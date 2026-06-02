@@ -9,45 +9,58 @@ import (
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/api"
+	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/muonsoft/clog"
+	"github.com/muonsoft/errors"
 	"github.com/pior/runnable"
 )
 
-const defaultAddr = ":17877"
-
 // Options configures process startup.
 type Options struct {
-	Addr    string
-	WebRoot string
-	Debug   bool
+	ConfigPath string
+	Addr       string
+	WebRoot    string
+	Debug      bool
 }
 
 // Run starts the HTTP server and blocks until shutdown.
 func Run(opts Options) error {
-	if opts.Addr == "" {
-		opts.Addr = defaultAddr
+	setupLogging(opts.Debug)
+
+	ctx := context.Background()
+
+	cfg, err := config.Load(opts.ConfigPath)
+	if err != nil {
+		clog.Errorf(ctx, "load config: %w", err)
+		return errors.Errorf("load config: %w", err)
 	}
 
-	setupLogging(opts.Debug)
+	addr := opts.Addr
+	if addr == "" {
+		addr = cfg.ListenAddr()
+	}
 
 	webRoot, err := resolveWebRoot(opts.WebRoot)
 	if err != nil {
-		return err
+		return errors.Errorf("resolve web root: %w", err)
 	}
 
 	handler, err := api.NewHandler(api.Options{WebRoot: webRoot})
 	if err != nil {
-		return err
+		return errors.Errorf("create handler: %w", err)
 	}
 
 	srv := &http.Server{
-		Addr:              opts.Addr,
+		Addr:              addr,
 		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	ctx := context.Background()
-	clog.Info(ctx, "starting chat relay", slog.String("addr", opts.Addr), slog.String("web_root", webRoot))
+	clog.Info(ctx, "starting chat relay",
+		slog.String("addr", addr),
+		slog.String("config_path", opts.ConfigPath),
+		slog.String("web_root", webRoot),
+	)
 
 	runnable.Run(
 		runnable.HTTPServer(srv).
