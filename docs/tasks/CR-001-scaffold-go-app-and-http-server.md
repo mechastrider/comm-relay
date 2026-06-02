@@ -1,6 +1,6 @@
 # CR-001: Scaffold Go App And HTTP Server
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 

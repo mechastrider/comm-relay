@@ -22,7 +22,7 @@
 
 | Order | ID | Status | Stage | Task | Task file |
 |---:|---|---|---|---|---|
-| 1 | CR-001 | todo | Prototype | Scaffold Go app and HTTP server | [CR-001](tasks/CR-001-scaffold-go-app-and-http-server.md) |
+| 1 | CR-001 | done | Prototype | Scaffold Go app and HTTP server | [CR-001](tasks/CR-001-scaffold-go-app-and-http-server.md) |
 | 2 | CR-002 | todo | Prototype | Add config loading and saving | [CR-002-config-json.md](tasks/CR-002-config-json.md) |
 | 3 | CR-003 | todo | Prototype | Add unified chat model and event bus | [CR-003-chat-model-and-event-bus.md](tasks/CR-003-chat-model-and-event-bus.md) |
 | 4 | CR-004 | todo | Prototype | Add WebSocket hub and `/ws` endpoint | [CR-004-websocket-hub.md](tasks/CR-004-websocket-hub.md) |
