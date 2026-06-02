@@ -1,0 +1,19 @@
+---
+description: Run tests and linters before finishing agent tasks
+alwaysApply: true
+---
+
+# Task completion: tests and linters
+
+After implementing code changes, the agent **must** run checks before finishing:
+
+1. **Build and tests** for the touched area:
+   - **Go** (`cmd/`, `internal/`): `go build ./... && go test ./...`
+   - Race-sensitive concurrency: `go test ./... -race` when practical
+
+2. **Linter** when `.golangci.yml` exists:
+   - `golangci-lint run ./...` from repo root
+
+3. **Result**: fix failures and re-run; do not leave broken checks unmentioned.
+
+Static UI-only changes: manual smoke of `/overlay` (transparent background) and admin forms when behavior changes.

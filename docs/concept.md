@@ -72,7 +72,7 @@ Frontend:
 
 Логи:
 
-- slog
+- github.com/muonsoft/clog (на базе log/slog)
 
 ---
 
@@ -259,7 +259,7 @@ config.json
 
 # Логирование
 
-Использовать slog.
+Использовать muonsoft/clog (уровни Debug, Info, Warn, Error).
 
 Уровни:
 

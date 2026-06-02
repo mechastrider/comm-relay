@@ -1,0 +1,14 @@
+---
+description: Wrap errors on return from handlers and internal packages
+globs: internal/**/*.go
+---
+
+# Go errors: wrap on return
+
+On any **`return ..., err`** from API handlers or internal packages, wrap with `errors.Errorf("<action>: %w", err)` from `github.com/muonsoft/errors`.
+
+**Do not use `fmt.Errorf`** for wrapping.
+
+Example: `return errors.Errorf("publish message: %w", err)` instead of `return err`.
+
+Details: skill `golang-errors` (`.agents/skills/golang-errors/SKILL.md`).
