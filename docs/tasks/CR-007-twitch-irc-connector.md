@@ -1,6 +1,6 @@
 # CR-007: Twitch IRC Connector
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -45,3 +45,9 @@ Status: `todo`
 
 - Для публичного чтения чата использовать anonymous или минимально необходимое подключение, если библиотека это поддерживает.
 - Не логировать приватные данные.
+
+## Completion Note
+
+- Added `internal/connector/twitch` with anonymous IRC via `go-twitch-irc/v4`, message mapping, reconnect backoff, and bootstrap wiring when `twitch.enabled` is true.
+- Unit tests cover message mapping and publish path with a fake IRC client.
+- Manual smoke with a live Twitch channel was not run in the cloud agent environment.
