@@ -1,6 +1,6 @@
 # CR-010: YouTube Live Connector With OAuth
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -48,3 +48,10 @@ Status: `todo`
 
 - Перед реализацией проверить актуальную официальную документацию YouTube API.
 - Если credentials недоступны, оставить connector testable через mocks и описать ручную проверку как blocked.
+
+## Completion Note (2026-06-03)
+
+- YouTube Live Chat connector polls `liveBroadcasts` (`snippet.liveChatId`) and `liveChatMessages.list`, maps to `ChatMessage`, publishes on the event bus.
+- OAuth: `GET /oauth/youtube/start` and `/oauth/youtube/callback`; tokens in `config.json`; admin GET/PATCH redacts secrets.
+- Admin panel: YouTube section with OAuth fields, Connect link, live status/detail from `internal/connector/status`.
+- Unit tests with mocks; manual OAuth E2E requires Google Cloud credentials and an active live stream (not run in CI).

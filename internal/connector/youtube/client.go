@@ -26,9 +26,8 @@ func newAPIClient(ctx context.Context, httpClient option.ClientOption) (*apiClie
 }
 
 func (c *apiClient) ActiveLiveChatID(ctx context.Context) (string, error) {
-	call := c.svc.LiveBroadcasts.List([]string{"contentDetails", "snippet"}).
+	call := c.svc.LiveBroadcasts.List([]string{"snippet"}).
 		BroadcastStatus("active").
-		Mine(true).
 		Context(ctx)
 
 	resp, err := call.Do()
@@ -37,10 +36,10 @@ func (c *apiClient) ActiveLiveChatID(ctx context.Context) (string, error) {
 	}
 
 	for _, item := range resp.Items {
-		if item.ContentDetails == nil {
+		if item.Snippet == nil {
 			continue
 		}
-		id := item.ContentDetails.ActiveLiveChatId
+		id := item.Snippet.LiveChatId
 		if id != "" {
 			return id, nil
 		}

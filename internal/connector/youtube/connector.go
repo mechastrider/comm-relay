@@ -15,7 +15,6 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
-	"google.golang.org/api/youtube/v3"
 )
 
 const configPollInterval = 2 * time.Second
@@ -81,7 +80,7 @@ func (c *Connector) Run(ctx context.Context) error {
 			continue
 		}
 
-		sessionCtx := clog.NewContext(ctx, slog.Default().With(slog.String("platform", platformYouTube))
+		sessionCtx := clog.NewContext(ctx, slog.Default().With(slog.String("platform", platformYouTube)))
 
 		err := c.runSession(sessionCtx, cfg)
 		if ctx.Err() != nil {

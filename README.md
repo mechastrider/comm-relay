@@ -60,6 +60,24 @@ curl http://127.0.0.1:17877/health
 
 Остановка сервера: **Ctrl+C** (graceful shutdown).
 
+## Настройка YouTube Live
+
+1. В [Google Cloud Console](https://console.cloud.google.com/) создайте OAuth client (тип **Desktop** или **Web** с redirect URI ниже).
+2. Включите **YouTube Data API v3**.
+3. Redirect URI должен совпадать с портом из `config.json`:
+
+   `http://127.0.0.1:17877/oauth/youtube/callback`
+
+   (замените `17877`, если изменили `server_port`.)
+
+4. В админке http://127.0.0.1:17877/ укажите **OAuth client ID** и **client secret**, нажмите **Save settings**.
+5. Нажмите **Connect YouTube**, пройдите авторизацию Google.
+6. Включите **Enable YouTube connector** и снова сохраните настройки.
+
+Сообщения YouTube Live Chat появятся в overlay вместе с Twitch, когда у аккаунта идёт активный эфир с live chat.
+
+OAuth-токены сохраняются в локальный `config.json` и не попадают в логи. Файл в `.gitignore` — не коммитьте его с секретами.
+
 ## Настройка Twitch
 
 В `config.json` или через админку включите коннектор и укажите канал:

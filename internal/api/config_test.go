@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
-	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/stretchr/testify/require"
 )
 
@@ -64,14 +63,27 @@ func TestConfig_WhenPatchValid_ExpectSaved(t *testing.T) {
 func TestConfig_WhenGet_ExpectYouTubeOAuthRedacted(t *testing.T) {
 	t.Parallel()
 
-	store := testConfigStore(t)
-	require.NoError(t, store.Mutate(func(cfg *config.Config) error {
-		cfg.YouTube.OAuth.ClientSecret = "top-secret"
-		cfg.YouTube.OAuth.RefreshToken = "refresh-token"
-		return nil
-	}))
-
 	handler := testHandler(t)
+
+	patchBody := strings.NewReader(`{
+  "server_port": 17877,
+  "twitch": { "enabled": false, "channel": "" },
+  "youtube": {
+    "enabled": false,
+    "oauth": {
+      "client_id": "client-id",
+      "client_secret": "top-secret",
+      "refresh_token": "refresh-token"
+    }
+  },
+  "vk": { "enabled": false },
+  "overlay": { "max_messages": 30, "message_ttl_seconds": 20 }
+}`)
+	patchRec := httptest.NewRecorder()
+	patchReq := httptest.NewRequest(http.MethodPatch, "/api/config", patchBody)
+	patchReq.Header.Set("Content-Type", "application/json")
+	handler.ServeHTTP(patchRec, patchReq)
+	require.Equal(t, http.StatusOK, patchRec.Code)
 
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/config", nil))
@@ -79,6 +91,7 @@ func TestConfig_WhenGet_ExpectYouTubeOAuthRedacted(t *testing.T) {
 	require.NotContains(t, rec.Body.String(), "top-secret")
 	require.NotContains(t, rec.Body.String(), "refresh-token")
 	require.Contains(t, rec.Body.String(), `"has_client_secret":true`)
+	require.Contains(t, rec.Body.String(), `"connected":true`)
 }
 
 func TestConfig_WhenPatchInvalid_ExpectBadRequest(t *testing.T) {

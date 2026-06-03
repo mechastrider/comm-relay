@@ -4,8 +4,8 @@ import "time"
 
 // YouTubeConfig holds YouTube Live connector and OAuth settings.
 type YouTubeConfig struct {
-	Enabled bool            `json:"enabled"`
-	OAuth   YouTubeOAuth    `json:"oauth"`
+	Enabled bool         `json:"enabled"`
+	OAuth   YouTubeOAuth `json:"oauth"`
 }
 
 // YouTubeOAuth stores Google OAuth client credentials and issued tokens.
