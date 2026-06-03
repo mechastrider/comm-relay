@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +14,7 @@ func TestNewHandlerRoutes(t *testing.T) {
 	t.Parallel()
 
 	webRoot := filepath.Join("..", "..", "web")
-	handler, err := NewHandler(Options{WebRoot: webRoot})
+	handler, err := NewHandler(Options{WebRoot: webRoot, Bus: bus.New(0)})
 	require.NoError(t, err)
 
 	t.Run("health", func(t *testing.T) {
