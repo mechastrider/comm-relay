@@ -1,6 +1,6 @@
 # CR-003: Chat Model And Event Bus
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -50,3 +50,10 @@ Overlay не должен знать платформенные детали. В
 
 - Keep API small.
 - Не протаскивать Twitch IRC tags или YouTube-specific fields в общую модель.
+
+## Completion Note
+
+- Added `internal/bus` with `ChatMessage`, `Event` / `ChatMessageReceived`, and `Bus` (per-subscriber buffered channels, default 256).
+- Overflow: non-blocking publish drops events only for subscribers whose buffer is full.
+- `Bus.Close()` stops the bus and closes subscriber channels; `Publish` returns `ErrClosed` after shutdown.
+- Unit tests cover fan-out, shutdown, overflow non-blocking, and slow-consumer isolation.
