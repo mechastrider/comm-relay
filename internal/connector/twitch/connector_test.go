@@ -49,11 +49,25 @@ func (f *fakeIRCClient) Disconnect() error {
 	return nil
 }
 
+func testStore(t *testing.T, twitch config.TwitchConfig) *config.Store {
+	t.Helper()
+
+	path := t.TempDir() + "/config.json"
+	cfg := config.Default()
+	cfg.Twitch = twitch
+
+	store, err := config.NewStore(path, cfg)
+	require.NoError(t, err)
+
+	return store
+}
+
 func TestConnector_Run_WhenDisabled_ExpectNoConnect(t *testing.T) {
 	t.Parallel()
 
 	eventBus := bus.New(8)
-	connector := New(eventBus, config.TwitchConfig{Enabled: false, Channel: "x"})
+	store := testStore(t, config.TwitchConfig{Enabled: false, Channel: "x"})
+	connector := New(eventBus, store)
 	connector.newClient = func() ircClient {
 		t.Fatal("client should not be created when disabled")
 		return nil
@@ -73,7 +87,8 @@ func TestConnector_Run_WhenSessionActive_ExpectPublishedMessage(t *testing.T) {
 	defer unsub()
 
 	fake := &fakeIRCClient{connectCh: make(chan struct{}, 1)}
-	connector := New(eventBus, config.TwitchConfig{Enabled: true, Channel: "#Streamer"})
+	store := testStore(t, config.TwitchConfig{Enabled: true, Channel: "#Streamer"})
+	connector := New(eventBus, store)
 	connector.newClient = func() ircClient { return fake }
 
 	ctx, cancel := context.WithCancel(context.Background())
