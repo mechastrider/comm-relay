@@ -24,7 +24,7 @@
 |---:|---|---|---|---|---|
 | 1 | CR-001 | done | Prototype | Scaffold Go app and HTTP server | [CR-001](tasks/CR-001-scaffold-go-app-and-http-server.md) |
 | 2 | CR-002 | done | Prototype | Add config loading and saving | [CR-002-config-json.md](tasks/CR-002-config-json.md) |
-| 3 | CR-003 | todo | Prototype | Add unified chat model and event bus | [CR-003-chat-model-and-event-bus.md](tasks/CR-003-chat-model-and-event-bus.md) |
+| 3 | CR-003 | done | Prototype | Add unified chat model and event bus | [CR-003-chat-model-and-event-bus.md](tasks/CR-003-chat-model-and-event-bus.md) |
 | 4 | CR-004 | todo | Prototype | Add WebSocket hub and `/ws` endpoint | [CR-004-websocket-hub.md](tasks/CR-004-websocket-hub.md) |
 | 5 | CR-005 | todo | Prototype | Add basic OBS overlay | [CR-005-basic-obs-overlay.md](tasks/CR-005-basic-obs-overlay.md) |
 | 6 | CR-006 | todo | Prototype | Add basic admin UI | [CR-006-basic-admin-ui.md](tasks/CR-006-basic-admin-ui.md) |
