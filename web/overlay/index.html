@@ -4,14 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chat Relay Overlay</title>
-  <style>
-    html, body {
-      margin: 0;
-      background: transparent;
-    }
-  </style>
+  <link rel="stylesheet" href="/overlay/overlay.css">
 </head>
 <body>
-  <p>Overlay placeholder. WebSocket chat will be added in a later task.</p>
+  <div id="messages" class="messages" aria-live="polite"></div>
+  <script src="/overlay/overlay.js" defer></script>
 </body>
 </html>

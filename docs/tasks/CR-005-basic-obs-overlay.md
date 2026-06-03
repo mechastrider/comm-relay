@@ -1,6 +1,6 @@
 # CR-005: Basic OBS Overlay
 
-Status: `todo`
+Status: `in_progress`
 
 ## Goal
 
