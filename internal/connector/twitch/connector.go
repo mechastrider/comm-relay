@@ -23,43 +23,31 @@ type ircClient interface {
 
 type clientFactory func() ircClient
 
+const configPollInterval = 2 * time.Second
+
 // Connector reads Twitch IRC chat (anonymous read-only) and publishes unified messages to the event bus.
 // MVP uses IRC rather than EventSub for simplicity and public chat without OAuth.
 type Connector struct {
 	bus       *bus.Bus
-	cfg       config.TwitchConfig
+	store     *config.Store
 	newClient clientFactory
 }
 
-// New creates a Twitch IRC connector.
-func New(eventBus *bus.Bus, cfg config.TwitchConfig) *Connector {
+// New creates a Twitch IRC connector that reads Twitch settings from the config store.
+func New(eventBus *bus.Bus, store *config.Store) *Connector {
 	return &Connector{
-		bus: eventBus,
-		cfg: cfg,
+		bus:   eventBus,
+		store: store,
 		newClient: func() ircClient {
 			return twitch.NewAnonymousClient()
 		},
 	}
 }
 
-// Run connects to Twitch IRC until ctx is cancelled. Disabled or empty channel is a no-op.
+// Run connects to Twitch IRC until ctx is cancelled. Watches the config store so admin saves take effect without restart.
 func (c *Connector) Run(ctx context.Context) error {
-	if !c.cfg.Enabled {
-		return nil
-	}
-
-	channel := normalizeChannel(c.cfg.Channel)
-	if channel == "" {
-		return nil
-	}
-
-	ctx = clog.NewContext(ctx, slog.Default().With(
-		slog.String("platform", platformTwitch),
-		slog.String("channel", channel),
-	))
-
-	clog.Info(ctx, "twitch connector starting")
-	defer clog.Info(ctx, "twitch connector stopped")
+	clog.Info(ctx, "twitch connector starting", slog.String("platform", platformTwitch))
+	defer clog.Info(ctx, "twitch connector stopped", slog.String("platform", platformTwitch))
 
 	backoff := newReconnectBackoff()
 
@@ -68,19 +56,41 @@ func (c *Connector) Run(ctx context.Context) error {
 			return nil
 		}
 
-		err := c.runSession(ctx, channel)
+		twitchCfg := c.store.Snapshot().Twitch
+		if !twitchCfg.Enabled {
+			backoff = newReconnectBackoff()
+			if err := waitContext(ctx, configPollInterval); err != nil {
+				return nil
+			}
+			continue
+		}
+
+		channel := normalizeChannel(twitchCfg.Channel)
+		if channel == "" {
+			if err := waitContext(ctx, configPollInterval); err != nil {
+				return nil
+			}
+			continue
+		}
+
+		sessionCtx := clog.NewContext(ctx, slog.Default().With(
+			slog.String("platform", platformTwitch),
+			slog.String("channel", channel),
+		))
+
+		err := c.runSession(sessionCtx, channel)
 		if ctx.Err() != nil {
 			return nil
 		}
 
 		if err != nil {
-			clog.Errorf(ctx, "twitch session ended: %w", err)
+			clog.Errorf(sessionCtx, "twitch session ended: %w", err)
 		} else {
-			clog.Info(ctx, "twitch session ended")
+			clog.Info(sessionCtx, "twitch session ended")
 		}
 
 		wait := backoff.current()
-		clog.Info(ctx, "twitch reconnect scheduled", slog.Duration("after", wait))
+		clog.Info(sessionCtx, "twitch reconnect scheduled", slog.Duration("after", wait))
 		if err := waitContext(ctx, wait); err != nil {
 			return nil
 		}

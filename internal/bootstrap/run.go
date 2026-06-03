@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/api"
@@ -98,15 +97,13 @@ func Run(opts Options) error {
 			Name("http"),
 	}
 
-	if cfg.Twitch.Enabled {
-		twitchConn := twitchconnector.New(eventBus, cfg.Twitch)
-		processes = append(processes, runnable.Func(func(ctx context.Context) error {
-			if err := twitchConn.Run(ctx); err != nil {
-				clog.Errorf(ctx, "twitch connector stopped with error: %w", err)
-			}
-			return nil
-		}).Name("twitch"))
-	}
+	twitchConn := twitchconnector.New(eventBus, store)
+	processes = append(processes, runnable.Func(func(ctx context.Context) error {
+		if err := twitchConn.Run(ctx); err != nil {
+			clog.Errorf(ctx, "twitch connector stopped with error: %w", err)
+		}
+		return nil
+	}).Name("twitch"))
 
 	mgr.Register(processes...)
 	runnable.Run(mgr)
@@ -129,14 +126,9 @@ func logStartup(ctx context.Context, addr, configPath, webRoot string, cfg *conf
 }
 
 func enabledConnectors(cfg *config.Config) string {
-	var names []string
-	if cfg.Twitch.Enabled {
-		names = append(names, "twitch")
-	}
-	if len(names) == 0 {
-		return "none"
-	}
-	return strings.Join(names, ", ")
+	// Twitch runnable is always registered; it watches the config store for enable/channel changes.
+	_ = cfg
+	return "twitch"
 }
 
 func setupLogging(debug bool) {

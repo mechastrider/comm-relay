@@ -32,13 +32,46 @@
     return value;
   }
 
-  const config = {
+  let config = {
     maxMessages: readPositiveInt("max_messages", DEFAULT_MAX_MESSAGES),
     messageTTLSeconds: readNonNegativeInt(
       "message_ttl_seconds",
       DEFAULT_MESSAGE_TTL_SECONDS
     ),
   };
+
+  function applyServerOverlayConfig(serverOverlay) {
+    if (!serverOverlay || typeof serverOverlay !== "object") {
+      return;
+    }
+    if (
+      !params.has("max_messages") &&
+      typeof serverOverlay.max_messages === "number" &&
+      serverOverlay.max_messages >= 1
+    ) {
+      config.maxMessages = serverOverlay.max_messages;
+    }
+    if (
+      !params.has("message_ttl_seconds") &&
+      typeof serverOverlay.message_ttl_seconds === "number" &&
+      serverOverlay.message_ttl_seconds >= 0
+    ) {
+      config.messageTTLSeconds = serverOverlay.message_ttl_seconds;
+    }
+  }
+
+  async function loadServerConfig() {
+    try {
+      const response = await fetch("/api/config");
+      if (!response.ok) {
+        return;
+      }
+      const payload = await response.json();
+      applyServerOverlayConfig(payload && payload.overlay);
+    } catch {
+      /* keep URL/default config */
+    }
+  }
 
   const listEl = document.getElementById("messages");
   if (!listEl) {
@@ -201,5 +234,5 @@
     }
   });
 
-  connect();
+  loadServerConfig().finally(connect);
 })();

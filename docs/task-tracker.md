@@ -30,7 +30,7 @@
 | 6 | CR-006 | done | Prototype | Add basic admin UI | [CR-006-basic-admin-ui.md](tasks/CR-006-basic-admin-ui.md) |
 | 7 | CR-007 | done | Prototype | Add Twitch IRC connector | [CR-007-twitch-irc-connector.md](tasks/CR-007-twitch-irc-connector.md) |
 | 8 | CR-008 | done | Prototype | Wire bootstrap lifecycle and graceful shutdown | [CR-008-bootstrap-lifecycle.md](tasks/CR-008-bootstrap-lifecycle.md) |
-| 9 | CR-009 | todo | Prototype | Smoke test Twitch-to-OBS prototype | [CR-009-prototype-smoke-test.md](tasks/CR-009-prototype-smoke-test.md) |
+| 9 | CR-009 | done | Prototype | Smoke test Twitch-to-OBS prototype | [CR-009-prototype-smoke-test.md](tasks/CR-009-prototype-smoke-test.md) |
 | 10 | CR-010 | todo | Streaming MVP | Add YouTube Live connector with OAuth | [CR-010-youtube-live-connector.md](tasks/CR-010-youtube-live-connector.md) |
 | 11 | CR-011 | todo | Streaming MVP | Research and add VK Live connector | [CR-011-vk-live-connector.md](tasks/CR-011-vk-live-connector.md) |
 | 12 | CR-012 | todo | Streaming MVP | Polish OBS overlay styling | [CR-012-overlay-styling.md](tasks/CR-012-overlay-styling.md) |
@@ -39,6 +39,7 @@
 
 ## Current Notes
 
+- CR-009: Prototype smoke passed (live Twitch on `xqc`, browser-equivalent WS checks). Fixes: Twitch connector watches config store (admin save without restart); overlay loads overlay settings from `/api/config` when query params omitted.
 - CR-008: Bootstrap uses `runnable.Manager` for HTTP, hub, history, and Twitch; startup logs `addr` and `connectors`.
 - CR-007: Twitch IRC connector uses anonymous read-only IRC; `/api/status` still reports `disconnected` until CR-013 adds live connector state.
 - Первый прототип ограничивается Twitch, чтобы быстро проверить сервер, WebSocket и OBS overlay на реальном стриме.
