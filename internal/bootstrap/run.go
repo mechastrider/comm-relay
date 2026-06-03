@@ -52,7 +52,19 @@ func Run(opts Options) error {
 		return errors.Errorf("create websocket hub: %w", err)
 	}
 
-	handler, err := api.NewHandler(api.Options{WebRoot: webRoot, Hub: hub})
+	store, err := config.NewStore(opts.ConfigPath, cfg)
+	if err != nil {
+		return errors.Errorf("create config store: %w", err)
+	}
+
+	history := api.NewMessageHistory(0)
+
+	handler, err := api.NewHandler(api.Options{
+		WebRoot: webRoot,
+		Hub:     hub,
+		Store:   store,
+		History: history,
+	})
 	if err != nil {
 		return errors.Errorf("create handler: %w", err)
 	}
@@ -62,6 +74,12 @@ func Run(opts Options) error {
 	go func() {
 		defer close(hubDone)
 		hub.Run(hubCtx)
+	}()
+
+	historyDone := make(chan struct{})
+	go func() {
+		defer close(historyDone)
+		history.Run(hubCtx, eventBus)
 	}()
 
 	srv := &http.Server{
@@ -85,6 +103,7 @@ func Run(opts Options) error {
 	hubCancel()
 	eventBus.Close()
 	<-hubDone
+	<-historyDone
 
 	clog.Info(ctx, "chat relay stopped")
 	return nil

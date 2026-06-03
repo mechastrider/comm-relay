@@ -1,11 +1,9 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -60,26 +58,4 @@ func TestWebSocket_WhenChatPublished_ExpectJSONMessage(t *testing.T) {
 	require.Equal(t, "twitch", frame["platform"])
 	require.Equal(t, "Viewer", frame["user"])
 	require.Equal(t, "Hello overlay", frame["message"])
-}
-
-func testHandler(t *testing.T) http.Handler {
-	t.Helper()
-	return testHandlerWithBus(t, bus.New(0))
-}
-
-func testHandlerWithBus(t *testing.T, b *bus.Bus) http.Handler {
-	t.Helper()
-
-	hub, err := NewHub(b)
-	require.NoError(t, err)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
-	go hub.Run(ctx)
-
-	webRoot := filepath.Join("..", "..", "web")
-	handler, err := NewHandler(Options{WebRoot: webRoot, Hub: hub})
-	require.NoError(t, err)
-
-	return handler
 }
