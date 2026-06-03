@@ -1,6 +1,6 @@
 # CR-004: WebSocket Hub
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -45,3 +45,11 @@ OBS overlay будет подключаться к `ws://localhost:17877/ws` и 
 
 - JSON должен использовать `snake_case`.
 - Минимальный формат должен оставаться совместимым с `docs/concept.md`.
+
+## Completion Note
+
+- Added WebSocket hub in `internal/api` (`Hub`, per-client `wsClient` with 64-slot outbound buffer).
+- Subscribes to `bus.Bus` and broadcasts `ChatMessageReceived` as snake_case JSON (`type`, `platform`, `user`, `message`, optional `display_name`, `avatar_url`, `badges`).
+- Registered `GET /ws` with `gorilla/websocket`; slow clients drop frames without blocking others.
+- Bootstrap wires a process-wide `bus.Bus` into `api.NewHandler`.
+- Tests cover wire JSON, hub broadcast isolation, WebSocket upgrade, and end-to-end bus-to-client delivery.

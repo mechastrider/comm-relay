@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/api"
+	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
@@ -45,7 +46,9 @@ func Run(opts Options) error {
 		return errors.Errorf("resolve web root: %w", err)
 	}
 
-	handler, err := api.NewHandler(api.Options{WebRoot: webRoot})
+	eventBus := bus.New(0)
+
+	handler, err := api.NewHandler(api.Options{WebRoot: webRoot, Bus: eventBus})
 	if err != nil {
 		return errors.Errorf("create handler: %w", err)
 	}
