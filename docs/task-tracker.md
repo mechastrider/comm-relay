@@ -26,7 +26,7 @@
 | 2 | CR-002 | done | Prototype | Add config loading and saving | [CR-002-config-json.md](tasks/CR-002-config-json.md) |
 | 3 | CR-003 | done | Prototype | Add unified chat model and event bus | [CR-003-chat-model-and-event-bus.md](tasks/CR-003-chat-model-and-event-bus.md) |
 | 4 | CR-004 | done | Prototype | Add WebSocket hub and `/ws` endpoint | [CR-004-websocket-hub.md](tasks/CR-004-websocket-hub.md) |
-| 5 | CR-005 | todo | Prototype | Add basic OBS overlay | [CR-005-basic-obs-overlay.md](tasks/CR-005-basic-obs-overlay.md) |
+| 5 | CR-005 | done | Prototype | Add basic OBS overlay | [CR-005-basic-obs-overlay.md](tasks/CR-005-basic-obs-overlay.md) |
 | 6 | CR-006 | todo | Prototype | Add basic admin UI | [CR-006-basic-admin-ui.md](tasks/CR-006-basic-admin-ui.md) |
 | 7 | CR-007 | todo | Prototype | Add Twitch IRC connector | [CR-007-twitch-irc-connector.md](tasks/CR-007-twitch-irc-connector.md) |
 | 8 | CR-008 | todo | Prototype | Wire bootstrap lifecycle and graceful shutdown | [CR-008-bootstrap-lifecycle.md](tasks/CR-008-bootstrap-lifecycle.md) |

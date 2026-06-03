@@ -45,6 +45,14 @@ func TestNewHandlerRoutes(t *testing.T) {
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/overlay", nil))
 		require.Equal(t, http.StatusOK, rec.Code)
-		require.Contains(t, rec.Body.String(), "Overlay placeholder")
+		body := rec.Body.String()
+		require.Contains(t, body, "/overlay/overlay.css")
+		require.Contains(t, body, "/overlay/overlay.js")
+		require.Contains(t, body, `id="messages"`)
+
+		cssRec := httptest.NewRecorder()
+		handler.ServeHTTP(cssRec, httptest.NewRequest(http.MethodGet, "/overlay/overlay.css", nil))
+		require.Equal(t, http.StatusOK, cssRec.Code)
+		require.Contains(t, cssRec.Body.String(), "background: transparent")
 	})
 }

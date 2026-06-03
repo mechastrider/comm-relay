@@ -1,6 +1,6 @@
 # CR-005: Basic OBS Overlay
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -44,3 +44,7 @@ Overlay открывается как Browser Source по адресу `http://l
 
 - Без React/Vue/Svelte.
 - Не добавлять видимый текст-инструкцию в сам overlay.
+
+## Completion Note
+
+2026-06-03: Added `web/overlay/overlay.js` (WebSocket client, exponential reconnect, max message cap, TTL expiry), `web/overlay/overlay.css` (transparent background, fade-in), and updated `index.html`. Configurable via query params `max_messages` and `message_ttl_seconds` (defaults 30 / 20). Extended `server_test` overlay route checks for static assets and transparent CSS.
