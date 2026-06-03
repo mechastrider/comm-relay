@@ -1,6 +1,6 @@
 # CR-002: Config JSON
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -49,3 +49,9 @@ Status: `todo`
 - JSON-поля должны быть в `snake_case`.
 - Не логировать потенциальные секреты, даже если сейчас их нет.
 - Для wrapped errors использовать `github.com/muonsoft/errors`.
+
+## Completion Note
+
+- Added `internal/config` with load/save, validation, atomic write, and safe defaults.
+- Bootstrap loads `config.json` (flag `-config`) and uses `server_port` for HTTP listen; `-addr` overrides when set.
+- Unit tests cover missing file, parse, validation, and round-trip save.
