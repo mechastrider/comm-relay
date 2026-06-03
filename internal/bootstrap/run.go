@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/api"
+	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
@@ -45,10 +46,23 @@ func Run(opts Options) error {
 		return errors.Errorf("resolve web root: %w", err)
 	}
 
-	handler, err := api.NewHandler(api.Options{WebRoot: webRoot})
+	eventBus := bus.New(0)
+	hub, err := api.NewHub(eventBus)
+	if err != nil {
+		return errors.Errorf("create websocket hub: %w", err)
+	}
+
+	handler, err := api.NewHandler(api.Options{WebRoot: webRoot, Hub: hub})
 	if err != nil {
 		return errors.Errorf("create handler: %w", err)
 	}
+
+	hubCtx, hubCancel := context.WithCancel(ctx)
+	hubDone := make(chan struct{})
+	go func() {
+		defer close(hubDone)
+		hub.Run(hubCtx)
+	}()
 
 	srv := &http.Server{
 		Addr:              addr,
@@ -67,6 +81,10 @@ func Run(opts Options) error {
 			ShutdownTimeout(10 * time.Second).
 			Name("http"),
 	)
+
+	hubCancel()
+	eventBus.Close()
+	<-hubDone
 
 	clog.Info(ctx, "chat relay stopped")
 	return nil
