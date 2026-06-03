@@ -4,9 +4,72 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chat Relay</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Chat Relay</h1>
-  <p>Admin panel placeholder. Configuration UI will be added in a later task.</p>
+  <header class="page-header">
+    <h1>Chat Relay</h1>
+    <p class="page-header__subtitle">Local chat relay for OBS overlays</p>
+  </header>
+
+  <main class="layout">
+    <div id="banner" class="banner" role="alert" aria-live="polite" hidden></div>
+
+    <section class="panel" aria-labelledby="twitch-heading">
+      <h2 id="twitch-heading">Twitch</h2>
+      <dl class="status-list">
+        <div class="status-list__row">
+          <dt>Status</dt>
+          <dd><span id="twitch-status" class="status-pill">—</span></dd>
+        </div>
+      </dl>
+
+      <form id="settings-form" class="form" novalidate>
+        <div class="form__field">
+          <label class="checkbox" for="twitch-enabled">
+            <input id="twitch-enabled" name="twitch_enabled" type="checkbox">
+            <span>Enable Twitch connector</span>
+          </label>
+        </div>
+
+        <div class="form__field">
+          <label for="twitch-channel">Channel</label>
+          <input id="twitch-channel" name="twitch_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
+          <p id="twitch-channel-error" class="field-error" role="alert" hidden></p>
+        </div>
+
+        <fieldset class="form__fieldset">
+          <legend>Overlay</legend>
+
+          <div class="form__field">
+            <label for="overlay-max-messages">Max messages</label>
+            <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
+            <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
+          </div>
+
+          <div class="form__field">
+            <label for="overlay-message-ttl">Message TTL (seconds)</label>
+            <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
+            <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
+          </div>
+        </fieldset>
+
+        <div class="form__actions">
+          <button id="save-button" type="submit">Save settings</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="messages-heading">
+      <div class="panel__header">
+        <h2 id="messages-heading">Recent messages</h2>
+        <button id="refresh-messages" type="button" class="button-secondary">Refresh</button>
+      </div>
+      <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
+      <p id="recent-messages-empty" class="empty-state">No messages yet.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
 </body>
 </html>

@@ -1,0 +1,106 @@
+package api
+
+import (
+	"context"
+	"sync"
+	"time"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
+)
+
+const defaultRecentMessageCapacity = 100
+
+// MessageHistory keeps the most recent chat messages for the admin panel.
+type MessageHistory struct {
+	mu       sync.RWMutex
+	messages []bus.ChatMessage
+	capacity int
+}
+
+// NewMessageHistory creates a bounded in-memory message buffer.
+func NewMessageHistory(capacity int) *MessageHistory {
+	if capacity <= 0 {
+		capacity = defaultRecentMessageCapacity
+	}
+
+	return &MessageHistory{
+		messages: make([]bus.ChatMessage, 0, capacity),
+		capacity: capacity,
+	}
+}
+
+// Run subscribes to chat events until the context is cancelled.
+func (h *MessageHistory) Run(ctx context.Context, b *bus.Bus) {
+	events, unsub := b.Subscribe()
+	defer unsub()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case ev, ok := <-events:
+			if !ok {
+				return
+			}
+			if ev.Type != bus.EventChatMessageReceived {
+				continue
+			}
+			h.append(ev.Message)
+		}
+	}
+}
+
+func (h *MessageHistory) append(msg bus.ChatMessage) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	h.messages = append(h.messages, msg)
+	if len(h.messages) > h.capacity {
+		h.messages = h.messages[len(h.messages)-h.capacity:]
+	}
+}
+
+// Recent returns up to limit newest messages in chronological order.
+func (h *MessageHistory) Recent(limit int) []adminMessage {
+	if limit <= 0 {
+		limit = 20
+	}
+
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	start := 0
+	if len(h.messages) > limit {
+		start = len(h.messages) - limit
+	}
+
+	out := make([]adminMessage, 0, len(h.messages)-start)
+	for _, msg := range h.messages[start:] {
+		out = append(out, adminMessageFromChat(msg))
+	}
+
+	return out
+}
+
+type adminMessage struct {
+	Platform    string `json:"platform"`
+	Username    string `json:"username"`
+	DisplayName string `json:"display_name,omitempty"`
+	Message     string `json:"message"`
+	Timestamp   string `json:"timestamp"`
+}
+
+func adminMessageFromChat(msg bus.ChatMessage) adminMessage {
+	ts := msg.Timestamp
+	if ts.IsZero() {
+		ts = time.Now().UTC()
+	}
+
+	return adminMessage{
+		Platform:    msg.Platform,
+		Username:    msg.Username,
+		DisplayName: msg.DisplayName,
+		Message:     msg.Message,
+		Timestamp:   ts.UTC().Format(time.RFC3339),
+	}
+}

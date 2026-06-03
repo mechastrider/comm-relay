@@ -1,6 +1,10 @@
 # CR-006: Basic Admin UI
 
-Status: `todo`
+Status: `done`
+
+## Completion note
+
+Added `/api/config`, `/api/status`, and `/api/messages/recent` endpoints with a thread-safe config store and in-memory recent message buffer. Admin UI at `/` lets users edit Twitch and overlay settings, shows connector status, recent messages, and API errors. Twitch connector status reports `disconnected` until CR-007 wires the live connector.
 
 ## Goal
 
