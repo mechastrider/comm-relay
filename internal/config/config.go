@@ -16,7 +16,7 @@ var ErrInvalidConfig = errors.New("invalid config")
 type Config struct {
 	ServerPort int           `json:"server_port"`
 	Twitch     TwitchConfig  `json:"twitch"`
-	YouTube    PlatformFlags `json:"youtube"`
+	YouTube    YouTubeConfig `json:"youtube"`
 	VK         PlatformFlags `json:"vk"`
 	Overlay    OverlayConfig `json:"overlay"`
 }
@@ -46,7 +46,7 @@ func Default() *Config {
 			Enabled: false,
 			Channel: "",
 		},
-		YouTube: PlatformFlags{Enabled: false},
+		YouTube: YouTubeConfig{Enabled: false},
 		VK:      PlatformFlags{Enabled: false},
 		Overlay: OverlayConfig{
 			MaxMessages:       30,

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,7 +37,7 @@ func TestConfig_WhenPatchValid_ExpectSaved(t *testing.T) {
 	body := strings.NewReader(`{
   "server_port": 17877,
   "twitch": { "enabled": true, "channel": "streamer" },
-  "youtube": { "enabled": false },
+  "youtube": { "enabled": false, "oauth": { "client_id": "" } },
   "vk": { "enabled": false },
   "overlay": { "max_messages": 25, "message_ttl_seconds": 15 }
 }`)
@@ -57,6 +58,27 @@ func TestConfig_WhenPatchValid_ExpectSaved(t *testing.T) {
 	handler.ServeHTTP(getRec, httptest.NewRequest(http.MethodGet, "/api/config", nil))
 	require.Equal(t, http.StatusOK, getRec.Code)
 	require.Contains(t, getRec.Body.String(), `"channel":"streamer"`)
+	require.NotContains(t, getRec.Body.String(), `"client_secret"`)
+}
+
+func TestConfig_WhenGet_ExpectYouTubeOAuthRedacted(t *testing.T) {
+	t.Parallel()
+
+	store := testConfigStore(t)
+	require.NoError(t, store.Mutate(func(cfg *config.Config) error {
+		cfg.YouTube.OAuth.ClientSecret = "top-secret"
+		cfg.YouTube.OAuth.RefreshToken = "refresh-token"
+		return nil
+	}))
+
+	handler := testHandler(t)
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/config", nil))
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.NotContains(t, rec.Body.String(), "top-secret")
+	require.NotContains(t, rec.Body.String(), "refresh-token")
+	require.Contains(t, rec.Body.String(), `"has_client_secret":true`)
 }
 
 func TestConfig_WhenPatchInvalid_ExpectBadRequest(t *testing.T) {
@@ -66,7 +88,7 @@ func TestConfig_WhenPatchInvalid_ExpectBadRequest(t *testing.T) {
 	body := strings.NewReader(`{
   "server_port": 17877,
   "twitch": { "enabled": true, "channel": "" },
-  "youtube": { "enabled": false },
+  "youtube": { "enabled": false, "oauth": { "client_id": "" } },
   "vk": { "enabled": false },
   "overlay": { "max_messages": 30, "message_ttl_seconds": 20 }
 }`)

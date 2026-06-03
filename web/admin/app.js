@@ -7,6 +7,13 @@
   const twitchStatus = document.getElementById("twitch-status");
   const twitchEnabled = document.getElementById("twitch-enabled");
   const twitchChannel = document.getElementById("twitch-channel");
+  const youtubeStatus = document.getElementById("youtube-status");
+  const youtubeOAuthLabel = document.getElementById("youtube-oauth-label");
+  const youtubeDetail = document.getElementById("youtube-detail");
+  const youtubeEnabled = document.getElementById("youtube-enabled");
+  const youtubeClientId = document.getElementById("youtube-client-id");
+  const youtubeClientSecret = document.getElementById("youtube-client-secret");
+  const youtubeConnect = document.getElementById("youtube-connect");
   const overlayMaxMessages = document.getElementById("overlay-max-messages");
   const overlayMessageTTL = document.getElementById("overlay-message-ttl");
   const recentMessages = document.getElementById("recent-messages");
@@ -103,6 +110,13 @@
     overlayMessageTTL.value = String(
       config.overlay ? config.overlay.message_ttl_seconds : 20
     );
+
+    if (config.youtube) {
+      youtubeEnabled.checked = Boolean(config.youtube.enabled);
+      const oauth = config.youtube.oauth || {};
+      youtubeClientId.value = oauth.client_id || "";
+      youtubeClientSecret.value = "";
+    }
   }
 
   function buildPayload() {
@@ -112,9 +126,13 @@
         enabled: twitchEnabled.checked,
         channel: twitchChannel.value.trim().toLowerCase(),
       },
-      youtube: currentConfig
-        ? currentConfig.youtube
-        : { enabled: false },
+      youtube: {
+        enabled: youtubeEnabled.checked,
+        oauth: {
+          client_id: youtubeClientId.value.trim(),
+          client_secret: youtubeClientSecret.value,
+        },
+      },
       vk: currentConfig ? currentConfig.vk : { enabled: false },
       overlay: {
         max_messages: Number.parseInt(overlayMaxMessages.value, 10),
@@ -162,11 +180,56 @@
     return true;
   }
 
+  function renderPlatformStatus(el, platform) {
+    const state = typeof platform.state === "string" ? platform.state : "unknown";
+    el.textContent = state.replace(/_/g, " ");
+    el.className = "status-pill status-pill--" + state;
+  }
+
   function renderStatus(status) {
-    const twitch = status.twitch || {};
-    const state = typeof twitch.state === "string" ? twitch.state : "unknown";
-    twitchStatus.textContent = state.replace(/_/g, " ");
-    twitchStatus.className = "status-pill status-pill--" + state;
+    renderPlatformStatus(twitchStatus, status.twitch || {});
+
+    const youtube = status.youtube || {};
+    renderPlatformStatus(youtubeStatus, youtube);
+
+    if (youtube.oauth_connected) {
+      youtubeOAuthLabel.textContent = "Connected";
+    } else {
+      youtubeOAuthLabel.textContent = "Not connected";
+    }
+
+    if (typeof youtube.detail === "string" && youtube.detail !== "") {
+      youtubeDetail.hidden = false;
+      youtubeDetail.textContent = youtube.detail;
+    } else {
+      youtubeDetail.hidden = true;
+      youtubeDetail.textContent = "";
+    }
+  }
+
+  function handleOAuthQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const oauth = params.get("oauth");
+    const oauthError = params.get("oauth_error");
+
+    if (oauth === "success") {
+      showBanner("success", "YouTube connected. Enable the connector and save settings.");
+    } else if (oauthError) {
+      const messages = {
+        denied: "YouTube authorization was denied.",
+        not_configured: "Set OAuth client ID and secret, save, then connect again.",
+        exchange_failed: "YouTube token exchange failed — check credentials and redirect URI.",
+      };
+      showBanner("error", messages[oauthError] || "YouTube authorization failed.");
+    }
+
+    if (oauth || oauthError) {
+      params.delete("oauth");
+      params.delete("oauth_error");
+      const query = params.toString();
+      const next = window.location.pathname + (query ? "?" + query : "");
+      window.history.replaceState({}, "", next);
+    }
   }
 
   function appendText(el, text) {
@@ -313,6 +376,8 @@
       showBanner("error", "Cannot load recent messages.");
     });
   });
+
+  handleOAuthQuery();
 
   refreshAll().catch(function () {
     showBanner("error", "Cannot reach Chat Relay — is it running?");

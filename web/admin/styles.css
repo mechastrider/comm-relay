@@ -143,6 +143,36 @@ body {
   color: var(--danger);
 }
 
+.status-pill--disabled {
+  background: rgba(154, 167, 186, 0.1);
+  color: var(--muted);
+}
+
+.status-pill--connecting {
+  background: rgba(124, 92, 255, 0.15);
+  color: var(--accent-hover);
+}
+
+.status-detail {
+  margin: 0 0 1rem;
+  color: var(--warning);
+  font-size: 0.9rem;
+}
+
+.status-list__value {
+  color: var(--text);
+}
+
+.field-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.form--section {
+  margin-top: 0.5rem;
+}
+
 .form {
   display: grid;
   gap: 1rem;
@@ -169,7 +199,8 @@ body {
 }
 
 .form__field input[type="text"],
-.form__field input[type="number"] {
+.form__field input[type="number"],
+.form__field input[type="password"] {
   width: 100%;
   min-height: 44px;
   padding: 0.55rem 0.75rem;
@@ -237,9 +268,22 @@ button:disabled {
 }
 
 .button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border);
+  text-decoration: none;
+  font: inherit;
+}
+
+a.button-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent-hover);
 }
 
 .message-list {

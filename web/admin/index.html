@@ -60,6 +60,45 @@
       </form>
     </section>
 
+    <section class="panel" aria-labelledby="youtube-heading">
+      <h2 id="youtube-heading">YouTube Live</h2>
+      <dl class="status-list">
+        <div class="status-list__row">
+          <dt>Status</dt>
+          <dd><span id="youtube-status" class="status-pill">—</span></dd>
+        </div>
+        <div class="status-list__row">
+          <dt>OAuth</dt>
+          <dd id="youtube-oauth-label" class="status-list__value">—</dd>
+        </div>
+      </dl>
+      <p id="youtube-detail" class="status-detail" hidden></p>
+
+      <div class="form form--section">
+        <div class="form__field">
+          <label class="checkbox" for="youtube-enabled">
+            <input id="youtube-enabled" name="youtube_enabled" type="checkbox">
+            <span>Enable YouTube connector</span>
+          </label>
+        </div>
+
+        <div class="form__field">
+          <label for="youtube-client-id">OAuth client ID</label>
+          <input id="youtube-client-id" name="youtube_client_id" type="text" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="form__field">
+          <label for="youtube-client-secret">OAuth client secret</label>
+          <input id="youtube-client-secret" name="youtube_client_secret" type="password" autocomplete="off">
+          <p class="field-hint">Leave blank when saving to keep the existing secret.</p>
+        </div>
+
+        <div class="form__actions">
+          <a id="youtube-connect" class="button-secondary" href="/oauth/youtube/start">Connect YouTube</a>
+        </div>
+      </div>
+    </section>
+
     <section class="panel" aria-labelledby="messages-heading">
       <div class="panel__header">
         <h2 id="messages-heading">Recent messages</h2>

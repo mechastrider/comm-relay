@@ -51,3 +51,23 @@ func (s *Store) Replace(cfg Config) error {
 
 	return nil
 }
+
+// Mutate updates settings under the store lock, then validates and persists.
+func (s *Store) Mutate(fn func(*Config) error) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	cfg := s.cfg
+	if err := fn(&cfg); err != nil {
+		return err
+	}
+	if err := cfg.Validate(); err != nil {
+		return err
+	}
+	if err := cfg.Save(s.path); err != nil {
+		return errors.Errorf("save config: %w", err)
+	}
+
+	s.cfg = cfg
+	return nil
+}

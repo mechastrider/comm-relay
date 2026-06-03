@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/connector/status"
 )
 
 type connectorState string
@@ -14,11 +15,12 @@ const (
 )
 
 type statusHandler struct {
-	store *config.Store
+	store    *config.Store
+	registry *status.Registry
 }
 
-func newStatusHandler(store *config.Store) *statusHandler {
-	return &statusHandler{store: store}
+func newStatusHandler(store *config.Store, registry *status.Registry) *statusHandler {
+	return &statusHandler{store: store, registry: registry}
 }
 
 type statusResponse struct {
@@ -34,8 +36,10 @@ type twitchStatusResponse struct {
 }
 
 type platformStatusResponse struct {
-	Enabled bool           `json:"enabled"`
-	State   connectorState `json:"state"`
+	Enabled        bool           `json:"enabled"`
+	State          connectorState `json:"state"`
+	OAuthConnected bool           `json:"oauth_connected,omitempty"`
+	Detail         string         `json:"detail,omitempty"`
 }
 
 func (h *statusHandler) handleGet(w http.ResponseWriter, r *http.Request) {
@@ -47,10 +51,7 @@ func (h *statusHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 			Channel: cfg.Twitch.Channel,
 			State:   twitchConnectorState(cfg.Twitch),
 		},
-		YouTube: platformStatusResponse{
-			Enabled: cfg.YouTube.Enabled,
-			State:   platformConnectorState(cfg.YouTube.Enabled),
-		},
+		YouTube: youtubeStatusResponse(cfg, h.registry),
 		VK: platformStatusResponse{
 			Enabled: cfg.VK.Enabled,
 			State:   platformConnectorState(cfg.VK.Enabled),
@@ -70,4 +71,31 @@ func platformConnectorState(enabled bool) connectorState {
 		return connectorStateDisabled
 	}
 	return connectorStateDisconnected
+}
+
+func youtubeStatusResponse(cfg config.Config, registry *status.Registry) platformStatusResponse {
+	resp := platformStatusResponse{
+		Enabled:        cfg.YouTube.Enabled,
+		OAuthConnected: cfg.YouTube.OAuth.Connected(),
+	}
+
+	if !cfg.YouTube.Enabled {
+		resp.State = connectorStateDisabled
+		return resp
+	}
+
+	if registry != nil {
+		snap := registry.YouTube()
+		if snap.State != "" {
+			resp.State = connectorState(snap.State)
+			resp.Detail = snap.Detail
+			return resp
+		}
+	}
+
+	resp.State = connectorStateDisconnected
+	if !cfg.YouTube.OAuth.Connected() {
+		resp.Detail = "Connect YouTube in admin (OAuth)."
+	}
+	return resp
 }

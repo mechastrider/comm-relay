@@ -31,7 +31,7 @@
 | 7 | CR-007 | done | Prototype | Add Twitch IRC connector | [CR-007-twitch-irc-connector.md](tasks/CR-007-twitch-irc-connector.md) |
 | 8 | CR-008 | done | Prototype | Wire bootstrap lifecycle and graceful shutdown | [CR-008-bootstrap-lifecycle.md](tasks/CR-008-bootstrap-lifecycle.md) |
 | 9 | CR-009 | done | Prototype | Smoke test Twitch-to-OBS prototype | [CR-009-prototype-smoke-test.md](tasks/CR-009-prototype-smoke-test.md) |
-| 10 | CR-010 | todo | Streaming MVP | Add YouTube Live connector with OAuth | [CR-010-youtube-live-connector.md](tasks/CR-010-youtube-live-connector.md) |
+| 10 | CR-010 | in_progress | Streaming MVP | Add YouTube Live connector with OAuth | [CR-010-youtube-live-connector.md](tasks/CR-010-youtube-live-connector.md) |
 | 11 | CR-011 | todo | Streaming MVP | Research and add VK Live connector | [CR-011-vk-live-connector.md](tasks/CR-011-vk-live-connector.md) |
 | 12 | CR-012 | todo | Streaming MVP | Polish OBS overlay styling | [CR-012-overlay-styling.md](tasks/CR-012-overlay-styling.md) |
 | 13 | CR-013 | todo | Product polish | Improve diagnostics and connector statuses | [CR-013-diagnostics-and-statuses.md](tasks/CR-013-diagnostics-and-statuses.md) |

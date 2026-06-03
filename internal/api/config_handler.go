@@ -19,7 +19,7 @@ func newConfigHandler(store *config.Store) *configHandler {
 }
 
 func (h *configHandler) handleGet(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, h.store.Snapshot())
+	writeJSON(w, http.StatusOK, h.store.Snapshot().Public())
 }
 
 func (h *configHandler) handlePatch(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +38,9 @@ func (h *configHandler) handlePatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	prev := h.store.Snapshot()
+	incoming.MergeYouTubeOAuthFrom(prev)
+
 	if err := h.store.Replace(incoming); err != nil {
 		if errors.Is(err, config.ErrInvalidConfig) {
 			writeError(w, http.StatusBadRequest, err.Error())
@@ -48,5 +51,5 @@ func (h *configHandler) handlePatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, h.store.Snapshot())
+	writeJSON(w, http.StatusOK, h.store.Snapshot().Public())
 }

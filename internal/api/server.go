@@ -6,15 +6,17 @@ import (
 	"path/filepath"
 
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/muonsoft/errors"
 )
 
 // Options configures the HTTP handler.
 type Options struct {
-	WebRoot string
-	Hub     *Hub
-	Store   *config.Store
-	History *MessageHistory
+	WebRoot  string
+	Hub      *Hub
+	Store    *config.Store
+	History  *MessageHistory
+	Registry *status.Registry
 }
 
 // NewHandler returns the root HTTP handler for Chat Relay.
@@ -44,9 +46,16 @@ func NewHandler(opts Options) (http.Handler, error) {
 		return nil, errors.New("message history is required")
 	}
 
+	registry := opts.Registry
+	if registry == nil {
+		registry = status.NewRegistry()
+	}
+
 	configHandler := newConfigHandler(opts.Store)
-	statusHandler := newStatusHandler(opts.Store)
+	statusHandler := newStatusHandler(opts.Store, registry)
 	messagesHandler := newMessagesHandler(opts.History)
+	oauthState := newOAuthStateStore()
+	youtubeOAuth := newYouTubeOAuthHandler(opts.Store, oauthState)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", handleHealth)
@@ -54,6 +63,8 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /api/config", configHandler.handleGet)
 	mux.HandleFunc("PATCH /api/config", configHandler.handlePatch)
 	mux.HandleFunc("GET /api/status", statusHandler.handleGet)
+	mux.HandleFunc("GET /oauth/youtube/start", youtubeOAuth.handleStart)
+	mux.HandleFunc("GET /oauth/youtube/callback", youtubeOAuth.handleCallback)
 	mux.HandleFunc("GET /api/messages/recent", messagesHandler.handleRecent)
 	mux.Handle("GET /overlay/", http.StripPrefix("/overlay/", http.FileServer(http.Dir(overlayDir))))
 	mux.HandleFunc("GET /overlay", func(w http.ResponseWriter, r *http.Request) {

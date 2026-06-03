@@ -6,12 +6,15 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/api"
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/connector/status"
 	twitchconnector "github.com/mechastrider/comm-relay/internal/connector/twitch"
+	youtubeconnector "github.com/mechastrider/comm-relay/internal/connector/youtube"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 	"github.com/pior/runnable"
@@ -60,12 +63,14 @@ func Run(opts Options) error {
 	}
 
 	history := api.NewMessageHistory(0)
+	statusRegistry := status.NewRegistry()
 
 	handler, err := api.NewHandler(api.Options{
-		WebRoot: webRoot,
-		Hub:     hub,
-		Store:   store,
-		History: history,
+		WebRoot:  webRoot,
+		Hub:      hub,
+		Store:    store,
+		History:  history,
+		Registry: statusRegistry,
 	})
 	if err != nil {
 		return errors.Errorf("create handler: %w", err)
@@ -105,6 +110,14 @@ func Run(opts Options) error {
 		return nil
 	}).Name("twitch"))
 
+	youtubeConn := youtubeconnector.New(eventBus, store, statusRegistry)
+	processes = append(processes, runnable.Func(func(ctx context.Context) error {
+		if err := youtubeConn.Run(ctx); err != nil {
+			clog.Errorf(ctx, "youtube connector stopped with error: %w", err)
+		}
+		return nil
+	}).Name("youtube"))
+
 	mgr.Register(processes...)
 	runnable.Run(mgr)
 
@@ -126,9 +139,9 @@ func logStartup(ctx context.Context, addr, configPath, webRoot string, cfg *conf
 }
 
 func enabledConnectors(cfg *config.Config) string {
-	// Twitch runnable is always registered; it watches the config store for enable/channel changes.
+	// Runnables are always registered; connectors watch the config store for changes.
 	_ = cfg
-	return "twitch"
+	return strings.Join([]string{"twitch", "youtube"}, ", ")
 }
 
 func setupLogging(debug bool) {
