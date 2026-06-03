@@ -11,6 +11,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/api"
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
+	twitchconnector "github.com/mechastrider/comm-relay/internal/connector/twitch"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 	"github.com/pior/runnable"
@@ -82,6 +83,23 @@ func Run(opts Options) error {
 		history.Run(hubCtx, eventBus)
 	}()
 
+	twitchDone := make(chan struct{})
+	if cfg.Twitch.Enabled {
+		twitchConn := twitchconnector.New(eventBus, cfg.Twitch)
+		twitchCtx := clog.NewContext(hubCtx, slog.Default().With(
+			slog.String("platform", "twitch"),
+			slog.String("channel", cfg.Twitch.Channel),
+		))
+		go func() {
+			defer close(twitchDone)
+			if err := twitchConn.Run(twitchCtx); err != nil {
+				clog.Errorf(twitchCtx, "twitch connector stopped with error: %w", err)
+			}
+		}()
+	} else {
+		close(twitchDone)
+	}
+
 	srv := &http.Server{
 		Addr:              addr,
 		Handler:           handler,
@@ -101,6 +119,7 @@ func Run(opts Options) error {
 	)
 
 	hubCancel()
+	<-twitchDone
 	eventBus.Close()
 	<-hubDone
 	<-historyDone

@@ -28,7 +28,7 @@
 | 4 | CR-004 | done | Prototype | Add WebSocket hub and `/ws` endpoint | [CR-004-websocket-hub.md](tasks/CR-004-websocket-hub.md) |
 | 5 | CR-005 | done | Prototype | Add basic OBS overlay | [CR-005-basic-obs-overlay.md](tasks/CR-005-basic-obs-overlay.md) |
 | 6 | CR-006 | done | Prototype | Add basic admin UI | [CR-006-basic-admin-ui.md](tasks/CR-006-basic-admin-ui.md) |
-| 7 | CR-007 | todo | Prototype | Add Twitch IRC connector | [CR-007-twitch-irc-connector.md](tasks/CR-007-twitch-irc-connector.md) |
+| 7 | CR-007 | done | Prototype | Add Twitch IRC connector | [CR-007-twitch-irc-connector.md](tasks/CR-007-twitch-irc-connector.md) |
 | 8 | CR-008 | todo | Prototype | Wire bootstrap lifecycle and graceful shutdown | [CR-008-bootstrap-lifecycle.md](tasks/CR-008-bootstrap-lifecycle.md) |
 | 9 | CR-009 | todo | Prototype | Smoke test Twitch-to-OBS prototype | [CR-009-prototype-smoke-test.md](tasks/CR-009-prototype-smoke-test.md) |
 | 10 | CR-010 | todo | Streaming MVP | Add YouTube Live connector with OAuth | [CR-010-youtube-live-connector.md](tasks/CR-010-youtube-live-connector.md) |
@@ -39,6 +39,7 @@
 
 ## Current Notes
 
+- CR-007: Twitch IRC connector uses anonymous read-only IRC; `/api/status` still reports `disconnected` until CR-013 adds live connector state.
 - Первый прототип ограничивается Twitch, чтобы быстро проверить сервер, WebSocket и OBS overlay на реальном стриме.
 - Стримовый MVP включает Twitch, YouTube Live и VK Live / VK Video.
 - Админка, overlay и WebSocket живут на одном локальном сервере: `/`, `/overlay`, `/ws`.
