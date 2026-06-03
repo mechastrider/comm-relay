@@ -10,7 +10,8 @@ import (
 func TestHub_broadcast_WhenClientBufferFull_ExpectOtherClientStillReceives(t *testing.T) {
 	t.Parallel()
 
-	h := newHub(bus.New(0))
+	h, err := NewHub(bus.New(0))
+	require.NoError(t, err)
 
 	slow := &wsClient{hub: h, send: make(chan []byte, 1)}
 	fast := &wsClient{hub: h, send: make(chan []byte, ClientSendBuffer)}

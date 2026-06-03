@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -13,8 +14,15 @@ import (
 func TestNewHandlerRoutes(t *testing.T) {
 	t.Parallel()
 
+	hub, err := NewHub(bus.New(0))
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	go hub.Run(ctx)
+
 	webRoot := filepath.Join("..", "..", "web")
-	handler, err := NewHandler(Options{WebRoot: webRoot, Bus: bus.New(0)})
+	handler, err := NewHandler(Options{WebRoot: webRoot, Hub: hub})
 	require.NoError(t, err)
 
 	t.Run("health", func(t *testing.T) {

@@ -16,6 +16,7 @@ const (
 )
 
 type wsClient struct {
+	ctx  context.Context
 	hub  *Hub
 	conn *websocket.Conn
 	send chan []byte
@@ -36,7 +37,7 @@ func (c *wsClient) readPump() {
 	for {
 		if _, _, err := c.conn.ReadMessage(); err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				clog.Debug(context.Background(), "websocket read closed", slog.Any("error", err))
+				clog.Debug(c.ctx, "websocket read closed", slog.Any("error", err))
 			}
 			return
 		}

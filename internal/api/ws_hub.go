@@ -6,6 +6,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/muonsoft/clog"
+	"github.com/muonsoft/errors"
 )
 
 // ClientSendBuffer is the per-client outbound queue capacity before messages are dropped.
@@ -16,24 +17,28 @@ type Hub struct {
 	mu      sync.Mutex
 	clients map[*wsClient]struct{}
 	bus     *bus.Bus
-	stop    chan struct{}
 }
 
-func newHub(b *bus.Bus) *Hub {
+// NewHub creates a WebSocket hub bound to the shared event bus.
+func NewHub(b *bus.Bus) (*Hub, error) {
+	if b == nil {
+		return nil, errors.New("event bus is required")
+	}
+
 	return &Hub{
 		clients: make(map[*wsClient]struct{}),
 		bus:     b,
-		stop:    make(chan struct{}),
-	}
+	}, nil
 }
 
-func (h *Hub) Run() {
+// Run consumes bus events and broadcasts them to connected clients until context cancellation.
+func (h *Hub) Run(ctx context.Context) {
 	events, unsub := h.bus.Subscribe()
 	defer unsub()
 
 	for {
 		select {
-		case <-h.stop:
+		case <-ctx.Done():
 			return
 		case ev, ok := <-events:
 			if !ok {
@@ -45,20 +50,12 @@ func (h *Hub) Run() {
 
 			payload, err := chatMessageWirePayload(ev.Message)
 			if err != nil {
-				clog.Errorf(context.Background(), "chat wire payload: %w", err)
+				clog.Errorf(ctx, "chat wire payload: %w", err)
 				continue
 			}
 
 			h.broadcast(payload)
 		}
-	}
-}
-
-func (h *Hub) Stop() {
-	select {
-	case <-h.stop:
-	default:
-		close(h.stop)
 	}
 }
 

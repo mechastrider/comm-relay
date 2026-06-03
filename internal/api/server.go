@@ -5,13 +5,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/muonsoft/errors"
 )
 
 // Options configures the HTTP handler.
 type Options struct {
 	WebRoot string
-	Bus     *bus.Bus
+	Hub     *Hub
 }
 
 // NewHandler returns the root HTTP handler for Chat Relay.
@@ -31,16 +31,13 @@ func NewHandler(opts Options) (http.Handler, error) {
 		return nil, err
 	}
 
-	if opts.Bus == nil {
-		opts.Bus = bus.New(0)
+	if opts.Hub == nil {
+		return nil, errors.New("websocket hub is required")
 	}
-
-	hub := newHub(opts.Bus)
-	go hub.Run()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", handleHealth)
-	mux.HandleFunc("GET /ws", hub.serveWS)
+	mux.HandleFunc("GET /ws", opts.Hub.serveWS)
 	mux.Handle("GET /overlay/", http.StripPrefix("/overlay/", http.FileServer(http.Dir(overlayDir))))
 	mux.HandleFunc("GET /overlay", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(overlayDir, "index.html"))

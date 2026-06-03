@@ -25,6 +25,7 @@ func (h *Hub) serveWS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &wsClient{
+		ctx:  r.Context(),
 		hub:  h,
 		conn: conn,
 		send: make(chan []byte, ClientSendBuffer),
