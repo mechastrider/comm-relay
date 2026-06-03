@@ -92,3 +92,37 @@ Before reporting a task as done:
 - `golangci-lint run ./...` when `.golangci.yml` exists.
 - If static UI changed: smoke-check overlay (transparent background, message limit) and admin forms.
 - State clearly if a check could not be run and why.
+
+## Cursor Cloud specific instructions
+
+Chat Relay is a **single Go binary** — no Docker, Node, or database. The VM needs **Go 1.26.3+** (see `go.mod`).
+
+### Dependencies and checks
+
+Standard commands from the repo root (documented in **Completion Checklist** above):
+
+- Refresh modules: `go mod download`
+- Tests: `go test ./...` (use `-race` when changing concurrency)
+- Build: `go build -o chat-relay ./cmd/chat-relay` or `go build ./...`
+- **golangci-lint**: not configured yet (no `.golangci.yml`); skip until added
+
+### Running the server
+
+- Default listen address: `127.0.0.1:17877` (`server_port` in `config.json`, created on first run).
+- Dev run: `go run ./cmd/chat-relay` from repo root (uses `./web` and `./config.json`).
+- Overrides: `-addr` (listen), `-config`, `-web`, `-debug` — see `cmd/chat-relay/main.go`.
+- For a long-lived background process in Cloud Agent VMs, use **tmux** (see system shell instructions), e.g. session `chat-relay-dev` with `go run ./cmd/chat-relay` or a built binary.
+
+### Smoke / hello world (current scaffold)
+
+With the server running:
+
+1. `curl -s http://127.0.0.1:17877/health` → `{"status":"ok"}`
+2. Browser: `/` (admin placeholder), `/overlay` (transparent background for OBS)
+
+WebSocket (`/ws`) and Twitch ingest are **not implemented yet**; full chat E2E requires those tasks (see `docs/task-tracker.md`).
+
+### Gotchas
+
+- Do not commit local `config.json` unless intentionally changing defaults for the repo.
+- If port 17877 is in use, stop the other process or pass `-addr 127.0.0.1:<port>`.
