@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/api"
@@ -25,9 +26,10 @@ type Options struct {
 	Debug      bool
 }
 
-// Run starts the HTTP server and blocks until shutdown.
+// Run wires config, event bus, WebSocket hub, HTTP API, and connectors, then blocks until shutdown.
 func Run(opts Options) error {
 	setupLogging(opts.Debug)
+	runnable.SetLogger(slog.Default())
 
 	ctx := context.Background()
 
@@ -70,62 +72,71 @@ func Run(opts Options) error {
 		return errors.Errorf("create handler: %w", err)
 	}
 
-	hubCtx, hubCancel := context.WithCancel(ctx)
-	hubDone := make(chan struct{})
-	go func() {
-		defer close(hubDone)
-		hub.Run(hubCtx)
-	}()
-
-	historyDone := make(chan struct{})
-	go func() {
-		defer close(historyDone)
-		history.Run(hubCtx, eventBus)
-	}()
-
-	twitchDone := make(chan struct{})
-	if cfg.Twitch.Enabled {
-		twitchConn := twitchconnector.New(eventBus, cfg.Twitch)
-		twitchCtx := clog.NewContext(hubCtx, slog.Default().With(
-			slog.String("platform", "twitch"),
-			slog.String("channel", cfg.Twitch.Channel),
-		))
-		go func() {
-			defer close(twitchDone)
-			if err := twitchConn.Run(twitchCtx); err != nil {
-				clog.Errorf(twitchCtx, "twitch connector stopped with error: %w", err)
-			}
-		}()
-	} else {
-		close(twitchDone)
-	}
-
 	srv := &http.Server{
 		Addr:              addr,
 		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	clog.Info(ctx, "starting chat relay",
-		slog.String("addr", addr),
-		slog.String("config_path", opts.ConfigPath),
-		slog.String("web_root", webRoot),
+	logStartup(ctx, addr, opts.ConfigPath, webRoot, cfg)
+
+	mgr := runnable.Manager().ShutdownTimeout(10 * time.Second)
+	mgr.RegisterService(
+		runnable.Func(func(ctx context.Context) error {
+			hub.Run(ctx)
+			return nil
+		}).Name("websocket-hub"),
+		runnable.Func(func(ctx context.Context) error {
+			history.Run(ctx, eventBus)
+			return nil
+		}).Name("message-history"),
 	)
 
-	runnable.Run(
+	processes := []runnable.Runnable{
 		runnable.HTTPServer(srv).
 			ShutdownTimeout(10 * time.Second).
 			Name("http"),
-	)
+	}
 
-	hubCancel()
-	<-twitchDone
+	if cfg.Twitch.Enabled {
+		twitchConn := twitchconnector.New(eventBus, cfg.Twitch)
+		processes = append(processes, runnable.Func(func(ctx context.Context) error {
+			if err := twitchConn.Run(ctx); err != nil {
+				clog.Errorf(ctx, "twitch connector stopped with error: %w", err)
+			}
+			return nil
+		}).Name("twitch"))
+	}
+
+	mgr.Register(processes...)
+	runnable.Run(mgr)
+
 	eventBus.Close()
-	<-hubDone
-	<-historyDone
 
 	clog.Info(ctx, "chat relay stopped")
 	return nil
+}
+
+func logStartup(ctx context.Context, addr, configPath, webRoot string, cfg *config.Config) {
+	connectors := enabledConnectors(cfg)
+
+	clog.Info(ctx, "starting chat relay",
+		slog.String("addr", addr),
+		slog.String("config_path", configPath),
+		slog.String("web_root", webRoot),
+		slog.String("connectors", connectors),
+	)
+}
+
+func enabledConnectors(cfg *config.Config) string {
+	var names []string
+	if cfg.Twitch.Enabled {
+		names = append(names, "twitch")
+	}
+	if len(names) == 0 {
+		return "none"
+	}
+	return strings.Join(names, ", ")
 }
 
 func setupLogging(debug bool) {
