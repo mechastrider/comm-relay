@@ -1,6 +1,6 @@
 # CR-008: Bootstrap Lifecycle
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -44,3 +44,9 @@ Status: `todo`
 
 - Если используется `pior/runnable`, следовать skill `runnable-background-processes`.
 - Keep wiring explicit.
+
+## Completion
+
+- `internal/bootstrap/run.go` uses `runnable.Manager`: HTTP + Twitch as processes; WebSocket hub and message history as services; SIGINT/SIGTERM via `runnable.Run`.
+- Startup log includes listen `addr` and enabled `connectors` (e.g. `twitch` or `none`).
+- Event bus closes after manager shutdown.
