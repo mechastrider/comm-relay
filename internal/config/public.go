@@ -7,6 +7,7 @@ type PublicConfig struct {
 	YouTube    YouTubeConfigPublic `json:"youtube"`
 	VK         PlatformFlags       `json:"vk"`
 	Overlay    OverlayConfig       `json:"overlay"`
+	Admin      AdminConfig         `json:"admin"`
 }
 
 // Public returns admin-safe settings (tokens and client secret omitted).
@@ -17,5 +18,6 @@ func (c Config) Public() PublicConfig {
 		YouTube:    c.YouTube.public(),
 		VK:         c.VK,
 		Overlay:    c.Overlay,
+		Admin:      c.Admin,
 	}
 }

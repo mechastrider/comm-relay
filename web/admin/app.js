@@ -19,22 +19,43 @@
   const recentMessages = document.getElementById("recent-messages");
   const recentMessagesEmpty = document.getElementById("recent-messages-empty");
   const refreshMessages = document.getElementById("refresh-messages");
+  const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
+  const messageSoundVolumeInput = document.getElementById("message-sound-volume");
+  const messageSoundVolumeLabel = document.getElementById("message-sound-volume-label");
+  const messageSoundTypeInput = document.getElementById("message-sound-type");
+  const testMessageSound = document.getElementById("test-message-sound");
+
+  const MESSAGE_SOUND_TYPES = ["chime", "ping", "soft", "alert"];
+  const RECENT_MESSAGE_LIMIT = 20;
+  const INITIAL_WS_RECONNECT_MS = 1000;
+  const MAX_WS_RECONNECT_MS = 30000;
 
   const fieldErrors = {
     twitch_channel: document.getElementById("twitch-channel-error"),
     overlay_max_messages: document.getElementById("overlay-max-messages-error"),
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
+    admin_message_sound_volume: document.getElementById("message-sound-volume-error"),
+    admin_message_sound_sound: document.getElementById("message-sound-type-error"),
   };
 
   const fieldInputs = {
     twitch_channel: twitchChannel,
     overlay_max_messages: overlayMaxMessages,
     overlay_message_ttl_seconds: overlayMessageTTL,
+    admin_message_sound_volume: messageSoundVolumeInput,
+    admin_message_sound_sound: messageSoundTypeInput,
   };
 
   let currentConfig = null;
   let statusTimer = null;
   let messagesTimer = null;
+  let soundReady = false;
+  let knownMessageKeys = new Set();
+  let wsSocket = null;
+  let wsShouldRun = true;
+  let wsReconnectDelayMs = INITIAL_WS_RECONNECT_MS;
+  let wsReconnectTimer = null;
+  let audioCtx = null;
 
   function apiURL(path) {
     return window.location.origin + path;
@@ -117,6 +138,50 @@
       youtubeClientId.value = oauth.client_id || "";
       youtubeClientSecret.value = "";
     }
+
+    applyMessageSoundFromConfig(config);
+  }
+
+  function normalizeMessageSoundType(raw) {
+    if (typeof raw === "string" && MESSAGE_SOUND_TYPES.indexOf(raw) !== -1) {
+      return raw;
+    }
+    return "chime";
+  }
+
+  function clampVolumePercent(value) {
+    if (!Number.isFinite(value)) {
+      return 50;
+    }
+    return Math.min(100, Math.max(0, Math.round(value)));
+  }
+
+  function applyMessageSoundFromConfig(config) {
+    const ms =
+      config && config.admin && config.admin.message_sound
+        ? config.admin.message_sound
+        : {};
+
+    messageSoundEnabledInput.checked = Boolean(ms.enabled);
+
+    const volumePercent = clampVolumePercent(
+      typeof ms.volume === "number" ? ms.volume * 100 : 50
+    );
+    messageSoundVolumeInput.value = String(volumePercent);
+    messageSoundVolumeLabel.textContent = String(volumePercent) + "%";
+
+    messageSoundTypeInput.value = normalizeMessageSoundType(ms.sound);
+  }
+
+  function getMessageSoundSettings() {
+    const volumePercent = clampVolumePercent(
+      Number.parseInt(messageSoundVolumeInput.value, 10)
+    );
+    return {
+      enabled: messageSoundEnabledInput.checked,
+      volume: volumePercent / 100,
+      sound: normalizeMessageSoundType(messageSoundTypeInput.value),
+    };
   }
 
   function buildPayload() {
@@ -137,6 +202,9 @@
       overlay: {
         max_messages: Number.parseInt(overlayMaxMessages.value, 10),
         message_ttl_seconds: Number.parseInt(overlayMessageTTL.value, 10),
+      },
+      admin: {
+        message_sound: getMessageSoundSettings(),
       },
     };
   }
@@ -170,6 +238,16 @@
     ) {
       setFieldError("overlay_message_ttl_seconds", "TTL must be 0 or greater.");
       firstInvalid = firstInvalid || overlayMessageTTL;
+    }
+
+    const sound = payload.admin && payload.admin.message_sound;
+    if (!sound || sound.volume < 0 || sound.volume > 1) {
+      setFieldError("admin_message_sound_volume", "Volume must be between 0% and 100%.");
+      firstInvalid = firstInvalid || messageSoundVolumeInput;
+    }
+    if (!sound || MESSAGE_SOUND_TYPES.indexOf(sound.sound) === -1) {
+      setFieldError("admin_message_sound_sound", "Choose a sound type.");
+      firstInvalid = firstInvalid || messageSoundTypeInput;
     }
 
     if (firstInvalid) {
@@ -236,6 +314,185 @@
     el.appendChild(document.createTextNode(text));
   }
 
+  function messageDisplayName(msg) {
+    if (typeof msg.display_name === "string" && msg.display_name !== "") {
+      return msg.display_name;
+    }
+    if (typeof msg.username === "string" && msg.username !== "") {
+      return msg.username;
+    }
+    return "?";
+  }
+
+  function messageKey(msg) {
+    return [
+      typeof msg.platform === "string" ? msg.platform : "",
+      messageDisplayName(msg),
+      typeof msg.message === "string" ? msg.message : "",
+      typeof msg.timestamp === "string" ? msg.timestamp : "",
+    ].join("\0");
+  }
+
+  function hasNewMessages(messages) {
+    if (!messages || messages.length === 0) {
+      return false;
+    }
+    return messages.some(function (msg) {
+      return !knownMessageKeys.has(messageKey(msg));
+    });
+  }
+
+  function trackMessages(messages) {
+    if (!messages) {
+      return;
+    }
+    messages.forEach(function (msg) {
+      knownMessageKeys.add(messageKey(msg));
+    });
+  }
+
+  function wireToAdminMessage(wire) {
+    const user = typeof wire.user === "string" ? wire.user : "";
+    const displayName =
+      typeof wire.display_name === "string" && wire.display_name !== ""
+        ? wire.display_name
+        : user;
+
+    return {
+      platform: typeof wire.platform === "string" ? wire.platform : "",
+      username: user,
+      display_name: displayName,
+      message: typeof wire.message === "string" ? wire.message : "",
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  function ensureAudioContext() {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) {
+        return Promise.reject(new Error("Web Audio not supported"));
+      }
+      audioCtx = new Ctx();
+    }
+    if (audioCtx.state === "suspended") {
+      return audioCtx.resume();
+    }
+    return Promise.resolve();
+  }
+
+  function playTone(ctx, start, options) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const peak = options.peak;
+    const duration = options.duration;
+    osc.type = options.wave || "sine";
+    osc.frequency.setValueAtTime(options.freq, start);
+    if (options.freqEnd) {
+      osc.frequency.exponentialRampToValueAtTime(options.freqEnd, start + duration);
+    }
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(peak, start + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + duration + 0.02);
+  }
+
+  function scheduleMessageSound(ctx, soundType, volume, start) {
+    const peak = Math.max(0.0001, volume * 0.18);
+
+    if (soundType === "ping") {
+      playTone(ctx, start, { freq: 1200, duration: 0.1, peak: peak });
+      return;
+    }
+
+    if (soundType === "soft") {
+      playTone(ctx, start, { freq: 440, duration: 0.16, peak: peak * 0.7, wave: "triangle" });
+      return;
+    }
+
+    if (soundType === "alert") {
+      playTone(ctx, start, { freq: 880, duration: 0.08, peak: peak });
+      playTone(ctx, start + 0.1, { freq: 880, duration: 0.08, peak: peak });
+      return;
+    }
+
+    playTone(ctx, start, {
+      freq: 880,
+      freqEnd: 660,
+      duration: 0.14,
+      peak: peak,
+    });
+  }
+
+  function playMessageSound(force) {
+    const settings = getMessageSoundSettings();
+    if (!force && !settings.enabled) {
+      return;
+    }
+    if (settings.volume <= 0) {
+      return;
+    }
+
+    ensureAudioContext()
+      .then(function () {
+        scheduleMessageSound(audioCtx, settings.sound, settings.volume, audioCtx.currentTime);
+      })
+      .catch(function () {
+        /* autoplay policy or missing Web Audio */
+      });
+  }
+
+  function maybePlayMessageSound(messages) {
+    if (!soundReady || !getMessageSoundSettings().enabled || !hasNewMessages(messages)) {
+      return;
+    }
+    playMessageSound();
+  }
+
+  function buildMessageListItem(msg) {
+    const item = document.createElement("li");
+    item.className = "message-list__item";
+
+    const meta = document.createElement("div");
+    meta.className = "message-list__meta";
+
+    const user = document.createElement("span");
+    user.className = "message-list__user";
+    appendText(user, messageDisplayName(msg));
+
+    const platform = document.createElement("span");
+    appendText(platform, typeof msg.platform === "string" ? msg.platform : "");
+
+    const time = document.createElement("time");
+    if (typeof msg.timestamp === "string") {
+      time.dateTime = msg.timestamp;
+      appendText(time, new Date(msg.timestamp).toLocaleTimeString());
+    }
+
+    meta.appendChild(user);
+    meta.appendChild(platform);
+    meta.appendChild(time);
+
+    const text = document.createElement("p");
+    text.className = "message-list__text";
+    appendText(text, typeof msg.message === "string" ? msg.message : "");
+
+    item.appendChild(meta);
+    item.appendChild(text);
+    return item;
+  }
+
+  function appendRecentMessage(msg) {
+    recentMessagesEmpty.hidden = true;
+    recentMessages.appendChild(buildMessageListItem(msg));
+    while (recentMessages.children.length > RECENT_MESSAGE_LIMIT) {
+      recentMessages.removeChild(recentMessages.firstChild);
+    }
+  }
+
   function renderRecentMessages(messages) {
     recentMessages.textContent = "";
 
@@ -247,42 +504,125 @@
     recentMessagesEmpty.hidden = true;
 
     messages.forEach(function (msg) {
-      const item = document.createElement("li");
-      item.className = "message-list__item";
+      recentMessages.appendChild(buildMessageListItem(msg));
+    });
+  }
 
-      const meta = document.createElement("div");
-      meta.className = "message-list__meta";
+  function wsURL() {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return protocol + "//" + window.location.host + "/ws";
+  }
 
-      const user = document.createElement("span");
-      user.className = "message-list__user";
-      const displayName =
-        typeof msg.display_name === "string" && msg.display_name !== ""
-          ? msg.display_name
-          : typeof msg.username === "string"
-            ? msg.username
-            : "?";
-      appendText(user, displayName);
+  function clearWSReconnectTimer() {
+    if (wsReconnectTimer !== null) {
+      window.clearTimeout(wsReconnectTimer);
+      wsReconnectTimer = null;
+    }
+  }
 
-      const platform = document.createElement("span");
-      appendText(platform, typeof msg.platform === "string" ? msg.platform : "");
+  function scheduleWSReconnect() {
+    if (!wsShouldRun || wsReconnectTimer !== null) {
+      return;
+    }
+    wsReconnectTimer = window.setTimeout(function () {
+      wsReconnectTimer = null;
+      connectMessageWebSocket();
+    }, wsReconnectDelayMs);
+    wsReconnectDelayMs = Math.min(wsReconnectDelayMs * 2, MAX_WS_RECONNECT_MS);
+  }
 
-      const time = document.createElement("time");
-      if (typeof msg.timestamp === "string") {
-        time.dateTime = msg.timestamp;
-        appendText(time, new Date(msg.timestamp).toLocaleTimeString());
+  function handleWireMessage(wire) {
+    if (!wire || wire.type !== "message") {
+      return;
+    }
+
+    const msg = wireToAdminMessage(wire);
+    const key = messageKey(msg);
+    if (knownMessageKeys.has(key)) {
+      return;
+    }
+    knownMessageKeys.add(key);
+    appendRecentMessage(msg);
+
+    if (soundReady && getMessageSoundSettings().enabled) {
+      playMessageSound();
+    }
+  }
+
+  function connectMessageWebSocket() {
+    if (!wsShouldRun || wsSocket) {
+      return;
+    }
+
+    let socket;
+    try {
+      socket = new WebSocket(wsURL());
+    } catch {
+      scheduleWSReconnect();
+      return;
+    }
+
+    wsSocket = socket;
+
+    socket.addEventListener("open", function () {
+      wsReconnectDelayMs = INITIAL_WS_RECONNECT_MS;
+    });
+
+    socket.addEventListener("message", function (event) {
+      let wire = null;
+      try {
+        wire = JSON.parse(event.data);
+      } catch {
+        return;
       }
+      handleWireMessage(wire);
+    });
 
-      meta.appendChild(user);
-      meta.appendChild(platform);
-      meta.appendChild(time);
+    socket.addEventListener("close", function () {
+      if (wsSocket === socket) {
+        wsSocket = null;
+      }
+      scheduleWSReconnect();
+    });
 
-      const text = document.createElement("p");
-      text.className = "message-list__text";
-      appendText(text, typeof msg.message === "string" ? msg.message : "");
+    socket.addEventListener("error", function () {
+      socket.close();
+    });
+  }
 
-      item.appendChild(meta);
-      item.appendChild(text);
-      recentMessages.appendChild(item);
+  function disconnectMessageWebSocket() {
+    wsShouldRun = false;
+    clearWSReconnectTimer();
+    if (wsSocket) {
+      wsSocket.close();
+      wsSocket = null;
+    }
+  }
+
+  function initMessageSoundControls() {
+    messageSoundEnabledInput.addEventListener("change", function () {
+      if (messageSoundEnabledInput.checked) {
+        ensureAudioContext().catch(function () {
+          /* user must use Test sound if blocked */
+        });
+      }
+    });
+
+    messageSoundVolumeInput.addEventListener("input", function () {
+      const volumePercent = clampVolumePercent(
+        Number.parseInt(messageSoundVolumeInput.value, 10)
+      );
+      messageSoundVolumeLabel.textContent = String(volumePercent) + "%";
+    });
+
+    testMessageSound.addEventListener("click", function () {
+      ensureAudioContext()
+        .then(function () {
+          playMessageSound(true);
+        })
+        .catch(function () {
+          showBanner("error", "Sound is not available in this browser.");
+        });
     });
   }
 
@@ -304,13 +644,22 @@
     renderStatus(payload);
   }
 
-  async function loadRecentMessages() {
-    const response = await fetch(apiURL("/api/messages/recent?limit=20"));
+  async function loadRecentMessages(options) {
+    const playSound = options && options.playSound;
+    const response = await fetch(
+      apiURL("/api/messages/recent?limit=" + String(RECENT_MESSAGE_LIMIT))
+    );
     const payload = await readJSON(response);
     if (!response.ok) {
       throw new Error(mapHTTPError(response.status, payload && payload.error));
     }
-    renderRecentMessages((payload && payload.messages) || []);
+    const messages = (payload && payload.messages) || [];
+    if (playSound) {
+      maybePlayMessageSound(messages);
+    }
+    trackMessages(messages);
+    renderRecentMessages(messages);
+    soundReady = true;
   }
 
   async function refreshAll() {
@@ -378,10 +727,13 @@
   });
 
   handleOAuthQuery();
+  initMessageSoundControls();
 
   refreshAll().catch(function () {
     showBanner("error", "Cannot reach Chat Relay — is it running?");
   });
+
+  connectMessageWebSocket();
 
   statusTimer = window.setInterval(function () {
     loadStatus().catch(function () {
@@ -390,12 +742,13 @@
   }, 5000);
 
   messagesTimer = window.setInterval(function () {
-    loadRecentMessages().catch(function () {
+    loadRecentMessages({ playSound: true }).catch(function () {
       /* keep last known messages */
     });
   }, 5000);
 
   window.addEventListener("beforeunload", function () {
+    disconnectMessageWebSocket();
     window.clearInterval(statusTimer);
     window.clearInterval(messagesTimer);
   });
