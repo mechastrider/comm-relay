@@ -1,6 +1,6 @@
 # CR-012: Overlay Styling
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -50,3 +50,9 @@ Status: `todo`
 
 - Не добавлять видимый help text в overlay.
 - Приоритет: читаемость, стабильная верстка, минимум лишнего визуального шума.
+
+## Completion Note
+
+- Added `overlay.font_size_px` (12–32) and `overlay.display_mode` (`normal` | `compact`) to config and admin Display panel.
+- Overlay CSS: platform accent border/username colors, CSS variables, compact spacing, fade-in/out.
+- Query params `font_size_px` and `display_mode` override saved config when present (same as max_messages / TTL).

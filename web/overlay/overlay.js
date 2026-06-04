@@ -3,8 +3,12 @@
 
   const DEFAULT_MAX_MESSAGES = 30;
   const DEFAULT_MESSAGE_TTL_SECONDS = 20;
+  const DEFAULT_FONT_SIZE_PX = 18;
+  const DEFAULT_DISPLAY_MODE = "normal";
+  const DISPLAY_MODES = new Set(["normal", "compact"]);
   const INITIAL_RECONNECT_MS = 1000;
   const MAX_RECONNECT_MS = 30000;
+  const LEAVE_ANIMATION_MS = 220;
 
   const params = new URLSearchParams(window.location.search);
 
@@ -32,12 +36,38 @@
     return value;
   }
 
+  function readFontSizePx(fallback) {
+    const raw = params.get("font_size_px");
+    if (raw === null || raw === "") {
+      return fallback;
+    }
+    const value = Number.parseInt(raw, 10);
+    if (!Number.isFinite(value) || value < 12 || value > 32) {
+      return fallback;
+    }
+    return value;
+  }
+
+  function readDisplayMode(fallback) {
+    const raw = params.get("display_mode");
+    if (raw === null || raw === "") {
+      return fallback;
+    }
+    const mode = raw.trim().toLowerCase();
+    if (!DISPLAY_MODES.has(mode)) {
+      return fallback;
+    }
+    return mode;
+  }
+
   let config = {
     maxMessages: readPositiveInt("max_messages", DEFAULT_MAX_MESSAGES),
     messageTTLSeconds: readNonNegativeInt(
       "message_ttl_seconds",
       DEFAULT_MESSAGE_TTL_SECONDS
     ),
+    fontSizePx: readFontSizePx(DEFAULT_FONT_SIZE_PX),
+    displayMode: readDisplayMode(DEFAULT_DISPLAY_MODE),
   };
 
   function applyServerOverlayConfig(serverOverlay) {
@@ -58,6 +88,31 @@
     ) {
       config.messageTTLSeconds = serverOverlay.message_ttl_seconds;
     }
+    if (
+      !params.has("font_size_px") &&
+      typeof serverOverlay.font_size_px === "number" &&
+      serverOverlay.font_size_px >= 12 &&
+      serverOverlay.font_size_px <= 32
+    ) {
+      config.fontSizePx = serverOverlay.font_size_px;
+    }
+    if (!params.has("display_mode") && typeof serverOverlay.display_mode === "string") {
+      const mode = serverOverlay.display_mode.trim().toLowerCase();
+      if (DISPLAY_MODES.has(mode)) {
+        config.displayMode = mode;
+      }
+    }
+  }
+
+  function applyAppearance() {
+    document.documentElement.style.setProperty(
+      "--overlay-font-size",
+      String(config.fontSizePx) + "px"
+    );
+    document.body.classList.remove("overlay--normal", "overlay--compact");
+    document.body.classList.add(
+      config.displayMode === "compact" ? "overlay--compact" : "overlay--normal"
+    );
   }
 
   async function loadServerConfig() {
@@ -71,12 +126,15 @@
     } catch {
       /* keep URL/default config */
     }
+    applyAppearance();
   }
 
   const listEl = document.getElementById("messages");
   if (!listEl) {
     return;
   }
+
+  applyAppearance();
 
   /** @type {Array<{ el: HTMLElement, ttlTimer: number | null }>} */
   const entries = [];
@@ -108,21 +166,48 @@
     reconnectDelayMs = Math.min(reconnectDelayMs * 2, MAX_RECONNECT_MS);
   }
 
-  function removeEntry(index) {
+  function removeEntryElement(el, animate) {
+    const idx = entries.findIndex(function (entry) {
+      return entry.el === el;
+    });
+    if (idx === -1) {
+      return;
+    }
+    removeEntry(idx, animate !== false);
+  }
+
+  function removeEntry(index, animate) {
     const entry = entries[index];
     if (!entry) {
       return;
     }
     if (entry.ttlTimer !== null) {
       window.clearTimeout(entry.ttlTimer);
+      entry.ttlTimer = null;
     }
+
+    if (animate) {
+      entry.el.classList.add("message--leaving");
+      window.setTimeout(function () {
+        entry.el.remove();
+        const currentIdx = entries.findIndex(function (item) {
+          return item.el === entry.el;
+        });
+        if (currentIdx !== -1) {
+          entries.splice(currentIdx, 1);
+        }
+      }, LEAVE_ANIMATION_MS);
+      entries.splice(index, 1);
+      return;
+    }
+
     entry.el.remove();
     entries.splice(index, 1);
   }
 
   function trimToLimit() {
     while (entries.length > config.maxMessages) {
-      removeEntry(0);
+      removeEntry(0, true);
     }
   }
 
@@ -173,12 +258,7 @@
     let ttlTimer = null;
     if (config.messageTTLSeconds > 0) {
       ttlTimer = window.setTimeout(function () {
-        const idx = entries.findIndex(function (entry) {
-          return entry.el === row;
-        });
-        if (idx !== -1) {
-          removeEntry(idx);
-        }
+        removeEntryElement(row, true);
       }, config.messageTTLSeconds * 1000);
     }
 
