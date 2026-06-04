@@ -50,6 +50,7 @@ func TestLoad_WhenValidFile_ExpectParsed(t *testing.T) {
 	require.True(t, cfg.Twitch.Enabled)
 	require.Equal(t, "streamer", cfg.Twitch.Channel)
 	require.Equal(t, 10, cfg.Overlay.MaxMessages)
+	require.Equal(t, OverlayThemeDefault, cfg.Overlay.Theme)
 }
 
 func TestLoad_WhenInvalidJSON_ExpectError(t *testing.T) {
@@ -124,6 +125,7 @@ func TestApplyDefaults_WhenOverlayFieldsOmitted_ExpectOverlayDefaults(t *testing
 
 	require.Equal(t, 18, cfg.Overlay.FontSizePx)
 	require.Equal(t, OverlayDisplayModeNormal, cfg.Overlay.DisplayMode)
+	require.Equal(t, OverlayThemeDefault, cfg.Overlay.Theme)
 }
 
 func TestValidate_WhenOverlayFontSizeOutOfRange_ExpectInvalidConfig(t *testing.T) {
@@ -142,6 +144,17 @@ func TestValidate_WhenOverlayDisplayModeInvalid_ExpectInvalidConfig(t *testing.T
 
 	cfg := Default()
 	cfg.Overlay.DisplayMode = "dense"
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+}
+
+func TestValidate_WhenOverlayThemeInvalid_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Theme = "terminal"
 
 	err := cfg.Validate()
 	require.Error(t, err)

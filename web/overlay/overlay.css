@@ -8,10 +8,17 @@
   --overlay-panel-bg: rgba(0, 0, 0, 0.58);
   --overlay-text: #f4f4f5;
   --overlay-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  --overlay-stroke-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.95),
+    1px 0 0 rgba(0, 0, 0, 0.95),
+    0 -1px 0 rgba(0, 0, 0, 0.95),
+    -1px 0 0 rgba(0, 0, 0, 0.95),
+    0 2px 3px rgba(0, 0, 0, 0.85);
   --platform-twitch: #bf94ff;
   --platform-youtube: #ff6b6b;
   --platform-vk: #5eb3ff;
   --platform-default: #d4d4d8;
+  --message-platform-color: var(--platform-default);
 }
 
 html,
@@ -63,6 +70,7 @@ body.overlay--compact {
 }
 
 .message[data-platform="twitch"] {
+  --message-platform-color: var(--platform-twitch);
   border-left-color: var(--platform-twitch);
 }
 
@@ -71,6 +79,7 @@ body.overlay--compact {
 }
 
 .message[data-platform="youtube"] {
+  --message-platform-color: var(--platform-youtube);
   border-left-color: var(--platform-youtube);
 }
 
@@ -79,6 +88,7 @@ body.overlay--compact {
 }
 
 .message[data-platform="vk"] {
+  --message-platform-color: var(--platform-vk);
   border-left-color: var(--platform-vk);
 }
 
@@ -98,6 +108,39 @@ body.overlay--compact {
   overflow-wrap: anywhere;
 }
 
+.message__platform {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.15em;
+  height: 1.15em;
+  color: var(--message-platform-color);
+  transform: translateY(0.12em);
+}
+
+.message__platform svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter:
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.95))
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.75));
+}
+
+.message__platform svg > * {
+  fill: currentColor;
+}
+
+.message__platform svg > :not(:first-child) {
+  fill: rgba(0, 0, 0, 0.9);
+}
+
+.message[data-platform="vk"] .message__platform svg text {
+  fill: #fff;
+}
+
 .message__user::after {
   content: ":";
 }
@@ -111,6 +154,50 @@ body.overlay--compact {
 
 body.overlay--compact .message__user {
   font-weight: 600;
+}
+
+body.overlay-theme--dashboard {
+  --overlay-message-gap: 3px;
+  --overlay-message-padding-y: 0;
+  --overlay-message-padding-x: 0;
+  --overlay-text: #f8fafc;
+  --overlay-text-shadow: var(--overlay-stroke-shadow);
+  --platform-twitch: #b786ff;
+  --platform-youtube: #ff3b30;
+  --platform-vk: #38bdf8;
+  --platform-default: #ffd166;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body.overlay-theme--dashboard .messages {
+  padding: 12px 18px;
+}
+
+body.overlay-theme--dashboard .message {
+  padding: 0;
+  padding-left: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.overlay-theme--dashboard .message__platform {
+  display: inline-flex;
+}
+
+body.overlay-theme--dashboard .message__user {
+  color: var(--overlay-text);
+  font-weight: 800;
+}
+
+body.overlay-theme--dashboard .message__text {
+  color: var(--overlay-text);
+  font-weight: 700;
+}
+
+body.overlay-theme--dashboard.overlay--compact {
+  --overlay-message-gap: 2px;
 }
 
 @keyframes message-in {

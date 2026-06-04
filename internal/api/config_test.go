@@ -38,7 +38,7 @@ func TestConfig_WhenPatchValid_ExpectSaved(t *testing.T) {
   "twitch": { "enabled": true, "channel": "streamer" },
   "youtube": { "enabled": false, "oauth": { "client_id": "" } },
   "vk": { "enabled": false },
-  "overlay": { "max_messages": 25, "message_ttl_seconds": 15 }
+  "overlay": { "max_messages": 25, "message_ttl_seconds": 15, "theme": "dashboard" }
 }`)
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPatch, "/api/config", body)
@@ -52,11 +52,14 @@ func TestConfig_WhenPatchValid_ExpectSaved(t *testing.T) {
 	twitch := payload["twitch"].(map[string]any)
 	require.Equal(t, true, twitch["enabled"])
 	require.Equal(t, "streamer", twitch["channel"])
+	overlay := payload["overlay"].(map[string]any)
+	require.Equal(t, "dashboard", overlay["theme"])
 
 	getRec := httptest.NewRecorder()
 	handler.ServeHTTP(getRec, httptest.NewRequest(http.MethodGet, "/api/config", nil))
 	require.Equal(t, http.StatusOK, getRec.Code)
 	require.Contains(t, getRec.Body.String(), `"channel":"streamer"`)
+	require.Contains(t, getRec.Body.String(), `"theme":"dashboard"`)
 	require.NotContains(t, getRec.Body.String(), `"client_secret"`)
 }
 

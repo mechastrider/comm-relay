@@ -26,6 +26,7 @@
   const overlayMessageTTL = document.getElementById("overlay-message-ttl");
   const overlayFontSize = document.getElementById("overlay-font-size");
   const overlayDisplayMode = document.getElementById("overlay-display-mode");
+  const overlayTheme = document.getElementById("overlay-theme");
   const recentMessages = document.getElementById("recent-messages");
   const recentMessagesEmpty = document.getElementById("recent-messages-empty");
   const refreshMessages = document.getElementById("refresh-messages");
@@ -47,6 +48,7 @@
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
     overlay_font_size_px: document.getElementById("overlay-font-size-error"),
     overlay_display_mode: document.getElementById("overlay-display-mode-error"),
+    overlay_theme: document.getElementById("overlay-theme-error"),
     admin_message_sound_volume: document.getElementById("message-sound-volume-error"),
     admin_message_sound_sound: document.getElementById("message-sound-type-error"),
   };
@@ -58,6 +60,7 @@
     overlay_message_ttl_seconds: overlayMessageTTL,
     overlay_font_size_px: overlayFontSize,
     overlay_display_mode: overlayDisplayMode,
+    overlay_theme: overlayTheme,
     admin_message_sound_volume: messageSoundVolumeInput,
     admin_message_sound_sound: messageSoundTypeInput,
   };
@@ -263,6 +266,8 @@
     );
     overlayDisplayMode.value =
       overlay.display_mode === "compact" ? "compact" : "normal";
+    overlayTheme.value =
+      overlay.theme === "dashboard" ? "dashboard" : "default";
 
     if (config.youtube) {
       youtubeEnabled.checked = Boolean(config.youtube.enabled);
@@ -345,6 +350,7 @@
         message_ttl_seconds: Number.parseInt(overlayMessageTTL.value, 10),
         font_size_px: Number.parseInt(overlayFontSize.value, 10),
         display_mode: overlayDisplayMode.value,
+        theme: overlayTheme.value,
       },
       admin: {
         message_sound: getMessageSoundSettings(),
@@ -413,6 +419,14 @@
     ) {
       setFieldError("overlay_display_mode", "Choose normal or compact layout.");
       firstInvalid = firstInvalid || overlayDisplayMode;
+    }
+
+    if (
+      payload.overlay.theme !== "default" &&
+      payload.overlay.theme !== "dashboard"
+    ) {
+      setFieldError("overlay_theme", "Choose default or dashboard theme.");
+      firstInvalid = firstInvalid || overlayTheme;
     }
 
     const sound = payload.admin && payload.admin.message_sound;

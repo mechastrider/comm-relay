@@ -5,10 +5,13 @@
   const DEFAULT_MESSAGE_TTL_SECONDS = 20;
   const DEFAULT_FONT_SIZE_PX = 18;
   const DEFAULT_DISPLAY_MODE = "normal";
+  const DEFAULT_THEME = "default";
   const DISPLAY_MODES = new Set(["normal", "compact"]);
+  const THEMES = new Set(["default", "dashboard"]);
   const INITIAL_RECONNECT_MS = 1000;
   const MAX_RECONNECT_MS = 30000;
   const LEAVE_ANIMATION_MS = 220;
+  const SVG_NS = "http://www.w3.org/2000/svg";
 
   const params = new URLSearchParams(window.location.search);
 
@@ -60,6 +63,18 @@
     return mode;
   }
 
+  function readTheme(fallback) {
+    const raw = params.get("theme");
+    if (raw === null || raw === "") {
+      return fallback;
+    }
+    const theme = raw.trim().toLowerCase();
+    if (!THEMES.has(theme)) {
+      return fallback;
+    }
+    return theme;
+  }
+
   let config = {
     maxMessages: readPositiveInt("max_messages", DEFAULT_MAX_MESSAGES),
     messageTTLSeconds: readNonNegativeInt(
@@ -68,6 +83,7 @@
     ),
     fontSizePx: readFontSizePx(DEFAULT_FONT_SIZE_PX),
     displayMode: readDisplayMode(DEFAULT_DISPLAY_MODE),
+    theme: readTheme(DEFAULT_THEME),
   };
 
   function applyServerOverlayConfig(serverOverlay) {
@@ -102,6 +118,12 @@
         config.displayMode = mode;
       }
     }
+    if (!params.has("theme") && typeof serverOverlay.theme === "string") {
+      const theme = serverOverlay.theme.trim().toLowerCase();
+      if (THEMES.has(theme)) {
+        config.theme = theme;
+      }
+    }
   }
 
   function applyAppearance() {
@@ -112,6 +134,10 @@
     document.body.classList.remove("overlay--normal", "overlay--compact");
     document.body.classList.add(
       config.displayMode === "compact" ? "overlay--compact" : "overlay--normal"
+    );
+    document.body.classList.remove("overlay-theme--default", "overlay-theme--dashboard");
+    document.body.classList.add(
+      config.theme === "dashboard" ? "overlay-theme--dashboard" : "overlay-theme--default"
     );
   }
 
@@ -221,6 +247,65 @@
     el.appendChild(document.createTextNode(text));
   }
 
+  function normalizePlatform(platform) {
+    return typeof platform === "string" && platform !== ""
+      ? platform.trim().toLowerCase()
+      : "chat";
+  }
+
+  function createSVGPath(d) {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    return path;
+  }
+
+  function createSVGRect(attrs) {
+    const rect = document.createElementNS(SVG_NS, "rect");
+    Object.keys(attrs).forEach(function (key) {
+      rect.setAttribute(key, attrs[key]);
+    });
+    return rect;
+  }
+
+  function createSVGText(text) {
+    const textEl = document.createElementNS(SVG_NS, "text");
+    textEl.setAttribute("x", "12");
+    textEl.setAttribute("y", "15.5");
+    textEl.setAttribute("text-anchor", "middle");
+    textEl.setAttribute("font-size", "7");
+    textEl.setAttribute("font-weight", "800");
+    textEl.setAttribute("font-family", "Arial, sans-serif");
+    appendText(textEl, text);
+    return textEl;
+  }
+
+  function appendPlatformIcon(el, platform) {
+    const name = normalizePlatform(platform);
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+
+    if (name === "youtube") {
+      svg.appendChild(createSVGRect({ x: "3", y: "6", width: "18", height: "12", rx: "3" }));
+      svg.appendChild(createSVGPath("M10 9.2v5.6L15 12z"));
+    } else if (name === "twitch") {
+      svg.appendChild(createSVGPath("M5 4h16v11.5L16.5 20H12l-3 3v-3H5z"));
+      svg.appendChild(createSVGRect({ x: "10", y: "8", width: "2", height: "5", rx: "0.5" }));
+      svg.appendChild(createSVGRect({ x: "15", y: "8", width: "2", height: "5", rx: "0.5" }));
+    } else if (name === "vk") {
+      svg.appendChild(createSVGPath("M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"));
+      svg.appendChild(createSVGText("VK"));
+    } else {
+      svg.appendChild(createSVGPath("M4 5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"));
+      svg.appendChild(createSVGPath("M8 11h8v2H8z"));
+    }
+
+    el.title = name;
+    el.setAttribute("aria-label", name);
+    el.appendChild(svg);
+  }
+
   function renderMessage(frame) {
     if (frame.type !== "message") {
       return;
@@ -243,6 +328,10 @@
       row.dataset.platform = frame.platform;
     }
 
+    const platformEl = document.createElement("span");
+    platformEl.className = "message__platform";
+    appendPlatformIcon(platformEl, frame.platform);
+
     const userEl = document.createElement("span");
     userEl.className = "message__user";
     appendText(userEl, user !== "" ? user : "?");
@@ -251,6 +340,7 @@
     textEl.className = "message__text";
     appendText(textEl, text);
 
+    row.appendChild(platformEl);
     row.appendChild(userEl);
     row.appendChild(textEl);
     listEl.appendChild(row);

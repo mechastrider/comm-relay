@@ -54,5 +54,6 @@ Status: `done`
 ## Completion Note
 
 - Added `overlay.font_size_px` (12–32) and `overlay.display_mode` (`normal` | `compact`) to config and admin Display panel.
+- Added `overlay.theme` (`default` | `dashboard`), preserving the existing overlay as `default` and adding transparent text-only styling with SVG platform icons for green backgrounds.
 - Overlay CSS: platform accent border/username colors, CSS variables, compact spacing, fade-in/out.
-- Query params `font_size_px` and `display_mode` override saved config when present (same as max_messages / TTL).
+- Query params `font_size_px`, `display_mode`, and `theme` override saved config when present (same as max_messages / TTL).

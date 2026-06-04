@@ -41,12 +41,19 @@ const (
 	OverlayDisplayModeCompact = "compact"
 )
 
+// Overlay visual themes.
+const (
+	OverlayThemeDefault   = "default"
+	OverlayThemeDashboard = "dashboard"
+)
+
 // OverlayConfig controls OBS overlay appearance and message retention.
 type OverlayConfig struct {
 	MaxMessages       int    `json:"max_messages"`
 	MessageTTLSeconds int    `json:"message_ttl_seconds"`
 	FontSizePx        int    `json:"font_size_px"`
 	DisplayMode       string `json:"display_mode"`
+	Theme             string `json:"theme"`
 }
 
 // Default returns safe prototype defaults.
@@ -67,6 +74,7 @@ func Default() *Config {
 			MessageTTLSeconds: 20,
 			FontSizePx:        18,
 			DisplayMode:       OverlayDisplayModeNormal,
+			Theme:             OverlayThemeDefault,
 		},
 		Admin: AdminConfig{
 			MessageSound: defaultMessageSound(),
@@ -82,6 +90,9 @@ func (c *Config) ApplyDefaults() {
 	}
 	if c.Overlay.DisplayMode == "" {
 		c.Overlay.DisplayMode = def.Overlay.DisplayMode
+	}
+	if c.Overlay.Theme == "" {
+		c.Overlay.Theme = def.Overlay.Theme
 	}
 	c.Admin.MessageSound.applyDefaults()
 }
@@ -113,6 +124,16 @@ func (c *Config) Validate() error {
 			ErrInvalidConfig,
 			OverlayDisplayModeNormal,
 			OverlayDisplayModeCompact,
+		)
+	}
+	switch c.Overlay.Theme {
+	case OverlayThemeDefault, OverlayThemeDashboard:
+	default:
+		return errors.Errorf(
+			"%w: overlay.theme must be %q or %q",
+			ErrInvalidConfig,
+			OverlayThemeDefault,
+			OverlayThemeDashboard,
 		)
 	}
 	if c.Twitch.Enabled && c.Twitch.Channel == "" {
