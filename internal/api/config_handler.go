@@ -40,6 +40,7 @@ func (h *configHandler) handlePatch(w http.ResponseWriter, r *http.Request) {
 
 	prev := h.store.Snapshot()
 	incoming.MergeYouTubeOAuthFrom(prev)
+	incoming.ApplyDefaults()
 
 	if err := h.store.Replace(incoming); err != nil {
 		if errors.Is(err, config.ErrInvalidConfig) {

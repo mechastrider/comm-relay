@@ -94,6 +94,36 @@ func TestConfig_WhenGet_ExpectYouTubeOAuthRedacted(t *testing.T) {
 	require.Contains(t, rec.Body.String(), `"connected":true`)
 }
 
+func TestConfig_WhenPatchMessageSound_ExpectSaved(t *testing.T) {
+	t.Parallel()
+
+	handler := testHandler(t)
+	body := strings.NewReader(`{
+  "server_port": 17877,
+  "twitch": { "enabled": false, "channel": "" },
+  "youtube": { "enabled": false, "oauth": { "client_id": "" } },
+  "vk": { "enabled": false },
+  "overlay": { "max_messages": 30, "message_ttl_seconds": 20 },
+  "admin": {
+    "message_sound": { "enabled": true, "volume": 0.25, "sound": "alert" }
+  }
+}`)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPatch, "/api/config", body)
+	req.Header.Set("Content-Type", "application/json")
+	handler.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var payload map[string]any
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	admin := payload["admin"].(map[string]any)
+	sound := admin["message_sound"].(map[string]any)
+	require.Equal(t, true, sound["enabled"])
+	require.InDelta(t, 0.25, sound["volume"], 0.001)
+	require.Equal(t, "alert", sound["sound"])
+}
+
 func TestConfig_WhenPatchInvalid_ExpectBadRequest(t *testing.T) {
 	t.Parallel()
 

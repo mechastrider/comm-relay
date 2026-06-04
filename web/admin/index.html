@@ -104,13 +104,37 @@
         <h2 id="messages-heading">Recent messages</h2>
         <button id="refresh-messages" type="button" class="button-secondary">Refresh</button>
       </div>
-      <div class="message-sound-controls">
-        <label class="checkbox" for="message-sound-enabled">
-          <input id="message-sound-enabled" type="checkbox">
-          <span>Play sound on new message</span>
-        </label>
-        <button id="test-message-sound" type="button" class="button-secondary">Test sound</button>
-      </div>
+      <fieldset class="message-sound-controls" aria-labelledby="message-sound-legend">
+        <legend id="message-sound-legend">Message sound</legend>
+        <p class="field-hint">Saved with <strong>Save settings</strong> in the Twitch panel.</p>
+        <div class="form__field">
+          <label class="checkbox" for="message-sound-enabled">
+            <input id="message-sound-enabled" form="settings-form" name="message_sound_enabled" type="checkbox">
+            <span>Play sound on new message</span>
+          </label>
+        </div>
+        <div class="form__field">
+          <label for="message-sound-volume">Volume</label>
+          <div class="volume-control">
+            <input id="message-sound-volume" form="settings-form" name="message_sound_volume" type="range" min="0" max="100" step="1" value="50">
+            <output id="message-sound-volume-label" for="message-sound-volume">50%</output>
+          </div>
+          <p id="message-sound-volume-error" class="field-error" role="alert" hidden></p>
+        </div>
+        <div class="form__field">
+          <label for="message-sound-type">Sound type</label>
+          <select id="message-sound-type" form="settings-form" name="message_sound_type">
+            <option value="chime">Chime — soft two-tone</option>
+            <option value="ping">Ping — short high note</option>
+            <option value="soft">Soft — quiet low tone</option>
+            <option value="alert">Alert — quick double beep</option>
+          </select>
+          <p id="message-sound-type-error" class="field-error" role="alert" hidden></p>
+        </div>
+        <div class="form__actions">
+          <button id="test-message-sound" type="button" class="button-secondary">Test sound</button>
+        </div>
+      </fieldset>
       <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
       <p id="recent-messages-empty" class="empty-state">No messages yet.</p>
     </section>

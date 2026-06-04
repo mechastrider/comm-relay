@@ -20,9 +20,12 @@
   const recentMessagesEmpty = document.getElementById("recent-messages-empty");
   const refreshMessages = document.getElementById("refresh-messages");
   const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
+  const messageSoundVolumeInput = document.getElementById("message-sound-volume");
+  const messageSoundVolumeLabel = document.getElementById("message-sound-volume-label");
+  const messageSoundTypeInput = document.getElementById("message-sound-type");
   const testMessageSound = document.getElementById("test-message-sound");
 
-  const SOUND_STORAGE_KEY = "admin_message_sound_enabled";
+  const MESSAGE_SOUND_TYPES = ["chime", "ping", "soft", "alert"];
   const RECENT_MESSAGE_LIMIT = 20;
   const INITIAL_WS_RECONNECT_MS = 1000;
   const MAX_WS_RECONNECT_MS = 30000;
@@ -31,18 +34,21 @@
     twitch_channel: document.getElementById("twitch-channel-error"),
     overlay_max_messages: document.getElementById("overlay-max-messages-error"),
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
+    admin_message_sound_volume: document.getElementById("message-sound-volume-error"),
+    admin_message_sound_sound: document.getElementById("message-sound-type-error"),
   };
 
   const fieldInputs = {
     twitch_channel: twitchChannel,
     overlay_max_messages: overlayMaxMessages,
     overlay_message_ttl_seconds: overlayMessageTTL,
+    admin_message_sound_volume: messageSoundVolumeInput,
+    admin_message_sound_sound: messageSoundTypeInput,
   };
 
   let currentConfig = null;
   let statusTimer = null;
   let messagesTimer = null;
-  let messageSoundEnabled = window.localStorage.getItem(SOUND_STORAGE_KEY) === "true";
   let soundReady = false;
   let knownMessageKeys = new Set();
   let wsSocket = null;
@@ -132,6 +138,50 @@
       youtubeClientId.value = oauth.client_id || "";
       youtubeClientSecret.value = "";
     }
+
+    applyMessageSoundFromConfig(config);
+  }
+
+  function normalizeMessageSoundType(raw) {
+    if (typeof raw === "string" && MESSAGE_SOUND_TYPES.indexOf(raw) !== -1) {
+      return raw;
+    }
+    return "chime";
+  }
+
+  function clampVolumePercent(value) {
+    if (!Number.isFinite(value)) {
+      return 50;
+    }
+    return Math.min(100, Math.max(0, Math.round(value)));
+  }
+
+  function applyMessageSoundFromConfig(config) {
+    const ms =
+      config && config.admin && config.admin.message_sound
+        ? config.admin.message_sound
+        : {};
+
+    messageSoundEnabledInput.checked = Boolean(ms.enabled);
+
+    const volumePercent = clampVolumePercent(
+      typeof ms.volume === "number" ? ms.volume * 100 : 50
+    );
+    messageSoundVolumeInput.value = String(volumePercent);
+    messageSoundVolumeLabel.textContent = String(volumePercent) + "%";
+
+    messageSoundTypeInput.value = normalizeMessageSoundType(ms.sound);
+  }
+
+  function getMessageSoundSettings() {
+    const volumePercent = clampVolumePercent(
+      Number.parseInt(messageSoundVolumeInput.value, 10)
+    );
+    return {
+      enabled: messageSoundEnabledInput.checked,
+      volume: volumePercent / 100,
+      sound: normalizeMessageSoundType(messageSoundTypeInput.value),
+    };
   }
 
   function buildPayload() {
@@ -152,6 +202,9 @@
       overlay: {
         max_messages: Number.parseInt(overlayMaxMessages.value, 10),
         message_ttl_seconds: Number.parseInt(overlayMessageTTL.value, 10),
+      },
+      admin: {
+        message_sound: getMessageSoundSettings(),
       },
     };
   }
@@ -185,6 +238,16 @@
     ) {
       setFieldError("overlay_message_ttl_seconds", "TTL must be 0 or greater.");
       firstInvalid = firstInvalid || overlayMessageTTL;
+    }
+
+    const sound = payload.admin && payload.admin.message_sound;
+    if (!sound || sound.volume < 0 || sound.volume > 1) {
+      setFieldError("admin_message_sound_volume", "Volume must be between 0% and 100%.");
+      firstInvalid = firstInvalid || messageSoundVolumeInput;
+    }
+    if (!sound || MESSAGE_SOUND_TYPES.indexOf(sound.sound) === -1) {
+      setFieldError("admin_message_sound_sound", "Choose a sound type.");
+      firstInvalid = firstInvalid || messageSoundTypeInput;
     }
 
     if (firstInvalid) {
@@ -318,25 +381,64 @@
     return Promise.resolve();
   }
 
-  function playMessageSound(force) {
-    if (!force && !messageSoundEnabled) {
+  function playTone(ctx, start, options) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const peak = options.peak;
+    const duration = options.duration;
+    osc.type = options.wave || "sine";
+    osc.frequency.setValueAtTime(options.freq, start);
+    if (options.freqEnd) {
+      osc.frequency.exponentialRampToValueAtTime(options.freqEnd, start + duration);
+    }
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(peak, start + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + duration + 0.02);
+  }
+
+  function scheduleMessageSound(ctx, soundType, volume, start) {
+    const peak = Math.max(0.0001, volume * 0.18);
+
+    if (soundType === "ping") {
+      playTone(ctx, start, { freq: 1200, duration: 0.1, peak: peak });
       return;
     }
+
+    if (soundType === "soft") {
+      playTone(ctx, start, { freq: 440, duration: 0.16, peak: peak * 0.7, wave: "triangle" });
+      return;
+    }
+
+    if (soundType === "alert") {
+      playTone(ctx, start, { freq: 880, duration: 0.08, peak: peak });
+      playTone(ctx, start + 0.1, { freq: 880, duration: 0.08, peak: peak });
+      return;
+    }
+
+    playTone(ctx, start, {
+      freq: 880,
+      freqEnd: 660,
+      duration: 0.14,
+      peak: peak,
+    });
+  }
+
+  function playMessageSound(force) {
+    const settings = getMessageSoundSettings();
+    if (!force && !settings.enabled) {
+      return;
+    }
+    if (settings.volume <= 0) {
+      return;
+    }
+
     ensureAudioContext()
       .then(function () {
-        const ctx = audioCtx;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(880, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.14);
+        scheduleMessageSound(audioCtx, settings.sound, settings.volume, audioCtx.currentTime);
       })
       .catch(function () {
         /* autoplay policy or missing Web Audio */
@@ -344,7 +446,7 @@
   }
 
   function maybePlayMessageSound(messages) {
-    if (!soundReady || !messageSoundEnabled || !hasNewMessages(messages)) {
+    if (!soundReady || !getMessageSoundSettings().enabled || !hasNewMessages(messages)) {
       return;
     }
     playMessageSound();
@@ -442,7 +544,7 @@
     knownMessageKeys.add(key);
     appendRecentMessage(msg);
 
-    if (soundReady && messageSoundEnabled) {
+    if (soundReady && getMessageSoundSettings().enabled) {
       playMessageSound();
     }
   }
@@ -498,19 +600,19 @@
   }
 
   function initMessageSoundControls() {
-    messageSoundEnabledInput.checked = messageSoundEnabled;
-
     messageSoundEnabledInput.addEventListener("change", function () {
-      messageSoundEnabled = messageSoundEnabledInput.checked;
-      window.localStorage.setItem(
-        SOUND_STORAGE_KEY,
-        messageSoundEnabled ? "true" : "false"
-      );
-      if (messageSoundEnabled) {
+      if (messageSoundEnabledInput.checked) {
         ensureAudioContext().catch(function () {
           /* user must use Test sound if blocked */
         });
       }
+    });
+
+    messageSoundVolumeInput.addEventListener("input", function () {
+      const volumePercent = clampVolumePercent(
+        Number.parseInt(messageSoundVolumeInput.value, 10)
+      );
+      messageSoundVolumeLabel.textContent = String(volumePercent) + "%";
     });
 
     testMessageSound.addEventListener("click", function () {

@@ -19,6 +19,7 @@ type Config struct {
 	YouTube    YouTubeConfig `json:"youtube"`
 	VK         PlatformFlags `json:"vk"`
 	Overlay    OverlayConfig `json:"overlay"`
+	Admin      AdminConfig   `json:"admin"`
 }
 
 // TwitchConfig holds Twitch connector settings.
@@ -52,7 +53,15 @@ func Default() *Config {
 			MaxMessages:       30,
 			MessageTTLSeconds: 20,
 		},
+		Admin: AdminConfig{
+			MessageSound: defaultMessageSound(),
+		},
 	}
+}
+
+// ApplyDefaults fills in settings omitted from older config.json files.
+func (c *Config) ApplyDefaults() {
+	c.Admin.MessageSound.applyDefaults()
 }
 
 // ListenAddr returns the HTTP listen address for ServerPort.
@@ -73,6 +82,9 @@ func (c *Config) Validate() error {
 	}
 	if c.Twitch.Enabled && c.Twitch.Channel == "" {
 		return errors.Errorf("%w: twitch.channel is required when twitch is enabled", ErrInvalidConfig)
+	}
+	if err := c.Admin.MessageSound.validate(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -95,6 +107,8 @@ func Load(path string) (*Config, error) {
 	if err := json.Unmarshal(data, cfg); err != nil {
 		return nil, errors.Errorf("parse config: %w", err, errors.String("path", path))
 	}
+
+	cfg.ApplyDefaults()
 
 	if err := cfg.Validate(); err != nil {
 		return nil, err

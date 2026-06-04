@@ -27,6 +27,7 @@ func TestLoad_WhenMissingFile_ExpectDefaultsAndCreatesFile(t *testing.T) {
 	require.NoError(t, json.Unmarshal(data, &onDisk))
 	require.Equal(t, cfg.ServerPort, onDisk.ServerPort)
 	require.Equal(t, cfg.Overlay.MaxMessages, onDisk.Overlay.MaxMessages)
+	require.Equal(t, cfg.Admin.MessageSound, onDisk.Admin.MessageSound)
 }
 
 func TestLoad_WhenValidFile_ExpectParsed(t *testing.T) {
