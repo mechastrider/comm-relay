@@ -19,6 +19,13 @@
   const recentMessages = document.getElementById("recent-messages");
   const recentMessagesEmpty = document.getElementById("recent-messages-empty");
   const refreshMessages = document.getElementById("refresh-messages");
+  const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
+  const testMessageSound = document.getElementById("test-message-sound");
+
+  const SOUND_STORAGE_KEY = "admin_message_sound_enabled";
+  const RECENT_MESSAGE_LIMIT = 20;
+  const INITIAL_WS_RECONNECT_MS = 1000;
+  const MAX_WS_RECONNECT_MS = 30000;
 
   const fieldErrors = {
     twitch_channel: document.getElementById("twitch-channel-error"),
@@ -35,6 +42,14 @@
   let currentConfig = null;
   let statusTimer = null;
   let messagesTimer = null;
+  let messageSoundEnabled = window.localStorage.getItem(SOUND_STORAGE_KEY) === "true";
+  let soundReady = false;
+  let knownMessageKeys = new Set();
+  let wsSocket = null;
+  let wsShouldRun = true;
+  let wsReconnectDelayMs = INITIAL_WS_RECONNECT_MS;
+  let wsReconnectTimer = null;
+  let audioCtx = null;
 
   function apiURL(path) {
     return window.location.origin + path;
@@ -236,6 +251,146 @@
     el.appendChild(document.createTextNode(text));
   }
 
+  function messageDisplayName(msg) {
+    if (typeof msg.display_name === "string" && msg.display_name !== "") {
+      return msg.display_name;
+    }
+    if (typeof msg.username === "string" && msg.username !== "") {
+      return msg.username;
+    }
+    return "?";
+  }
+
+  function messageKey(msg) {
+    return [
+      typeof msg.platform === "string" ? msg.platform : "",
+      messageDisplayName(msg),
+      typeof msg.message === "string" ? msg.message : "",
+      typeof msg.timestamp === "string" ? msg.timestamp : "",
+    ].join("\0");
+  }
+
+  function hasNewMessages(messages) {
+    if (!messages || messages.length === 0) {
+      return false;
+    }
+    return messages.some(function (msg) {
+      return !knownMessageKeys.has(messageKey(msg));
+    });
+  }
+
+  function trackMessages(messages) {
+    if (!messages) {
+      return;
+    }
+    messages.forEach(function (msg) {
+      knownMessageKeys.add(messageKey(msg));
+    });
+  }
+
+  function wireToAdminMessage(wire) {
+    const user = typeof wire.user === "string" ? wire.user : "";
+    const displayName =
+      typeof wire.display_name === "string" && wire.display_name !== ""
+        ? wire.display_name
+        : user;
+
+    return {
+      platform: typeof wire.platform === "string" ? wire.platform : "",
+      username: user,
+      display_name: displayName,
+      message: typeof wire.message === "string" ? wire.message : "",
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  function ensureAudioContext() {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) {
+        return Promise.reject(new Error("Web Audio not supported"));
+      }
+      audioCtx = new Ctx();
+    }
+    if (audioCtx.state === "suspended") {
+      return audioCtx.resume();
+    }
+    return Promise.resolve();
+  }
+
+  function playMessageSound(force) {
+    if (!force && !messageSoundEnabled) {
+      return;
+    }
+    ensureAudioContext()
+      .then(function () {
+        const ctx = audioCtx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.14);
+      })
+      .catch(function () {
+        /* autoplay policy or missing Web Audio */
+      });
+  }
+
+  function maybePlayMessageSound(messages) {
+    if (!soundReady || !messageSoundEnabled || !hasNewMessages(messages)) {
+      return;
+    }
+    playMessageSound();
+  }
+
+  function buildMessageListItem(msg) {
+    const item = document.createElement("li");
+    item.className = "message-list__item";
+
+    const meta = document.createElement("div");
+    meta.className = "message-list__meta";
+
+    const user = document.createElement("span");
+    user.className = "message-list__user";
+    appendText(user, messageDisplayName(msg));
+
+    const platform = document.createElement("span");
+    appendText(platform, typeof msg.platform === "string" ? msg.platform : "");
+
+    const time = document.createElement("time");
+    if (typeof msg.timestamp === "string") {
+      time.dateTime = msg.timestamp;
+      appendText(time, new Date(msg.timestamp).toLocaleTimeString());
+    }
+
+    meta.appendChild(user);
+    meta.appendChild(platform);
+    meta.appendChild(time);
+
+    const text = document.createElement("p");
+    text.className = "message-list__text";
+    appendText(text, typeof msg.message === "string" ? msg.message : "");
+
+    item.appendChild(meta);
+    item.appendChild(text);
+    return item;
+  }
+
+  function appendRecentMessage(msg) {
+    recentMessagesEmpty.hidden = true;
+    recentMessages.appendChild(buildMessageListItem(msg));
+    while (recentMessages.children.length > RECENT_MESSAGE_LIMIT) {
+      recentMessages.removeChild(recentMessages.firstChild);
+    }
+  }
+
   function renderRecentMessages(messages) {
     recentMessages.textContent = "";
 
@@ -247,42 +402,125 @@
     recentMessagesEmpty.hidden = true;
 
     messages.forEach(function (msg) {
-      const item = document.createElement("li");
-      item.className = "message-list__item";
+      recentMessages.appendChild(buildMessageListItem(msg));
+    });
+  }
 
-      const meta = document.createElement("div");
-      meta.className = "message-list__meta";
+  function wsURL() {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return protocol + "//" + window.location.host + "/ws";
+  }
 
-      const user = document.createElement("span");
-      user.className = "message-list__user";
-      const displayName =
-        typeof msg.display_name === "string" && msg.display_name !== ""
-          ? msg.display_name
-          : typeof msg.username === "string"
-            ? msg.username
-            : "?";
-      appendText(user, displayName);
+  function clearWSReconnectTimer() {
+    if (wsReconnectTimer !== null) {
+      window.clearTimeout(wsReconnectTimer);
+      wsReconnectTimer = null;
+    }
+  }
 
-      const platform = document.createElement("span");
-      appendText(platform, typeof msg.platform === "string" ? msg.platform : "");
+  function scheduleWSReconnect() {
+    if (!wsShouldRun || wsReconnectTimer !== null) {
+      return;
+    }
+    wsReconnectTimer = window.setTimeout(function () {
+      wsReconnectTimer = null;
+      connectMessageWebSocket();
+    }, wsReconnectDelayMs);
+    wsReconnectDelayMs = Math.min(wsReconnectDelayMs * 2, MAX_WS_RECONNECT_MS);
+  }
 
-      const time = document.createElement("time");
-      if (typeof msg.timestamp === "string") {
-        time.dateTime = msg.timestamp;
-        appendText(time, new Date(msg.timestamp).toLocaleTimeString());
+  function handleWireMessage(wire) {
+    if (!wire || wire.type !== "message") {
+      return;
+    }
+
+    const msg = wireToAdminMessage(wire);
+    const key = messageKey(msg);
+    if (knownMessageKeys.has(key)) {
+      return;
+    }
+    knownMessageKeys.add(key);
+    appendRecentMessage(msg);
+
+    if (soundReady && messageSoundEnabled) {
+      playMessageSound();
+    }
+  }
+
+  function connectMessageWebSocket() {
+    if (!wsShouldRun || wsSocket) {
+      return;
+    }
+
+    let socket;
+    try {
+      socket = new WebSocket(wsURL());
+    } catch {
+      scheduleWSReconnect();
+      return;
+    }
+
+    wsSocket = socket;
+
+    socket.addEventListener("open", function () {
+      wsReconnectDelayMs = INITIAL_WS_RECONNECT_MS;
+    });
+
+    socket.addEventListener("message", function (event) {
+      let wire = null;
+      try {
+        wire = JSON.parse(event.data);
+      } catch {
+        return;
       }
+      handleWireMessage(wire);
+    });
 
-      meta.appendChild(user);
-      meta.appendChild(platform);
-      meta.appendChild(time);
+    socket.addEventListener("close", function () {
+      if (wsSocket === socket) {
+        wsSocket = null;
+      }
+      scheduleWSReconnect();
+    });
 
-      const text = document.createElement("p");
-      text.className = "message-list__text";
-      appendText(text, typeof msg.message === "string" ? msg.message : "");
+    socket.addEventListener("error", function () {
+      socket.close();
+    });
+  }
 
-      item.appendChild(meta);
-      item.appendChild(text);
-      recentMessages.appendChild(item);
+  function disconnectMessageWebSocket() {
+    wsShouldRun = false;
+    clearWSReconnectTimer();
+    if (wsSocket) {
+      wsSocket.close();
+      wsSocket = null;
+    }
+  }
+
+  function initMessageSoundControls() {
+    messageSoundEnabledInput.checked = messageSoundEnabled;
+
+    messageSoundEnabledInput.addEventListener("change", function () {
+      messageSoundEnabled = messageSoundEnabledInput.checked;
+      window.localStorage.setItem(
+        SOUND_STORAGE_KEY,
+        messageSoundEnabled ? "true" : "false"
+      );
+      if (messageSoundEnabled) {
+        ensureAudioContext().catch(function () {
+          /* user must use Test sound if blocked */
+        });
+      }
+    });
+
+    testMessageSound.addEventListener("click", function () {
+      ensureAudioContext()
+        .then(function () {
+          playMessageSound(true);
+        })
+        .catch(function () {
+          showBanner("error", "Sound is not available in this browser.");
+        });
     });
   }
 
@@ -304,13 +542,22 @@
     renderStatus(payload);
   }
 
-  async function loadRecentMessages() {
-    const response = await fetch(apiURL("/api/messages/recent?limit=20"));
+  async function loadRecentMessages(options) {
+    const playSound = options && options.playSound;
+    const response = await fetch(
+      apiURL("/api/messages/recent?limit=" + String(RECENT_MESSAGE_LIMIT))
+    );
     const payload = await readJSON(response);
     if (!response.ok) {
       throw new Error(mapHTTPError(response.status, payload && payload.error));
     }
-    renderRecentMessages((payload && payload.messages) || []);
+    const messages = (payload && payload.messages) || [];
+    if (playSound) {
+      maybePlayMessageSound(messages);
+    }
+    trackMessages(messages);
+    renderRecentMessages(messages);
+    soundReady = true;
   }
 
   async function refreshAll() {
@@ -378,10 +625,13 @@
   });
 
   handleOAuthQuery();
+  initMessageSoundControls();
 
   refreshAll().catch(function () {
     showBanner("error", "Cannot reach Chat Relay — is it running?");
   });
+
+  connectMessageWebSocket();
 
   statusTimer = window.setInterval(function () {
     loadStatus().catch(function () {
@@ -390,12 +640,13 @@
   }, 5000);
 
   messagesTimer = window.setInterval(function () {
-    loadRecentMessages().catch(function () {
+    loadRecentMessages({ playSound: true }).catch(function () {
       /* keep last known messages */
     });
   }, 5000);
 
   window.addEventListener("beforeunload", function () {
+    disconnectMessageWebSocket();
     window.clearInterval(statusTimer);
     window.clearInterval(messagesTimer);
   });

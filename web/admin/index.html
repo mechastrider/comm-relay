@@ -104,6 +104,13 @@
         <h2 id="messages-heading">Recent messages</h2>
         <button id="refresh-messages" type="button" class="button-secondary">Refresh</button>
       </div>
+      <div class="message-sound-controls">
+        <label class="checkbox" for="message-sound-enabled">
+          <input id="message-sound-enabled" type="checkbox">
+          <span>Play sound on new message</span>
+        </label>
+        <button id="test-message-sound" type="button" class="button-secondary">Test sound</button>
+      </div>
       <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
       <p id="recent-messages-empty" class="empty-state">No messages yet.</p>
     </section>
