@@ -3,6 +3,7 @@
 
   const form = document.getElementById("settings-form");
   const saveButton = document.getElementById("save-button");
+  const settingsState = document.getElementById("settings-state");
   const banner = document.getElementById("banner");
   const twitchStatus = document.getElementById("twitch-status");
   const twitchEnabled = document.getElementById("twitch-enabled");
@@ -56,6 +57,9 @@
   };
 
   let currentConfig = null;
+  let settingsLoaded = false;
+  let settingsDirty = false;
+  let saveInFlight = false;
   let statusTimer = null;
   let messagesTimer = null;
   let soundReady = false;
@@ -80,6 +84,60 @@
     banner.hidden = true;
     banner.textContent = "";
     banner.className = "banner";
+  }
+
+  function renderSettingsState() {
+    if (!settingsState) {
+      return;
+    }
+
+    settingsState.className = "settings-state";
+
+    if (saveInFlight) {
+      settingsState.textContent = "Saving";
+      saveButton.disabled = true;
+      return;
+    }
+
+    if (!settingsLoaded) {
+      settingsState.textContent = "Loading settings";
+      saveButton.disabled = true;
+      return;
+    }
+
+    if (settingsDirty) {
+      settingsState.textContent = "Unsaved changes";
+      settingsState.className = "settings-state settings-state--dirty";
+      saveButton.disabled = false;
+      return;
+    }
+
+    settingsState.textContent = "Settings saved";
+    settingsState.className = "settings-state settings-state--saved";
+    saveButton.disabled = true;
+  }
+
+  function markSettingsDirty() {
+    if (!settingsLoaded || saveInFlight) {
+      return;
+    }
+    settingsDirty = true;
+    renderSettingsState();
+  }
+
+  function markSettingsClean() {
+    settingsLoaded = true;
+    settingsDirty = false;
+    renderSettingsState();
+  }
+
+  function markSettingsUnavailable() {
+    settingsLoaded = false;
+    settingsDirty = false;
+    renderSettingsState();
+    if (settingsState) {
+      settingsState.textContent = "Settings unavailable";
+    }
   }
 
   function clearFieldErrors() {
@@ -208,6 +266,7 @@
     }
 
     applyMessageSoundFromConfig(config);
+    markSettingsClean();
   }
 
   function normalizeMessageSoundType(raw) {
@@ -761,6 +820,9 @@
 
   async function saveSettings(event) {
     event.preventDefault();
+    if (saveInFlight) {
+      return;
+    }
     hideBanner();
     clearFieldErrors();
 
@@ -770,7 +832,8 @@
       return;
     }
 
-    saveButton.disabled = true;
+    saveInFlight = true;
+    renderSettingsState();
 
     try {
       const response = await fetch(apiURL("/api/config"), {
@@ -793,7 +856,8 @@
     } catch {
       showBanner("error", "Cannot reach Chat Relay — is it running?");
     } finally {
-      saveButton.disabled = false;
+      saveInFlight = false;
+      renderSettingsState();
     }
   }
 
@@ -825,6 +889,8 @@
   }
 
   form.addEventListener("submit", saveSettings);
+  form.addEventListener("input", markSettingsDirty);
+  form.addEventListener("change", markSettingsDirty);
   refreshMessages.addEventListener("click", function () {
     loadRecentMessages().catch(function () {
       showBanner("error", "Cannot load recent messages.");
@@ -834,7 +900,12 @@
   handleOAuthQuery();
   initMessageSoundControls();
 
+  renderSettingsState();
+
   refreshAll().catch(function () {
+    if (!currentConfig) {
+      markSettingsUnavailable();
+    }
     showBanner("error", "Cannot reach Chat Relay — is it running?");
   });
 

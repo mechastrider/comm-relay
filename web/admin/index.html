@@ -8,167 +8,204 @@
 </head>
 <body>
   <header class="page-header">
-    <h1>Chat Relay</h1>
-    <p class="page-header__subtitle">Local chat relay for OBS overlays</p>
+    <div>
+      <h1>Chat Relay</h1>
+      <p class="page-header__subtitle">Local chat relay for OBS overlays</p>
+    </div>
+    <div class="page-header__actions">
+      <span id="settings-state" class="settings-state" aria-live="polite">Loading settings</span>
+      <button id="save-button" type="submit" form="settings-form" disabled>Save settings</button>
+    </div>
   </header>
 
   <main class="layout">
     <div id="banner" class="banner" role="alert" aria-live="polite" hidden></div>
 
-    <form id="settings-form" class="settings-form" novalidate>
-      <section class="panel" aria-labelledby="twitch-heading">
-        <h2 id="twitch-heading">Twitch</h2>
-        <dl class="status-list">
-          <div class="status-list__row">
-            <dt>Status</dt>
-            <dd><span id="twitch-status" class="status-pill">—</span></dd>
-          </div>
-        </dl>
-
-        <div class="form form--section">
-          <div class="form__field">
-            <label class="checkbox" for="twitch-enabled">
-              <input id="twitch-enabled" name="twitch_enabled" type="checkbox">
-              <span>Enable Twitch connector</span>
-            </label>
-          </div>
-
-          <div class="form__field">
-            <label for="twitch-channel">Channel</label>
-            <input id="twitch-channel" name="twitch_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
-            <p id="twitch-channel-error" class="field-error" role="alert" hidden></p>
-          </div>
-
-          <fieldset class="form__fieldset">
-            <legend>Overlay</legend>
-
-            <div class="form__field">
-              <label for="overlay-max-messages">Max messages</label>
-              <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
-              <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
-            </div>
-
-            <div class="form__field">
-              <label for="overlay-message-ttl">Message TTL (seconds)</label>
-              <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
-              <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
-            </div>
-          </fieldset>
-        </div>
-      </section>
-
-      <section class="panel" aria-labelledby="youtube-heading">
-        <h2 id="youtube-heading">YouTube Live</h2>
-        <dl class="status-list">
-          <div class="status-list__row">
-            <dt>Status</dt>
-            <dd><span id="youtube-status" class="status-pill">—</span></dd>
-          </div>
-          <div class="status-list__row">
-            <dt>OAuth</dt>
-            <dd id="youtube-oauth-label" class="status-list__value">—</dd>
-          </div>
-        </dl>
-        <p id="youtube-detail" class="status-detail" hidden></p>
-
-        <div class="form form--section">
-          <div class="form__field">
-            <label class="checkbox" for="youtube-enabled">
-              <input id="youtube-enabled" name="youtube_enabled" type="checkbox">
-              <span>Enable YouTube connector</span>
-            </label>
-          </div>
-
-          <div class="form__field">
-            <label for="youtube-client-id">OAuth client ID</label>
-            <input id="youtube-client-id" name="youtube_client_id" type="text" autocomplete="off" spellcheck="false">
-          </div>
-
-          <div class="form__field">
-            <label for="youtube-client-secret">OAuth client secret</label>
-            <input id="youtube-client-secret" name="youtube_client_secret" type="password" autocomplete="off">
-            <p class="field-hint">Leave blank when saving to keep the existing secret.</p>
-          </div>
-
-          <div class="form__actions">
-            <a id="youtube-connect" class="button-secondary" href="/oauth/youtube/start">Connect YouTube</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel" aria-labelledby="vk-heading">
-        <h2 id="vk-heading">VK Live</h2>
-        <dl class="status-list">
-          <div class="status-list__row">
-            <dt>Status</dt>
-            <dd><span id="vk-status" class="status-pill">—</span></dd>
-          </div>
-        </dl>
-        <p id="vk-detail" class="status-detail" hidden></p>
-
-        <div class="form form--section">
-          <div class="form__field">
-            <label class="checkbox" for="vk-enabled">
-              <input id="vk-enabled" name="vk_enabled" type="checkbox">
-              <span>Enable VK Live connector</span>
-            </label>
-          </div>
-
-          <div class="form__field">
-            <label for="vk-channel">Channel slug</label>
-            <input id="vk-channel" name="vk_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
-            <p class="field-hint">Channel slug or full <code>live.vkvideo.ru/&lt;slug&gt;</code> URL (read-only chat, no OAuth).</p>
-            <p id="vk-channel-error" class="field-error" role="alert" hidden></p>
-          </div>
-        </div>
-      </section>
-
-      <div class="settings-form__actions">
-        <button id="save-button" type="submit">Save settings</button>
+    <aside class="overview" aria-labelledby="overview-heading">
+      <div class="section-heading">
+        <h2 id="overview-heading">Overview</h2>
       </div>
+
+      <dl class="overview-list">
+        <div class="overview-list__row">
+          <dt>Twitch</dt>
+          <dd><span id="twitch-status" class="status-pill">-</span></dd>
+        </div>
+        <div class="overview-list__row">
+          <dt>YouTube</dt>
+          <dd><span id="youtube-status" class="status-pill">-</span></dd>
+        </div>
+        <div class="overview-list__row">
+          <dt>YouTube OAuth</dt>
+          <dd id="youtube-oauth-label" class="overview-list__value">-</dd>
+        </div>
+        <div class="overview-list__row">
+          <dt>VK Live</dt>
+          <dd><span id="vk-status" class="status-pill">-</span></dd>
+        </div>
+      </dl>
+
+      <p id="youtube-detail" class="status-detail" hidden></p>
+      <p id="vk-detail" class="status-detail" hidden></p>
+    </aside>
+
+    <form id="settings-form" class="settings-form" novalidate>
+      <section class="section" aria-labelledby="connections-heading">
+        <div class="section-heading">
+          <h2 id="connections-heading">Connections</h2>
+        </div>
+
+        <div class="connection-grid">
+          <section class="panel platform-panel" aria-labelledby="twitch-heading">
+            <div class="panel__header">
+              <h3 id="twitch-heading">Twitch</h3>
+            </div>
+
+            <div class="form">
+              <div class="form__field">
+                <label class="checkbox" for="twitch-enabled">
+                  <input id="twitch-enabled" name="twitch_enabled" type="checkbox">
+                  <span>Enable connector</span>
+                </label>
+              </div>
+
+              <div class="form__field">
+                <label for="twitch-channel">Channel</label>
+                <input id="twitch-channel" name="twitch_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
+                <p id="twitch-channel-error" class="field-error" role="alert" hidden></p>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel platform-panel" aria-labelledby="youtube-heading">
+            <div class="panel__header">
+              <h3 id="youtube-heading">YouTube Live</h3>
+              <a id="youtube-connect" class="button-secondary" href="/oauth/youtube/start">Connect</a>
+            </div>
+
+            <div class="form">
+              <div class="form__field">
+                <label class="checkbox" for="youtube-enabled">
+                  <input id="youtube-enabled" name="youtube_enabled" type="checkbox">
+                  <span>Enable connector</span>
+                </label>
+              </div>
+
+              <div class="form__field">
+                <label for="youtube-client-id">OAuth client ID</label>
+                <input id="youtube-client-id" name="youtube_client_id" type="text" autocomplete="off" spellcheck="false">
+              </div>
+
+              <div class="form__field">
+                <label for="youtube-client-secret">OAuth client secret</label>
+                <input id="youtube-client-secret" name="youtube_client_secret" type="password" autocomplete="off">
+                <p class="field-hint">Leave blank to keep the existing secret.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel platform-panel" aria-labelledby="vk-heading">
+            <div class="panel__header">
+              <h3 id="vk-heading">VK Live</h3>
+            </div>
+
+            <div class="form">
+              <div class="form__field">
+                <label class="checkbox" for="vk-enabled">
+                  <input id="vk-enabled" name="vk_enabled" type="checkbox">
+                  <span>Enable connector</span>
+                </label>
+              </div>
+
+              <div class="form__field">
+                <label for="vk-channel">Channel slug</label>
+                <input id="vk-channel" name="vk_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
+                <p class="field-hint">Accepts a slug or live.vkvideo.ru URL.</p>
+                <p id="vk-channel-error" class="field-error" role="alert" hidden></p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="overlay-heading">
+        <div class="section-heading">
+          <h2 id="overlay-heading">Overlay</h2>
+        </div>
+
+        <div class="settings-grid">
+          <section class="panel" aria-labelledby="overlay-display-heading">
+            <div class="panel__header">
+              <h3 id="overlay-display-heading">Display</h3>
+            </div>
+
+            <div class="form form--compact">
+              <div class="form__field">
+                <label for="overlay-max-messages">Max messages</label>
+                <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
+                <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
+              </div>
+
+              <div class="form__field">
+                <label for="overlay-message-ttl">Message TTL (seconds)</label>
+                <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
+                <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="message-sound-heading">
+            <div class="panel__header">
+              <h3 id="message-sound-heading">Message sound</h3>
+              <button id="test-message-sound" type="button" class="button-secondary">Test</button>
+            </div>
+
+            <div class="form form--compact">
+              <div class="form__field">
+                <label class="checkbox" for="message-sound-enabled">
+                  <input id="message-sound-enabled" name="message_sound_enabled" type="checkbox">
+                  <span>Play sound on new message</span>
+                </label>
+              </div>
+
+              <div class="form__field">
+                <label for="message-sound-volume">Volume</label>
+                <div class="volume-control">
+                  <input id="message-sound-volume" name="message_sound_volume" type="range" min="0" max="100" step="1" value="50">
+                  <output id="message-sound-volume-label" for="message-sound-volume">50%</output>
+                </div>
+                <p id="message-sound-volume-error" class="field-error" role="alert" hidden></p>
+              </div>
+
+              <div class="form__field">
+                <label for="message-sound-type">Sound type</label>
+                <select id="message-sound-type" name="message_sound_type">
+                  <option value="chime">Chime - soft two-tone</option>
+                  <option value="ping">Ping - short high note</option>
+                  <option value="soft">Soft - quiet low tone</option>
+                  <option value="alert">Alert - quick double beep</option>
+                </select>
+                <p id="message-sound-type-error" class="field-error" role="alert" hidden></p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
     </form>
 
-    <section class="panel" aria-labelledby="messages-heading">
-      <div class="panel__header">
+    <section class="section activity-section" aria-labelledby="messages-heading">
+      <div class="section-heading section-heading--with-action">
         <h2 id="messages-heading">Recent messages</h2>
         <button id="refresh-messages" type="button" class="button-secondary">Refresh</button>
       </div>
-      <fieldset class="message-sound-controls" aria-labelledby="message-sound-legend">
-        <legend id="message-sound-legend">Message sound</legend>
-        <p class="field-hint">Saved with <strong>Save settings</strong> above.</p>
-        <div class="form__field">
-          <label class="checkbox" for="message-sound-enabled">
-            <input id="message-sound-enabled" form="settings-form" name="message_sound_enabled" type="checkbox">
-            <span>Play sound on new message</span>
-          </label>
-        </div>
-        <div class="form__field">
-          <label for="message-sound-volume">Volume</label>
-          <div class="volume-control">
-            <input id="message-sound-volume" form="settings-form" name="message_sound_volume" type="range" min="0" max="100" step="1" value="50">
-            <output id="message-sound-volume-label" for="message-sound-volume">50%</output>
-          </div>
-          <p id="message-sound-volume-error" class="field-error" role="alert" hidden></p>
-        </div>
-        <div class="form__field">
-          <label for="message-sound-type">Sound type</label>
-          <select id="message-sound-type" form="settings-form" name="message_sound_type">
-            <option value="chime">Chime — soft two-tone</option>
-            <option value="ping">Ping — short high note</option>
-            <option value="soft">Soft — quiet low tone</option>
-            <option value="alert">Alert — quick double beep</option>
-          </select>
-          <p id="message-sound-type-error" class="field-error" role="alert" hidden></p>
-        </div>
-        <div class="form__actions">
-          <button id="test-message-sound" type="button" class="button-secondary">Test sound</button>
-        </div>
-      </fieldset>
-      <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
-      <p id="recent-messages-empty" class="empty-state">No messages yet.</p>
+
+      <div class="message-panel">
+        <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
+        <p id="recent-messages-empty" class="empty-state">No messages yet.</p>
+      </div>
     </section>
   </main>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
