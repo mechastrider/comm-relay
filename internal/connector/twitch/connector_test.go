@@ -67,7 +67,7 @@ func TestConnector_Run_WhenDisabled_ExpectNoConnect(t *testing.T) {
 
 	eventBus := bus.New(8)
 	store := testStore(t, config.TwitchConfig{Enabled: false, Channel: "x"})
-	connector := New(eventBus, store)
+	connector := New(eventBus, store, nil)
 	connector.newClient = func() ircClient {
 		t.Fatal("client should not be created when disabled")
 		return nil
@@ -88,7 +88,7 @@ func TestConnector_Run_WhenSessionActive_ExpectPublishedMessage(t *testing.T) {
 
 	fake := &fakeIRCClient{connectCh: make(chan struct{}, 1)}
 	store := testStore(t, config.TwitchConfig{Enabled: true, Channel: "#Streamer"})
-	connector := New(eventBus, store)
+	connector := New(eventBus, store, nil)
 	connector.newClient = func() ircClient { return fake }
 
 	ctx, cancel := context.WithCancel(context.Background())

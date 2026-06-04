@@ -45,8 +45,24 @@
         </div>
       </dl>
 
+      <p id="twitch-detail" class="status-detail" hidden></p>
       <p id="youtube-detail" class="status-detail" hidden></p>
       <p id="vk-detail" class="status-detail" hidden></p>
+
+      <dl class="overview-list diagnostics-list" aria-label="Runtime diagnostics">
+        <div class="overview-list__row">
+          <dt>Uptime</dt>
+          <dd id="diag-uptime" class="overview-list__value">-</dd>
+        </div>
+        <div class="overview-list__row">
+          <dt>WebSocket clients</dt>
+          <dd id="diag-ws-clients" class="overview-list__value">-</dd>
+        </div>
+        <div class="overview-list__row">
+          <dt>Messages</dt>
+          <dd id="diag-message-counts" class="overview-list__value">-</dd>
+        </div>
+      </dl>
     </aside>
 
     <form id="settings-form" class="settings-form" novalidate>
@@ -230,6 +246,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

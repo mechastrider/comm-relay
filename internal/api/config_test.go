@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/stretchr/testify/require"
 )
 
@@ -163,6 +164,47 @@ func TestStatus_WhenGet_ExpectConnectorStates(t *testing.T) {
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
 	twitch := payload["twitch"].(map[string]any)
 	require.Equal(t, "disabled", twitch["state"])
+	require.Equal(t, float64(0), twitch["message_count"])
+}
+
+func TestStatus_WhenRegistryConnected_ExpectLiveState(t *testing.T) {
+	t.Parallel()
+
+	b := bus.New(0)
+	hub, err := NewHub(b)
+	require.NoError(t, err)
+
+	registry := status.NewRegistry()
+	registry.SetTwitch(status.Snapshot{
+		State:        status.StateConnected,
+		LastError:    "",
+		MessageCount: 5,
+	})
+
+	store := testConfigStore(t)
+	updated := store.Snapshot()
+	updated.Twitch.Enabled = true
+	updated.Twitch.Channel = "streamer"
+	require.NoError(t, store.Replace(updated))
+
+	handler, err := NewHandler(Options{
+		WebRoot:  "../../web",
+		Hub:      hub,
+		Store:    store,
+		History:  NewMessageHistory(0),
+		Registry: registry,
+	})
+	require.NoError(t, err)
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/status", nil))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var payload map[string]any
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	twitch := payload["twitch"].(map[string]any)
+	require.Equal(t, "connected", twitch["state"])
+	require.Equal(t, float64(5), twitch["message_count"])
 }
 
 func TestMessagesRecent_WhenPublished_ExpectChronologicalList(t *testing.T) {

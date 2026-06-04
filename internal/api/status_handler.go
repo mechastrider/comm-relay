@@ -13,6 +13,10 @@ type connectorState string
 const (
 	connectorStateDisabled     connectorState = "disabled"
 	connectorStateDisconnected connectorState = "disconnected"
+	connectorStateConnecting   connectorState = "connecting"
+	connectorStateConnected    connectorState = "connected"
+	connectorStateReconnecting connectorState = "reconnecting"
+	connectorStateError        connectorState = "error"
 )
 
 type statusHandler struct {
@@ -25,41 +29,58 @@ func newStatusHandler(store *config.Store, registry *status.Registry) *statusHan
 }
 
 type statusResponse struct {
-	Twitch  twitchStatusResponse   `json:"twitch"`
+	Twitch  platformStatusResponse `json:"twitch"`
 	YouTube platformStatusResponse `json:"youtube"`
 	VK      platformStatusResponse `json:"vk"`
 }
 
-type twitchStatusResponse struct {
-	Enabled bool           `json:"enabled"`
-	Channel string         `json:"channel"`
-	State   connectorState `json:"state"`
-}
-
 type platformStatusResponse struct {
 	Enabled        bool           `json:"enabled"`
+	Channel        string         `json:"channel,omitempty"`
 	State          connectorState `json:"state"`
 	OAuthConnected bool           `json:"oauth_connected,omitempty"`
 	Detail         string         `json:"detail,omitempty"`
+	LastError      string         `json:"last_error,omitempty"`
+	MessageCount   uint64         `json:"message_count"`
 }
 
 func (h *statusHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	cfg := h.store.Snapshot()
 
 	writeJSON(w, http.StatusOK, statusResponse{
-		Twitch: twitchStatusResponse{
-			Enabled: cfg.Twitch.Enabled,
-			Channel: cfg.Twitch.Channel,
-			State:   twitchConnectorState(cfg.Twitch),
-		},
+		Twitch:  twitchStatusResponse(cfg, h.registry),
 		YouTube: youtubeStatusResponse(cfg, h.registry),
 		VK:      vkStatusResponse(cfg, h.registry),
 	})
 }
 
+func twitchStatusResponse(cfg config.Config, registry *status.Registry) platformStatusResponse {
+	resp := platformStatusResponse{
+		Enabled: cfg.Twitch.Enabled,
+		Channel: cfg.Twitch.Channel,
+	}
+
+	if !cfg.Twitch.Enabled {
+		resp.State = connectorStateDisabled
+		return resp
+	}
+
+	if snap, ok := registrySnapshot(registry, status.PlatformTwitch); ok {
+		applyRegistrySnapshot(&resp, snap)
+		return resp
+	}
+
+	resp.State = connectorStateDisconnected
+	if strings.TrimSpace(cfg.Twitch.Channel) == "" {
+		resp.Detail = "Set Twitch channel in admin."
+	}
+	return resp
+}
+
 func vkStatusResponse(cfg config.Config, registry *status.Registry) platformStatusResponse {
 	resp := platformStatusResponse{
 		Enabled: cfg.VK.Enabled,
+		Channel: cfg.VK.Channel,
 	}
 
 	if !cfg.VK.Enabled {
@@ -67,13 +88,9 @@ func vkStatusResponse(cfg config.Config, registry *status.Registry) platformStat
 		return resp
 	}
 
-	if registry != nil {
-		snap := registry.VK()
-		if snap.State != "" {
-			resp.State = connectorState(snap.State)
-			resp.Detail = snap.Detail
-			return resp
-		}
+	if snap, ok := registrySnapshot(registry, status.PlatformVK); ok {
+		applyRegistrySnapshot(&resp, snap)
+		return resp
 	}
 
 	resp.State = connectorStateDisconnected
@@ -81,20 +98,6 @@ func vkStatusResponse(cfg config.Config, registry *status.Registry) platformStat
 		resp.Detail = "Set VK channel slug in admin."
 	}
 	return resp
-}
-
-func twitchConnectorState(twitch config.TwitchConfig) connectorState {
-	if !twitch.Enabled {
-		return connectorStateDisabled
-	}
-	return connectorStateDisconnected
-}
-
-func platformConnectorState(enabled bool) connectorState {
-	if !enabled {
-		return connectorStateDisabled
-	}
-	return connectorStateDisconnected
 }
 
 func youtubeStatusResponse(cfg config.Config, registry *status.Registry) platformStatusResponse {
@@ -108,13 +111,9 @@ func youtubeStatusResponse(cfg config.Config, registry *status.Registry) platfor
 		return resp
 	}
 
-	if registry != nil {
-		snap := registry.YouTube()
-		if snap.State != "" {
-			resp.State = connectorState(snap.State)
-			resp.Detail = snap.Detail
-			return resp
-		}
+	if snap, ok := registrySnapshot(registry, status.PlatformYouTube); ok {
+		applyRegistrySnapshot(&resp, snap)
+		return resp
 	}
 
 	resp.State = connectorStateDisconnected
@@ -122,4 +121,22 @@ func youtubeStatusResponse(cfg config.Config, registry *status.Registry) platfor
 		resp.Detail = "Connect YouTube in admin (OAuth)."
 	}
 	return resp
+}
+
+func registrySnapshot(registry *status.Registry, platform string) (status.Snapshot, bool) {
+	if registry == nil {
+		return status.Snapshot{}, false
+	}
+	snap := registry.Get(platform)
+	if snap.State == "" {
+		return status.Snapshot{}, false
+	}
+	return snap, true
+}
+
+func applyRegistrySnapshot(resp *platformStatusResponse, snap status.Snapshot) {
+	resp.State = connectorState(snap.State)
+	resp.Detail = snap.Detail
+	resp.LastError = snap.LastError
+	resp.MessageCount = snap.MessageCount
 }

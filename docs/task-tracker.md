@@ -34,11 +34,12 @@
 | 10 | CR-010 | done | Streaming MVP | Add YouTube Live connector with OAuth | [CR-010-youtube-live-connector.md](tasks/CR-010-youtube-live-connector.md) |
 | 11 | CR-011 | done | Streaming MVP | Research and add VK Live connector | [CR-011-vk-live-connector.md](tasks/CR-011-vk-live-connector.md) |
 | 12 | CR-012 | done | Streaming MVP | Polish OBS overlay styling | [CR-012-overlay-styling.md](tasks/CR-012-overlay-styling.md) |
-| 13 | CR-013 | todo | Product polish | Improve diagnostics and connector statuses | [CR-013-diagnostics-and-statuses.md](tasks/CR-013-diagnostics-and-statuses.md) |
+| 13 | CR-013 | done | Product polish | Improve diagnostics and connector statuses | [CR-013-diagnostics-and-statuses.md](tasks/CR-013-diagnostics-and-statuses.md) |
 | 14 | CR-014 | todo | Product polish | Add emoji provider research plan | [CR-014-emoji-provider-research.md](tasks/CR-014-emoji-provider-research.md) |
 
 ## Current Notes
 
+- CR-013: Unified connector states (disabled/connecting/connected/reconnecting/error), Twitch live status via registry, per-platform message counters, `GET /api/diagnostics` (uptime, WS clients, counts), admin overview shows details/last errors/diagnostics. Manual admin smoke not run in agent environment.
 - CR-012: Overlay polish — platform accent colors (Twitch/YouTube/VK), CSS variables, compact/normal layout, font size 12–32px; settings in `config.json` + admin Display panel; fade-in/out animations. Manual OBS smoke not run in agent environment.
 - CR-011: VK Live connector via public WebSocket API (`api.live.vkvideo.ru`, `pubsub.live.vkvideo.ru`); read-only, no OAuth; admin channel slug + status. Documented in `docs/concept.md`. Manual live smoke not run here.
 - CR-010: YouTube Live connector + OAuth (`/oauth/youtube/*`), admin UI, status registry. Redirect URI: `http://127.0.0.1:<server_port>/oauth/youtube/callback`. Manual live OAuth smoke not run here (no credentials in agent environment).

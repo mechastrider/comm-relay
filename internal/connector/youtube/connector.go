@@ -56,7 +56,7 @@ func (c *Connector) Run(ctx context.Context) error {
 
 		cfg := c.store.Snapshot()
 		if !cfg.YouTube.Enabled {
-			c.setStatus(status.StateDisabled, "")
+			c.setStatus(status.StateDisabled, "", "")
 			backoff = newReconnectBackoff()
 			if err := waitContext(ctx, configPollInterval); err != nil {
 				return nil
@@ -65,7 +65,7 @@ func (c *Connector) Run(ctx context.Context) error {
 		}
 
 		if !cfg.YouTube.OAuth.HasClientCredentials() {
-			c.setStatus(status.StateError, "Set YouTube OAuth client ID and secret in admin.")
+			c.setStatus(status.StateError, "Set YouTube OAuth client ID and secret in admin.", "")
 			if err := waitContext(ctx, configPollInterval); err != nil {
 				return nil
 			}
@@ -73,7 +73,7 @@ func (c *Connector) Run(ctx context.Context) error {
 		}
 
 		if !cfg.YouTube.OAuth.Connected() {
-			c.setStatus(status.StateError, "Connect YouTube in admin (OAuth).")
+			c.setStatus(status.StateError, "Connect YouTube in admin (OAuth).", "")
 			if err := waitContext(ctx, configPollInterval); err != nil {
 				return nil
 			}
@@ -92,10 +92,11 @@ func (c *Connector) Run(ctx context.Context) error {
 			c.setStatusFromError(err)
 		} else {
 			clog.Info(sessionCtx, "youtube session ended")
-			c.setStatus(status.StateDisconnected, "")
+			c.setStatus(status.StateDisconnected, "", "")
 		}
 
 		wait := backoff.current()
+		c.setStatus(status.StateReconnecting, "", "")
 		clog.Info(sessionCtx, "youtube reconnect scheduled", slog.Duration("after", wait))
 		if err := waitContext(ctx, wait); err != nil {
 			return nil
@@ -114,7 +115,7 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 	token := tokenFromConfig(cfg.YouTube.OAuth)
 	tokenSource := NewPersistingTokenSource(c.store, oauthCfg, token)
 
-	c.setStatus(status.StateConnecting, "")
+	c.setStatus(status.StateConnecting, "", "")
 
 	client, err := c.newClient(ctx, tokenSource)
 	if err != nil {
@@ -131,7 +132,7 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 		slog.String("live_chat_id", liveChatID),
 	))
 
-	c.setStatus(status.StateConnected, "")
+	c.setStatus(status.StateConnected, "", "")
 
 	pageToken := ""
 	pollInterval := 5 * time.Second
@@ -181,35 +182,45 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 	}
 }
 
-func (c *Connector) setStatus(state status.State, detail string) {
+func (c *Connector) setStatus(state status.State, detail, lastError string) {
 	if c.registry == nil {
 		return
 	}
-	c.registry.SetYouTube(status.Snapshot{State: state, Detail: detail})
+	snap := c.registry.YouTube()
+	snap.State = state
+	snap.Detail = detail
+	if lastError != "" {
+		snap.LastError = lastError
+	}
+	if state == status.StateConnected {
+		snap.LastError = ""
+		snap.Detail = ""
+	}
+	c.registry.SetYouTube(snap)
 }
 
 func (c *Connector) setStatusFromError(err error) {
 	if isQuotaError(err) {
-		c.setStatus(status.StateError, "YouTube API quota exceeded — try again later.")
+		c.setStatus(status.StateError, "YouTube API quota exceeded — try again later.", "")
 		return
 	}
 	if errors.Is(err, errNoLiveChat) {
-		c.setStatus(status.StateError, "No active YouTube live stream for this account.")
+		c.setStatus(status.StateError, "No active YouTube live stream for this account.", "")
 		return
 	}
 	if errors.Is(err, errNotConnected) || errors.Is(err, errNotConfigured) {
-		c.setStatus(status.StateError, err.Error())
+		c.setStatus(status.StateError, err.Error(), "")
 		return
 	}
 
 	if apiErr, ok := errors.As[*googleapi.Error](err); ok {
 		if apiErr.Code == http.StatusUnauthorized || apiErr.Code == http.StatusForbidden {
-			c.setStatus(status.StateError, "YouTube authorization failed — reconnect in admin.")
+			c.setStatus(status.StateError, "YouTube authorization failed — reconnect in admin.", "")
 			return
 		}
 	}
 
-	c.setStatus(status.StateError, "YouTube connector error — see server logs.")
+	c.setStatus(status.StateError, "YouTube connector error — see server logs.", status.SanitizeError(err.Error()))
 }
 
 func isQuotaError(err error) bool {

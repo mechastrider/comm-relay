@@ -6,6 +6,7 @@
   const settingsState = document.getElementById("settings-state");
   const banner = document.getElementById("banner");
   const twitchStatus = document.getElementById("twitch-status");
+  const twitchDetail = document.getElementById("twitch-detail");
   const twitchEnabled = document.getElementById("twitch-enabled");
   const twitchChannel = document.getElementById("twitch-channel");
   const youtubeStatus = document.getElementById("youtube-status");
@@ -17,6 +18,9 @@
   const youtubeConnect = document.getElementById("youtube-connect");
   const vkStatus = document.getElementById("vk-status");
   const vkDetail = document.getElementById("vk-detail");
+  const diagUptime = document.getElementById("diag-uptime");
+  const diagWsClients = document.getElementById("diag-ws-clients");
+  const diagMessageCounts = document.getElementById("diag-message-counts");
   const vkEnabled = document.getElementById("vk-enabled");
   const vkChannel = document.getElementById("vk-channel");
   if (!vkEnabled || !vkChannel) {
@@ -453,8 +457,49 @@
     el.className = "status-pill status-pill--" + state;
   }
 
+  function formatMessageCount(count) {
+    if (typeof count !== "number" || count < 0) {
+      return "";
+    }
+    if (count === 0) {
+      return "";
+    }
+    return " · " + String(count) + " msg";
+  }
+
+  function platformDetailText(platform) {
+    const parts = [];
+    if (typeof platform.detail === "string" && platform.detail !== "") {
+      parts.push(platform.detail);
+    }
+    if (typeof platform.last_error === "string" && platform.last_error !== "") {
+      parts.push("Last error: " + platform.last_error);
+    }
+    const countSuffix = formatMessageCount(platform.message_count);
+    if (countSuffix !== "") {
+      parts.push("Received" + countSuffix);
+    }
+    return parts.join(" ");
+  }
+
+  function renderPlatformDetail(el, platform) {
+    const text = platformDetailText(platform);
+    if (!el) {
+      return;
+    }
+    if (text !== "") {
+      el.hidden = false;
+      el.textContent = text;
+      return;
+    }
+    el.hidden = true;
+    el.textContent = "";
+  }
+
   function renderStatus(status) {
-    renderPlatformStatus(twitchStatus, status.twitch || {});
+    const twitch = status.twitch || {};
+    renderPlatformStatus(twitchStatus, twitch);
+    renderPlatformDetail(twitchDetail, twitch);
 
     const youtube = status.youtube || {};
     renderPlatformStatus(youtubeStatus, youtube);
@@ -465,22 +510,62 @@
       youtubeOAuthLabel.textContent = "Not connected";
     }
 
-    if (typeof youtube.detail === "string" && youtube.detail !== "") {
-      youtubeDetail.hidden = false;
-      youtubeDetail.textContent = youtube.detail;
-    } else {
-      youtubeDetail.hidden = true;
-      youtubeDetail.textContent = "";
-    }
+    renderPlatformDetail(youtubeDetail, youtube);
 
     const vk = status.vk || {};
     renderPlatformStatus(vkStatus, vk);
-    if (typeof vk.detail === "string" && vk.detail !== "") {
-      vkDetail.hidden = false;
-      vkDetail.textContent = vk.detail;
-    } else {
-      vkDetail.hidden = true;
-      vkDetail.textContent = "";
+    renderPlatformDetail(vkDetail, vk);
+  }
+
+  function formatUptime(seconds) {
+    if (typeof seconds !== "number" || seconds < 0) {
+      return "-";
+    }
+    if (seconds < 60) {
+      return String(seconds) + "s";
+    }
+    const minutes = Math.floor(seconds / 60);
+    const rem = seconds % 60;
+    if (minutes < 60) {
+      return String(minutes) + "m " + String(rem) + "s";
+    }
+    const hours = Math.floor(minutes / 60);
+    const remMinutes = minutes % 60;
+    return String(hours) + "h " + String(remMinutes) + "m";
+  }
+
+  function formatMessageCounts(counts) {
+    if (!counts || typeof counts !== "object") {
+      return "None yet";
+    }
+    const entries = Object.keys(counts)
+      .sort()
+      .map(function (platform) {
+        return platform + ": " + String(counts[platform]);
+      });
+    if (entries.length === 0) {
+      return "None yet";
+    }
+    return entries.join(", ");
+  }
+
+  function renderDiagnostics(payload) {
+    if (!payload) {
+      return;
+    }
+    if (diagUptime) {
+      diagUptime.textContent = formatUptime(payload.uptime_seconds);
+    }
+    if (diagWsClients) {
+      const clients = payload.websocket_clients;
+      diagWsClients.textContent =
+        typeof clients === "number" ? String(clients) : "-";
+    }
+    if (diagMessageCounts) {
+      diagMessageCounts.textContent = formatMessageCounts(payload.message_counts);
+    }
+    if (payload.connectors) {
+      renderStatus(payload.connectors);
     }
   }
 
@@ -835,12 +920,12 @@
   }
 
   async function loadStatus() {
-    const response = await fetch(apiURL("/api/status"));
+    const response = await fetch(apiURL("/api/diagnostics"));
     const payload = await readJSON(response);
     if (!response.ok) {
       throw new Error(mapHTTPError(response.status, payload && payload.error));
     }
-    renderStatus(payload);
+    renderDiagnostics(payload);
   }
 
   async function loadRecentMessages(options) {

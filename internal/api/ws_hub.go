@@ -74,6 +74,13 @@ func (h *Hub) unregister(c *wsClient) {
 	h.mu.Unlock()
 }
 
+// ClientCount returns the number of connected WebSocket clients.
+func (h *Hub) ClientCount() int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return len(h.clients)
+}
+
 func (h *Hub) broadcast(payload []byte) {
 	h.mu.Lock()
 	defer h.mu.Unlock()

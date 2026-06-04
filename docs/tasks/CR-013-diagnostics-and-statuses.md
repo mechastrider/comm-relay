@@ -1,6 +1,6 @@
 # CR-013: Diagnostics And Statuses
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -49,3 +49,11 @@ Status: `todo`
 ## Notes For Agent
 
 - Статусы должны быть platform-agnostic, чтобы не размазывать платформенную логику по UI.
+
+## Completion
+
+- `internal/connector/status`: platform map, `reconnecting`, message counters, `SanitizeError`, `RunMessageCounter`.
+- Twitch connector reports live status; YouTube/VK set `reconnecting` during backoff.
+- `GET /api/diagnostics` + extended `GET /api/status` (`last_error`, `message_count`).
+- Admin overview polls diagnostics and shows runtime row + per-platform detail lines.
+- Checks: `go build ./...`, `go test ./...` passed. Manual admin smoke not run here.
