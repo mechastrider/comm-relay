@@ -21,7 +21,9 @@ const (
 	wsOrigin               = "https://live.vkvideo.ru"
 )
 
-var appConfigPattern = regexp.MustCompile(`<script id="app-config">(.+?)</script>`)
+var appConfigPattern = regexp.MustCompile(`(?s)<script[^>]*\bid=["']app-config["'][^>]*>(.+?)</script>`)
+
+const defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
 type httpDoer interface {
 	Do(req *http.Request) (*http.Response, error)
@@ -145,7 +147,7 @@ func (c *defaultClient) fetchWebSocketToken(ctx context.Context) (string, error)
 	if err != nil {
 		return "", errors.Errorf("create vk app config request: %w", err)
 	}
-	req.Header.Set("Origin", wsOrigin)
+	setVKBrowserHeaders(req)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -189,7 +191,7 @@ func (c *defaultClient) fetchChannelOwnerID(ctx context.Context, channel string)
 	if err != nil {
 		return "", errors.Errorf("create vk channel info request: %w", err)
 	}
-	req.Header.Set("Origin", wsOrigin)
+	setVKBrowserHeaders(req)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -223,4 +225,10 @@ func (c *defaultClient) fetchChannelOwnerID(ctx context.Context, channel string)
 	}
 
 	return strconv.FormatInt(info.Data.Owner.ID, 10), nil
+}
+
+func setVKBrowserHeaders(req *http.Request) {
+	req.Header.Set("Origin", wsOrigin)
+	req.Header.Set("User-Agent", defaultUserAgent)
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 }

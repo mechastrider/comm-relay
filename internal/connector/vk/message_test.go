@@ -54,6 +54,32 @@ func TestMapWSMessage_IgnoresNonMessageEvents(t *testing.T) {
 	require.False(t, ok)
 }
 
+func TestMapWSMessage_StructuredTextPayload(t *testing.T) {
+	t.Parallel()
+
+	raw := []byte(`{
+		"push": {
+			"pub": {
+				"data": {
+					"type": "message",
+					"data": {
+						"id": 2,
+						"createdAt": 1717400000,
+						"author": {"id": 1, "displayName": "Viewer"},
+						"data": [
+							{"type": "text", "content": "[\"тест вк\",\"unstyled\",[]]"}
+						]
+					}
+				}
+			}
+		}
+	}`)
+
+	msg, ok := MapWSMessage(raw)
+	require.True(t, ok)
+	require.Equal(t, "тест вк", msg.Message)
+}
+
 func TestMapWSMessage_MentionBlock(t *testing.T) {
 	t.Parallel()
 

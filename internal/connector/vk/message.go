@@ -111,13 +111,73 @@ func parseTextContent(content string) string {
 	if content == "" {
 		return ""
 	}
+	if !strings.HasPrefix(content, "[") {
+		return content
+	}
+
+	var raw []json.RawMessage
+	if err := json.Unmarshal([]byte(content), &raw); err != nil || len(raw) == 0 {
+		return content
+	}
+
+	var first string
+	if err := json.Unmarshal(raw[0], &first); err != nil {
+		return content
+	}
+
+	if vkStructuredTextPayload(raw) {
+		return first
+	}
 
 	var parts []string
-	if err := json.Unmarshal([]byte(content), &parts); err == nil {
+	allStrings := true
+	for _, item := range raw {
+		var part string
+		if err := json.Unmarshal(item, &part); err != nil {
+			allStrings = false
+			break
+		}
+		parts = append(parts, part)
+	}
+	if allStrings {
 		return strings.Join(parts, "")
 	}
 
-	return content
+	return first
+}
+
+// vkStructuredTextPayload detects [text, style, attachments?] payloads from VK Live chat.
+func vkStructuredTextPayload(raw []json.RawMessage) bool {
+	if len(raw) < 2 {
+		return false
+	}
+
+	var style string
+	if err := json.Unmarshal(raw[1], &style); err != nil || !isVkTextStyle(style) {
+		return false
+	}
+
+	if len(raw) >= 3 {
+		var nested []json.RawMessage
+		if json.Unmarshal(raw[2], &nested) == nil {
+			return true
+		}
+		var obj map[string]json.RawMessage
+		if json.Unmarshal(raw[2], &obj) == nil {
+			return true
+		}
+	}
+
+	return true
+}
+
+func isVkTextStyle(style string) bool {
+	switch style {
+	case "unstyled", "styled":
+		return true
+	default:
+		return false
+	}
 }
 
 func authorBadges(author struct {
