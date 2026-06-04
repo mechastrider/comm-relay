@@ -349,7 +349,9 @@ config.json
   },
   "overlay": {
     "max_messages": 30,
-    "message_ttl_seconds": 20
+    "message_ttl_seconds": 20,
+    "font_size_px": 18,
+    "display_mode": "normal"
   }
 }
 ```

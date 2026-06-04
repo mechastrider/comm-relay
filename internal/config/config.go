@@ -35,10 +35,18 @@ type VKConfig struct {
 	Channel string `json:"channel"`
 }
 
-// OverlayConfig controls OBS overlay message retention.
+// Overlay display density modes.
+const (
+	OverlayDisplayModeNormal  = "normal"
+	OverlayDisplayModeCompact = "compact"
+)
+
+// OverlayConfig controls OBS overlay appearance and message retention.
 type OverlayConfig struct {
-	MaxMessages       int `json:"max_messages"`
-	MessageTTLSeconds int `json:"message_ttl_seconds"`
+	MaxMessages       int    `json:"max_messages"`
+	MessageTTLSeconds int    `json:"message_ttl_seconds"`
+	FontSizePx        int    `json:"font_size_px"`
+	DisplayMode       string `json:"display_mode"`
 }
 
 // Default returns safe prototype defaults.
@@ -57,6 +65,8 @@ func Default() *Config {
 		Overlay: OverlayConfig{
 			MaxMessages:       30,
 			MessageTTLSeconds: 20,
+			FontSizePx:        18,
+			DisplayMode:       OverlayDisplayModeNormal,
 		},
 		Admin: AdminConfig{
 			MessageSound: defaultMessageSound(),
@@ -66,6 +76,13 @@ func Default() *Config {
 
 // ApplyDefaults fills in settings omitted from older config.json files.
 func (c *Config) ApplyDefaults() {
+	def := Default()
+	if c.Overlay.FontSizePx < 1 {
+		c.Overlay.FontSizePx = def.Overlay.FontSizePx
+	}
+	if c.Overlay.DisplayMode == "" {
+		c.Overlay.DisplayMode = def.Overlay.DisplayMode
+	}
 	c.Admin.MessageSound.applyDefaults()
 }
 
@@ -84,6 +101,19 @@ func (c *Config) Validate() error {
 	}
 	if c.Overlay.MessageTTLSeconds < 0 {
 		return errors.Errorf("%w: overlay.message_ttl_seconds must be non-negative", ErrInvalidConfig)
+	}
+	if c.Overlay.FontSizePx < 12 || c.Overlay.FontSizePx > 32 {
+		return errors.Errorf("%w: overlay.font_size_px must be between 12 and 32", ErrInvalidConfig)
+	}
+	switch c.Overlay.DisplayMode {
+	case OverlayDisplayModeNormal, OverlayDisplayModeCompact:
+	default:
+		return errors.Errorf(
+			"%w: overlay.display_mode must be %q or %q",
+			ErrInvalidConfig,
+			OverlayDisplayModeNormal,
+			OverlayDisplayModeCompact,
+		)
 	}
 	if c.Twitch.Enabled && c.Twitch.Channel == "" {
 		return errors.Errorf("%w: twitch.channel is required when twitch is enabled", ErrInvalidConfig)

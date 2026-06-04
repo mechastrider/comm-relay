@@ -109,3 +109,41 @@ func TestListenAddr_WhenDefaultPort_ExpectFormattedAddr(t *testing.T) {
 	cfg := Default()
 	require.Equal(t, ":17877", cfg.ListenAddr())
 }
+
+func TestApplyDefaults_WhenOverlayFieldsOmitted_ExpectOverlayDefaults(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		ServerPort: 17877,
+		Overlay: OverlayConfig{
+			MaxMessages:       10,
+			MessageTTLSeconds: 5,
+		},
+	}
+	cfg.ApplyDefaults()
+
+	require.Equal(t, 18, cfg.Overlay.FontSizePx)
+	require.Equal(t, OverlayDisplayModeNormal, cfg.Overlay.DisplayMode)
+}
+
+func TestValidate_WhenOverlayFontSizeOutOfRange_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.FontSizePx = 8
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+}
+
+func TestValidate_WhenOverlayDisplayModeInvalid_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.DisplayMode = "dense"
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+}

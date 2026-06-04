@@ -24,6 +24,8 @@
   }
   const overlayMaxMessages = document.getElementById("overlay-max-messages");
   const overlayMessageTTL = document.getElementById("overlay-message-ttl");
+  const overlayFontSize = document.getElementById("overlay-font-size");
+  const overlayDisplayMode = document.getElementById("overlay-display-mode");
   const recentMessages = document.getElementById("recent-messages");
   const recentMessagesEmpty = document.getElementById("recent-messages-empty");
   const refreshMessages = document.getElementById("refresh-messages");
@@ -43,6 +45,8 @@
     vk_channel: document.getElementById("vk-channel-error"),
     overlay_max_messages: document.getElementById("overlay-max-messages-error"),
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
+    overlay_font_size_px: document.getElementById("overlay-font-size-error"),
+    overlay_display_mode: document.getElementById("overlay-display-mode-error"),
     admin_message_sound_volume: document.getElementById("message-sound-volume-error"),
     admin_message_sound_sound: document.getElementById("message-sound-type-error"),
   };
@@ -52,6 +56,8 @@
     vk_channel: vkChannel,
     overlay_max_messages: overlayMaxMessages,
     overlay_message_ttl_seconds: overlayMessageTTL,
+    overlay_font_size_px: overlayFontSize,
+    overlay_display_mode: overlayDisplayMode,
     admin_message_sound_volume: messageSoundVolumeInput,
     admin_message_sound_sound: messageSoundTypeInput,
   };
@@ -245,10 +251,18 @@
     currentConfig = config;
     twitchEnabled.checked = Boolean(config.twitch && config.twitch.enabled);
     twitchChannel.value = config.twitch && config.twitch.channel ? config.twitch.channel : "";
-    overlayMaxMessages.value = String(config.overlay ? config.overlay.max_messages : 30);
-    overlayMessageTTL.value = String(
-      config.overlay ? config.overlay.message_ttl_seconds : 20
+    const overlay = config.overlay || {};
+    overlayMaxMessages.value = String(
+      typeof overlay.max_messages === "number" ? overlay.max_messages : 30
     );
+    overlayMessageTTL.value = String(
+      typeof overlay.message_ttl_seconds === "number" ? overlay.message_ttl_seconds : 20
+    );
+    overlayFontSize.value = String(
+      typeof overlay.font_size_px === "number" ? overlay.font_size_px : 18
+    );
+    overlayDisplayMode.value =
+      overlay.display_mode === "compact" ? "compact" : "normal";
 
     if (config.youtube) {
       youtubeEnabled.checked = Boolean(config.youtube.enabled);
@@ -329,6 +343,8 @@
       overlay: {
         max_messages: Number.parseInt(overlayMaxMessages.value, 10),
         message_ttl_seconds: Number.parseInt(overlayMessageTTL.value, 10),
+        font_size_px: Number.parseInt(overlayFontSize.value, 10),
+        display_mode: overlayDisplayMode.value,
       },
       admin: {
         message_sound: getMessageSoundSettings(),
@@ -380,6 +396,23 @@
     ) {
       setFieldError("overlay_message_ttl_seconds", "TTL must be 0 or greater.");
       firstInvalid = firstInvalid || overlayMessageTTL;
+    }
+
+    if (
+      !Number.isFinite(payload.overlay.font_size_px) ||
+      payload.overlay.font_size_px < 12 ||
+      payload.overlay.font_size_px > 32
+    ) {
+      setFieldError("overlay_font_size_px", "Font size must be between 12 and 32 px.");
+      firstInvalid = firstInvalid || overlayFontSize;
+    }
+
+    if (
+      payload.overlay.display_mode !== "normal" &&
+      payload.overlay.display_mode !== "compact"
+    ) {
+      setFieldError("overlay_display_mode", "Choose normal or compact layout.");
+      firstInvalid = firstInvalid || overlayDisplayMode;
     }
 
     const sound = payload.admin && payload.admin.message_sound;

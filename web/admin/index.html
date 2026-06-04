@@ -151,6 +151,21 @@
                 <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
                 <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
               </div>
+
+              <div class="form__field">
+                <label for="overlay-font-size">Font size (px)</label>
+                <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="32" step="1">
+                <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
+              </div>
+
+              <div class="form__field">
+                <label for="overlay-display-mode">Layout</label>
+                <select id="overlay-display-mode" name="overlay_display_mode">
+                  <option value="normal">Normal</option>
+                  <option value="compact">Compact</option>
+                </select>
+                <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
+              </div>
             </div>
           </section>
 
