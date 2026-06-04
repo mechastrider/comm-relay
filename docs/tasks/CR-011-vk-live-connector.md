@@ -1,6 +1,10 @@
 # CR-011: VK Live Connector
 
-Status: `todo`
+Status: `done`
+
+## Completion note
+
+Implemented read-only VK Live connector via public `live.vkvideo.ru` WebSocket API (documented in `docs/concept.md`). Admin: enable + channel slug; live status via registry. Manual live smoke not run in agent environment (no guaranteed live VK stream).
 
 ## Goal
 

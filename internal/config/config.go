@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/muonsoft/errors"
 )
@@ -17,7 +18,7 @@ type Config struct {
 	ServerPort int           `json:"server_port"`
 	Twitch     TwitchConfig  `json:"twitch"`
 	YouTube    YouTubeConfig `json:"youtube"`
-	VK         PlatformFlags `json:"vk"`
+	VK         VKConfig      `json:"vk"`
 	Overlay    OverlayConfig `json:"overlay"`
 	Admin      AdminConfig   `json:"admin"`
 }
@@ -28,9 +29,10 @@ type TwitchConfig struct {
 	Channel string `json:"channel"`
 }
 
-// PlatformFlags toggles a connector without platform-specific fields.
-type PlatformFlags struct {
-	Enabled bool `json:"enabled"`
+// VKConfig holds VK Live / VK Video connector settings.
+type VKConfig struct {
+	Enabled bool   `json:"enabled"`
+	Channel string `json:"channel"`
 }
 
 // OverlayConfig controls OBS overlay message retention.
@@ -48,7 +50,10 @@ func Default() *Config {
 			Channel: "",
 		},
 		YouTube: YouTubeConfig{Enabled: false},
-		VK:      PlatformFlags{Enabled: false},
+		VK: VKConfig{
+			Enabled: false,
+			Channel: "",
+		},
 		Overlay: OverlayConfig{
 			MaxMessages:       30,
 			MessageTTLSeconds: 20,
@@ -82,6 +87,9 @@ func (c *Config) Validate() error {
 	}
 	if c.Twitch.Enabled && c.Twitch.Channel == "" {
 		return errors.Errorf("%w: twitch.channel is required when twitch is enabled", ErrInvalidConfig)
+	}
+	if c.VK.Enabled && strings.TrimSpace(c.VK.Channel) == "" {
+		return errors.Errorf("%w: vk.channel is required when vk is enabled", ErrInvalidConfig)
 	}
 	if err := c.Admin.MessageSound.validate(); err != nil {
 		return err

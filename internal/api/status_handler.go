@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
@@ -52,11 +53,34 @@ func (h *statusHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 			State:   twitchConnectorState(cfg.Twitch),
 		},
 		YouTube: youtubeStatusResponse(cfg, h.registry),
-		VK: platformStatusResponse{
-			Enabled: cfg.VK.Enabled,
-			State:   platformConnectorState(cfg.VK.Enabled),
-		},
+		VK:      vkStatusResponse(cfg, h.registry),
 	})
+}
+
+func vkStatusResponse(cfg config.Config, registry *status.Registry) platformStatusResponse {
+	resp := platformStatusResponse{
+		Enabled: cfg.VK.Enabled,
+	}
+
+	if !cfg.VK.Enabled {
+		resp.State = connectorStateDisabled
+		return resp
+	}
+
+	if registry != nil {
+		snap := registry.VK()
+		if snap.State != "" {
+			resp.State = connectorState(snap.State)
+			resp.Detail = snap.Detail
+			return resp
+		}
+	}
+
+	resp.State = connectorStateDisconnected
+	if strings.TrimSpace(cfg.VK.Channel) == "" {
+		resp.Detail = "Set VK channel slug in admin."
+	}
+	return resp
 }
 
 func twitchConnectorState(twitch config.TwitchConfig) connectorState {

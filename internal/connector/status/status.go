@@ -23,6 +23,7 @@ type Snapshot struct {
 type Registry struct {
 	mu      sync.RWMutex
 	youtube Snapshot
+	vk      Snapshot
 }
 
 // NewRegistry creates an empty status registry.
@@ -42,4 +43,18 @@ func (r *Registry) YouTube() Snapshot {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.youtube
+}
+
+// SetVK updates VK connector status.
+func (r *Registry) SetVK(s Snapshot) {
+	r.mu.Lock()
+	r.vk = s
+	r.mu.Unlock()
+}
+
+// VK returns the current VK connector status.
+func (r *Registry) VK() Snapshot {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.vk
 }

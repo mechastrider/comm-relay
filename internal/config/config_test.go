@@ -74,6 +74,17 @@ func TestValidate_WhenTwitchEnabledWithoutChannel_ExpectInvalidConfig(t *testing
 	require.True(t, errors.Is(err, ErrInvalidConfig))
 }
 
+func TestValidate_WhenVKEnabledWithoutChannel_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.VK.Enabled = true
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+}
+
 func TestSave_WhenRoundTrip_ExpectEqual(t *testing.T) {
 	t.Parallel()
 

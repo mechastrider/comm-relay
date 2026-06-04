@@ -14,6 +14,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	twitchconnector "github.com/mechastrider/comm-relay/internal/connector/twitch"
+	vkconnector "github.com/mechastrider/comm-relay/internal/connector/vk"
 	youtubeconnector "github.com/mechastrider/comm-relay/internal/connector/youtube"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
@@ -118,6 +119,14 @@ func Run(opts Options) error {
 		return nil
 	}).Name("youtube"))
 
+	vkConn := vkconnector.New(eventBus, store, statusRegistry)
+	processes = append(processes, runnable.Func(func(ctx context.Context) error {
+		if err := vkConn.Run(ctx); err != nil {
+			clog.Errorf(ctx, "vk connector stopped with error: %w", err)
+		}
+		return nil
+	}).Name("vk"))
+
 	mgr.Register(processes...)
 	runnable.Run(mgr)
 
@@ -141,7 +150,7 @@ func logStartup(ctx context.Context, addr, configPath, webRoot string, cfg *conf
 func enabledConnectors(cfg *config.Config) string {
 	// Runnables are always registered; connectors watch the config store for changes.
 	_ = cfg
-	return strings.Join([]string{"twitch", "youtube"}, ", ")
+	return strings.Join([]string{"twitch", "youtube", "vk"}, ", ")
 }
 
 func setupLogging(debug bool) {

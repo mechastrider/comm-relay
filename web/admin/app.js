@@ -14,6 +14,10 @@
   const youtubeClientId = document.getElementById("youtube-client-id");
   const youtubeClientSecret = document.getElementById("youtube-client-secret");
   const youtubeConnect = document.getElementById("youtube-connect");
+  const vkStatus = document.getElementById("vk-status");
+  const vkDetail = document.getElementById("vk-detail");
+  const vkEnabled = document.getElementById("vk-enabled");
+  const vkChannel = document.getElementById("vk-channel");
   const overlayMaxMessages = document.getElementById("overlay-max-messages");
   const overlayMessageTTL = document.getElementById("overlay-message-ttl");
   const recentMessages = document.getElementById("recent-messages");
@@ -32,6 +36,7 @@
 
   const fieldErrors = {
     twitch_channel: document.getElementById("twitch-channel-error"),
+    vk_channel: document.getElementById("vk-channel-error"),
     overlay_max_messages: document.getElementById("overlay-max-messages-error"),
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
     admin_message_sound_volume: document.getElementById("message-sound-volume-error"),
@@ -40,6 +45,7 @@
 
   const fieldInputs = {
     twitch_channel: twitchChannel,
+    vk_channel: vkChannel,
     overlay_max_messages: overlayMaxMessages,
     overlay_message_ttl_seconds: overlayMessageTTL,
     admin_message_sound_volume: messageSoundVolumeInput,
@@ -139,6 +145,11 @@
       youtubeClientSecret.value = "";
     }
 
+    if (config.vk) {
+      vkEnabled.checked = Boolean(config.vk.enabled);
+      vkChannel.value = config.vk.channel ? config.vk.channel : "";
+    }
+
     applyMessageSoundFromConfig(config);
   }
 
@@ -198,7 +209,10 @@
           client_secret: youtubeClientSecret.value,
         },
       },
-      vk: currentConfig ? currentConfig.vk : { enabled: false },
+      vk: {
+        enabled: vkEnabled.checked,
+        channel: vkChannel.value.trim().toLowerCase(),
+      },
       overlay: {
         max_messages: Number.parseInt(overlayMaxMessages.value, 10),
         message_ttl_seconds: Number.parseInt(overlayMessageTTL.value, 10),
@@ -225,6 +239,20 @@
         "Use a lowercase Twitch login (letters, numbers, underscore)."
       );
       firstInvalid = twitchChannel;
+    }
+
+    if (payload.vk.enabled && payload.vk.channel === "") {
+      setFieldError("vk_channel", "Channel slug is required when VK Live is enabled.");
+      firstInvalid = firstInvalid || vkChannel;
+    } else if (
+      payload.vk.channel !== "" &&
+      !/^[a-z0-9_-]{1,64}$/.test(payload.vk.channel)
+    ) {
+      setFieldError(
+        "vk_channel",
+        "Use a lowercase channel slug (letters, numbers, underscore, hyphen)."
+      );
+      firstInvalid = firstInvalid || vkChannel;
     }
 
     if (!Number.isFinite(payload.overlay.max_messages) || payload.overlay.max_messages < 1) {
@@ -282,6 +310,16 @@
     } else {
       youtubeDetail.hidden = true;
       youtubeDetail.textContent = "";
+    }
+
+    const vk = status.vk || {};
+    renderPlatformStatus(vkStatus, vk);
+    if (typeof vk.detail === "string" && vk.detail !== "") {
+      vkDetail.hidden = false;
+      vkDetail.textContent = vk.detail;
+    } else {
+      vkDetail.hidden = true;
+      vkDetail.textContent = "";
     }
   }
 
