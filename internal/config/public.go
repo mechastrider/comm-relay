@@ -5,7 +5,7 @@ type PublicConfig struct {
 	ServerPort int                 `json:"server_port"`
 	Twitch     TwitchConfig        `json:"twitch"`
 	YouTube    YouTubeConfigPublic `json:"youtube"`
-	VK         PlatformFlags       `json:"vk"`
+	VK         VKConfig            `json:"vk"`
 	Overlay    OverlayConfig       `json:"overlay"`
 	Admin      AdminConfig         `json:"admin"`
 }

@@ -99,6 +99,33 @@
       </div>
     </section>
 
+    <section class="panel" aria-labelledby="vk-heading">
+      <h2 id="vk-heading">VK Live</h2>
+      <dl class="status-list">
+        <div class="status-list__row">
+          <dt>Status</dt>
+          <dd><span id="vk-status" class="status-pill">—</span></dd>
+        </div>
+      </dl>
+      <p id="vk-detail" class="status-detail" hidden></p>
+
+      <div class="form form--section">
+        <div class="form__field">
+          <label class="checkbox" for="vk-enabled">
+            <input id="vk-enabled" form="settings-form" name="vk_enabled" type="checkbox">
+            <span>Enable VK Live connector</span>
+          </label>
+        </div>
+
+        <div class="form__field">
+          <label for="vk-channel">Channel slug</label>
+          <input id="vk-channel" form="settings-form" name="vk_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
+          <p class="field-hint">Blog slug from <code>live.vkvideo.ru/&lt;slug&gt;</code> (read-only chat, no OAuth).</p>
+          <p id="vk-channel-error" class="field-error" role="alert" hidden></p>
+        </div>
+      </div>
+    </section>
+
     <section class="panel" aria-labelledby="messages-heading">
       <div class="panel__header">
         <h2 id="messages-heading">Recent messages</h2>

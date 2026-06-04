@@ -178,16 +178,25 @@ EventSub можно исследовать после прототипа, но �
 
 ## VK Live / VK Video
 
-Для стримового MVP добавить VK Live / VK Video после YouTube или параллельно с ним, в зависимости от доступности API.
+Для стримового MVP connector использует **публичный read-only WebSocket API** платформы `live.vkvideo.ru` (ранее VK Play Live). Официальной документированной API для live chat у VK нет; решение основано на публичных endpoint'ах, которые использует веб-плеер (см. также community-проекты turnir-crystal, vklive-message-client).
+
+Технический подход (MVP):
+
+1. Получить анонимный WebSocket token из `<script id="app-config">` на `https://live.vkvideo.ru/`.
+2. Разрешить slug канала через `GET https://api.live.vkvideo.ru/v1/blog/{slug}/public_video_stream/chat/user/` → `owner.id`.
+3. Подключиться к `wss://pubsub.live.vkvideo.ru/connection/websocket?cf_protocol_version=v2` и подписаться на `channel-chat:{owner_id}`.
+4. Парсить события `push.pub.data.type == "message"` в `ChatMessage`.
+
+OAuth для MVP **не требуется** (только чтение чата). Отправка сообщений и приватные сценарии — вне scope.
+
+Риски: endpoint'ы недокументированы и могут измениться; connector должен переживать ошибки и reconnect без падения процесса.
 
 Требования:
 
-- исследовать доступный API для live chat
-- определить способ авторизации
-- получать сообщения текущего эфира
+- channel slug в config и админке
+- получать сообщения текущего эфира (и офлайн-чата канала, если API отдаёт)
 - обрабатывать reconnect и ошибки платформы
-
-Если официальный API окажется неудобным или нестабильным, нужно отдельно зафиксировать техническое решение перед реализацией.
+- показывать статус connector в админке
 
 ---
 
@@ -335,7 +344,8 @@ config.json
     "enabled": false
   },
   "vk": {
-    "enabled": false
+    "enabled": false,
+    "channel": "example"
   },
   "overlay": {
     "max_messages": 30,
