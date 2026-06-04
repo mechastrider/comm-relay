@@ -53,6 +53,17 @@ body {
   gap: 1.25rem;
 }
 
+.settings-form {
+  display: grid;
+  gap: 1.25rem;
+  margin: 0;
+}
+
+.settings-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);

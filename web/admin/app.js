@@ -18,6 +18,9 @@
   const vkDetail = document.getElementById("vk-detail");
   const vkEnabled = document.getElementById("vk-enabled");
   const vkChannel = document.getElementById("vk-channel");
+  if (!vkEnabled || !vkChannel) {
+    console.error("VK Live settings controls are missing from the page");
+  }
   const overlayMaxMessages = document.getElementById("overlay-max-messages");
   const overlayMessageTTL = document.getElementById("overlay-message-ttl");
   const recentMessages = document.getElementById("recent-messages");
@@ -129,6 +132,57 @@
     return payload;
   }
 
+  function normalizeVkChannel(raw) {
+    let s = String(raw || "").trim().toLowerCase();
+    if (s === "") {
+      return "";
+    }
+
+    try {
+      if (s.indexOf("://") !== -1 || s.indexOf("vkvideo.ru") !== -1) {
+        const parsed = new URL(s.indexOf("://") !== -1 ? s : "https://" + s);
+        const host = parsed.hostname.replace(/^www\./, "");
+        if (host === "live.vkvideo.ru" || host === "vkvideo.ru") {
+          const slug = parsed.pathname.replace(/^\/+/, "").split("/")[0];
+          if (slug) {
+            return slug;
+          }
+        }
+      }
+    } catch {
+      /* use fallbacks below */
+    }
+
+    const fromPath = s.match(/(?:live\.)?vkvideo\.ru\/+([a-z0-9_-]{1,64})/);
+    if (fromPath) {
+      return fromPath[1];
+    }
+
+    return s.replace(/^[@/]+/, "");
+  }
+
+  function readVkSettings() {
+    const enabledInput = document.getElementById("vk-enabled");
+    const channelInput = document.getElementById("vk-channel");
+    let enabled = enabledInput ? enabledInput.checked : false;
+    let channel = channelInput ? normalizeVkChannel(channelInput.value) : "";
+
+    if (form) {
+      const formData = new FormData(form);
+      const formChannel = formData.get("vk_channel");
+      if (typeof formChannel === "string" && formChannel.trim() !== "") {
+        channel = normalizeVkChannel(formChannel);
+      }
+      if (formData.get("vk_enabled") === "on") {
+        enabled = true;
+      } else if (enabledInput) {
+        enabled = enabledInput.checked;
+      }
+    }
+
+    return { enabled: enabled, channel: channel };
+  }
+
   function applyConfig(config) {
     currentConfig = config;
     twitchEnabled.checked = Boolean(config.twitch && config.twitch.enabled);
@@ -145,9 +199,12 @@
       youtubeClientSecret.value = "";
     }
 
-    if (config.vk) {
-      vkEnabled.checked = Boolean(config.vk.enabled);
-      vkChannel.value = config.vk.channel ? config.vk.channel : "";
+    const vk = config.vk || { enabled: false, channel: "" };
+    if (vkEnabled) {
+      vkEnabled.checked = Boolean(vk.enabled);
+    }
+    if (vkChannel) {
+      vkChannel.value = vk.channel ? vk.channel : "";
     }
 
     applyMessageSoundFromConfig(config);
@@ -209,10 +266,7 @@
           client_secret: youtubeClientSecret.value,
         },
       },
-      vk: {
-        enabled: vkEnabled.checked,
-        channel: vkChannel.value.trim().toLowerCase(),
-      },
+      vk: readVkSettings(),
       overlay: {
         max_messages: Number.parseInt(overlayMaxMessages.value, 10),
         message_ttl_seconds: Number.parseInt(overlayMessageTTL.value, 10),
@@ -245,6 +299,7 @@
       setFieldError("vk_channel", "Channel slug is required when VK Live is enabled.");
       firstInvalid = firstInvalid || vkChannel;
     } else if (
+      payload.vk.enabled &&
       payload.vk.channel !== "" &&
       !/^[a-z0-9_-]{1,64}$/.test(payload.vk.channel)
     ) {
@@ -730,6 +785,9 @@
       }
 
       applyConfig(body);
+      if (vkChannel) {
+        vkChannel.value = readVkSettings().channel;
+      }
       showBanner("success", "Settings saved.");
       await loadStatus();
     } catch {
@@ -756,6 +814,15 @@
   }
 
   Object.keys(fieldInputs).forEach(bindFieldClear);
+
+  if (vkChannel) {
+    vkChannel.addEventListener("blur", function () {
+      const normalized = normalizeVkChannel(vkChannel.value);
+      if (normalized !== vkChannel.value.trim().toLowerCase()) {
+        vkChannel.value = normalized;
+      }
+    });
+  }
 
   form.addEventListener("submit", saveSettings);
   refreshMessages.addEventListener("click", function () {
