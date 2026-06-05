@@ -163,6 +163,17 @@ body.overlay--compact {
   vertical-align: -0.25em;
 }
 
+.message__image-preview {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: var(--overlay-image-preview-max-width, 320px);
+  max-height: var(--overlay-image-preview-max-height, 180px);
+  margin: 0.2em 0;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
 body.overlay--compact .message__user {
   font-weight: 600;
 }

@@ -1,6 +1,6 @@
 # CR-021: Add Safe Image Link Previews
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -44,4 +44,8 @@ Research plan: [Emoji and Rich Media Provider Research](../emoji-provider-resear
 
 - `go test ./...`
 - Static UI smoke for `/overlay`.
+
+## Completion note
+
+2026-06-05: Added `overlay.image_previews` config (disabled by default), `internal/imagelink` validation/enrichment, connector wiring, overlay `image_link` renderer with HTTPS/allowlist checks and bounded CSS. `go test ./...` passed. Manual overlay smoke not run in agent environment.
 

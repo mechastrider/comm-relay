@@ -10,6 +10,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/imagelink"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 	"golang.org/x/oauth2"
@@ -160,6 +161,7 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 			if strings.TrimSpace(chatMsg.Message) == "" {
 				continue
 			}
+			imagelink.Enrich(&chatMsg, c.store.Snapshot().Overlay.ImagePreviews)
 			if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
 				clog.Errorf(sessionCtx, "publish youtube message: %w", err)
 			}
