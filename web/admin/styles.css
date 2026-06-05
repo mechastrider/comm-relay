@@ -281,6 +281,12 @@ select {
   font-size: 0.9rem;
 }
 
+.diagnostics-list {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
 .field-hint {
   margin: 0;
   color: var(--subtle);

@@ -8,6 +8,7 @@ import (
 	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 )
@@ -30,14 +31,16 @@ const configPollInterval = 2 * time.Second
 type Connector struct {
 	bus       *bus.Bus
 	store     *config.Store
+	registry  *status.Registry
 	newClient clientFactory
 }
 
 // New creates a Twitch IRC connector that reads Twitch settings from the config store.
-func New(eventBus *bus.Bus, store *config.Store) *Connector {
+func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry) *Connector {
 	return &Connector{
-		bus:   eventBus,
-		store: store,
+		bus:      eventBus,
+		store:    store,
+		registry: registry,
 		newClient: func() ircClient {
 			return twitch.NewAnonymousClient()
 		},
@@ -58,6 +61,7 @@ func (c *Connector) Run(ctx context.Context) error {
 
 		twitchCfg := c.store.Snapshot().Twitch
 		if !twitchCfg.Enabled {
+			c.setStatus(status.StateDisabled, "", "")
 			backoff = newReconnectBackoff()
 			if err := waitContext(ctx, configPollInterval); err != nil {
 				return nil
@@ -67,6 +71,7 @@ func (c *Connector) Run(ctx context.Context) error {
 
 		channel := normalizeChannel(twitchCfg.Channel)
 		if channel == "" {
+			c.setStatus(status.StateError, "Set Twitch channel in admin.", "")
 			if err := waitContext(ctx, configPollInterval); err != nil {
 				return nil
 			}
@@ -85,11 +90,13 @@ func (c *Connector) Run(ctx context.Context) error {
 
 		if err != nil {
 			clog.Errorf(sessionCtx, "twitch session ended: %w", err)
+			c.setStatus(status.StateError, "Twitch connection failed — will retry.", status.SanitizeError(err.Error()))
 		} else {
 			clog.Info(sessionCtx, "twitch session ended")
 		}
 
 		wait := backoff.current()
+		c.setStatus(status.StateReconnecting, "", "")
 		clog.Info(sessionCtx, "twitch reconnect scheduled", slog.Duration("after", wait))
 		if err := waitContext(ctx, wait); err != nil {
 			return nil
@@ -100,10 +107,13 @@ func (c *Connector) Run(ctx context.Context) error {
 }
 
 func (c *Connector) runSession(ctx context.Context, channel string) error {
+	c.setStatus(status.StateConnecting, "", "")
+
 	client := c.newClient()
 
 	client.OnConnect(func() {
 		clog.Info(ctx, "twitch irc connected")
+		c.setStatus(status.StateConnected, "", "")
 	})
 
 	client.OnPrivateMessage(func(msg twitch.PrivateMessage) {
@@ -132,6 +142,23 @@ func (c *Connector) runSession(ctx context.Context, channel string) error {
 		}
 		return nil
 	}
+}
+
+func (c *Connector) setStatus(state status.State, detail, lastError string) {
+	if c.registry == nil {
+		return
+	}
+	snap := c.registry.Twitch()
+	snap.State = state
+	snap.Detail = detail
+	if lastError != "" {
+		snap.LastError = lastError
+	}
+	if state == status.StateConnected {
+		snap.LastError = ""
+		snap.Detail = ""
+	}
+	c.registry.SetTwitch(snap)
 }
 
 func waitContext(ctx context.Context, d time.Duration) error {

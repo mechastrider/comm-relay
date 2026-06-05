@@ -49,7 +49,7 @@ func (c *Connector) Run(ctx context.Context) error {
 
 		vkCfg := c.store.Snapshot().VK
 		if !vkCfg.Enabled {
-			c.setStatus(status.StateDisabled, "")
+			c.setStatus(status.StateDisabled, "", "")
 			backoff = newReconnectBackoff()
 			if err := waitContext(ctx, configPollInterval); err != nil {
 				return nil
@@ -59,7 +59,7 @@ func (c *Connector) Run(ctx context.Context) error {
 
 		channel := normalizeChannel(vkCfg.Channel)
 		if channel == "" {
-			c.setStatus(status.StateError, "Set VK channel slug in admin.")
+			c.setStatus(status.StateError, "Set VK channel slug in admin.", "")
 			if err := waitContext(ctx, configPollInterval); err != nil {
 				return nil
 			}
@@ -81,10 +81,11 @@ func (c *Connector) Run(ctx context.Context) error {
 			c.setStatusFromError(err)
 		} else {
 			clog.Info(sessionCtx, "vk session ended")
-			c.setStatus(status.StateDisconnected, "")
+			c.setStatus(status.StateDisconnected, "", "")
 		}
 
 		wait := backoff.current()
+		c.setStatus(status.StateReconnecting, "", "")
 		clog.Info(sessionCtx, "vk reconnect scheduled", slog.Duration("after", wait))
 		if err := waitContext(ctx, wait); err != nil {
 			return nil
@@ -96,7 +97,7 @@ func (c *Connector) Run(ctx context.Context) error {
 
 func (c *Connector) runSession(ctx context.Context, channel string) error {
 	client := c.newClient()
-	c.setStatus(status.StateConnecting, "")
+	c.setStatus(status.StateConnecting, "", "")
 
 	return client.RunSession(ctx, channel, func(raw []byte) {
 		chatMsg, ok := MapWSMessage(raw)
@@ -110,27 +111,37 @@ func (c *Connector) runSession(ctx context.Context, channel string) error {
 			clog.Errorf(ctx, "publish vk message: %w", err)
 			return
 		}
-		c.setStatus(status.StateConnected, "")
+		c.setStatus(status.StateConnected, "", "")
 	})
 }
 
-func (c *Connector) setStatus(state status.State, detail string) {
+func (c *Connector) setStatus(state status.State, detail, lastError string) {
 	if c.registry == nil {
 		return
 	}
-	c.registry.SetVK(status.Snapshot{State: state, Detail: detail})
+	snap := c.registry.VK()
+	snap.State = state
+	snap.Detail = detail
+	if lastError != "" {
+		snap.LastError = lastError
+	}
+	if state == status.StateConnected {
+		snap.LastError = ""
+		snap.Detail = ""
+	}
+	c.registry.SetVK(snap)
 }
 
 func (c *Connector) setStatusFromError(err error) {
 	if errors.Is(err, errChannelNotFound) {
-		c.setStatus(status.StateError, "VK channel not found — check the channel slug.")
+		c.setStatus(status.StateError, "VK channel not found — check the channel slug.", "")
 		return
 	}
 	if errors.Is(err, errNoWebSocketToken) {
-		c.setStatus(status.StateError, "VK Live chat token unavailable — try again later.")
+		c.setStatus(status.StateError, "VK Live chat token unavailable — try again later.", "")
 		return
 	}
-	c.setStatus(status.StateError, "VK connector error — see server logs.")
+	c.setStatus(status.StateError, "VK connector error — see server logs.", status.SanitizeError(err.Error()))
 }
 
 func waitContext(ctx context.Context, d time.Duration) error {

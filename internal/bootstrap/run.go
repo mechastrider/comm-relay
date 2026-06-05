@@ -16,6 +16,7 @@ import (
 	twitchconnector "github.com/mechastrider/comm-relay/internal/connector/twitch"
 	vkconnector "github.com/mechastrider/comm-relay/internal/connector/vk"
 	youtubeconnector "github.com/mechastrider/comm-relay/internal/connector/youtube"
+	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 	"github.com/pior/runnable"
@@ -65,6 +66,7 @@ func Run(opts Options) error {
 
 	history := api.NewMessageHistory(0)
 	statusRegistry := status.NewRegistry()
+	runtimeInfo := runtime.NewInfo()
 
 	handler, err := api.NewHandler(api.Options{
 		WebRoot:  webRoot,
@@ -72,6 +74,7 @@ func Run(opts Options) error {
 		Store:    store,
 		History:  history,
 		Registry: statusRegistry,
+		Runtime:  runtimeInfo,
 	})
 	if err != nil {
 		return errors.Errorf("create handler: %w", err)
@@ -95,6 +98,10 @@ func Run(opts Options) error {
 			history.Run(ctx, eventBus)
 			return nil
 		}).Name("message-history"),
+		runnable.Func(func(ctx context.Context) error {
+			statusRegistry.RunMessageCounter(ctx, eventBus)
+			return nil
+		}).Name("message-counter"),
 	)
 
 	processes := []runnable.Runnable{
@@ -103,7 +110,7 @@ func Run(opts Options) error {
 			Name("http"),
 	}
 
-	twitchConn := twitchconnector.New(eventBus, store)
+	twitchConn := twitchconnector.New(eventBus, store, statusRegistry)
 	processes = append(processes, runnable.Func(func(ctx context.Context) error {
 		if err := twitchConn.Run(ctx); err != nil {
 			clog.Errorf(ctx, "twitch connector stopped with error: %w", err)

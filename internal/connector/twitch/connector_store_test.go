@@ -18,7 +18,7 @@ func TestConnector_Run_WhenEnabledAfterStoreUpdate_ExpectSession(t *testing.T) {
 	store := testStore(t, config.TwitchConfig{Enabled: false, Channel: "streamer"})
 
 	fake := &fakeIRCClient{connectCh: make(chan struct{}, 1)}
-	connector := New(eventBus, store)
+	connector := New(eventBus, store, nil)
 	connector.newClient = func() ircClient { return fake }
 
 	ctx, cancel := context.WithCancel(context.Background())

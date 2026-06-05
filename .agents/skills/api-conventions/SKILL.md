@@ -14,6 +14,7 @@ description: HTTP and WebSocket API conventions for comm-relay — routes, snake
 | `/ws` | GET | WebSocket upgrade for overlay |
 | `/healthz` | GET | Liveness |
 | `/api/status` | GET | Connector connection status (JSON) |
+| `/api/diagnostics` | GET | Runtime info, message counts, connector statuses |
 | `/api/config` | GET/PATCH | Read/update settings (snake_case JSON) |
 | `/oauth/youtube/start` | GET | Begin OAuth (redirect) |
 | `/oauth/youtube/callback` | GET | OAuth callback |

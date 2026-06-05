@@ -7,6 +7,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/muonsoft/errors"
 )
 
@@ -17,6 +18,7 @@ type Options struct {
 	Store    *config.Store
 	History  *MessageHistory
 	Registry *status.Registry
+	Runtime  *runtime.Info
 }
 
 // NewHandler returns the root HTTP handler for Chat Relay.
@@ -51,8 +53,14 @@ func NewHandler(opts Options) (http.Handler, error) {
 		registry = status.NewRegistry()
 	}
 
+	rt := opts.Runtime
+	if rt == nil {
+		rt = runtime.NewInfo()
+	}
+
 	configHandler := newConfigHandler(opts.Store)
 	statusHandler := newStatusHandler(opts.Store, registry)
+	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt)
 	messagesHandler := newMessagesHandler(opts.History)
 	oauthState := newOAuthStateStore()
 	youtubeOAuth := newYouTubeOAuthHandler(opts.Store, oauthState)
@@ -63,6 +71,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /api/config", configHandler.handleGet)
 	mux.HandleFunc("PATCH /api/config", configHandler.handlePatch)
 	mux.HandleFunc("GET /api/status", statusHandler.handleGet)
+	mux.HandleFunc("GET /api/diagnostics", diagnosticsHandler.handleGet)
 	mux.HandleFunc("GET /oauth/youtube/start", youtubeOAuth.handleStart)
 	mux.HandleFunc("GET /oauth/youtube/callback", youtubeOAuth.handleCallback)
 	mux.HandleFunc("GET /api/messages/recent", messagesHandler.handleRecent)
