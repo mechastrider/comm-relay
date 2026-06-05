@@ -47,6 +47,7 @@
 
 ## Current Notes
 
+- CR-015: Added `MessageFragment` model (`text`, `emote`, `image_link`) on `ChatMessage.Fragments`; `/ws` payload includes optional `fragments` while keeping plain `message` for backward compatibility. Connectors do not populate fragments yet (CR-017+).
 - CR-014: Emoji/rich media research documented in `docs/emoji-provider-research.md`. Follow-up tasks added for fragments, safe overlay rendering, Twitch emotes, provider cache, FFZ/BTTV, 7TV, safe image link previews with SSRF guardrails, and admin controls.
 - CR-013: Unified connector states (disabled/connecting/connected/reconnecting/error), Twitch live status via registry, per-platform message counters, `GET /api/diagnostics` (uptime, WS clients, counts), admin overview shows details/last errors/diagnostics. Manual admin smoke not run in agent environment.
 - CR-012: Overlay polish — platform accent colors (Twitch/YouTube/VK), CSS variables, compact/normal layout, font size 12–32px; settings in `config.json` + admin Display panel; fade-in/out animations. Manual OBS smoke not run in agent environment.
