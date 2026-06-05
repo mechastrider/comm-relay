@@ -9,6 +9,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 )
@@ -32,15 +33,17 @@ type Connector struct {
 	bus       *bus.Bus
 	store     *config.Store
 	registry  *status.Registry
+	enricher  *emote.Enricher
 	newClient clientFactory
 }
 
 // New creates a Twitch IRC connector that reads Twitch settings from the config store.
-func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry) *Connector {
+func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry, enricher *emote.Enricher) *Connector {
 	return &Connector{
 		bus:      eventBus,
 		store:    store,
 		registry: registry,
+		enricher: enricher,
 		newClient: func() ircClient {
 			return twitch.NewAnonymousClient()
 		},
@@ -118,6 +121,9 @@ func (c *Connector) runSession(ctx context.Context, channel string) error {
 
 	client.OnPrivateMessage(func(msg twitch.PrivateMessage) {
 		chatMsg := MapPrivateMessage(msg)
+		if c.enricher != nil {
+			c.enricher.Enrich(&chatMsg, channel)
+		}
 		if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
 			clog.Errorf(ctx, "publish twitch message: %w", err)
 		}

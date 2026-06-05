@@ -17,6 +17,8 @@ import (
 	vkconnector "github.com/mechastrider/comm-relay/internal/connector/vk"
 	youtubeconnector "github.com/mechastrider/comm-relay/internal/connector/youtube"
 	"github.com/mechastrider/comm-relay/internal/emote"
+	"github.com/mechastrider/comm-relay/internal/emote/bttv"
+	"github.com/mechastrider/comm-relay/internal/emote/ffz"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
@@ -70,7 +72,13 @@ func Run(opts Options) error {
 	history := api.NewMessageHistory(0)
 	statusRegistry := status.NewRegistry()
 	runtimeInfo := runtime.NewInfo()
+	emoteHTTP := emote.NewHTTPClient()
 	emoteCache := emote.New(emote.Options{})
+	ffzFetcher := ffz.New(emoteHTTP)
+	emoteCache.RegisterFetcher(ffzFetcher)
+	emoteCache.RegisterFetcher(bttv.New(emoteHTTP, ffzFetcher))
+	emoteEnricher := emote.NewEnricher(emoteCache)
+	emoteRefresher := emote.NewRefresher(emoteCache, store)
 
 	handler, err := api.NewHandler(api.Options{
 		WebRoot:    webRoot,
@@ -111,6 +119,10 @@ func Run(opts Options) error {
 			emoteCache.RunMaintenance(ctx)
 			return nil
 		}).Name("emote-cache-maintenance"),
+		runnable.Func(func(ctx context.Context) error {
+			emoteRefresher.Run(ctx)
+			return nil
+		}).Name("emote-cache-refresh"),
 	)
 
 	processes := []runnable.Runnable{
@@ -119,7 +131,7 @@ func Run(opts Options) error {
 			Name("http"),
 	}
 
-	twitchConn := twitchconnector.New(eventBus, store, statusRegistry)
+	twitchConn := twitchconnector.New(eventBus, store, statusRegistry, emoteEnricher)
 	processes = append(processes, runnable.Func(func(ctx context.Context) error {
 		if err := twitchConn.Run(ctx); err != nil {
 			clog.Errorf(ctx, "twitch connector stopped with error: %w", err)
