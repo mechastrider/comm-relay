@@ -1,6 +1,6 @@
 # CR-015: Add Rich Message Fragments
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
