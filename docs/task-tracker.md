@@ -42,11 +42,12 @@
 | 18 | CR-018 | done | Product polish | Add emote provider metadata cache | [CR-018-emote-provider-cache.md](tasks/CR-018-emote-provider-cache.md) |
 | 19 | CR-019 | done | Product polish | Add FFZ and BTTV emote providers | [CR-019-ffz-bttv-emote-providers.md](tasks/CR-019-ffz-bttv-emote-providers.md) |
 | 20 | CR-020 | done | Product polish | Add 7TV emote provider | [CR-020-7tv-emote-provider.md](tasks/CR-020-7tv-emote-provider.md) |
-| 21 | CR-021 | todo | Product polish | Add safe image link previews | [CR-021-safe-image-link-previews.md](tasks/CR-021-safe-image-link-previews.md) |
+| 21 | CR-021 | done | Product polish | Add safe image link previews | [CR-021-safe-image-link-previews.md](tasks/CR-021-safe-image-link-previews.md) |
 | 22 | CR-022 | todo | Product polish | Add rich chat admin controls and diagnostics | [CR-022-rich-chat-admin-controls.md](tasks/CR-022-rich-chat-admin-controls.md) |
 
 ## Current Notes
 
+- CR-021: Added `internal/imagelink` URL validation (HTTPS-only, host allowlist, private/localhost rejection, image extensions) and fragment enrichment on Twitch/YouTube/VK connectors. Config `overlay.image_previews` defaults to disabled with a conservative host list; overlay renders `image_link` fragments via DOM `<img>` with `referrerpolicy="no-referrer"` and bounded CSS. Backend never fetches user URLs.
 - CR-020: Added 7TV `Fetcher` in `internal/emote/seventv` (v3 global + Twitch channel endpoints, CDN `2x.webp` URLs), periodic refresh and third-party lookup with channel 7TV before FFZ/BTTV. Provider failures keep plain chat text; cache health on `GET /api/diagnostics`.
 - CR-019: Added FFZ and BTTV `Fetcher` implementations (`internal/emote/ffz`, `internal/emote/bttv`), periodic metadata refresh for active Twitch channels, third-party token matching via `emote.Enricher` in the Twitch connector (channel scopes before globals; Twitch IRC positions still win). Provider failures keep plain chat text; cache health remains on `GET /api/diagnostics`.
 - CR-018: Added `internal/emote` package with `Fetcher` interface, bounded in-memory cache (TTL, eviction, refresh backoff), `Metadata.ToFragment()`, maintenance runnable, and `emote_cache` block on `GET /api/diagnostics`. Provider implementations deferred to CR-019/020.

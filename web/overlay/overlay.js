@@ -75,6 +75,9 @@
     return theme;
   }
 
+  const DEFAULT_IMAGE_PREVIEW_MAX_WIDTH = 320;
+  const DEFAULT_IMAGE_PREVIEW_MAX_HEIGHT = 180;
+
   let config = {
     maxMessages: readPositiveInt("max_messages", DEFAULT_MAX_MESSAGES),
     messageTTLSeconds: readNonNegativeInt(
@@ -84,6 +87,12 @@
     fontSizePx: readFontSizePx(DEFAULT_FONT_SIZE_PX),
     displayMode: readDisplayMode(DEFAULT_DISPLAY_MODE),
     theme: readTheme(DEFAULT_THEME),
+    imagePreviews: {
+      enabled: false,
+      allowedHosts: [],
+      maxWidthPx: DEFAULT_IMAGE_PREVIEW_MAX_WIDTH,
+      maxHeightPx: DEFAULT_IMAGE_PREVIEW_MAX_HEIGHT,
+    },
   };
 
   function applyServerOverlayConfig(serverOverlay) {
@@ -124,12 +133,97 @@
         config.theme = theme;
       }
     }
+    if (
+      serverOverlay.image_previews &&
+      typeof serverOverlay.image_previews === "object"
+    ) {
+      applyServerImagePreviewConfig(serverOverlay.image_previews);
+    }
+  }
+
+  function normalizeAllowedHosts(hosts) {
+    if (!Array.isArray(hosts)) {
+      return [];
+    }
+    return hosts
+      .map(function (host) {
+        return typeof host === "string" ? host.trim().toLowerCase() : "";
+      })
+      .filter(function (host) {
+        return host !== "";
+      });
+  }
+
+  function applyServerImagePreviewConfig(imagePreviews) {
+    if (typeof imagePreviews.enabled === "boolean") {
+      config.imagePreviews.enabled = imagePreviews.enabled;
+    }
+    if (Array.isArray(imagePreviews.allowed_hosts)) {
+      config.imagePreviews.allowedHosts = normalizeAllowedHosts(
+        imagePreviews.allowed_hosts
+      );
+    }
+    if (
+      typeof imagePreviews.max_width_px === "number" &&
+      imagePreviews.max_width_px >= 32
+    ) {
+      config.imagePreviews.maxWidthPx = imagePreviews.max_width_px;
+    }
+    if (
+      typeof imagePreviews.max_height_px === "number" &&
+      imagePreviews.max_height_px >= 32
+    ) {
+      config.imagePreviews.maxHeightPx = imagePreviews.max_height_px;
+    }
+  }
+
+  function hostAllowed(hostname) {
+    const host = typeof hostname === "string" ? hostname.trim().toLowerCase() : "";
+    if (host === "" || config.imagePreviews.allowedHosts.length === 0) {
+      return false;
+    }
+    return config.imagePreviews.allowedHosts.some(function (allowed) {
+      return host === allowed || host.endsWith("." + allowed);
+    });
+  }
+
+  function isPreviewImageURL(rawURL) {
+    if (typeof rawURL !== "string" || rawURL.trim() === "") {
+      return false;
+    }
+    try {
+      const url = new URL(rawURL, window.location.href);
+      if (url.protocol !== "https:") {
+        return false;
+      }
+      if (url.username !== "" || url.password !== "") {
+        return false;
+      }
+      if (url.port !== "" && url.port !== "443") {
+        return false;
+      }
+      const path = url.pathname.toLowerCase();
+      if (!/\.(png|jpe?g|gif|webp|avif)$/.test(path)) {
+        return false;
+      }
+      return hostAllowed(url.hostname);
+    } catch {
+      return false;
+    }
   }
 
   function applyAppearance() {
     document.documentElement.style.setProperty(
       "--overlay-font-size",
       String(config.fontSizePx) + "px"
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-image-preview-max-width",
+      String(config.imagePreviews.maxWidthPx) + "px"
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-image-preview-max-height",
+      String(config.imagePreviews.maxHeightPx) + "px"
     );
     document.body.classList.remove("overlay--normal", "overlay--compact");
     document.body.classList.add(
@@ -277,6 +371,32 @@
     );
   }
 
+  function appendImageLinkFragment(el, fragment) {
+    const text = readFragmentText(fragment);
+    if (!config.imagePreviews.enabled) {
+      appendText(el, text);
+      return;
+    }
+
+    const url = safeImageURL(fragment.url);
+    if (url === "" || !isPreviewImageURL(url)) {
+      appendText(el, text);
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.className = "message__image-preview";
+    img.src = url;
+    img.alt = "chat image";
+    img.title = text;
+    img.decoding = "async";
+    img.loading = "lazy";
+    img.draggable = false;
+    img.referrerPolicy = "no-referrer";
+    replaceBrokenImageWithText(img, text);
+    el.appendChild(img);
+  }
+
   function appendEmoteFragment(el, fragment) {
     const text = readFragmentText(fragment);
     const url = safeImageURL(fragment.url);
@@ -309,6 +429,10 @@
     }
     if (type === "emote") {
       appendEmoteFragment(el, fragment);
+      return;
+    }
+    if (type === "image_link") {
+      appendImageLinkFragment(el, fragment);
       return;
     }
 

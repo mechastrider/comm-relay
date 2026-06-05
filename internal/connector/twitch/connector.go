@@ -10,6 +10,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
+	"github.com/mechastrider/comm-relay/internal/imagelink"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 )
@@ -124,6 +125,7 @@ func (c *Connector) runSession(ctx context.Context, channel string) error {
 		if c.enricher != nil {
 			c.enricher.Enrich(&chatMsg, channel)
 		}
+		imagelink.Enrich(&chatMsg, c.store.Snapshot().Overlay.ImagePreviews)
 		if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
 			clog.Errorf(ctx, "publish twitch message: %w", err)
 		}

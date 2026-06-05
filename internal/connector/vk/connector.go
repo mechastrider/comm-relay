@@ -9,6 +9,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/imagelink"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 )
@@ -107,6 +108,7 @@ func (c *Connector) runSession(ctx context.Context, channel string) error {
 		if strings.TrimSpace(chatMsg.Message) == "" {
 			return
 		}
+		imagelink.Enrich(&chatMsg, c.store.Snapshot().Overlay.ImagePreviews)
 		if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
 			clog.Errorf(ctx, "publish vk message: %w", err)
 			return

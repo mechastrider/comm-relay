@@ -49,11 +49,12 @@ const (
 
 // OverlayConfig controls OBS overlay appearance and message retention.
 type OverlayConfig struct {
-	MaxMessages       int    `json:"max_messages"`
-	MessageTTLSeconds int    `json:"message_ttl_seconds"`
-	FontSizePx        int    `json:"font_size_px"`
-	DisplayMode       string `json:"display_mode"`
-	Theme             string `json:"theme"`
+	MaxMessages       int                 `json:"max_messages"`
+	MessageTTLSeconds int                 `json:"message_ttl_seconds"`
+	FontSizePx        int                 `json:"font_size_px"`
+	DisplayMode       string              `json:"display_mode"`
+	Theme             string              `json:"theme"`
+	ImagePreviews     ImagePreviewsConfig `json:"image_previews"`
 }
 
 // Default returns safe prototype defaults.
@@ -75,6 +76,7 @@ func Default() *Config {
 			FontSizePx:        18,
 			DisplayMode:       OverlayDisplayModeNormal,
 			Theme:             OverlayThemeDefault,
+			ImagePreviews:     defaultImagePreviews(),
 		},
 		Admin: AdminConfig{
 			MessageSound: defaultMessageSound(),
@@ -94,6 +96,7 @@ func (c *Config) ApplyDefaults() {
 	if c.Overlay.Theme == "" {
 		c.Overlay.Theme = def.Overlay.Theme
 	}
+	c.Overlay.ImagePreviews.applyDefaults()
 	c.Admin.MessageSound.applyDefaults()
 }
 
@@ -135,6 +138,9 @@ func (c *Config) Validate() error {
 			OverlayThemeDefault,
 			OverlayThemeDashboard,
 		)
+	}
+	if err := c.Overlay.ImagePreviews.validate(); err != nil {
+		return err
 	}
 	if c.Twitch.Enabled && c.Twitch.Channel == "" {
 		return errors.Errorf("%w: twitch.channel is required when twitch is enabled", ErrInvalidConfig)
