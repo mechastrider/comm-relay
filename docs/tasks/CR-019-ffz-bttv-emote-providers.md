@@ -1,6 +1,6 @@
 # CR-019: Add FFZ and BTTV Emote Providers
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -36,4 +36,8 @@ Research plan: [Emoji and Rich Media Provider Research](../emoji-provider-resear
 
 - `go test ./...`
 - Static UI smoke for `/overlay`.
+
+## Completion Note
+
+Implemented FFZ/BTTV metadata fetchers, bootstrap wiring with periodic refresh, and Twitch message enrichment for third-party emote tokens. BTTV channel lookups resolve Twitch logins via the FFZ room API. Modifier emotes are skipped. Admin enable/disable toggles remain in CR-022.
 
