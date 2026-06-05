@@ -1,6 +1,6 @@
 # CR-016: Add Safe Overlay Fragment Renderer
 
-Status: `in_progress`
+Status: `done`
 
 ## Goal
 
@@ -36,4 +36,9 @@ Research plan: [Emoji and Rich Media Provider Research](../emoji-provider-resear
 
 - Static UI smoke for `/overlay`.
 - Documentation review.
+
+## Completion Note
+
+- Implemented DOM-only fragment rendering in the overlay: text fragments use text nodes, emote fragments use constrained `<img>` nodes, and unsupported or failed emote fragments fall back to text.
+- Verified with Go tests/build, `innerHTML` search, and a browser smoke harness for plain, emote, and fallback rows.
 
