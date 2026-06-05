@@ -19,6 +19,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/emote/bttv"
 	"github.com/mechastrider/comm-relay/internal/emote/ffz"
+	"github.com/mechastrider/comm-relay/internal/emote/seventv"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
@@ -77,6 +78,7 @@ func Run(opts Options) error {
 	ffzFetcher := ffz.New(emoteHTTP)
 	emoteCache.RegisterFetcher(ffzFetcher)
 	emoteCache.RegisterFetcher(bttv.New(emoteHTTP, ffzFetcher))
+	emoteCache.RegisterFetcher(seventv.New(emoteHTTP, ffzFetcher))
 	emoteEnricher := emote.NewEnricher(emoteCache)
 	emoteRefresher := emote.NewRefresher(emoteCache, store)
 

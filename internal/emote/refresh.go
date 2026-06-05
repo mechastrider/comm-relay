@@ -56,7 +56,7 @@ func (r *Refresher) refreshActive(ctx context.Context) {
 
 	r.cache.SetChannelActive("twitch", channel)
 
-	providers := []ProviderID{ProviderFFZ, ProviderBTTV}
+	providers := []ProviderID{Provider7TV, ProviderFFZ, ProviderBTTV}
 	scopes := []Scope{GlobalScope(), ChannelScope("twitch", channel)}
 
 	for _, provider := range providers {
