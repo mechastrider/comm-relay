@@ -188,7 +188,6 @@ func TestStatus_WhenRegistryConnected_ExpectLiveState(t *testing.T) {
 	require.NoError(t, store.Replace(updated))
 
 	handler, err := NewHandler(Options{
-		WebRoot:  "../../web",
 		Hub:      hub,
 		Store:    store,
 		History:  NewMessageHistory(0),

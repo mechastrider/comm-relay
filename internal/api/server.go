@@ -2,8 +2,6 @@ package api
 
 import (
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
@@ -13,6 +11,7 @@ import (
 
 // Options configures the HTTP handler.
 type Options struct {
+	// WebRoot overrides embedded static assets with files from disk (for local UI dev).
 	WebRoot  string
 	Hub      *Hub
 	Store    *config.Store
@@ -23,19 +22,9 @@ type Options struct {
 
 // NewHandler returns the root HTTP handler for Chat Relay.
 func NewHandler(opts Options) (http.Handler, error) {
-	webRoot := opts.WebRoot
-	if webRoot == "" {
-		webRoot = "web"
-	}
-
-	adminDir := filepath.Join(webRoot, "admin")
-	if _, err := os.Stat(filepath.Join(adminDir, "index.html")); err != nil {
-		return nil, err
-	}
-
-	overlayDir := filepath.Join(webRoot, "overlay")
-	if _, err := os.Stat(filepath.Join(overlayDir, "index.html")); err != nil {
-		return nil, err
+	static, err := resolveStaticRoots(opts.WebRoot)
+	if err != nil {
+		return nil, errors.Errorf("resolve static assets: %w", err)
 	}
 
 	if opts.Hub == nil {
@@ -75,11 +64,11 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /oauth/youtube/start", youtubeOAuth.handleStart)
 	mux.HandleFunc("GET /oauth/youtube/callback", youtubeOAuth.handleCallback)
 	mux.HandleFunc("GET /api/messages/recent", messagesHandler.handleRecent)
-	mux.Handle("GET /overlay/", http.StripPrefix("/overlay/", http.FileServer(http.Dir(overlayDir))))
+	mux.Handle("GET /overlay/", http.StripPrefix("/overlay/", http.FileServer(http.FS(static.overlay))))
 	mux.HandleFunc("GET /overlay", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(overlayDir, "index.html"))
+		serveFSFile(w, r, static.overlay, "index.html")
 	})
-	mux.Handle("GET /", http.FileServer(http.Dir(adminDir)))
+	mux.Handle("GET /", http.FileServer(http.FS(static.admin)))
 
 	return mux, nil
 }

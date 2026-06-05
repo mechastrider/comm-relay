@@ -30,9 +30,7 @@ func testHandlerWithBus(t *testing.T, b *bus.Bus) http.Handler {
 	history := NewMessageHistory(0)
 	go history.Run(ctx, b)
 
-	webRoot := filepath.Join("..", "..", "web")
 	handler, err := NewHandler(Options{
-		WebRoot: webRoot,
 		Hub:     hub,
 		Store:   store,
 		History: history,

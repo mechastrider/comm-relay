@@ -36,7 +36,6 @@ func TestDiagnostics_WhenGet_ExpectRuntimeFields(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	handler, err := NewHandler(Options{
-		WebRoot:  "../../web",
 		Hub:      hub,
 		Store:    store,
 		History:  NewMessageHistory(0),

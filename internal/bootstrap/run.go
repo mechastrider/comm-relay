@@ -48,9 +48,11 @@ func Run(opts Options) error {
 		addr = cfg.ListenAddr()
 	}
 
-	webRoot, err := resolveWebRoot(opts.WebRoot)
-	if err != nil {
-		return errors.Errorf("resolve web root: %w", err)
+	webRoot := opts.WebRoot
+	if webRoot != "" {
+		if err := validateWebRoot(webRoot); err != nil {
+			return errors.Errorf("resolve web root: %w", err)
+		}
 	}
 
 	eventBus := bus.New(0)
@@ -146,10 +148,15 @@ func Run(opts Options) error {
 func logStartup(ctx context.Context, addr, configPath, webRoot string, cfg *config.Config) {
 	connectors := enabledConnectors(cfg)
 
+	webSource := "embedded"
+	if webRoot != "" {
+		webSource = webRoot
+	}
+
 	clog.Info(ctx, "starting chat relay",
 		slog.String("addr", addr),
 		slog.String("config_path", configPath),
-		slog.String("web_root", webRoot),
+		slog.String("web_source", webSource),
 		slog.String("connectors", connectors),
 	)
 }
@@ -171,23 +178,15 @@ func setupLogging(debug bool) {
 	slog.SetDefault(logger)
 }
 
-func resolveWebRoot(override string) (string, error) {
-	if override != "" {
-		return override, nil
+func validateWebRoot(root string) error {
+	if !fileExists(filepath.Join(root, "admin", "index.html")) {
+		return os.ErrNotExist
+	}
+	if !fileExists(filepath.Join(root, "overlay", "index.html")) {
+		return os.ErrNotExist
 	}
 
-	candidates := []string{"web"}
-	if exec, err := os.Executable(); err == nil {
-		candidates = append(candidates, filepath.Join(filepath.Dir(exec), "web"))
-	}
-
-	for _, root := range candidates {
-		if fileExists(filepath.Join(root, "admin", "index.html")) {
-			return root, nil
-		}
-	}
-
-	return "", os.ErrNotExist
+	return nil
 }
 
 func fileExists(path string) bool {

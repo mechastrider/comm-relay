@@ -11,7 +11,7 @@ import (
 func main() {
 	configPath := flag.String("config", "config.json", "path to config.json")
 	addr := flag.String("addr", "", "HTTP listen address (overrides config server_port)")
-	webRoot := flag.String("web", "", "path to web static assets (default: auto-detect)")
+	webRoot := flag.String("web", "", "path to web static assets on disk (default: embedded in binary)")
 	debug := flag.Bool("debug", false, "enable debug logging")
 	flag.Parse()
 
