@@ -11,13 +11,14 @@ const wireMessageType = "message"
 
 // wireChatMessage is the JSON payload sent to overlay WebSocket clients.
 type wireChatMessage struct {
-	Type        string   `json:"type"`
-	Platform    string   `json:"platform"`
-	User        string   `json:"user"`
-	Message     string   `json:"message"`
-	DisplayName string   `json:"display_name,omitempty"`
-	AvatarURL   string   `json:"avatar_url,omitempty"`
-	Badges      []string `json:"badges,omitempty"`
+	Type        string                `json:"type"`
+	Platform    string                `json:"platform"`
+	User        string                `json:"user"`
+	Message     string                `json:"message"`
+	Fragments   []bus.MessageFragment `json:"fragments,omitempty"`
+	DisplayName string                `json:"display_name,omitempty"`
+	AvatarURL   string                `json:"avatar_url,omitempty"`
+	Badges      []string              `json:"badges,omitempty"`
 }
 
 func chatMessageWirePayload(msg bus.ChatMessage) ([]byte, error) {
@@ -31,6 +32,7 @@ func chatMessageWirePayload(msg bus.ChatMessage) ([]byte, error) {
 		Platform:    msg.Platform,
 		User:        user,
 		Message:     msg.Message,
+		Fragments:   msg.Fragments,
 		DisplayName: msg.DisplayName,
 		AvatarURL:   msg.AvatarURL,
 		Badges:      msg.Badges,

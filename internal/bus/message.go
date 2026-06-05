@@ -10,6 +10,7 @@ type ChatMessage struct {
 	Username    string
 	DisplayName string
 	Message     string
+	Fragments   []MessageFragment
 	AvatarURL   string
 	Badges      []string
 	Timestamp   time.Time
