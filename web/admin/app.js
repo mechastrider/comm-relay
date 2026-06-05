@@ -890,6 +890,14 @@
   }
 
   function messageKey(msg) {
+    const id = typeof msg.id === "string" ? msg.id.trim() : "";
+    if (id !== "") {
+      return [
+        typeof msg.platform === "string" ? msg.platform : "",
+        id,
+      ].join("\0");
+    }
+
     return [
       typeof msg.platform === "string" ? msg.platform : "",
       messageDisplayName(msg),
@@ -924,11 +932,14 @@
         : user;
 
     return {
+      id: typeof wire.id === "string" ? wire.id : "",
       platform: typeof wire.platform === "string" ? wire.platform : "",
       username: user,
       display_name: displayName,
       message: typeof wire.message === "string" ? wire.message : "",
-      timestamp: new Date().toISOString(),
+      timestamp: typeof wire.timestamp === "string" && wire.timestamp !== ""
+        ? wire.timestamp
+        : new Date().toISOString(),
     };
   }
 

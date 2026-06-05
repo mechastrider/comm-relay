@@ -43,10 +43,12 @@ func TestWebSocket_WhenChatPublished_ExpectJSONMessage(t *testing.T) {
 	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 
 	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		ID:          "overlay-1",
 		Platform:    "twitch",
 		Username:    "viewer",
 		DisplayName: "Viewer",
 		Message:     "Hello overlay",
+		Timestamp:   time.Date(2026, 6, 5, 10, 11, 12, 0, time.UTC),
 	})))
 
 	_, data, err := conn.ReadMessage()
@@ -56,6 +58,8 @@ func TestWebSocket_WhenChatPublished_ExpectJSONMessage(t *testing.T) {
 	require.NoError(t, json.Unmarshal(data, &frame))
 	require.Equal(t, "message", frame["type"])
 	require.Equal(t, "twitch", frame["platform"])
+	require.Equal(t, "overlay-1", frame["id"])
 	require.Equal(t, "Viewer", frame["user"])
 	require.Equal(t, "Hello overlay", frame["message"])
+	require.Equal(t, "2026-06-05T10:11:12Z", frame["timestamp"])
 }

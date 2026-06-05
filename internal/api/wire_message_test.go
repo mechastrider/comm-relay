@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/stretchr/testify/require"
@@ -12,12 +13,14 @@ func TestChatMessageWirePayload_WhenDisplayNameSet_ExpectSnakeCaseJSON(t *testin
 	t.Parallel()
 
 	payload, err := chatMessageWirePayload(bus.ChatMessage{
+		ID:          "msg-1",
 		Platform:    "twitch",
 		Username:    "cmd_user",
 		DisplayName: "Commander",
 		Message:     "Hello",
 		AvatarURL:   "https://example.com/avatar.png",
 		Badges:      []string{"mod"},
+		Timestamp:   time.Date(2026, 6, 5, 10, 11, 12, 0, time.UTC),
 	})
 	require.NoError(t, err)
 
@@ -25,12 +28,14 @@ func TestChatMessageWirePayload_WhenDisplayNameSet_ExpectSnakeCaseJSON(t *testin
 	require.NoError(t, json.Unmarshal(payload, &decoded))
 
 	require.Equal(t, "message", decoded["type"])
+	require.Equal(t, "msg-1", decoded["id"])
 	require.Equal(t, "twitch", decoded["platform"])
 	require.Equal(t, "Commander", decoded["user"])
 	require.Equal(t, "Hello", decoded["message"])
 	require.Equal(t, "Commander", decoded["display_name"])
 	require.Equal(t, "https://example.com/avatar.png", decoded["avatar_url"])
 	require.Equal(t, []any{"mod"}, decoded["badges"])
+	require.Equal(t, "2026-06-05T10:11:12Z", decoded["timestamp"])
 	_, hasFragments := decoded["fragments"]
 	require.False(t, hasFragments)
 }
