@@ -2,8 +2,9 @@
   "use strict";
 
   const form = document.getElementById("settings-form");
-  const saveButton = document.getElementById("save-button");
+  const saveButtons = Array.from(document.querySelectorAll("[data-save-button]"));
   const settingsState = document.getElementById("settings-state");
+  const footerSettingsState = document.getElementById("footer-settings-state");
   const banner = document.getElementById("banner");
   const twitchStatus = document.getElementById("twitch-status");
   const twitchDetail = document.getElementById("twitch-detail");
@@ -99,35 +100,44 @@
     banner.className = "banner";
   }
 
-  function renderSettingsState() {
-    if (!settingsState) {
-      return;
+  function setSaveButtonsDisabled(disabled) {
+    saveButtons.forEach(function (button) {
+      button.disabled = disabled;
+    });
+  }
+
+  function setSettingsStateText(message, stateClass) {
+    if (settingsState) {
+      settingsState.textContent = message;
+      settingsState.className = stateClass ? "settings-state " + stateClass : "settings-state";
     }
+    if (footerSettingsState) {
+      footerSettingsState.textContent = message;
+      footerSettingsState.className = stateClass || "";
+    }
+  }
 
-    settingsState.className = "settings-state";
-
+  function renderSettingsState() {
     if (saveInFlight) {
-      settingsState.textContent = "Saving";
-      saveButton.disabled = true;
+      setSettingsStateText("Saving", "");
+      setSaveButtonsDisabled(true);
       return;
     }
 
     if (!settingsLoaded) {
-      settingsState.textContent = "Loading settings";
-      saveButton.disabled = true;
+      setSettingsStateText("Loading settings", "");
+      setSaveButtonsDisabled(true);
       return;
     }
 
     if (settingsDirty) {
-      settingsState.textContent = "Unsaved changes";
-      settingsState.className = "settings-state settings-state--dirty";
-      saveButton.disabled = false;
+      setSettingsStateText("Unsaved changes", "settings-state--dirty");
+      setSaveButtonsDisabled(false);
       return;
     }
 
-    settingsState.textContent = "Settings saved";
-    settingsState.className = "settings-state settings-state--saved";
-    saveButton.disabled = true;
+    setSettingsStateText("Settings saved", "settings-state--saved");
+    setSaveButtonsDisabled(true);
   }
 
   function markSettingsDirty() {
@@ -148,9 +158,7 @@
     settingsLoaded = false;
     settingsDirty = false;
     renderSettingsState();
-    if (settingsState) {
-      settingsState.textContent = "Settings unavailable";
-    }
+    setSettingsStateText("Settings unavailable", "");
   }
 
   function clearFieldErrors() {
@@ -178,6 +186,22 @@
     el.textContent = message;
     input.setAttribute("aria-invalid", "true");
     input.setAttribute("aria-describedby", el.id);
+  }
+
+  function openDialogForElement(el) {
+    if (!el) {
+      return;
+    }
+    const dialog = el.closest("dialog");
+    if (dialog && typeof dialog.showModal === "function" && !dialog.open) {
+      dialog.showModal();
+    }
+  }
+
+  function closeOpenDialogs() {
+    document.querySelectorAll("dialog[open]").forEach(function (dialog) {
+      dialog.close();
+    });
   }
 
   function mapHTTPError(status, bodyError) {
@@ -444,6 +468,7 @@
     }
 
     if (firstInvalid) {
+      openDialogForElement(firstInvalid);
       firstInvalid.focus();
       return false;
     }
@@ -748,9 +773,11 @@
     appendText(user, messageDisplayName(msg));
 
     const platform = document.createElement("span");
+    platform.className = "message-list__platform";
     appendText(platform, typeof msg.platform === "string" ? msg.platform : "");
 
     const time = document.createElement("time");
+    time.className = "message-list__time";
     if (typeof msg.timestamp === "string") {
       time.dateTime = msg.timestamp;
       appendText(time, new Date(msg.timestamp).toLocaleTimeString());
@@ -769,12 +796,23 @@
     return item;
   }
 
+  function scrollMessagesToBottom() {
+    const panel = recentMessages ? recentMessages.closest(".message-panel") : null;
+    if (!panel) {
+      return;
+    }
+    window.requestAnimationFrame(function () {
+      panel.scrollTop = panel.scrollHeight;
+    });
+  }
+
   function appendRecentMessage(msg) {
     recentMessagesEmpty.hidden = true;
     recentMessages.appendChild(buildMessageListItem(msg));
     while (recentMessages.children.length > RECENT_MESSAGE_LIMIT) {
       recentMessages.removeChild(recentMessages.firstChild);
     }
+    scrollMessagesToBottom();
   }
 
   function renderRecentMessages(messages) {
@@ -790,6 +828,7 @@
     messages.forEach(function (msg) {
       recentMessages.appendChild(buildMessageListItem(msg));
     });
+    scrollMessagesToBottom();
   }
 
   function wsURL() {
@@ -984,6 +1023,7 @@
         vkChannel.value = readVkSettings().channel;
       }
       showBanner("success", "Settings saved.");
+      closeOpenDialogs();
       await loadStatus();
     } catch {
       showBanner("error", "Cannot reach Chat Relay — is it running?");
@@ -1009,6 +1049,34 @@
     });
   }
 
+  function initSettingsDialogs() {
+    document.querySelectorAll("[data-dialog-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const dialog = document.getElementById(button.getAttribute("data-dialog-target"));
+        if (dialog && typeof dialog.showModal === "function") {
+          dialog.showModal();
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-dialog-close]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const dialog = button.closest("dialog");
+        if (dialog) {
+          dialog.close();
+        }
+      });
+    });
+
+    document.querySelectorAll("dialog").forEach(function (dialog) {
+      dialog.addEventListener("click", function (event) {
+        if (event.target === dialog) {
+          dialog.close();
+        }
+      });
+    });
+  }
+
   Object.keys(fieldInputs).forEach(bindFieldClear);
 
   if (vkChannel) {
@@ -1030,6 +1098,7 @@
   });
 
   handleOAuthQuery();
+  initSettingsDialogs();
   initMessageSoundControls();
 
   renderSettingsState();

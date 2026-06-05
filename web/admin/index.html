@@ -7,68 +7,106 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="page-header">
-    <div>
-      <h1>Chat Relay</h1>
-      <p class="page-header__subtitle">Local chat relay for OBS overlays</p>
-    </div>
-    <div class="page-header__actions">
-      <span id="settings-state" class="settings-state" aria-live="polite">Loading settings</span>
-      <button id="save-button" type="submit" form="settings-form" disabled>Save settings</button>
-    </div>
-  </header>
-
-  <main class="layout">
-    <div id="banner" class="banner" role="alert" aria-live="polite" hidden></div>
-
-    <aside class="overview" aria-labelledby="overview-heading">
-      <div class="section-heading">
-        <h2 id="overview-heading">Overview</h2>
+  <div class="cockpit-shell">
+    <header class="top-bar" aria-label="System status">
+      <div class="brand-stack">
+        <span class="brand-kicker">LOCAL OBS CHAT RELAY</span>
+        <h1>Chat Relay</h1>
       </div>
 
-      <dl class="overview-list">
-        <div class="overview-list__row">
-          <dt>Twitch</dt>
-          <dd><span id="twitch-status" class="status-pill">-</span></dd>
+      <div class="connector-rack" aria-label="Connector states">
+        <div class="indicator">
+          <span class="indicator__label">Twitch</span>
+          <span id="twitch-status" class="status-pill">-</span>
         </div>
-        <div class="overview-list__row">
-          <dt>YouTube</dt>
-          <dd><span id="youtube-status" class="status-pill">-</span></dd>
+        <div class="indicator">
+          <span class="indicator__label">YouTube</span>
+          <span id="youtube-status" class="status-pill">-</span>
         </div>
-        <div class="overview-list__row">
-          <dt>YouTube OAuth</dt>
-          <dd id="youtube-oauth-label" class="overview-list__value">-</dd>
+        <div class="indicator">
+          <span class="indicator__label">VK Live</span>
+          <span id="vk-status" class="status-pill">-</span>
         </div>
-        <div class="overview-list__row">
-          <dt>VK Live</dt>
-          <dd><span id="vk-status" class="status-pill">-</span></dd>
-        </div>
-      </dl>
+      </div>
 
-      <p id="twitch-detail" class="status-detail" hidden></p>
-      <p id="youtube-detail" class="status-detail" hidden></p>
-      <p id="vk-detail" class="status-detail" hidden></p>
+      <div class="top-actions">
+        <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
+        <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
+        <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
+        <button id="save-button" class="btn-physical btn-start" type="submit" form="settings-form" data-save-button disabled>Save</button>
+      </div>
+    </header>
 
-      <dl class="overview-list diagnostics-list" aria-label="Runtime diagnostics">
-        <div class="overview-list__row">
-          <dt>Uptime</dt>
-          <dd id="diag-uptime" class="overview-list__value">-</dd>
-        </div>
-        <div class="overview-list__row">
-          <dt>WebSocket clients</dt>
-          <dd id="diag-ws-clients" class="overview-list__value">-</dd>
-        </div>
-        <div class="overview-list__row">
-          <dt>Messages</dt>
-          <dd id="diag-message-counts" class="overview-list__value">-</dd>
-        </div>
-      </dl>
-    </aside>
+    <main class="main-area">
+      <div id="banner" class="banner" role="alert" aria-live="polite" hidden></div>
 
-    <form id="settings-form" class="settings-form" novalidate>
-      <section class="section" aria-labelledby="connections-heading">
-        <div class="section-heading">
-          <h2 id="connections-heading">Connections</h2>
+      <section class="console-panel" aria-labelledby="messages-heading">
+        <div class="console-header">
+          <div>
+            <span class="console-label">Monitor</span>
+            <h2 id="messages-heading">Live messages</h2>
+          </div>
+          <div class="console-actions">
+            <span id="settings-state" class="settings-state" aria-live="polite">Loading settings</span>
+            <button id="refresh-messages" type="button" class="btn-physical btn-small">Refresh</button>
+          </div>
+        </div>
+
+        <div class="message-panel">
+          <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
+          <p id="recent-messages-empty" class="empty-state">No messages yet.</p>
+        </div>
+      </section>
+
+      <aside class="systems-panel" aria-labelledby="systems-heading">
+        <div class="panel-heading">
+          <h2 id="systems-heading">Systems</h2>
+        </div>
+
+        <dl class="overview-list">
+          <div class="overview-list__row">
+            <dt>YouTube OAuth</dt>
+            <dd id="youtube-oauth-label" class="overview-list__value">-</dd>
+          </div>
+        </dl>
+
+        <div class="detail-stack" aria-label="Connector details">
+          <p id="twitch-detail" class="status-detail" hidden></p>
+          <p id="youtube-detail" class="status-detail" hidden></p>
+          <p id="vk-detail" class="status-detail" hidden></p>
+        </div>
+
+        <div class="panel-heading panel-heading--spaced">
+          <h2>Controls</h2>
+        </div>
+
+        <div class="control-grid">
+          <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
+          <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
+          <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="status-bar" aria-label="Runtime diagnostics">
+      <span class="tag">ADMIN</span>
+      <span>Uptime: <strong id="diag-uptime">-</strong></span>
+      <span>WS: <strong id="diag-ws-clients">-</strong></span>
+      <span>Messages: <strong id="diag-message-counts">-</strong></span>
+      <span class="status-bar__spacer"></span>
+      <span>State: <strong id="footer-settings-state">Loading settings</strong></span>
+    </footer>
+  </div>
+
+  <form id="settings-form" class="settings-form" novalidate>
+    <dialog id="connections-dialog" class="settings-dialog" aria-labelledby="connections-heading">
+      <div class="dialog-frame">
+        <div class="dialog-header">
+          <div>
+            <span class="dialog-kicker">Configuration</span>
+            <h2 id="connections-heading">Connections</h2>
+          </div>
+          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close connections settings">Close</button>
         </div>
 
         <div class="connection-grid">
@@ -142,110 +180,129 @@
             </div>
           </section>
         </div>
-      </section>
 
-      <section class="section" aria-labelledby="overlay-heading">
-        <div class="section-heading">
-          <h2 id="overlay-heading">Overlay</h2>
+        <div class="dialog-actions">
+          <button class="btn-physical" type="button" data-dialog-close>Close</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="overlay-dialog" class="settings-dialog" aria-labelledby="overlay-heading">
+      <div class="dialog-frame">
+        <div class="dialog-header">
+          <div>
+            <span class="dialog-kicker">Configuration</span>
+            <h2 id="overlay-heading">Overlay</h2>
+          </div>
+          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close overlay settings">Close</button>
         </div>
 
-        <div class="settings-grid">
-          <section class="panel" aria-labelledby="overlay-display-heading">
-            <div class="panel__header">
-              <h3 id="overlay-display-heading">Display</h3>
+        <section class="panel" aria-labelledby="overlay-display-heading">
+          <div class="panel__header">
+            <h3 id="overlay-display-heading">Display</h3>
+          </div>
+
+          <div class="form form--compact">
+            <div class="form__field">
+              <label for="overlay-max-messages">Max messages</label>
+              <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
+              <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
             </div>
 
-            <div class="form form--compact">
-              <div class="form__field">
-                <label for="overlay-max-messages">Max messages</label>
-                <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
-                <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
-              </div>
-
-              <div class="form__field">
-                <label for="overlay-message-ttl">Message TTL (seconds)</label>
-                <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
-                <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
-              </div>
-
-              <div class="form__field">
-                <label for="overlay-font-size">Font size (px)</label>
-                <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="32" step="1">
-                <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
-              </div>
-
-              <div class="form__field">
-                <label for="overlay-display-mode">Layout</label>
-                <select id="overlay-display-mode" name="overlay_display_mode">
-                  <option value="normal">Normal</option>
-                  <option value="compact">Compact</option>
-                </select>
-                <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
-              </div>
-
-              <div class="form__field">
-                <label for="overlay-theme">Theme</label>
-                <select id="overlay-theme" name="overlay_theme">
-                  <option value="default">Default</option>
-                  <option value="dashboard">Dashboard text</option>
-                </select>
-                <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel" aria-labelledby="message-sound-heading">
-            <div class="panel__header">
-              <h3 id="message-sound-heading">Message sound</h3>
-              <button id="test-message-sound" type="button" class="button-secondary">Test</button>
+            <div class="form__field">
+              <label for="overlay-message-ttl">Message TTL (seconds)</label>
+              <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
+              <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
             </div>
 
-            <div class="form form--compact">
-              <div class="form__field">
-                <label class="checkbox" for="message-sound-enabled">
-                  <input id="message-sound-enabled" name="message_sound_enabled" type="checkbox">
-                  <span>Play sound on new message</span>
-                </label>
-              </div>
-
-              <div class="form__field">
-                <label for="message-sound-volume">Volume</label>
-                <div class="volume-control">
-                  <input id="message-sound-volume" name="message_sound_volume" type="range" min="0" max="100" step="1" value="50">
-                  <output id="message-sound-volume-label" for="message-sound-volume">50%</output>
-                </div>
-                <p id="message-sound-volume-error" class="field-error" role="alert" hidden></p>
-              </div>
-
-              <div class="form__field">
-                <label for="message-sound-type">Sound type</label>
-                <select id="message-sound-type" name="message_sound_type">
-                  <option value="chime">Chime - soft two-tone</option>
-                  <option value="ping">Ping - short high note</option>
-                  <option value="soft">Soft - quiet low tone</option>
-                  <option value="alert">Alert - quick double beep</option>
-                </select>
-                <p id="message-sound-type-error" class="field-error" role="alert" hidden></p>
-              </div>
+            <div class="form__field">
+              <label for="overlay-font-size">Font size (px)</label>
+              <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="32" step="1">
+              <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
             </div>
-          </section>
+
+            <div class="form__field">
+              <label for="overlay-display-mode">Layout</label>
+              <select id="overlay-display-mode" name="overlay_display_mode">
+                <option value="normal">Normal</option>
+                <option value="compact">Compact</option>
+              </select>
+              <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
+            </div>
+
+            <div class="form__field">
+              <label for="overlay-theme">Theme</label>
+              <select id="overlay-theme" name="overlay_theme">
+                <option value="default">Default</option>
+                <option value="dashboard">Dashboard text</option>
+              </select>
+              <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <div class="dialog-actions">
+          <button class="btn-physical" type="button" data-dialog-close>Close</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
         </div>
-      </section>
-    </form>
-
-    <section class="section activity-section" aria-labelledby="messages-heading">
-      <div class="section-heading section-heading--with-action">
-        <h2 id="messages-heading">Recent messages</h2>
-        <button id="refresh-messages" type="button" class="button-secondary">Refresh</button>
       </div>
+    </dialog>
 
-      <div class="message-panel">
-        <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
-        <p id="recent-messages-empty" class="empty-state">No messages yet.</p>
+    <dialog id="sound-dialog" class="settings-dialog" aria-labelledby="message-sound-heading">
+      <div class="dialog-frame">
+        <div class="dialog-header">
+          <div>
+            <span class="dialog-kicker">Configuration</span>
+            <h2 id="message-sound-heading">Message sound</h2>
+          </div>
+          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close sound settings">Close</button>
+        </div>
+
+        <section class="panel" aria-labelledby="message-sound-panel-heading">
+          <div class="panel__header">
+            <h3 id="message-sound-panel-heading">Alert tone</h3>
+            <button id="test-message-sound" type="button" class="button-secondary">Test</button>
+          </div>
+
+          <div class="form form--compact">
+            <div class="form__field">
+              <label class="checkbox" for="message-sound-enabled">
+                <input id="message-sound-enabled" name="message_sound_enabled" type="checkbox">
+                <span>Play sound on new message</span>
+              </label>
+            </div>
+
+            <div class="form__field">
+              <label for="message-sound-volume">Volume</label>
+              <div class="volume-control">
+                <input id="message-sound-volume" name="message_sound_volume" type="range" min="0" max="100" step="1" value="50">
+                <output id="message-sound-volume-label" for="message-sound-volume">50%</output>
+              </div>
+              <p id="message-sound-volume-error" class="field-error" role="alert" hidden></p>
+            </div>
+
+            <div class="form__field">
+              <label for="message-sound-type">Sound type</label>
+              <select id="message-sound-type" name="message_sound_type">
+                <option value="chime">Chime - soft two-tone</option>
+                <option value="ping">Ping - short high note</option>
+                <option value="soft">Soft - quiet low tone</option>
+                <option value="alert">Alert - quick double beep</option>
+              </select>
+              <p id="message-sound-type-error" class="field-error" role="alert" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <div class="dialog-actions">
+          <button class="btn-physical" type="button" data-dialog-close>Close</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
+        </div>
       </div>
-    </section>
-  </main>
+    </dialog>
+  </form>
 
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>
