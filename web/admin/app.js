@@ -54,6 +54,7 @@
 
   const MESSAGE_SOUND_TYPES = ["chime", "ping", "soft", "alert"];
   const RECENT_MESSAGE_LIMIT = 20;
+  const BANNER_SUCCESS_DISMISS_MS = 4000;
   const INITIAL_WS_RECONNECT_MS = 1000;
   const MAX_WS_RECONNECT_MS = 30000;
 
@@ -109,18 +110,33 @@
   let wsReconnectDelayMs = INITIAL_WS_RECONNECT_MS;
   let wsReconnectTimer = null;
   let audioCtx = null;
+  let bannerTimer = null;
 
   function apiURL(path) {
     return window.location.origin + path;
   }
 
   function showBanner(kind, message) {
+    if (bannerTimer) {
+      window.clearTimeout(bannerTimer);
+      bannerTimer = null;
+    }
     banner.hidden = false;
     banner.className = "banner banner--" + kind;
     banner.textContent = message;
+    if (kind === "success") {
+      bannerTimer = window.setTimeout(function () {
+        bannerTimer = null;
+        hideBanner();
+      }, BANNER_SUCCESS_DISMISS_MS);
+    }
   }
 
   function hideBanner() {
+    if (bannerTimer) {
+      window.clearTimeout(bannerTimer);
+      bannerTimer = null;
+    }
     banner.hidden = true;
     banner.textContent = "";
     banner.className = "banner";
