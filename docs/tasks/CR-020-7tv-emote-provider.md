@@ -1,6 +1,6 @@
 # CR-020: Add 7TV Emote Provider
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -36,4 +36,8 @@ Research plan: [Emoji and Rich Media Provider Research](../emoji-provider-resear
 
 - `go test ./...`
 - Static UI smoke for `/overlay`.
+
+## Completion Note
+
+Added `internal/emote/seventv` fetcher (v3 global + Twitch channel endpoints, isolated adapter with documented assumptions). Wired into bootstrap, periodic refresh, and third-party enricher lookup (channel 7TV before FFZ/BTTV). `go test ./...` passed; overlay unchanged (no UI edits).
 

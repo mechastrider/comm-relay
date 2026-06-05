@@ -140,8 +140,10 @@ func (c *Cache) LookupThirdParty(platform, channelLogin, code string) (Metadata,
 		provider ProviderID
 		scope    Scope
 	}{
+		{Provider7TV, channelScope},
 		{ProviderFFZ, channelScope},
 		{ProviderBTTV, channelScope},
+		{Provider7TV, GlobalScope()},
 		{ProviderFFZ, GlobalScope()},
 		{ProviderBTTV, GlobalScope()},
 	}
