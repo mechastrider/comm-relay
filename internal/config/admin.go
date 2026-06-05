@@ -1,9 +1,5 @@
 package config
 
-import (
-	"github.com/muonsoft/errors"
-)
-
 // Message sound presets for the admin panel (Web Audio in the browser).
 const (
 	MessageSoundChime = "chime"
@@ -53,11 +49,19 @@ func (m *MessageSoundConfig) applyDefaults() {
 }
 
 func (m MessageSoundConfig) validate() error {
-	if m.Volume < 0 || m.Volume > 1 {
-		return errors.Errorf("%w: admin.message_sound.volume must be between 0 and 1", ErrInvalidConfig)
-	}
-	if _, ok := validMessageSounds[m.Sound]; !ok {
-		return errors.Errorf("%w: admin.message_sound.sound must be one of chime, ping, soft, alert", ErrInvalidConfig)
+	if fields := m.validateFields(); len(fields) > 0 {
+		return fields
 	}
 	return nil
+}
+
+func (m MessageSoundConfig) validateFields() FieldErrors {
+	fields := FieldErrors{}
+	if m.Volume < 0 || m.Volume > 1 {
+		fields["admin_message_sound_volume"] = "Volume must be between 0% and 100%."
+	}
+	if _, ok := validMessageSounds[m.Sound]; !ok {
+		fields["admin_message_sound_sound"] = "Choose a sound type."
+	}
+	return fields
 }

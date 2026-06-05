@@ -32,6 +32,17 @@
   const overlayFontSize = document.getElementById("overlay-font-size");
   const overlayDisplayMode = document.getElementById("overlay-display-mode");
   const overlayTheme = document.getElementById("overlay-theme");
+  const emotesTwitch = document.getElementById("emotes-twitch");
+  const emotesFFZ = document.getElementById("emotes-ffz");
+  const emotesBTTV = document.getElementById("emotes-bttv");
+  const emotesSevenTV = document.getElementById("emotes-7tv");
+  const imagePreviewsEnabled = document.getElementById("image-previews-enabled");
+  const imagePreviewsAllowedHosts = document.getElementById("image-previews-allowed-hosts");
+  const imagePreviewsMaxWidth = document.getElementById("image-previews-max-width");
+  const imagePreviewsMaxHeight = document.getElementById("image-previews-max-height");
+  const imagePreviewsMaxPerMessage = document.getElementById("image-previews-max-per-message");
+  const emoteCacheEntries = document.getElementById("emote-cache-entries");
+  const emoteProviderList = document.getElementById("emote-provider-list");
   const recentMessages = document.getElementById("recent-messages");
   const recentMessagesEmpty = document.getElementById("recent-messages-empty");
   const refreshMessages = document.getElementById("refresh-messages");
@@ -54,6 +65,10 @@
     overlay_font_size_px: document.getElementById("overlay-font-size-error"),
     overlay_display_mode: document.getElementById("overlay-display-mode-error"),
     overlay_theme: document.getElementById("overlay-theme-error"),
+    overlay_image_previews_allowed_hosts: document.getElementById("image-previews-allowed-hosts-error"),
+    overlay_image_previews_max_width_px: document.getElementById("image-previews-max-width-error"),
+    overlay_image_previews_max_height_px: document.getElementById("image-previews-max-height-error"),
+    overlay_image_previews_max_per_message: document.getElementById("image-previews-max-per-message-error"),
     admin_message_sound_volume: document.getElementById("message-sound-volume-error"),
     admin_message_sound_sound: document.getElementById("message-sound-type-error"),
   };
@@ -66,8 +81,19 @@
     overlay_font_size_px: overlayFontSize,
     overlay_display_mode: overlayDisplayMode,
     overlay_theme: overlayTheme,
+    overlay_image_previews_allowed_hosts: imagePreviewsAllowedHosts,
+    overlay_image_previews_max_width_px: imagePreviewsMaxWidth,
+    overlay_image_previews_max_height_px: imagePreviewsMaxHeight,
+    overlay_image_previews_max_per_message: imagePreviewsMaxPerMessage,
     admin_message_sound_volume: messageSoundVolumeInput,
     admin_message_sound_sound: messageSoundTypeInput,
+  };
+
+  const PROVIDER_LABELS = {
+    twitch: "Twitch",
+    ffz: "FFZ",
+    bttv: "BTTV",
+    "7tv": "7TV",
   };
 
   let currentConfig = null;
@@ -176,6 +202,25 @@
     });
   }
 
+  function applyServerFieldErrors(fields) {
+    if (!fields || typeof fields !== "object") {
+      return null;
+    }
+    clearFieldErrors();
+    let firstInvalid = null;
+    Object.keys(fields).forEach(function (key) {
+      const message = fields[key];
+      if (typeof message !== "string" || message === "") {
+        return;
+      }
+      setFieldError(key, message);
+      if (!firstInvalid && fieldInputs[key]) {
+        firstInvalid = fieldInputs[key];
+      }
+    });
+    return firstInvalid;
+  }
+
   function setFieldError(field, message) {
     const el = fieldErrors[field];
     const input = fieldInputs[field];
@@ -278,6 +323,63 @@
     return { enabled: enabled, channel: channel };
   }
 
+  function parseAllowedHostsText(raw) {
+    return String(raw || "")
+      .split(/\r?\n/)
+      .map(function (line) {
+        return line.trim().toLowerCase();
+      })
+      .filter(function (host) {
+        return host !== "";
+      });
+  }
+
+  function formatAllowedHostsText(hosts) {
+    if (!hosts || !Array.isArray(hosts)) {
+      return "";
+    }
+    return hosts.join("\n");
+  }
+
+  function applyRichChatFromConfig(overlay) {
+    const emotes = overlay.emotes || {};
+    emotesTwitch.checked = emotes.twitch !== false;
+    emotesFFZ.checked = emotes.ffz !== false;
+    emotesBTTV.checked = emotes.bttv !== false;
+    emotesSevenTV.checked = emotes["7tv"] !== false;
+
+    const previews = overlay.image_previews || {};
+    imagePreviewsEnabled.checked = Boolean(previews.enabled);
+    imagePreviewsAllowedHosts.value = formatAllowedHostsText(previews.allowed_hosts);
+    imagePreviewsMaxWidth.value = String(
+      typeof previews.max_width_px === "number" ? previews.max_width_px : 320
+    );
+    imagePreviewsMaxHeight.value = String(
+      typeof previews.max_height_px === "number" ? previews.max_height_px : 180
+    );
+    imagePreviewsMaxPerMessage.value = String(
+      typeof previews.max_per_message === "number" ? previews.max_per_message : 1
+    );
+  }
+
+  function getRichChatSettings() {
+    return {
+      emotes: {
+        twitch: emotesTwitch.checked,
+        ffz: emotesFFZ.checked,
+        bttv: emotesBTTV.checked,
+        "7tv": emotesSevenTV.checked,
+      },
+      image_previews: {
+        enabled: imagePreviewsEnabled.checked,
+        allowed_hosts: parseAllowedHostsText(imagePreviewsAllowedHosts.value),
+        max_width_px: Number.parseInt(imagePreviewsMaxWidth.value, 10),
+        max_height_px: Number.parseInt(imagePreviewsMaxHeight.value, 10),
+        max_per_message: Number.parseInt(imagePreviewsMaxPerMessage.value, 10),
+      },
+    };
+  }
+
   function applyConfig(config) {
     currentConfig = config;
     twitchEnabled.checked = Boolean(config.twitch && config.twitch.enabled);
@@ -296,6 +398,7 @@
       overlay.display_mode === "compact" ? "compact" : "normal";
     overlayTheme.value =
       overlay.theme === "dashboard" ? "dashboard" : "default";
+    applyRichChatFromConfig(overlay);
 
     if (config.youtube) {
       youtubeEnabled.checked = Boolean(config.youtube.enabled);
@@ -359,6 +462,7 @@
   }
 
   function buildPayload() {
+    const richChat = getRichChatSettings();
     return {
       server_port: currentConfig ? currentConfig.server_port : 17877,
       twitch: {
@@ -379,6 +483,8 @@
         font_size_px: Number.parseInt(overlayFontSize.value, 10),
         display_mode: overlayDisplayMode.value,
         theme: overlayTheme.value,
+        emotes: richChat.emotes,
+        image_previews: richChat.image_previews,
       },
       admin: {
         message_sound: getMessageSoundSettings(),
@@ -455,6 +561,63 @@
     ) {
       setFieldError("overlay_theme", "Choose default or dashboard theme.");
       firstInvalid = firstInvalid || overlayTheme;
+    }
+
+    const previews = payload.overlay.image_previews || {};
+    if (previews.enabled) {
+      if (!previews.allowed_hosts || previews.allowed_hosts.length === 0) {
+        setFieldError(
+          "overlay_image_previews_allowed_hosts",
+          "Add at least one allowed hostname."
+        );
+        firstInvalid = firstInvalid || imagePreviewsAllowedHosts;
+      } else {
+        previews.allowed_hosts.forEach(function (host) {
+          if (host.indexOf("/") !== -1 || host.indexOf(":") !== -1) {
+            setFieldError(
+              "overlay_image_previews_allowed_hosts",
+              "Each host must be a hostname without path or port."
+            );
+            firstInvalid = firstInvalid || imagePreviewsAllowedHosts;
+          }
+        });
+      }
+
+      if (
+        !Number.isFinite(previews.max_width_px) ||
+        previews.max_width_px < 32 ||
+        previews.max_width_px > 1920
+      ) {
+        setFieldError(
+          "overlay_image_previews_max_width_px",
+          "Max width must be between 32 and 1920 px."
+        );
+        firstInvalid = firstInvalid || imagePreviewsMaxWidth;
+      }
+
+      if (
+        !Number.isFinite(previews.max_height_px) ||
+        previews.max_height_px < 32 ||
+        previews.max_height_px > 1080
+      ) {
+        setFieldError(
+          "overlay_image_previews_max_height_px",
+          "Max height must be between 32 and 1080 px."
+        );
+        firstInvalid = firstInvalid || imagePreviewsMaxHeight;
+      }
+
+      if (
+        !Number.isFinite(previews.max_per_message) ||
+        previews.max_per_message < 1 ||
+        previews.max_per_message > 5
+      ) {
+        setFieldError(
+          "overlay_image_previews_max_per_message",
+          "Max previews per message must be between 1 and 5."
+        );
+        firstInvalid = firstInvalid || imagePreviewsMaxPerMessage;
+      }
     }
 
     const sound = payload.admin && payload.admin.message_sound;
@@ -574,6 +737,82 @@
     return entries.join(", ");
   }
 
+  function formatRefreshTime(value) {
+    if (typeof value !== "string" || value === "") {
+      return "Never";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "Never";
+    }
+    return date.toLocaleString();
+  }
+
+  function renderEmoteDiagnostics(emoteCache) {
+    if (!emoteCache) {
+      if (emoteCacheEntries) {
+        emoteCacheEntries.textContent = "-";
+      }
+      if (emoteProviderList) {
+        emoteProviderList.textContent = "";
+      }
+      return;
+    }
+
+    if (emoteCacheEntries) {
+      const total = emoteCache.total_entries;
+      const scopes = emoteCache.total_scopes;
+      if (typeof total === "number" && typeof scopes === "number") {
+        emoteCacheEntries.textContent = String(total) + " emotes · " + String(scopes) + " scopes";
+      } else {
+        emoteCacheEntries.textContent = "-";
+      }
+    }
+
+    if (!emoteProviderList) {
+      return;
+    }
+
+    emoteProviderList.textContent = "";
+    const providers = emoteCache.providers || {};
+    const keys = Object.keys(providers).sort();
+    if (keys.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "provider-list__item provider-list__item--empty";
+      appendText(empty, "No provider data yet.");
+      emoteProviderList.appendChild(empty);
+      return;
+    }
+
+    keys.forEach(function (key) {
+      const snap = providers[key] || {};
+      const item = document.createElement("li");
+      item.className = "provider-list__item";
+
+      const title = document.createElement("div");
+      title.className = "provider-list__title";
+      appendText(title, PROVIDER_LABELS[key] || key);
+
+      const stats = document.createElement("div");
+      stats.className = "provider-list__stats";
+      const count =
+        typeof snap.emote_count === "number" ? String(snap.emote_count) : "0";
+      appendText(stats, count + " emotes · refreshed " + formatRefreshTime(snap.last_refresh_at));
+
+      item.appendChild(title);
+      item.appendChild(stats);
+
+      if (typeof snap.last_error === "string" && snap.last_error !== "") {
+        const err = document.createElement("p");
+        err.className = "provider-list__error";
+        appendText(err, "Last error: " + snap.last_error);
+        item.appendChild(err);
+      }
+
+      emoteProviderList.appendChild(item);
+    });
+  }
+
   function renderDiagnostics(payload) {
     if (!payload) {
       return;
@@ -592,6 +831,7 @@
     if (payload.connectors) {
       renderStatus(payload.connectors);
     }
+    renderEmoteDiagnostics(payload.emote_cache);
   }
 
   function handleOAuthQuery() {
@@ -1014,6 +1254,11 @@
       });
       const body = await readJSON(response);
       if (!response.ok) {
+        const firstInvalid = body && body.fields ? applyServerFieldErrors(body.fields) : null;
+        if (firstInvalid) {
+          openDialogForElement(firstInvalid);
+          firstInvalid.focus();
+        }
         showBanner("error", mapHTTPError(response.status, body && body.error));
         return;
       }

@@ -121,7 +121,7 @@ func TestMapPrivateMessage_WhenIRCEmotesParsed_ExpectFragments(t *testing.T) {
 	raw := "@emotes=25:6-10/1902:16-20;id=abc :user!user@user.tmi.twitch.tv PRIVMSG #channel :-tags Kappa 123 Keepo"
 	msg := twitch.ParseMessage(raw).(*twitch.PrivateMessage)
 
-	got := MapPrivateMessage(*msg)
+	got := MapPrivateMessage(*msg, true)
 
 	require.Equal(t, "-tags Kappa 123 Keepo", got.Message)
 	require.Len(t, got.Fragments, 4)
@@ -137,6 +137,21 @@ func TestMapPrivateMessage_WhenIRCEmotesParsed_ExpectFragments(t *testing.T) {
 	require.Equal(t, "1902", got.Fragments[3].ID)
 }
 
+func TestMapPrivateMessage_WhenTwitchEmotesDisabled_ExpectNoFragments(t *testing.T) {
+	t.Parallel()
+
+	msg := twitch.PrivateMessage{
+		Message: "Kappa",
+		Emotes: []*twitch.Emote{
+			{ID: "25", Positions: []twitch.EmotePosition{{Start: 0, End: 4}}},
+		},
+	}
+
+	got := MapPrivateMessage(msg, false)
+
+	require.Empty(t, got.Fragments)
+}
+
 func TestMapPrivateMessage_WhenNoEmotes_ExpectNoFragments(t *testing.T) {
 	t.Parallel()
 
@@ -148,7 +163,7 @@ func TestMapPrivateMessage_WhenNoEmotes_ExpectNoFragments(t *testing.T) {
 		},
 	}
 
-	got := MapPrivateMessage(msg)
+	got := MapPrivateMessage(msg, true)
 
 	require.Equal(t, "plain text", got.Message)
 	require.Nil(t, got.Fragments)

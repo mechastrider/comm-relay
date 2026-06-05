@@ -56,7 +56,8 @@ func (r *Refresher) refreshActive(ctx context.Context) {
 
 	r.cache.SetChannelActive("twitch", channel)
 
-	providers := []ProviderID{Provider7TV, ProviderFFZ, ProviderBTTV}
+	emotesCfg := r.store.Snapshot().Overlay.Emotes
+	providers := enabledProviders(emotesCfg)
 	scopes := []Scope{GlobalScope(), ChannelScope("twitch", channel)}
 
 	for _, provider := range providers {
@@ -70,4 +71,18 @@ func (r *Refresher) refreshActive(ctx context.Context) {
 			}
 		}
 	}
+}
+
+func enabledProviders(cfg config.EmotesConfig) []ProviderID {
+	out := make([]ProviderID, 0, 3)
+	if cfg.SevenTV {
+		out = append(out, Provider7TV)
+	}
+	if cfg.FFZ {
+		out = append(out, ProviderFFZ)
+	}
+	if cfg.BTTV {
+		out = append(out, ProviderBTTV)
+	}
+	return out
 }

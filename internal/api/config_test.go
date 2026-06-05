@@ -128,6 +128,43 @@ func TestConfig_WhenPatchMessageSound_ExpectSaved(t *testing.T) {
 	require.Equal(t, "alert", sound["sound"])
 }
 
+func TestConfig_WhenPatchInvalidImagePreviewHost_ExpectFieldErrors(t *testing.T) {
+	t.Parallel()
+
+	handler := testHandler(t)
+	body := strings.NewReader(`{
+  "server_port": 17877,
+  "twitch": { "enabled": false, "channel": "" },
+  "youtube": { "enabled": false, "oauth": { "client_id": "" } },
+  "vk": { "enabled": false },
+  "overlay": {
+    "max_messages": 30,
+    "message_ttl_seconds": 20,
+    "image_previews": {
+      "enabled": true,
+      "allowed_hosts": ["bad/host"],
+      "max_width_px": 320,
+      "max_height_px": 180,
+      "max_per_message": 1
+    }
+  }
+}`)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPatch, "/api/config", body)
+	req.Header.Set("Content-Type", "application/json")
+	handler.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+
+	var payload struct {
+		Error  string            `json:"error"`
+		Fields map[string]string `json:"fields"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.NotEmpty(t, payload.Error)
+	require.Contains(t, payload.Fields, "overlay_image_previews_allowed_hosts")
+}
+
 func TestConfig_WhenPatchInvalid_ExpectBadRequest(t *testing.T) {
 	t.Parallel()
 
@@ -146,9 +183,13 @@ func TestConfig_WhenPatchInvalid_ExpectBadRequest(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 
-	var payload map[string]string
+	var payload struct {
+		Error  string            `json:"error"`
+		Fields map[string]string `json:"fields"`
+	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
-	require.NotEmpty(t, payload["error"])
+	require.NotEmpty(t, payload.Error)
+	require.Contains(t, payload.Fields, "twitch_channel")
 }
 
 func TestStatus_WhenGet_ExpectConnectorStates(t *testing.T) {

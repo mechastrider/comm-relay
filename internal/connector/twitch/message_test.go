@@ -27,7 +27,7 @@ func TestMapPrivateMessage_WhenFullTags_ExpectUnifiedFields(t *testing.T) {
 		},
 	}
 
-	got := MapPrivateMessage(msg)
+	got := MapPrivateMessage(msg, true)
 
 	require.Equal(t, "abc-123", got.ID)
 	require.Equal(t, "twitch", got.Platform)
@@ -50,7 +50,7 @@ func TestMapPrivateMessage_WhenMissingID_ExpectSyntheticID(t *testing.T) {
 		},
 	}
 
-	got := MapPrivateMessage(msg)
+	got := MapPrivateMessage(msg, true)
 
 	require.Contains(t, got.ID, "99-")
 	require.Equal(t, "anon", got.DisplayName)

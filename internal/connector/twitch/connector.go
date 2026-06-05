@@ -121,11 +121,12 @@ func (c *Connector) runSession(ctx context.Context, channel string) error {
 	})
 
 	client.OnPrivateMessage(func(msg twitch.PrivateMessage) {
-		chatMsg := MapPrivateMessage(msg)
+		overlay := c.store.Snapshot().Overlay
+		chatMsg := MapPrivateMessage(msg, overlay.Emotes.Twitch)
 		if c.enricher != nil {
-			c.enricher.Enrich(&chatMsg, channel)
+			c.enricher.Enrich(&chatMsg, channel, overlay.Emotes)
 		}
-		imagelink.Enrich(&chatMsg, c.store.Snapshot().Overlay.ImagePreviews)
+		imagelink.Enrich(&chatMsg, overlay.ImagePreviews)
 		if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
 			clog.Errorf(ctx, "publish twitch message: %w", err)
 		}

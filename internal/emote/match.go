@@ -5,6 +5,7 @@ import (
 	"unicode"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/config"
 )
 
 // Enricher adds third-party emote fragments to chat messages using cached metadata.
@@ -19,8 +20,8 @@ func NewEnricher(cache *Cache) *Enricher {
 
 // Enrich replaces known third-party emote tokens in message fragments for a Twitch channel.
 // Provider failures or cache misses leave the original text intact.
-func (e *Enricher) Enrich(msg *bus.ChatMessage, channelLogin string) {
-	if e == nil || e.cache == nil || msg == nil || msg.Message == "" {
+func (e *Enricher) Enrich(msg *bus.ChatMessage, channelLogin string, emotes config.EmotesConfig) {
+	if e == nil || e.cache == nil || msg == nil || msg.Message == "" || !emotes.ThirdPartyEnabled() {
 		return
 	}
 
@@ -29,19 +30,19 @@ func (e *Enricher) Enrich(msg *bus.ChatMessage, channelLogin string) {
 		return
 	}
 
-	enriched := enrichFragments(e.cache, msg.Platform, channelLogin, msg.Fragments, msg.Message)
+	enriched := enrichFragments(e.cache, msg.Platform, channelLogin, msg.Fragments, msg.Message, emotes)
 	if enriched != nil {
 		msg.Fragments = enriched
 	}
 }
 
-func enrichFragments(cache *Cache, platform, channelLogin string, fragments []bus.MessageFragment, message string) []bus.MessageFragment {
+func enrichFragments(cache *Cache, platform, channelLogin string, fragments []bus.MessageFragment, message string, emotes config.EmotesConfig) []bus.MessageFragment {
 	if platform != "twitch" {
 		return fragments
 	}
 
 	if len(fragments) == 0 {
-		matched := matchText(cache, platform, channelLogin, message)
+		matched := matchText(cache, platform, channelLogin, message, emotes)
 		if len(matched) == 0 {
 			return nil
 		}
@@ -57,7 +58,7 @@ func enrichFragments(cache *Cache, platform, channelLogin string, fragments []bu
 			continue
 		}
 
-		matched := matchText(cache, platform, channelLogin, fragment.Text)
+		matched := matchText(cache, platform, channelLogin, fragment.Text, emotes)
 		if len(matched) == 0 {
 			out = append(out, fragment)
 			continue
@@ -74,15 +75,15 @@ func enrichFragments(cache *Cache, platform, channelLogin string, fragments []bu
 	return out
 }
 
-func matchText(cache *Cache, platform, channelLogin, text string) []bus.MessageFragment {
-	fragments := tokenizeWithEmotes(cache, platform, channelLogin, text)
+func matchText(cache *Cache, platform, channelLogin, text string, emotes config.EmotesConfig) []bus.MessageFragment {
+	fragments := tokenizeWithEmotes(cache, platform, channelLogin, text, emotes)
 	if !containsEmoteFragment(fragments) {
 		return nil
 	}
 	return fragments
 }
 
-func tokenizeWithEmotes(cache *Cache, platform, channelLogin, text string) []bus.MessageFragment {
+func tokenizeWithEmotes(cache *Cache, platform, channelLogin, text string, emotes config.EmotesConfig) []bus.MessageFragment {
 	runes := []rune(text)
 	if len(runes) == 0 {
 		return nil
@@ -98,7 +99,7 @@ func tokenizeWithEmotes(cache *Cache, platform, channelLogin, text string) []bus
 		}
 		if start < i {
 			token := string(runes[start:i])
-			if meta, ok := cache.LookupThirdParty(platform, channelLogin, token); ok {
+			if meta, ok := cache.LookupThirdParty(platform, channelLogin, token, emotes); ok {
 				out = append(out, meta.ToFragment())
 			} else {
 				out = append(out, bus.MessageFragment{Type: bus.FragmentTypeText, Text: token})
@@ -130,7 +131,7 @@ func containsEmoteFragment(fragments []bus.MessageFragment) bool {
 }
 
 // LookupThirdParty resolves a third-party emote code using channel scopes before globals.
-func (c *Cache) LookupThirdParty(platform, channelLogin, code string) (Metadata, bool) {
+func (c *Cache) LookupThirdParty(platform, channelLogin, code string, emotes config.EmotesConfig) (Metadata, bool) {
 	if c == nil || code == "" {
 		return Metadata{}, false
 	}
@@ -149,12 +150,28 @@ func (c *Cache) LookupThirdParty(platform, channelLogin, code string) (Metadata,
 	}
 
 	for _, item := range lookupOrder {
+		if !providerEnabled(emotes, item.provider) {
+			continue
+		}
 		if meta, ok := c.Lookup(item.provider, item.scope, code); ok {
 			return meta, true
 		}
 	}
 
 	return Metadata{}, false
+}
+
+func providerEnabled(emotes config.EmotesConfig, provider ProviderID) bool {
+	switch provider {
+	case ProviderFFZ:
+		return emotes.FFZ
+	case ProviderBTTV:
+		return emotes.BTTV
+	case Provider7TV:
+		return emotes.SevenTV
+	default:
+		return false
+	}
 }
 
 func normalizeChannelLogin(channel string) string {

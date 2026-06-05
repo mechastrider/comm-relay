@@ -12,7 +12,7 @@ import (
 const platformTwitch = "twitch"
 
 // MapPrivateMessage converts a Twitch IRC private message to the unified chat model.
-func MapPrivateMessage(msg twitch.PrivateMessage) bus.ChatMessage {
+func MapPrivateMessage(msg twitch.PrivateMessage, twitchEmotesEnabled bool) bus.ChatMessage {
 	ts := msg.Time
 	if ts.IsZero() {
 		ts = time.Now().UTC()
@@ -30,6 +30,11 @@ func MapPrivateMessage(msg twitch.PrivateMessage) bus.ChatMessage {
 		displayName = msg.User.Name
 	}
 
+	var fragments []bus.MessageFragment
+	if twitchEmotesEnabled {
+		fragments = mapEmoteFragments(msg.Message, msg.Emotes)
+	}
+
 	return bus.ChatMessage{
 		ID:          id,
 		Platform:    platformTwitch,
@@ -37,7 +42,7 @@ func MapPrivateMessage(msg twitch.PrivateMessage) bus.ChatMessage {
 		Username:    msg.User.Name,
 		DisplayName: displayName,
 		Message:     msg.Message,
-		Fragments:   mapEmoteFragments(msg.Message, msg.Emotes),
+		Fragments:   fragments,
 		Badges:      badgeNames(msg.User.Badges),
 		Timestamp:   ts,
 	}

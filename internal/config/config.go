@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/muonsoft/errors"
 )
@@ -54,6 +53,7 @@ type OverlayConfig struct {
 	FontSizePx        int                 `json:"font_size_px"`
 	DisplayMode       string              `json:"display_mode"`
 	Theme             string              `json:"theme"`
+	Emotes            EmotesConfig        `json:"emotes"`
 	ImagePreviews     ImagePreviewsConfig `json:"image_previews"`
 }
 
@@ -76,6 +76,7 @@ func Default() *Config {
 			FontSizePx:        18,
 			DisplayMode:       OverlayDisplayModeNormal,
 			Theme:             OverlayThemeDefault,
+			Emotes:            defaultEmotes(),
 			ImagePreviews:     defaultImagePreviews(),
 		},
 		Admin: AdminConfig{
@@ -96,6 +97,7 @@ func (c *Config) ApplyDefaults() {
 	if c.Overlay.Theme == "" {
 		c.Overlay.Theme = def.Overlay.Theme
 	}
+	c.Overlay.Emotes.applyDefaults()
 	c.Overlay.ImagePreviews.applyDefaults()
 	c.Admin.MessageSound.applyDefaults()
 }
@@ -107,51 +109,7 @@ func (c *Config) ListenAddr() string {
 
 // Validate checks settings after load or before save.
 func (c *Config) Validate() error {
-	if c.ServerPort < 1 || c.ServerPort > 65535 {
-		return errors.Errorf("%w: server_port must be between 1 and 65535", ErrInvalidConfig)
-	}
-	if c.Overlay.MaxMessages < 1 {
-		return errors.Errorf("%w: overlay.max_messages must be at least 1", ErrInvalidConfig)
-	}
-	if c.Overlay.MessageTTLSeconds < 0 {
-		return errors.Errorf("%w: overlay.message_ttl_seconds must be non-negative", ErrInvalidConfig)
-	}
-	if c.Overlay.FontSizePx < 12 || c.Overlay.FontSizePx > 32 {
-		return errors.Errorf("%w: overlay.font_size_px must be between 12 and 32", ErrInvalidConfig)
-	}
-	switch c.Overlay.DisplayMode {
-	case OverlayDisplayModeNormal, OverlayDisplayModeCompact:
-	default:
-		return errors.Errorf(
-			"%w: overlay.display_mode must be %q or %q",
-			ErrInvalidConfig,
-			OverlayDisplayModeNormal,
-			OverlayDisplayModeCompact,
-		)
-	}
-	switch c.Overlay.Theme {
-	case OverlayThemeDefault, OverlayThemeDashboard:
-	default:
-		return errors.Errorf(
-			"%w: overlay.theme must be %q or %q",
-			ErrInvalidConfig,
-			OverlayThemeDefault,
-			OverlayThemeDashboard,
-		)
-	}
-	if err := c.Overlay.ImagePreviews.validate(); err != nil {
-		return err
-	}
-	if c.Twitch.Enabled && c.Twitch.Channel == "" {
-		return errors.Errorf("%w: twitch.channel is required when twitch is enabled", ErrInvalidConfig)
-	}
-	if c.VK.Enabled && strings.TrimSpace(c.VK.Channel) == "" {
-		return errors.Errorf("%w: vk.channel is required when vk is enabled", ErrInvalidConfig)
-	}
-	if err := c.Admin.MessageSound.validate(); err != nil {
-		return err
-	}
-	return nil
+	return c.validateFields()
 }
 
 // Load reads config from path. If the file is missing, defaults are written and returned.
@@ -174,12 +132,27 @@ func Load(path string) (*Config, error) {
 	}
 
 	cfg.ApplyDefaults()
+	if !overlayEmotesPresent(data) {
+		cfg.Overlay.Emotes = defaultEmotes()
+	}
 
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
+}
+
+func overlayEmotesPresent(data []byte) bool {
+	var doc struct {
+		Overlay *struct {
+			Emotes *json.RawMessage `json:"emotes"`
+		} `json:"overlay"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.Overlay != nil && doc.Overlay.Emotes != nil
 }
 
 // Save writes config to path using a temp file and atomic rename.

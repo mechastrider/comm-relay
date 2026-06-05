@@ -43,6 +43,10 @@ func (h *configHandler) handlePatch(w http.ResponseWriter, r *http.Request) {
 	incoming.ApplyDefaults()
 
 	if err := h.store.Replace(incoming); err != nil {
+		if fields := config.ValidationFields(err); len(fields) > 0 {
+			writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
+			return
+		}
 		if errors.Is(err, config.ErrInvalidConfig) {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
