@@ -9,6 +9,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/stretchr/testify/require"
 )
@@ -35,12 +36,15 @@ func TestDiagnostics_WhenGet_ExpectRuntimeFields(t *testing.T) {
 	rt := runtime.NewInfo()
 	time.Sleep(10 * time.Millisecond)
 
+	emoteCache := emote.New(emote.Options{})
+
 	handler, err := NewHandler(Options{
-		Hub:      hub,
-		Store:    store,
-		History:  NewMessageHistory(0),
-		Registry: registry,
-		Runtime:  rt,
+		Hub:        hub,
+		Store:      store,
+		History:    NewMessageHistory(0),
+		Registry:   registry,
+		Runtime:    rt,
+		EmoteCache: emoteCache,
 	})
 	require.NoError(t, err)
 
@@ -60,10 +64,16 @@ func TestDiagnostics_WhenGet_ExpectRuntimeFields(t *testing.T) {
 				MessageCount uint64 `json:"message_count"`
 			} `json:"twitch"`
 		} `json:"connectors"`
+		EmoteCache struct {
+			TotalEntries int            `json:"total_entries"`
+			TotalScopes  int            `json:"total_scopes"`
+			Providers    map[string]any `json:"providers"`
+		} `json:"emote_cache"`
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
 	require.GreaterOrEqual(t, payload.UptimeSeconds, int64(0))
 	require.Equal(t, 0, payload.WebSocketClients)
 	require.Equal(t, "connected", payload.Connectors.Twitch.State)
 	require.Equal(t, uint64(3), payload.Connectors.Twitch.MessageCount)
+	require.NotNil(t, payload.EmoteCache.Providers)
 }
