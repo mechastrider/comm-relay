@@ -37,6 +37,7 @@ func MapPrivateMessage(msg twitch.PrivateMessage) bus.ChatMessage {
 		Username:    msg.User.Name,
 		DisplayName: displayName,
 		Message:     msg.Message,
+		Fragments:   mapEmoteFragments(msg.Message, msg.Emotes),
 		Badges:      badgeNames(msg.User.Badges),
 		Timestamp:   ts,
 	}

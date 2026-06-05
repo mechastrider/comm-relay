@@ -1,6 +1,6 @@
 # CR-017: Render Twitch Native IRC Emotes
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -35,4 +35,8 @@ Research plan: [Emoji and Rich Media Provider Research](../emoji-provider-resear
 
 - `go test ./...`
 - Static UI smoke for `/overlay`.
+
+## Completion Note
+
+- Twitch `MapPrivateMessage` maps IRC `Emotes` positions into ordered `fragments` with Twitch CDN URLs; plain `message` is unchanged. Invalid or overlapping positions omit fragments. Overlay already renders emote fragments from CR-016; no UI changes required.
 
