@@ -38,7 +38,7 @@
 | 14 | CR-014 | done | Product polish | Add emoji provider research plan | [CR-014-emoji-provider-research.md](tasks/CR-014-emoji-provider-research.md) |
 | 15 | CR-015 | done | Product polish | Add rich message fragments | [CR-015-rich-message-fragments.md](tasks/CR-015-rich-message-fragments.md) |
 | 16 | CR-016 | done | Product polish | Add safe overlay fragment renderer | [CR-016-overlay-fragment-renderer.md](tasks/CR-016-overlay-fragment-renderer.md) |
-| 17 | CR-017 | todo | Product polish | Render Twitch native IRC emotes | [CR-017-twitch-native-emotes.md](tasks/CR-017-twitch-native-emotes.md) |
+| 17 | CR-017 | done | Product polish | Render Twitch native IRC emotes | [CR-017-twitch-native-emotes.md](tasks/CR-017-twitch-native-emotes.md) |
 | 18 | CR-018 | todo | Product polish | Add emote provider metadata cache | [CR-018-emote-provider-cache.md](tasks/CR-018-emote-provider-cache.md) |
 | 19 | CR-019 | todo | Product polish | Add FFZ and BTTV emote providers | [CR-019-ffz-bttv-emote-providers.md](tasks/CR-019-ffz-bttv-emote-providers.md) |
 | 20 | CR-020 | todo | Product polish | Add 7TV emote provider | [CR-020-7tv-emote-provider.md](tasks/CR-020-7tv-emote-provider.md) |
@@ -47,6 +47,7 @@
 
 ## Current Notes
 
+- CR-017: Twitch connector maps IRC emote positions to `fragments` (text + emote blocks) with CDN URLs; overlapping/out-of-bounds positions omit fragments and keep plain `message`. Tests cover mixed, repeated, and malformed cases. Overlay emote renderer unchanged (CR-016).
 - CR-016: Overlay renders structured `fragments` without `innerHTML`: text fragments become text nodes, emote fragments become constrained inline images with safe URL/attribute handling, and unsupported or broken image fragments fall back to text. Browser smoke verified plain, emote, and fallback rows.
 - CR-015: Added `MessageFragment` model (`text`, `emote`, `image_link`) on `ChatMessage.Fragments`; `/ws` payload includes optional `fragments` while keeping plain `message` for backward compatibility. Connectors do not populate fragments yet (CR-017+).
 - CR-014: Emoji/rich media research documented in `docs/emoji-provider-research.md`. Follow-up tasks added for fragments, safe overlay rendering, Twitch emotes, provider cache, FFZ/BTTV, 7TV, safe image link previews with SSRF guardrails, and admin controls.
