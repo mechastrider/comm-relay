@@ -247,6 +247,93 @@
     el.appendChild(document.createTextNode(text));
   }
 
+  function readFragmentText(fragment) {
+    return typeof fragment.text === "string" ? fragment.text : "";
+  }
+
+  function safeImageURL(rawURL) {
+    if (typeof rawURL !== "string" || rawURL.trim() === "") {
+      return "";
+    }
+    try {
+      const url = new URL(rawURL, window.location.href);
+      if (url.protocol !== "https:" && url.protocol !== "http:") {
+        return "";
+      }
+      return url.href;
+    } catch {
+      return "";
+    }
+  }
+
+  function replaceBrokenImageWithText(img, text) {
+    img.addEventListener(
+      "error",
+      function () {
+        const fallback = document.createTextNode(text);
+        img.replaceWith(fallback);
+      },
+      { once: true }
+    );
+  }
+
+  function appendEmoteFragment(el, fragment) {
+    const text = readFragmentText(fragment);
+    const url = safeImageURL(fragment.url);
+    if (url === "") {
+      appendText(el, text);
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.className = "message__emote";
+    img.src = url;
+    img.alt = text;
+    img.title = text;
+    img.decoding = "async";
+    img.draggable = false;
+    img.referrerPolicy = "no-referrer";
+    replaceBrokenImageWithText(img, text);
+    el.appendChild(img);
+  }
+
+  function appendFragment(el, fragment) {
+    if (!fragment || typeof fragment !== "object") {
+      return;
+    }
+
+    const type = typeof fragment.type === "string" ? fragment.type : "";
+    if (type === "text") {
+      appendText(el, readFragmentText(fragment));
+      return;
+    }
+    if (type === "emote") {
+      appendEmoteFragment(el, fragment);
+      return;
+    }
+
+    appendText(el, readFragmentText(fragment));
+  }
+
+  function appendMessageContent(el, frame, fallbackText) {
+    if (!Array.isArray(frame.fragments) || frame.fragments.length === 0) {
+      appendText(el, fallbackText);
+      return;
+    }
+
+    const before = el.childNodes.length;
+    frame.fragments.forEach(function (fragment) {
+      appendFragment(el, fragment);
+    });
+    if (el.childNodes.length === before) {
+      appendText(el, fallbackText);
+    }
+  }
+
+  function hasFragments(frame) {
+    return Array.isArray(frame.fragments) && frame.fragments.length > 0;
+  }
+
   function normalizePlatform(platform) {
     return typeof platform === "string" && platform !== ""
       ? platform.trim().toLowerCase()
@@ -318,7 +405,7 @@
           ? frame.user
           : "";
     const text = typeof frame.message === "string" ? frame.message : "";
-    if (user === "" && text === "") {
+    if (user === "" && text === "" && !hasFragments(frame)) {
       return;
     }
 
@@ -338,7 +425,7 @@
 
     const textEl = document.createElement("span");
     textEl.className = "message__text";
-    appendText(textEl, text);
+    appendMessageContent(textEl, frame, text);
 
     row.appendChild(platformEl);
     row.appendChild(userEl);

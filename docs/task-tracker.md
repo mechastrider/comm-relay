@@ -37,7 +37,7 @@
 | 13 | CR-013 | done | Product polish | Improve diagnostics and connector statuses | [CR-013-diagnostics-and-statuses.md](tasks/CR-013-diagnostics-and-statuses.md) |
 | 14 | CR-014 | done | Product polish | Add emoji provider research plan | [CR-014-emoji-provider-research.md](tasks/CR-014-emoji-provider-research.md) |
 | 15 | CR-015 | done | Product polish | Add rich message fragments | [CR-015-rich-message-fragments.md](tasks/CR-015-rich-message-fragments.md) |
-| 16 | CR-016 | todo | Product polish | Add safe overlay fragment renderer | [CR-016-overlay-fragment-renderer.md](tasks/CR-016-overlay-fragment-renderer.md) |
+| 16 | CR-016 | in_progress | Product polish | Add safe overlay fragment renderer | [CR-016-overlay-fragment-renderer.md](tasks/CR-016-overlay-fragment-renderer.md) |
 | 17 | CR-017 | todo | Product polish | Render Twitch native IRC emotes | [CR-017-twitch-native-emotes.md](tasks/CR-017-twitch-native-emotes.md) |
 | 18 | CR-018 | todo | Product polish | Add emote provider metadata cache | [CR-018-emote-provider-cache.md](tasks/CR-018-emote-provider-cache.md) |
 | 19 | CR-019 | todo | Product polish | Add FFZ and BTTV emote providers | [CR-019-ffz-bttv-emote-providers.md](tasks/CR-019-ffz-bttv-emote-providers.md) |
