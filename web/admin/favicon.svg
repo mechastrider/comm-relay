@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>Chat Relay</title>
+  <defs>
+    <linearGradient id="bg" x1="10" y1="8" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#171923"/>
+      <stop offset="1" stop-color="#070A12"/>
+    </linearGradient>
+    <linearGradient id="bubble" x1="29" y1="19" x2="51" y2="45" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DCEBFF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <path d="M12 20C19 20 21 28 29 28" fill="none" stroke="#19D4FF" stroke-width="5" stroke-linecap="round"/>
+  <path d="M12 44C19 44 21 36 29 36" fill="none" stroke="#B6FF3B" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="12" cy="20" r="3.5" fill="#19D4FF"/>
+  <circle cx="12" cy="44" r="3.5" fill="#B6FF3B"/>
+
+  <path d="M28 23C28 19.7 30.7 17 34 17H48C51.3 17 54 19.7 54 23V36C54 39.3 51.3 42 48 42H42L35 48V42H34C30.7 42 28 39.3 28 36V23Z" fill="url(#bubble)"/>
+  <path d="M35 27H47M35 33H43" fill="none" stroke="#121826" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M54 31H59" fill="none" stroke="#FF4DA6" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="59" cy="31" r="3" fill="#FF4DA6"/>
+</svg>
