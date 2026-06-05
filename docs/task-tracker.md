@@ -35,10 +35,19 @@
 | 11 | CR-011 | done | Streaming MVP | Research and add VK Live connector | [CR-011-vk-live-connector.md](tasks/CR-011-vk-live-connector.md) |
 | 12 | CR-012 | done | Streaming MVP | Polish OBS overlay styling | [CR-012-overlay-styling.md](tasks/CR-012-overlay-styling.md) |
 | 13 | CR-013 | done | Product polish | Improve diagnostics and connector statuses | [CR-013-diagnostics-and-statuses.md](tasks/CR-013-diagnostics-and-statuses.md) |
-| 14 | CR-014 | todo | Product polish | Add emoji provider research plan | [CR-014-emoji-provider-research.md](tasks/CR-014-emoji-provider-research.md) |
+| 14 | CR-014 | done | Product polish | Add emoji provider research plan | [CR-014-emoji-provider-research.md](tasks/CR-014-emoji-provider-research.md) |
+| 15 | CR-015 | todo | Product polish | Add rich message fragments | [CR-015-rich-message-fragments.md](tasks/CR-015-rich-message-fragments.md) |
+| 16 | CR-016 | todo | Product polish | Add safe overlay fragment renderer | [CR-016-overlay-fragment-renderer.md](tasks/CR-016-overlay-fragment-renderer.md) |
+| 17 | CR-017 | todo | Product polish | Render Twitch native IRC emotes | [CR-017-twitch-native-emotes.md](tasks/CR-017-twitch-native-emotes.md) |
+| 18 | CR-018 | todo | Product polish | Add emote provider metadata cache | [CR-018-emote-provider-cache.md](tasks/CR-018-emote-provider-cache.md) |
+| 19 | CR-019 | todo | Product polish | Add FFZ and BTTV emote providers | [CR-019-ffz-bttv-emote-providers.md](tasks/CR-019-ffz-bttv-emote-providers.md) |
+| 20 | CR-020 | todo | Product polish | Add 7TV emote provider | [CR-020-7tv-emote-provider.md](tasks/CR-020-7tv-emote-provider.md) |
+| 21 | CR-021 | todo | Product polish | Add safe image link previews | [CR-021-safe-image-link-previews.md](tasks/CR-021-safe-image-link-previews.md) |
+| 22 | CR-022 | todo | Product polish | Add rich chat admin controls and diagnostics | [CR-022-rich-chat-admin-controls.md](tasks/CR-022-rich-chat-admin-controls.md) |
 
 ## Current Notes
 
+- CR-014: Emoji/rich media research documented in `docs/emoji-provider-research.md`. Follow-up tasks added for fragments, safe overlay rendering, Twitch emotes, provider cache, FFZ/BTTV, 7TV, safe image link previews with SSRF guardrails, and admin controls.
 - CR-013: Unified connector states (disabled/connecting/connected/reconnecting/error), Twitch live status via registry, per-platform message counters, `GET /api/diagnostics` (uptime, WS clients, counts), admin overview shows details/last errors/diagnostics. Manual admin smoke not run in agent environment.
 - CR-012: Overlay polish — platform accent colors (Twitch/YouTube/VK), CSS variables, compact/normal layout, font size 12–32px; settings in `config.json` + admin Display panel; fade-in/out animations. Manual OBS smoke not run in agent environment.
 - CR-011: VK Live connector via public WebSocket API (`api.live.vkvideo.ru`, `pubsub.live.vkvideo.ru`); read-only, no OAuth; admin channel slug + status. Documented in `docs/concept.md`. Manual live smoke not run here.

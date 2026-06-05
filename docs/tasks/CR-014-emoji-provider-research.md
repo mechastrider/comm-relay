@@ -1,6 +1,6 @@
 # CR-014: Emoji Provider Research Plan
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -44,3 +44,7 @@ Status: `todo`
 
 - Перед выводами проверить актуальные API providers.
 - Не тащить emoji поддержку в первый прототип.
+
+## Completion Note
+
+Документирован план в [Emoji and Rich Media Provider Research](../emoji-provider-research.md). Backlog дополнен задачами CR-015..CR-022, включая безопасную поддержку image link previews без backend proxy/fetch и с SSRF guardrails.
