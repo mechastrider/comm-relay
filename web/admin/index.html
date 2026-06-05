@@ -32,6 +32,7 @@
       <div class="top-actions">
         <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
         <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
+        <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
         <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
         <button id="save-button" class="btn-physical btn-start" type="submit" form="settings-form" data-save-button disabled>Save</button>
       </div>
@@ -77,12 +78,25 @@
         </div>
 
         <div class="panel-heading panel-heading--spaced">
+          <h2>Rich chat</h2>
+        </div>
+
+        <dl id="emote-diagnostics" class="overview-list emote-diagnostics" aria-label="Emote provider cache">
+          <div class="overview-list__row">
+            <dt>Cache entries</dt>
+            <dd id="emote-cache-entries" class="overview-list__value">-</dd>
+          </div>
+        </dl>
+        <ul id="emote-provider-list" class="provider-list" aria-label="Emote provider status"></ul>
+
+        <div class="panel-heading panel-heading--spaced">
           <h2>Controls</h2>
         </div>
 
         <div class="control-grid">
           <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
           <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
+          <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
           <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
         </div>
       </aside>
@@ -249,6 +263,100 @@
       </div>
     </dialog>
 
+    <dialog id="rich-chat-dialog" class="settings-dialog" aria-labelledby="rich-chat-heading">
+      <div class="dialog-frame">
+        <div class="dialog-header">
+          <div>
+            <span class="dialog-kicker">Configuration</span>
+            <h2 id="rich-chat-heading">Rich chat</h2>
+          </div>
+          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close rich chat settings">Close</button>
+        </div>
+
+        <section class="panel" aria-labelledby="emote-providers-heading">
+          <div class="panel__header">
+            <h3 id="emote-providers-heading">Emote providers</h3>
+          </div>
+
+          <div class="form form--compact">
+            <div class="form__field">
+              <label class="checkbox" for="emotes-twitch">
+                <input id="emotes-twitch" name="emotes_twitch" type="checkbox">
+                <span>Twitch native emotes</span>
+              </label>
+            </div>
+
+            <div class="form__field">
+              <label class="checkbox" for="emotes-ffz">
+                <input id="emotes-ffz" name="emotes_ffz" type="checkbox">
+                <span>FrankerFaceZ (FFZ)</span>
+              </label>
+            </div>
+
+            <div class="form__field">
+              <label class="checkbox" for="emotes-bttv">
+                <input id="emotes-bttv" name="emotes_bttv" type="checkbox">
+                <span>BetterTTV (BTTV)</span>
+              </label>
+            </div>
+
+            <div class="form__field">
+              <label class="checkbox" for="emotes-7tv">
+                <input id="emotes-7tv" name="emotes_7tv" type="checkbox">
+                <span>7TV</span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="image-previews-heading">
+          <div class="panel__header">
+            <h3 id="image-previews-heading">Image link previews</h3>
+          </div>
+
+          <div class="form form--compact">
+            <div class="form__field">
+              <label class="checkbox" for="image-previews-enabled">
+                <input id="image-previews-enabled" name="image_previews_enabled" type="checkbox">
+                <span>Enable safe image previews</span>
+              </label>
+              <p class="field-hint">Only HTTPS links on allowed hosts are rendered. The server never fetches user URLs.</p>
+            </div>
+
+            <div class="form__field">
+              <label for="image-previews-allowed-hosts">Allowed hosts</label>
+              <textarea id="image-previews-allowed-hosts" name="image_previews_allowed_hosts" rows="5" spellcheck="false" autocomplete="off"></textarea>
+              <p class="field-hint">One hostname per line, without <code>https://</code> or paths.</p>
+              <p id="image-previews-allowed-hosts-error" class="field-error" role="alert" hidden></p>
+            </div>
+
+            <div class="form__field">
+              <label for="image-previews-max-width">Max width (px)</label>
+              <input id="image-previews-max-width" name="image_previews_max_width_px" type="number" min="32" max="1920" step="1">
+              <p id="image-previews-max-width-error" class="field-error" role="alert" hidden></p>
+            </div>
+
+            <div class="form__field">
+              <label for="image-previews-max-height">Max height (px)</label>
+              <input id="image-previews-max-height" name="image_previews_max_height_px" type="number" min="32" max="1080" step="1">
+              <p id="image-previews-max-height-error" class="field-error" role="alert" hidden></p>
+            </div>
+
+            <div class="form__field">
+              <label for="image-previews-max-per-message">Max previews per message</label>
+              <input id="image-previews-max-per-message" name="image_previews_max_per_message" type="number" min="1" max="5" step="1">
+              <p id="image-previews-max-per-message-error" class="field-error" role="alert" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <div class="dialog-actions">
+          <button class="btn-physical" type="button" data-dialog-close>Close</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="sound-dialog" class="settings-dialog" aria-labelledby="message-sound-heading">
       <div class="dialog-frame">
         <div class="dialog-header">
@@ -303,6 +411,6 @@
     </dialog>
   </form>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

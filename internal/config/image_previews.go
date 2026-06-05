@@ -52,33 +52,41 @@ func (c *ImagePreviewsConfig) applyDefaults() {
 }
 
 func (c ImagePreviewsConfig) validate() error {
+	if fields := c.validateFields(); len(fields) > 0 {
+		return fields
+	}
+	return nil
+}
+
+func (c ImagePreviewsConfig) validateFields() FieldErrors {
+	fields := FieldErrors{}
 	if !c.Enabled {
-		return nil
+		return fields
 	}
 	if c.MaxWidthPx < 32 || c.MaxWidthPx > 1920 {
-		return errors.Errorf(
-			"%w: overlay.image_previews.max_width_px must be between 32 and 1920",
-			ErrInvalidConfig,
-		)
+		fields["overlay_image_previews_max_width_px"] = "Max width must be between 32 and 1920 px."
 	}
 	if c.MaxHeightPx < 32 || c.MaxHeightPx > 1080 {
-		return errors.Errorf(
-			"%w: overlay.image_previews.max_height_px must be between 32 and 1080",
-			ErrInvalidConfig,
-		)
+		fields["overlay_image_previews_max_height_px"] = "Max height must be between 32 and 1080 px."
 	}
 	if c.MaxPerMessage < 1 || c.MaxPerMessage > 5 {
-		return errors.Errorf(
-			"%w: overlay.image_previews.max_per_message must be between 1 and 5",
-			ErrInvalidConfig,
-		)
+		fields["overlay_image_previews_max_per_message"] = "Max previews per message must be between 1 and 5."
 	}
 	for _, host := range c.AllowedHosts {
 		if err := validateAllowedHost(host); err != nil {
-			return err
+			fields["overlay_image_previews_allowed_hosts"] = allowedHostErrorMessage(host)
+			break
 		}
 	}
-	return nil
+	return fields
+}
+
+func allowedHostErrorMessage(host string) string {
+	host = normalizeAllowedHost(host)
+	if host == "" {
+		return "Add at least one allowed hostname."
+	}
+	return "Each host must be a hostname without path or port."
 }
 
 func validateAllowedHost(host string) error {

@@ -1,6 +1,6 @@
 # CR-022: Add Rich Chat Admin Controls and Diagnostics
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
