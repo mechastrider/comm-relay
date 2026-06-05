@@ -5,6 +5,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/muonsoft/errors"
 )
@@ -12,12 +13,13 @@ import (
 // Options configures the HTTP handler.
 type Options struct {
 	// WebRoot overrides embedded static assets with files from disk (for local UI dev).
-	WebRoot  string
-	Hub      *Hub
-	Store    *config.Store
-	History  *MessageHistory
-	Registry *status.Registry
-	Runtime  *runtime.Info
+	WebRoot    string
+	Hub        *Hub
+	Store      *config.Store
+	History    *MessageHistory
+	Registry   *status.Registry
+	Runtime    *runtime.Info
+	EmoteCache *emote.Cache
 }
 
 // NewHandler returns the root HTTP handler for Chat Relay.
@@ -49,7 +51,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 
 	configHandler := newConfigHandler(opts.Store)
 	statusHandler := newStatusHandler(opts.Store, registry)
-	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt)
+	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt, opts.EmoteCache)
 	messagesHandler := newMessagesHandler(opts.History)
 	oauthState := newOAuthStateStore()
 	youtubeOAuth := newYouTubeOAuthHandler(opts.Store, oauthState)

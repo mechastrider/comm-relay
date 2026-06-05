@@ -16,6 +16,7 @@ import (
 	twitchconnector "github.com/mechastrider/comm-relay/internal/connector/twitch"
 	vkconnector "github.com/mechastrider/comm-relay/internal/connector/vk"
 	youtubeconnector "github.com/mechastrider/comm-relay/internal/connector/youtube"
+	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
@@ -69,14 +70,16 @@ func Run(opts Options) error {
 	history := api.NewMessageHistory(0)
 	statusRegistry := status.NewRegistry()
 	runtimeInfo := runtime.NewInfo()
+	emoteCache := emote.New(emote.Options{})
 
 	handler, err := api.NewHandler(api.Options{
-		WebRoot:  webRoot,
-		Hub:      hub,
-		Store:    store,
-		History:  history,
-		Registry: statusRegistry,
-		Runtime:  runtimeInfo,
+		WebRoot:    webRoot,
+		Hub:        hub,
+		Store:      store,
+		History:    history,
+		Registry:   statusRegistry,
+		Runtime:    runtimeInfo,
+		EmoteCache: emoteCache,
 	})
 	if err != nil {
 		return errors.Errorf("create handler: %w", err)
@@ -104,6 +107,10 @@ func Run(opts Options) error {
 			statusRegistry.RunMessageCounter(ctx, eventBus)
 			return nil
 		}).Name("message-counter"),
+		runnable.Func(func(ctx context.Context) error {
+			emoteCache.RunMaintenance(ctx)
+			return nil
+		}).Name("emote-cache-maintenance"),
 	)
 
 	processes := []runnable.Runnable{

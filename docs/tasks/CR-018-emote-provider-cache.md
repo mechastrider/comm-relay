@@ -1,6 +1,6 @@
 # CR-018: Add Emote Provider Metadata Cache
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 

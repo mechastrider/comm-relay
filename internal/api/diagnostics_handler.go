@@ -5,22 +5,25 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 )
 
 type diagnosticsHandler struct {
-	store    *config.Store
-	registry *status.Registry
-	hub      *Hub
-	runtime  *runtime.Info
+	store      *config.Store
+	registry   *status.Registry
+	hub        *Hub
+	runtime    *runtime.Info
+	emoteCache *emote.Cache
 }
 
-func newDiagnosticsHandler(store *config.Store, registry *status.Registry, hub *Hub, rt *runtime.Info) *diagnosticsHandler {
+func newDiagnosticsHandler(store *config.Store, registry *status.Registry, hub *Hub, rt *runtime.Info, emoteCache *emote.Cache) *diagnosticsHandler {
 	return &diagnosticsHandler{
-		store:    store,
-		registry: registry,
-		hub:      hub,
-		runtime:  rt,
+		store:      store,
+		registry:   registry,
+		hub:        hub,
+		runtime:    rt,
+		emoteCache: emoteCache,
 	}
 }
 
@@ -30,6 +33,7 @@ type diagnosticsResponse struct {
 	EnabledConnectors []string          `json:"enabled_connectors"`
 	MessageCounts     map[string]uint64 `json:"message_counts"`
 	Connectors        statusResponse    `json:"connectors"`
+	EmoteCache        emote.Snapshot    `json:"emote_cache"`
 }
 
 func (h *diagnosticsHandler) handleGet(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +57,11 @@ func (h *diagnosticsHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 		wsClients = h.hub.ClientCount()
 	}
 
+	emoteCache := emote.Snapshot{Providers: map[string]emote.ProviderSnapshot{}}
+	if h.emoteCache != nil {
+		emoteCache = h.emoteCache.Diagnostics()
+	}
+
 	writeJSON(w, http.StatusOK, diagnosticsResponse{
 		UptimeSeconds:     uptimeSeconds,
 		WebSocketClients:  wsClients,
@@ -63,6 +72,7 @@ func (h *diagnosticsHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 			YouTube: youtubeStatusResponse(cfg, h.registry),
 			VK:      vkStatusResponse(cfg, h.registry),
 		},
+		EmoteCache: emoteCache,
 	})
 }
 
