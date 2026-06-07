@@ -26,7 +26,17 @@ func TestNewHandlerRoutes(t *testing.T) {
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
 		require.Equal(t, http.StatusOK, rec.Code)
 		require.Contains(t, rec.Body.String(), "Chat Relay")
+		require.Contains(t, rec.Body.String(), "/favicon.svg")
 		require.Contains(t, rec.Body.String(), "app.js")
+	})
+
+	t.Run("favicon", func(t *testing.T) {
+		t.Parallel()
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/favicon.svg", nil))
+		require.Equal(t, http.StatusOK, rec.Code)
+		require.Contains(t, rec.Body.String(), "<title>Chat Relay</title>")
+		require.Contains(t, rec.Body.String(), "#19D4FF")
 	})
 
 	t.Run("overlay", func(t *testing.T) {
@@ -35,6 +45,7 @@ func TestNewHandlerRoutes(t *testing.T) {
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/overlay", nil))
 		require.Equal(t, http.StatusOK, rec.Code)
 		body := rec.Body.String()
+		require.Contains(t, body, "/favicon.svg")
 		require.Contains(t, body, "/overlay/overlay.css")
 		require.Contains(t, body, "/overlay/overlay.js")
 		require.Contains(t, body, `id="messages"`)

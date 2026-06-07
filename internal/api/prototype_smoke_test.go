@@ -29,10 +29,12 @@ func TestPrototypeSmoke_WhenMessagePublished_ExpectWebSocketAndRecentAPI(t *test
 	t.Cleanup(func() { _ = conn.Close() })
 
 	msg := bus.ChatMessage{
+		ID:          "prototype-smoke-1",
 		Platform:    "twitch",
 		Username:    "viewer",
 		DisplayName: "Viewer",
 		Message:     "prototype smoke",
+		Timestamp:   time.Date(2026, 6, 5, 10, 11, 12, 0, time.UTC),
 	}
 
 	var frame map[string]any
@@ -53,6 +55,8 @@ func TestPrototypeSmoke_WhenMessagePublished_ExpectWebSocketAndRecentAPI(t *test
 	}, 3*time.Second, 25*time.Millisecond)
 
 	require.Equal(t, "twitch", frame["platform"])
+	require.Equal(t, "prototype-smoke-1", frame["id"])
+	require.Equal(t, "2026-06-05T10:11:12Z", frame["timestamp"])
 
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=5", nil))
@@ -63,5 +67,8 @@ func TestPrototypeSmoke_WhenMessagePublished_ExpectWebSocketAndRecentAPI(t *test
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &recent))
 	require.NotEmpty(t, recent.Messages)
-	require.Equal(t, "prototype smoke", recent.Messages[len(recent.Messages)-1]["message"])
+	last := recent.Messages[len(recent.Messages)-1]
+	require.Equal(t, "prototype-smoke-1", last["id"])
+	require.Equal(t, "prototype smoke", last["message"])
+	require.Equal(t, frame["timestamp"], last["timestamp"])
 }
