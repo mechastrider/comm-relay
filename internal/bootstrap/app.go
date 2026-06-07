@@ -209,6 +209,6 @@ func (a *App) Stop(ctx context.Context) error {
 }
 
 // LogStartup logs listen address and connector list after Start succeeds.
-func (a *App) LogStartup(ctx context.Context, addr, configPath, webRoot string, cfg *config.Config) {
-	logStartup(ctx, addr, configPath, webRoot, cfg)
+func (a *App) LogStartup(ctx context.Context, addr, configPath, webRoot, logFile string, cfg *config.Config) {
+	logStartup(ctx, addr, configPath, webRoot, logFile, cfg)
 }

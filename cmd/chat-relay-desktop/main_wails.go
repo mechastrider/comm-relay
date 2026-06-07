@@ -21,16 +21,18 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/bootstrap"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/logging"
 )
 
 //go:embed frontend
 var frontendAssets embed.FS
 
 type desktopApp struct {
-	relay    *bootstrap.App
-	adminURL string
-	debug    bool
-	wailsCtx context.Context
+	relay      *bootstrap.App
+	adminURL   string
+	debug      bool
+	wailsCtx   context.Context
+	logSession *logging.Session
 
 	navMu     sync.Mutex
 	viewReady bool
@@ -52,11 +54,31 @@ func (a *desktopApp) tryNavigateAdmin() {
 
 func (a *desktopApp) startup(ctx context.Context) {
 	a.wailsCtx = ctx
-	setupLogging(a.debug)
+	logging.SetupStderr(a.debug)
+
+	configPath := a.configPath()
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		clog.Errorf(ctx, "load config: %w", err)
+		runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
+			Type:    runtime.ErrorDialog,
+			Title:   "Chat Relay",
+			Message: fmt.Sprintf("Failed to load config: %v", err),
+		})
+		runtime.Quit(ctx)
+		return
+	}
+
+	logSession, logErr := logging.Setup(cfg.Logging, configPath, a.debug)
+	if logErr != nil {
+		clog.Warn(ctx, "session log file unavailable", slog.Any("error", logErr))
+	}
+	a.logSession = logSession
+	logging.WriteStartupLine(logSession)
 	runnable.SetLogger(slog.Default())
 
 	app, err := bootstrap.New(bootstrap.Options{
-		ConfigPath: a.configPath(),
+		ConfigPath: configPath,
 		WebRoot:    a.webRoot(),
 		Debug:      a.debug,
 	})
@@ -99,6 +121,12 @@ func (a *desktopApp) domReady(ctx context.Context) {
 }
 
 func (a *desktopApp) shutdown(ctx context.Context) {
+	if a.logSession != nil {
+		if err := a.logSession.Close(); err != nil {
+			clog.Warn(ctx, "close session log", slog.Any("error", err))
+		}
+	}
+
 	if a.relay == nil {
 		return
 	}
@@ -171,14 +199,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "chat-relay-desktop: %v\n", err)
 		os.Exit(1)
 	}
-}
-
-func setupLogging(debug bool) {
-	level := slog.LevelInfo
-	if debug {
-		level = slog.LevelDebug
-	}
-
-	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})
-	slog.SetDefault(slog.New(handler))
 }

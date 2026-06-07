@@ -20,6 +20,7 @@ type Config struct {
 	VK         VKConfig      `json:"vk"`
 	Overlay    OverlayConfig `json:"overlay"`
 	Admin      AdminConfig   `json:"admin"`
+	Logging    LoggingConfig `json:"logging"`
 }
 
 // TwitchConfig holds Twitch connector settings.
@@ -82,6 +83,7 @@ func Default() *Config {
 		Admin: AdminConfig{
 			MessageSound: defaultMessageSound(),
 		},
+		Logging: defaultLogging(),
 	}
 }
 
@@ -100,6 +102,7 @@ func (c *Config) ApplyDefaults() {
 	c.Overlay.Emotes.applyDefaults()
 	c.Overlay.ImagePreviews.applyDefaults()
 	c.Admin.MessageSound.applyDefaults()
+	c.Logging.applyDefaults()
 }
 
 // ListenAddr returns the HTTP listen address for ServerPort.

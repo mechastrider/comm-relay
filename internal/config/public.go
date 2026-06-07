@@ -8,6 +8,7 @@ type PublicConfig struct {
 	VK         VKConfig            `json:"vk"`
 	Overlay    OverlayConfig       `json:"overlay"`
 	Admin      AdminConfig         `json:"admin"`
+	Logging    LoggingConfig       `json:"logging"`
 }
 
 // Public returns admin-safe settings (tokens and client secret omitted).
@@ -19,5 +20,6 @@ func (c Config) Public() PublicConfig {
 		VK:         c.VK,
 		Overlay:    c.Overlay,
 		Admin:      c.Admin,
+		Logging:    c.Logging,
 	}
 }
