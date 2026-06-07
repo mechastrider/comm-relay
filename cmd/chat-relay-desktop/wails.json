@@ -1,0 +1,26 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "Chat Relay",
+  "outputfilename": "chat-relay-app",
+  "build:tags": "wails",
+  "frontend:install": "",
+  "frontend:build": "",
+  "frontend:dev:watcher": "",
+  "frontend:dev:serverUrl": "",
+  "author": {
+    "name": "Chat Relay",
+    "email": ""
+  },
+  "info": {
+    "companyName": "Chat Relay",
+    "productName": "Chat Relay",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright ........",
+    "comments": "Desktop shell for Chat Relay admin UI"
+  },
+  "version": "2",
+  "outputdir": "../../build/bin",
+  "assetdir": "frontend",
+  "reloaddirs": "frontend",
+  "debounceMS": 100
+}

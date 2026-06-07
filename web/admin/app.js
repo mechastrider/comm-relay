@@ -2,6 +2,8 @@
   "use strict";
 
   const form = document.getElementById("settings-form");
+  const cockpitShell = document.querySelector(".cockpit-shell");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
   const saveButtons = Array.from(document.querySelectorAll("[data-save-button]"));
   const settingsState = document.getElementById("settings-state");
   const footerSettingsState = document.getElementById("footer-settings-state");
@@ -57,6 +59,7 @@
   const BANNER_SUCCESS_DISMISS_MS = 4000;
   const INITIAL_WS_RECONNECT_MS = 1000;
   const MAX_WS_RECONNECT_MS = 30000;
+  const SIDEBAR_COLLAPSED_KEY = "chatRelay.sidebarCollapsed";
 
   const fieldErrors = {
     twitch_channel: document.getElementById("twitch-channel-error"),
@@ -140,6 +143,57 @@
     banner.hidden = true;
     banner.textContent = "";
     banner.className = "banner";
+  }
+
+  function readSidebarCollapsedPreference() {
+    try {
+      return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function writeSidebarCollapsedPreference(collapsed) {
+    try {
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "true" : "false");
+    } catch (error) {
+      /* localStorage can be unavailable in locked-down browser contexts. */
+    }
+  }
+
+  function setSidebarCollapsed(collapsed, options) {
+    const shouldPersist = !options || options.persist !== false;
+    if (!cockpitShell || !sidebarToggle) {
+      return;
+    }
+
+    cockpitShell.classList.toggle("sidebar-collapsed", collapsed);
+    sidebarToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    sidebarToggle.setAttribute(
+      "aria-label",
+      collapsed ? "Expand systems panel" : "Collapse systems panel"
+    );
+    sidebarToggle.title = collapsed ? "Expand systems panel" : "Collapse systems panel";
+
+    const chevron = sidebarToggle.querySelector(".sidebar-toggle__chevron");
+    if (chevron) {
+      chevron.textContent = collapsed ? "<" : ">";
+    }
+
+    if (shouldPersist) {
+      writeSidebarCollapsedPreference(collapsed);
+    }
+  }
+
+  function initSidebarToggle() {
+    if (!cockpitShell || !sidebarToggle) {
+      return;
+    }
+
+    setSidebarCollapsed(readSidebarCollapsedPreference(), { persist: false });
+    sidebarToggle.addEventListener("click", function () {
+      setSidebarCollapsed(!cockpitShell.classList.contains("sidebar-collapsed"));
+    });
   }
 
   function setSaveButtonsDisabled(disabled) {
@@ -1370,6 +1424,7 @@
   });
 
   handleOAuthQuery();
+  initSidebarToggle();
   initSettingsDialogs();
   initMessageSoundControls();
 

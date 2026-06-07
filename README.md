@@ -28,6 +28,27 @@ go build -o chat-relay.exe ./cmd/chat-relay
 
 На Linux/macOS имя бинарника можно оставить `chat-relay`.
 
+## Десктоп-приложение (Wails)
+
+Окно с той же админкой: в фоне поднимается локальный HTTP-сервер, WebView открывает `http://127.0.0.1:<порт>/`. OBS overlay по-прежнему использует `http://127.0.0.1:17877/overlay`.
+
+**Требования:** [Wails v2](https://wails.io/) (`go install github.com/wailsapp/wails/v2/cmd/wails@latest`), на Linux — `libgtk-3-dev` и `libwebkit2gtk-4.1-dev` (см. `wails doctor`).
+
+Сборка из корня репозитория:
+
+```powershell
+go build -tags wails -o chat-relay-app ./cmd/chat-relay-desktop
+```
+
+Или через Wails CLI из каталога приложения:
+
+```powershell
+cd cmd/chat-relay-desktop
+wails build
+```
+
+По умолчанию настройки сохраняются в каталог пользователя (`%AppData%\chat-relay\config.json` на Windows, `~/.config/chat-relay/config.json` на Linux). Флаг `-config` по-прежнему переопределяет путь.
+
 ## Флаги запуска
 
 | Флаг | По умолчанию | Описание |
@@ -94,6 +115,7 @@ OAuth-токены сохраняются в локальный `config.json` и
 ```powershell
 go test ./...
 go build ./...
+go build -tags wails -o chat-relay-app ./cmd/chat-relay-desktop
 ```
 
 Структура проекта и правила для агентов: [`AGENTS.md`](AGENTS.md).

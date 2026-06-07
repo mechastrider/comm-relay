@@ -14,7 +14,8 @@ Source of product requirements: [`docs/concept.md`](docs/concept.md).
 
 ```text
 comm-relay/
-├── cmd/chat-relay/       # main: HTTP server, graceful shutdown
+├── cmd/chat-relay/          # main: HTTP server, graceful shutdown
+├── cmd/chat-relay-desktop/  # Wails desktop (build tag `wails`)
 ├── internal/
 │   ├── bootstrap/        # config load, wiring, runnables
 │   ├── config/           # config.json read/write
@@ -110,6 +111,7 @@ Standard commands from the repo root (documented in **Completion Checklist** abo
 
 - Default listen address: `127.0.0.1:17877` (`server_port` in `config.json`, created on first run).
 - Dev run: `go run ./cmd/chat-relay` from repo root (uses `./web` and `./config.json`).
+- Desktop: `go build -tags wails -o chat-relay-app ./cmd/chat-relay-desktop` (needs Wails + platform WebView deps); config defaults to user config dir.
 - Overrides: `-addr` (listen), `-config`, `-web`, `-debug` — see `cmd/chat-relay/main.go`.
 - For a long-lived background process in Cloud Agent VMs, use **tmux** (see system shell instructions), e.g. session `chat-relay-dev` with `go run ./cmd/chat-relay` or a built binary.
 
