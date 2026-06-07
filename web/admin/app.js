@@ -36,6 +36,7 @@
   const overlayTheme = document.getElementById("overlay-theme");
   const emotesTwitch = document.getElementById("emotes-twitch");
   const emotesYouTube = document.getElementById("emotes-youtube");
+  const emotesVK = document.getElementById("emotes-vk");
   const emotesFFZ = document.getElementById("emotes-ffz");
   const emotesBTTV = document.getElementById("emotes-bttv");
   const emotesSevenTV = document.getElementById("emotes-7tv");
@@ -418,6 +419,9 @@
     if (emotesYouTube) {
       emotesYouTube.checked = emotes.youtube !== false;
     }
+    if (emotesVK) {
+      emotesVK.checked = emotes.vk !== false;
+    }
     emotesFFZ.checked = emotes.ffz !== false;
     emotesBTTV.checked = emotes.bttv !== false;
     emotesSevenTV.checked = emotes["7tv"] !== false;
@@ -441,6 +445,7 @@
       emotes: {
         twitch: emotesTwitch.checked,
         youtube: emotesYouTube ? emotesYouTube.checked : true,
+        vk: emotesVK ? emotesVK.checked : true,
         ffz: emotesFFZ.checked,
         bttv: emotesBTTV.checked,
         "7tv": emotesSevenTV.checked,
