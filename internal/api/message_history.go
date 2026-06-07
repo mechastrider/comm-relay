@@ -83,12 +83,13 @@ func (h *MessageHistory) Recent(limit int) []adminMessage {
 }
 
 type adminMessage struct {
-	ID          string `json:"id,omitempty"`
-	Platform    string `json:"platform"`
-	Username    string `json:"username"`
-	DisplayName string `json:"display_name,omitempty"`
-	Message     string `json:"message"`
-	Timestamp   string `json:"timestamp"`
+	ID          string                `json:"id,omitempty"`
+	Platform    string                `json:"platform"`
+	Username    string                `json:"username"`
+	DisplayName string                `json:"display_name,omitempty"`
+	Message     string                `json:"message"`
+	Fragments   []bus.MessageFragment `json:"fragments,omitempty"`
+	Timestamp   string                `json:"timestamp"`
 }
 
 func adminMessageFromChat(msg bus.ChatMessage) adminMessage {
@@ -103,6 +104,7 @@ func adminMessageFromChat(msg bus.ChatMessage) adminMessage {
 		Username:    msg.Username,
 		DisplayName: msg.DisplayName,
 		Message:     msg.Message,
+		Fragments:   msg.Fragments,
 		Timestamp:   ts.UTC().Format(time.RFC3339),
 	}
 }

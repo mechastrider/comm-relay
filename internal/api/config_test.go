@@ -300,3 +300,66 @@ func TestMessagesRecent_WhenPublished_ExpectChronologicalList(t *testing.T) {
 	require.Equal(t, "first", payload.Messages[0].Username)
 	require.Equal(t, "second", payload.Messages[1].Username)
 }
+
+func TestMessagesRecent_WhenPublishedWithFragments_ExpectFragmentsInResponse(t *testing.T) {
+	t.Parallel()
+
+	b := bus.New(0)
+	handler := testHandlerWithBus(t, b)
+
+	time.Sleep(50 * time.Millisecond)
+
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		Platform: "twitch",
+		Username: "viewer",
+		Message:  "Kappa",
+		Fragments: []bus.MessageFragment{
+			{Type: bus.FragmentTypeEmote, Text: "Kappa", URL: "https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0"},
+		},
+	})))
+
+	require.Eventually(t, func() bool {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=5", nil))
+		if rec.Code != http.StatusOK {
+			return false
+		}
+
+		var payload struct {
+			Messages []struct {
+				Message   string `json:"message"`
+				Fragments []struct {
+					Type string `json:"type"`
+					Text string `json:"text"`
+					URL  string `json:"url"`
+				} `json:"fragments"`
+			} `json:"messages"`
+		}
+		if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+			return false
+		}
+		return len(payload.Messages) == 1 && len(payload.Messages[0].Fragments) == 1
+	}, time.Second, 10*time.Millisecond)
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=5", nil))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var payload struct {
+		Messages []struct {
+			Message   string `json:"message"`
+			Fragments []struct {
+				Type string `json:"type"`
+				Text string `json:"text"`
+				URL  string `json:"url"`
+			} `json:"fragments"`
+		} `json:"messages"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Len(t, payload.Messages, 1)
+	require.Equal(t, "Kappa", payload.Messages[0].Message)
+	require.Len(t, payload.Messages[0].Fragments, 1)
+	require.Equal(t, "emote", payload.Messages[0].Fragments[0].Type)
+	require.Equal(t, "Kappa", payload.Messages[0].Fragments[0].Text)
+	require.Contains(t, payload.Messages[0].Fragments[0].URL, "jtvnw.net")
+}

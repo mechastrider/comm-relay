@@ -428,6 +428,28 @@ select:focus-visible {
   white-space: pre-wrap;
 }
 
+.message-list__emote {
+  display: inline-block;
+  width: auto;
+  height: 1.35em;
+  max-width: 4em;
+  max-height: 1.35em;
+  margin: 0 0.08em;
+  object-fit: contain;
+  vertical-align: -0.25em;
+}
+
+.message-list__image-preview {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 320px;
+  max-height: 180px;
+  margin: 0.2em 0;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
 .empty-state {
   position: absolute;
   inset: 0;

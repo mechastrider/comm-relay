@@ -933,6 +933,177 @@
     el.appendChild(document.createTextNode(text));
   }
 
+  function readFragmentText(fragment) {
+    return typeof fragment.text === "string" ? fragment.text : "";
+  }
+
+  function safeImageURL(rawURL) {
+    if (typeof rawURL !== "string" || rawURL.trim() === "") {
+      return "";
+    }
+    try {
+      const url = new URL(rawURL, window.location.href);
+      if (url.protocol !== "https:" && url.protocol !== "http:") {
+        return "";
+      }
+      return url.href;
+    } catch {
+      return "";
+    }
+  }
+
+  function replaceBrokenImageWithText(img, text) {
+    img.addEventListener(
+      "error",
+      function () {
+        img.replaceWith(document.createTextNode(text));
+      },
+      { once: true }
+    );
+  }
+
+  function getImagePreviewSettings() {
+    const overlay = currentConfig && currentConfig.overlay;
+    const previews = overlay && overlay.image_previews;
+    if (!previews || typeof previews !== "object") {
+      return {
+        enabled: false,
+        allowed_hosts: [],
+        max_width_px: 320,
+        max_height_px: 180,
+      };
+    }
+    return previews;
+  }
+
+  function imagePreviewHostAllowed(hostname, allowedHosts) {
+    const host = typeof hostname === "string" ? hostname.trim().toLowerCase() : "";
+    if (host === "" || !Array.isArray(allowedHosts) || allowedHosts.length === 0) {
+      return false;
+    }
+    return allowedHosts.some(function (allowed) {
+      const normalized =
+        typeof allowed === "string" ? allowed.trim().toLowerCase() : "";
+      return normalized !== "" && (host === normalized || host.endsWith("." + normalized));
+    });
+  }
+
+  function isPreviewImageURL(rawURL, allowedHosts) {
+    if (typeof rawURL !== "string" || rawURL.trim() === "") {
+      return false;
+    }
+    try {
+      const url = new URL(rawURL, window.location.href);
+      if (url.protocol !== "https:") {
+        return false;
+      }
+      if (url.username !== "" || url.password !== "") {
+        return false;
+      }
+      if (url.port !== "" && url.port !== "443") {
+        return false;
+      }
+      const path = url.pathname.toLowerCase();
+      if (!/\.(png|jpe?g|gif|webp|avif)$/.test(path)) {
+        return false;
+      }
+      return imagePreviewHostAllowed(url.hostname, allowedHosts);
+    } catch {
+      return false;
+    }
+  }
+
+  function appendEmoteFragment(el, fragment) {
+    const text = readFragmentText(fragment);
+    const url = safeImageURL(fragment.url);
+    if (url === "") {
+      appendText(el, text);
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.className = "message-list__emote";
+    img.src = url;
+    img.alt = text;
+    img.title = text;
+    img.decoding = "async";
+    img.draggable = false;
+    img.referrerPolicy = "no-referrer";
+    replaceBrokenImageWithText(img, text);
+    el.appendChild(img);
+  }
+
+  function appendImageLinkFragment(el, fragment) {
+    const text = readFragmentText(fragment);
+    const previews = getImagePreviewSettings();
+    if (!previews.enabled) {
+      appendText(el, text);
+      return;
+    }
+
+    const url = safeImageURL(fragment.url);
+    if (url === "" || !isPreviewImageURL(url, previews.allowed_hosts)) {
+      appendText(el, text);
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.className = "message-list__image-preview";
+    img.src = url;
+    img.alt = "chat image";
+    img.title = text;
+    img.decoding = "async";
+    img.loading = "lazy";
+    img.draggable = false;
+    img.referrerPolicy = "no-referrer";
+    if (typeof previews.max_width_px === "number" && previews.max_width_px >= 32) {
+      img.style.maxWidth = String(previews.max_width_px) + "px";
+    }
+    if (typeof previews.max_height_px === "number" && previews.max_height_px >= 32) {
+      img.style.maxHeight = String(previews.max_height_px) + "px";
+    }
+    replaceBrokenImageWithText(img, text);
+    el.appendChild(img);
+  }
+
+  function appendFragment(el, fragment) {
+    if (!fragment || typeof fragment !== "object") {
+      return;
+    }
+
+    const type = typeof fragment.type === "string" ? fragment.type : "";
+    if (type === "text") {
+      appendText(el, readFragmentText(fragment));
+      return;
+    }
+    if (type === "emote") {
+      appendEmoteFragment(el, fragment);
+      return;
+    }
+    if (type === "image_link") {
+      appendImageLinkFragment(el, fragment);
+      return;
+    }
+
+    appendText(el, readFragmentText(fragment));
+  }
+
+  function appendMessageContent(el, msg) {
+    const fallbackText = typeof msg.message === "string" ? msg.message : "";
+    if (!Array.isArray(msg.fragments) || msg.fragments.length === 0) {
+      appendText(el, fallbackText);
+      return;
+    }
+
+    const before = el.childNodes.length;
+    msg.fragments.forEach(function (fragment) {
+      appendFragment(el, fragment);
+    });
+    if (el.childNodes.length === before) {
+      appendText(el, fallbackText);
+    }
+  }
+
   function messageDisplayName(msg) {
     if (typeof msg.display_name === "string" && msg.display_name !== "") {
       return msg.display_name;
@@ -991,6 +1162,7 @@
       username: user,
       display_name: displayName,
       message: typeof wire.message === "string" ? wire.message : "",
+      fragments: Array.isArray(wire.fragments) ? wire.fragments : [],
       timestamp: typeof wire.timestamp === "string" && wire.timestamp !== ""
         ? wire.timestamp
         : new Date().toISOString(),
@@ -1110,7 +1282,7 @@
 
     const text = document.createElement("p");
     text.className = "message-list__text";
-    appendText(text, typeof msg.message === "string" ? msg.message : "");
+    appendMessageContent(text, msg);
 
     item.appendChild(meta);
     item.appendChild(text);
