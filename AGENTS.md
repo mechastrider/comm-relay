@@ -90,7 +90,7 @@ Before reporting a task as done:
 - Review `git diff` — only relevant files changed.
 - `gofmt` / `goimports` on touched Go files.
 - `go test ./...` (or targeted packages); `-race` when changing concurrency.
-- `golangci-lint run ./...` when `.golangci.yml` exists.
+- `golangci-lint run ./...` (config: `.golangci.yml`, v2).
 - If static UI changed: smoke-check overlay (transparent background, message limit) and admin forms.
 - State clearly if a check could not be run and why.
 
@@ -105,7 +105,7 @@ Standard commands from the repo root (documented in **Completion Checklist** abo
 - Refresh modules: `go mod download`
 - Tests: `go test ./...` (use `-race` when changing concurrency)
 - Build: `go build -o chat-relay ./cmd/chat-relay` or `go build ./...`
-- **golangci-lint**: not configured yet (no `.golangci.yml`); skip until added
+- **golangci-lint** v2.12.2: `golangci-lint run ./...` (install: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2`)
 
 ### Running the server
 

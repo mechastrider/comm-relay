@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/muonsoft/errors"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
 )
 
 const wireMessageType = "message"

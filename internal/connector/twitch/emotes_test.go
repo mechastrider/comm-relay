@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"github.com/gempir/go-twitch-irc/v4"
-	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
 )
 
 func TestMapEmoteFragments_WhenNoEmotes_ExpectNil(t *testing.T) {

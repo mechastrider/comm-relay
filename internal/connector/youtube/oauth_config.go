@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mechastrider/comm-relay/internal/config"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+
+	"github.com/mechastrider/comm-relay/internal/config"
 )
 
 const (

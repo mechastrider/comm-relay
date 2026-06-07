@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
 )
 
 func TestSanitizeError_RedactsSecrets(t *testing.T) {

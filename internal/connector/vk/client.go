@@ -64,7 +64,7 @@ func (c *defaultClient) RunSession(ctx context.Context, channel string, onMessag
 	if err != nil {
 		return errors.Errorf("dial vk websocket: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	var msgID int64
 	send := func(payload any) error {
@@ -153,7 +153,7 @@ func (c *defaultClient) fetchWebSocketToken(ctx context.Context) (string, error)
 	if err != nil {
 		return "", errors.Errorf("fetch vk app config: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
 	if err != nil {
@@ -197,7 +197,7 @@ func (c *defaultClient) fetchChannelOwnerID(ctx context.Context, channel string)
 	if err != nil {
 		return "", errors.Errorf("fetch vk channel info: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {

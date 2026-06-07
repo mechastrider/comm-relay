@@ -31,7 +31,3 @@ func (b refreshBackoff) onFailure(now time.Time) refreshBackoff {
 		nextRetry: now.Add(wait),
 	}
 }
-
-func (b refreshBackoff) onSuccess() refreshBackoff {
-	return newRefreshBackoff()
-}

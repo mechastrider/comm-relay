@@ -5,31 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
+
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
-	googleyoutube "google.golang.org/api/youtube/v3"
 )
-
-type fakeLiveChatAPI struct {
-	activeID string
-}
-
-func (f *fakeLiveChatAPI) ActiveLiveChatID(ctx context.Context) (string, error) {
-	return f.activeID, nil
-}
-
-func (f *fakeLiveChatAPI) ListMessages(ctx context.Context, liveChatID, pageToken string) (*googleyoutube.LiveChatMessageListResponse, error) {
-	_ = ctx
-	_ = liveChatID
-	_ = pageToken
-	<-time.After(50 * time.Millisecond)
-	return &googleyoutube.LiveChatMessageListResponse{
-		PollingIntervalMillis: 1000,
-	}, nil
-}
 
 func testStore(t *testing.T, youtubeCfg config.YouTubeConfig) *config.Store {
 	t.Helper()

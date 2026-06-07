@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
 )
 
 func TestWebSocket_WhenUpgrade_ExpectSwitchingProtocols(t *testing.T) {

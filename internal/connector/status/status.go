@@ -17,6 +17,7 @@ const (
 // State is the connection state exposed to the admin API.
 type State string
 
+// Known connector states for the admin API.
 const (
 	StateDisabled     State = "disabled"
 	StateDisconnected State = "disconnected"

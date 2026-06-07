@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gempir/go-twitch-irc/v4"
+
 	"github.com/mechastrider/comm-relay/internal/bus"
 )
 

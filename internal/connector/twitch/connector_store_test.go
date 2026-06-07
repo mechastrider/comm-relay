@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
-	"github.com/stretchr/testify/require"
 )
 
 func TestConnector_Run_WhenEnabledAfterStoreUpdate_ExpectSession(t *testing.T) {

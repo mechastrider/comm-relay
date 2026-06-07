@@ -51,13 +51,6 @@ func (c *ImagePreviewsConfig) applyDefaults() {
 	}
 }
 
-func (c ImagePreviewsConfig) validate() error {
-	if fields := c.validateFields(); len(fields) > 0 {
-		return fields
-	}
-	return nil
-}
-
 func (c ImagePreviewsConfig) validateFields() FieldErrors {
 	fields := FieldErrors{}
 	if !c.Enabled {

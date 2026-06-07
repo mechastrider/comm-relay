@@ -3,8 +3,9 @@ package api
 import (
 	"testing"
 
-	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
 )
 
 func TestHub_broadcast_WhenClientBufferFull_ExpectOtherClientStillReceives(t *testing.T) {

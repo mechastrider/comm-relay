@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/muonsoft/clog"
+	"github.com/muonsoft/errors"
+	"github.com/pior/runnable"
+
 	"github.com/mechastrider/comm-relay/internal/api"
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
@@ -17,9 +21,6 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote/ffz"
 	"github.com/mechastrider/comm-relay/internal/emote/seventv"
 	"github.com/mechastrider/comm-relay/internal/runtime"
-	"github.com/muonsoft/clog"
-	"github.com/muonsoft/errors"
-	"github.com/pior/runnable"
 )
 
 // App runs Chat Relay HTTP services and connectors until stopped.
@@ -46,8 +47,8 @@ func New(opts Options) (*App, error) {
 
 	webRoot := opts.WebRoot
 	if webRoot != "" {
-		if err := validateWebRoot(webRoot); err != nil {
-			return nil, errors.Errorf("resolve web root: %w", err)
+		if validateErr := validateWebRoot(webRoot); validateErr != nil {
+			return nil, errors.Errorf("resolve web root: %w", validateErr)
 		}
 	}
 

@@ -13,8 +13,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/muonsoft/errors"
+
+	"github.com/mechastrider/comm-relay/internal/emote"
 )
 
 var (

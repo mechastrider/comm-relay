@@ -3,9 +3,10 @@ package imagelink
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
-	"github.com/stretchr/testify/require"
 )
 
 func enabledPolicy() config.ImagePreviewsConfig {

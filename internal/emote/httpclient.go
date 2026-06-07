@@ -38,7 +38,7 @@ func GetJSON(ctx context.Context, client HTTPDoer, url string, dest any) error {
 	if err != nil {
 		return errors.Errorf("http get: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return ErrNotFound

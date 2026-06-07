@@ -7,15 +7,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mechastrider/comm-relay/internal/bus"
-	"github.com/mechastrider/comm-relay/internal/config"
-	"github.com/mechastrider/comm-relay/internal/connector/status"
-	"github.com/mechastrider/comm-relay/internal/imagelink"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/imagelink"
 )
 
 const configPollInterval = 2 * time.Second

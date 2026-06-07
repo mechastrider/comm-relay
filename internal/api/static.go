@@ -7,8 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	webstatic "github.com/mechastrider/comm-relay/web"
 	"github.com/muonsoft/errors"
+
+	webstatic "github.com/mechastrider/comm-relay/web"
 )
 
 type staticRoots struct {

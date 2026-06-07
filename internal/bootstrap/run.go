@@ -8,10 +8,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 	"github.com/pior/runnable"
+
+	"github.com/mechastrider/comm-relay/internal/config"
 )
 
 // Options configures process startup.

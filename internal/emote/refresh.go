@@ -5,8 +5,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/muonsoft/clog"
+
+	"github.com/mechastrider/comm-relay/internal/config"
 )
 
 const refreshInterval = 2 * time.Minute

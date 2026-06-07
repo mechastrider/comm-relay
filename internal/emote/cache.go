@@ -5,8 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/muonsoft/errors"
+
+	"github.com/mechastrider/comm-relay/internal/connector/status"
 )
 
 const (

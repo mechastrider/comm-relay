@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
 )
 
 func TestMessageFragment_WhenTextType_ExpectJSONShape(t *testing.T) {

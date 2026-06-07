@@ -4,10 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/muonsoft/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
 )
 
 func TestBus_WhenPublishChatMessage_ExpectSubscriberReceives(t *testing.T) {
@@ -86,14 +87,14 @@ func TestBus_WhenClosed_ExpectSubscriberChannelClosed(t *testing.T) {
 func TestBus_WhenSubscriberBufferFull_ExpectPublishDoesNotBlock(t *testing.T) {
 	t.Parallel()
 
-	const cap = 2
-	b := bus.New(cap)
+	const bufCap = 2
+	b := bus.New(bufCap)
 	t.Cleanup(b.Close)
 
 	events, unsub := b.Subscribe()
 	defer unsub()
 
-	for range cap {
+	for range bufCap {
 		require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
 			ID:      "fill",
 			Message: "fill",
@@ -116,7 +117,7 @@ func TestBus_WhenSubscriberBufferFull_ExpectPublishDoesNotBlock(t *testing.T) {
 	}
 
 	// Drain buffered events so the test goroutine can exit cleanly.
-	for range cap {
+	for range bufCap {
 		<-events
 	}
 }

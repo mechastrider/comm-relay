@@ -5,21 +5,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
-	"github.com/stretchr/testify/require"
 )
-
-type fakeChatClient struct {
-	sessions int
-}
-
-func (f *fakeChatClient) RunSession(ctx context.Context, channel string, onMessage func([]byte)) error {
-	f.sessions++
-	<-ctx.Done()
-	return nil
-}
 
 func testStore(t *testing.T, vkCfg config.VKConfig) *config.Store {
 	t.Helper()

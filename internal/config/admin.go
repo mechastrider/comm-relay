@@ -48,13 +48,6 @@ func (m *MessageSoundConfig) applyDefaults() {
 	}
 }
 
-func (m MessageSoundConfig) validate() error {
-	if fields := m.validateFields(); len(fields) > 0 {
-		return fields
-	}
-	return nil
-}
-
 func (m MessageSoundConfig) validateFields() FieldErrors {
 	fields := FieldErrors{}
 	if m.Volume < 0 || m.Volume > 1 {

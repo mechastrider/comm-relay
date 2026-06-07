@@ -4,8 +4,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mechastrider/comm-relay/internal/bus"
 	"google.golang.org/api/youtube/v3"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
 )
 
 // MapLiveChatMessage converts a YouTube Live Chat API message to the unified chat model.
@@ -30,9 +31,6 @@ func MapLiveChatMessage(item *youtube.LiveChatMessage) bus.ChatMessage {
 	if item.AuthorDetails != nil {
 		userID = item.AuthorDetails.ChannelId
 		displayName = strings.TrimSpace(item.AuthorDetails.DisplayName)
-		if item.AuthorDetails.IsChatOwner {
-			// display name is enough for MVP
-		}
 	}
 
 	message := ""

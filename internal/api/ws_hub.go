@@ -4,9 +4,10 @@ import (
 	"context"
 	"sync"
 
-	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
+
+	"github.com/mechastrider/comm-relay/internal/bus"
 )
 
 // ClientSendBuffer is the per-client outbound queue capacity before messages are dropped.
@@ -92,11 +93,4 @@ func (h *Hub) broadcast(payload []byte) {
 			// Slow client: drop this frame without blocking other clients.
 		}
 	}
-}
-
-func (h *Hub) clientCount() int {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	return len(h.clients)
 }

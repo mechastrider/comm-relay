@@ -21,10 +21,6 @@ func (c *EmotesConfig) applyDefaults() {
 	// Boolean fields are explicit; legacy migration happens in Load when overlay.emotes is absent.
 }
 
-func (c EmotesConfig) validate() error {
-	return nil
-}
-
 // ThirdPartyEnabled reports whether any third-party emote provider is enabled.
 func (c EmotesConfig) ThirdPartyEnabled() bool {
 	return c.FFZ || c.BTTV || c.SevenTV

@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/gempir/go-twitch-irc/v4"
+	"github.com/muonsoft/clog"
+	"github.com/muonsoft/errors"
+
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/imagelink"
-	"github.com/muonsoft/clog"
-	"github.com/muonsoft/errors"
 )
 
 // ircClient is the subset of go-twitch-irc used by the connector (mocked in tests).

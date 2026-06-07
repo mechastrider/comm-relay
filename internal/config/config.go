@@ -169,8 +169,8 @@ func (c *Config) Save(path string) error {
 
 	dir := filepath.Dir(path)
 	if dir != "" && dir != "." {
-		if err := os.MkdirAll(dir, 0o755); err != nil {
-			return errors.Errorf("create config directory: %w", err, errors.String("path", dir))
+		if mkdirErr := os.MkdirAll(dir, 0o755); mkdirErr != nil {
+			return errors.Errorf("create config directory: %w", mkdirErr, errors.String("path", dir))
 		}
 	}
 

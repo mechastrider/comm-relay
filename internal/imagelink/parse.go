@@ -84,8 +84,8 @@ func trimURLTrailingPunctuation(rawURL string) string {
 	trimmed := strings.TrimRight(rawURL, ".,!?;:")
 	for strings.HasSuffix(trimmed, ")") {
 		open := strings.Count(trimmed, "(")
-		close := strings.Count(trimmed, ")")
-		if close <= open {
+		closeCount := strings.Count(trimmed, ")")
+		if closeCount <= open {
 			break
 		}
 		trimmed = strings.TrimSuffix(trimmed, ")")

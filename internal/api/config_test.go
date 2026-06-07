@@ -8,9 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
-	"github.com/stretchr/testify/require"
 )
 
 func TestConfig_WhenGet_ExpectCurrentSettings(t *testing.T) {

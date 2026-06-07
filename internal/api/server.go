@@ -3,11 +3,12 @@ package api
 import (
 	"net/http"
 
+	"github.com/muonsoft/errors"
+
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/runtime"
-	"github.com/muonsoft/errors"
 )
 
 // Options configures the HTTP handler.

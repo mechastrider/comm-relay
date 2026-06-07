@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/mechastrider/comm-relay/internal/config"
-	youtubeconnector "github.com/mechastrider/comm-relay/internal/connector/youtube"
 	"github.com/muonsoft/clog"
 	"golang.org/x/oauth2"
+
+	"github.com/mechastrider/comm-relay/internal/config"
+	youtubeconnector "github.com/mechastrider/comm-relay/internal/connector/youtube"
 )
 
 type youtubeOAuthHandler struct {

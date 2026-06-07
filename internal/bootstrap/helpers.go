@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/muonsoft/clog"
+
+	"github.com/mechastrider/comm-relay/internal/config"
 )
 
 func logStartup(ctx context.Context, addr, configPath, webRoot string, cfg *config.Config) {

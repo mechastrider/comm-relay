@@ -5,9 +5,10 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
+
+	"github.com/mechastrider/comm-relay/internal/config"
 )
 
 type configHandler struct {

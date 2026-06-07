@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"github.com/gempir/go-twitch-irc/v4"
+	"github.com/stretchr/testify/require"
+
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
-	"github.com/stretchr/testify/require"
 )
 
 type fakeIRCClient struct {

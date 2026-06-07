@@ -26,7 +26,3 @@ func (b reconnectBackoff) next() reconnectBackoff {
 	}
 	return reconnectBackoff{delay: next}
 }
-
-func (b reconnectBackoff) reset() reconnectBackoff {
-	return newReconnectBackoff()
-}
