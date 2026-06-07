@@ -36,7 +36,7 @@ func TestNewHandlerRoutes(t *testing.T) {
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/favicon.svg", nil))
 		require.Equal(t, http.StatusOK, rec.Code)
 		require.Contains(t, rec.Body.String(), "<title>Chat Relay</title>")
-		require.Contains(t, rec.Body.String(), "#19D4FF")
+		require.Contains(t, rec.Body.String(), "#D4A017")
 	})
 
 	t.Run("overlay", func(t *testing.T) {

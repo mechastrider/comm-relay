@@ -18,4 +18,10 @@ config.json
 # Wails (wails build / wails dev)
 /build/
 /cmd/chat-relay-desktop/build/
+!/cmd/chat-relay-desktop/build/
+/cmd/chat-relay-desktop/build/*
+!/cmd/chat-relay-desktop/build/appicon.png
+!/cmd/chat-relay-desktop/build/windows/
+/cmd/chat-relay-desktop/build/windows/*
+!/cmd/chat-relay-desktop/build/windows/icon.ico
 /cmd/chat-relay-desktop/frontend/wailsjs/
