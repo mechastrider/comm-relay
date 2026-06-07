@@ -8,14 +8,14 @@
   "frontend:dev:watcher": "",
   "frontend:dev:serverUrl": "",
   "author": {
-    "name": "Chat Relay",
+    "name": "Igor Lazarev",
     "email": ""
   },
   "info": {
     "companyName": "Chat Relay",
     "productName": "Chat Relay",
     "productVersion": "1.0.0",
-    "copyright": "Copyright ........",
+    "copyright": "Copyright (c) 2026 Igor Lazarev",
     "comments": "Desktop shell for Chat Relay admin UI"
   },
   "version": "2",

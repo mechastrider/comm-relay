@@ -124,3 +124,7 @@ go build -tags wails -o chat-relay-app ./cmd/chat-relay-desktop
 
 - **Порт 17877 занят** — остановите другой процесс или запустите с `-addr 127.0.0.1:<порт>`.
 - **Не найдена папка `web`** — запускайте из корня репозитория или передайте `-web ./web`.
+
+## Лицензия
+
+Проект распространяется под [MIT License](LICENSE). Copyright (c) 2026 Igor Lazarev.
