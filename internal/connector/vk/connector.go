@@ -102,14 +102,15 @@ func (c *Connector) runSession(ctx context.Context, channel string) error {
 	c.setStatus(status.StateConnecting, "", "")
 
 	return client.RunSession(ctx, channel, func(raw []byte) {
-		chatMsg, ok := MapWSMessage(raw)
+		overlay := c.store.Snapshot().Overlay
+		chatMsg, ok := MapWSMessage(raw, overlay.Emotes.VK)
 		if !ok {
 			return
 		}
 		if strings.TrimSpace(chatMsg.Message) == "" {
 			return
 		}
-		imagelink.Enrich(&chatMsg, c.store.Snapshot().Overlay.ImagePreviews)
+		imagelink.Enrich(&chatMsg, overlay.ImagePreviews)
 		if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
 			clog.Errorf(ctx, "publish vk message: %w", err)
 			return

@@ -41,10 +41,16 @@ type contentBlock struct {
 	Type        string `json:"type"`
 	Content     string `json:"content"`
 	DisplayName string `json:"displayName"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	SmallURL    string `json:"smallUrl"`
+	MediumURL   string `json:"mediumUrl"`
+	LargeURL    string `json:"largeUrl"`
+	IsAnimated  bool   `json:"isAnimated"`
 }
 
 // MapWSMessage converts a VK Live WebSocket chat payload to the unified chat model.
-func MapWSMessage(raw []byte) (bus.ChatMessage, bool) {
+func MapWSMessage(raw []byte, vkEmotesEnabled bool) (bus.ChatMessage, bool) {
 	var msg wsChatMessage
 	if err := json.Unmarshal(raw, &msg); err != nil {
 		return bus.ChatMessage{}, false
@@ -55,8 +61,8 @@ func MapWSMessage(raw []byte) (bus.ChatMessage, bool) {
 	}
 
 	payload := msg.Push.Pub.Data.Data
-	text := extractMessageText(payload.Data)
-	text = strings.TrimSpace(text)
+	content := buildMessageContent(payload.Data, vkEmotesEnabled)
+	text := strings.TrimSpace(content.message)
 	if text == "" {
 		return bus.ChatMessage{}, false
 	}
@@ -83,27 +89,11 @@ func MapWSMessage(raw []byte) (bus.ChatMessage, bool) {
 		Username:    displayName,
 		DisplayName: displayName,
 		Message:     text,
+		Fragments:   content.fragments,
 		AvatarURL:   strings.TrimSpace(payload.Author.AvatarURL),
 		Badges:      authorBadges(payload.Author),
 		Timestamp:   ts,
 	}, true
-}
-
-func extractMessageText(blocks []contentBlock) string {
-	var b strings.Builder
-	for _, block := range blocks {
-		switch block.Type {
-		case "text":
-			b.WriteString(parseTextContent(block.Content))
-		case "mention":
-			name := strings.TrimSpace(block.DisplayName)
-			if name != "" {
-				b.WriteString("@")
-				b.WriteString(name)
-			}
-		}
-	}
-	return b.String()
 }
 
 func parseTextContent(content string) string {

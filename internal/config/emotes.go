@@ -4,6 +4,7 @@ package config
 type EmotesConfig struct {
 	Twitch  bool `json:"twitch"`
 	YouTube bool `json:"youtube"`
+	VK      bool `json:"vk"`
 	FFZ     bool `json:"ffz"`
 	BTTV    bool `json:"bttv"`
 	SevenTV bool `json:"7tv"`
@@ -13,6 +14,7 @@ func defaultEmotes() EmotesConfig {
 	return EmotesConfig{
 		Twitch:  true,
 		YouTube: true,
+		VK:      true,
 		FFZ:     true,
 		BTTV:    true,
 		SevenTV: true,
