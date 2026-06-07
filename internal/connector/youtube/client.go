@@ -7,9 +7,15 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
+// liveSessionInfo identifies the active YouTube live broadcast chat session.
+type liveSessionInfo struct {
+	LiveChatID string
+	VideoID    string
+}
+
 // liveChatAPI is the subset of YouTube Data API used by the connector (mocked in tests).
 type liveChatAPI interface {
-	ActiveLiveChatID(ctx context.Context) (string, error)
+	ActiveLiveSession(ctx context.Context) (liveSessionInfo, error)
 	ListMessages(ctx context.Context, liveChatID, pageToken string) (*youtube.LiveChatMessageListResponse, error)
 }
 
@@ -25,27 +31,31 @@ func newAPIClient(ctx context.Context, httpClient option.ClientOption) (*apiClie
 	return &apiClient{svc: svc}, nil
 }
 
-func (c *apiClient) ActiveLiveChatID(ctx context.Context) (string, error) {
+func (c *apiClient) ActiveLiveSession(ctx context.Context) (liveSessionInfo, error) {
 	call := c.svc.LiveBroadcasts.List([]string{"snippet"}).
 		BroadcastStatus("active").
 		Context(ctx)
 
 	resp, err := call.Do()
 	if err != nil {
-		return "", err
+		return liveSessionInfo{}, err
 	}
 
 	for _, item := range resp.Items {
-		if item.Snippet == nil {
+		if item == nil || item.Snippet == nil {
 			continue
 		}
-		id := item.Snippet.LiveChatId
-		if id != "" {
-			return id, nil
+		liveChatID := item.Snippet.LiveChatId
+		if liveChatID == "" {
+			continue
 		}
+		return liveSessionInfo{
+			LiveChatID: liveChatID,
+			VideoID:    item.Id,
+		}, nil
 	}
 
-	return "", errNoLiveChat
+	return liveSessionInfo{}, errNoLiveChat
 }
 
 func (c *apiClient) ListMessages(ctx context.Context, liveChatID, pageToken string) (*youtube.LiveChatMessageListResponse, error) {

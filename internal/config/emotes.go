@@ -3,6 +3,7 @@ package config
 // EmotesConfig controls which emote providers are rendered in chat messages.
 type EmotesConfig struct {
 	Twitch  bool `json:"twitch"`
+	YouTube bool `json:"youtube"`
 	FFZ     bool `json:"ffz"`
 	BTTV    bool `json:"bttv"`
 	SevenTV bool `json:"7tv"`
@@ -11,6 +12,7 @@ type EmotesConfig struct {
 func defaultEmotes() EmotesConfig {
 	return EmotesConfig{
 		Twitch:  true,
+		YouTube: true,
 		FFZ:     true,
 		BTTV:    true,
 		SevenTV: true,

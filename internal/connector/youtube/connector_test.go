@@ -32,7 +32,7 @@ func TestConnector_Run_WhenDisabled_ExpectDisabledStatus(t *testing.T) {
 	eventBus := bus.New(8)
 	registry := status.NewRegistry()
 	store := testStore(t, config.YouTubeConfig{Enabled: false})
-	connector := New(eventBus, store, registry)
+	connector := New(eventBus, store, registry, nil, nil)
 	connector.newClient = func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error) {
 		t.Fatal("client should not be created when disabled")
 		return nil, nil

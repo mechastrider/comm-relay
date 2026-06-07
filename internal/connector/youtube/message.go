@@ -34,13 +34,20 @@ func MapLiveChatMessage(item *youtube.LiveChatMessage) bus.ChatMessage {
 	}
 
 	message := ""
+	messageText := ""
 	if item.Snippet != nil {
 		message = item.Snippet.DisplayMessage
+		if item.Snippet.TextMessageDetails != nil {
+			messageText = item.Snippet.TextMessageDetails.MessageText
+		}
 		if item.Snippet.Type != "" && item.Snippet.Type != "textMessageEvent" {
 			if message == "" {
 				message = item.Snippet.Type
 			}
 		}
+	}
+	if message == "" && messageText != "" {
+		message = messageText
 	}
 
 	if displayName == "" {
@@ -75,4 +82,12 @@ func MapLiveChatMessage(item *youtube.LiveChatMessage) bus.ChatMessage {
 		Badges:      badges,
 		Timestamp:   ts,
 	}
+}
+
+// messageTextFromLiveChat returns the raw YouTube message text with emoji shortcuts.
+func messageTextFromLiveChat(item *youtube.LiveChatMessage) string {
+	if item == nil || item.Snippet == nil || item.Snippet.TextMessageDetails == nil {
+		return ""
+	}
+	return item.Snippet.TextMessageDetails.MessageText
 }

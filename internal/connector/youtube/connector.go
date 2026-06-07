@@ -16,6 +16,8 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/emote"
+	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
 	"github.com/mechastrider/comm-relay/internal/imagelink"
 )
 
@@ -25,18 +27,24 @@ type clientFactory func(ctx context.Context, tokenSource oauth2.TokenSource) (li
 
 // Connector polls YouTube Live Chat for the authenticated user's active broadcast.
 type Connector struct {
-	bus       *bus.Bus
-	store     *config.Store
-	registry  *status.Registry
-	newClient clientFactory
+	bus          *bus.Bus
+	store        *config.Store
+	registry     *status.Registry
+	emojiCatalog *ytemoji.Catalog
+	emojiClient  emote.HTTPDoer
+	emojiRefresh *ytemoji.Refresher
+	newClient    clientFactory
 }
 
 // New creates a YouTube Live Chat connector.
-func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry) *Connector {
+func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry, emojiCatalog *ytemoji.Catalog, emojiClient emote.HTTPDoer) *Connector {
 	return &Connector{
-		bus:      eventBus,
-		store:    store,
-		registry: registry,
+		bus:          eventBus,
+		store:        store,
+		registry:     registry,
+		emojiCatalog: emojiCatalog,
+		emojiClient:  emojiClient,
+		emojiRefresh: ytemoji.NewRefresher(emojiCatalog, emojiClient),
 		newClient: func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error) {
 			client := oauth2.NewClient(ctx, tokenSource)
 			return newAPIClient(ctx, option.WithHTTPClient(client))
@@ -124,15 +132,23 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 		return errors.Errorf("create youtube client: %w", err)
 	}
 
-	liveChatID, err := client.ActiveLiveChatID(ctx)
+	session, err := client.ActiveLiveSession(ctx)
 	if err != nil {
 		return err
 	}
 
 	sessionCtx := clog.NewContext(ctx, slog.Default().With(
 		slog.String("platform", platformYouTube),
-		slog.String("live_chat_id", liveChatID),
+		slog.String("live_chat_id", session.LiveChatID),
+		slog.String("video_id", session.VideoID),
 	))
+
+	if c.emojiRefresh != nil {
+		c.emojiRefresh.EnsureGlobalLoaded(sessionCtx)
+	}
+	if err := c.refreshChannelEmojis(sessionCtx, session.VideoID); err != nil {
+		clog.Debug(sessionCtx, "youtube channel emoji refresh failed", slog.Any("error", err))
+	}
 
 	c.setStatus(status.StateConnected, "", "")
 
@@ -149,7 +165,7 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 			return nil
 		}
 
-		resp, err := client.ListMessages(sessionCtx, liveChatID, pageToken)
+		resp, err := client.ListMessages(sessionCtx, session.LiveChatID, pageToken)
 		if err != nil {
 			return errors.Errorf("list live chat messages: %w", err)
 		}
@@ -158,11 +174,15 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 			if item == nil {
 				continue
 			}
+			overlay := c.store.Snapshot().Overlay
 			chatMsg := MapLiveChatMessage(item)
 			if strings.TrimSpace(chatMsg.Message) == "" {
 				continue
 			}
-			imagelink.Enrich(&chatMsg, c.store.Snapshot().Overlay.ImagePreviews)
+			if overlay.Emotes.YouTube && c.emojiCatalog != nil {
+				chatMsg.Fragments = mapEmojiFragments(messageTextFromLiveChat(item), c.emojiCatalog)
+			}
+			imagelink.Enrich(&chatMsg, overlay.ImagePreviews)
 			if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
 				clog.Errorf(sessionCtx, "publish youtube message: %w", err)
 			}
@@ -240,6 +260,26 @@ func isQuotaError(err error) bool {
 		}
 	}
 	return false
+}
+
+func (c *Connector) refreshChannelEmojis(ctx context.Context, videoID string) error {
+	if c == nil || c.emojiCatalog == nil || c.emojiClient == nil {
+		return nil
+	}
+
+	c.emojiCatalog.ClearChannel()
+
+	entries, err := ytemoji.FetchChannel(ctx, c.emojiClient, videoID)
+	if err != nil {
+		return err
+	}
+	if len(entries) == 0 {
+		return nil
+	}
+
+	c.emojiCatalog.MergeChannel(entries)
+	clog.Info(ctx, "youtube channel emoji catalog refreshed", slog.Int("shortcuts", len(entries)))
+	return nil
 }
 
 func waitContext(ctx context.Context, d time.Duration) error {

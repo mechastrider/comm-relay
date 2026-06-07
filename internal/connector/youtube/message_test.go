@@ -16,7 +16,10 @@ func TestMapLiveChatMessage_WhenTextMessage_ExpectUnifiedFields(t *testing.T) {
 		Snippet: &youtube.LiveChatMessageSnippet{
 			Type:           "textMessageEvent",
 			DisplayMessage: "Hello chat",
-			PublishedAt:    time.Date(2026, 6, 2, 12, 0, 0, 0, time.UTC).Format(time.RFC3339),
+			TextMessageDetails: &youtube.LiveChatTextMessageDetails{
+				MessageText: "Hello :heart: chat",
+			},
+			PublishedAt: time.Date(2026, 6, 2, 12, 0, 0, 0, time.UTC).Format(time.RFC3339),
 		},
 		AuthorDetails: &youtube.LiveChatMessageAuthorDetails{
 			ChannelId:       "UC123",
@@ -33,4 +36,5 @@ func TestMapLiveChatMessage_WhenTextMessage_ExpectUnifiedFields(t *testing.T) {
 	require.Equal(t, "Hello chat", msg.Message)
 	require.Equal(t, "Streamer", msg.DisplayName)
 	require.Contains(t, msg.Badges, "owner")
+	require.Equal(t, "Hello :heart: chat", messageTextFromLiveChat(item))
 }

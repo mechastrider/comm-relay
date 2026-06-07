@@ -20,6 +20,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote/bttv"
 	"github.com/mechastrider/comm-relay/internal/emote/ffz"
 	"github.com/mechastrider/comm-relay/internal/emote/seventv"
+	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 )
 
@@ -74,6 +75,8 @@ func New(opts Options) (*App, error) {
 	emoteCache.RegisterFetcher(seventv.New(emoteHTTP, ffzFetcher))
 	emoteEnricher := emote.NewEnricher(emoteCache)
 	emoteRefresher := emote.NewRefresher(emoteCache, store)
+	youtubeEmojiCatalog := ytemoji.NewCatalog()
+	youtubeEmojiRefresher := ytemoji.NewRefresher(youtubeEmojiCatalog, emoteHTTP)
 
 	handler, err := api.NewHandler(api.Options{
 		WebRoot:    webRoot,
@@ -116,6 +119,10 @@ func New(opts Options) (*App, error) {
 			emoteRefresher.Run(ctx)
 			return nil
 		}).Name("emote-cache-refresh"),
+		runnable.Func(func(ctx context.Context) error {
+			youtubeEmojiRefresher.Run(ctx)
+			return nil
+		}).Name("youtube-emoji-refresh"),
 	)
 
 	processes := []runnable.Runnable{
@@ -132,7 +139,7 @@ func New(opts Options) (*App, error) {
 		return nil
 	}).Name("twitch"))
 
-	youtubeConn := youtubeconnector.New(eventBus, store, statusRegistry)
+	youtubeConn := youtubeconnector.New(eventBus, store, statusRegistry, youtubeEmojiCatalog, emoteHTTP)
 	processes = append(processes, runnable.Func(func(ctx context.Context) error {
 		if err := youtubeConn.Run(ctx); err != nil {
 			clog.Errorf(ctx, "youtube connector stopped with error: %w", err)
