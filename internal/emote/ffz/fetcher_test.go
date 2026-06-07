@@ -10,10 +10,9 @@ import (
 )
 
 func TestFetcher_FetchGlobal_WhenValidPayload_ExpectNormalizedEmotes(t *testing.T) {
-	t.Parallel()
-
+	var requestedPath string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/v1/set/global", r.URL.Path)
+		requestedPath = r.URL.Path
 		_, _ = w.Write([]byte(`{
 			"default_sets": [3],
 			"sets": {
@@ -49,6 +48,7 @@ func TestFetcher_FetchGlobal_WhenValidPayload_ExpectNormalizedEmotes(t *testing.
 
 	metadata, err := fetcher.FetchGlobal(context.Background())
 	require.NoError(t, err)
+	require.Equal(t, "/v1/set/global", requestedPath)
 	require.Len(t, metadata, 1)
 	require.Equal(t, "BibleThump", metadata[0].Code)
 	require.Equal(t, "757384", metadata[0].ID)
@@ -56,10 +56,9 @@ func TestFetcher_FetchGlobal_WhenValidPayload_ExpectNormalizedEmotes(t *testing.
 }
 
 func TestFetcher_FetchChannel_WhenRoomExists_ExpectChannelEmotes(t *testing.T) {
-	t.Parallel()
-
+	var requestedPath string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/v1/room/streamer", r.URL.Path)
+		requestedPath = r.URL.Path
 		_, _ = w.Write([]byte(`{
 			"room": {"twitch_id": 12345, "id": "streamer", "set": 9},
 			"sets": {
@@ -86,13 +85,12 @@ func TestFetcher_FetchChannel_WhenRoomExists_ExpectChannelEmotes(t *testing.T) {
 
 	metadata, err := fetcher.FetchChannel(context.Background(), "twitch", "Streamer")
 	require.NoError(t, err)
+	require.Equal(t, "/v1/room/streamer", requestedPath)
 	require.Len(t, metadata, 1)
 	require.Equal(t, "WideHard", metadata[0].Code)
 }
 
 func TestFetcher_ResolveTwitchID_WhenRoomExists_ExpectNumericID(t *testing.T) {
-	t.Parallel()
-
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{"room": {"twitch_id": 71092938, "id": "xqc", "set": 1}}`))
 	}))

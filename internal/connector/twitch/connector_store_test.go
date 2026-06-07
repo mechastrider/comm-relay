@@ -33,14 +33,14 @@ func TestConnector_Run_WhenEnabledAfterStoreUpdate_ExpectSession(t *testing.T) {
 	}()
 
 	time.Sleep(100 * time.Millisecond)
-	require.Equal(t, "", fake.joined)
+	require.Equal(t, "", fake.joinedChannel())
 
 	updated := store.Snapshot()
 	updated.Twitch = config.TwitchConfig{Enabled: true, Channel: "streamer"}
 	require.NoError(t, store.Replace(updated))
 
 	require.Eventually(t, func() bool {
-		return fake.joined == "streamer"
+		return fake.joinedChannel() == "streamer"
 	}, 5*time.Second, 50*time.Millisecond)
 
 	cancel()

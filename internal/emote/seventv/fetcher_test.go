@@ -22,10 +22,9 @@ func (s stubResolver) ResolveTwitchID(ctx context.Context, login string) (string
 }
 
 func TestFetcher_FetchGlobal_WhenValidPayload_ExpectNormalizedEmotes(t *testing.T) {
-	t.Parallel()
-
+	var requestedPath string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/v3/emote-sets/global", r.URL.Path)
+		requestedPath = r.URL.Path
 		_, _ = w.Write([]byte(`{
 			"emotes": [
 				{
@@ -64,6 +63,7 @@ func TestFetcher_FetchGlobal_WhenValidPayload_ExpectNormalizedEmotes(t *testing.
 
 	metadata, err := fetcher.FetchGlobal(context.Background())
 	require.NoError(t, err)
+	require.Equal(t, "/v3/emote-sets/global", requestedPath)
 	require.Len(t, metadata, 1)
 	require.Equal(t, "RainTime", metadata[0].Code)
 	require.Equal(t, "01FCY771D800007PQ2DF3GDTN6", metadata[0].ID)
@@ -73,10 +73,9 @@ func TestFetcher_FetchGlobal_WhenValidPayload_ExpectNormalizedEmotes(t *testing.
 }
 
 func TestFetcher_FetchChannel_WhenLoginProvided_ExpectResolvedChannelEmotes(t *testing.T) {
-	t.Parallel()
-
+	var requestedPath string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/v3/users/twitch/71092938", r.URL.Path)
+		requestedPath = r.URL.Path
 		_, _ = w.Write([]byte(`{
 			"emote_set": {
 				"emotes": [
@@ -108,14 +107,13 @@ func TestFetcher_FetchChannel_WhenLoginProvided_ExpectResolvedChannelEmotes(t *t
 
 	metadata, err := fetcher.FetchChannel(context.Background(), "twitch", "xqc")
 	require.NoError(t, err)
+	require.Equal(t, "/v3/users/twitch/71092938", requestedPath)
 	require.Len(t, metadata, 1)
 	require.Equal(t, "GAMBA", metadata[0].Code)
 	require.True(t, metadata[0].Animated)
 }
 
 func TestFetcher_FetchChannel_WhenUserNotFound_ExpectNil(t *testing.T) {
-	t.Parallel()
-
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))

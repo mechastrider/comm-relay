@@ -14,14 +14,12 @@ func TestNewHandlerRoutes(t *testing.T) {
 	handler := testHandler(t)
 
 	t.Run("health", func(t *testing.T) {
-		t.Parallel()
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/health", nil))
 		require.Equal(t, http.StatusOK, rec.Code)
 	})
 
 	t.Run("admin", func(t *testing.T) {
-		t.Parallel()
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
 		require.Equal(t, http.StatusOK, rec.Code)
@@ -31,7 +29,6 @@ func TestNewHandlerRoutes(t *testing.T) {
 	})
 
 	t.Run("favicon", func(t *testing.T) {
-		t.Parallel()
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/favicon.svg", nil))
 		require.Equal(t, http.StatusOK, rec.Code)
@@ -40,7 +37,6 @@ func TestNewHandlerRoutes(t *testing.T) {
 	})
 
 	t.Run("overlay", func(t *testing.T) {
-		t.Parallel()
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/overlay", nil))
 		require.Equal(t, http.StatusOK, rec.Code)

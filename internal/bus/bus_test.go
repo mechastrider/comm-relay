@@ -102,11 +102,12 @@ func TestBus_WhenSubscriberBufferFull_ExpectPublishDoesNotBlock(t *testing.T) {
 	}
 
 	done := make(chan struct{})
+	var publishErr error
 	go func() {
-		require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		publishErr = b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
 			ID:      "overflow",
 			Message: "dropped or delivered",
-		})))
+		}))
 		close(done)
 	}()
 
@@ -115,6 +116,7 @@ func TestBus_WhenSubscriberBufferFull_ExpectPublishDoesNotBlock(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("publish blocked on full subscriber buffer")
 	}
+	require.NoError(t, publishErr)
 
 	// Drain buffered events so the test goroutine can exit cleanly.
 	for range bufCap {

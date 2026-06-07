@@ -14,6 +14,7 @@ import (
 )
 
 type fakeIRCClient struct {
+	mu        sync.Mutex
 	onPrivate func(twitch.PrivateMessage)
 	onConnect func()
 	joined    string
@@ -29,9 +30,17 @@ func (f *fakeIRCClient) OnConnect(handler func()) {
 }
 
 func (f *fakeIRCClient) Join(channels ...string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	if len(channels) > 0 {
 		f.joined = channels[0]
 	}
+}
+
+func (f *fakeIRCClient) joinedChannel() string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.joined
 }
 
 func (f *fakeIRCClient) Connect() error {
@@ -103,7 +112,7 @@ func TestConnector_Run_WhenSessionActive_ExpectPublishedMessage(t *testing.T) {
 	}()
 
 	require.Eventually(t, func() bool {
-		return fake.joined == "streamer"
+		return fake.joinedChannel() == "streamer"
 	}, time.Second, 10*time.Millisecond)
 
 	fake.onPrivate(twitch.PrivateMessage{

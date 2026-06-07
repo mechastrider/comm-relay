@@ -143,19 +143,16 @@ func (c *Cache) Lookup(provider ProviderID, scope Scope, code string) (Metadata,
 	now := c.now()
 	key := scopeKey{provider: provider, scope: scope}
 
-	c.mu.RLock()
-	data := c.scopes[key]
-	c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
+	data := c.scopes[key]
 	if data == nil || now.After(data.expiresAt) {
 		return Metadata{}, false
 	}
 
-	c.mu.Lock()
 	data.lastAccess = now
 	meta, ok := data.entries[code]
-	c.mu.Unlock()
-
 	return meta, ok
 }
 
