@@ -248,6 +248,11 @@ select:focus-visible {
   grid-template-columns: minmax(0, 1fr) 270px;
   min-height: 0;
   overflow: hidden;
+  transition: grid-template-columns 160ms ease;
+}
+
+.cockpit-shell.sidebar-collapsed .main-area {
+  grid-template-columns: minmax(0, 1fr) 34px;
 }
 
 .banner {
@@ -262,6 +267,11 @@ select:focus-visible {
   background: var(--surface);
   box-shadow: var(--shadow);
   font-weight: 700;
+  transition: right 160ms ease;
+}
+
+.cockpit-shell.sidebar-collapsed .banner {
+  right: 48px;
 }
 
 .banner--error {
@@ -431,13 +441,66 @@ select:focus-visible {
 }
 
 .systems-panel {
-  display: flex;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
-  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  background: var(--surface);
+  transition: grid-template-columns 160ms ease;
+}
+
+.cockpit-shell.sidebar-collapsed .systems-panel {
+  grid-template-columns: 34px 0;
+}
+
+.sidebar-toggle {
+  display: grid;
+  grid-template-rows: 32px 1fr;
+  place-items: center;
+  min-width: 34px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--border-dark);
+  background: var(--surface-raised);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.sidebar-toggle:hover {
+  color: var(--amber);
+}
+
+.sidebar-toggle__chevron {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sidebar-toggle__label {
+  align-self: start;
+  margin-top: 18px;
+  color: currentColor;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+}
+
+.systems-panel__content {
+  min-width: 0;
   overflow: auto;
   padding: 10px;
-  background: var(--surface);
+  transition: opacity 120ms ease, visibility 120ms ease;
+}
+
+.cockpit-shell.sidebar-collapsed .systems-panel__content {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .panel-heading {
@@ -836,7 +899,7 @@ select:focus-visible {
   text-align: right;
 }
 
-@media (max-width: 1120px) {
+@media (max-width: 760px) {
   .top-bar {
     align-items: stretch;
     flex-wrap: wrap;
@@ -884,7 +947,27 @@ select:focus-visible {
   }
 
   .systems-panel {
+    grid-template-columns: 1fr;
     max-height: none;
+  }
+
+  .cockpit-shell.sidebar-collapsed .systems-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-toggle {
+    grid-template-columns: auto auto;
+    grid-template-rows: 1fr;
+    gap: 8px;
+    min-height: 44px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-dark);
+  }
+
+  .sidebar-toggle__label {
+    align-self: center;
+    margin-top: 0;
+    writing-mode: horizontal-tb;
   }
 
   .connection-grid,

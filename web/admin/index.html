@@ -31,10 +31,6 @@
       </div>
 
       <div class="top-actions">
-        <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
-        <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
-        <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
-        <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
         <button id="save-button" class="btn-physical btn-start" type="submit" form="settings-form" data-save-button disabled>Save</button>
       </div>
     </header>
@@ -61,44 +57,51 @@
       </section>
 
       <aside class="systems-panel" aria-labelledby="systems-heading">
-        <div class="panel-heading">
-          <h2 id="systems-heading">Systems</h2>
-        </div>
+        <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="systems-content" aria-expanded="true" aria-label="Collapse systems panel">
+          <span class="sidebar-toggle__chevron" aria-hidden="true">&gt;</span>
+          <span class="sidebar-toggle__label" aria-hidden="true">Controls</span>
+        </button>
 
-        <dl class="overview-list">
-          <div class="overview-list__row">
-            <dt>YouTube OAuth</dt>
-            <dd id="youtube-oauth-label" class="overview-list__value">-</dd>
+        <div id="systems-content" class="systems-panel__content">
+          <div class="panel-heading">
+            <h2 id="systems-heading">Systems</h2>
           </div>
-        </dl>
 
-        <div class="detail-stack" aria-label="Connector details">
-          <p id="twitch-detail" class="status-detail" hidden></p>
-          <p id="youtube-detail" class="status-detail" hidden></p>
-          <p id="vk-detail" class="status-detail" hidden></p>
-        </div>
+          <dl class="overview-list">
+            <div class="overview-list__row">
+              <dt>YouTube OAuth</dt>
+              <dd id="youtube-oauth-label" class="overview-list__value">-</dd>
+            </div>
+          </dl>
 
-        <div class="panel-heading panel-heading--spaced">
-          <h2>Rich chat</h2>
-        </div>
-
-        <dl id="emote-diagnostics" class="overview-list emote-diagnostics" aria-label="Emote provider cache">
-          <div class="overview-list__row">
-            <dt>Cache entries</dt>
-            <dd id="emote-cache-entries" class="overview-list__value">-</dd>
+          <div class="detail-stack" aria-label="Connector details">
+            <p id="twitch-detail" class="status-detail" hidden></p>
+            <p id="youtube-detail" class="status-detail" hidden></p>
+            <p id="vk-detail" class="status-detail" hidden></p>
           </div>
-        </dl>
-        <ul id="emote-provider-list" class="provider-list" aria-label="Emote provider status"></ul>
 
-        <div class="panel-heading panel-heading--spaced">
-          <h2>Controls</h2>
-        </div>
+          <div class="panel-heading panel-heading--spaced">
+            <h2>Rich chat</h2>
+          </div>
 
-        <div class="control-grid">
-          <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
-          <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
-          <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
-          <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
+          <dl id="emote-diagnostics" class="overview-list emote-diagnostics" aria-label="Emote provider cache">
+            <div class="overview-list__row">
+              <dt>Cache entries</dt>
+              <dd id="emote-cache-entries" class="overview-list__value">-</dd>
+            </div>
+          </dl>
+          <ul id="emote-provider-list" class="provider-list" aria-label="Emote provider status"></ul>
+
+          <div class="panel-heading panel-heading--spaced">
+            <h2>Controls</h2>
+          </div>
+
+          <div class="control-grid">
+            <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
+            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
+            <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
+            <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
+          </div>
         </div>
       </aside>
     </main>
