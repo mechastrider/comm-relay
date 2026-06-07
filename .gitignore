@@ -1,1 +1,21 @@
 config.json
+
+# Application binaries (see README)
+/chat-relay
+/chat-relay.exe
+/chat-relay-app
+/chat-relay-app.exe
+
+# Go build and test artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Wails (wails build / wails dev)
+/build/
+/cmd/chat-relay-desktop/build/
+/cmd/chat-relay-desktop/frontend/wailsjs/

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/bootstrap"
@@ -29,6 +30,23 @@ type desktopApp struct {
 	adminURL string
 	debug    bool
 	wailsCtx context.Context
+
+	navMu     sync.Mutex
+	viewReady bool
+	navigated bool
+}
+
+func (a *desktopApp) tryNavigateAdmin() {
+	a.navMu.Lock()
+	defer a.navMu.Unlock()
+
+	if a.navigated || a.adminURL == "" || !a.viewReady || a.wailsCtx == nil {
+		return
+	}
+
+	a.navigated = true
+	js := fmt.Sprintf(`window.location.replace(%q);`, a.adminURL)
+	runtime.WindowExecJS(a.wailsCtx, js)
 }
 
 func (a *desktopApp) startup(ctx context.Context) {
@@ -66,14 +84,17 @@ func (a *desktopApp) startup(ctx context.Context) {
 	a.relay = app
 	a.adminURL = app.AdminURL()
 	clog.Info(ctx, "chat relay desktop ready", slog.String("admin_url", a.adminURL))
+	a.tryNavigateAdmin()
 }
 
 func (a *desktopApp) domReady(ctx context.Context) {
-	if a.adminURL == "" {
-		return
-	}
-	js := fmt.Sprintf(`window.location.replace(%q);`, a.adminURL)
-	runtime.WindowExecJS(ctx, js)
+	a.wailsCtx = ctx
+
+	a.navMu.Lock()
+	a.viewReady = true
+	a.navMu.Unlock()
+
+	a.tryNavigateAdmin()
 }
 
 func (a *desktopApp) shutdown(ctx context.Context) {

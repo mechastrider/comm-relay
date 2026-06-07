@@ -9,6 +9,7 @@ require (
 	github.com/muonsoft/errors v0.5.0
 	github.com/pior/runnable v1.0.0
 	github.com/stretchr/testify v1.11.1
+	github.com/wailsapp/wails/v2 v2.12.0
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.283.0
 )
@@ -49,7 +50,6 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/wailsapp/go-webview2 v1.0.22 // indirect
 	github.com/wailsapp/mimetype v1.4.1 // indirect
-	github.com/wailsapp/wails/v2 v2.12.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.67.0 // indirect
 	go.opentelemetry.io/otel v1.43.0 // indirect
