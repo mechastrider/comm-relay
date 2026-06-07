@@ -21,7 +21,10 @@ import (
 	"github.com/mechastrider/comm-relay/internal/imagelink"
 )
 
-const configPollInterval = 2 * time.Second
+const (
+	configPollInterval             = 2 * time.Second
+	recentYouTubeMessageIDCapacity = 2048
+)
 
 type clientFactory func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error)
 
@@ -33,6 +36,7 @@ type Connector struct {
 	emojiCatalog *ytemoji.Catalog
 	emojiClient  emote.HTTPDoer
 	emojiRefresh *ytemoji.Refresher
+	seenMessages *recentMessageIDs
 	newClient    clientFactory
 }
 
@@ -45,6 +49,7 @@ func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry, emoj
 		emojiCatalog: emojiCatalog,
 		emojiClient:  emojiClient,
 		emojiRefresh: ytemoji.NewRefresher(emojiCatalog, emojiClient),
+		seenMessages: newRecentMessageIDs(recentYouTubeMessageIDCapacity),
 		newClient: func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error) {
 			client := oauth2.NewClient(ctx, tokenSource)
 			return newAPIClient(ctx, option.WithHTTPClient(client))
@@ -179,6 +184,9 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 			if strings.TrimSpace(chatMsg.Message) == "" {
 				continue
 			}
+			if !c.markMessageID(item.Id) {
+				continue
+			}
 			if overlay.Emotes.YouTube && c.emojiCatalog != nil {
 				chatMsg.Fragments = mapEmojiFragments(messageTextFromLiveChat(item), c.emojiCatalog)
 			}
@@ -203,6 +211,14 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 			return nil
 		}
 	}
+}
+
+func (c *Connector) markMessageID(id string) bool {
+	if c.seenMessages == nil {
+		c.seenMessages = newRecentMessageIDs(recentYouTubeMessageIDCapacity)
+	}
+
+	return c.seenMessages.add(id)
 }
 
 func (c *Connector) setStatus(state status.State, detail, lastError string) {

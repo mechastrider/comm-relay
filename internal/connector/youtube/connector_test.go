@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
+	"google.golang.org/api/youtube/v3"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
@@ -43,4 +44,124 @@ func TestConnector_Run_WhenDisabled_ExpectDisabledStatus(t *testing.T) {
 
 	require.NoError(t, connector.Run(ctx))
 	require.Equal(t, status.StateDisabled, registry.YouTube().State)
+}
+
+func TestConnectorRunSession_WhenLiveChatReturnsDuplicateIDs_ExpectSinglePublish(t *testing.T) {
+	eventBus := bus.New(8)
+	events, unsub := eventBus.Subscribe()
+	defer unsub()
+
+	store := testStore(t, testEnabledYouTubeConfig())
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	connector.newClient = testClientFactory(t, cancel, []*youtube.LiveChatMessage{
+		testLiveChatMessage("yt-1", "hello"),
+		testLiveChatMessage("yt-1", "hello"),
+		testLiveChatMessage("yt-2", "world"),
+	})
+
+	require.NoError(t, connector.runSession(ctx, store.Snapshot()))
+	require.Equal(t, []string{"yt-1", "yt-2"}, collectMessageIDs(events))
+}
+
+func TestConnectorRunSession_WhenReconnectedAndAPIReplaysMessage_ExpectDuplicateSkipped(t *testing.T) {
+	eventBus := bus.New(8)
+	events, unsub := eventBus.Subscribe()
+	defer unsub()
+
+	store := testStore(t, testEnabledYouTubeConfig())
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	connector.newClient = testClientFactory(t, cancel, []*youtube.LiveChatMessage{
+		testLiveChatMessage("yt-1", "hello"),
+	})
+	require.NoError(t, connector.runSession(ctx, store.Snapshot()))
+	cancel()
+	require.Equal(t, []string{"yt-1"}, collectMessageIDs(events))
+
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+	connector.newClient = testClientFactory(t, cancel, []*youtube.LiveChatMessage{
+		testLiveChatMessage("yt-1", "hello"),
+	})
+	require.NoError(t, connector.runSession(ctx, store.Snapshot()))
+	require.Empty(t, collectMessageIDs(events))
+}
+
+func testEnabledYouTubeConfig() config.YouTubeConfig {
+	return config.YouTubeConfig{
+		Enabled: true,
+		OAuth: config.YouTubeOAuth{
+			ClientID:     "client-id",
+			ClientSecret: "client-secret",
+			RefreshToken: "refresh-token",
+		},
+	}
+}
+
+func testClientFactory(t *testing.T, cancel context.CancelFunc, items []*youtube.LiveChatMessage) clientFactory {
+	t.Helper()
+
+	return func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error) {
+		return &fakeLiveChatAPI{
+			cancel: cancel,
+			items:  items,
+		}, nil
+	}
+}
+
+type fakeLiveChatAPI struct {
+	cancel context.CancelFunc
+	items  []*youtube.LiveChatMessage
+}
+
+func (api *fakeLiveChatAPI) ActiveLiveSession(ctx context.Context) (liveSessionInfo, error) {
+	return liveSessionInfo{
+		LiveChatID: "live-chat-id",
+		VideoID:    "video-id",
+	}, nil
+}
+
+func (api *fakeLiveChatAPI) ListMessages(ctx context.Context, liveChatID, pageToken string) (*youtube.LiveChatMessageListResponse, error) {
+	api.cancel()
+
+	return &youtube.LiveChatMessageListResponse{
+		Items:                 api.items,
+		NextPageToken:         "next-page-token",
+		PollingIntervalMillis: 1,
+	}, nil
+}
+
+func testLiveChatMessage(id, text string) *youtube.LiveChatMessage {
+	return &youtube.LiveChatMessage{
+		Id: id,
+		Snippet: &youtube.LiveChatMessageSnippet{
+			Type:           "textMessageEvent",
+			DisplayMessage: text,
+			TextMessageDetails: &youtube.LiveChatTextMessageDetails{
+				MessageText: text,
+			},
+			PublishedAt: time.Date(2026, 6, 7, 19, 0, 0, 0, time.UTC).Format(time.RFC3339),
+		},
+		AuthorDetails: &youtube.LiveChatMessageAuthorDetails{
+			ChannelId:   "UC123",
+			DisplayName: "Viewer",
+		},
+	}
+}
+
+func collectMessageIDs(events <-chan bus.Event) []string {
+	var ids []string
+	for {
+		select {
+		case ev := <-events:
+			ids = append(ids, ev.Message.ID)
+		default:
+			return ids
+		}
+	}
 }
