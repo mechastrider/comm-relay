@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -38,6 +39,19 @@ func TestFetchGlobal_WhenCatalogAvailable_ExpectShortcuts(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, entries, ":heart:")
 	require.Equal(t, "https://example.com/heart.svg", entries[":heart:"].URL)
+}
+
+func TestNewCatalog_WhenDefaultLiveChatEmoji_ExpectShortcut(t *testing.T) {
+	t.Parallel()
+
+	catalog := NewCatalog()
+
+	entry, ok := catalog.Lookup(":face-blue-smiling:")
+	require.True(t, ok)
+	require.NotEmpty(t, entry.URL)
+	require.Equal(t, DefaultWidth, entry.Width)
+	require.Equal(t, DefaultHeight, entry.Height)
+	require.True(t, catalog.NeedsGlobalRefresh(time.Now()))
 }
 
 func TestExtractYTInitialData_WhenPopoutPage_ExpectJSON(t *testing.T) {

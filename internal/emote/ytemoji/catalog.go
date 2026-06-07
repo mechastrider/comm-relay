@@ -33,10 +33,10 @@ type Catalog struct {
 	channel      map[string]Entry
 }
 
-// NewCatalog creates an empty YouTube emoji catalog.
+// NewCatalog creates a YouTube emoji catalog with built-in live chat emoji fallbacks.
 func NewCatalog() *Catalog {
 	return &Catalog{
-		global:  make(map[string]Entry),
+		global:  defaultLiveChatEntries(),
 		channel: make(map[string]Entry),
 	}
 }

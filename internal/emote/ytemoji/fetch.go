@@ -36,7 +36,7 @@ func FetchGlobal(ctx context.Context, client emote.HTTPDoer) (map[string]Entry, 
 		return nil, errors.New("http client is nil")
 	}
 
-	merged := make(map[string]Entry)
+	merged := defaultLiveChatEntries()
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	errCh := make(chan error, globalEmojiFileCount)

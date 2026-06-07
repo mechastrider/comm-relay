@@ -41,6 +41,21 @@ func TestMapEmojiFragments_WhenKnownShortcuts_ExpectEmoteFragments(t *testing.T)
 	require.Equal(t, ":smile:", fragments[3].Text)
 }
 
+func TestMapEmojiFragments_WhenDefaultLiveChatEmoji_ExpectEmoteFragment(t *testing.T) {
+	t.Parallel()
+
+	catalog := ytemoji.NewCatalog()
+	fragments := mapEmojiFragments("Привет! :face-blue-smiling:", catalog)
+
+	require.Len(t, fragments, 2)
+	require.Equal(t, bus.FragmentTypeText, fragments[0].Type)
+	require.Equal(t, "Привет! ", fragments[0].Text)
+	require.Equal(t, bus.FragmentTypeEmote, fragments[1].Type)
+	require.Equal(t, ":face-blue-smiling:", fragments[1].Text)
+	require.Equal(t, ytemoji.ProviderID, fragments[1].Provider)
+	require.NotEmpty(t, fragments[1].URL)
+}
+
 func TestMapEmojiFragments_WhenUnknownShortcut_ExpectPlainText(t *testing.T) {
 	t.Parallel()
 
