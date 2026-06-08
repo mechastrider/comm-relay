@@ -66,7 +66,10 @@ func Default() *Config {
 			Enabled: false,
 			Channel: "",
 		},
-		YouTube: YouTubeConfig{Enabled: false},
+		YouTube: YouTubeConfig{
+			Enabled:  false,
+			ChatMode: YouTubeChatModeStream,
+		},
 		VK: VKConfig{
 			Enabled: false,
 			Channel: "",
@@ -103,6 +106,7 @@ func (c *Config) ApplyDefaults() {
 	c.Overlay.ImagePreviews.applyDefaults()
 	c.Admin.MessageSound.applyDefaults()
 	c.Logging.applyDefaults()
+	c.YouTube.ApplyYouTubeDefaults()
 }
 
 // ListenAddr returns the HTTP listen address for ServerPort.

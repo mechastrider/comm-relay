@@ -2,10 +2,18 @@ package config
 
 import "time"
 
+// YouTube chat transport modes.
+const (
+	YouTubeChatModeStream = "stream"
+	YouTubeChatModePoll   = "poll"
+	YouTubeChatModeAuto   = "auto"
+)
+
 // YouTubeConfig holds YouTube Live connector and OAuth settings.
 type YouTubeConfig struct {
-	Enabled bool         `json:"enabled"`
-	OAuth   YouTubeOAuth `json:"oauth"`
+	Enabled  bool         `json:"enabled"`
+	ChatMode string       `json:"chat_mode"`
+	OAuth    YouTubeOAuth `json:"oauth"`
 }
 
 // YouTubeOAuth stores Google OAuth client credentials and issued tokens.
@@ -43,13 +51,22 @@ type YouTubeOAuthPublic struct {
 
 // YouTubeConfigPublic is the admin-safe YouTube settings view.
 type YouTubeConfigPublic struct {
-	Enabled bool               `json:"enabled"`
-	OAuth   YouTubeOAuthPublic `json:"oauth"`
+	Enabled  bool               `json:"enabled"`
+	ChatMode string             `json:"chat_mode"`
+	OAuth    YouTubeOAuthPublic `json:"oauth"`
+}
+
+// ApplyYouTubeDefaults fills omitted YouTube settings from older config files.
+func (c *YouTubeConfig) ApplyYouTubeDefaults() {
+	if c.ChatMode == "" {
+		c.ChatMode = YouTubeChatModeStream
+	}
 }
 
 func (c YouTubeConfig) public() YouTubeConfigPublic {
 	return YouTubeConfigPublic{
-		Enabled: c.Enabled,
+		Enabled:  c.Enabled,
+		ChatMode: c.ChatMode,
 		OAuth: YouTubeOAuthPublic{
 			ClientID:        c.OAuth.ClientID,
 			HasClientSecret: c.OAuth.ClientSecret != "",

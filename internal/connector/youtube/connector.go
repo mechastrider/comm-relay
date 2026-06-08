@@ -12,6 +12,7 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
+	"google.golang.org/api/youtube/v3"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
@@ -28,7 +29,7 @@ const (
 
 type clientFactory func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error)
 
-// Connector polls YouTube Live Chat for the authenticated user's active broadcast.
+// Connector reads YouTube Live Chat for the authenticated user's active broadcast.
 type Connector struct {
 	bus          *bus.Bus
 	store        *config.Store
@@ -38,6 +39,7 @@ type Connector struct {
 	emojiRefresh *ytemoji.Refresher
 	seenMessages *recentMessageIDs
 	newClient    clientFactory
+	newGRPC      grpcClientFactory
 }
 
 // New creates a YouTube Live Chat connector.
@@ -51,13 +53,14 @@ func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry, emoj
 		emojiRefresh: ytemoji.NewRefresher(emojiCatalog, emojiClient),
 		seenMessages: newRecentMessageIDs(recentYouTubeMessageIDCapacity),
 		newClient: func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error) {
-			client := oauth2.NewClient(ctx, tokenSource)
-			return newAPIClient(ctx, option.WithHTTPClient(client))
+			httpClient := oauth2.NewClient(ctx, tokenSource)
+			return newAPIClient(ctx, option.WithHTTPClient(httpClient))
 		},
+		newGRPC: defaultGRPCClientFactory,
 	}
 }
 
-// Run polls YouTube Live Chat until ctx is cancelled.
+// Run reads YouTube Live Chat until ctx is cancelled.
 func (c *Connector) Run(ctx context.Context) error {
 	clog.Info(ctx, "youtube connector starting", slog.String("platform", platformYouTube))
 	defer clog.Info(ctx, "youtube connector stopped", slog.String("platform", platformYouTube))
@@ -146,6 +149,7 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 		slog.String("platform", platformYouTube),
 		slog.String("live_chat_id", session.LiveChatID),
 		slog.String("video_id", session.VideoID),
+		slog.String("chat_mode", cfg.YouTube.ChatMode),
 	))
 
 	if c.emojiRefresh != nil {
@@ -157,6 +161,45 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 
 	c.setStatus(status.StateConnected, "", "")
 
+	chatMode := cfg.YouTube.ChatMode
+	if chatMode == "" {
+		chatMode = config.YouTubeChatModeStream
+	}
+
+	switch chatMode {
+	case config.YouTubeChatModePoll:
+		return c.runPoll(sessionCtx, client, session)
+	case config.YouTubeChatModeAuto:
+		grpcClient, closer, err := c.newGRPC(sessionCtx, tokenSource)
+		if err != nil {
+			clog.Warn(sessionCtx, "youtube grpc unavailable, falling back to REST polling", slog.Any("error", err))
+			c.setStatus(status.StateConnected, "Using REST polling (gRPC unavailable).", "")
+			return c.runPoll(sessionCtx, client, session)
+		}
+		defer closer.Close()
+
+		err = c.runStream(sessionCtx, grpcClient, session)
+		if err == nil || sessionCtx.Err() != nil {
+			return err
+		}
+		if isStreamUnavailable(err) {
+			clog.Warn(sessionCtx, "youtube stream failed, falling back to REST polling", slog.Any("error", err))
+			c.setStatus(status.StateConnected, "Using REST polling (gRPC stream failed).", "")
+			return c.runPoll(sessionCtx, client, session)
+		}
+		return err
+	default:
+		grpcClient, closer, err := c.newGRPC(sessionCtx, tokenSource)
+		if err != nil {
+			return errors.Errorf("create youtube grpc client: %w", err)
+		}
+		defer closer.Close()
+
+		return c.runStream(sessionCtx, grpcClient, session)
+	}
+}
+
+func (c *Connector) runPoll(ctx context.Context, client liveChatAPI, session liveSessionInfo) error {
 	pageToken := ""
 	pollInterval := 5 * time.Second
 
@@ -170,31 +213,12 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 			return nil
 		}
 
-		resp, err := client.ListMessages(sessionCtx, session.LiveChatID, pageToken)
+		resp, err := client.ListMessages(ctx, session.LiveChatID, pageToken)
 		if err != nil {
 			return errors.Errorf("list live chat messages: %w", err)
 		}
 
-		for _, item := range resp.Items {
-			if item == nil {
-				continue
-			}
-			overlay := c.store.Snapshot().Overlay
-			chatMsg := MapLiveChatMessage(item)
-			if strings.TrimSpace(chatMsg.Message) == "" {
-				continue
-			}
-			if !c.markMessageID(item.Id) {
-				continue
-			}
-			if overlay.Emotes.YouTube && c.emojiCatalog != nil {
-				chatMsg.Fragments = mapEmojiFragments(messageTextFromLiveChat(item), c.emojiCatalog)
-			}
-			imagelink.Enrich(&chatMsg, overlay.ImagePreviews)
-			if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
-				clog.Errorf(sessionCtx, "publish youtube message: %w", err)
-			}
-		}
+		c.publishLiveChatItems(ctx, resp.Items)
 
 		if resp.NextPageToken != "" {
 			pageToken = resp.NextPageToken
@@ -209,6 +233,29 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 
 		if err := waitContext(ctx, pollInterval); err != nil {
 			return nil
+		}
+	}
+}
+
+func (c *Connector) publishLiveChatItems(ctx context.Context, items []*youtube.LiveChatMessage) {
+	for _, item := range items {
+		if item == nil {
+			continue
+		}
+		overlay := c.store.Snapshot().Overlay
+		chatMsg := MapLiveChatMessage(item)
+		if strings.TrimSpace(chatMsg.Message) == "" {
+			continue
+		}
+		if !c.markMessageID(item.Id) {
+			continue
+		}
+		if overlay.Emotes.YouTube && c.emojiCatalog != nil {
+			chatMsg.Fragments = mapEmojiFragments(messageTextFromLiveChat(item), c.emojiCatalog)
+		}
+		imagelink.Enrich(&chatMsg, overlay.ImagePreviews)
+		if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
+			clog.Errorf(ctx, "publish youtube message: %w", err)
 		}
 	}
 }
@@ -233,7 +280,9 @@ func (c *Connector) setStatus(state status.State, detail, lastError string) {
 	}
 	if state == status.StateConnected {
 		snap.LastError = ""
-		snap.Detail = ""
+		if detail == "" {
+			snap.Detail = ""
+		}
 	}
 	c.registry.SetYouTube(snap)
 }
