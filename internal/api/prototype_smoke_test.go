@@ -59,17 +59,27 @@ func TestPrototypeSmoke_WhenMessagePublished_ExpectWebSocketAndRecentAPI(t *test
 	require.Equal(t, "prototype-smoke-1", frame["id"])
 	require.Equal(t, "2026-06-05T10:11:12Z", frame["timestamp"])
 
-	rec := httptest.NewRecorder()
-	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=5", nil))
-	require.Equal(t, http.StatusOK, rec.Code)
+	var last map[string]any
+	require.Eventually(t, func() bool {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=5", nil))
+		if rec.Code != http.StatusOK {
+			return false
+		}
 
-	var recent struct {
-		Messages []map[string]any `json:"messages"`
-	}
-	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &recent))
-	require.NotEmpty(t, recent.Messages)
-	last := recent.Messages[len(recent.Messages)-1]
-	require.Equal(t, "prototype-smoke-1", last["id"])
-	require.Equal(t, "prototype smoke", last["message"])
+		var recent struct {
+			Messages []map[string]any `json:"messages"`
+		}
+		if err := json.Unmarshal(rec.Body.Bytes(), &recent); err != nil {
+			return false
+		}
+		if len(recent.Messages) == 0 {
+			return false
+		}
+
+		last = recent.Messages[len(recent.Messages)-1]
+		return last["id"] == "prototype-smoke-1" && last["message"] == "prototype smoke"
+	}, 3*time.Second, 25*time.Millisecond)
+
 	require.Equal(t, frame["timestamp"], last["timestamp"])
 }

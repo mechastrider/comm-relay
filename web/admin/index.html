@@ -164,6 +164,16 @@
               </div>
 
               <div class="form__field">
+                <label for="youtube-chat-mode">Chat transport</label>
+                <select id="youtube-chat-mode" name="youtube_chat_mode">
+                  <option value="stream">gRPC stream (recommended)</option>
+                  <option value="auto">Auto (stream with poll fallback)</option>
+                  <option value="poll">REST polling</option>
+                </select>
+                <p class="field-hint">Stream pushes messages with lower latency. Auto falls back to polling if gRPC fails.</p>
+              </div>
+
+              <div class="form__field">
                 <label for="youtube-client-id">OAuth client ID</label>
                 <input id="youtube-client-id" name="youtube_client_id" type="text" autocomplete="off" spellcheck="false">
               </div>

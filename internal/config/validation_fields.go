@@ -57,6 +57,11 @@ func (c *Config) validateFields() error {
 	if c.VK.Enabled && strings.TrimSpace(c.VK.Channel) == "" {
 		fields["vk_channel"] = "Channel slug is required when VK Live is enabled."
 	}
+	switch c.YouTube.ChatMode {
+	case YouTubeChatModeStream, YouTubeChatModePoll, YouTubeChatModeAuto, "":
+	default:
+		fields["youtube_chat_mode"] = "Choose stream, poll, or auto."
+	}
 	if c.Logging.RetainSessions < 1 || c.Logging.RetainSessions > 100 {
 		fields["logging_retain_sessions"] = "Keep between 1 and 100 session logs."
 	}

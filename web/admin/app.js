@@ -16,6 +16,7 @@
   const youtubeOAuthLabel = document.getElementById("youtube-oauth-label");
   const youtubeDetail = document.getElementById("youtube-detail");
   const youtubeEnabled = document.getElementById("youtube-enabled");
+  const youtubeChatMode = document.getElementById("youtube-chat-mode");
   const youtubeClientId = document.getElementById("youtube-client-id");
   const youtubeClientSecret = document.getElementById("youtube-client-secret");
   const youtubeConnect = document.getElementById("youtube-connect");
@@ -482,6 +483,11 @@
 
     if (config.youtube) {
       youtubeEnabled.checked = Boolean(config.youtube.enabled);
+      if (youtubeChatMode) {
+        const mode = config.youtube.chat_mode || "stream";
+        youtubeChatMode.value =
+          mode === "poll" || mode === "auto" ? mode : "stream";
+      }
       const oauth = config.youtube.oauth || {};
       youtubeClientId.value = oauth.client_id || "";
       youtubeClientSecret.value = "";
@@ -551,6 +557,7 @@
       },
       youtube: {
         enabled: youtubeEnabled.checked,
+        chat_mode: youtubeChatMode ? youtubeChatMode.value : "stream",
         oauth: {
           client_id: youtubeClientId.value.trim(),
           client_secret: youtubeClientSecret.value,

@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"context"
+	"io"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/connector/youtube/grpcproto"
 )
 
 func testStore(t *testing.T, youtubeCfg config.YouTubeConfig) *config.Store {
@@ -63,7 +65,9 @@ func TestConnectorRunSession_WhenLiveChatReturnsDuplicateIDs_ExpectSinglePublish
 		testLiveChatMessage("yt-2", "world"),
 	})
 
-	require.NoError(t, connector.runSession(ctx, store.Snapshot()))
+	cfg := store.Snapshot()
+	cfg.YouTube.ChatMode = config.YouTubeChatModePoll
+	require.NoError(t, connector.runSession(ctx, cfg))
 	require.Equal(t, []string{"yt-1", "yt-2"}, collectMessageIDs(events))
 }
 
@@ -79,7 +83,9 @@ func TestConnectorRunSession_WhenReconnectedAndAPIReplaysMessage_ExpectDuplicate
 	connector.newClient = testClientFactory(t, cancel, []*youtube.LiveChatMessage{
 		testLiveChatMessage("yt-1", "hello"),
 	})
-	require.NoError(t, connector.runSession(ctx, store.Snapshot()))
+	cfg := store.Snapshot()
+	cfg.YouTube.ChatMode = config.YouTubeChatModePoll
+	require.NoError(t, connector.runSession(ctx, cfg))
 	cancel()
 	require.Equal(t, []string{"yt-1"}, collectMessageIDs(events))
 
@@ -88,13 +94,40 @@ func TestConnectorRunSession_WhenReconnectedAndAPIReplaysMessage_ExpectDuplicate
 	connector.newClient = testClientFactory(t, cancel, []*youtube.LiveChatMessage{
 		testLiveChatMessage("yt-1", "hello"),
 	})
-	require.NoError(t, connector.runSession(ctx, store.Snapshot()))
+	cfg = store.Snapshot()
+	cfg.YouTube.ChatMode = config.YouTubeChatModePoll
+	require.NoError(t, connector.runSession(ctx, cfg))
 	require.Empty(t, collectMessageIDs(events))
+}
+
+func TestConnectorRunSession_WhenAutoAndStreamFails_ExpectPollFallback(t *testing.T) {
+	eventBus := bus.New(8)
+	events, unsub := eventBus.Subscribe()
+	defer unsub()
+
+	store := testStore(t, testEnabledYouTubeConfig())
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	connector.newGRPC = func(ctx context.Context, tokenSource oauth2.TokenSource) (grpcproto.V3DataLiveChatMessageServiceClient, io.Closer, error) {
+		return &fakeGRPCClient{err: errStreamUnavailable}, io.NopCloser(nil), nil
+	}
+	connector.newClient = testClientFactory(t, cancel, []*youtube.LiveChatMessage{
+		testLiveChatMessage("yt-1", "from poll"),
+	})
+
+	cfg := store.Snapshot()
+	cfg.YouTube.ChatMode = config.YouTubeChatModeAuto
+	require.NoError(t, connector.runSession(ctx, cfg))
+	require.Equal(t, []string{"yt-1"}, collectMessageIDs(events))
 }
 
 func testEnabledYouTubeConfig() config.YouTubeConfig {
 	return config.YouTubeConfig{
-		Enabled: true,
+		Enabled:  true,
+		ChatMode: config.YouTubeChatModePoll,
 		OAuth: config.YouTubeOAuth{
 			ClientID:     "client-id",
 			ClientSecret: "client-secret",
