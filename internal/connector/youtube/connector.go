@@ -176,7 +176,7 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 			c.setStatus(status.StateConnected, "Using REST polling (gRPC unavailable).", "")
 			return c.runPoll(sessionCtx, client, session)
 		}
-		defer closer.Close()
+		defer func() { _ = closer.Close() }()
 
 		err = c.runStream(sessionCtx, grpcClient, session)
 		if err == nil || sessionCtx.Err() != nil {
@@ -193,7 +193,7 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 		if err != nil {
 			return errors.Errorf("create youtube grpc client: %w", err)
 		}
-		defer closer.Close()
+		defer func() { _ = closer.Close() }()
 
 		return c.runStream(sessionCtx, grpcClient, session)
 	}
