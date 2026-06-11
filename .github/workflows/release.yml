@@ -16,6 +16,8 @@ permissions:
 
 env:
   WAILS_VERSION: v2.12.0
+  WAILS_PROJECT_DIR: cmd/comm-relay-desktop
+  WAILS_BIN_DIR: cmd/comm-relay-desktop/build/bin
 
 jobs:
   validate:
@@ -98,7 +100,7 @@ jobs:
       - name: Build desktop app
         shell: bash
         run: |
-          cd cmd/comm-relay-desktop
+          cd "$WAILS_PROJECT_DIR"
           wails build -clean -platform "${{ matrix.platform }}"
 
       - name: Package Windows
@@ -106,9 +108,17 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
+          $binDir = $env:WAILS_BIN_DIR
+          $exePath = Join-Path $binDir "comm-relay-desktop.exe"
+          if (-not (Test-Path $exePath)) {
+            Write-Error "Windows binary not found at $exePath"
+            Get-ChildItem -Recurse $binDir
+            exit 1
+          }
+
           $packageDir = "dist/CommRelay-$version-windows-amd64"
           New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
-          Copy-Item "build/bin/comm-relay-desktop.exe" "$packageDir/CommRelay.exe"
+          Copy-Item $exePath "$packageDir/CommRelay.exe"
           Copy-Item "README.md", "CHANGELOG.md", "LICENSE" $packageDir
           Compress-Archive -Path $packageDir -DestinationPath "dist/CommRelay-$version-windows-amd64.zip" -Force
 
@@ -118,15 +128,17 @@ jobs:
         run: |
           version="${{ steps.version.outputs.version }}"
           package_dir="dist/CommRelay-$version-macos-universal"
+          bin_dir="$WAILS_BIN_DIR"
           mkdir -p "$package_dir"
 
-          app_paths=(build/bin/*.app)
-          if [ ! -d "${app_paths[0]}" ]; then
-            echo "No .app bundle found in build/bin" >&2
+          app_path="$(find "$bin_dir" -maxdepth 1 -name '*.app' -print -quit)"
+          if [ -z "$app_path" ]; then
+            echo "No .app bundle found in $bin_dir" >&2
+            ls -la "$bin_dir" || true
             exit 1
           fi
 
-          cp -R "${app_paths[0]}" "$package_dir/"
+          cp -R "$app_path" "$package_dir/"
           cp README.md CHANGELOG.md LICENSE "$package_dir/"
           ditto -c -k --sequesterRsrc --keepParent "$package_dir" "dist/CommRelay-$version-macos-universal.zip"
 
@@ -136,8 +148,17 @@ jobs:
         run: |
           version="${{ steps.version.outputs.version }}"
           package_dir="dist/CommRelay-$version-linux-amd64"
+          bin_dir="$WAILS_BIN_DIR"
           mkdir -p "$package_dir"
-          cp build/bin/comm-relay-desktop "$package_dir/CommRelay"
+
+          bin_path="$(find "$bin_dir" -maxdepth 1 -type f -name 'comm-relay-desktop*' ! -name '*.app' -print -quit)"
+          if [ -z "$bin_path" ]; then
+            echo "No Linux binary found in $bin_dir" >&2
+            ls -la "$bin_dir" || true
+            exit 1
+          fi
+
+          cp "$bin_path" "$package_dir/CommRelay"
           chmod +x "$package_dir/CommRelay"
           cp README.md CHANGELOG.md LICENSE "$package_dir/"
           tar -C dist -czf "dist/CommRelay-$version-linux-amd64.tar.gz" "$(basename "$package_dir")"

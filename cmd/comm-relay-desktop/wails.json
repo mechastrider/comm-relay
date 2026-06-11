@@ -2,7 +2,7 @@
   "$schema": "https://wails.io/schemas/config.v2.json",
   "name": "CommRelay",
   "outputfilename": "comm-relay-desktop",
-  "build:tags": "wails",
+  "build:tags": "wails,webkit2_41",
   "frontend:install": "",
   "frontend:build": "",
   "frontend:dev:watcher": "",
@@ -19,7 +19,6 @@
     "comments": "Desktop shell for CommRelay admin UI"
   },
   "version": "2",
-  "outputdir": "../../build/bin",
   "assetdir": "frontend",
   "reloaddirs": "frontend",
   "debounceMS": 100
