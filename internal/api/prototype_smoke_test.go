@@ -29,6 +29,8 @@ func TestPrototypeSmoke_WhenMessagePublished_ExpectWebSocketAndRecentAPI(t *test
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = conn.Close() })
 
+	time.Sleep(50 * time.Millisecond)
+
 	msg := bus.ChatMessage{
 		ID:          "prototype-smoke-1",
 		Platform:    "twitch",
@@ -38,25 +40,18 @@ func TestPrototypeSmoke_WhenMessagePublished_ExpectWebSocketAndRecentAPI(t *test
 		Timestamp:   time.Date(2026, 6, 5, 10, 11, 12, 0, time.UTC),
 	}
 
-	var frame map[string]any
-	require.Eventually(t, func() bool {
-		if err := b.Publish(bus.ChatMessageReceived(msg)); err != nil {
-			return false
-		}
-		_ = conn.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
-		_, data, err := conn.ReadMessage()
-		if err != nil {
-			return false
-		}
-		frame = nil
-		if err := json.Unmarshal(data, &frame); err != nil {
-			return false
-		}
-		return frame["type"] == "message" && frame["message"] == "prototype smoke"
-	}, 3*time.Second, 25*time.Millisecond)
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(msg)))
 
+	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_, data, err := conn.ReadMessage()
+	require.NoError(t, err)
+
+	var frame map[string]any
+	require.NoError(t, json.Unmarshal(data, &frame))
+	require.Equal(t, "message", frame["type"])
 	require.Equal(t, "twitch", frame["platform"])
 	require.Equal(t, "prototype-smoke-1", frame["id"])
+	require.Equal(t, "prototype smoke", frame["message"])
 	require.Equal(t, "2026-06-05T10:11:12Z", frame["timestamp"])
 
 	var last map[string]any
