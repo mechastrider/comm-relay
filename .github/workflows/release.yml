@@ -1,0 +1,208 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example v0.1.0"
+        required: true
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+
+env:
+  WAILS_VERSION: v2.12.0
+
+jobs:
+  validate:
+    name: Validate release
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test ./... -race -count=1
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.12.2
+
+  build:
+    name: Build ${{ matrix.name }}
+    needs: validate
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows 11 64-bit
+            runner: windows-latest
+            platform: windows/amd64
+            artifact: commrelay-windows-amd64
+          - name: macOS universal 64-bit
+            runner: macos-latest
+            platform: darwin/universal
+            artifact: commrelay-macos-universal
+          - name: Linux 64-bit
+            runner: ubuntu-24.04
+            platform: linux/amd64
+            artifact: commrelay-linux-amd64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="${{ inputs.version }}"
+          else
+            version="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release version: $version" >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Install Linux desktop dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@${{ env.WAILS_VERSION }}
+
+      - name: Build desktop app
+        shell: bash
+        run: |
+          cd cmd/comm-relay-desktop
+          wails build -clean -platform "${{ matrix.platform }}"
+
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $packageDir = "dist/CommRelay-$version-windows-amd64"
+          New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
+          Copy-Item "build/bin/comm-relay-desktop.exe" "$packageDir/CommRelay.exe"
+          Copy-Item "README.md", "CHANGELOG.md", "LICENSE" $packageDir
+          Compress-Archive -Path $packageDir -DestinationPath "dist/CommRelay-$version-windows-amd64.zip" -Force
+
+      - name: Package macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          package_dir="dist/CommRelay-$version-macos-universal"
+          mkdir -p "$package_dir"
+
+          app_paths=(build/bin/*.app)
+          if [ ! -d "${app_paths[0]}" ]; then
+            echo "No .app bundle found in build/bin" >&2
+            exit 1
+          fi
+
+          cp -R "${app_paths[0]}" "$package_dir/"
+          cp README.md CHANGELOG.md LICENSE "$package_dir/"
+          ditto -c -k --sequesterRsrc --keepParent "$package_dir" "dist/CommRelay-$version-macos-universal.zip"
+
+      - name: Package Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          package_dir="dist/CommRelay-$version-linux-amd64"
+          mkdir -p "$package_dir"
+          cp build/bin/comm-relay-desktop "$package_dir/CommRelay"
+          chmod +x "$package_dir/CommRelay"
+          cp README.md CHANGELOG.md LICENSE "$package_dir/"
+          tar -C dist -czf "dist/CommRelay-$version-linux-amd64.tar.gz" "$(basename "$package_dir")"
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="${{ inputs.version }}"
+          else
+            version="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release version: $version" >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "changelog_version=${version#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Extract release notes
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.changelog_version }}"
+          awk -v ver="$version" '
+            $0 ~ "^## \\[" ver "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+
+          if [ ! -s release-notes.md ]; then
+            echo "CommRelay ${{ steps.version.outputs.version }}" > release-notes.md
+            echo "" >> release-notes.md
+            echo "See CHANGELOG.md for details." >> release-notes.md
+          fi
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: CommRelay ${{ steps.version.outputs.version }}
+          body_path: release-notes.md
+          files: dist/*
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}

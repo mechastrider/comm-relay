@@ -1,0 +1,27 @@
+# Changelog
+
+Все заметные изменения CommRelay описываются в этом файле.
+
+Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/), версии следуют [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.1.0] - 2026-06-11
+
+### Добавлено
+
+- Первый публичный MVP-релиз CommRelay для локального объединения чатов Twitch, YouTube Live и VK Live / VK Video.
+- Desktop-приложение на Wails: локальный HTTP-сервер поднимается в фоне, панель управления открывается в окне приложения.
+- OBS overlay на `http://127.0.0.1:17877/overlay` с прозрачным фоном, WebSocket-доставкой сообщений и буфером недавних сообщений после переподключения.
+- Панель управления с настройками подключений, статусами коннекторов, live-монитором сообщений, диагностикой и звуком новых сообщений.
+- Twitch connector через публичный IRC без OAuth.
+- YouTube Live connector с OAuth flow и чтением live chat активного эфира.
+- VK Live / VK Video connector через публичный WebSocket API.
+- Настройки overlay: лимит сообщений, TTL, размер шрифта, режимы `normal` / `compact`, темы `default` / `dashboard`.
+- Rich chat: нативные Twitch emotes, FrankerFaceZ, BetterTTV, 7TV и безопасные превью картинок с allowlist хостов.
+- Локальное хранение настроек в `config.json` в пользовательском каталоге ОС.
+- Автоматические GitHub release-сборки для Windows, macOS и Linux 64-bit.
+
+### Известные ограничения
+
+- Релизные desktop-сборки пока не подписаны и не notarized, поэтому Windows/macOS могут показывать предупреждение при первом запуске.
+- Для YouTube пользователь должен самостоятельно создать OAuth client в Google Cloud Console и включить YouTube Data API v3.
+- Linux-сборке нужны системные GTK/WebKit зависимости.

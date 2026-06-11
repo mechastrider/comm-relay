@@ -14,7 +14,7 @@
   "info": {
     "companyName": "CommRelay",
     "productName": "CommRelay",
-    "productVersion": "1.0.0",
+    "productVersion": "0.1.0",
     "copyright": "Copyright (c) 2026 Igor Lazarev",
     "comments": "Desktop shell for CommRelay admin UI"
   },

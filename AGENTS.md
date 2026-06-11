@@ -76,6 +76,12 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 | `web-static-frontend` | Admin panel and OBS overlay under `web/` |
 | `ux-form-practices` | Connect forms, settings, accessibility |
 
+### Release and docs
+
+| Skill | Use when |
+|-------|----------|
+| `changelog` | Preparing releases, editing `CHANGELOG.md`, or writing user-facing release notes |
+
 ## Backend Guidelines
 
 - Go under `cmd/` and `internal/`.
@@ -91,6 +97,7 @@ Before reporting a task as done:
 - `gofmt` / `goimports` on touched Go files.
 - `go test ./...` (or targeted packages); `-race` when changing concurrency.
 - `golangci-lint run ./...` (config: `.golangci.yml`, v2).
+- If preparing a release: update `CHANGELOG.md` with skill `changelog` and keep README artifact names/install steps in sync.
 - If static UI changed: smoke-check overlay (transparent background, message limit) and admin forms.
 - State clearly if a check could not be run and why.
 
