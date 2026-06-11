@@ -3,13 +3,13 @@ name: backend-structure
 description: Backend layout for comm-relay (cmd/, internal/). Use when adding HTTP handlers, connectors, event bus, config, or bootstrap wiring.
 ---
 
-# Backend structure — Chat Relay
+# Backend structure — CommRelay
 
 ## Repository layout
 
 ```text
 /
-├── cmd/chat-relay/          # main: flags, config path, runnable manager
+├── cmd/comm-relay-server/    # headless server: flags, config path, runnable manager
 ├── internal/
 │   ├── bootstrap/           # load config, wire bus, connectors, HTTP server
 │   ├── config/              # config.json types, load/save, defaults
@@ -51,7 +51,7 @@ description: Backend layout for comm-relay (cmd/, internal/). Use when adding HT
 - Load/save `config.json`; atomic write (temp file + rename) when persisting tokens or settings.
 - Validation at load time (required channel when twitch enabled, port range, etc.).
 
-## cmd/chat-relay
+## cmd/comm-relay-server
 
 - Parse flags (`-config`, `-addr`).
 - Build `*slog.Logger` in `main`, set `slog.Default`, bind per-request/per-connector with `clog.NewContext` — see [golang-logging](../golang-logging/SKILL.md).

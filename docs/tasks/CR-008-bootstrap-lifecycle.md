@@ -29,7 +29,7 @@ Status: `done`
 
 ## Acceptance Criteria
 
-- `go run ./cmd/chat-relay` запускает весь прототип.
+- `go run ./cmd/comm-relay-server` запускает весь прототип.
 - При `Ctrl+C` сервер и connector завершаются корректно.
 - Одна ошибка connector не роняет весь процесс.
 - Startup logs показывают порт и включенные connector.

@@ -95,7 +95,7 @@ func FetchChannel(ctx context.Context, client emote.HTTPDoer, videoID string) (m
 	if err != nil {
 		return nil, errors.Errorf("create live chat request: %w", err)
 	}
-	req.Header.Set("User-Agent", "comm-relay/1.0")
+	req.Header.Set("User-Agent", "CommRelay/1.0")
 
 	resp, err := client.Do(req)
 	if err != nil {

@@ -30,7 +30,7 @@ func logStartup(ctx context.Context, addr, configPath, webRoot, logFile string, 
 		args = append(args, slog.String("log_file", logFile))
 	}
 
-	clog.Info(ctx, "starting chat relay", args...)
+	clog.Info(ctx, "starting comm-relay", args...)
 }
 
 func enabledConnectors(cfg *config.Config) string {

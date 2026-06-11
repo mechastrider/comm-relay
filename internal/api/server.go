@@ -23,7 +23,7 @@ type Options struct {
 	EmoteCache *emote.Cache
 }
 
-// NewHandler returns the root HTTP handler for Chat Relay.
+// NewHandler returns the root HTTP handler for CommRelay.
 func NewHandler(opts Options) (http.Handler, error) {
 	static, err := resolveStaticRoots(opts.WebRoot)
 	if err != nil {

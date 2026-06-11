@@ -63,7 +63,7 @@
   const BANNER_SUCCESS_DISMISS_MS = 4000;
   const INITIAL_WS_RECONNECT_MS = 1000;
   const MAX_WS_RECONNECT_MS = 30000;
-  const SIDEBAR_COLLAPSED_KEY = "chatRelay.sidebarCollapsed";
+  const SIDEBAR_COLLAPSED_KEY = "commRelay.sidebarCollapsed";
 
   const fieldErrors = {
     twitch_channel: document.getElementById("twitch-channel-error"),
@@ -1617,7 +1617,7 @@
       closeOpenDialogs();
       await loadStatus();
     } catch {
-      showBanner("error", "Cannot reach Chat Relay — is it running?");
+      showBanner("error", "Cannot reach CommRelay — is it running?");
     } finally {
       saveInFlight = false;
       renderSettingsState();
@@ -1699,7 +1699,7 @@
     if (!currentConfig) {
       markSettingsUnavailable();
     }
-    showBanner("error", "Cannot reach Chat Relay — is it running?");
+    showBanner("error", "Cannot reach CommRelay — is it running?");
   });
 
   connectMessageWebSocket();

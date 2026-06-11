@@ -1,9 +1,9 @@
 ---
-name: chat-relay
-description: Product and domain rules for Chat Relay (comm-relay). Use when implementing connectors, ChatMessage, WebSocket overlay, OBS browser source, or config behavior.
+name: comm-relay
+description: Product and domain rules for CommRelay (comm-relay). Use when implementing connectors, ChatMessage, WebSocket overlay, OBS browser source, or config behavior.
 ---
 
-# Chat Relay — domain
+# CommRelay — domain
 
 Canonical brief: [`docs/concept.md`](../../../docs/concept.md).
 
@@ -103,6 +103,6 @@ When touching architecture, consider documenting decisions for:
 ## Related skills
 
 - Layout: [backend-structure](../backend-structure/SKILL.md)
-- Go implementation: [chat-relay-backend-golang](../chat-relay-backend-golang/SKILL.md)
+- Go implementation: [comm-relay-backend-golang](../comm-relay-backend-golang/SKILL.md)
 - HTTP/WS: [api-conventions](../api-conventions/SKILL.md)
 - Static UI: [web-static-frontend](../web-static-frontend/SKILL.md)

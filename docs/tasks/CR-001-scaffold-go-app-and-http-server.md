@@ -4,17 +4,17 @@ Status: `done`
 
 ## Goal
 
-Создать минимальный каркас приложения `chat-relay`, который запускает локальный HTTP-сервер и обслуживает базовые маршруты.
+Создать минимальный каркас приложения `comm-relay`, который запускает локальный HTTP-сервер и обслуживает базовые маршруты.
 
 ## Context
 
 - Концепт: `docs/concept.md`
-- Архитектура из `AGENTS.md`: `cmd/chat-relay/`, `internal/`, `web/`
+- Архитектура из `AGENTS.md`: `cmd/comm-relay-server/`, `internal/`, `web/`
 - Один локальный порт: `localhost:17877`
 
 ## Scope
 
-- Создать `cmd/chat-relay/main.go`.
+- Создать `cmd/comm-relay-server/main.go`.
 - Добавить минимальный bootstrap-пакет, если он нужен для чистой инициализации.
 - Поднять HTTP-сервер на порту из будущей конфигурации, временно можно использовать `17877`.
 - Добавить маршруты:
@@ -32,7 +32,7 @@ Status: `done`
 
 ## Acceptance Criteria
 
-- `go run ./cmd/chat-relay` запускает сервер.
+- `go run ./cmd/comm-relay-server` запускает сервер.
 - `GET /health` возвращает успешный ответ.
 - `/` и `/overlay` открываются в браузере или через HTTP client.
 - Завершение процесса не оставляет зависших goroutine сервера.

@@ -1,4 +1,4 @@
-# Chat Relay (comm-relay)
+# CommRelay
 
 Локальное приложение на Go: объединяет чаты стриминговых платформ (Twitch, YouTube Live, VK Live) и выводит сообщения в OBS через Browser Source. Один бинарник, без облака и без Docker/Node/БД.
 
@@ -26,7 +26,7 @@
 
 ```powershell
 go mod download
-go run ./cmd/chat-relay
+go run ./cmd/comm-relay-server
 ```
 
 При первом запуске создаётся `config.json` с настройками по умолчанию. Сервер слушает порт **17877**.
@@ -45,11 +45,11 @@ go run ./cmd/chat-relay
 ## Сборка
 
 ```powershell
-go build -o chat-relay.exe ./cmd/chat-relay
-.\chat-relay.exe
+go build -o comm-relay.exe ./cmd/comm-relay-server
+.\comm-relay.exe
 ```
 
-На Linux/macOS имя бинарника можно оставить `chat-relay`.
+На Linux/macOS имя бинарника можно оставить `comm-relay`.
 
 ## Десктоп-приложение (Wails)
 
@@ -60,13 +60,13 @@ go build -o chat-relay.exe ./cmd/chat-relay
 Сборка из корня репозитория:
 
 ```powershell
-go build -tags wails -o chat-relay-app ./cmd/chat-relay-desktop
+go build -tags wails -o comm-relay-desktop ./cmd/comm-relay-desktop
 ```
 
 Или через Wails CLI из каталога приложения (артефакт в `build/bin/`):
 
 ```powershell
-cd cmd/chat-relay-desktop
+cd cmd/comm-relay-desktop
 wails build
 ```
 
@@ -74,15 +74,15 @@ wails build
 
 | ОС | Путь к `config.json` |
 |----|----------------------|
-| Windows | `%AppData%\chat-relay\config.json` |
-| Linux | `~/.config/chat-relay/config.json` |
-| macOS | `~/Library/Application Support/chat-relay/config.json` |
+| Windows | `%AppData%\comm-relay\config.json` |
+| Linux | `~/.config/comm-relay/config.json` |
+| macOS | `~/Library/Application Support/comm-relay/config.json` |
 
 Флаг `-config` переопределяет путь. Повторный запуск поднимает уже открытое окно (single-instance).
 
 ## Флаги запуска
 
-### CLI (`cmd/chat-relay`)
+### Сервер (`cmd/comm-relay-server`)
 
 | Флаг | По умолчанию | Описание |
 |------|--------------|----------|
@@ -94,10 +94,10 @@ wails build
 Пример с другим портом:
 
 ```powershell
-go run ./cmd/chat-relay -addr 127.0.0.1:8080
+go run ./cmd/comm-relay-server -addr 127.0.0.1:8080
 ```
 
-### Десктоп (`cmd/chat-relay-desktop`)
+### Десктоп (`cmd/comm-relay-desktop`)
 
 | Флаг | По умолчанию | Описание |
 |------|--------------|----------|
@@ -189,20 +189,20 @@ OAuth не требуется. Укажите slug канала или URL `live
 ```powershell
 go test ./...
 go build ./...
-go build -tags wails -o chat-relay-app ./cmd/chat-relay-desktop
+go build -tags wails -o comm-relay-desktop ./cmd/comm-relay-desktop
 ```
 
 Для правок UI без пересборки Go-бинарника:
 
 ```powershell
-go run ./cmd/chat-relay -web ./web
+go run ./cmd/comm-relay-server -web ./web
 ```
 
 Структура проекта и правила для агентов: [`AGENTS.md`](AGENTS.md).
 
 ```text
-cmd/chat-relay/          CLI-сервер
-cmd/chat-relay-desktop/  Wails-оболочка (build tag wails)
+cmd/comm-relay-server/   headless-сервер
+cmd/comm-relay-desktop/  Wails-оболочка (build tag wails)
 internal/api/            HTTP, WebSocket, OAuth
 internal/bootstrap/      Сборка и запуск приложения
 internal/bus/            Внутренняя шина событий

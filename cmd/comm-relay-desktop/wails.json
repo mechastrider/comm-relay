@@ -1,7 +1,7 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "Chat Relay",
-  "outputfilename": "chat-relay-app",
+  "name": "CommRelay",
+  "outputfilename": "comm-relay-desktop",
   "build:tags": "wails",
   "frontend:install": "",
   "frontend:build": "",
@@ -12,11 +12,11 @@
     "email": ""
   },
   "info": {
-    "companyName": "Chat Relay",
-    "productName": "Chat Relay",
+    "companyName": "CommRelay",
+    "productName": "CommRelay",
     "productVersion": "1.0.0",
     "copyright": "Copyright (c) 2026 Igor Lazarev",
-    "comments": "Desktop shell for Chat Relay admin UI"
+    "comments": "Desktop shell for CommRelay admin UI"
   },
   "version": "2",
   "outputdir": "../../build/bin",

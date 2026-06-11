@@ -1,6 +1,6 @@
 ---
 name: runnable-background-processes
-description: Long-running connectors and workers via pior/runnable. Use when implementing Twitch/YouTube connectors, WebSocket hub lifecycle, or graceful shutdown in cmd/chat-relay.
+description: Long-running connectors and workers via pior/runnable. Use when implementing Twitch/YouTube connectors, WebSocket hub lifecycle, or graceful shutdown in cmd/comm-relay-server.
 ---
 
 # Background processes (runnable)
@@ -68,7 +68,7 @@ Use exponential backoff with a cap for reconnects.
 
 Use **`clog.FromContext(ctx)`** or `clog.Info(ctx, ...)` / `clog.Errorf(ctx, ...)` in workers. Bind `platform` and `channel` on the logger in `bootstrap` via `clog.NewContext` before starting the connector. Do not call `slog.Info` directly in `internal/`.
 
-## Chat Relay specifics
+## CommRelay specifics
 
 | Runnable | Role |
 |----------|------|
@@ -82,4 +82,4 @@ One connector crashing its loop should reconnect, not take down other runnables.
 ## Related
 
 - [golang-logging](../golang-logging/SKILL.md)
-- [chat-relay](../chat-relay/SKILL.md) — reliability requirements
+- [comm-relay](../comm-relay/SKILL.md) — reliability requirements

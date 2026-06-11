@@ -62,7 +62,7 @@ func (a *desktopApp) startup(ctx context.Context) {
 		clog.Errorf(ctx, "load config: %w", err)
 		runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
 			Type:    runtime.ErrorDialog,
-			Title:   "Chat Relay",
+			Title:   "CommRelay",
 			Message: fmt.Sprintf("Failed to load config: %v", err),
 		})
 		runtime.Quit(ctx)
@@ -86,7 +86,7 @@ func (a *desktopApp) startup(ctx context.Context) {
 		clog.Errorf(ctx, "initialize relay: %w", err)
 		runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
 			Type:    runtime.ErrorDialog,
-			Title:   "Chat Relay",
+			Title:   "CommRelay",
 			Message: fmt.Sprintf("Failed to start: %v", err),
 		})
 		runtime.Quit(ctx)
@@ -97,7 +97,7 @@ func (a *desktopApp) startup(ctx context.Context) {
 		clog.Errorf(ctx, "start relay: %w", err)
 		runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
 			Type:    runtime.ErrorDialog,
-			Title:   "Chat Relay",
+			Title:   "CommRelay",
 			Message: fmt.Sprintf("HTTP server did not start: %v", err),
 		})
 		runtime.Quit(ctx)
@@ -106,7 +106,7 @@ func (a *desktopApp) startup(ctx context.Context) {
 
 	a.relay = app
 	a.adminURL = app.AdminURL()
-	clog.Info(ctx, "chat relay desktop ready", slog.String("admin_url", a.adminURL))
+	clog.Info(ctx, "comm-relay desktop ready", slog.String("admin_url", a.adminURL))
 	a.tryNavigateAdmin()
 }
 
@@ -170,7 +170,7 @@ func main() {
 	app := &desktopApp{debug: debugFlag}
 
 	err := wails.Run(&options.App{
-		Title:             "Chat Relay",
+		Title:             "CommRelay",
 		Width:             1100,
 		Height:            760,
 		MinWidth:          800,
@@ -196,7 +196,7 @@ func main() {
 		},
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "chat-relay-desktop: %v\n", err)
+		fmt.Fprintf(os.Stderr, "comm-relay-desktop: %v\n", err)
 		os.Exit(1)
 	}
 }

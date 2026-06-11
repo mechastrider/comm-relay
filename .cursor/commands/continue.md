@@ -1,6 +1,6 @@
 # Continue
 
-Continue work on Chat Relay from the backlog.
+Continue work on CommRelay from the backlog.
 
 ## Instructions
 

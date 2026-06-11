@@ -34,7 +34,7 @@ Adjust paths when implementing; keep this table and `internal/api` router in syn
 ## WebSocket
 
 - Endpoint: `/ws`
-- Server → client: chat events per [chat-relay](../chat-relay/SKILL.md)
+- Server → client: chat events per [comm-relay](../comm-relay/SKILL.md)
 - Optional server → client: `type: "ping"` / client `pong` for keepalive
 - On connect, optionally send recent buffered messages (document limit)
 

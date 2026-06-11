@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
-  <title>Chat Relay</title>
+  <title>CommRelay</title>
   <rect x="5" y="5" width="54" height="54" rx="8" fill="#171719"/>
   <rect x="8" y="8" width="48" height="48" rx="5" fill="#242428" stroke="#444444" stroke-width="3"/>
   <path d="M18 20H46V39H34L24 49V39H18Z" fill="#D4A017"/>

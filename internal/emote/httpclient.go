@@ -32,7 +32,7 @@ func GetJSON(ctx context.Context, client HTTPDoer, url string, dest any) error {
 	if err != nil {
 		return errors.Errorf("create request: %w", err)
 	}
-	req.Header.Set("User-Agent", "comm-relay/1.0")
+	req.Header.Set("User-Agent", "CommRelay/1.0")
 
 	resp, err := client.Do(req)
 	if err != nil {

@@ -1,6 +1,6 @@
-# Agents Guide — Chat Relay (comm-relay)
+# Agents Guide — CommRelay
 
-This guide is for AI agents working on **Chat Relay** — a local Go application that aggregates streaming chat (Twitch, YouTube, …) and feeds an OBS Browser Source overlay.
+This guide is for AI agents working on **CommRelay** — a local Go application that aggregates streaming chat (Twitch, YouTube, …) and feeds an OBS Browser Source overlay.
 
 Source of product requirements: [`docs/concept.md`](docs/concept.md).
 
@@ -14,8 +14,8 @@ Source of product requirements: [`docs/concept.md`](docs/concept.md).
 
 ```text
 comm-relay/
-├── cmd/chat-relay/          # main: HTTP server, graceful shutdown
-├── cmd/chat-relay-desktop/  # Wails desktop (build tag `wails`)
+├── cmd/comm-relay-server/    # headless HTTP server, graceful shutdown
+├── cmd/comm-relay-desktop/   # Wails desktop (build tag `wails`)
 ├── internal/
 │   ├── bootstrap/        # config load, wiring, runnables
 │   ├── config/           # config.json read/write
@@ -53,7 +53,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 
 | Skill | Use when |
 |-------|----------|
-| `chat-relay` | Product behavior, `ChatMessage`, platforms, overlay/OBS requirements |
+| `comm-relay` | Product behavior, `ChatMessage`, platforms, overlay/OBS requirements |
 | `backend-structure` | Adding packages under `cmd/`, `internal/` |
 | `api-conventions` | HTTP routes, WebSocket `/ws`, JSON shapes |
 
@@ -61,7 +61,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 
 | Skill | Use when |
 |-------|----------|
-| `chat-relay-backend-golang` | Go style, layers, connectors, bus |
+| `comm-relay-backend-golang` | Go style, layers, connectors, bus |
 | `golang-errors` | Error wrapping and sentinels (`github.com/muonsoft/errors`) |
 | `golang-logging` | `github.com/muonsoft/clog`, contextual logging |
 | `golang-validation` | Optional: `github.com/muonsoft/validation` for config/API DTOs |
@@ -96,7 +96,7 @@ Before reporting a task as done:
 
 ## Cursor Cloud specific instructions
 
-Chat Relay is a **single Go binary** — no Docker, Node, or database. The VM needs **Go 1.26.3+** (see `go.mod`).
+CommRelay is a **single Go binary** — no Docker, Node, or database. The VM needs **Go 1.26.3+** (see `go.mod`).
 
 ### Dependencies and checks
 
@@ -104,16 +104,16 @@ Standard commands from the repo root (documented in **Completion Checklist** abo
 
 - Refresh modules: `go mod download`
 - Tests: `go test ./...` (use `-race` when changing concurrency)
-- Build: `go build -o chat-relay ./cmd/chat-relay` or `go build ./...`
+- Build: `go build -o comm-relay ./cmd/comm-relay-server` or `go build ./...`
 - **golangci-lint** v2.12.2: `golangci-lint run ./...` (install: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2`)
 
 ### Running the server
 
 - Default listen address: `127.0.0.1:17877` (`server_port` in `config.json`, created on first run).
-- Dev run: `go run ./cmd/chat-relay` from repo root (uses `./web` and `./config.json`).
-- Desktop: `go build -tags wails -o chat-relay-app ./cmd/chat-relay-desktop` (needs Wails + platform WebView deps); config defaults to user config dir.
-- Overrides: `-addr` (listen), `-config`, `-web`, `-debug` — see `cmd/chat-relay/main.go`.
-- For a long-lived background process in Cloud Agent VMs, use **tmux** (see system shell instructions), e.g. session `chat-relay-dev` with `go run ./cmd/chat-relay` or a built binary.
+- Dev run: `go run ./cmd/comm-relay-server` from repo root (uses `./web` and `./config.json`).
+- Desktop: `go build -tags wails -o comm-relay-desktop ./cmd/comm-relay-desktop` (needs Wails + platform WebView deps); config defaults to user config dir.
+- Overrides: `-addr` (listen), `-config`, `-web`, `-debug` — see `cmd/comm-relay-server/main.go`.
+- For a long-lived background process in Cloud Agent VMs, use **tmux** (see system shell instructions), e.g. session `comm-relay-dev` with `go run ./cmd/comm-relay-server` or a built binary.
 
 ### Smoke / hello world (current scaffold)
 

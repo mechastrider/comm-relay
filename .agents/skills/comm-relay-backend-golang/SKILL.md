@@ -1,11 +1,11 @@
 ---
-name: chat-relay-backend-golang
-description: Go backend style for comm-relay (cmd/chat-relay, internal/). Use when editing handlers, connectors, bus, config, or bootstrap.
+name: comm-relay-backend-golang
+description: Go backend style for comm-relay (cmd/comm-relay-server, internal/). Use when editing handlers, connectors, bus, config, or bootstrap.
 ---
 
-# Go backend — Chat Relay
+# Go backend — CommRelay
 
-Applies to `cmd/chat-relay` and `internal/`.
+Applies to `cmd/comm-relay-server` and `internal/`.
 
 Goals: idiomatic Go, clear package boundaries, testable connectors via interfaces, local-first single binary.
 
@@ -60,11 +60,11 @@ Prefer **interfaces** at connector boundaries for tests (`Connector`, `Publisher
 ## API JSON
 
 - **snake_case** JSON tags — see [api-conventions](../api-conventions/SKILL.md).
-- WebSocket payloads match overlay contract in [chat-relay](../chat-relay/SKILL.md).
+- WebSocket payloads match overlay contract in [comm-relay](../comm-relay/SKILL.md).
 
 ## Related skills
 
-- Product: [chat-relay](../chat-relay/SKILL.md)
+- Product: [comm-relay](../comm-relay/SKILL.md)
 - Structure: [backend-structure](../backend-structure/SKILL.md)
 - Tests: [golang-tests](../golang-tests/SKILL.md)
 

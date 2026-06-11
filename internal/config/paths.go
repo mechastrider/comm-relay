@@ -14,7 +14,7 @@ func DefaultUserConfigPath() (string, error) {
 		return "", errors.Errorf("resolve user config dir: %w", err)
 	}
 
-	appDir := filepath.Join(dir, "chat-relay")
+	appDir := filepath.Join(dir, "comm-relay")
 	if err := os.MkdirAll(appDir, 0o700); err != nil {
 		return "", errors.Errorf("create config directory: %w", err)
 	}

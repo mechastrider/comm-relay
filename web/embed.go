@@ -1,5 +1,5 @@
 // Package web embeds static admin and OBS overlay assets for release builds.
-// For local UI work without recompile, run chat-relay with -web ./web.
+// For local UI work without recompile, run comm-relay-server with -web ./web.
 package web
 
 import "embed"

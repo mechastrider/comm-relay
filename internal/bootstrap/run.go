@@ -74,6 +74,6 @@ func Run(opts Options) error {
 		return errors.Errorf("stop app: %w", err)
 	}
 
-	clog.Info(context.Background(), "chat relay stopped")
+	clog.Info(context.Background(), "comm-relay stopped")
 	return nil
 }

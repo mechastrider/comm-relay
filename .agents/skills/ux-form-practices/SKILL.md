@@ -23,7 +23,7 @@ Apply when working on forms in `web/admin/`.
 - After failed submit, focus first invalid field
 - Clear field error when user edits the field
 
-## Chat Relay fields
+## CommRelay fields
 
 | Area | Fields |
 |------|--------|
@@ -45,7 +45,7 @@ Map HTTP status to short messages:
 | 409 | Already connected — disconnect first |
 | 503 | Platform not configured on server |
 | 5xx | Server error — try again |
-| Network | Cannot reach Chat Relay — is it running? |
+| Network | Cannot reach CommRelay — is it running? |
 
 Backend: `{"error":"..."}`. Normalize in `app.js` before showing banners.
 

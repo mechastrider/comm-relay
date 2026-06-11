@@ -1,8 +1,8 @@
-# Проект: Chat Relay (рабочее название)
+# Проект: CommRelay
 
 ## Цель проекта
 
-Chat Relay — локальное приложение на Go для объединения чатов стриминговых платформ и вывода сообщений в OBS через Browser Source.
+CommRelay — локальное приложение на Go для объединения чатов стриминговых платформ и вывода сообщений в OBS через Browser Source.
 
 Приложение развивается как отдельный продукт и не является частью mech-comm.
 
@@ -73,7 +73,7 @@ Chat Relay — локальное приложение на Go для объед
 
 ```text
 [Twitch]  \
-[YouTube]  -> [Chat Relay Core] -> [WebSocket /ws] -> [OBS Overlay /overlay]
+[YouTube]  -> [CommRelay Core] -> [WebSocket /ws] -> [OBS Overlay /overlay]
 [VK Live] /
 ```
 

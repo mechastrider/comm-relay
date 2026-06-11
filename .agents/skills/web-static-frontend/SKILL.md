@@ -53,7 +53,7 @@ web/
 ## Related
 
 - Forms: [ux-form-practices](../ux-form-practices/SKILL.md)
-- Wire format: [chat-relay](../chat-relay/SKILL.md), [api-conventions](../api-conventions/SKILL.md)
+- Wire format: [comm-relay](../comm-relay/SKILL.md), [api-conventions](../api-conventions/SKILL.md)
 
 ## Checklist
 

@@ -16,13 +16,13 @@ External references checked on 2026-06-05:
 
 ## Goal
 
-Plan Twitch emotes, BTTV, FFZ, 7TV, and safe image link previews without turning Chat Relay into an image cache or a remote-content proxy.
+Plan Twitch emotes, BTTV, FFZ, 7TV, and safe image link previews without turning CommRelay into an image cache or a remote-content proxy.
 
 This document uses "emote" for platform chat images and "emoji" only as the broader user-facing feature name.
 
 ## Current Product Fit
 
-Chat Relay currently sends plain chat text through the unified `ChatMessage` model and the `/ws` payload. The OBS overlay renders message text with DOM text nodes, which is the right security baseline. Rich message rendering should preserve that model:
+CommRelay currently sends plain chat text through the unified `ChatMessage` model and the `/ws` payload. The OBS overlay renders message text with DOM text nodes, which is the right security baseline. Rich message rendering should preserve that model:
 
 - keep `message` as plain text for compatibility;
 - add optional structured fragments later;

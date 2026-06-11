@@ -21,7 +21,7 @@ func main() {
 		WebRoot:    *webRoot,
 		Debug:      *debug,
 	}); err != nil {
-		fmt.Fprintf(os.Stderr, "chat-relay: %v\n", err)
+		fmt.Fprintf(os.Stderr, "comm-relay: %v\n", err)
 		os.Exit(1)
 	}
 }

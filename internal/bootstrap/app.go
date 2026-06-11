@@ -24,7 +24,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/runtime"
 )
 
-// App runs Chat Relay HTTP services and connectors until stopped.
+// App runs CommRelay HTTP services and connectors until stopped.
 type App struct {
 	eventBus  *bus.Bus
 	runner    runnable.Runnable

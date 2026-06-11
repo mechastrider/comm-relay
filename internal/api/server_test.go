@@ -23,7 +23,7 @@ func TestNewHandlerRoutes(t *testing.T) {
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
 		require.Equal(t, http.StatusOK, rec.Code)
-		require.Contains(t, rec.Body.String(), "Chat Relay")
+		require.Contains(t, rec.Body.String(), "CommRelay")
 		require.Contains(t, rec.Body.String(), "/favicon.svg")
 		require.Contains(t, rec.Body.String(), "app.js")
 	})
@@ -32,7 +32,7 @@ func TestNewHandlerRoutes(t *testing.T) {
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/favicon.svg", nil))
 		require.Equal(t, http.StatusOK, rec.Code)
-		require.Contains(t, rec.Body.String(), "<title>Chat Relay</title>")
+		require.Contains(t, rec.Body.String(), "<title>CommRelay</title>")
 		require.Contains(t, rec.Body.String(), "#D4A017")
 	})
 
