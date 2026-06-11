@@ -59,6 +59,7 @@
 
   const MESSAGE_SOUND_TYPES = ["chime", "ping", "soft", "alert"];
   const RECENT_MESSAGE_LIMIT = 20;
+  const MESSAGE_SCROLL_THRESHOLD_PX = 48;
   const BANNER_SUCCESS_DISMISS_MS = 4000;
   const INITIAL_WS_RECONNECT_MS = 1000;
   const MAX_WS_RECONNECT_MS = 30000;
@@ -111,6 +112,7 @@
   let messagesTimer = null;
   let soundReady = false;
   let knownMessageKeys = new Set();
+  let renderedMessagesFingerprint = "";
   let wsSocket = null;
   let wsShouldRun = true;
   let wsReconnectDelayMs = INITIAL_WS_RECONNECT_MS;
@@ -1271,9 +1273,44 @@
     playMessageSound();
   }
 
+  function messagesPanel() {
+    return recentMessages ? recentMessages.closest(".message-panel") : null;
+  }
+
+  function messagesFingerprint(messages) {
+    if (!messages || messages.length === 0) {
+      return "";
+    }
+    return messages
+      .map(function (msg) {
+        return messageKey(msg);
+      })
+      .join("\0");
+  }
+
+  function renderedMessagesFingerprintFromDOM() {
+    if (!recentMessages) {
+      return "";
+    }
+    return Array.from(recentMessages.children)
+      .map(function (el) {
+        return el.dataset.messageKey || "";
+      })
+      .join("\0");
+  }
+
+  function isMessagesPanelNearBottom(panel) {
+    if (!panel) {
+      return true;
+    }
+    const distance = panel.scrollHeight - panel.scrollTop - panel.clientHeight;
+    return distance <= MESSAGE_SCROLL_THRESHOLD_PX;
+  }
+
   function buildMessageListItem(msg) {
     const item = document.createElement("li");
     item.className = "message-list__item";
+    item.dataset.messageKey = messageKey(msg);
 
     const meta = document.createElement("div");
     meta.className = "message-list__meta";
@@ -1307,7 +1344,7 @@
   }
 
   function scrollMessagesToBottom() {
-    const panel = recentMessages ? recentMessages.closest(".message-panel") : null;
+    const panel = messagesPanel();
     if (!panel) {
       return;
     }
@@ -1316,20 +1353,53 @@
     });
   }
 
+  function restoreMessagesScroll(panel, prevScrollTop, prevScrollHeight) {
+    if (!panel) {
+      return;
+    }
+    window.requestAnimationFrame(function () {
+      if (isMessagesPanelNearBottom(panel)) {
+        panel.scrollTop = panel.scrollHeight;
+        return;
+      }
+      const delta = panel.scrollHeight - prevScrollHeight;
+      panel.scrollTop = Math.max(0, prevScrollTop + delta);
+    });
+  }
+
+  function maybeScrollMessagesToBottom() {
+    const panel = messagesPanel();
+    if (!panel || isMessagesPanelNearBottom(panel)) {
+      scrollMessagesToBottom();
+    }
+  }
+
   function appendRecentMessage(msg) {
     recentMessagesEmpty.hidden = true;
     recentMessages.appendChild(buildMessageListItem(msg));
     while (recentMessages.children.length > RECENT_MESSAGE_LIMIT) {
       recentMessages.removeChild(recentMessages.firstChild);
     }
-    scrollMessagesToBottom();
+    renderedMessagesFingerprint = renderedMessagesFingerprintFromDOM();
+    maybeScrollMessagesToBottom();
   }
 
   function renderRecentMessages(messages) {
+    const fingerprint = messagesFingerprint(messages);
+    if (fingerprint === renderedMessagesFingerprint && recentMessages.children.length > 0) {
+      return;
+    }
+
+    const panel = messagesPanel();
+    const stickToBottom = isMessagesPanelNearBottom(panel);
+    const prevScrollTop = panel ? panel.scrollTop : 0;
+    const prevScrollHeight = panel ? panel.scrollHeight : 0;
+
     recentMessages.textContent = "";
 
     if (!messages || messages.length === 0) {
       recentMessagesEmpty.hidden = false;
+      renderedMessagesFingerprint = "";
       return;
     }
 
@@ -1338,7 +1408,13 @@
     messages.forEach(function (msg) {
       recentMessages.appendChild(buildMessageListItem(msg));
     });
-    scrollMessagesToBottom();
+    renderedMessagesFingerprint = fingerprint;
+
+    if (stickToBottom) {
+      scrollMessagesToBottom();
+    } else {
+      restoreMessagesScroll(panel, prevScrollTop, prevScrollHeight);
+    }
   }
 
   function wsURL() {
