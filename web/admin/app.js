@@ -1367,21 +1367,19 @@
     });
   }
 
-  function maybeScrollMessagesToBottom() {
-    const panel = messagesPanel();
-    if (!panel || isMessagesPanelNearBottom(panel)) {
-      scrollMessagesToBottom();
-    }
-  }
-
   function appendRecentMessage(msg) {
+    const stickToBottom = isMessagesPanelNearBottom(messagesPanel());
+
     recentMessagesEmpty.hidden = true;
     recentMessages.appendChild(buildMessageListItem(msg));
     while (recentMessages.children.length > RECENT_MESSAGE_LIMIT) {
       recentMessages.removeChild(recentMessages.firstChild);
     }
     renderedMessagesFingerprint = renderedMessagesFingerprintFromDOM();
-    maybeScrollMessagesToBottom();
+
+    if (stickToBottom) {
+      scrollMessagesToBottom();
+    }
   }
 
   function renderRecentMessages(messages) {
