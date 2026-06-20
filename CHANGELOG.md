@@ -4,6 +4,22 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/), версии следуют [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Добавлено
+
+- В README — раздел «Настройки overlay»: что делают Spacing и Theme, лимит шрифта, шаги Save settings и обновления Browser Source в OBS.
+- В админке, диалог **Overlay**: подсказки к полям, вводный текст и напоминание обновить Browser Source в OBS после сохранения display-настроек.
+
+### Изменено
+
+- Максимальный размер шрифта overlay увеличен с 32 до 48 px (админка, `config.json`, overlay).
+- В диалоге **Overlay** поле **Layout** переименовано в **Spacing** (Comfortable / Compact), тема **Dashboard text** — в **Text only (no background)**.
+
+### Исправлено
+
+- Вёрстка диалога **Overlay** в админке: ровная высота полей, отступы и подсказки больше не ломают сетку.
+
 ## [0.1.1] - 2026-06-13
 
 ### Исправлено

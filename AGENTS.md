@@ -36,6 +36,7 @@ comm-relay/
 3. **Simple deployment**: single executable, Windows-friendly, minimal memory.
 4. **Logging**: `github.com/muonsoft/clog` (on `log/slog`) — Debug/Info/Warn/Error — see skill `golang-logging`.
 5. **Small, explicit changes**: match existing package layout; update `docs/concept.md` only when the product contract changes.
+6. **Changelog for user-visible work**: when a task changes application behavior, config, API, admin/overlay UI, connectors, or user-facing docs (README), append concise Russian bullets to `CHANGELOG.md` under `## [Unreleased]` (skill `changelog`). Skip changelog-only updates for refactors, tests-only, or internal agent/tooling edits with no user impact.
 
 ## Language Conventions
 
@@ -97,7 +98,8 @@ Before reporting a task as done:
 - `gofmt` / `goimports` on touched Go files.
 - `go test ./...` (or targeted packages); `-race` when changing concurrency.
 - `golangci-lint run ./...` (config: `.golangci.yml`, v2).
-- If preparing a release: update `CHANGELOG.md` with skill `changelog` and keep README artifact names/install steps in sync.
+- If the change is user-visible (see Core Principle 6): update `CHANGELOG.md` under `[Unreleased]` with skill `changelog` — do not wait for a release task.
+- If preparing a release: move `[Unreleased]` into a versioned section, set the date, and keep README artifact names/install steps in sync.
 - If static UI changed: smoke-check overlay (transparent background, message limit) and admin forms.
 - State clearly if a check could not be run and why.
 
