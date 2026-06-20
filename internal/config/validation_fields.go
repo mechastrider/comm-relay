@@ -72,8 +72,9 @@ func (c *Config) validateFields() error {
 	default:
 		fields["youtube_chat_mode"] = "Choose stream, poll, or auto."
 	}
-	if c.YouTube.Enabled && c.YouTube.ConnectionMode == YouTubeConnectionModePage && strings.TrimSpace(c.YouTube.VideoInput) == "" {
-		fields["youtube_video_input"] = "Live video URL or ID is required in simple mode."
+	if c.YouTube.Enabled && c.YouTube.ConnectionMode == YouTubeConnectionModePage &&
+		strings.TrimSpace(c.YouTube.VideoInput) == "" && strings.TrimSpace(c.YouTube.ChannelHandle) == "" {
+		fields["youtube_channel_handle"] = "Set a channel handle or live video URL in simple mode."
 	}
 	if c.Logging.RetainSessions < 1 || c.Logging.RetainSessions > 100 {
 		fields["logging_retain_sessions"] = "Keep between 1 and 100 session logs."

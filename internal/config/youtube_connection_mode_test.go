@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidate_WhenYouTubePageEnabledWithoutVideoInput_ExpectFieldError(t *testing.T) {
+func TestValidate_WhenYouTubePageEnabledWithoutSource_ExpectFieldError(t *testing.T) {
 	t.Parallel()
 
 	cfg := Default()
@@ -16,7 +16,7 @@ func TestValidate_WhenYouTubePageEnabledWithoutVideoInput_ExpectFieldError(t *te
 	err := cfg.Validate()
 	fields := ValidationFields(err)
 	require.NotNil(t, fields)
-	require.Equal(t, "Live video URL or ID is required in simple mode.", fields["youtube_video_input"])
+	require.Equal(t, "Set a channel handle or live video URL in simple mode.", fields["youtube_channel_handle"])
 }
 
 func TestValidate_WhenYouTubeConnectionModeInvalid_ExpectFieldError(t *testing.T) {

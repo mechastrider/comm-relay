@@ -14,6 +14,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/connector/youtube/grpcproto"
+	"github.com/mechastrider/comm-relay/internal/youtube/channel"
 	"github.com/mechastrider/comm-relay/internal/youtube/innertube"
 )
 
@@ -49,7 +50,7 @@ func TestConnector_Run_WhenDisabled_ExpectDisabledStatus(t *testing.T) {
 	require.Equal(t, status.StateDisabled, registry.YouTube().State)
 }
 
-func TestConnector_Run_WhenPageModeWithoutVideoInput_ExpectErrorStatus(t *testing.T) {
+func TestConnector_Run_WhenPageModeWithoutSource_ExpectErrorStatus(t *testing.T) {
 	t.Parallel()
 
 	eventBus := bus.New(8)
@@ -60,7 +61,7 @@ func TestConnector_Run_WhenPageModeWithoutVideoInput_ExpectErrorStatus(t *testin
 	})
 	connector := New(eventBus, store, registry, nil, nil)
 	connector.newPageClient = func() pageChatClient {
-		t.Fatal("page client should not be created without video input")
+		t.Fatal("page client should not be created without source")
 		return nil
 	}
 
@@ -69,6 +70,46 @@ func TestConnector_Run_WhenPageModeWithoutVideoInput_ExpectErrorStatus(t *testin
 
 	require.NoError(t, connector.Run(ctx))
 	require.Equal(t, status.StateError, registry.YouTube().State)
+}
+
+func TestConnectorRunPageSession_WhenChannelAutoDetect_ExpectResolvedVideo(t *testing.T) {
+	eventBus := bus.New(8)
+	events, unsub := eventBus.Subscribe()
+	defer unsub()
+
+	store := testStore(t, config.YouTubeConfig{
+		Enabled:        true,
+		ConnectionMode: config.YouTubeConnectionModePage,
+		ChannelHandle:  "@example",
+	})
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	connector.newLiveResolver = func() liveVideoResolver {
+		return &fakeLiveResolver{videoID: "dQw4w9WgXcQ"}
+	}
+	connector.newPageClient = func() pageChatClient {
+		return &fakePageChatClient{
+			cancel: cancel,
+			items: []innertube.LiveChatItem{
+				{
+					ID:          "msg-1",
+					UserID:      "UC123",
+					DisplayName: "Viewer",
+					Message:     "hello",
+				},
+			},
+		}
+	}
+
+	videoID, autoDetect, err := connector.resolvePageVideoID(ctx, store.Snapshot().YouTube)
+	require.NoError(t, err)
+	require.True(t, autoDetect)
+	require.Equal(t, "dQw4w9WgXcQ", videoID)
+	require.NoError(t, connector.runPageSession(ctx, videoID))
+	require.Equal(t, []string{"msg-1"}, collectMessageIDs(events))
 }
 
 func TestConnectorRunPageSession_WhenMessagesReturned_ExpectPublish(t *testing.T) {
@@ -206,6 +247,18 @@ func (c *fakePageChatClient) RunSession(ctx context.Context, videoID string, onI
 		return onItems(c.items)
 	}
 	return nil
+}
+
+type fakeLiveResolver struct {
+	videoID string
+	err     error
+}
+
+func (r *fakeLiveResolver) ResolveLiveVideoID(ctx context.Context, ref channel.Ref) (string, error) {
+	if r.err != nil {
+		return "", r.err
+	}
+	return r.videoID, nil
 }
 
 func testClientFactory(t *testing.T, cancel context.CancelFunc, items []*youtube.LiveChatMessage) clientFactory {

@@ -92,8 +92,9 @@ sudo apt install libgtk-3-0 libwebkit2gtk-4.1-0
 **Simple (video URL)** — без Google Cloud и OAuth:
 
 1. В админке выберите **Connection mode → Simple (video URL)**.
-2. Вставьте URL или ID текущего live-видео (ссылку из YouTube Studio перед эфиром).
-3. Включите YouTube connector и сохраните настройки.
+2. Укажите **Channel handle** (`@name` или URL канала) — CommRelay сам найдёт текущий эфир.
+3. Либо вставьте URL/ID конкретного live-видео (имеет приоритет над автопоиском).
+4. Включите YouTube connector и сохраните настройки.
 
 **API (OAuth)** — для автоматического чтения чата авторизованного аккаунта:
 

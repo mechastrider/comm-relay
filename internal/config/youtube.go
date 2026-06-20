@@ -20,6 +20,7 @@ type YouTubeConfig struct {
 	Enabled        bool         `json:"enabled"`
 	ConnectionMode string       `json:"connection_mode"`
 	VideoInput     string       `json:"video_input"`
+	ChannelHandle  string       `json:"channel_handle"`
 	ChatMode       string       `json:"chat_mode"`
 	OAuth          YouTubeOAuth `json:"oauth"`
 }
@@ -62,6 +63,7 @@ type YouTubeConfigPublic struct {
 	Enabled        bool               `json:"enabled"`
 	ConnectionMode string             `json:"connection_mode"`
 	VideoInput     string             `json:"video_input"`
+	ChannelHandle  string             `json:"channel_handle"`
 	ChatMode       string             `json:"chat_mode"`
 	OAuth          YouTubeOAuthPublic `json:"oauth"`
 }
@@ -81,6 +83,7 @@ func (c YouTubeConfig) public() YouTubeConfigPublic {
 		Enabled:        c.Enabled,
 		ConnectionMode: c.ConnectionMode,
 		VideoInput:     c.VideoInput,
+		ChannelHandle:  c.ChannelHandle,
 		ChatMode:       c.ChatMode,
 		OAuth: YouTubeOAuthPublic{
 			ClientID:        c.OAuth.ClientID,

@@ -20,30 +20,37 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
 	"github.com/mechastrider/comm-relay/internal/imagelink"
+	"github.com/mechastrider/comm-relay/internal/youtube/channel"
 	"github.com/mechastrider/comm-relay/internal/youtube/innertube"
 	"github.com/mechastrider/comm-relay/internal/youtube/videoid"
 )
 
 const (
 	configPollInterval             = 2 * time.Second
+	channelLivePollInterval        = 30 * time.Second
 	recentYouTubeMessageIDCapacity = 2048
 )
 
 type clientFactory func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error)
 
+type liveVideoResolver interface {
+	ResolveLiveVideoID(ctx context.Context, ref channel.Ref) (string, error)
+}
+
 // Connector reads YouTube Live Chat for the authenticated user's active broadcast
 // or from a public live video page in simple mode.
 type Connector struct {
-	bus           *bus.Bus
-	store         *config.Store
-	registry      *status.Registry
-	emojiCatalog  *ytemoji.Catalog
-	emojiClient   emote.HTTPDoer
-	emojiRefresh  *ytemoji.Refresher
-	seenMessages  *recentMessageIDs
-	newClient     clientFactory
-	newGRPC       grpcClientFactory
-	newPageClient func() pageChatClient
+	bus             *bus.Bus
+	store           *config.Store
+	registry        *status.Registry
+	emojiCatalog    *ytemoji.Catalog
+	emojiClient     emote.HTTPDoer
+	emojiRefresh    *ytemoji.Refresher
+	seenMessages    *recentMessageIDs
+	newClient       clientFactory
+	newGRPC         grpcClientFactory
+	newPageClient   func() pageChatClient
+	newLiveResolver func() liveVideoResolver
 }
 
 // New creates a YouTube Live Chat connector.
@@ -63,6 +70,9 @@ func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry, emoj
 		newGRPC: defaultGRPCClientFactory,
 		newPageClient: func() pageChatClient {
 			return newDefaultPageClient()
+		},
+		newLiveResolver: func() liveVideoResolver {
+			return channel.NewLiveResolver(nil)
 		},
 	}
 }
@@ -95,18 +105,23 @@ func (c *Connector) Run(ctx context.Context) error {
 		}
 
 		if connectionMode == config.YouTubeConnectionModePage {
-			if strings.TrimSpace(cfg.YouTube.VideoInput) == "" {
-				c.setStatus(status.StateError, "Set live video URL or ID in admin.", "")
-				if err := waitContext(ctx, configPollInterval); err != nil {
-					return nil
+			videoID, autoDetect, resolveErr := c.resolvePageVideoID(ctx, cfg.YouTube)
+			if resolveErr != nil {
+				if errors.Is(resolveErr, channel.ErrNoLiveStream) {
+					c.setStatus(status.StateConnecting, "No live stream on channel — checking again…", "")
+					if err := waitContext(ctx, channelLivePollInterval); err != nil {
+						return nil
+					}
+					continue
 				}
-				continue
-			}
-
-			videoID, err := videoid.ParseInput(cfg.YouTube.VideoInput)
-			if err != nil {
-				c.setStatus(status.StateError, "Invalid YouTube video URL or ID.", status.SanitizeError(err.Error()))
-				if waitErr := waitContext(ctx, configPollInterval); waitErr != nil {
+				if errors.Is(resolveErr, errNoVideoInput) {
+					c.setStatus(status.StateError, "Set channel handle or live video URL in admin.", "")
+				} else if errors.Is(resolveErr, errNoChannelHandle) {
+					c.setStatus(status.StateError, "Invalid YouTube channel handle.", status.SanitizeError(resolveErr.Error()))
+				} else {
+					c.setStatus(status.StateError, "Invalid YouTube video URL or ID.", status.SanitizeError(resolveErr.Error()))
+				}
+				if err := waitContext(ctx, configPollInterval); err != nil {
 					return nil
 				}
 				continue
@@ -116,9 +131,10 @@ func (c *Connector) Run(ctx context.Context) error {
 				slog.String("platform", platformYouTube),
 				slog.String("video_id", videoID),
 				slog.String("connection_mode", connectionMode),
+				slog.Bool("channel_auto_detect", autoDetect),
 			))
 
-			err = c.runPageSession(sessionCtx, videoID)
+			err := c.runPageSession(sessionCtx, videoID)
 			if ctx.Err() != nil {
 				return nil
 			}
@@ -129,6 +145,15 @@ func (c *Connector) Run(ctx context.Context) error {
 			} else {
 				clog.Info(sessionCtx, "youtube page session ended")
 				c.setStatus(status.StateDisconnected, "", "")
+			}
+
+			if autoDetect && (err == nil || errors.Is(err, errStreamEnded)) {
+				c.setStatus(status.StateConnecting, "Live stream ended — checking channel again…", "")
+				if waitErr := waitContext(ctx, channelLivePollInterval); waitErr != nil {
+					return nil
+				}
+				backoff = newReconnectBackoff()
+				continue
 			}
 
 			wait := backoff.current()
@@ -182,6 +207,30 @@ func (c *Connector) Run(ctx context.Context) error {
 
 		backoff = backoff.next()
 	}
+}
+
+func (c *Connector) resolvePageVideoID(ctx context.Context, ytCfg config.YouTubeConfig) (string, bool, error) {
+	if strings.TrimSpace(ytCfg.VideoInput) != "" {
+		id, err := videoid.ParseInput(ytCfg.VideoInput)
+		return id, false, err
+	}
+
+	if strings.TrimSpace(ytCfg.ChannelHandle) == "" {
+		return "", false, errNoVideoInput
+	}
+
+	ref, err := channel.ParseRef(ytCfg.ChannelHandle)
+	if err != nil {
+		return "", true, errors.Errorf("%w: %w", errNoChannelHandle, err)
+	}
+
+	resolver := c.newLiveResolver()
+	if resolver == nil {
+		return "", true, errors.New("youtube live resolver is not configured")
+	}
+
+	id, err := resolver.ResolveLiveVideoID(ctx, ref)
+	return id, true, err
 }
 
 func (c *Connector) runPageSession(ctx context.Context, videoID string) error {
@@ -408,7 +457,11 @@ func (c *Connector) setStatusFromError(err error) {
 		return
 	}
 	if errors.Is(err, errNoVideoInput) {
-		c.setStatus(status.StateError, "Set live video URL or ID in admin.", "")
+		c.setStatus(status.StateError, "Set channel handle or live video URL in admin.", "")
+		return
+	}
+	if errors.Is(err, channel.ErrNoLiveStream) {
+		c.setStatus(status.StateConnecting, "No live stream on channel — checking again…", "")
 		return
 	}
 	if errors.Is(err, errNotConnected) || errors.Is(err, errNotConfigured) {

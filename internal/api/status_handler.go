@@ -6,6 +6,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/youtube/channel"
 	"github.com/mechastrider/comm-relay/internal/youtube/videoid"
 )
 
@@ -118,6 +119,15 @@ func youtubeStatusResponse(cfg config.Config, registry *status.Registry) platfor
 		if videoID, err := videoid.ParseInput(cfg.YouTube.VideoInput); err == nil {
 			resp.VideoID = videoID
 		}
+		if handle := strings.TrimSpace(cfg.YouTube.ChannelHandle); handle != "" {
+			if ref, err := channel.ParseRef(handle); err == nil {
+				if ref.Handle != "" {
+					resp.Channel = ref.Handle
+				} else {
+					resp.Channel = ref.ChannelID
+				}
+			}
+		}
 	} else {
 		resp.OAuthConnected = cfg.YouTube.OAuth.Connected()
 	}
@@ -134,8 +144,8 @@ func youtubeStatusResponse(cfg config.Config, registry *status.Registry) platfor
 
 	resp.State = connectorStateDisconnected
 	if connectionMode == config.YouTubeConnectionModePage {
-		if strings.TrimSpace(cfg.YouTube.VideoInput) == "" {
-			resp.Detail = "Set live video URL or ID in admin."
+		if strings.TrimSpace(cfg.YouTube.VideoInput) == "" && strings.TrimSpace(cfg.YouTube.ChannelHandle) == "" {
+			resp.Detail = "Set channel handle or live video URL in admin."
 		}
 		return resp
 	}

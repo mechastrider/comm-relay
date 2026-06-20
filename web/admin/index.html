@@ -172,11 +172,20 @@
                 <p class="field-hint">Simple mode reads public live chat without Google Cloud setup.</p>
               </div>
 
-              <div id="youtube-page-fields" class="form__field" hidden>
-                <label for="youtube-video-input">Live video URL or ID</label>
-                <input id="youtube-video-input" name="youtube_video_input" type="text" autocomplete="off" spellcheck="false" inputmode="url">
-                <p class="field-hint">Paste the watch URL from YouTube Studio before going live.</p>
-                <p id="youtube-video-input-error" class="field-error" role="alert" hidden></p>
+              <div id="youtube-page-fields" class="youtube-page-fields" hidden>
+                <div class="form__field">
+                  <label for="youtube-channel-handle">Channel handle</label>
+                  <input id="youtube-channel-handle" name="youtube_channel_handle" type="text" autocomplete="off" spellcheck="false" inputmode="text">
+                  <p class="field-hint">@name or youtube.com/@name — auto-detects the current live stream.</p>
+                  <p id="youtube-channel-handle-error" class="field-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form__field">
+                  <label for="youtube-video-input">Live video URL or ID <span class="field-optional">(optional)</span></label>
+                  <input id="youtube-video-input" name="youtube_video_input" type="text" autocomplete="off" spellcheck="false" inputmode="url">
+                  <p class="field-hint">Overrides auto-detect when set. Paste a watch URL to pin a specific broadcast.</p>
+                  <p id="youtube-video-input-error" class="field-error" role="alert" hidden></p>
+                </div>
               </div>
 
               <div id="youtube-api-fields">

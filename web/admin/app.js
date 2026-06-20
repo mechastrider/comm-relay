@@ -17,6 +17,7 @@
   const youtubeDetail = document.getElementById("youtube-detail");
   const youtubeEnabled = document.getElementById("youtube-enabled");
   const youtubeConnectionMode = document.getElementById("youtube-connection-mode");
+  const youtubeChannelHandle = document.getElementById("youtube-channel-handle");
   const youtubeVideoInput = document.getElementById("youtube-video-input");
   const youtubePageFields = document.getElementById("youtube-page-fields");
   const youtubeApiFields = document.getElementById("youtube-api-fields");
@@ -75,7 +76,8 @@
     twitch_channel: document.getElementById("twitch-channel-error"),
     vk_channel: document.getElementById("vk-channel-error"),
     youtube_video_input: document.getElementById("youtube-video-input-error"),
-    youtube_connection_mode: document.getElementById("youtube-video-input-error"),
+    youtube_channel_handle: document.getElementById("youtube-channel-handle-error"),
+    youtube_connection_mode: document.getElementById("youtube-channel-handle-error"),
     overlay_max_messages: document.getElementById("overlay-max-messages-error"),
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
     overlay_font_size_px: document.getElementById("overlay-font-size-error"),
@@ -93,6 +95,7 @@
     twitch_channel: twitchChannel,
     vk_channel: vkChannel,
     youtube_video_input: youtubeVideoInput,
+    youtube_channel_handle: youtubeChannelHandle,
     overlay_max_messages: overlayMaxMessages,
     overlay_message_ttl_seconds: overlayMessageTTL,
     overlay_font_size_px: overlayFontSize,
@@ -513,6 +516,9 @@
         youtubeConnectionMode.value =
           connectionMode === "page" ? "page" : "api";
       }
+      if (youtubeChannelHandle) {
+        youtubeChannelHandle.value = config.youtube.channel_handle || "";
+      }
       if (youtubeVideoInput) {
         youtubeVideoInput.value = config.youtube.video_input || "";
       }
@@ -613,6 +619,7 @@
           ? youtubeConnectionMode.value
           : "api",
         video_input: youtubeVideoInput ? youtubeVideoInput.value.trim() : "",
+        channel_handle: youtubeChannelHandle ? youtubeChannelHandle.value.trim() : "",
         chat_mode: youtubeChatMode ? youtubeChatMode.value : "stream",
         oauth: {
           client_id: youtubeClientId.value.trim(),
@@ -839,10 +846,12 @@
     renderPlatformStatus(youtubeStatus, youtube);
 
     if (youtube.connection_mode === "page") {
-      if (youtube.video_id) {
+      if (youtube.channel) {
+        youtubeOAuthLabel.textContent = "Simple · @" + youtube.channel;
+      } else if (youtube.video_id) {
         youtubeOAuthLabel.textContent = "Simple · " + youtube.video_id;
       } else {
-        youtubeOAuthLabel.textContent = "Simple (video URL)";
+        youtubeOAuthLabel.textContent = "Simple (channel or video URL)";
       }
       if (youtubeConnect) {
         youtubeConnect.hidden = true;
