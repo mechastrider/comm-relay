@@ -184,14 +184,22 @@ go build -o comm-relay.exe ./cmd/comm-relay-server
 
 Release workflow собирает desktop-архивы для Windows, macOS и Linux при публикации тега `v*.*.*`, а также доступен вручную через GitHub Actions.
 
-Первый релиз:
+Перед релизом добавляйте пользовательские изменения в секцию **`## [Unreleased]`** в [`CHANGELOG.md`](CHANGELOG.md). При публикации workflow сам:
+
+1. проверит, что в `[Unreleased]` есть записи;
+2. перенесёт их в `## [X.Y.Z] - YYYY-MM-DD`;
+3. создаст пустую секцию `[Unreleased]` для следующего цикла;
+4. закоммитит обновлённый changelog в `main`;
+5. возьмёт текст GitHub Release из новой версионной секции.
+
+Пример:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
-Workflow возьмёт описание релиза из [`CHANGELOG.md`](CHANGELOG.md).
+Если секция для версии уже есть в `CHANGELOG.md`, workflow не дублирует её и только публикует релиз.
 
 ## Лицензия
 

@@ -4,6 +4,25 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/), версии следуют [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Добавлено
+
+- YouTube Live в **простом режиме** (Simple): чтение публичного live chat без Google Cloud и OAuth — через InnerTube API, как веб-плеер YouTube.
+- В админке для YouTube: переключатель **Connection mode** — `API (OAuth)` или `Simple (video URL)`; в simple mode скрываются поля OAuth и выбор транспорта.
+- **Автопоиск эфира по channel handle** (`@name`, URL канала или channel ID): connector сам находит текущий live и периодически проверяет канал, если эфира ещё нет или он завершился.
+- Опциональное поле **Live video URL or ID** в simple mode: при указании URL конкретного эфира автопоиск не используется.
+
+### Изменено
+
+- Статус YouTube в админке показывает режим подключения (API / Simple) и handle или video ID, когда это применимо.
+- Release workflow автоматически переносит секцию `[Unreleased]` в версию с датой при публикации GitHub Release.
+
+### Известные ограничения
+
+- Simple mode опирается на недокументированный InnerTube API: формат может измениться без предупреждения (аналогично VK Live connector).
+- Для API mode по-прежнему нужен OAuth client в Google Cloud Console.
+
 ## [0.1.1] - 2026-06-13
 
 ### Исправлено
