@@ -784,11 +784,30 @@ select:focus-visible {
 
 .form--compact {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
 }
 
 .form__field {
   display: grid;
-  gap: 5px;
+  gap: 6px;
+  align-content: start;
+}
+
+.form__field--full {
+  grid-column: 1 / -1;
+}
+
+.panel__body {
+  padding: 12px;
+}
+
+.form--overlay-display {
+  gap: 16px 20px;
+  padding: 0;
+}
+
+#overlay-dialog .panel__body .panel-intro {
+  margin: 0 0 12px;
 }
 
 .form__field label {
@@ -802,10 +821,10 @@ select:focus-visible {
 .form__field input[type="text"],
 .form__field input[type="number"],
 .form__field input[type="password"],
-.form__field textarea,
 .form__field select {
   width: 100%;
   min-height: 42px;
+  max-height: 42px;
   padding: 7px 9px;
   border: 1px solid var(--border);
   border-top-color: #555;
@@ -813,10 +832,20 @@ select:focus-visible {
   border-radius: 2px;
   background: #111;
   color: var(--text);
+  box-sizing: border-box;
 }
 
 .form__field textarea {
+  width: 100%;
   min-height: 110px;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-top-color: #555;
+  border-left-color: #555;
+  border-radius: 2px;
+  background: #111;
+  color: var(--text);
+  box-sizing: border-box;
   resize: vertical;
   line-height: 1.4;
 }
@@ -888,14 +917,23 @@ select:focus-visible {
   text-transform: uppercase;
 }
 
+.panel-intro {
+  margin: 0 0 14px;
+  color: var(--subtle);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .field-hint,
 .field-error {
   margin: 0;
   font-size: 12px;
+  line-height: 1.45;
 }
 
 .field-hint {
   color: var(--subtle);
+  padding-top: 2px;
 }
 
 .field-error {

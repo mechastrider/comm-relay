@@ -47,6 +47,12 @@ const (
 	OverlayThemeDashboard = "dashboard"
 )
 
+// Overlay font size bounds (px).
+const (
+	OverlayFontSizeMin = 12
+	OverlayFontSizeMax = 48
+)
+
 // OverlayConfig controls OBS overlay appearance and message retention.
 type OverlayConfig struct {
 	MaxMessages       int                 `json:"max_messages"`

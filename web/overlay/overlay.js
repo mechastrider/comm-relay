@@ -4,6 +4,8 @@
   const DEFAULT_MAX_MESSAGES = 30;
   const DEFAULT_MESSAGE_TTL_SECONDS = 20;
   const DEFAULT_FONT_SIZE_PX = 18;
+  const OVERLAY_FONT_SIZE_MIN = 12;
+  const OVERLAY_FONT_SIZE_MAX = 48;
   const DEFAULT_DISPLAY_MODE = "normal";
   const DEFAULT_THEME = "default";
   const DISPLAY_MODES = new Set(["normal", "compact"]);
@@ -45,7 +47,7 @@
       return fallback;
     }
     const value = Number.parseInt(raw, 10);
-    if (!Number.isFinite(value) || value < 12 || value > 32) {
+    if (!Number.isFinite(value) || value < OVERLAY_FONT_SIZE_MIN || value > OVERLAY_FONT_SIZE_MAX) {
       return fallback;
     }
     return value;
@@ -116,8 +118,8 @@
     if (
       !params.has("font_size_px") &&
       typeof serverOverlay.font_size_px === "number" &&
-      serverOverlay.font_size_px >= 12 &&
-      serverOverlay.font_size_px <= 32
+      serverOverlay.font_size_px >= OVERLAY_FONT_SIZE_MIN &&
+      serverOverlay.font_size_px <= OVERLAY_FONT_SIZE_MAX
     ) {
       config.fontSizePx = serverOverlay.font_size_px;
     }

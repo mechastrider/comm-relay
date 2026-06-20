@@ -61,6 +61,8 @@
   const RECENT_MESSAGE_LIMIT = 20;
   const MESSAGE_SCROLL_THRESHOLD_PX = 48;
   const BANNER_SUCCESS_DISMISS_MS = 4000;
+  const OVERLAY_FONT_SIZE_MIN = 12;
+  const OVERLAY_FONT_SIZE_MAX = 48;
   const INITIAL_WS_RECONNECT_MS = 1000;
   const MAX_WS_RECONNECT_MS = 30000;
   const SIDEBAR_COLLAPSED_KEY = "commRelay.sidebarCollapsed";
@@ -549,6 +551,24 @@
     };
   }
 
+  function overlayDisplaySettingsChanged(payload) {
+    if (!currentConfig) {
+      return true;
+    }
+    const next = payload.overlay;
+    const prev = currentConfig.overlay || {};
+    return (
+      next.max_messages !==
+        (typeof prev.max_messages === "number" ? prev.max_messages : 30) ||
+      next.message_ttl_seconds !==
+        (typeof prev.message_ttl_seconds === "number" ? prev.message_ttl_seconds : 20) ||
+      next.font_size_px !==
+        (typeof prev.font_size_px === "number" ? prev.font_size_px : 18) ||
+      next.display_mode !== (prev.display_mode === "compact" ? "compact" : "normal") ||
+      next.theme !== (prev.theme === "dashboard" ? "dashboard" : "default")
+    );
+  }
+
   function buildPayload() {
     const richChat = getRichChatSettings();
     return {
@@ -629,10 +649,13 @@
 
     if (
       !Number.isFinite(payload.overlay.font_size_px) ||
-      payload.overlay.font_size_px < 12 ||
-      payload.overlay.font_size_px > 32
+      payload.overlay.font_size_px < OVERLAY_FONT_SIZE_MIN ||
+      payload.overlay.font_size_px > OVERLAY_FONT_SIZE_MAX
     ) {
-      setFieldError("overlay_font_size_px", "Font size must be between 12 and 32 px.");
+      setFieldError(
+        "overlay_font_size_px",
+        "Font size must be between " + OVERLAY_FONT_SIZE_MIN + " and " + OVERLAY_FONT_SIZE_MAX + " px."
+      );
       firstInvalid = firstInvalid || overlayFontSize;
     }
 
@@ -640,7 +663,7 @@
       payload.overlay.display_mode !== "normal" &&
       payload.overlay.display_mode !== "compact"
     ) {
-      setFieldError("overlay_display_mode", "Choose normal or compact layout.");
+      setFieldError("overlay_display_mode", "Choose comfortable or compact spacing.");
       firstInvalid = firstInvalid || overlayDisplayMode;
     }
 
@@ -648,7 +671,7 @@
       payload.overlay.theme !== "default" &&
       payload.overlay.theme !== "dashboard"
     ) {
-      setFieldError("overlay_theme", "Choose default or dashboard theme.");
+      setFieldError("overlay_theme", "Choose default or text-only theme.");
       firstInvalid = firstInvalid || overlayTheme;
     }
 
@@ -1607,11 +1630,15 @@
         return;
       }
 
+      const overlayDisplayChanged = overlayDisplaySettingsChanged(payload);
       applyConfig(body);
       if (vkChannel) {
         vkChannel.value = readVkSettings().channel;
       }
-      showBanner("success", "Settings saved.");
+      const savedMessage = overlayDisplayChanged
+        ? "Settings saved. Refresh the Browser Source in OBS to apply display changes."
+        : "Settings saved.";
+      showBanner("success", savedMessage);
       closeOpenDialogs();
       await loadStatus();
     } catch {

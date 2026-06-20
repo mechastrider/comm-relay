@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/muonsoft/errors"
@@ -34,8 +35,12 @@ func (c *Config) validateFields() error {
 	if c.Overlay.MessageTTLSeconds < 0 {
 		fields["overlay_message_ttl_seconds"] = "TTL must be 0 or greater."
 	}
-	if c.Overlay.FontSizePx < 12 || c.Overlay.FontSizePx > 32 {
-		fields["overlay_font_size_px"] = "Font size must be between 12 and 32 px."
+	if c.Overlay.FontSizePx < OverlayFontSizeMin || c.Overlay.FontSizePx > OverlayFontSizeMax {
+		fields["overlay_font_size_px"] = fmt.Sprintf(
+			"Font size must be between %d and %d px.",
+			OverlayFontSizeMin,
+			OverlayFontSizeMax,
+		)
 	}
 	switch c.Overlay.DisplayMode {
 	case OverlayDisplayModeNormal, OverlayDisplayModeCompact:

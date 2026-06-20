@@ -231,41 +231,49 @@
             <h3 id="overlay-display-heading">Display</h3>
           </div>
 
-          <div class="form form--compact">
-            <div class="form__field">
-              <label for="overlay-max-messages">Max messages</label>
-              <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
-              <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
-            </div>
+          <div class="panel__body">
+            <p class="panel-intro">Appearance settings for the OBS Browser Source overlay. After saving, refresh the Browser Source in OBS to apply display changes.</p>
 
-            <div class="form__field">
-              <label for="overlay-message-ttl">Message TTL (seconds)</label>
-              <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
-              <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
-            </div>
+            <div class="form form--compact form--overlay-display">
+              <div class="form__field">
+                <label for="overlay-max-messages">Max messages</label>
+                <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
+                <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
+              </div>
 
-            <div class="form__field">
-              <label for="overlay-font-size">Font size (px)</label>
-              <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="32" step="1">
-              <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
-            </div>
+              <div class="form__field">
+                <label for="overlay-message-ttl">Message TTL (seconds)</label>
+                <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
+                <p class="field-hint">0 keeps messages until they scroll off (max messages limit).</p>
+                <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
+              </div>
 
-            <div class="form__field">
-              <label for="overlay-display-mode">Layout</label>
-              <select id="overlay-display-mode" name="overlay_display_mode">
-                <option value="normal">Normal</option>
-                <option value="compact">Compact</option>
-              </select>
-              <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
-            </div>
+              <div class="form__field">
+                <label for="overlay-font-size">Font size (px)</label>
+                <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="48" step="1">
+                <p class="field-hint">12–48 px. After saving, refresh the Browser Source in OBS.</p>
+                <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
+              </div>
 
-            <div class="form__field">
-              <label for="overlay-theme">Theme</label>
-              <select id="overlay-theme" name="overlay_theme">
-                <option value="default">Default</option>
-                <option value="dashboard">Dashboard text</option>
-              </select>
-              <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
+              <div class="form__field">
+                <label for="overlay-display-mode">Spacing</label>
+                <select id="overlay-display-mode" name="overlay_display_mode">
+                  <option value="normal">Comfortable</option>
+                  <option value="compact">Compact</option>
+                </select>
+                <p class="field-hint">Compact reduces gaps between lines — useful with a busy chat.</p>
+                <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
+              </div>
+
+              <div class="form__field form__field--full">
+                <label for="overlay-theme">Theme</label>
+                <select id="overlay-theme" name="overlay_theme">
+                  <option value="default">Default</option>
+                  <option value="dashboard">Text only (no background)</option>
+                </select>
+                <p class="field-hint">Default uses semi-transparent cards. Text only drops the background (good on green screen / chroma).</p>
+                <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
+              </div>
             </div>
           </div>
         </section>
