@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/mechastrider/comm-relay/internal/youtube/innertube"
 )
 
 func TestFetchGlobal_WhenCatalogAvailable_ExpectShortcuts(t *testing.T) {
@@ -58,7 +60,7 @@ func TestExtractYTInitialData_WhenPopoutPage_ExpectJSON(t *testing.T) {
 	t.Parallel()
 
 	html := `<html><script>window["ytInitialData"] = {"contents":{"liveChatRenderer":{"emojis":[]}}};</script></html>`
-	data, err := extractYTInitialData(html)
+	data, err := innertube.ExtractInitialData(html)
 	require.NoError(t, err)
 	require.JSONEq(t, `{"contents":{"liveChatRenderer":{"emojis":[]}}}`, string(data))
 }
@@ -124,7 +126,7 @@ func fetchChannelFromURL(ctx context.Context, client *http.Client, pageURL strin
 		return nil, err
 	}
 
-	initialData, err := extractYTInitialData(string(body))
+	initialData, err := innertube.ExtractInitialData(string(body))
 	if err != nil {
 		return nil, err
 	}

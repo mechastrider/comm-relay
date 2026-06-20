@@ -87,7 +87,15 @@ sudo apt install libgtk-3-0 libwebkit2gtk-4.1-0
 
 ### YouTube Live
 
-Для YouTube нужен OAuth client:
+Есть два режима подключения:
+
+**Simple (video URL)** — без Google Cloud и OAuth:
+
+1. В админке выберите **Connection mode → Simple (video URL)**.
+2. Вставьте URL или ID текущего live-видео (ссылку из YouTube Studio перед эфиром).
+3. Включите YouTube connector и сохраните настройки.
+
+**API (OAuth)** — для автоматического чтения чата авторизованного аккаунта:
 
 1. Откройте [Google Cloud Console](https://console.cloud.google.com/).
 2. Создайте OAuth client и включите **YouTube Data API v3**.
@@ -96,7 +104,9 @@ sudo apt install libgtk-3-0 libwebkit2gtk-4.1-0
 5. Нажмите **Connect YouTube** и пройдите авторизацию Google.
 6. Включите YouTube connector и сохраните настройки ещё раз.
 
-Сообщения появятся, когда у авторизованного аккаунта идёт активный эфир с live chat.
+В simple mode читается публичный live chat по URL. В API mode сообщения появятся, когда у авторизованного аккаунта идёт активный эфир с live chat.
+
+Simple mode использует недокументированный InnerTube API (как веб-плеер YouTube). Формат может измениться без предупреждения; при проблемах попробуйте API mode.
 
 ### VK Live
 
@@ -127,7 +137,8 @@ OAuth не требуется. Укажите slug канала или URL `live
 - **OBS ничего не показывает**: проверьте, что CommRelay запущен, URL в Browser Source совпадает с портом, а connector в админке имеет статус `connected`.
 - **Порт 17877 занят**: закройте другое приложение на этом порту или запустите CommRelay с другим адресом через `-addr 127.0.0.1:<порт>`.
 - **YouTube OAuth не проходит**: redirect URI в Google Cloud должен точно совпадать с портом из `config.json`.
-- **Нет сообщений YouTube**: нужен активный эфир с включённым live chat.
+- **Нет сообщений YouTube**: нужен активный эфир с включённым live chat; в simple mode проверьте URL видео.
+- **Simple mode не подключается**: YouTube может показать consent/captcha — попробуйте API mode или обновите URL эфира.
 - **macOS не открывает приложение**: ранние сборки не подписаны; используйте **Open** из контекстного меню Finder.
 - **Linux не запускает окно**: установите GTK/WebKit зависимости из раздела Linux.
 

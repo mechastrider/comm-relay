@@ -20,6 +20,8 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
 	"github.com/mechastrider/comm-relay/internal/imagelink"
+	"github.com/mechastrider/comm-relay/internal/youtube/innertube"
+	"github.com/mechastrider/comm-relay/internal/youtube/videoid"
 )
 
 const (
@@ -29,17 +31,19 @@ const (
 
 type clientFactory func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error)
 
-// Connector reads YouTube Live Chat for the authenticated user's active broadcast.
+// Connector reads YouTube Live Chat for the authenticated user's active broadcast
+// or from a public live video page in simple mode.
 type Connector struct {
-	bus          *bus.Bus
-	store        *config.Store
-	registry     *status.Registry
-	emojiCatalog *ytemoji.Catalog
-	emojiClient  emote.HTTPDoer
-	emojiRefresh *ytemoji.Refresher
-	seenMessages *recentMessageIDs
-	newClient    clientFactory
-	newGRPC      grpcClientFactory
+	bus           *bus.Bus
+	store         *config.Store
+	registry      *status.Registry
+	emojiCatalog  *ytemoji.Catalog
+	emojiClient   emote.HTTPDoer
+	emojiRefresh  *ytemoji.Refresher
+	seenMessages  *recentMessageIDs
+	newClient     clientFactory
+	newGRPC       grpcClientFactory
+	newPageClient func() pageChatClient
 }
 
 // New creates a YouTube Live Chat connector.
@@ -57,6 +61,9 @@ func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry, emoj
 			return newAPIClient(ctx, option.WithHTTPClient(httpClient))
 		},
 		newGRPC: defaultGRPCClientFactory,
+		newPageClient: func() pageChatClient {
+			return newDefaultPageClient()
+		},
 	}
 }
 
@@ -79,6 +86,59 @@ func (c *Connector) Run(ctx context.Context) error {
 			if err := waitContext(ctx, configPollInterval); err != nil {
 				return nil
 			}
+			continue
+		}
+
+		connectionMode := cfg.YouTube.ConnectionMode
+		if connectionMode == "" {
+			connectionMode = config.YouTubeConnectionModeAPI
+		}
+
+		if connectionMode == config.YouTubeConnectionModePage {
+			if strings.TrimSpace(cfg.YouTube.VideoInput) == "" {
+				c.setStatus(status.StateError, "Set live video URL or ID in admin.", "")
+				if err := waitContext(ctx, configPollInterval); err != nil {
+					return nil
+				}
+				continue
+			}
+
+			videoID, err := videoid.ParseInput(cfg.YouTube.VideoInput)
+			if err != nil {
+				c.setStatus(status.StateError, "Invalid YouTube video URL or ID.", status.SanitizeError(err.Error()))
+				if waitErr := waitContext(ctx, configPollInterval); waitErr != nil {
+					return nil
+				}
+				continue
+			}
+
+			sessionCtx := clog.NewContext(ctx, slog.Default().With(
+				slog.String("platform", platformYouTube),
+				slog.String("video_id", videoID),
+				slog.String("connection_mode", connectionMode),
+			))
+
+			err = c.runPageSession(sessionCtx, videoID)
+			if ctx.Err() != nil {
+				return nil
+			}
+
+			if err != nil {
+				clog.Errorf(sessionCtx, "youtube page session ended: %w", err)
+				c.setStatusFromError(err)
+			} else {
+				clog.Info(sessionCtx, "youtube page session ended")
+				c.setStatus(status.StateDisconnected, "", "")
+			}
+
+			wait := backoff.current()
+			c.setStatus(status.StateReconnecting, "", "")
+			clog.Info(sessionCtx, "youtube reconnect scheduled", slog.Duration("after", wait))
+			if err := waitContext(ctx, wait); err != nil {
+				return nil
+			}
+
+			backoff = backoff.next()
 			continue
 		}
 
@@ -121,6 +181,53 @@ func (c *Connector) Run(ctx context.Context) error {
 		}
 
 		backoff = backoff.next()
+	}
+}
+
+func (c *Connector) runPageSession(ctx context.Context, videoID string) error {
+	c.setStatus(status.StateConnecting, "", "")
+
+	if c.emojiRefresh != nil {
+		c.emojiRefresh.EnsureGlobalLoaded(ctx)
+	}
+	if err := c.refreshChannelEmojis(ctx, videoID); err != nil {
+		clog.Debug(ctx, "youtube channel emoji refresh failed", slog.Any("error", err))
+	}
+
+	client := c.newPageClient()
+	if client == nil {
+		return errors.New("youtube page client is not configured")
+	}
+
+	c.setStatus(status.StateConnected, "", "")
+
+	return client.RunSession(ctx, videoID, func(items []innertube.LiveChatItem) error {
+		c.publishPageChatItems(ctx, items)
+		return nil
+	})
+}
+
+func (c *Connector) publishPageChatItems(ctx context.Context, items []innertube.LiveChatItem) {
+	for _, item := range items {
+		overlay := c.store.Snapshot().Overlay
+		chatMsg := MapPageChatMessage(item)
+		if strings.TrimSpace(chatMsg.Message) == "" {
+			continue
+		}
+		if !c.markMessageID(chatMsg.ID) {
+			continue
+		}
+		if overlay.Emotes.YouTube && c.emojiCatalog != nil {
+			messageText := item.MessageText
+			if messageText == "" {
+				messageText = chatMsg.Message
+			}
+			chatMsg.Fragments = mapEmojiFragments(messageText, c.emojiCatalog)
+		}
+		imagelink.Enrich(&chatMsg, overlay.ImagePreviews)
+		if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
+			clog.Errorf(ctx, "publish youtube page message: %w", err)
+		}
 	}
 }
 
@@ -294,6 +401,14 @@ func (c *Connector) setStatusFromError(err error) {
 	}
 	if errors.Is(err, errNoLiveChat) {
 		c.setStatus(status.StateError, "No active YouTube live stream for this account.", "")
+		return
+	}
+	if errors.Is(err, errStreamEnded) {
+		c.setStatus(status.StateError, "YouTube live stream ended or chat is offline.", "")
+		return
+	}
+	if errors.Is(err, errNoVideoInput) {
+		c.setStatus(status.StateError, "Set live video URL or ID in admin.", "")
 		return
 	}
 	if errors.Is(err, errNotConnected) || errors.Is(err, errNotConfigured) {

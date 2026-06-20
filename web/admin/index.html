@@ -164,24 +164,42 @@
               </div>
 
               <div class="form__field">
-                <label for="youtube-chat-mode">Chat transport</label>
-                <select id="youtube-chat-mode" name="youtube_chat_mode">
-                  <option value="stream">gRPC stream (recommended)</option>
-                  <option value="auto">Auto (stream with poll fallback)</option>
-                  <option value="poll">REST polling</option>
+                <label for="youtube-connection-mode">Connection mode</label>
+                <select id="youtube-connection-mode" name="youtube_connection_mode">
+                  <option value="api">API (OAuth)</option>
+                  <option value="page">Simple (video URL)</option>
                 </select>
-                <p class="field-hint">Stream pushes messages with lower latency. Auto falls back to polling if gRPC fails.</p>
+                <p class="field-hint">Simple mode reads public live chat without Google Cloud setup.</p>
               </div>
 
-              <div class="form__field">
-                <label for="youtube-client-id">OAuth client ID</label>
-                <input id="youtube-client-id" name="youtube_client_id" type="text" autocomplete="off" spellcheck="false">
+              <div id="youtube-page-fields" class="form__field" hidden>
+                <label for="youtube-video-input">Live video URL or ID</label>
+                <input id="youtube-video-input" name="youtube_video_input" type="text" autocomplete="off" spellcheck="false" inputmode="url">
+                <p class="field-hint">Paste the watch URL from YouTube Studio before going live.</p>
+                <p id="youtube-video-input-error" class="field-error" role="alert" hidden></p>
               </div>
 
-              <div class="form__field">
-                <label for="youtube-client-secret">OAuth client secret</label>
-                <input id="youtube-client-secret" name="youtube_client_secret" type="password" autocomplete="off">
-                <p class="field-hint">Leave blank to keep the existing secret.</p>
+              <div id="youtube-api-fields">
+                <div class="form__field">
+                  <label for="youtube-chat-mode">Chat transport</label>
+                  <select id="youtube-chat-mode" name="youtube_chat_mode">
+                    <option value="stream">gRPC stream (recommended)</option>
+                    <option value="auto">Auto (stream with poll fallback)</option>
+                    <option value="poll">REST polling</option>
+                  </select>
+                  <p class="field-hint">Stream pushes messages with lower latency. Auto falls back to polling if gRPC fails.</p>
+                </div>
+
+                <div class="form__field">
+                  <label for="youtube-client-id">OAuth client ID</label>
+                  <input id="youtube-client-id" name="youtube_client_id" type="text" autocomplete="off" spellcheck="false">
+                </div>
+
+                <div class="form__field">
+                  <label for="youtube-client-secret">OAuth client secret</label>
+                  <input id="youtube-client-secret" name="youtube_client_secret" type="password" autocomplete="off">
+                  <p class="field-hint">Leave blank to keep the existing secret.</p>
+                </div>
               </div>
             </div>
           </section>
