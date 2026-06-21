@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml/badge.svg)](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/mechastrider/comm-relay?label=release)](https://github.com/mechastrider/comm-relay/releases) ![Go](https://img.shields.io/github/go-mod/go-version/mechastrider/comm-relay) [![License](https://img.shields.io/github/license/mechastrider/comm-relay)](LICENSE) ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue) ![OBS](https://img.shields.io/badge/OBS-Browser%20Source-9146FF?logo=obsstudio&logoColor=white) [![Wails](https://img.shields.io/badge/desktop-Wails%20v2-DF2C2C)](https://wails.io/) [![DonationAlerts](https://img.shields.io/badge/DonationAlerts-Поддержать-FD6535)](https://www.donationalerts.com/r/mechastrider)
 
+![CommRelay — локальная панель управления, монитор чата и overlay для OBS](docs/images/poster.jpg)
+
 CommRelay собирает сообщения из Twitch, YouTube Live и VK Live в один локальный чат для OBS. Приложение запускается на вашем компьютере, не использует облачный relay-сервер и показывает overlay через обычный OBS Browser Source.
 
 Первый публичный релиз: **v0.1.0**. История изменений ведётся в [`CHANGELOG.md`](CHANGELOG.md).
