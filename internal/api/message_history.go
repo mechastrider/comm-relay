@@ -89,6 +89,7 @@ type adminMessage struct {
 	DisplayName string                `json:"display_name,omitempty"`
 	Message     string                `json:"message"`
 	Fragments   []bus.MessageFragment `json:"fragments,omitempty"`
+	AvatarURL   string                `json:"avatar_url,omitempty"`
 	Timestamp   string                `json:"timestamp"`
 }
 
@@ -105,6 +106,7 @@ func adminMessageFromChat(msg bus.ChatMessage) adminMessage {
 		DisplayName: msg.DisplayName,
 		Message:     msg.Message,
 		Fragments:   msg.Fragments,
+		AvatarURL:   msg.AvatarURL,
 		Timestamp:   ts.UTC().Format(time.RFC3339),
 	}
 }

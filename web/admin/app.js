@@ -1213,6 +1213,119 @@
     return "?";
   }
 
+  function messageIdentity(msg) {
+    const platform = typeof msg.platform === "string" ? msg.platform.trim().toLowerCase() : "";
+    const username = typeof msg.username === "string" ? msg.username.trim().toLowerCase() : "";
+    const displayName = messageDisplayName(msg).trim().toLowerCase();
+    return [platform, username || displayName || "?"].join(":");
+  }
+
+  function hashString(value) {
+    let hash = 2166136261;
+    for (let i = 0; i < value.length; i += 1) {
+      hash ^= value.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function userAccent(msg) {
+    const palette = [
+      "#57d68d",
+      "#5ec8ff",
+      "#ffca55",
+      "#ff8f70",
+      "#c89cff",
+      "#66e3d4",
+      "#f06ea9",
+      "#a5d65e",
+      "#8ca8ff",
+      "#f0a84f",
+    ];
+    const hash = hashString(messageIdentity(msg));
+    return palette[hash % palette.length];
+  }
+
+  function safeAvatarURL(value) {
+    if (typeof value !== "string" || value.trim() === "") {
+      return "";
+    }
+    try {
+      const url = new URL(value, window.location.href);
+      if (url.protocol !== "https:" && url.protocol !== "http:") {
+        return "";
+      }
+      return url.href;
+    } catch {
+      return "";
+    }
+  }
+
+  function initialsForName(name) {
+    return name
+      .split(/[\s._-]+/)
+      .filter(function (part) {
+        return part !== "";
+      })
+      .slice(0, 2)
+      .map(function (part) {
+        return part.charAt(0).toUpperCase();
+      })
+      .join("") || "?";
+  }
+
+  function escapeSVGText(value) {
+    return value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function avatarFallbackURL(msg) {
+    const identity = messageIdentity(msg);
+    const hash = hashString(identity);
+    const accent = userAccent(msg);
+    const initials = escapeSVGText(initialsForName(messageDisplayName(msg)));
+    const bgPalette = ["#1e2d24", "#1c2b36", "#33281a", "#332022", "#2b2340"];
+    const variant = hash % 5;
+    const bg = bgPalette[hash % bgPalette.length];
+    const shapes = [
+      '<circle cx="18" cy="20" r="10" fill="' + accent + '" opacity="0.95"/>',
+      '<rect x="9" y="9" width="30" height="30" rx="12" fill="' + accent + '" opacity="0.95"/>',
+      '<path d="M24 6 43 18 36 41H12L5 18Z" fill="' + accent + '" opacity="0.95"/>',
+      '<circle cx="17" cy="18" r="9" fill="' + accent + '" opacity="0.9"/><circle cx="31" cy="29" r="12" fill="' + accent + '" opacity="0.72"/>',
+      '<path d="M8 32c6-18 26-22 32-6 2 6-2 12-8 14H16c-6-1-10-3-8-8Z" fill="' + accent + '" opacity="0.95"/>',
+    ];
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">' +
+      '<rect width="48" height="48" rx="12" fill="' + bg + '"/>' +
+      '<circle cx="40" cy="8" r="12" fill="#ffffff" opacity="0.08"/>' +
+      shapes[variant] +
+      '<text x="24" y="31" text-anchor="middle" font-family="Consolas,monospace" font-size="14" font-weight="700" fill="#fff">' +
+      initials +
+      "</text></svg>";
+    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+  }
+
+  function buildAvatarImage(msg) {
+    const avatar = document.createElement("img");
+    avatar.className = "message-list__avatar";
+    avatar.alt = "";
+    avatar.decoding = "async";
+    avatar.draggable = false;
+    avatar.referrerPolicy = "no-referrer";
+
+    const fallback = avatarFallbackURL(msg);
+    const url = safeAvatarURL(msg.avatar_url);
+    avatar.src = url !== "" ? url : fallback;
+    if (url !== "") {
+      avatar.addEventListener("error", function () {
+        avatar.src = fallback;
+      }, { once: true });
+    }
+    return avatar;
+  }
+
   function messageKey(msg) {
     const id = typeof msg.id === "string" ? msg.id.trim() : "";
     if (id !== "") {
@@ -1262,6 +1375,7 @@
       display_name: displayName,
       message: typeof wire.message === "string" ? wire.message : "",
       fragments: Array.isArray(wire.fragments) ? wire.fragments : [],
+      avatar_url: typeof wire.avatar_url === "string" ? wire.avatar_url : "",
       timestamp: typeof wire.timestamp === "string" && wire.timestamp !== ""
         ? wire.timestamp
         : new Date().toISOString(),
@@ -1391,6 +1505,7 @@
     const item = document.createElement("li");
     item.className = "message-list__item";
     item.dataset.messageKey = messageKey(msg);
+    item.style.setProperty("--message-accent", userAccent(msg));
 
     const meta = document.createElement("div");
     meta.className = "message-list__meta";
@@ -1418,8 +1533,13 @@
     text.className = "message-list__text";
     appendMessageContent(text, msg);
 
-    item.appendChild(meta);
-    item.appendChild(text);
+    const content = document.createElement("div");
+    content.className = "message-list__content";
+    content.appendChild(meta);
+    content.appendChild(text);
+
+    item.appendChild(buildAvatarImage(msg));
+    item.appendChild(content);
     return item;
   }
 

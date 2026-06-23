@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CommRelay message feed mockup</title>
+  <link rel="stylesheet" href="../../web/admin/styles.css">
+  <style>
+    body {
+      overflow: auto;
+    }
+
+    .cockpit-shell {
+      min-height: calc(100vh - 12px);
+    }
+
+    .main-area {
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
+
+    .mock-panel {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      padding: 18px;
+      border-left: 2px solid var(--border-dark);
+      background: var(--surface-darker);
+    }
+
+    .mock-card {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--surface);
+    }
+
+    .mock-card h3 {
+      margin: 0 0 8px;
+      color: var(--amber);
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .mock-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 920px) {
+      .main-area {
+        grid-template-columns: 1fr;
+      }
+
+      .mock-panel {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="cockpit-shell">
+    <header class="top-bar" aria-label="System status">
+      <div class="brand-stack">
+        <span class="brand-kicker">LOCAL OBS COMM RELAY</span>
+        <h1>CommRelay</h1>
+      </div>
+
+      <div class="connector-rack" aria-label="Connector states">
+        <div class="indicator">
+          <span class="indicator__label">Twitch</span>
+          <span class="status-pill status-pill--connected">connected</span>
+        </div>
+        <div class="indicator">
+          <span class="indicator__label">YouTube</span>
+          <span class="status-pill status-pill--connected">connected</span>
+        </div>
+        <div class="indicator">
+          <span class="indicator__label">VK Live</span>
+          <span class="status-pill status-pill--reconnecting">reconnecting</span>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn-physical btn-start" type="button">Save</button>
+      </div>
+    </header>
+
+    <main class="main-area">
+      <section class="console-panel" aria-labelledby="messages-heading">
+        <div class="console-header">
+          <div>
+            <span class="console-label">Monitor</span>
+            <h2 id="messages-heading">Live messages</h2>
+          </div>
+          <div class="console-actions">
+            <span class="settings-state settings-state--saved">Preview data</span>
+            <button type="button" class="btn-physical btn-small">Refresh</button>
+          </div>
+        </div>
+
+        <div class="message-panel">
+          <ul class="message-list" aria-live="polite">
+            <li class="message-list__item" style="--message-accent: #57d68d;">
+              <img class="message-list__avatar" alt="" src="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%231e2d24'/%3E%3Ccircle cx='18' cy='20' r='10' fill='%2357d68d'/%3E%3Ctext x='24' y='31' text-anchor='middle' font-family='Consolas,monospace' font-size='14' font-weight='700' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+              <div class="message-list__content">
+                <div class="message-list__meta">
+                  <span class="message-list__user">NightSignal</span>
+                  <span class="message-list__platform">twitch</span>
+                  <time class="message-list__time">21:58:03</time>
+                </div>
+                <p class="message-list__text">First test after the avatar update. This is much easier to scan.</p>
+              </div>
+            </li>
+
+            <li class="message-list__item" style="--message-accent: #5ec8ff;">
+              <img class="message-list__avatar" alt="" src="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%231c2b36'/%3E%3Crect x='9' y='9' width='30' height='30' rx='12' fill='%235ec8ff'/%3E%3Ctext x='24' y='31' text-anchor='middle' font-family='Consolas,monospace' font-size='14' font-weight='700' fill='white'%3EC%3C/text%3E%3C/svg%3E">
+              <div class="message-list__content">
+                <div class="message-list__meta">
+                  <span class="message-list__user">ColdOrbit</span>
+                  <span class="message-list__platform">youtube</span>
+                  <time class="message-list__time">21:58:10</time>
+                </div>
+                <p class="message-list__text">Same platform? No problem, the nickname hash keeps my blue accent stable.</p>
+              </div>
+            </li>
+
+            <li class="message-list__item" style="--message-accent: #ffca55;">
+              <img class="message-list__avatar" alt="" src="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%2333281a'/%3E%3Cpath d='M24 6 43 18 36 41H12L5 18Z' fill='%23ffca55'/%3E%3Ctext x='24' y='31' text-anchor='middle' font-family='Consolas,monospace' font-size='14' font-weight='700' fill='white'%3ESV%3C/text%3E%3C/svg%3E">
+              <div class="message-list__content">
+                <div class="message-list__meta">
+                  <span class="message-list__user">StreamVera</span>
+                  <span class="message-list__platform">vk</span>
+                  <time class="message-list__time">21:58:17</time>
+                </div>
+                <p class="message-list__text">А вот так выглядит сообщение на русском: акцент и аватар сразу отделяют автора.</p>
+              </div>
+            </li>
+
+            <li class="message-list__item" style="--message-accent: #ff8f70;">
+              <img class="message-list__avatar" alt="" src="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%23332022'/%3E%3Ccircle cx='17' cy='18' r='9' fill='%23ff8f70' opacity='0.9'/%3E%3Ccircle cx='31' cy='29' r='12' fill='%23ff8f70' opacity='0.72'/%3E%3Ctext x='24' y='31' text-anchor='middle' font-family='Consolas,monospace' font-size='14' font-weight='700' fill='white'%3ERK%3C/text%3E%3C/svg%3E">
+              <div class="message-list__content">
+                <div class="message-list__meta">
+                  <span class="message-list__user">RetroKeys</span>
+                  <span class="message-list__platform">twitch</span>
+                  <time class="message-list__time">21:58:22</time>
+                </div>
+                <p class="message-list__text">Longer message example: the text column keeps wrapping while the avatar stays fixed, so the list does not wobble.</p>
+              </div>
+            </li>
+
+            <li class="message-list__item" style="--message-accent: #c89cff;">
+              <img class="message-list__avatar" alt="" src="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%232b2340'/%3E%3Cpath d='M8 32c6-18 26-22 32-6 2 6-2 12-8 14H16c-6-1-10-3-8-8Z' fill='%23c89cff'/%3E%3Ctext x='24' y='31' text-anchor='middle' font-family='Consolas,monospace' font-size='14' font-weight='700' fill='white'%3EM%3C/text%3E%3C/svg%3E">
+              <div class="message-list__content">
+                <div class="message-list__meta">
+                  <span class="message-list__user">ModMark</span>
+                  <span class="message-list__platform">youtube</span>
+                  <time class="message-list__time">21:58:29</time>
+                </div>
+                <p class="message-list__text">Fallback SVG avatar sample, for users whose platform avatar is missing or fails to load.</p>
+              </div>
+            </li>
+
+            <li class="message-list__item" style="--message-accent: #66e3d4;">
+              <img class="message-list__avatar" alt="" src="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2366e3d4'/%3E%3Cstop offset='1' stop-color='%23233a5f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='12' fill='url(%23g)'/%3E%3Ccircle cx='24' cy='18' r='8' fill='white' opacity='0.9'/%3E%3Cpath d='M10 43c2-10 10-16 14-16s12 6 14 16' fill='white' opacity='0.85'/%3E%3C/svg%3E">
+              <div class="message-list__content">
+                <div class="message-list__meta">
+                  <span class="message-list__user">AquaPilot</span>
+                  <span class="message-list__platform">twitch</span>
+                  <time class="message-list__time">21:58:35</time>
+                </div>
+                <p class="message-list__text">This row imitates a real platform avatar: still framed by the same author color.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <aside class="mock-panel" aria-label="Preview notes">
+        <div class="panel-heading">
+          <h2>Preview</h2>
+        </div>
+        <div class="mock-card">
+          <h3>Author color</h3>
+          <p>Each row uses a stable color derived from platform and nickname.</p>
+        </div>
+        <div class="mock-card">
+          <h3>Avatar slot</h3>
+          <p>Real platform avatars fit the same frame as generated SVG fallbacks.</p>
+        </div>
+        <div class="mock-card">
+          <h3>Dense chat</h3>
+          <p>The avatar column stays fixed while longer messages wrap.</p>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="status-bar" aria-label="Runtime diagnostics">
+      <span class="tag">MOCKUP</span>
+      <span>Uptime: <strong>12m 08s</strong></span>
+      <span>WS: <strong>1</strong></span>
+      <span>Messages: <strong>twitch: 42, youtube: 18, vk: 7</strong></span>
+      <span class="status-bar__spacer"></span>
+      <span>State: <strong>Preview only</strong></span>
+    </footer>
+  </div>
+</body>
+</html>

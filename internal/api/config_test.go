@@ -311,9 +311,10 @@ func TestMessagesRecent_WhenPublishedWithFragments_ExpectFragmentsInResponse(t *
 	time.Sleep(50 * time.Millisecond)
 
 	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
-		Platform: "twitch",
-		Username: "viewer",
-		Message:  "Kappa",
+		Platform:  "twitch",
+		Username:  "viewer",
+		Message:   "Kappa",
+		AvatarURL: "https://example.com/avatar.png",
 		Fragments: []bus.MessageFragment{
 			{Type: bus.FragmentTypeEmote, Text: "Kappa", URL: "https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0"},
 		},
@@ -329,6 +330,7 @@ func TestMessagesRecent_WhenPublishedWithFragments_ExpectFragmentsInResponse(t *
 		var payload struct {
 			Messages []struct {
 				Message   string `json:"message"`
+				AvatarURL string `json:"avatar_url"`
 				Fragments []struct {
 					Type string `json:"type"`
 					Text string `json:"text"`
@@ -349,6 +351,7 @@ func TestMessagesRecent_WhenPublishedWithFragments_ExpectFragmentsInResponse(t *
 	var payload struct {
 		Messages []struct {
 			Message   string `json:"message"`
+			AvatarURL string `json:"avatar_url"`
 			Fragments []struct {
 				Type string `json:"type"`
 				Text string `json:"text"`
@@ -359,6 +362,7 @@ func TestMessagesRecent_WhenPublishedWithFragments_ExpectFragmentsInResponse(t *
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
 	require.Len(t, payload.Messages, 1)
 	require.Equal(t, "Kappa", payload.Messages[0].Message)
+	require.Equal(t, "https://example.com/avatar.png", payload.Messages[0].AvatarURL)
 	require.Len(t, payload.Messages[0].Fragments, 1)
 	require.Equal(t, "emote", payload.Messages[0].Fragments[0].Type)
 	require.Equal(t, "Kappa", payload.Messages[0].Fragments[0].Text)
