@@ -91,7 +91,16 @@ sudo apt install libgtk-3-0 libwebkit2gtk-4.1-0
 
 ### YouTube Live
 
-Для YouTube нужен OAuth client:
+Есть два режима подключения:
+
+**Simple (video URL)** — без Google Cloud и OAuth:
+
+1. В админке выберите **Connection mode → Simple (video URL)**.
+2. Укажите **Channel handle** (`@name` или URL канала) — CommRelay сам найдёт текущий эфир.
+3. Либо вставьте URL/ID конкретного live-видео (имеет приоритет над автопоиском).
+4. Включите YouTube connector и сохраните настройки.
+
+**API (OAuth)** — для автоматического чтения чата авторизованного аккаунта:
 
 1. Откройте [Google Cloud Console](https://console.cloud.google.com/).
 2. Создайте OAuth client и включите **YouTube Data API v3**.
@@ -100,7 +109,9 @@ sudo apt install libgtk-3-0 libwebkit2gtk-4.1-0
 5. Нажмите **Connect YouTube** и пройдите авторизацию Google.
 6. Включите YouTube connector и сохраните настройки ещё раз.
 
-Сообщения появятся, когда у авторизованного аккаунта идёт активный эфир с live chat.
+В simple mode читается публичный live chat по URL. В API mode сообщения появятся, когда у авторизованного аккаунта идёт активный эфир с live chat.
+
+Simple mode использует недокументированный InnerTube API (как веб-плеер YouTube). Формат может измениться без предупреждения; при проблемах попробуйте API mode.
 
 ### VK Live
 
@@ -131,7 +142,8 @@ OAuth не требуется. Укажите slug канала или URL `live
 - **OBS ничего не показывает**: проверьте, что CommRelay запущен, URL в Browser Source совпадает с портом, а connector в админке имеет статус `connected`.
 - **Порт 17877 занят**: закройте другое приложение на этом порту или запустите CommRelay с другим адресом через `-addr 127.0.0.1:<порт>`.
 - **YouTube OAuth не проходит**: redirect URI в Google Cloud должен точно совпадать с портом из `config.json`.
-- **Нет сообщений YouTube**: нужен активный эфир с включённым live chat.
+- **Нет сообщений YouTube**: нужен активный эфир с включённым live chat; в simple mode проверьте URL видео.
+- **Simple mode не подключается**: YouTube может показать consent/captcha — попробуйте API mode или обновите URL эфира.
 - **macOS не открывает приложение**: ранние сборки не подписаны; используйте **Open** из контекстного меню Finder.
 - **Linux не запускает окно**: установите GTK/WebKit зависимости из раздела Linux.
 
@@ -176,14 +188,22 @@ go build -o comm-relay.exe ./cmd/comm-relay-server
 
 Release workflow собирает desktop-архивы для Windows, macOS и Linux при публикации тега `v*.*.*`, а также доступен вручную через GitHub Actions.
 
-Первый релиз:
+Перед релизом добавляйте пользовательские изменения в секцию **`## [Unreleased]`** в [`CHANGELOG.md`](CHANGELOG.md). При публикации workflow сам:
+
+1. проверит, что в `[Unreleased]` есть записи;
+2. перенесёт их в `## [X.Y.Z] - YYYY-MM-DD`;
+3. создаст пустую секцию `[Unreleased]` для следующего цикла;
+4. закоммитит обновлённый changelog в `main`;
+5. возьмёт текст GitHub Release из новой версионной секции.
+
+Пример:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
-Workflow возьмёт описание релиза из [`CHANGELOG.md`](CHANGELOG.md).
+Если секция для версии уже есть в `CHANGELOG.md`, workflow не дублирует её и только публикует релиз.
 
 ## Поддержка автора
 

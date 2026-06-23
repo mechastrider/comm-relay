@@ -16,6 +16,11 @@
   const youtubeOAuthLabel = document.getElementById("youtube-oauth-label");
   const youtubeDetail = document.getElementById("youtube-detail");
   const youtubeEnabled = document.getElementById("youtube-enabled");
+  const youtubeConnectionMode = document.getElementById("youtube-connection-mode");
+  const youtubeChannelHandle = document.getElementById("youtube-channel-handle");
+  const youtubeVideoInput = document.getElementById("youtube-video-input");
+  const youtubePageFields = document.getElementById("youtube-page-fields");
+  const youtubeApiFields = document.getElementById("youtube-api-fields");
   const youtubeChatMode = document.getElementById("youtube-chat-mode");
   const youtubeClientId = document.getElementById("youtube-client-id");
   const youtubeClientSecret = document.getElementById("youtube-client-secret");
@@ -70,6 +75,9 @@
   const fieldErrors = {
     twitch_channel: document.getElementById("twitch-channel-error"),
     vk_channel: document.getElementById("vk-channel-error"),
+    youtube_video_input: document.getElementById("youtube-video-input-error"),
+    youtube_channel_handle: document.getElementById("youtube-channel-handle-error"),
+    youtube_connection_mode: document.getElementById("youtube-channel-handle-error"),
     overlay_max_messages: document.getElementById("overlay-max-messages-error"),
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
     overlay_font_size_px: document.getElementById("overlay-font-size-error"),
@@ -86,6 +94,8 @@
   const fieldInputs = {
     twitch_channel: twitchChannel,
     vk_channel: vkChannel,
+    youtube_video_input: youtubeVideoInput,
+    youtube_channel_handle: youtubeChannelHandle,
     overlay_max_messages: overlayMaxMessages,
     overlay_message_ttl_seconds: overlayMessageTTL,
     overlay_font_size_px: overlayFontSize,
@@ -378,6 +388,20 @@
     return s.replace(/^[@/]+/, "");
   }
 
+  function updateYouTubeConnectionModeUI() {
+    const isPageMode =
+      youtubeConnectionMode && youtubeConnectionMode.value === "page";
+    if (youtubePageFields) {
+      youtubePageFields.hidden = !isPageMode;
+    }
+    if (youtubeApiFields) {
+      youtubeApiFields.hidden = isPageMode;
+    }
+    if (youtubeConnect) {
+      youtubeConnect.hidden = isPageMode;
+    }
+  }
+
   function readVkSettings() {
     const enabledInput = document.getElementById("vk-enabled");
     const channelInput = document.getElementById("vk-channel");
@@ -487,6 +511,17 @@
 
     if (config.youtube) {
       youtubeEnabled.checked = Boolean(config.youtube.enabled);
+      if (youtubeConnectionMode) {
+        const connectionMode = config.youtube.connection_mode || "api";
+        youtubeConnectionMode.value =
+          connectionMode === "page" ? "page" : "api";
+      }
+      if (youtubeChannelHandle) {
+        youtubeChannelHandle.value = config.youtube.channel_handle || "";
+      }
+      if (youtubeVideoInput) {
+        youtubeVideoInput.value = config.youtube.video_input || "";
+      }
       if (youtubeChatMode) {
         const mode = config.youtube.chat_mode || "stream";
         youtubeChatMode.value =
@@ -495,6 +530,7 @@
       const oauth = config.youtube.oauth || {};
       youtubeClientId.value = oauth.client_id || "";
       youtubeClientSecret.value = "";
+      updateYouTubeConnectionModeUI();
     }
 
     const vk = config.vk || { enabled: false, channel: "" };
@@ -579,6 +615,11 @@
       },
       youtube: {
         enabled: youtubeEnabled.checked,
+        connection_mode: youtubeConnectionMode
+          ? youtubeConnectionMode.value
+          : "api",
+        video_input: youtubeVideoInput ? youtubeVideoInput.value.trim() : "",
+        channel_handle: youtubeChannelHandle ? youtubeChannelHandle.value.trim() : "",
         chat_mode: youtubeChatMode ? youtubeChatMode.value : "stream",
         oauth: {
           client_id: youtubeClientId.value.trim(),
@@ -804,10 +845,26 @@
     const youtube = status.youtube || {};
     renderPlatformStatus(youtubeStatus, youtube);
 
-    if (youtube.oauth_connected) {
-      youtubeOAuthLabel.textContent = "Connected";
+    if (youtube.connection_mode === "page") {
+      if (youtube.channel) {
+        youtubeOAuthLabel.textContent = "Simple · @" + youtube.channel;
+      } else if (youtube.video_id) {
+        youtubeOAuthLabel.textContent = "Simple · " + youtube.video_id;
+      } else {
+        youtubeOAuthLabel.textContent = "Simple (channel or video URL)";
+      }
+      if (youtubeConnect) {
+        youtubeConnect.hidden = true;
+      }
     } else {
-      youtubeOAuthLabel.textContent = "Not connected";
+      if (youtube.oauth_connected) {
+        youtubeOAuthLabel.textContent = "API · Connected";
+      } else {
+        youtubeOAuthLabel.textContent = "API · Not connected";
+      }
+      if (youtubeConnect) {
+        youtubeConnect.hidden = false;
+      }
     }
 
     renderPlatformDetail(youtubeDetail, youtube);
@@ -1694,6 +1751,13 @@
   }
 
   Object.keys(fieldInputs).forEach(bindFieldClear);
+
+  if (youtubeConnectionMode) {
+    youtubeConnectionMode.addEventListener("change", function () {
+      updateYouTubeConnectionModeUI();
+      markSettingsDirty();
+    });
+  }
 
   if (vkChannel) {
     vkChannel.addEventListener("blur", function () {

@@ -9,11 +9,20 @@ const (
 	YouTubeChatModeAuto   = "auto"
 )
 
+// YouTube connection modes.
+const (
+	YouTubeConnectionModeAPI  = "api"
+	YouTubeConnectionModePage = "page"
+)
+
 // YouTubeConfig holds YouTube Live connector and OAuth settings.
 type YouTubeConfig struct {
-	Enabled  bool         `json:"enabled"`
-	ChatMode string       `json:"chat_mode"`
-	OAuth    YouTubeOAuth `json:"oauth"`
+	Enabled        bool         `json:"enabled"`
+	ConnectionMode string       `json:"connection_mode"`
+	VideoInput     string       `json:"video_input"`
+	ChannelHandle  string       `json:"channel_handle"`
+	ChatMode       string       `json:"chat_mode"`
+	OAuth          YouTubeOAuth `json:"oauth"`
 }
 
 // YouTubeOAuth stores Google OAuth client credentials and issued tokens.
@@ -51,13 +60,19 @@ type YouTubeOAuthPublic struct {
 
 // YouTubeConfigPublic is the admin-safe YouTube settings view.
 type YouTubeConfigPublic struct {
-	Enabled  bool               `json:"enabled"`
-	ChatMode string             `json:"chat_mode"`
-	OAuth    YouTubeOAuthPublic `json:"oauth"`
+	Enabled        bool               `json:"enabled"`
+	ConnectionMode string             `json:"connection_mode"`
+	VideoInput     string             `json:"video_input"`
+	ChannelHandle  string             `json:"channel_handle"`
+	ChatMode       string             `json:"chat_mode"`
+	OAuth          YouTubeOAuthPublic `json:"oauth"`
 }
 
 // ApplyYouTubeDefaults fills omitted YouTube settings from older config files.
 func (c *YouTubeConfig) ApplyYouTubeDefaults() {
+	if c.ConnectionMode == "" {
+		c.ConnectionMode = YouTubeConnectionModeAPI
+	}
 	if c.ChatMode == "" {
 		c.ChatMode = YouTubeChatModeStream
 	}
@@ -65,8 +80,11 @@ func (c *YouTubeConfig) ApplyYouTubeDefaults() {
 
 func (c YouTubeConfig) public() YouTubeConfigPublic {
 	return YouTubeConfigPublic{
-		Enabled:  c.Enabled,
-		ChatMode: c.ChatMode,
+		Enabled:        c.Enabled,
+		ConnectionMode: c.ConnectionMode,
+		VideoInput:     c.VideoInput,
+		ChannelHandle:  c.ChannelHandle,
+		ChatMode:       c.ChatMode,
 		OAuth: YouTubeOAuthPublic{
 			ClientID:        c.OAuth.ClientID,
 			HasClientSecret: c.OAuth.ClientSecret != "",

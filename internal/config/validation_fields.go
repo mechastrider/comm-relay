@@ -62,10 +62,19 @@ func (c *Config) validateFields() error {
 	if c.VK.Enabled && strings.TrimSpace(c.VK.Channel) == "" {
 		fields["vk_channel"] = "Channel slug is required when VK Live is enabled."
 	}
+	switch c.YouTube.ConnectionMode {
+	case YouTubeConnectionModeAPI, YouTubeConnectionModePage, "":
+	default:
+		fields["youtube_connection_mode"] = "Choose API (OAuth) or simple (video URL)."
+	}
 	switch c.YouTube.ChatMode {
 	case YouTubeChatModeStream, YouTubeChatModePoll, YouTubeChatModeAuto, "":
 	default:
 		fields["youtube_chat_mode"] = "Choose stream, poll, or auto."
+	}
+	if c.YouTube.Enabled && c.YouTube.ConnectionMode == YouTubeConnectionModePage &&
+		strings.TrimSpace(c.YouTube.VideoInput) == "" && strings.TrimSpace(c.YouTube.ChannelHandle) == "" {
+		fields["youtube_channel_handle"] = "Set a channel handle or live video URL in simple mode."
 	}
 	if c.Logging.RetainSessions < 1 || c.Logging.RetainSessions > 100 {
 		fields["logging_retain_sessions"] = "Keep between 1 and 100 session logs."

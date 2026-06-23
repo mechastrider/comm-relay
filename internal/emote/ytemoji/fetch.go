@@ -12,6 +12,7 @@ import (
 	"github.com/muonsoft/errors"
 
 	"github.com/mechastrider/comm-relay/internal/emote"
+	"github.com/mechastrider/comm-relay/internal/youtube/innertube"
 )
 
 const (
@@ -112,7 +113,7 @@ func FetchChannel(ctx context.Context, client emote.HTTPDoer, videoID string) (m
 		return nil, errors.Errorf("read live chat page: %w", err)
 	}
 
-	initialData, err := extractYTInitialData(string(body))
+	initialData, err := innertube.ExtractInitialData(string(body))
 	if err != nil {
 		return nil, err
 	}
@@ -171,67 +172,6 @@ func firstThumbnailURL(thumbs []struct {
 		}
 	}
 	return ""
-}
-
-func extractYTInitialData(html string) ([]byte, error) {
-	markers := []string{
-		`window["ytInitialData"] = `,
-		`var ytInitialData = `,
-		`ytInitialData = `,
-	}
-
-	start := -1
-	for _, marker := range markers {
-		if idx := strings.Index(html, marker); idx >= 0 {
-			start = idx + len(marker)
-			break
-		}
-	}
-	if start < 0 {
-		return nil, errors.New("ytInitialData not found in live chat page")
-	}
-
-	jsonStart := strings.IndexByte(html[start:], '{')
-	if jsonStart < 0 {
-		return nil, errors.New("ytInitialData json object not found")
-	}
-	start += jsonStart
-
-	depth := 0
-	inString := false
-	escaped := false
-
-	for i := start; i < len(html); i++ {
-		ch := html[i]
-		if inString {
-			if escaped {
-				escaped = false
-				continue
-			}
-			if ch == '\\' {
-				escaped = true
-				continue
-			}
-			if ch == '"' {
-				inString = false
-			}
-			continue
-		}
-
-		switch ch {
-		case '"':
-			inString = true
-		case '{':
-			depth++
-		case '}':
-			depth--
-			if depth == 0 {
-				return []byte(html[start : i+1]), nil
-			}
-		}
-	}
-
-	return nil, errors.New("ytInitialData json object is incomplete")
 }
 
 func parseEmojiRecords(initialData []byte) ([]emojiRecord, error) {

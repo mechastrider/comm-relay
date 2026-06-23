@@ -47,7 +47,9 @@ Only include sections that have content.
 Before finalizing a release entry:
 
 1. Confirm the version and date.
-2. Review the diff or merged task notes.
+2. Add user-facing notes under `## [Unreleased]` in `CHANGELOG.md` (do not create the version heading manually unless re-publishing).
 3. Group changes by user-facing outcome.
 4. Add any install, update, or compatibility notes.
 5. Ensure README release instructions and GitHub workflow artifact names still match the changelog.
+
+On GitHub Release, `.github/workflows/release.yml` runs `scripts/prepare-changelog.sh` to promote `[Unreleased]` to `[X.Y.Z] - date`, commit to `main`, and feed GitHub Release notes from the new section.

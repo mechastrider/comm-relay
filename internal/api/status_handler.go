@@ -6,6 +6,8 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
+	"github.com/mechastrider/comm-relay/internal/youtube/channel"
+	"github.com/mechastrider/comm-relay/internal/youtube/videoid"
 )
 
 type connectorState string
@@ -37,6 +39,8 @@ type statusResponse struct {
 type platformStatusResponse struct {
 	Enabled        bool           `json:"enabled"`
 	Channel        string         `json:"channel,omitempty"`
+	ConnectionMode string         `json:"connection_mode,omitempty"`
+	VideoID        string         `json:"video_id,omitempty"`
 	State          connectorState `json:"state"`
 	OAuthConnected bool           `json:"oauth_connected,omitempty"`
 	Detail         string         `json:"detail,omitempty"`
@@ -101,9 +105,31 @@ func vkStatusResponse(cfg config.Config, registry *status.Registry) platformStat
 }
 
 func youtubeStatusResponse(cfg config.Config, registry *status.Registry) platformStatusResponse {
+	connectionMode := cfg.YouTube.ConnectionMode
+	if connectionMode == "" {
+		connectionMode = config.YouTubeConnectionModeAPI
+	}
+
 	resp := platformStatusResponse{
 		Enabled:        cfg.YouTube.Enabled,
-		OAuthConnected: cfg.YouTube.OAuth.Connected(),
+		ConnectionMode: connectionMode,
+	}
+
+	if connectionMode == config.YouTubeConnectionModePage {
+		if videoID, err := videoid.ParseInput(cfg.YouTube.VideoInput); err == nil {
+			resp.VideoID = videoID
+		}
+		if handle := strings.TrimSpace(cfg.YouTube.ChannelHandle); handle != "" {
+			if ref, err := channel.ParseRef(handle); err == nil {
+				if ref.Handle != "" {
+					resp.Channel = ref.Handle
+				} else {
+					resp.Channel = ref.ChannelID
+				}
+			}
+		}
+	} else {
+		resp.OAuthConnected = cfg.YouTube.OAuth.Connected()
 	}
 
 	if !cfg.YouTube.Enabled {
@@ -117,6 +143,12 @@ func youtubeStatusResponse(cfg config.Config, registry *status.Registry) platfor
 	}
 
 	resp.State = connectorStateDisconnected
+	if connectionMode == config.YouTubeConnectionModePage {
+		if strings.TrimSpace(cfg.YouTube.VideoInput) == "" && strings.TrimSpace(cfg.YouTube.ChannelHandle) == "" {
+			resp.Detail = "Set channel handle or live video URL in admin."
+		}
+		return resp
+	}
 	if !cfg.YouTube.OAuth.Connected() {
 		resp.Detail = "Connect YouTube in admin (OAuth)."
 	}

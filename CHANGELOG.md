@@ -8,17 +8,28 @@
 
 ### Добавлено
 
+- YouTube Live в **простом режиме** (Simple): чтение публичного live chat без Google Cloud и OAuth — через InnerTube API, как веб-плеер YouTube.
+- В админке для YouTube: переключатель **Connection mode** — `API (OAuth)` или `Simple (video URL)`; в simple mode скрываются поля OAuth и выбор транспорта.
+- **Автопоиск эфира по channel handle** (`@name`, URL канала или channel ID): connector сам находит текущий live и периодически проверяет канал, если эфира ещё нет или он завершился.
+- Опциональное поле **Live video URL or ID** в simple mode: при указании URL конкретного эфира автопоиск не используется.
 - В README — раздел «Настройки overlay»: что делают Spacing и Theme, лимит шрифта, шаги Save settings и обновления Browser Source в OBS.
 - В админке, диалог **Overlay**: подсказки к полям, вводный текст и напоминание обновить Browser Source в OBS после сохранения display-настроек.
 
 ### Изменено
 
+- Статус YouTube в админке показывает режим подключения (API / Simple) и handle или video ID, когда это применимо.
+- Release workflow автоматически переносит секцию `[Unreleased]` в версию с датой при публикации GitHub Release.
 - Максимальный размер шрифта overlay увеличен с 32 до 48 px (админка, `config.json`, overlay).
 - В диалоге **Overlay** поле **Layout** переименовано в **Spacing** (Comfortable / Compact), тема **Dashboard text** — в **Text only (no background)**.
 
 ### Исправлено
 
 - Вёрстка диалога **Overlay** в админке: ровная высота полей, отступы и подсказки больше не ломают сетку.
+
+### Известные ограничения
+
+- Simple mode опирается на недокументированный InnerTube API: формат может измениться без предупреждения (аналогично VK Live connector).
+- Для API mode по-прежнему нужен OAuth client в Google Cloud Console.
 
 ## [0.1.1] - 2026-06-13
 
