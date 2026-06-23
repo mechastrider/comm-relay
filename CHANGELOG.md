@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-23
+
 ### Добавлено
 
 - YouTube Live в **простом режиме** (Simple): чтение публичного live chat без Google Cloud и OAuth — через InnerTube API, как веб-плеер YouTube.
