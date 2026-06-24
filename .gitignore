@@ -1,5 +1,6 @@
 config.json
 logs/
+var/
 
 # Application binaries (see README)
 /comm-relay

@@ -48,9 +48,9 @@ func (c *Config) validateFields() error {
 		fields["overlay_display_mode"] = "Choose normal or compact layout."
 	}
 	switch c.Overlay.Theme {
-	case OverlayThemeDefault, OverlayThemeDashboard:
+	case OverlayThemeDefault, OverlayThemeDashboard, OverlayThemeCockpitPanel, OverlayThemeCockpitPopups:
 	default:
-		fields["overlay_theme"] = "Choose default or dashboard theme."
+		fields["overlay_theme"] = "Choose a supported overlay theme."
 	}
 
 	mergeFieldErrors(fields, c.Overlay.ImagePreviews.validateFields())

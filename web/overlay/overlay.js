@@ -9,7 +9,7 @@
   const DEFAULT_DISPLAY_MODE = "normal";
   const DEFAULT_THEME = "default";
   const DISPLAY_MODES = new Set(["normal", "compact"]);
-  const THEMES = new Set(["default", "dashboard"]);
+  const THEMES = new Set(["default", "dashboard", "cockpit_panel", "cockpit_popups"]);
   const INITIAL_RECONNECT_MS = 1000;
   const MAX_RECONNECT_MS = 30000;
   const LEAVE_ANIMATION_MS = 220;
@@ -231,10 +231,13 @@
     document.body.classList.add(
       config.displayMode === "compact" ? "overlay--compact" : "overlay--normal"
     );
-    document.body.classList.remove("overlay-theme--default", "overlay-theme--dashboard");
-    document.body.classList.add(
-      config.theme === "dashboard" ? "overlay-theme--dashboard" : "overlay-theme--default"
+    document.body.classList.remove(
+      "overlay-theme--default",
+      "overlay-theme--dashboard",
+      "overlay-theme--cockpit-panel",
+      "overlay-theme--cockpit-popups"
     );
+    document.body.classList.add("overlay-theme--" + config.theme.replace(/_/g, "-"));
   }
 
   async function loadServerConfig() {
@@ -260,6 +263,7 @@
 
   /** @type {Array<{ el: HTMLElement, ttlTimer: number | null }>} */
   const entries = [];
+  const renderedMessageIDs = new Set();
   let reconnectDelayMs = INITIAL_RECONNECT_MS;
   let reconnectTimer = null;
   let socket = null;
@@ -333,8 +337,42 @@
     }
   }
 
+  function rememberRenderedMessage(frame) {
+    if (frame && typeof frame.id === "string" && frame.id !== "") {
+      renderedMessageIDs.add(frame.id);
+    }
+  }
+
+  function hasRenderedMessage(frame) {
+    return Boolean(
+      frame &&
+        typeof frame.id === "string" &&
+        frame.id !== "" &&
+        renderedMessageIDs.has(frame.id)
+    );
+  }
+
+  function messageTTLMilliseconds(frame) {
+    if (config.messageTTLSeconds <= 0) {
+      return null;
+    }
+
+    const ttlMs = config.messageTTLSeconds * 1000;
+    if (!frame || typeof frame.timestamp !== "string" || frame.timestamp === "") {
+      return ttlMs;
+    }
+
+    const publishedAt = Date.parse(frame.timestamp);
+    if (!Number.isFinite(publishedAt)) {
+      return ttlMs;
+    }
+
+    return Math.max(0, ttlMs - (Date.now() - publishedAt));
+  }
+
   function scrollToBottom() {
     window.requestAnimationFrame(function () {
+      listEl.scrollTop = listEl.scrollHeight;
       window.scrollTo(0, document.body.scrollHeight);
     });
   }
@@ -519,8 +557,11 @@
     el.appendChild(svg);
   }
 
-  function renderMessage(frame) {
+  function renderMessage(frame, options) {
     if (frame.type !== "message") {
+      return;
+    }
+    if (hasRenderedMessage(frame)) {
       return;
     }
 
@@ -532,6 +573,14 @@
           : "";
     const text = typeof frame.message === "string" ? frame.message : "";
     if (user === "" && text === "" && !hasFragments(frame)) {
+      return;
+    }
+    const renderOptions = options || {};
+    const ttlMs =
+      typeof renderOptions.ttlMs === "number"
+        ? renderOptions.ttlMs
+        : messageTTLMilliseconds(frame);
+    if (ttlMs === 0) {
       return;
     }
 
@@ -559,12 +608,13 @@
     listEl.appendChild(row);
 
     let ttlTimer = null;
-    if (config.messageTTLSeconds > 0) {
+    if (ttlMs !== null && ttlMs > 0) {
       ttlTimer = window.setTimeout(function () {
         removeEntryElement(row, true);
-      }, config.messageTTLSeconds * 1000);
+      }, ttlMs);
     }
 
+    rememberRenderedMessage(frame);
     entries.push({ el: row, ttlTimer: ttlTimer });
     trimToLimit();
     scrollToBottom();
@@ -581,6 +631,44 @@
       return;
     }
     renderMessage(frame);
+  }
+
+  function recentMessageToFrame(msg) {
+    if (!msg || typeof msg !== "object") {
+      return null;
+    }
+    return {
+      type: "message",
+      id: typeof msg.id === "string" ? msg.id : "",
+      platform: typeof msg.platform === "string" ? msg.platform : "",
+      user: typeof msg.username === "string" ? msg.username : "",
+      message: typeof msg.message === "string" ? msg.message : "",
+      display_name: typeof msg.display_name === "string" ? msg.display_name : "",
+      avatar_url: typeof msg.avatar_url === "string" ? msg.avatar_url : "",
+      fragments: Array.isArray(msg.fragments) ? msg.fragments : [],
+      timestamp: typeof msg.timestamp === "string" ? msg.timestamp : "",
+    };
+  }
+
+  async function loadRecentMessages() {
+    try {
+      const limit = encodeURIComponent(String(config.maxMessages));
+      const response = await fetch("/api/messages/recent?limit=" + limit);
+      if (!response.ok) {
+        return;
+      }
+      const payload = await response.json();
+      const messages = payload && Array.isArray(payload.messages) ? payload.messages : [];
+      messages.forEach(function (msg) {
+        const frame = recentMessageToFrame(msg);
+        if (!frame) {
+          return;
+        }
+        renderMessage(frame, { ttlMs: messageTTLMilliseconds(frame) });
+      });
+    } catch {
+      /* keep overlay live even if history restore fails */
+    }
   }
 
   function connect() {
@@ -617,5 +705,5 @@
     }
   });
 
-  loadServerConfig().finally(connect);
+  loadServerConfig().then(loadRecentMessages).finally(connect);
 })();

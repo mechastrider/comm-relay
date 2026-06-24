@@ -150,6 +150,26 @@ func TestValidate_WhenOverlayDisplayModeInvalid_ExpectInvalidConfig(t *testing.T
 	require.True(t, errors.Is(err, ErrInvalidConfig))
 }
 
+func TestValidate_WhenOverlayThemeKnown_ExpectValid(t *testing.T) {
+	t.Parallel()
+
+	themes := []string{
+		OverlayThemeDefault,
+		OverlayThemeDashboard,
+		OverlayThemeCockpitPanel,
+		OverlayThemeCockpitPopups,
+	}
+
+	for _, theme := range themes {
+		t.Run(theme, func(t *testing.T) {
+			cfg := Default()
+			cfg.Overlay.Theme = theme
+
+			require.NoError(t, cfg.Validate())
+		})
+	}
+}
+
 func TestValidate_WhenOverlayThemeInvalid_ExpectInvalidConfig(t *testing.T) {
 	t.Parallel()
 

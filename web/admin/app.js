@@ -68,6 +68,7 @@
   const BANNER_SUCCESS_DISMISS_MS = 4000;
   const OVERLAY_FONT_SIZE_MIN = 12;
   const OVERLAY_FONT_SIZE_MAX = 48;
+  const OVERLAY_THEMES = ["default", "dashboard", "cockpit_panel", "cockpit_popups"];
   const INITIAL_WS_RECONNECT_MS = 1000;
   const MAX_WS_RECONNECT_MS = 30000;
   const SIDEBAR_COLLAPSED_KEY = "commRelay.sidebarCollapsed";
@@ -505,8 +506,7 @@
     );
     overlayDisplayMode.value =
       overlay.display_mode === "compact" ? "compact" : "normal";
-    overlayTheme.value =
-      overlay.theme === "dashboard" ? "dashboard" : "default";
+    overlayTheme.value = normalizeOverlayTheme(overlay.theme);
     applyRichChatFromConfig(overlay);
 
     if (config.youtube) {
@@ -601,8 +601,14 @@
       next.font_size_px !==
         (typeof prev.font_size_px === "number" ? prev.font_size_px : 18) ||
       next.display_mode !== (prev.display_mode === "compact" ? "compact" : "normal") ||
-      next.theme !== (prev.theme === "dashboard" ? "dashboard" : "default")
+      next.theme !== normalizeOverlayTheme(prev.theme)
     );
+  }
+
+  function normalizeOverlayTheme(raw) {
+    return typeof raw === "string" && OVERLAY_THEMES.indexOf(raw) !== -1
+      ? raw
+      : "default";
   }
 
   function buildPayload() {
@@ -709,10 +715,9 @@
     }
 
     if (
-      payload.overlay.theme !== "default" &&
-      payload.overlay.theme !== "dashboard"
+      OVERLAY_THEMES.indexOf(payload.overlay.theme) === -1
     ) {
-      setFieldError("overlay_theme", "Choose default or text-only theme.");
+      setFieldError("overlay_theme", "Choose a supported overlay theme.");
       firstInvalid = firstInvalid || overlayTheme;
     }
 
