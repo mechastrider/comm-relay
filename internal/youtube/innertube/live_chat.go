@@ -254,12 +254,12 @@ func textFromRuns(value any) (display string, raw string) {
 		if !ok {
 			continue
 		}
-		if text := stringField(runObj, "text"); text != "" {
+		if text := runText(runObj); text != "" {
 			parts = append(parts, text)
 			continue
 		}
 		if emoji, ok := runObj["emoji"].(map[string]any); ok {
-			if shortcut := stringField(emoji, "shortcut"); shortcut != "" {
+			if shortcut := shortcutFromEmoji(emoji); shortcut != "" {
 				parts = append(parts, shortcut)
 			} else if text := simpleText(emoji["image"]); text != "" {
 				parts = append(parts, text)
@@ -268,6 +268,44 @@ func textFromRuns(value any) (display string, raw string) {
 	}
 	joined := strings.Join(parts, "")
 	return joined, joined
+}
+
+func runText(run map[string]any) string {
+	raw, ok := run["text"]
+	if !ok {
+		return ""
+	}
+	text, ok := raw.(string)
+	if !ok {
+		return ""
+	}
+	return text
+}
+
+func shortcutFromEmoji(emoji map[string]any) string {
+	if shortcut := stringField(emoji, "shortcut"); shortcut != "" {
+		return shortcut
+	}
+
+	if rawShortcuts, ok := emoji["shortcuts"].([]any); ok {
+		for _, raw := range rawShortcuts {
+			shortcut, ok := raw.(string)
+			if !ok {
+				continue
+			}
+			shortcut = strings.TrimSpace(shortcut)
+			if shortcut != "" {
+				return shortcut
+			}
+		}
+	}
+
+	emojiID := stringField(emoji, "emojiId")
+	if strings.HasPrefix(emojiID, ":") && strings.HasSuffix(emojiID, ":") {
+		return emojiID
+	}
+
+	return ""
 }
 
 func simpleText(value any) string {

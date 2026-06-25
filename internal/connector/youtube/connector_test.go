@@ -14,6 +14,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/connector/youtube/grpcproto"
+	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
 	"github.com/mechastrider/comm-relay/internal/youtube/channel"
 	"github.com/mechastrider/comm-relay/internal/youtube/innertube"
 )
@@ -143,6 +144,49 @@ func TestConnectorRunPageSession_WhenMessagesReturned_ExpectPublish(t *testing.T
 
 	require.NoError(t, connector.runPageSession(ctx, "dQw4w9WgXcQ"))
 	require.Equal(t, []string{"msg-1"}, collectMessageIDs(events))
+}
+
+func TestConnectorRunPageSession_WhenYouTubeEmojiShortcutReturned_ExpectEmoteFragments(t *testing.T) {
+	eventBus := bus.New(8)
+	events, unsub := eventBus.Subscribe()
+	defer unsub()
+
+	store := testStore(t, config.YouTubeConfig{
+		Enabled:        true,
+		ConnectionMode: config.YouTubeConnectionModePage,
+		VideoInput:     "dQw4w9WgXcQ",
+	})
+	connector := New(eventBus, store, status.NewRegistry(), ytemoji.NewCatalog(), nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	connector.newPageClient = func() pageChatClient {
+		return &fakePageChatClient{
+			cancel: cancel,
+			items: []innertube.LiveChatItem{
+				{
+					ID:          "msg-emoji",
+					UserID:      "UC123",
+					DisplayName: "Viewer",
+					Message:     "hello :face-blue-smiling:",
+					MessageText: "hello :face-blue-smiling:",
+				},
+			},
+		}
+	}
+
+	require.NoError(t, connector.runPageSession(ctx, "dQw4w9WgXcQ"))
+
+	messages := collectMessages(events)
+	require.Len(t, messages, 1)
+	require.Len(t, messages[0].Fragments, 2)
+	require.Equal(t, bus.FragmentTypeText, messages[0].Fragments[0].Type)
+	require.Equal(t, "hello ", messages[0].Fragments[0].Text)
+	require.Equal(t, bus.FragmentTypeEmote, messages[0].Fragments[1].Type)
+	require.Equal(t, ":face-blue-smiling:", messages[0].Fragments[1].Text)
+	require.Equal(t, ytemoji.ProviderID, messages[0].Fragments[1].Provider)
+	require.NotEmpty(t, messages[0].Fragments[1].URL)
 }
 
 func TestConnectorRunSession_WhenLiveChatReturnsDuplicateIDs_ExpectSinglePublish(t *testing.T) {
@@ -320,6 +364,18 @@ func collectMessageIDs(events <-chan bus.Event) []string {
 			ids = append(ids, ev.Message.ID)
 		default:
 			return ids
+		}
+	}
+}
+
+func collectMessages(events <-chan bus.Event) []bus.ChatMessage {
+	var messages []bus.ChatMessage
+	for {
+		select {
+		case ev := <-events:
+			messages = append(messages, ev.Message)
+		default:
+			return messages
 		}
 	}
 }
