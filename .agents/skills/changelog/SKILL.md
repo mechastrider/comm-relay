@@ -38,6 +38,8 @@ Only include sections that have content.
 
 - Write for streamers and users first, maintainers second.
 - Describe behavior and impact, not implementation trivia.
+- Before appending a new `[Unreleased]` bullet, scan existing `[Unreleased]` entries. If the work refines, renames, or extends an unreleased feature already listed, edit that existing bullet instead of adding a separate one.
+- Add a new `[Unreleased]` bullet only for a distinct user-facing change, or when no existing unreleased entry can naturally absorb it.
 - Mention setup or migration steps explicitly when users must do something after updating.
 - Keep known limitations honest: unsigned builds, OAuth setup, platform dependencies, or manual smoke gaps belong in release notes.
 - Do not include secrets, local paths with usernames, or noisy internal file lists.
