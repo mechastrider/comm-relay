@@ -69,7 +69,7 @@
 
           <div class="control-grid">
             <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
-            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
+            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">OBS</button>
             <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
             <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
           </div>
@@ -247,13 +247,92 @@
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>
-            <span class="dialog-kicker">Configuration</span>
-            <h2 id="overlay-heading">Overlay</h2>
+            <span class="dialog-kicker">Streaming integration</span>
+            <h2 id="overlay-heading">OBS</h2>
           </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close overlay settings">Close</button>
+          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close OBS settings">Close</button>
         </div>
 
-        <div class="overlay-editor">
+        <div class="obs-dialog-body">
+          <div class="obs-tabs" role="tablist" aria-label="OBS sections">
+            <button id="obs-setup-tab" class="obs-tab" type="button" role="tab" aria-selected="true" aria-controls="obs-setup-panel" data-obs-section="setup">Setup</button>
+            <button id="obs-appearance-tab" class="obs-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-appearance-panel" tabindex="-1" data-obs-section="appearance">Appearance</button>
+          </div>
+
+          <section id="obs-setup-panel" class="obs-tab-panel obs-setup" role="tabpanel" aria-labelledby="obs-setup-tab">
+            <div class="obs-setup-intro">
+              <span class="dialog-kicker">Ready to paste</span>
+              <h3>Connect CommRelay to OBS</h3>
+              <p>Choose where messages should appear. URLs use the address currently serving CommRelay, so custom ports are included automatically.</p>
+            </div>
+
+            <div class="obs-integration-grid">
+              <article class="obs-integration-card" aria-labelledby="obs-overlay-card-heading">
+                <div class="obs-integration-card__header">
+                  <div>
+                    <span class="obs-integration-card__eyebrow">Browser Source</span>
+                    <h3 id="obs-overlay-card-heading">On-stream overlay</h3>
+                  </div>
+                  <span class="obs-audience-badge obs-audience-badge--live">Visible to viewers</span>
+                </div>
+                <p class="obs-integration-card__summary">Adds chat messages to the scene output seen by your audience.</p>
+
+                <div class="obs-url-field">
+                  <label for="obs-overlay-url">Overlay URL</label>
+                  <div class="obs-url-row">
+                    <input id="obs-overlay-url" type="text" readonly value="/overlay" data-obs-url-path="/overlay">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-overlay-url" data-copy-label="Overlay URL">Copy URL</button>
+                  </div>
+                </div>
+
+                <ol class="obs-setup-steps">
+                  <li>In OBS Sources, add a <strong>Browser</strong> source.</li>
+                  <li>Paste the URL above into its URL field.</li>
+                  <li>Set the source width and height for your scene.</li>
+                  <li>Keep CommRelay running while you stream.</li>
+                </ol>
+
+                <div class="obs-integration-actions">
+                  <a id="obs-overlay-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener">Open overlay</a>
+                  <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance">Customize appearance</button>
+                </div>
+              </article>
+
+              <article class="obs-integration-card" aria-labelledby="obs-dock-card-heading">
+                <div class="obs-integration-card__header">
+                  <div>
+                    <span class="obs-integration-card__eyebrow">Custom Browser Dock</span>
+                    <h3 id="obs-dock-card-heading">Message dock</h3>
+                  </div>
+                  <span class="obs-audience-badge">Only visible to you</span>
+                </div>
+                <p class="obs-integration-card__summary">Keeps a compact message journal inside the OBS interface without adding it to the scene.</p>
+
+                <div class="obs-url-field">
+                  <label for="obs-dock-url">Message dock URL</label>
+                  <div class="obs-url-row">
+                    <input id="obs-dock-url" type="text" readonly value="/dock/messages" data-obs-url-path="/dock/messages">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-dock-url" data-copy-label="Message dock URL">Copy URL</button>
+                  </div>
+                </div>
+
+                <ol class="obs-setup-steps">
+                  <li>Open <strong>View → Docks → Custom Browser Docks…</strong> in OBS.</li>
+                  <li>Enter a dock name and paste the URL above.</li>
+                  <li>Apply the change and place the dock where it is convenient.</li>
+                </ol>
+
+                <div class="obs-integration-actions">
+                  <a id="obs-dock-open" class="button-secondary button-secondary--small" href="/dock/messages" target="_blank" rel="noopener">Open message dock</a>
+                </div>
+              </article>
+            </div>
+
+            <p id="obs-copy-status" class="obs-copy-status" role="status" aria-live="polite"></p>
+          </section>
+
+          <section id="obs-appearance-panel" class="obs-tab-panel obs-tab-panel--appearance" role="tabpanel" aria-labelledby="obs-appearance-tab" hidden>
+            <div class="overlay-editor">
           <section class="panel overlay-settings-panel" aria-labelledby="overlay-display-heading">
             <div class="panel__header">
               <h3 id="overlay-display-heading">Display</h3>
@@ -368,10 +447,12 @@
             <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
           </section>
         </div>
+          </section>
+        </div>
 
         <div class="dialog-actions">
           <button class="btn-physical" type="button" data-dialog-close>Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button data-obs-appearance-only disabled hidden>Save settings</button>
         </div>
       </div>
     </dialog>

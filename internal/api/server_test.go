@@ -26,6 +26,15 @@ func TestNewHandlerRoutes(t *testing.T) {
 		require.Contains(t, rec.Body.String(), "CommRelay")
 		require.Contains(t, rec.Body.String(), "/favicon.svg")
 		require.Contains(t, rec.Body.String(), "app.js")
+		require.Contains(t, rec.Body.String(), `id="obs-setup-panel"`)
+		require.Contains(t, rec.Body.String(), `data-copy-obs-url="obs-overlay-url"`)
+		require.Contains(t, rec.Body.String(), `/dock/messages`)
+
+		jsRec := httptest.NewRecorder()
+		handler.ServeHTTP(jsRec, httptest.NewRequest(http.MethodGet, "/app.js", nil))
+		require.Equal(t, http.StatusOK, jsRec.Code)
+		require.Contains(t, jsRec.Body.String(), "setOBSSection")
+		require.Contains(t, jsRec.Body.String(), "navigator.clipboard")
 	})
 
 	t.Run("favicon", func(t *testing.T) {

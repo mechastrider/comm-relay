@@ -52,6 +52,13 @@
   const overlayPreviewReplay = document.getElementById("overlay-preview-replay");
   const overlayPreviewOpen = document.getElementById("overlay-preview-open");
   const overlayPreviewNote = document.getElementById("overlay-preview-note");
+  const obsSetupTab = document.getElementById("obs-setup-tab");
+  const obsAppearanceTab = document.getElementById("obs-appearance-tab");
+  const obsSetupPanel = document.getElementById("obs-setup-panel");
+  const obsAppearancePanel = document.getElementById("obs-appearance-panel");
+  const obsCopyStatus = document.getElementById("obs-copy-status");
+  const obsOverlayOpen = document.getElementById("obs-overlay-open");
+  const obsDockOpen = document.getElementById("obs-dock-open");
   const emotesTwitch = document.getElementById("emotes-twitch");
   const emotesYouTube = document.getElementById("emotes-youtube");
   const emotesVK = document.getElementById("emotes-vk");
@@ -167,9 +174,157 @@
   let overlayPreviewRefreshTimer = null;
   let overlayPreviewRevision = 0;
   let overlayPreviewResizeObserver = null;
+  let obsCopyFeedbackTimer = null;
+  let obsCopyFeedbackButton = null;
 
   function apiURL(path) {
     return window.location.origin + path;
+  }
+
+  function updateOBSSetupURLs() {
+    document.querySelectorAll("[data-obs-url-path]").forEach(function (input) {
+      input.value = apiURL(input.dataset.obsUrlPath || "/");
+    });
+    if (obsOverlayOpen) {
+      obsOverlayOpen.href = apiURL("/overlay");
+    }
+    if (obsDockOpen) {
+      obsDockOpen.href = apiURL("/dock/messages");
+    }
+  }
+
+  function resetOBSCopyFeedback() {
+    if (obsCopyFeedbackTimer !== null) {
+      window.clearTimeout(obsCopyFeedbackTimer);
+      obsCopyFeedbackTimer = null;
+    }
+    if (obsCopyFeedbackButton) {
+      obsCopyFeedbackButton.textContent = obsCopyFeedbackButton.dataset.copyDefaultText || "Copy URL";
+      obsCopyFeedbackButton = null;
+    }
+  }
+
+  function showOBSCopyFeedback(button, message, copied) {
+    resetOBSCopyFeedback();
+    button.dataset.copyDefaultText = button.dataset.copyDefaultText || button.textContent;
+    button.textContent = copied ? "Copied" : "Copy failed";
+    obsCopyFeedbackButton = button;
+    if (obsCopyStatus) {
+      obsCopyStatus.textContent = message;
+      obsCopyStatus.classList.toggle("obs-copy-status--error", !copied);
+    }
+    obsCopyFeedbackTimer = window.setTimeout(function () {
+      resetOBSCopyFeedback();
+    }, 2500);
+  }
+
+  function fallbackCopyFromInput(input) {
+    try {
+      input.focus();
+      input.select();
+      input.setSelectionRange(0, input.value.length);
+      const copied = document.execCommand("copy");
+      if (copied) {
+        input.setSelectionRange(0, 0);
+      }
+      return copied;
+    } catch {
+      return false;
+    }
+  }
+
+  async function copyOBSURL(input) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      try {
+        await navigator.clipboard.writeText(input.value);
+        return true;
+      } catch {
+        return fallbackCopyFromInput(input);
+      }
+    }
+    return fallbackCopyFromInput(input);
+  }
+
+  function setOBSSection(section, options) {
+    if (!obsSetupTab || !obsAppearanceTab || !obsSetupPanel || !obsAppearancePanel) {
+      return;
+    }
+    const showAppearance = section === "appearance";
+    obsSetupTab.setAttribute("aria-selected", showAppearance ? "false" : "true");
+    obsSetupTab.tabIndex = showAppearance ? -1 : 0;
+    obsAppearanceTab.setAttribute("aria-selected", showAppearance ? "true" : "false");
+    obsAppearanceTab.tabIndex = showAppearance ? 0 : -1;
+    obsSetupPanel.hidden = showAppearance;
+    obsAppearancePanel.hidden = !showAppearance;
+    document.querySelectorAll("[data-obs-appearance-only]").forEach(function (element) {
+      element.hidden = !showAppearance;
+    });
+
+    if (overlayDialog && overlayDialog.open) {
+      if (showAppearance) {
+        mountOverlayPreview();
+      } else {
+        unmountOverlayPreview();
+      }
+    }
+
+    if (options && options.focusTab) {
+      (showAppearance ? obsAppearanceTab : obsSetupTab).focus();
+    }
+  }
+
+  function initOBSSetup() {
+    if (!overlayDialog || !obsSetupTab || !obsAppearanceTab) {
+      return;
+    }
+
+    updateOBSSetupURLs();
+    setOBSSection("setup");
+
+    overlayDialog.querySelectorAll("[data-obs-section]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        setOBSSection(button.dataset.obsSection, {
+          focusTab: button.getAttribute("role") !== "tab",
+        });
+      });
+    });
+
+    [obsSetupTab, obsAppearanceTab].forEach(function (tab) {
+      tab.addEventListener("keydown", function (event) {
+        if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(event.key) === -1) {
+          return;
+        }
+        event.preventDefault();
+        const showAppearance = event.key === "ArrowRight" || event.key === "End";
+        setOBSSection(showAppearance ? "appearance" : "setup", { focusTab: true });
+      });
+    });
+
+    overlayDialog.querySelectorAll("[data-copy-obs-url]").forEach(function (button) {
+      button.addEventListener("click", async function () {
+        const input = document.getElementById(button.dataset.copyObsUrl);
+        if (!input) {
+          return;
+        }
+        const copied = await copyOBSURL(input);
+        const label = button.dataset.copyLabel || "URL";
+        showOBSCopyFeedback(
+          button,
+          copied
+            ? label + " copied. Paste it into OBS."
+            : "Could not copy automatically. Select the URL and copy it manually.",
+          copied
+        );
+      });
+    });
+
+    overlayDialog.addEventListener("close", function () {
+      resetOBSCopyFeedback();
+      if (obsCopyStatus) {
+        obsCopyStatus.textContent = "";
+        obsCopyStatus.classList.remove("obs-copy-status--error");
+      }
+    });
   }
 
   function positionErrorPopover(trigger) {
@@ -474,6 +629,9 @@
     const dialog = el.closest("dialog");
     if (dialog && typeof dialog.showModal === "function" && !dialog.open) {
       dialog.showModal();
+    }
+    if (dialog === overlayDialog) {
+      setOBSSection("appearance");
     }
   }
 
@@ -2407,7 +2565,8 @@
         if (dialog && typeof dialog.showModal === "function") {
           dialog.showModal();
           if (dialog === overlayDialog) {
-            mountOverlayPreview();
+            updateOBSSetupURLs();
+            setOBSSection("setup");
           }
         }
       });
@@ -2469,6 +2628,7 @@
   handleOAuthQuery();
   initSidebarToggle();
   initOverlayPreview();
+  initOBSSetup();
   initSettingsDialogs();
   initMessageSoundControls();
 
