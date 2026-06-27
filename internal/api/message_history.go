@@ -10,7 +10,7 @@ import (
 
 const defaultRecentMessageCapacity = 100
 
-// MessageHistory keeps the most recent chat messages for the admin panel.
+// MessageHistory keeps the most recent chat messages for admin and OBS dock clients.
 type MessageHistory struct {
 	mu       sync.RWMutex
 	messages []bus.ChatMessage

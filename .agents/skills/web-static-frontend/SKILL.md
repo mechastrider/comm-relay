@@ -18,6 +18,10 @@ web/
 │   ├── index.html
 │   ├── app.js          # status, config, OAuth links
 │   └── styles.css
+├── dock/
+│   ├── index.html
+│   ├── messages.js     # recent history + live WebSocket messages
+│   └── messages.css    # compact dark OBS dock layout
 └── overlay/
     ├── index.html
     ├── overlay.js      # WebSocket client, message list DOM
@@ -38,6 +42,13 @@ web/
 - Show per-platform connection state (connected / reconnecting / error).
 - Link to OAuth start URL for YouTube; show channel name when configured.
 - Keep layout usable at ~1280px width; no marketing chrome.
+
+## OBS message dock
+
+- Serve the messages-only operator view at `/dock/messages`.
+- Keep the dock useful at narrow widths and separate from the scene overlay.
+- Restore recent messages, then consume live messages from `/ws` with reconnect.
+- Preserve manual scroll position while the operator reads older messages.
 
 ## JavaScript style
 

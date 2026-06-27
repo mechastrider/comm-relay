@@ -51,4 +51,25 @@ func TestNewHandlerRoutes(t *testing.T) {
 		require.Equal(t, http.StatusOK, cssRec.Code)
 		require.Contains(t, cssRec.Body.String(), "background: transparent")
 	})
+
+	t.Run("message dock", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/dock/messages", nil))
+		require.Equal(t, http.StatusOK, rec.Code)
+		body := rec.Body.String()
+		require.Contains(t, body, "/dock/messages/messages.css")
+		require.Contains(t, body, "/dock/messages/messages.js")
+		require.Contains(t, body, `id="messages"`)
+
+		cssRec := httptest.NewRecorder()
+		handler.ServeHTTP(cssRec, httptest.NewRequest(http.MethodGet, "/dock/messages/messages.css", nil))
+		require.Equal(t, http.StatusOK, cssRec.Code)
+		require.Contains(t, cssRec.Body.String(), "color-scheme: dark")
+
+		jsRec := httptest.NewRecorder()
+		handler.ServeHTTP(jsRec, httptest.NewRequest(http.MethodGet, "/dock/messages/messages.js", nil))
+		require.Equal(t, http.StatusOK, jsRec.Code)
+		require.Contains(t, jsRec.Body.String(), "/api/messages/recent")
+		require.Contains(t, jsRec.Body.String(), "/ws")
+	})
 }

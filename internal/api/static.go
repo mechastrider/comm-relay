@@ -14,6 +14,7 @@ import (
 
 type staticRoots struct {
 	admin   fs.FS
+	dock    fs.FS
 	overlay fs.FS
 }
 
@@ -26,17 +27,26 @@ func resolveStaticRoots(webRoot string) (staticRoots, error) {
 	if err != nil {
 		return staticRoots{}, errors.Errorf("embedded admin assets: %w", err)
 	}
+	dock, err := fs.Sub(webstatic.FS, "dock")
+	if err != nil {
+		return staticRoots{}, errors.Errorf("embedded dock assets: %w", err)
+	}
 	overlay, err := fs.Sub(webstatic.FS, "overlay")
 	if err != nil {
 		return staticRoots{}, errors.Errorf("embedded overlay assets: %w", err)
 	}
 
-	return staticRoots{admin: admin, overlay: overlay}, nil
+	return staticRoots{admin: admin, dock: dock, overlay: overlay}, nil
 }
 
 func staticRootsFromDisk(webRoot string) (staticRoots, error) {
 	adminDir := filepath.Join(webRoot, "admin")
 	if _, err := os.Stat(filepath.Join(adminDir, "index.html")); err != nil {
+		return staticRoots{}, err
+	}
+
+	dockDir := filepath.Join(webRoot, "dock")
+	if _, err := os.Stat(filepath.Join(dockDir, "index.html")); err != nil {
 		return staticRoots{}, err
 	}
 
@@ -47,6 +57,7 @@ func staticRootsFromDisk(webRoot string) (staticRoots, error) {
 
 	return staticRoots{
 		admin:   os.DirFS(adminDir),
+		dock:    os.DirFS(dockDir),
 		overlay: os.DirFS(overlayDir),
 	}, nil
 }
