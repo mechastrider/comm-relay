@@ -61,6 +61,7 @@
   const messageSoundVolumeLabel = document.getElementById("message-sound-volume-label");
   const messageSoundTypeInput = document.getElementById("message-sound-type");
   const testMessageSound = document.getElementById("test-message-sound");
+  const statusErrorPopover = document.getElementById("status-error-popover");
 
   const MESSAGE_SOUND_TYPES = ["chime", "ping", "soft", "alert"];
   const RECENT_MESSAGE_LIMIT = 20;
@@ -132,10 +133,123 @@
   let wsReconnectTimer = null;
   let audioCtx = null;
   let bannerTimer = null;
+  let activeErrorTrigger = null;
+  let errorPopoverPinned = false;
 
   function apiURL(path) {
     return window.location.origin + path;
   }
+
+  function positionErrorPopover(trigger) {
+    if (!statusErrorPopover || statusErrorPopover.hidden) {
+      return;
+    }
+
+    const viewportGap = 12;
+    const triggerGap = 7;
+    const triggerRect = trigger.getBoundingClientRect();
+    const popoverRect = statusErrorPopover.getBoundingClientRect();
+    let left = triggerRect.right - popoverRect.width;
+    let top = triggerRect.bottom + triggerGap;
+
+    left = Math.max(
+      viewportGap,
+      Math.min(left, window.innerWidth - popoverRect.width - viewportGap)
+    );
+    if (top + popoverRect.height > window.innerHeight - viewportGap) {
+      top = Math.max(viewportGap, triggerRect.top - popoverRect.height - triggerGap);
+    }
+
+    statusErrorPopover.style.left = Math.round(left) + "px";
+    statusErrorPopover.style.top = Math.round(top) + "px";
+  }
+
+  function hideErrorPopover() {
+    if (activeErrorTrigger) {
+      activeErrorTrigger.setAttribute("aria-expanded", "false");
+    }
+    activeErrorTrigger = null;
+    errorPopoverPinned = false;
+    if (!statusErrorPopover) {
+      return;
+    }
+    statusErrorPopover.hidden = true;
+    statusErrorPopover.textContent = "";
+    statusErrorPopover.style.left = "";
+    statusErrorPopover.style.top = "";
+  }
+
+  function showErrorPopover(trigger, pin) {
+    if (!statusErrorPopover || !trigger) {
+      return;
+    }
+    if (activeErrorTrigger === trigger && errorPopoverPinned && !pin) {
+      return;
+    }
+    if (activeErrorTrigger && activeErrorTrigger !== trigger) {
+      activeErrorTrigger.setAttribute("aria-expanded", "false");
+    }
+
+    activeErrorTrigger = trigger;
+    errorPopoverPinned = Boolean(pin);
+    trigger.setAttribute("aria-expanded", "true");
+    statusErrorPopover.textContent = trigger.dataset.errorText || "";
+    statusErrorPopover.hidden = false;
+    positionErrorPopover(trigger);
+  }
+
+  function createErrorDetailTrigger(errorText, contextLabel) {
+    const trigger = document.createElement("button");
+    trigger.className = "error-detail-trigger";
+    trigger.type = "button";
+    trigger.textContent = "Error";
+    trigger.dataset.errorText = "Last error: " + errorText;
+    trigger.setAttribute("aria-label", contextLabel + " technical error details");
+    trigger.setAttribute("aria-controls", "status-error-popover");
+    trigger.setAttribute("aria-describedby", "status-error-popover");
+    trigger.setAttribute("aria-expanded", "false");
+
+    trigger.addEventListener("mouseenter", function () {
+      showErrorPopover(trigger, false);
+    });
+    trigger.addEventListener("mouseleave", function () {
+      if (!errorPopoverPinned && document.activeElement !== trigger) {
+        hideErrorPopover();
+      }
+    });
+    trigger.addEventListener("focus", function () {
+      showErrorPopover(trigger, false);
+    });
+    trigger.addEventListener("blur", function () {
+      hideErrorPopover();
+    });
+    trigger.addEventListener("click", function () {
+      if (activeErrorTrigger === trigger && errorPopoverPinned) {
+        hideErrorPopover();
+        return;
+      }
+      showErrorPopover(trigger, true);
+    });
+
+    return trigger;
+  }
+
+  document.addEventListener("pointerdown", function (event) {
+    if (
+      errorPopoverPinned &&
+      activeErrorTrigger &&
+      event.target !== activeErrorTrigger
+    ) {
+      hideErrorPopover();
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && activeErrorTrigger) {
+      hideErrorPopover();
+    }
+  });
+  window.addEventListener("resize", hideErrorPopover);
+  window.addEventListener("scroll", hideErrorPopover, true);
 
   function showBanner(kind, message) {
     if (bannerTimer) {
@@ -813,13 +927,10 @@
     return " · " + String(count) + " msg";
   }
 
-  function platformDetailText(platform) {
+  function platformSummaryText(platform) {
     const parts = [];
     if (typeof platform.detail === "string" && platform.detail !== "") {
       parts.push(platform.detail);
-    }
-    if (typeof platform.last_error === "string" && platform.last_error !== "") {
-      parts.push("Last error: " + platform.last_error);
     }
     const countSuffix = formatMessageCount(platform.message_count);
     if (countSuffix !== "") {
@@ -828,24 +939,39 @@
     return parts.join(" ");
   }
 
-  function renderPlatformDetail(el, platform) {
-    const text = platformDetailText(platform);
+  function renderPlatformDetail(el, platform, platformLabel) {
+    const summary = platformSummaryText(platform);
+    const lastError =
+      typeof platform.last_error === "string" ? platform.last_error.trim() : "";
     if (!el) {
       return;
     }
-    if (text !== "") {
-      el.hidden = false;
-      el.textContent = text;
+    const renderKey = summary + "\0" + lastError;
+    if (el.dataset.renderKey === renderKey) {
       return;
     }
-    el.hidden = true;
-    el.textContent = "";
+    if (activeErrorTrigger && el.contains(activeErrorTrigger)) {
+      hideErrorPopover();
+    }
+
+    el.dataset.renderKey = renderKey;
+    el.replaceChildren();
+    if (summary !== "") {
+      const summaryText = document.createElement("span");
+      summaryText.className = "status-detail__summary";
+      summaryText.textContent = summary;
+      el.appendChild(summaryText);
+    }
+    if (lastError !== "") {
+      el.appendChild(createErrorDetailTrigger(lastError, platformLabel));
+    }
+    el.hidden = summary === "" && lastError === "";
   }
 
   function renderStatus(status) {
     const twitch = status.twitch || {};
     renderPlatformStatus(twitchStatus, twitch);
-    renderPlatformDetail(twitchDetail, twitch);
+    renderPlatformDetail(twitchDetail, twitch, "Twitch");
 
     const youtube = status.youtube || {};
     renderPlatformStatus(youtubeStatus, youtube);
@@ -872,11 +998,11 @@
       }
     }
 
-    renderPlatformDetail(youtubeDetail, youtube);
+    renderPlatformDetail(youtubeDetail, youtube, "YouTube");
 
     const vk = status.vk || {};
     renderPlatformStatus(vkStatus, vk);
-    renderPlatformDetail(vkDetail, vk);
+    renderPlatformDetail(vkDetail, vk, "VK Live");
   }
 
   function formatUptime(seconds) {
@@ -928,6 +1054,10 @@
         emoteCacheEntries.textContent = "-";
       }
       if (emoteProviderList) {
+        if (activeErrorTrigger && emoteProviderList.contains(activeErrorTrigger)) {
+          hideErrorPopover();
+        }
+        emoteProviderList.dataset.renderKey = "";
         emoteProviderList.textContent = "";
       }
       return;
@@ -947,6 +1077,14 @@
       return;
     }
 
+    const renderKey = JSON.stringify(emoteCache);
+    if (emoteProviderList.dataset.renderKey === renderKey) {
+      return;
+    }
+    if (activeErrorTrigger && emoteProviderList.contains(activeErrorTrigger)) {
+      hideErrorPopover();
+    }
+    emoteProviderList.dataset.renderKey = renderKey;
     emoteProviderList.textContent = "";
     const providers = emoteCache.providers || {};
     const keys = Object.keys(providers).sort();
@@ -977,10 +1115,9 @@
       item.appendChild(stats);
 
       if (typeof snap.last_error === "string" && snap.last_error !== "") {
-        const err = document.createElement("p");
-        err.className = "provider-list__error";
-        appendText(err, "Last error: " + snap.last_error);
-        item.appendChild(err);
+        item.appendChild(
+          createErrorDetailTrigger(snap.last_error, (PROVIDER_LABELS[key] || key) + " emotes")
+        );
       }
 
       emoteProviderList.appendChild(item);

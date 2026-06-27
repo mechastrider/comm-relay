@@ -64,7 +64,7 @@ func (r *Refresher) refreshActive(ctx context.Context) {
 	for _, provider := range providers {
 		for _, scope := range scopes {
 			if err := r.cache.Refresh(ctx, provider, scope); err != nil {
-				clog.Debug(ctx, "emote metadata refresh failed",
+				clog.Warn(ctx, "emote metadata refresh failed",
 					slog.String("provider", string(provider)),
 					slog.String("scope", string(scope.Kind)),
 					slog.Any("error", err),

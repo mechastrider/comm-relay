@@ -56,7 +56,7 @@
         </div>
       </section>
 
-      <aside class="systems-panel" aria-labelledby="systems-heading">
+      <aside class="systems-panel" aria-labelledby="controls-heading">
         <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="systems-content" aria-expanded="true" aria-label="Collapse systems panel">
           <span class="sidebar-toggle__chevron" aria-hidden="true">&gt;</span>
           <span class="sidebar-toggle__label" aria-hidden="true">Controls</span>
@@ -64,6 +64,17 @@
 
         <div id="systems-content" class="systems-panel__content">
           <div class="panel-heading">
+            <h2 id="controls-heading">Controls</h2>
+          </div>
+
+          <div class="control-grid">
+            <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
+            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
+            <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
+            <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
+          </div>
+
+          <div class="panel-heading panel-heading--spaced">
             <h2 id="systems-heading">Systems</h2>
           </div>
 
@@ -91,17 +102,6 @@
             </div>
           </dl>
           <ul id="emote-provider-list" class="provider-list" aria-label="Emote provider status"></ul>
-
-          <div class="panel-heading panel-heading--spaced">
-            <h2>Controls</h2>
-          </div>
-
-          <div class="control-grid">
-            <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
-            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
-            <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
-            <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
-          </div>
         </div>
       </aside>
     </main>
@@ -476,6 +476,8 @@
     </dialog>
   </form>
 
-  <script src="app.js?v=7"></script>
+  <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
+
+  <script src="app.js?v=8"></script>
 </body>
 </html>
