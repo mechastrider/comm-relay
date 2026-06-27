@@ -13,9 +13,13 @@
   const INITIAL_RECONNECT_MS = 1000;
   const MAX_RECONNECT_MS = 30000;
   const LEAVE_ANIMATION_MS = 220;
+  const SAMPLE_PREVIEW_MESSAGE_STAGGER_MS = 650;
   const SVG_NS = "http://www.w3.org/2000/svg";
 
   const params = new URLSearchParams(window.location.search);
+  const samplePreviewEnabled = params.get("preview") === "sample";
+  const previewEnabled = params.has("preview");
+  const PREVIEW_BACKGROUNDS = new Set(["busy", "checker", "dark"]);
 
   function readPositiveInt(name, fallback) {
     const raw = params.get(name);
@@ -238,6 +242,21 @@
       "overlay-theme--cockpit-popups"
     );
     document.body.classList.add("overlay-theme--" + config.theme.replace(/_/g, "-"));
+    document.body.classList.remove(
+      "overlay-preview--busy",
+      "overlay-preview--checker",
+      "overlay-preview--dark"
+    );
+    if (previewEnabled) {
+      const previewBackground = params.get("preview_background");
+      document.body.classList.add(
+        "overlay-preview--" + (
+          PREVIEW_BACKGROUNDS.has(previewBackground)
+            ? previewBackground
+            : "busy"
+        )
+      );
+    }
   }
 
   async function loadServerConfig() {
@@ -690,10 +709,9 @@
       return;
     }
     const renderOptions = options || {};
-    const ttlMs =
-      typeof renderOptions.ttlMs === "number"
-        ? renderOptions.ttlMs
-        : messageTTLMilliseconds(frame);
+    const ttlMs = Object.prototype.hasOwnProperty.call(renderOptions, "ttlMs")
+      ? renderOptions.ttlMs
+      : messageTTLMilliseconds(frame);
     if (ttlMs === 0) {
       return;
     }
@@ -796,6 +814,49 @@
     }
   }
 
+  function renderSamplePreview() {
+    const messages = [
+      {
+        type: "message",
+        id: "preview-twitch",
+        platform: "twitch",
+        user: "nova_pilot",
+        display_name: "Nova Pilot",
+        message: "Проверяем связь — текст хорошо читается поверх игры.",
+      },
+      {
+        type: "message",
+        id: "preview-youtube",
+        platform: "youtube",
+        user: "long_range_commander",
+        display_name: "Long Range Commander",
+        message: "A longer message wraps onto another line without hiding the newest chat activity.",
+      },
+      {
+        type: "message",
+        id: "preview-vk",
+        platform: "vk",
+        user: "mech_operator",
+        display_name: "Мех Оператор",
+        message: "HUD стабилен. Можно начинать миссию!",
+      },
+      {
+        type: "message",
+        id: "preview-relay",
+        platform: "chat",
+        user: "commrelay",
+        display_name: "CommRelay",
+        message: "Sample preview uses the same renderer as the OBS Browser Source.",
+      },
+    ];
+
+    messages.forEach(function (frame, index) {
+      window.setTimeout(function () {
+        renderMessage(frame, { ttlMs: null });
+      }, index * SAMPLE_PREVIEW_MESSAGE_STAGGER_MS);
+    });
+  }
+
   function connect() {
     clearReconnectTimer();
     if (!shouldRun) {
@@ -830,5 +891,10 @@
     }
   });
 
-  loadServerConfig().then(loadRecentMessages).finally(connect);
+  if (samplePreviewEnabled) {
+    applyAppearance();
+    renderSamplePreview();
+  } else {
+    loadServerConfig().then(loadRecentMessages).finally(connect);
+  }
 })();
