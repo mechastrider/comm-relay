@@ -1,43 +1,47 @@
 ---
 name: web-static-frontend
-description: Static admin and OBS overlay for comm-relay (HTML/CSS/JS under web/). Use when editing control panel, overlay, or client WebSocket code — no React on MVP.
+description: Static frontend conventions (HTML/CSS/vanilla JS, no framework) — page structure, client WebSocket, JS style, security.
 ---
 
-# Static frontend — web/
+# Static frontend (HTML/CSS/vanilla JS)
 
-Stack (MVP):
+Stack:
 
 - Plain HTML, CSS, JavaScript (ES modules optional)
-- No React, Vue, or Svelte until explicitly approved in concept
+- No React, Vue, or Svelte unless the project explicitly adopts a framework
 
 ## Layout
 
 ```text
 web/
-├── admin/
+├── panel/
 │   ├── index.html
-│   ├── app.js          # status, config, OAuth links
+│   ├── app.js          # status, config, API calls
 │   └── styles.css
-└── overlay/
+└── widget/
     ├── index.html
-    ├── overlay.js      # WebSocket client, message list DOM
-    └── overlay.css     # transparent background, animations
+    ├── widget.js       # WebSocket client, message list DOM
+    └── widget.css      # transparent background, animations (when embedded)
 ```
 
-## OBS overlay
+## Overlay / widget pages
 
-- `html, body { background: transparent; }` — required for Browser Source.
-- Connect to `ws://` or `wss://` same host, path `/ws`.
+Static pages embedded in another host (browser source, iframe, kiosk display):
+
+- `html, body { background: transparent; }` when the host requires transparency.
+- Connect to `ws://` or `wss://` on the same host, path `/ws` (or project-specific path).
 - Reconnect with exponential backoff on close/error.
 - Cap DOM nodes (remove oldest); CSS transition for fade-in.
-- Configurable max messages and TTL via query string or injected `window.__OVERLAY_CONFIG__` from server template.
+- Configurable limits via query string or injected `window.__WIDGET_CONFIG__` from a server template.
 
-## Admin panel
+## Control panel
+
+Admin or operator UI served as static HTML:
 
 - Fetch `/api/status` and config endpoints with `fetch`.
-- Show per-platform connection state (connected / reconnecting / error).
-- Link to OAuth start URL for YouTube; show channel name when configured.
-- Keep layout usable at ~1280px width; no marketing chrome.
+- Show connection state (connected / reconnecting / error) for each integration.
+- Link to OAuth or setup URLs when the backend exposes them.
+- Keep layout usable at desktop widths (~1280px); avoid marketing chrome.
 
 ## JavaScript style
 
@@ -47,18 +51,18 @@ web/
 
 ## Security
 
-- Admin is localhost-trusted; still avoid `innerHTML` with unsanitized chat text — use `textContent` or escape.
-- Overlay displays chat from WebSocket: escape HTML entities in usernames and messages.
+- Treat admin pages as trusted only in their intended deployment context; still avoid `innerHTML` with unsanitized user content — use `textContent` or escape.
+- Widget pages displaying live messages over WebSocket: escape HTML entities in usernames and message bodies.
 
 ## Related
 
-- Forms: [ux-form-practices](../ux-form-practices/SKILL.md)
-- Wire format: [comm-relay](../comm-relay/SKILL.md), [api-conventions](../api-conventions/SKILL.md)
+- Forms: [ux-form-practices](../../ux/ux-form-practices/SKILL.md)
+- API shape: [api-conventions](../../../backend/go/api-conventions/SKILL.md)
 
 ## Checklist
 
-- [ ] Overlay background transparent
-- [ ] WebSocket reconnect
-- [ ] Message limit and TTL behavior match concept
+- [ ] Overlay/widget background transparent when required by host
+- [ ] WebSocket reconnect with backoff
+- [ ] Message limit and TTL behavior documented
 - [ ] XSS-safe text rendering
 - [ ] API field names snake_case

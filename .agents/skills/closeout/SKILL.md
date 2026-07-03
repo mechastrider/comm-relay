@@ -25,7 +25,7 @@ Principle: *Capture freely. Retrieve cautiously. Promote deliberately.*
 Default prompt (adapt `projectId` for client repos):
 
 ```text
-@closeout for muonsoft/agentmem
+@closeout for <owner>/<repo>
 ```
 
 Optional: user may name a specific conversation or paste a transcript path.
@@ -34,7 +34,7 @@ Optional: user may name a specific conversation or paste a transcript path.
 
 ### 1. Resolve project
 
-- Default for this repo: `projectId: "muonsoft/agentmem"`.
+- Default: the current repository's registered slug (`owner/repo` from the origin remote).
 - Client repos: `projectId` slug (`owner/repo`) or `repoUrl` from git remote.
 
 ### 2. Check MCP
@@ -100,7 +100,7 @@ Trust model: events are **evidence only**; `propose_entry` creates **draft**; hu
 ```json
 {
   "eventType": "pattern_validated",
-  "projectId": "muonsoft/agentmem",
+  "projectId": "owner/repo",
   "summary": "Short factual summary",
   "topic": "workflow",
   "severity": "low",
@@ -154,7 +154,7 @@ End with:
 
 ## Insurance
 
-Scheduled **Cursor Automation** with `memory-curation` can backfill when closeout was skipped — see [session-closeout-automation.md](../../../docs/agent-memory/session-closeout-automation.md).
+Scheduled **Cursor Automation** with `memory-curation` can backfill when closeout was skipped — see [session-closeout-automation.md](https://github.com/muonsoft/agentmem/blob/main/docs/agent-memory/session-closeout-automation.md).
 
 ## Related skills
 
