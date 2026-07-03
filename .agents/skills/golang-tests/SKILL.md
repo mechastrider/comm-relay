@@ -1,27 +1,31 @@
 ---
 name: golang-tests
-description: Go testing for comm-relay — API tests (muonsoft/api-testing), connector unit tests with testify. Use when writing tests for internal/ and cmd/.
+description: Go testing with muonsoft/api-testing, testify, and afero — AAA scenarios, HTTP handler tests, JSON assertions, filesystem tests. Use when writing tests under internal/ and cmd/.
 ---
 
-# Go testing (comm-relay)
+# Go testing
 
-Cover HTTP handlers, WebSocket handshake (where practical), `internal/bus`, and `internal/connector/*`.
-
-Detailed API examples: [references/api-tests.md](references/api-tests.md).
+Cover HTTP handlers, domain packages, and the code paths they exercise.
 
 ## One scenario per test (AAA)
 
+Use explicit sections:
+
 ```go
-func TestHealthz_WhenServerUp_ExpectOK(t *testing.T) {
+func TestDeleteNode_WhenExists_ExpectOK(t *testing.T) {
     t.Parallel()
     // Arrange
-    mux := setupTestMux(t)
+    handler := setupTestHandler(t)
 
     // Act
-    resp := apitest.HandleGET(t, mux, "/healthz")
+    resp := apitest.HandleDELETE(t, handler, "/api/nodes/topic/my-node")
 
     // Assert
     resp.IsOK()
+    resp.HasJSON(func(json *assertjson.AssertJSON) {
+        json.Node("path").IsString().EqualTo("topic/my-node")
+        json.Node("deleted").IsTrue()
+    })
 }
 ```
 
@@ -32,16 +36,19 @@ Packages: `github.com/muonsoft/api-testing/apitest`, `assertjson`.
 ```go
 resp := apitest.HandleGET(t, mux, "/api/status")
 resp.IsOK()
-resp.HasJSON(func(json *assertjson.AssertJSON) {
-    json.Node("twitch", "connected").IsTrue()
-})
+
+resp := apitest.HandlePOST(t, mux, "/api/commit",
+    strings.NewReader(`{"message":"sync"}`),
+    apitest.WithJSONContentType(),
+)
+resp.HasCode(503)
 ```
 
-**assertjson paths:** variadic `Node("key", 0, "nested")`.
+**assertjson paths:** variadic `Node("key", 0, "nested")` — not legacy `/key/0/nested`.
 
 Custom requests: `httptest.NewRequest` + `apitest.HandleRequest(t, handler, req)`.
 
-Use `package api_test` (black-box) for handler tests.
+Use `package <pkg>_test` (black-box) for handler tests.
 
 ## Naming
 
@@ -49,7 +56,7 @@ Use `package api_test` (black-box) for handler tests.
 Test<Entity>_<Action>_When<Condition>_Expect<Result>
 ```
 
-Examples: `TestWS_WhenUpgrade_Expect101`, `TestConfig_WhenMissingFile_ExpectDefaults`.
+Examples: `TestGetStatus_WhenDisabled_Expect503`, `TestMoveNode_WhenConflict_Expect409`.
 
 ## testify
 
@@ -58,33 +65,38 @@ Examples: `TestWS_WhenUpgrade_Expect101`, `TestConfig_WhenMissingFile_ExpectDefa
 | Must stop test | `require.NoError`, `require.Error` |
 | Continue on failure | `assert.Equal`, `assert.True`, `assert.ErrorIs` |
 
-Prefer `assert.ErrorIs(t, err, target)` with muonsoft `errors.Is` at call sites under test when checking wrapped chains.
+Prefer `assert.ErrorIs(t, err, target)` over `assert.True(t, errors.Is(...))`.
 
 ## Helpers
 
 - Accept `testing.TB`, call `tb.Helper()` at start.
 - On setup failure: `tb.Fatalf` — **no panic** in test helpers.
 
-## Connector tests
+## Filesystem tests
 
-- Fake upstream with `httptest.Server` for YouTube API shapes.
-- Twitch: test message parsing and mapping to `ChatMessage` with table-driven cases.
-- Bus: publish/subscribe with `context.Background()` and short timeouts.
+### Integration-style: `t.TempDir`
 
-## WebSocket tests
+Seed fixtures under `t.TempDir()` and pass the path to the code under test. This matches real on-disk layout.
 
-- Use `gorilla/websocket` client against `httptest.Server`, or test hub logic without full network when possible.
-- Assert first JSON frame shape matches overlay contract.
+### Unit tests with afero
+
+```go
+fs := afero.NewMemMapFs()
+store := store.New(fs)
+```
+
+Use absolute paths with MemMapFs (`/` as base). Follow existing `seedMemFS`-style helpers for fixtures.
 
 ## Mocks
 
-- Small interfaces (`Publisher`, `Connector`) — manual mocks in `*_test.go`.
-- Return errors with `errors.Errorf` for simulated failures.
+- Small interfaces — manual mocks in `*_test.go`.
+- Return errors with `errors.Errorf` from muonsoft/errors for anonymous failures.
 
 ## Checklist
 
-- [ ] Changed HTTP routes have tests
-- [ ] AAA + `t.Parallel()` where safe
+- [ ] Endpoints/behaviours touched have tests
+- [ ] AAA structure with `t.Parallel()` where safe
 - [ ] `TestX_WhenY_ExpectZ` naming
-- [ ] JSON via `assertjson` when applicable
-- [ ] Connector mapping covered for new platform fields
+- [ ] testify `require` / `assert`, not bare `t.Fatal` except in helpers
+- [ ] JSON assertions via `assertjson` + `HasJSON`
+- [ ] Store/filesystem unit tests use afero when testing storage directly

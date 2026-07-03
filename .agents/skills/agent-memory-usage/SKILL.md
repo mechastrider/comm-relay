@@ -11,7 +11,7 @@ Install this skill in project repos that connect to agentmem MCP.
 
 | Phase | Tool |
 |-------|------|
-| Task start | `memory.get_context_pack` with `projectId` (e.g. `muonsoft/agentmem`) or `repoUrl` |
+| Task start | `memory.get_context_pack` with `projectId` (e.g. `owner/repo`) or `repoUrl` |
 | Stuck / need precedent | `memory.search` with filters |
 | After review feedback | `memory.record_event` |
 | Stable lesson, not yet a rule | `memory.propose_entry` as **draft** |

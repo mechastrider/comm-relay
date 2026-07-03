@@ -1,70 +1,66 @@
 ---
 name: ux-form-practices
-description: Form UX for comm-relay admin (web/admin). Use when adding connection forms, overlay settings, or OAuth-related UI.
+description: Form UX — labels, validation, errors, accessibility, mobile-friendly inputs. Use when adding or reviewing forms.
 ---
 
-# Form UX — admin panel
+# Form UX
 
-Apply when working on forms in `web/admin/`.
+Apply when working on forms in page components and related UI.
 
 ## Workflow
 
-1. List fields and types (text, toggle, channel name, port).
-2. Use controlled inputs with visible labels.
-3. Validate on submit; optional format check on blur (channel name, port).
-4. Show errors next to fields; keyboard and screen reader friendly.
-5. Adequate tap targets on touch devices (~44px).
+1. List fields and types (text, URL, select, boolean).
+2. Use controlled inputs with clear labels.
+3. Validate on submit; optional soft checks on blur for format fields.
+4. Show errors next to fields; support keyboard and screen readers.
+5. On mobile, set `inputMode` and adequate tap targets (~44px).
 
 ## Baseline rules
 
 - Every control has a visible `<label>` or correct `aria-label`
 - Do not use placeholder as the only label
-- Disable submit while request in flight
-- After failed submit, focus first invalid field
-- Clear field error when user edits the field
+- Disable submit while `loading` or when required fields are empty
+- After failed submit, focus the first invalid field
+- Clear field-level error when the user fixes input
 
-## CommRelay fields
+## Text and URL fields
 
-| Area | Fields |
-|------|--------|
-| Server | `server_port` (number, 1024–65535) |
-| Twitch | `enabled`, `channel` (lowercase login) |
-| YouTube | `enabled`, connect via OAuth button (no manual token paste) |
-| Overlay | max messages, message TTL, animation toggles |
-
-Trim whitespace on text inputs. Channel names: reject obvious invalid characters client-side; server validates again.
+- **Long text**: textarea with a clear label; type or category selector when the domain has variants
+- **URLs**: trim whitespace; show readable validation ("Enter a valid URL")
+- Do not expose raw server stack traces in the UI
 
 ## Server errors
 
-Map HTTP status to short messages:
+Map HTTP status to short user-facing messages in the API client or page:
 
 | Status | User message (example) |
 |--------|-------------------------|
-| 400 | Check the highlighted fields |
-| 401 | Sign in required (OAuth) |
-| 409 | Already connected — disconnect first |
-| 503 | Platform not configured on server |
-| 5xx | Server error — try again |
-| Network | Cannot reach CommRelay — is it running? |
+| 401 | Session expired — sign in again |
+| 403 | Not allowed |
+| 404 | Not found |
+| 409 | Conflict — refresh and retry |
+| 422 | Validation failed (field messages when available) |
+| 5xx | Server error — try again later |
+| Network | Connection problem |
 
-Backend: `{"error":"..."}`. Normalize in `app.js` before showing banners.
-
-## OAuth UX
-
-- Primary action: **Connect YouTube** → navigates to `/oauth/youtube/start`
-- After callback, show success or error banner on admin home
-- Do not display refresh tokens in the UI
+Backend returns `{"error":"..."}` (snake_case body fields on success payloads). Normalize in the API client before showing toasts or inline errors.
 
 ## Accessibility
 
 - `htmlFor` / `id` on label + input
-- `aria-invalid` and `aria-describedby` for errors
-- `role="alert"` or `aria-live="polite"` for dynamic status
+- `aria-invalid` and `aria-describedby` when showing errors
+- `role="alert"` or `aria-live="polite"` for dynamic error banners
+
+## Numeric fields
+
+- `inputMode="decimal"` is only a hint — validate in code
+- Normalize `,` → `.` for locales
+- Keep editing state as string; send parsed number to API
 
 ## Checklist
 
-- [ ] Labels on all controls
-- [ ] Submit disabled while saving
-- [ ] Errors visible and tied to fields
-- [ ] No secrets shown in UI
-- [ ] Mobile-friendly primary actions
+- [ ] Controlled inputs with labels
+- [ ] Submit disabled during in-flight request
+- [ ] Errors visible and associated with fields
+- [ ] API errors mapped to friendly text
+- [ ] Mobile: readable layout without horizontal scroll on primary actions
