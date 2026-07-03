@@ -1,0 +1,17 @@
+version: 2
+hub:
+    repo: https://github.com/muonsoft/skills.git
+    ref: main
+    commit: 988a9ae72725c17d761715717ab36fb01fd0ec83
+preset: desktop-app
+target_path: .agents/skills/shared
+selected_paths:
+    - databases/database-migrations
+    - devtools/agent-memory-usage
+    - devtools/closeout
+    - integration/mcp-tool-input-schema
+hashes:
+    databases/database-migrations: sha256:118ce23f4e0e7ccea54c898798d1678dc05e2b9127ad3b44a863be9a59f8bd57
+    devtools/agent-memory-usage: sha256:ac3730a8242f0a083e2ff35a9c6f8e3516df4719475b9ef778260cd05ffbf9d9
+    devtools/closeout: sha256:36a90a418fa59affcdf43e92a8792b488ea147d1cb0041dd92c7ade61d709926
+    integration/mcp-tool-input-schema: sha256:313b1ce465ff6894ac82292d194155846c27b4fadab89e1b71899acdb65ad452
