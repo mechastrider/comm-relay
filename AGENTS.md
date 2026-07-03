@@ -137,3 +137,9 @@ WebSocket (`/ws`) and Twitch ingest are **not implemented yet**; full chat E2E r
 
 - Do not commit local `config.json` unless intentionally changing defaults for the repo.
 - If port 17877 is in use, stop the other process or pass `-addr 127.0.0.1:<port>`.
+
+<!-- agentmem:closeout:start -->
+This repository is registered in agentmem as `mechastrider/comm-relay`.
+Run `@closeout for mechastrider/comm-relay` after non-trivial work (skill: `.agents/skills/closeout/SKILL.md`).
+Consult `.agents/skills/agent-memory-usage/SKILL.md` for MCP usage.
+<!-- agentmem:closeout:end -->
