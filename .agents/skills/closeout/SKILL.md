@@ -22,7 +22,7 @@ Principle: *Capture freely. Retrieve cautiously. Promote deliberately.*
 
 ## Invocation
 
-Default prompt (adapt `projectId` for client repos):
+Default prompt (adapt `project_id` for client repos):
 
 ```text
 @closeout for <owner>/<repo>
@@ -35,7 +35,7 @@ Optional: user may name a specific conversation or paste a transcript path.
 ### 1. Resolve project
 
 - Default: the current repository's registered slug (`owner/repo` from the origin remote).
-- Client repos: `projectId` slug (`owner/repo`) or `repoUrl` from git remote.
+- Client repos: `project_id` slug (`owner/repo`) or `repo_url` from git remote.
 
 ### 2. Check MCP
 
@@ -91,7 +91,7 @@ Produce internally, then show the user a **brief** summary:
 
 Use **one or more** `memory.record_event` calls when multiple distinct lessons deserve separate evidence. Prefer a single closeout event with structured `details` when lessons are one narrative.
 
-Every closeout capture MUST include tag `closeout` and a structured **`sessionDigest`** inside `details` (concept v2). Target ~500–800 words total across digest fields; no tool-call replay; redact secrets.
+Every closeout capture MUST include tag `closeout` and a structured **`session_digest`** inside `details` (concept v2). Target ~500–800 words total across digest fields; no tool-call replay; redact secrets.
 
 Trust model: events are **evidence only**; `propose_entry` creates **draft**; humans approve **active** memory.
 
@@ -99,31 +99,31 @@ Trust model: events are **evidence only**; `propose_entry` creates **draft**; hu
 
 ```json
 {
-  "eventType": "pattern_validated",
-  "projectId": "owner/repo",
+  "event_type": "pattern_validated",
+  "project_id": "owner/repo",
   "summary": "Short factual summary",
   "topic": "workflow",
   "severity": "low",
   "details": {
-    "sessionDigest": {
+    "session_digest": {
       "goal": "What the session tried to accomplish",
       "outcome": "What actually shipped or was decided",
-      "keyDecisions": ["Important choices made"],
+      "key_decisions": ["Important choices made"],
       "mistakes": ["Regressions or false assumptions"],
-      "openQuestions": ["Unresolved items for follow-up"]
+      "open_questions": ["Unresolved items for follow-up"]
     },
-    "wentWell": ["bullet"],
-    "wentPoorly": ["bullet"],
+    "went_well": ["bullet"],
+    "went_poorly": ["bullet"],
     "done": ["outcome bullet"],
     "skipped": ["routine noise"]
   },
   "evidence": [{ "kind": "file", "uri": "path/from/repo/root" }],
   "tags": ["closeout", "workflow"],
-  "agentClient": "cursor"
+  "agent_client": "cursor"
 }
 ```
 
-`sessionDigest` fields are required for closeout events. `wentWell` and `wentPoorly` remain alongside the digest for quick scanning.
+`session_digest` fields are required for closeout events. `went_well` and `went_poorly` remain alongside the digest for quick scanning.
 
 #### Draft memory (`memory.propose_entry`)
 
@@ -131,7 +131,7 @@ Propose when the lesson should guide **future** agents:
 
 - Title: imperative, specific.
 - Body: what to do, what to avoid, where documented — no generic praise.
-- `suggestedStatus`: always `draft`.
+- `suggested_status`: always `draft`.
 - Reuse the same `evidence` array as the event when possible.
 
 ### 6. Report to user
@@ -147,7 +147,7 @@ End with:
 
 - [ ] Transcript (or conversation fallback) reviewed
 - [ ] Retrospective: done / well / poorly / noise
-- [ ] `memory.record_event` with `closeout` tag and `sessionDigest` for worthwhile evidence
+- [ ] `memory.record_event` with `closeout` tag and `session_digest` for worthwhile evidence
 - [ ] `memory.propose_entry` for durable rules
 - [ ] `memory.record_feedback` if context pack misled you
 - [ ] User briefed; no secrets in captured text
