@@ -56,7 +56,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 |-------|----------|
 | `comm-relay` | Product behavior, `ChatMessage`, platforms, overlay/OBS requirements |
 | `backend-structure` | Adding packages under `cmd/`, `internal/` |
-| `api-conventions` | HTTP routes, WebSocket `/ws`, JSON shapes |
+| `api-conventions` | HTTP routes, WebSocket `/ws`, JSON shapes — **API is POST-action, never REST** — mutations are `POST /api/<resource>/<action>`; no `PUT`/`DELETE`/`PATCH` or `{id}` paths (guarded by `internal/api/router_guard_test.go`). |
 
 ### Go backend
 

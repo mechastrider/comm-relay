@@ -61,7 +61,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /health", handleHealth)
 	mux.HandleFunc("GET /ws", opts.Hub.serveWS)
 	mux.HandleFunc("GET /api/config", configHandler.handleGet)
-	mux.HandleFunc("PATCH /api/config", configHandler.handlePatch)
+	mux.HandleFunc("POST /api/config/update", configHandler.handleUpdate)
 	mux.HandleFunc("GET /api/status", statusHandler.handleGet)
 	mux.HandleFunc("GET /api/diagnostics", diagnosticsHandler.handleGet)
 	mux.HandleFunc("GET /oauth/youtube/start", youtubeOAuth.handleStart)
