@@ -53,7 +53,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	configHandler := newConfigHandler(opts.Store)
 	statusHandler := newStatusHandler(opts.Store, registry)
 	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt, opts.EmoteCache)
-	messagesHandler := newMessagesHandler(opts.History)
+	messagesHandler := newMessagesHandler(opts.History, opts.Hub)
 	oauthState := newOAuthStateStore()
 	youtubeOAuth := newYouTubeOAuthHandler(opts.Store, oauthState)
 
@@ -67,6 +67,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /oauth/youtube/start", youtubeOAuth.handleStart)
 	mux.HandleFunc("GET /oauth/youtube/callback", youtubeOAuth.handleCallback)
 	mux.HandleFunc("GET /api/messages/recent", messagesHandler.handleRecent)
+	mux.HandleFunc("POST /api/messages/delete", messagesHandler.handleDelete)
 	mux.Handle("GET /dock/messages/", http.StripPrefix("/dock/messages/", http.FileServer(http.FS(static.dock))))
 	mux.HandleFunc("GET /dock/messages", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.dock, "index.html")

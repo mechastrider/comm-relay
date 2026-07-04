@@ -451,6 +451,33 @@ select:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+.message-list__delete {
+  min-height: 24px;
+  margin-left: auto;
+  padding: 2px 7px;
+  border: 1px solid #71383d;
+  border-radius: 3px;
+  background: #26171a;
+  color: #ffb8be;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.message-list__delete:hover,
+.message-list__delete:focus-visible {
+  border-color: #c95d66;
+  background: #3a1d21;
+  color: #fff;
+}
+
+.message-list__delete:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .message-list__text {
   margin: 0;
   color: #f0f0f3;

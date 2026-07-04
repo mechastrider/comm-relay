@@ -9,7 +9,10 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 )
 
-const wireMessageType = "message"
+const (
+	wireMessageType        = "message"
+	wireMessageDeletedType = "message_deleted"
+)
 
 // wireChatMessage is the JSON payload sent to overlay WebSocket clients.
 type wireChatMessage struct {
@@ -23,6 +26,12 @@ type wireChatMessage struct {
 	AvatarURL   string                `json:"avatar_url,omitempty"`
 	Badges      []string              `json:"badges,omitempty"`
 	Timestamp   string                `json:"timestamp,omitempty"`
+}
+
+type wireMessageDeleted struct {
+	Type     string `json:"type"`
+	Platform string `json:"platform"`
+	ID       string `json:"id"`
 }
 
 func chatMessageWirePayload(msg bus.ChatMessage) ([]byte, error) {
@@ -49,6 +58,19 @@ func chatMessageWirePayload(msg bus.ChatMessage) ([]byte, error) {
 	data, err := json.Marshal(wire)
 	if err != nil {
 		return nil, errors.Errorf("marshal chat wire message: %w", err)
+	}
+
+	return data, nil
+}
+
+func messageDeletedWirePayload(platform, id string) ([]byte, error) {
+	data, err := json.Marshal(wireMessageDeleted{
+		Type:     wireMessageDeletedType,
+		Platform: platform,
+		ID:       id,
+	})
+	if err != nil {
+		return nil, errors.Errorf("marshal message deleted wire event: %w", err)
 	}
 
 	return data, nil

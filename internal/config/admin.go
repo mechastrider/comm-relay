@@ -8,6 +8,17 @@ const (
 	MessageSoundAlert = "alert"
 )
 
+// Time display locales shared by the admin panel and OBS message dock.
+const (
+	TimeLocaleRussian = "ru-RU"
+	TimeLocaleEnglish = "en-GB"
+)
+
+var validTimeLocales = map[string]struct{}{
+	TimeLocaleRussian: {},
+	TimeLocaleEnglish: {},
+}
+
 var validMessageSounds = map[string]struct{}{
 	MessageSoundChime: {},
 	MessageSoundPing:  {},
@@ -15,9 +26,10 @@ var validMessageSounds = map[string]struct{}{
 	MessageSoundAlert: {},
 }
 
-// AdminConfig holds admin UI preferences (not used by OBS overlay).
+// AdminConfig holds preferences shared by operator-facing admin and dock UIs.
 type AdminConfig struct {
 	MessageSound MessageSoundConfig `json:"message_sound"`
+	TimeLocale   string             `json:"time_locale"`
 }
 
 // MessageSoundConfig controls notification sound in the admin panel.
@@ -33,6 +45,21 @@ func defaultMessageSound() MessageSoundConfig {
 		Volume:  0.5,
 		Sound:   MessageSoundChime,
 	}
+}
+
+func (a *AdminConfig) applyDefaults() {
+	if a.TimeLocale == "" {
+		a.TimeLocale = TimeLocaleRussian
+	}
+	a.MessageSound.applyDefaults()
+}
+
+func (a AdminConfig) validateFields() FieldErrors {
+	fields := a.MessageSound.validateFields()
+	if _, ok := validTimeLocales[a.TimeLocale]; !ok {
+		fields["admin_time_locale"] = "Choose a supported time locale."
+	}
+	return fields
 }
 
 func (m *MessageSoundConfig) applyDefaults() {

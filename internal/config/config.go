@@ -93,6 +93,7 @@ func Default() *Config {
 		},
 		Admin: AdminConfig{
 			MessageSound: defaultMessageSound(),
+			TimeLocale:   TimeLocaleRussian,
 		},
 		Logging: defaultLogging(),
 	}
@@ -112,7 +113,7 @@ func (c *Config) ApplyDefaults() {
 	}
 	c.Overlay.Emotes.applyDefaults()
 	c.Overlay.ImagePreviews.applyDefaults()
-	c.Admin.MessageSound.applyDefaults()
+	c.Admin.applyDefaults()
 	c.Logging.applyDefaults()
 	c.YouTube.ApplyYouTubeDefaults()
 }

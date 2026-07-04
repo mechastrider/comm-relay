@@ -54,7 +54,7 @@ func (c *Config) validateFields() error {
 	}
 
 	mergeFieldErrors(fields, c.Overlay.ImagePreviews.validateFields())
-	mergeFieldErrors(fields, c.Admin.MessageSound.validateFields())
+	mergeFieldErrors(fields, c.Admin.validateFields())
 
 	if c.Twitch.Enabled && c.Twitch.Channel == "" {
 		fields["twitch_channel"] = "Channel is required when Twitch is enabled."

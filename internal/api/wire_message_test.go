@@ -102,3 +102,16 @@ func TestChatMessageWirePayload_WhenUnknownFragmentType_ExpectMessageStillDelive
 	require.Equal(t, "fallback text", decoded["message"])
 	require.NotNil(t, decoded["fragments"])
 }
+
+func TestMessageDeletedWirePayload_ExpectSnakeCaseJSON(t *testing.T) {
+	t.Parallel()
+
+	payload, err := messageDeletedWirePayload("youtube", "message-42")
+	require.NoError(t, err)
+
+	var decoded map[string]any
+	require.NoError(t, json.Unmarshal(payload, &decoded))
+	require.Equal(t, "message_deleted", decoded["type"])
+	require.Equal(t, "youtube", decoded["platform"])
+	require.Equal(t, "message-42", decoded["id"])
+}

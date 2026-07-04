@@ -280,7 +280,7 @@
 
   applyAppearance();
 
-  /** @type {Array<{ el: HTMLElement, ttlTimer: number | null }>} */
+  /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, messageKey: string }>} */
   const entries = [];
   const renderedMessageIDs = new Set();
   let reconnectDelayMs = INITIAL_RECONNECT_MS;
@@ -330,6 +330,9 @@
       window.clearTimeout(entry.ttlTimer);
       entry.ttlTimer = null;
     }
+    if (entry.messageKey !== "") {
+      renderedMessageIDs.delete(entry.messageKey);
+    }
 
     if (animate) {
       entry.el.classList.add("message--leaving");
@@ -357,9 +360,18 @@
   }
 
   function rememberRenderedMessage(frame) {
-    if (frame && typeof frame.id === "string" && frame.id !== "") {
-      renderedMessageIDs.add(frame.id);
+    const key = messageKey(frame);
+    if (key !== "") {
+      renderedMessageIDs.add(key);
     }
+  }
+
+  function messageKey(frame) {
+    if (!frame || typeof frame.id !== "string" || frame.id === "") {
+      return "";
+    }
+    const platform = typeof frame.platform === "string" ? frame.platform : "";
+    return platform + "\0" + frame.id;
   }
 
   function hasRenderedMessage(frame) {
@@ -367,8 +379,22 @@
       frame &&
         typeof frame.id === "string" &&
         frame.id !== "" &&
-        renderedMessageIDs.has(frame.id)
+        renderedMessageIDs.has(messageKey(frame))
     );
+  }
+
+  function removeMessage(frame) {
+    const key = messageKey(frame);
+    if (key === "") {
+      return;
+    }
+    const matching = entries.filter(function (entry) {
+      return entry.messageKey === key;
+    });
+    matching.forEach(function (entry) {
+      removeEntryElement(entry.el, true);
+    });
+    renderedMessageIDs.delete(key);
   }
 
   function messageTTLMilliseconds(frame) {
@@ -449,7 +475,6 @@
     img.alt = "chat image";
     img.title = text;
     img.decoding = "async";
-    img.loading = "lazy";
     img.draggable = false;
     img.referrerPolicy = "no-referrer";
     replaceBrokenImageWithText(img, text);
@@ -758,7 +783,7 @@
     }
 
     rememberRenderedMessage(frame);
-    entries.push({ el: row, ttlTimer: ttlTimer });
+    entries.push({ el: row, ttlTimer: ttlTimer, messageKey: messageKey(frame) });
     trimToLimit();
     scrollToBottom();
   }
@@ -771,6 +796,10 @@
       return;
     }
     if (!frame || typeof frame !== "object") {
+      return;
+    }
+    if (frame.type === "message_deleted") {
+      removeMessage(frame);
       return;
     }
     renderMessage(frame);
@@ -892,8 +921,7 @@
   });
 
   if (samplePreviewEnabled) {
-    applyAppearance();
-    renderSamplePreview();
+    loadServerConfig().finally(renderSamplePreview);
   } else {
     loadServerConfig().then(loadRecentMessages).finally(connect);
   }

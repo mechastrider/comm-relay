@@ -60,6 +60,29 @@ func (h *MessageHistory) append(msg bus.ChatMessage) {
 	}
 }
 
+// Delete removes a message identified by its platform and source message ID.
+func (h *MessageHistory) Delete(platform, id string) bool {
+	if platform == "" || id == "" {
+		return false
+	}
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	for index, msg := range h.messages {
+		if msg.Platform != platform || msg.ID != id {
+			continue
+		}
+
+		copy(h.messages[index:], h.messages[index+1:])
+		h.messages[len(h.messages)-1] = bus.ChatMessage{}
+		h.messages = h.messages[:len(h.messages)-1]
+		return true
+	}
+
+	return false
+}
+
 // Recent returns up to limit newest messages in chronological order.
 func (h *MessageHistory) Recent(limit int) []adminMessage {
 	if limit <= 0 {

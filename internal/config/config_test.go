@@ -28,6 +28,7 @@ func TestLoad_WhenMissingFile_ExpectDefaultsAndCreatesFile(t *testing.T) {
 	require.Equal(t, cfg.ServerPort, onDisk.ServerPort)
 	require.Equal(t, cfg.Overlay.MaxMessages, onDisk.Overlay.MaxMessages)
 	require.Equal(t, cfg.Admin.MessageSound, onDisk.Admin.MessageSound)
+	require.Equal(t, TimeLocaleRussian, onDisk.Admin.TimeLocale)
 }
 
 func TestLoad_WhenValidFile_ExpectParsed(t *testing.T) {
@@ -126,6 +127,19 @@ func TestApplyDefaults_WhenOverlayFieldsOmitted_ExpectOverlayDefaults(t *testing
 	require.Equal(t, 18, cfg.Overlay.FontSizePx)
 	require.Equal(t, OverlayDisplayModeNormal, cfg.Overlay.DisplayMode)
 	require.Equal(t, OverlayThemeDefault, cfg.Overlay.Theme)
+	require.Equal(t, TimeLocaleRussian, cfg.Admin.TimeLocale)
+}
+
+func TestValidate_WhenAdminTimeLocaleInvalid_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Admin.TimeLocale = "browser"
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+	require.Contains(t, ValidationFields(err), "admin_time_locale")
 }
 
 func TestValidate_WhenOverlayFontSizeOutOfRange_ExpectInvalidConfig(t *testing.T) {

@@ -80,6 +80,7 @@
   const messageSoundVolumeLabel = document.getElementById("message-sound-volume-label");
   const messageSoundTypeInput = document.getElementById("message-sound-type");
   const testMessageSound = document.getElementById("test-message-sound");
+  const timeLocaleInput = document.getElementById("time-locale");
   const statusErrorPopover = document.getElementById("status-error-popover");
 
   const MESSAGE_SOUND_TYPES = ["chime", "ping", "soft", "alert"];
@@ -127,6 +128,7 @@
     overlay_image_previews_max_per_message: document.getElementById("image-previews-max-per-message-error"),
     admin_message_sound_volume: document.getElementById("message-sound-volume-error"),
     admin_message_sound_sound: document.getElementById("message-sound-type-error"),
+    admin_time_locale: document.getElementById("time-locale-error"),
   };
 
   const fieldInputs = {
@@ -145,6 +147,7 @@
     overlay_image_previews_max_per_message: imagePreviewsMaxPerMessage,
     admin_message_sound_volume: messageSoundVolumeInput,
     admin_message_sound_sound: messageSoundTypeInput,
+    admin_time_locale: timeLocaleInput,
   };
 
   const PROVIDER_LABELS = {
@@ -162,6 +165,7 @@
   let messagesTimer = null;
   let soundReady = false;
   let knownMessageKeys = new Set();
+  let recentMessageCache = [];
   let renderedMessagesFingerprint = "";
   let wsSocket = null;
   let wsShouldRun = true;
@@ -795,6 +799,9 @@
   }
 
   function applyConfig(config) {
+    const previousLocale = currentConfig && currentConfig.admin
+      ? currentConfig.admin.time_locale
+      : "";
     currentConfig = config;
     twitchEnabled.checked = Boolean(config.twitch && config.twitch.enabled);
     twitchChannel.value = config.twitch && config.twitch.channel ? config.twitch.channel : "";
@@ -846,6 +853,16 @@
     }
 
     applyMessageSoundFromConfig(config);
+    if (timeLocaleInput) {
+      timeLocaleInput.value =
+        config.admin && config.admin.time_locale === "en-GB" ? "en-GB" : "ru-RU";
+    }
+    const nextLocale = config.admin && config.admin.time_locale
+      ? config.admin.time_locale
+      : "ru-RU";
+    if (previousLocale !== nextLocale && recentMessageCache.length > 0) {
+      renderRecentMessages(recentMessageCache, { force: true });
+    }
     markSettingsClean();
     scheduleOverlayPreviewRefresh();
   }
@@ -1331,6 +1348,9 @@
         image_previews: richChat.image_previews,
       },
       admin: {
+        time_locale: timeLocaleInput && timeLocaleInput.value === "en-GB"
+          ? "en-GB"
+          : "ru-RU",
         message_sound: getMessageSoundSettings(),
       },
     };
@@ -2217,6 +2237,75 @@
     return distance <= MESSAGE_SCROLL_THRESHOLD_PX;
   }
 
+  function timeLocale() {
+    return currentConfig && currentConfig.admin && currentConfig.admin.time_locale === "en-GB"
+      ? "en-GB"
+      : "ru-RU";
+  }
+
+  function formatMessageTime(value) {
+    if (typeof value !== "string" || value === "") {
+      return "";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+    return new Intl.DateTimeFormat(timeLocale(), {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    }).format(date);
+  }
+
+  function isSameMessage(message, platform, id) {
+    return Boolean(
+      message &&
+        typeof message.id === "string" &&
+        message.id === id &&
+        typeof message.platform === "string" &&
+        message.platform === platform
+    );
+  }
+
+  function removeMessageFromAdmin(platform, id) {
+    const removed = recentMessageCache.filter(function (message) {
+      return isSameMessage(message, platform, id);
+    });
+    if (removed.length === 0) {
+      return;
+    }
+    removed.forEach(function (message) {
+      knownMessageKeys.delete(messageKey(message));
+    });
+    recentMessageCache = recentMessageCache.filter(function (message) {
+      return !isSameMessage(message, platform, id);
+    });
+    renderRecentMessages(recentMessageCache, { force: true });
+  }
+
+  async function deleteMessage(message, button) {
+    if (!message || typeof message.id !== "string" || message.id === "") {
+      return;
+    }
+    button.disabled = true;
+    try {
+      const response = await fetch(apiURL("/api/messages/delete"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platform: message.platform, id: message.id }),
+      });
+      if (!response.ok && response.status !== 404) {
+        throw new Error("delete failed");
+      }
+      removeMessageFromAdmin(message.platform, message.id);
+    } catch {
+      button.disabled = false;
+      showBanner("error", "Could not delete the message.");
+    }
+  }
+
   function buildMessageListItem(msg) {
     const item = document.createElement("li");
     item.className = "message-list__item";
@@ -2238,12 +2327,24 @@
     time.className = "message-list__time";
     if (typeof msg.timestamp === "string") {
       time.dateTime = msg.timestamp;
-      appendText(time, new Date(msg.timestamp).toLocaleTimeString());
+      appendText(time, formatMessageTime(msg.timestamp));
     }
 
     meta.appendChild(user);
     meta.appendChild(platform);
     meta.appendChild(time);
+
+    if (typeof msg.id === "string" && msg.id !== "") {
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "message-list__delete";
+      deleteButton.type = "button";
+      deleteButton.textContent = "Delete";
+      deleteButton.setAttribute("aria-label", "Delete message from " + messageDisplayName(msg));
+      deleteButton.addEventListener("click", function () {
+        deleteMessage(msg, deleteButton);
+      });
+      meta.appendChild(deleteButton);
+    }
 
     const text = document.createElement("p");
     text.className = "message-list__text";
@@ -2287,6 +2388,10 @@
     const stickToBottom = isMessagesPanelNearBottom(messagesPanel());
 
     recentMessagesEmpty.hidden = true;
+    recentMessageCache.push(msg);
+    if (recentMessageCache.length > RECENT_MESSAGE_LIMIT) {
+      recentMessageCache = recentMessageCache.slice(-RECENT_MESSAGE_LIMIT);
+    }
     recentMessages.appendChild(buildMessageListItem(msg));
     while (recentMessages.children.length > RECENT_MESSAGE_LIMIT) {
       recentMessages.removeChild(recentMessages.firstChild);
@@ -2298,11 +2403,13 @@
     }
   }
 
-  function renderRecentMessages(messages) {
+  function renderRecentMessages(messages, options) {
     const fingerprint = messagesFingerprint(messages);
-    if (fingerprint === renderedMessagesFingerprint && recentMessages.children.length > 0) {
+    const force = options && options.force;
+    if (!force && fingerprint === renderedMessagesFingerprint && recentMessages.children.length > 0) {
       return;
     }
+    recentMessageCache = Array.isArray(messages) ? messages.slice() : [];
 
     const panel = messagesPanel();
     const stickToBottom = isMessagesPanelNearBottom(panel);
@@ -2355,7 +2462,14 @@
   }
 
   function handleWireMessage(wire) {
-    if (!wire || wire.type !== "message") {
+    if (!wire || typeof wire !== "object") {
+      return;
+    }
+    if (wire.type === "message_deleted") {
+      removeMessageFromAdmin(wire.platform, wire.id);
+      return;
+    }
+    if (wire.type !== "message") {
       return;
     }
 
@@ -2423,6 +2537,14 @@
   }
 
   function initMessageSoundControls() {
+    function unlockAudio() {
+      ensureAudioContext().catch(function () {
+        /* A later explicit Test click can retry browser audio activation. */
+      });
+    }
+    document.addEventListener("pointerdown", unlockAudio, { once: true });
+    document.addEventListener("keydown", unlockAudio, { once: true });
+
     messageSoundEnabledInput.addEventListener("change", function () {
       if (messageSoundEnabledInput.checked) {
         ensureAudioContext().catch(function () {
@@ -2634,14 +2756,17 @@
 
   renderSettingsState();
 
-  refreshAll().catch(function () {
-    if (!currentConfig) {
-      markSettingsUnavailable();
-    }
-    showBanner("error", "Cannot reach CommRelay — is it running?");
-  });
-
-  connectMessageWebSocket();
+  refreshAll()
+    .catch(function () {
+      if (!currentConfig) {
+        markSettingsUnavailable();
+      }
+      showBanner("error", "Cannot reach CommRelay — is it running?");
+    })
+    .finally(function () {
+      soundReady = true;
+      connectMessageWebSocket();
+    });
 
   statusTimer = window.setInterval(function () {
     loadStatus().catch(function () {

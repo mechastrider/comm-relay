@@ -110,6 +110,7 @@ func TestConfig_WhenPatchMessageSound_ExpectSaved(t *testing.T) {
   "vk": { "enabled": false },
   "overlay": { "max_messages": 30, "message_ttl_seconds": 20 },
   "admin": {
+    "time_locale": "en-GB",
     "message_sound": { "enabled": true, "volume": 0.25, "sound": "alert" }
   }
 }`)
@@ -123,10 +124,64 @@ func TestConfig_WhenPatchMessageSound_ExpectSaved(t *testing.T) {
 	var payload map[string]any
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
 	admin := payload["admin"].(map[string]any)
+	require.Equal(t, "en-GB", admin["time_locale"])
 	sound := admin["message_sound"].(map[string]any)
 	require.Equal(t, true, sound["enabled"])
 	require.InDelta(t, 0.25, sound["volume"], 0.001)
 	require.Equal(t, "alert", sound["sound"])
+}
+
+func TestMessagesDelete_WhenMessageExists_ExpectRemoved(t *testing.T) {
+	t.Parallel()
+
+	b := bus.New(0)
+	handler := testHandlerWithBus(t, b)
+	time.Sleep(50 * time.Millisecond)
+
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		ID:       "message-1",
+		Platform: "twitch",
+		Username: "viewer",
+		Message:  "remove me",
+	})))
+	require.Eventually(t, func() bool {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent", nil))
+		return rec.Code == http.StatusOK && strings.Contains(rec.Body.String(), "message-1")
+	}, time.Second, 10*time.Millisecond)
+
+	deleteRec := httptest.NewRecorder()
+	deleteReq := httptest.NewRequest(
+		http.MethodPost,
+		"/api/messages/delete",
+		strings.NewReader(`{"platform":"twitch","id":"message-1"}`),
+	)
+	deleteReq.Header.Set("Content-Type", "application/json")
+	handler.ServeHTTP(deleteRec, deleteReq)
+
+	require.Equal(t, http.StatusOK, deleteRec.Code)
+	require.JSONEq(t, `{"deleted":true}`, deleteRec.Body.String())
+
+	recentRec := httptest.NewRecorder()
+	handler.ServeHTTP(recentRec, httptest.NewRequest(http.MethodGet, "/api/messages/recent", nil))
+	require.Equal(t, http.StatusOK, recentRec.Code)
+	require.NotContains(t, recentRec.Body.String(), "message-1")
+}
+
+func TestMessagesDelete_WhenMessageMissing_ExpectNotFound(t *testing.T) {
+	t.Parallel()
+
+	handler := testHandler(t)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/messages/delete",
+		strings.NewReader(`{"platform":"twitch","id":"missing"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	handler.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestConfig_WhenPatchInvalidImagePreviewHost_ExpectFieldErrors(t *testing.T) {

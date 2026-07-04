@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
   <div class="cockpit-shell">
@@ -72,6 +72,7 @@
             <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">OBS</button>
             <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
             <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
+            <button class="btn-physical" type="button" data-dialog-target="interface-dialog">Interface</button>
           </div>
 
           <div class="panel-heading panel-heading--spaced">
@@ -565,6 +566,41 @@
       </div>
     </dialog>
 
+    <dialog id="interface-dialog" class="settings-dialog" aria-labelledby="interface-heading">
+      <div class="dialog-frame">
+        <div class="dialog-header">
+          <div>
+            <span class="dialog-kicker">Configuration</span>
+            <h2 id="interface-heading">Interface</h2>
+          </div>
+          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close interface settings">Close</button>
+        </div>
+
+        <section class="panel" aria-labelledby="time-display-heading">
+          <div class="panel__header">
+            <h3 id="time-display-heading">Time display</h3>
+          </div>
+
+          <div class="form form--compact">
+            <div class="form__field">
+              <label for="time-locale">Locale</label>
+              <select id="time-locale" name="time_locale">
+                <option value="ru-RU">Русский — 20:37:08</option>
+                <option value="en-GB">English — 20:37:08</option>
+              </select>
+              <p class="field-hint">The admin message list and OBS dock always use the same 24-hour format.</p>
+              <p id="time-locale-error" class="field-error" role="alert" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <div class="dialog-actions">
+          <button class="btn-physical" type="button" data-dialog-close>Close</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="sound-dialog" class="settings-dialog" aria-labelledby="message-sound-heading">
       <div class="dialog-frame">
         <div class="dialog-header">
@@ -621,6 +657,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

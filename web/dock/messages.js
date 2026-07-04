@@ -21,6 +21,17 @@
     max_width_px: 320,
     max_height_px: 180,
   };
+  let timeLocale = "ru-RU";
+  let timeFormatter = createTimeFormatter(timeLocale);
+
+  function createTimeFormatter(locale) {
+    return new Intl.DateTimeFormat(locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    });
+  }
 
   function appendText(element, value) {
     element.appendChild(document.createTextNode(typeof value === "string" ? value : ""));
@@ -210,7 +221,6 @@
       image.alt = "chat image";
       image.title = text;
       image.decoding = "async";
-      image.loading = "lazy";
       image.draggable = false;
       image.referrerPolicy = "no-referrer";
       image.style.setProperty("--preview-max-width", String(previewSettings.max_width_px || 320) + "px");
@@ -244,7 +254,7 @@
     if (Number.isNaN(date.getTime())) {
       return "";
     }
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    return timeFormatter.format(date);
   }
 
   function buildMessageItem(message) {
@@ -278,6 +288,18 @@
     meta.appendChild(user);
     meta.appendChild(platform);
     meta.appendChild(time);
+
+    if (typeof message.id === "string" && message.id !== "") {
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "message-list__delete";
+      deleteButton.type = "button";
+      deleteButton.textContent = "Delete";
+      deleteButton.setAttribute("aria-label", "Delete message from " + displayName(message));
+      deleteButton.addEventListener("click", function () {
+        deleteMessage(message, deleteButton);
+      });
+      meta.appendChild(deleteButton);
+    }
     content.appendChild(meta);
     content.appendChild(text);
     item.appendChild(buildAvatar(message));
@@ -327,6 +349,46 @@
     renderMessages(false);
   }
 
+  function isSameMessage(message, platform, id) {
+    return Boolean(
+      message &&
+        typeof message.id === "string" &&
+        message.id === id &&
+        typeof message.platform === "string" &&
+        message.platform === platform
+    );
+  }
+
+  function removeMessage(platform, id) {
+    const next = messages.filter(function (message) {
+      return !isSameMessage(message, platform, id);
+    });
+    if (next.length === messages.length) {
+      return;
+    }
+    messages = next;
+    renderMessages(false);
+  }
+
+  async function deleteMessage(message, button) {
+    button.disabled = true;
+    button.title = "";
+    try {
+      const response = await fetch("/api/messages/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platform: message.platform, id: message.id }),
+      });
+      if (!response.ok && response.status !== 404) {
+        throw new Error("delete failed");
+      }
+      removeMessage(message.platform, message.id);
+    } catch {
+      button.disabled = false;
+      button.title = "Could not delete message";
+    }
+  }
+
   function wireToMessage(wire) {
     const user = typeof wire.user === "string" ? wire.user : "";
     return {
@@ -358,7 +420,7 @@
     }
   }
 
-  async function loadPreviewSettings() {
+  async function loadDisplaySettings() {
     try {
       const response = await fetch("/api/config");
       if (!response.ok) {
@@ -368,8 +430,11 @@
       const settings = payload && payload.overlay && payload.overlay.image_previews;
       if (settings && typeof settings === "object") {
         previewSettings = settings;
-        renderMessages(false);
       }
+      const locale = payload && payload.admin && payload.admin.time_locale;
+      timeLocale = locale === "en-GB" ? "en-GB" : "ru-RU";
+      timeFormatter = createTimeFormatter(timeLocale);
+      renderMessages(false);
     } catch {
       /* Direct image previews stay disabled; text and emotes still render. */
     }
@@ -411,7 +476,9 @@
     nextSocket.addEventListener("message", function (event) {
       try {
         const wire = JSON.parse(event.data);
-        if (wire && wire.type === "message") {
+        if (wire && wire.type === "message_deleted") {
+          removeMessage(wire.platform, wire.id);
+        } else if (wire && wire.type === "message") {
           mergeMessages([wireToMessage(wire)]);
         }
       } catch {
@@ -438,6 +505,5 @@
   });
 
   renderMessages(true);
-  loadPreviewSettings();
-  connectWebSocket();
+  Promise.all([loadDisplaySettings(), loadRecentMessages()]).finally(connectWebSocket);
 }());
