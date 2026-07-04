@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CommRelay stream template mockup - panel</title>
+  <style>
+    :root {
+      --hud-cyan: #35d2d0;
+      --hud-cyan-soft: rgba(53, 210, 208, 0.58);
+      --hud-green: #8ed83f;
+      --hud-amber: #f0df58;
+      --panel-bg: rgba(8, 17, 22, 0.7);
+      --panel-dark: rgba(2, 8, 12, 0.68);
+      --text: #f4f6f0;
+      --muted: #a8c0bf;
+      --warning: #ff4b42;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: #000;
+      color: var(--text);
+      font-family: "Roboto Condensed", "Arial Narrow", "Bahnschrift", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.22)),
+        url("../../var/20251022080049_1.jpg") center / cover no-repeat;
+      isolation: isolate;
+    }
+
+    .scene::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 48%, transparent 0 52%, rgba(0, 0, 0, 0.2) 100%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 4px);
+      mix-blend-mode: screen;
+      opacity: 0.52;
+      z-index: 1;
+    }
+
+    .scene::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(90deg, rgba(0, 255, 239, 0.08), transparent 18% 82%, rgba(0, 255, 239, 0.05));
+      z-index: 1;
+    }
+
+    .dialog-panel {
+      position: absolute;
+      left: clamp(360px, 33.2vw, 680px);
+      top: clamp(145px, 20.5vh, 250px);
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      width: min(628px, 48vw);
+      min-height: 158px;
+      border: 1px solid rgba(83, 232, 226, 0.44);
+      background:
+        linear-gradient(90deg, rgba(43, 191, 190, 0.14), transparent 34%),
+        var(--panel-bg);
+      clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.5) inset,
+        0 0 28px rgba(16, 218, 216, 0.16),
+        0 12px 32px rgba(0, 0, 0, 0.28);
+      animation: panel-arrive 720ms cubic-bezier(0.18, 0.82, 0.26, 1) both;
+    }
+
+    .dialog-panel::before,
+    .dialog-panel::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .dialog-panel::before {
+      inset: 7px;
+      border: 1px solid rgba(53, 210, 208, 0.17);
+      clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    }
+
+    .dialog-panel::after {
+      left: 78px;
+      right: 18px;
+      bottom: 17px;
+      height: 3px;
+      background:
+        linear-gradient(90deg, var(--hud-cyan), transparent 78%),
+        repeating-linear-gradient(90deg, transparent 0 16px, rgba(53, 210, 208, 0.65) 16px 18px);
+      opacity: 0.72;
+    }
+
+    .portrait {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 158px;
+      border-right: 1px solid rgba(53, 210, 208, 0.38);
+      background:
+        linear-gradient(180deg, rgba(51, 222, 204, 0.12), rgba(7, 18, 25, 0.74)),
+        linear-gradient(135deg, rgba(244, 223, 88, 0.1), transparent 52%);
+      overflow: hidden;
+    }
+
+    .portrait::before {
+      content: "";
+      position: absolute;
+      top: 22px;
+      bottom: 22px;
+      left: 50%;
+      width: 2px;
+      background: linear-gradient(180deg, transparent, var(--hud-cyan) 18% 82%, transparent);
+      box-shadow: 0 0 12px rgba(53, 210, 208, 0.38);
+      opacity: 0.62;
+    }
+
+    .portrait::after {
+      content: "";
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 36px;
+      height: 3px;
+      background: var(--hud-cyan);
+      box-shadow:
+        0 42px 0 rgba(53, 210, 208, 0.4),
+        0 84px 0 rgba(142, 216, 63, 0.48);
+      opacity: 0.66;
+    }
+
+    .dialog-copy {
+      position: relative;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+      padding: 22px 28px 30px;
+      min-width: 0;
+    }
+
+    .speaker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #f9fbf5;
+      font-size: clamp(13px, 1.04vw, 17px);
+      font-weight: 800;
+      text-transform: uppercase;
+      text-shadow: 0 2px 3px #000;
+    }
+
+    .speaker::before {
+      content: "";
+      width: 4px;
+      height: 22px;
+      background: var(--hud-cyan);
+      box-shadow: 0 0 12px var(--hud-cyan);
+    }
+
+    .message-stack {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .message {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 9px;
+      align-items: baseline;
+      opacity: 0;
+      animation: message-fade 8s ease-in-out infinite both;
+    }
+
+    .message:nth-child(2) {
+      animation-delay: 350ms;
+    }
+
+    .message:nth-child(3) {
+      animation-delay: 700ms;
+    }
+
+    .message__author {
+      color: var(--hud-amber);
+      font-size: clamp(12px, 0.94vw, 15px);
+      font-weight: 800;
+      text-transform: uppercase;
+      text-shadow: 0 2px 3px #000;
+      white-space: nowrap;
+    }
+
+    .message__text {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(19px, 1.55vw, 30px);
+      font-weight: 800;
+      line-height: 1.18;
+      text-shadow:
+        0 2px 3px #000,
+        0 0 9px rgba(255, 255, 255, 0.18);
+      overflow-wrap: anywhere;
+    }
+
+    .hud-corners {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .hud-corners span {
+      position: absolute;
+      width: 44px;
+      height: 16px;
+      border-top: 2px solid var(--hud-cyan);
+      opacity: 0.75;
+    }
+
+    .hud-corners span:nth-child(1) {
+      left: 12px;
+      top: 10px;
+      border-left: 2px solid var(--hud-cyan);
+    }
+
+    .hud-corners span:nth-child(2) {
+      right: 12px;
+      top: 10px;
+      border-right: 2px solid var(--hud-cyan);
+    }
+
+    .hud-corners span:nth-child(3) {
+      left: 12px;
+      bottom: 10px;
+      border-top: 0;
+      border-bottom: 2px solid var(--hud-cyan);
+      border-left: 2px solid var(--hud-cyan);
+    }
+
+    .hud-corners span:nth-child(4) {
+      right: 12px;
+      bottom: 10px;
+      border-top: 0;
+      border-right: 2px solid var(--hud-cyan);
+      border-bottom: 2px solid var(--hud-cyan);
+    }
+
+    .signal-strip {
+      position: absolute;
+      right: clamp(42px, 4vw, 80px);
+      bottom: clamp(38px, 4.2vh, 66px);
+      z-index: 2;
+      width: min(438px, 29vw);
+      height: 44px;
+      border: 1px solid rgba(53, 210, 208, 0.34);
+      background: rgba(2, 15, 18, 0.34);
+      clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+    }
+
+    .signal-strip::before {
+      content: "";
+      display: block;
+      height: 100%;
+      background:
+        linear-gradient(90deg, var(--hud-cyan) 0 24%, transparent 24% 28%, var(--hud-cyan) 28% 43%, transparent 43% 47%, var(--hud-cyan) 47% 55%, transparent 55%),
+        repeating-linear-gradient(90deg, transparent 0 12px, rgba(53, 210, 208, 0.55) 12px 13px);
+      opacity: 0.42;
+    }
+
+    @keyframes panel-arrive {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.985);
+        filter: blur(4px);
+      }
+
+      65% {
+        opacity: 1;
+        transform: translateY(-2px) scale(1.004);
+        filter: blur(0);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes message-fade {
+      0%,
+      100% {
+        opacity: 0;
+      }
+
+      8%,
+      78% {
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .dialog-panel {
+        left: 5vw;
+        top: 16vh;
+        grid-template-columns: 52px minmax(0, 1fr);
+        width: 90vw;
+      }
+
+      .dialog-copy {
+        padding: 20px 22px 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="scene" aria-label="OBS overlay mockup with embedded background">
+    <section class="dialog-panel" aria-label="Stream messages">
+      <div class="portrait" aria-hidden="true"></div>
+      <div class="dialog-copy">
+        <div class="speaker">CommRelay uplink</div>
+        <ul class="message-stack">
+          <li class="message">
+            <span class="message__author">NightSignal</span>
+            <p class="message__text">Город горит красиво, но таймер выглядит подозрительно.</p>
+          </li>
+          <li class="message">
+            <span class="message__author">IronVera</span>
+            <p class="message__text">Левый фланг просит больше лазеров.</p>
+          </li>
+          <li class="message">
+            <span class="message__author">ColdOrbit</span>
+            <p class="message__text">Ставлю на то, что следующий залп попадет в корпус.</p>
+          </li>
+        </ul>
+      </div>
+      <div class="hud-corners" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </section>
+    <div class="signal-strip" aria-hidden="true"></div>
+  </main>
+</body>
+</html>

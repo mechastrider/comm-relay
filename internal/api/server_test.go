@@ -26,6 +26,15 @@ func TestNewHandlerRoutes(t *testing.T) {
 		require.Contains(t, rec.Body.String(), "CommRelay")
 		require.Contains(t, rec.Body.String(), "/favicon.svg")
 		require.Contains(t, rec.Body.String(), "app.js")
+		require.Contains(t, rec.Body.String(), `id="obs-setup-panel"`)
+		require.Contains(t, rec.Body.String(), `data-copy-obs-url="obs-overlay-url"`)
+		require.Contains(t, rec.Body.String(), `/dock/messages`)
+
+		jsRec := httptest.NewRecorder()
+		handler.ServeHTTP(jsRec, httptest.NewRequest(http.MethodGet, "/app.js", nil))
+		require.Equal(t, http.StatusOK, jsRec.Code)
+		require.Contains(t, jsRec.Body.String(), "setOBSSection")
+		require.Contains(t, jsRec.Body.String(), "navigator.clipboard")
 	})
 
 	t.Run("favicon", func(t *testing.T) {
@@ -50,5 +59,26 @@ func TestNewHandlerRoutes(t *testing.T) {
 		handler.ServeHTTP(cssRec, httptest.NewRequest(http.MethodGet, "/overlay/overlay.css", nil))
 		require.Equal(t, http.StatusOK, cssRec.Code)
 		require.Contains(t, cssRec.Body.String(), "background: transparent")
+	})
+
+	t.Run("message dock", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/dock/messages", nil))
+		require.Equal(t, http.StatusOK, rec.Code)
+		body := rec.Body.String()
+		require.Contains(t, body, "/dock/messages/messages.css")
+		require.Contains(t, body, "/dock/messages/messages.js")
+		require.Contains(t, body, `id="messages"`)
+
+		cssRec := httptest.NewRecorder()
+		handler.ServeHTTP(cssRec, httptest.NewRequest(http.MethodGet, "/dock/messages/messages.css", nil))
+		require.Equal(t, http.StatusOK, cssRec.Code)
+		require.Contains(t, cssRec.Body.String(), "color-scheme: dark")
+
+		jsRec := httptest.NewRecorder()
+		handler.ServeHTTP(jsRec, httptest.NewRequest(http.MethodGet, "/dock/messages/messages.js", nil))
+		require.Equal(t, http.StatusOK, jsRec.Code)
+		require.Contains(t, jsRec.Body.String(), "/api/messages/recent")
+		require.Contains(t, jsRec.Body.String(), "/ws")
 	})
 }

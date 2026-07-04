@@ -74,7 +74,7 @@ CommRelay — локальное приложение на Go для объед�
 ```text
 [Twitch]  \
 [YouTube]  -> [CommRelay Core] -> [WebSocket /ws] -> [OBS Overlay /overlay]
-[VK Live] /
+[VK Live] /                                      -> [OBS Dock /dock/messages]
 ```
 
 ## HTTP-сервер
@@ -82,6 +82,7 @@ CommRelay — локальное приложение на Go для объед�
 На первом этапе используется один локальный сервер и один порт:
 
 - `http://localhost:17877/` — панель управления
+- `http://localhost:17877/dock/messages` — журнал сообщений как Custom Browser Dock в интерфейсе OBS
 - `http://localhost:17877/overlay` — OBS Browser Source
 - `ws://localhost:17877/ws` — WebSocket для overlay
 
@@ -308,6 +309,23 @@ URL:
 
 ---
 
+# OBS Dock с журналом сообщений
+
+URL:
+
+[http://localhost:17877/dock/messages](http://localhost:17877/dock/messages)
+
+Назначение:
+
+- встраивание через Custom Browser Dock в интерфейс OBS
+- отображение только сообщений без панели настроек и диагностики
+- восстановление последних сообщений из локальной истории
+- получение новых сообщений через общий WebSocket `/ws`
+- сохранение ручной позиции прокрутки, пока пользователь читает старые сообщения
+- панель видна оператору и не входит в изображение сцены
+
+---
+
 # Панель управления
 
 URL:
@@ -330,6 +348,7 @@ URL:
 - OAuth для платформ, где он нужен
 - просмотр статуса всех подключений
 - просмотр последних сообщений
+- встроенная настройка OBS с готовыми URL, копированием и инструкциями для Browser Source и Custom Browser Dock
 - настройки overlay
 - сохранение настроек
 

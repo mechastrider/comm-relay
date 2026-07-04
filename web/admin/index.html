@@ -56,7 +56,7 @@
         </div>
       </section>
 
-      <aside class="systems-panel" aria-labelledby="systems-heading">
+      <aside class="systems-panel" aria-labelledby="controls-heading">
         <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="systems-content" aria-expanded="true" aria-label="Collapse systems panel">
           <span class="sidebar-toggle__chevron" aria-hidden="true">&gt;</span>
           <span class="sidebar-toggle__label" aria-hidden="true">Controls</span>
@@ -64,6 +64,17 @@
 
         <div id="systems-content" class="systems-panel__content">
           <div class="panel-heading">
+            <h2 id="controls-heading">Controls</h2>
+          </div>
+
+          <div class="control-grid">
+            <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
+            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">OBS</button>
+            <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
+            <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
+          </div>
+
+          <div class="panel-heading panel-heading--spaced">
             <h2 id="systems-heading">Systems</h2>
           </div>
 
@@ -91,17 +102,6 @@
             </div>
           </dl>
           <ul id="emote-provider-list" class="provider-list" aria-label="Emote provider status"></ul>
-
-          <div class="panel-heading panel-heading--spaced">
-            <h2>Controls</h2>
-          </div>
-
-          <div class="control-grid">
-            <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
-            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">Overlay</button>
-            <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
-            <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
-          </div>
         </div>
       </aside>
     </main>
@@ -247,67 +247,212 @@
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>
-            <span class="dialog-kicker">Configuration</span>
-            <h2 id="overlay-heading">Overlay</h2>
+            <span class="dialog-kicker">Streaming integration</span>
+            <h2 id="overlay-heading">OBS</h2>
           </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close overlay settings">Close</button>
+          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close OBS settings">Close</button>
         </div>
 
-        <section class="panel" aria-labelledby="overlay-display-heading">
-          <div class="panel__header">
-            <h3 id="overlay-display-heading">Display</h3>
+        <div class="obs-dialog-body">
+          <div class="obs-tabs" role="tablist" aria-label="OBS sections">
+            <button id="obs-setup-tab" class="obs-tab" type="button" role="tab" aria-selected="true" aria-controls="obs-setup-panel" data-obs-section="setup">Setup</button>
+            <button id="obs-appearance-tab" class="obs-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-appearance-panel" tabindex="-1" data-obs-section="appearance">Appearance</button>
           </div>
 
-          <div class="panel__body">
-            <p class="panel-intro">Appearance settings for the OBS Browser Source overlay. After saving, refresh the Browser Source in OBS to apply display changes.</p>
+          <section id="obs-setup-panel" class="obs-tab-panel obs-setup" role="tabpanel" aria-labelledby="obs-setup-tab">
+            <div class="obs-setup-intro">
+              <span class="dialog-kicker">Ready to paste</span>
+              <h3>Connect CommRelay to OBS</h3>
+              <p>Choose where messages should appear. URLs use the address currently serving CommRelay, so custom ports are included automatically.</p>
+            </div>
 
-            <div class="form form--compact form--overlay-display">
-              <div class="form__field">
-                <label for="overlay-max-messages">Max messages</label>
-                <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
-                <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
-              </div>
+            <div class="obs-integration-grid">
+              <article class="obs-integration-card" aria-labelledby="obs-overlay-card-heading">
+                <div class="obs-integration-card__header">
+                  <div>
+                    <span class="obs-integration-card__eyebrow">Browser Source</span>
+                    <h3 id="obs-overlay-card-heading">On-stream overlay</h3>
+                  </div>
+                  <span class="obs-audience-badge obs-audience-badge--live">Visible to viewers</span>
+                </div>
+                <p class="obs-integration-card__summary">Adds chat messages to the scene output seen by your audience.</p>
 
-              <div class="form__field">
-                <label for="overlay-message-ttl">Message TTL (seconds)</label>
-                <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
-                <p class="field-hint">0 keeps messages until they scroll off (max messages limit).</p>
-                <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
-              </div>
+                <div class="obs-url-field">
+                  <label for="obs-overlay-url">Overlay URL</label>
+                  <div class="obs-url-row">
+                    <input id="obs-overlay-url" type="text" readonly value="/overlay" data-obs-url-path="/overlay">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-overlay-url" data-copy-label="Overlay URL">Copy URL</button>
+                  </div>
+                </div>
 
-              <div class="form__field">
-                <label for="overlay-font-size">Font size (px)</label>
-                <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="48" step="1">
-                <p class="field-hint">12–48 px. After saving, refresh the Browser Source in OBS.</p>
-                <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
-              </div>
+                <ol class="obs-setup-steps">
+                  <li>In OBS Sources, add a <strong>Browser</strong> source.</li>
+                  <li>Paste the URL above into its URL field.</li>
+                  <li>Set the source width and height for your scene.</li>
+                  <li>Keep CommRelay running while you stream.</li>
+                </ol>
 
-              <div class="form__field">
-                <label for="overlay-display-mode">Spacing</label>
-                <select id="overlay-display-mode" name="overlay_display_mode">
-                  <option value="normal">Comfortable</option>
-                  <option value="compact">Compact</option>
-                </select>
-                <p class="field-hint">Compact reduces gaps between lines — useful with a busy chat.</p>
-                <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
-              </div>
+                <div class="obs-integration-actions">
+                  <a id="obs-overlay-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener">Open overlay</a>
+                  <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance">Customize appearance</button>
+                </div>
+              </article>
 
-              <div class="form__field form__field--full">
-                <label for="overlay-theme">Theme</label>
-                <select id="overlay-theme" name="overlay_theme">
-                  <option value="default">Default</option>
-                  <option value="dashboard">Text only (no background)</option>
-                </select>
-                <p class="field-hint">Default uses semi-transparent cards. Text only drops the background (good on green screen / chroma).</p>
-                <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
+              <article class="obs-integration-card" aria-labelledby="obs-dock-card-heading">
+                <div class="obs-integration-card__header">
+                  <div>
+                    <span class="obs-integration-card__eyebrow">Custom Browser Dock</span>
+                    <h3 id="obs-dock-card-heading">Message dock</h3>
+                  </div>
+                  <span class="obs-audience-badge">Only visible to you</span>
+                </div>
+                <p class="obs-integration-card__summary">Keeps a compact message journal inside the OBS interface without adding it to the scene.</p>
+
+                <div class="obs-url-field">
+                  <label for="obs-dock-url">Message dock URL</label>
+                  <div class="obs-url-row">
+                    <input id="obs-dock-url" type="text" readonly value="/dock/messages" data-obs-url-path="/dock/messages">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-dock-url" data-copy-label="Message dock URL">Copy URL</button>
+                  </div>
+                </div>
+
+                <ol class="obs-setup-steps">
+                  <li>Open <strong>View → Docks → Custom Browser Docks…</strong> in OBS.</li>
+                  <li>Enter a dock name and paste the URL above.</li>
+                  <li>Apply the change and place the dock where it is convenient.</li>
+                </ol>
+
+                <div class="obs-integration-actions">
+                  <a id="obs-dock-open" class="button-secondary button-secondary--small" href="/dock/messages" target="_blank" rel="noopener">Open message dock</a>
+                </div>
+              </article>
+            </div>
+
+            <p id="obs-copy-status" class="obs-copy-status" role="status" aria-live="polite"></p>
+          </section>
+
+          <section id="obs-appearance-panel" class="obs-tab-panel obs-tab-panel--appearance" role="tabpanel" aria-labelledby="obs-appearance-tab" hidden>
+            <div class="overlay-editor">
+          <section class="panel overlay-settings-panel" aria-labelledby="overlay-display-heading">
+            <div class="panel__header">
+              <h3 id="overlay-display-heading">Display</h3>
+            </div>
+
+            <div class="panel__body">
+              <p class="panel-intro">Appearance settings for the OBS Browser Source overlay. The preview reflects unsaved display changes.</p>
+
+              <div class="form form--compact form--overlay-display">
+                <div class="form__field">
+                  <label for="overlay-max-messages">Max messages</label>
+                  <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
+                  <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form__field">
+                  <label for="overlay-message-ttl">Message TTL (seconds)</label>
+                  <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
+                  <p class="field-hint">0 keeps messages until they scroll off (max messages limit).</p>
+                  <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form__field">
+                  <label for="overlay-font-size">Font size (px)</label>
+                  <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="48" step="1">
+                  <p class="field-hint">12–48 px. After saving, refresh the Browser Source in OBS.</p>
+                  <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form__field">
+                  <label for="overlay-display-mode">Spacing</label>
+                  <select id="overlay-display-mode" name="overlay_display_mode">
+                    <option value="normal">Comfortable</option>
+                    <option value="compact">Compact</option>
+                  </select>
+                  <p class="field-hint">Compact reduces gaps between lines — useful with a busy chat.</p>
+                  <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form__field form__field--full">
+                  <label for="overlay-theme">Theme</label>
+                  <select id="overlay-theme" name="overlay_theme">
+                    <option value="default">Default</option>
+                    <option value="dashboard">Text only (no background)</option>
+                    <option value="cockpit_panel">MW5 Mercs Cockpit panel</option>
+                    <option value="cockpit_popups">MW5 Mercs Cockpit popups</option>
+                  </select>
+                  <p class="field-hint">MW5 Mercs Cockpit themes use HUD-style panels for streams over gameplay.</p>
+                  <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+
+          <section class="panel overlay-preview-panel" aria-labelledby="overlay-preview-heading" data-preview-only>
+            <div class="panel__header overlay-preview-header">
+              <h3 id="overlay-preview-heading">Preview</h3>
+              <div class="overlay-preview-actions">
+                <button id="overlay-preview-replay" class="btn-physical btn-small" type="button">Replay</button>
+                <a id="overlay-preview-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener">Open overlay</a>
+              </div>
+            </div>
+
+            <div class="overlay-preview-controls">
+              <div class="preview-control">
+                <label for="overlay-preview-mode">Messages</label>
+                <select id="overlay-preview-mode">
+                  <option value="sample">Sample</option>
+                  <option value="live">Live chat</option>
+                </select>
+              </div>
+
+              <div class="preview-control preview-control--size">
+                <label for="overlay-preview-size">Source size</label>
+                <select id="overlay-preview-size">
+                  <option value="640x360">640 × 360</option>
+                  <option value="800x600">800 × 600</option>
+                  <option value="1280x720">1280 × 720</option>
+                  <option value="480x720">480 × 720</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+
+              <div class="preview-control preview-control--dimension">
+                <label for="overlay-preview-width">Width</label>
+                <input id="overlay-preview-width" type="number" min="240" max="3840" step="1" inputmode="numeric" value="640">
+              </div>
+
+              <span class="preview-dimension-mark" aria-hidden="true">×</span>
+
+              <div class="preview-control preview-control--dimension">
+                <label for="overlay-preview-height">Height</label>
+                <input id="overlay-preview-height" type="number" min="180" max="2160" step="1" inputmode="numeric" value="360">
+              </div>
+
+              <div class="preview-control">
+                <label for="overlay-preview-background">Background</label>
+                <select id="overlay-preview-background">
+                  <option value="busy">Busy scene</option>
+                  <option value="checker">Checkerboard</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="overlay-preview-stage" class="overlay-preview-stage">
+              <div id="overlay-preview-viewport" class="overlay-preview-viewport">
+                <iframe id="overlay-preview-frame" title="OBS overlay preview" referrerpolicy="no-referrer"></iframe>
+              </div>
+            </div>
+
+            <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
+          </section>
+        </div>
+          </section>
+        </div>
 
         <div class="dialog-actions">
           <button class="btn-physical" type="button" data-dialog-close>Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button data-obs-appearance-only disabled hidden>Save settings</button>
         </div>
       </div>
     </dialog>
@@ -474,6 +619,8 @@
     </dialog>
   </form>
 
-  <script src="app.js?v=7"></script>
+  <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
+
+  <script src="app.js?v=8"></script>
 </body>
 </html>

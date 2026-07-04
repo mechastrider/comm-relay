@@ -19,6 +19,7 @@
   --platform-vk: #5eb3ff;
   --platform-default: #d4d4d8;
   --message-platform-color: var(--platform-default);
+  --message-accent: var(--platform-default);
 }
 
 html,
@@ -31,6 +32,30 @@ body {
   font-size: var(--overlay-font-size);
   line-height: var(--overlay-line-height);
   color: var(--overlay-text);
+}
+
+body.overlay-preview--busy {
+  background:
+    radial-gradient(circle at 72% 28%, rgba(244, 188, 58, 0.52), transparent 4%),
+    linear-gradient(118deg, transparent 0 52%, rgba(20, 27, 32, 0.8) 52% 58%, transparent 58%),
+    linear-gradient(24deg, rgba(115, 55, 31, 0.7), transparent 34%),
+    radial-gradient(ellipse at 54% 76%, rgba(31, 91, 83, 0.75), transparent 38%),
+    linear-gradient(145deg, #23313b 0 34%, #6b5540 34% 48%, #182227 48% 100%);
+}
+
+body.overlay-preview--checker {
+  background-color: #303030;
+  background-image:
+    linear-gradient(45deg, #3c3c3c 25%, transparent 25%),
+    linear-gradient(-45deg, #3c3c3c 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #3c3c3c 75%),
+    linear-gradient(-45deg, transparent 75%, #3c3c3c 75%);
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+  background-size: 20px 20px;
+}
+
+body.overlay-preview--dark {
+  background: #080a0c;
 }
 
 body.overlay--compact {
@@ -52,6 +77,7 @@ body.overlay--compact {
 }
 
 .message {
+  box-sizing: border-box;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -135,6 +161,11 @@ body.overlay--compact {
 
 .message__platform svg > :not(:first-child) {
   fill: rgba(0, 0, 0, 0.9);
+}
+
+.message__avatar,
+.message__accent {
+  display: none;
 }
 
 .message[data-platform="vk"] .message__platform svg text {
@@ -222,6 +253,314 @@ body.overlay-theme--dashboard.overlay--compact {
   --overlay-message-gap: 2px;
 }
 
+body.overlay-theme--cockpit-panel,
+body.overlay-theme--cockpit-popups {
+  --hud-cyan: #35d2d0;
+  --hud-green: #8ed83f;
+  --hud-amber: #f0df58;
+  --hud-glass: rgba(8, 17, 22, 0.7);
+  --hud-glass-strong: rgba(4, 13, 17, 0.76);
+  --overlay-text: #f4f6f0;
+  --overlay-text-shadow:
+    0 2px 3px #000,
+    0 0 9px rgba(255, 255, 255, 0.18);
+  --platform-twitch: #35d2d0;
+  --platform-youtube: #8ed83f;
+  --platform-vk: #f0df58;
+  --platform-default: #f0df58;
+  font-family: "Roboto Condensed", "Arial Narrow", "Bahnschrift", Arial, sans-serif;
+}
+
+body.overlay-theme--cockpit-panel .messages {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  padding: clamp(58px, 20vh, 72px) clamp(18px, 4vw, 28px) clamp(20px, 10vh, 30px) 86px;
+  gap: 8px;
+  border: 1px solid rgba(83, 232, 226, 0.44);
+  background:
+    linear-gradient(var(--hud-cyan), var(--hud-cyan)) 18px 24px / 32px 3px no-repeat,
+    linear-gradient(rgba(53, 210, 208, 0.42), rgba(53, 210, 208, 0.42)) 18px 50% / 26px 3px no-repeat,
+    linear-gradient(rgba(142, 216, 63, 0.48), rgba(142, 216, 63, 0.48)) 18px calc(100% - 28px) / 32px 3px no-repeat,
+    linear-gradient(90deg, rgba(51, 222, 204, 0.12) 0 58px, transparent 58px),
+    linear-gradient(90deg, rgba(53, 210, 208, 0.38) 0 1px, transparent 1px) 58px 0 / 1px 100% no-repeat,
+    linear-gradient(90deg, rgba(43, 191, 190, 0.14), transparent 34%),
+    var(--hud-glass);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5) inset,
+    0 0 28px rgba(16, 218, 216, 0.16),
+    0 12px 32px rgba(0, 0, 0, 0.28);
+  clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+  overflow: hidden;
+}
+
+body.overlay-theme--cockpit-panel .messages::before,
+body.overlay-theme--cockpit-panel .messages::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+body.overlay-theme--cockpit-panel .messages::before {
+  content: "COMMRELAY UPLINK";
+  z-index: 3;
+  left: 58px;
+  right: 18px;
+  top: 0;
+  display: flex;
+  align-items: flex-start;
+  height: clamp(46px, 16vh, 66px);
+  max-width: none;
+  padding: clamp(16px, 6vh, 22px) 0 0 28px;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 17, 22, 0.96) 0%,
+    rgba(8, 17, 22, 0.86) 48%,
+    rgba(8, 17, 22, 0) 100%
+  );
+  box-sizing: border-box;
+  color: #f9fbf5;
+  font-size: clamp(11px, 1.04vw, 15px);
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: 0 2px 3px #000;
+  white-space: nowrap;
+}
+
+body.overlay-theme--cockpit-panel .messages::after {
+  z-index: 3;
+  left: 78px;
+  right: 18px;
+  bottom: 17px;
+  height: 3px;
+  background:
+    linear-gradient(90deg, var(--hud-cyan), transparent 78%),
+    repeating-linear-gradient(90deg, transparent 0 16px, rgba(53, 210, 208, 0.65) 16px 18px);
+  opacity: 0.72;
+}
+
+body.overlay-theme--cockpit-panel .message {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 34px 4px fit-content(18ch) minmax(0, 1fr);
+  grid-template-areas: "avatar accent user text";
+  align-items: baseline;
+  gap: 8px;
+  padding: 0;
+  padding-left: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-shadow: var(--overlay-text-shadow);
+  transform: none;
+  flex: 0 0 auto;
+  animation: cockpit-message-in 0.32s ease-out forwards;
+}
+
+body.overlay-theme--cockpit-panel .message--leaving,
+body.overlay-theme--cockpit-popups .message--leaving {
+  animation: cockpit-message-out 0.24s ease-in forwards;
+}
+
+body.overlay-theme--cockpit-panel .message__platform,
+body.overlay-theme--cockpit-popups .message__platform {
+  display: none;
+}
+
+body.overlay-theme--cockpit-panel .message__avatar,
+body.overlay-theme--cockpit-popups .message__avatar {
+  display: block;
+  grid-area: avatar;
+  align-self: start;
+  border: 1px solid color-mix(in srgb, var(--message-accent) 68%, #111);
+  border-radius: 4px;
+  background: rgba(6, 13, 17, 0.78);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 10px color-mix(in srgb, var(--message-accent) 24%, transparent),
+    0 2px 8px rgba(0, 0, 0, 0.32);
+  object-fit: cover;
+}
+
+body.overlay-theme--cockpit-panel .message__avatar {
+  width: 34px;
+  height: 34px;
+}
+
+body.overlay-theme--cockpit-popups .message__avatar {
+  width: 42px;
+  height: 42px;
+  margin-top: 2px;
+}
+
+body.overlay-theme--cockpit-panel .message__accent,
+body.overlay-theme--cockpit-popups .message__accent {
+  display: block;
+  grid-area: accent;
+  align-self: stretch;
+  width: 100%;
+  height: auto;
+  min-height: 30px;
+  background: var(--message-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--message-accent) 72%, transparent);
+}
+
+body.overlay-theme--cockpit-panel .message__user,
+body.overlay-theme--cockpit-popups .message__user {
+  color: var(--message-platform-color);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+body.overlay-theme--cockpit-panel .message__user {
+  grid-area: user;
+  min-width: 0;
+  max-width: 18ch;
+  font-size: clamp(12px, 0.94vw, 15px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.overlay-theme--cockpit-panel .message__user::after,
+body.overlay-theme--cockpit-popups .message__user::after {
+  content: "";
+}
+
+body.overlay-theme--cockpit-panel .message__text {
+  grid-area: text;
+  color: var(--overlay-text);
+  font-size: clamp(19px, calc(var(--overlay-font-size) * 1.35), 30px);
+  font-weight: 800;
+  line-height: 1.18;
+}
+
+body.overlay-theme--cockpit-popups .messages {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  padding: 1px 2px 2px 0;
+  gap: 12px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    rgba(0, 0, 0, 0.36) 18px,
+    #000 52px,
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    rgba(0, 0, 0, 0.36) 18px,
+    #000 52px,
+    #000 100%
+  );
+}
+
+body.overlay-theme--cockpit-popups .message {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px 5px minmax(0, 1fr);
+  grid-template-areas:
+    "avatar accent user"
+    "avatar accent text";
+  gap: 4px 12px;
+  align-items: start;
+  width: 100%;
+  min-height: 70px;
+  padding: 14px 19px 16px 15px;
+  border: 1px solid rgba(53, 210, 208, 0.4);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(53, 210, 208, 0.18), transparent 34%),
+    var(--hud-glass-strong);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.58) inset,
+    0 0 22px rgba(53, 210, 208, 0.16),
+    0 12px 24px rgba(0, 0, 0, 0.28);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 14px 100%, 0 calc(100% - 14px));
+  text-shadow: var(--overlay-text-shadow);
+  transform: none;
+  flex: 0 0 auto;
+  animation: cockpit-message-in 0.32s ease-out forwards;
+}
+
+body.overlay-theme--cockpit-popups .message::before,
+body.overlay-theme--cockpit-popups .message::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+body.overlay-theme--cockpit-popups .message::before {
+  left: 12px;
+  right: 24px;
+  top: 7px;
+  height: 2px;
+  background:
+    linear-gradient(90deg, var(--hud-cyan), transparent 72%),
+    repeating-linear-gradient(90deg, transparent 0 18px, rgba(53, 210, 208, 0.7) 18px 20px);
+  opacity: 0.72;
+}
+
+body.overlay-theme--cockpit-popups .message::after {
+  right: 10px;
+  bottom: 8px;
+  width: 58px;
+  height: 9px;
+  border-right: 2px solid var(--hud-cyan);
+  border-bottom: 2px solid var(--hud-cyan);
+  opacity: 0.7;
+}
+
+body.overlay-theme--cockpit-popups .message__platform {
+  display: none;
+}
+
+body.overlay-theme--cockpit-popups .message__platform svg {
+  display: none;
+}
+
+body.overlay-theme--cockpit-popups .message__user {
+  grid-area: user;
+  min-width: 0;
+  margin-top: 2px;
+  font-size: clamp(12px, 0.88vw, 15px);
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.overlay-theme--cockpit-popups .message__text {
+  grid-area: text;
+  color: var(--overlay-text);
+  font-size: clamp(20px, calc(var(--overlay-font-size) * 1.25), 28px);
+  font-weight: 800;
+  line-height: 1.16;
+}
+
+@media (max-width: 980px) {
+  body.overlay-theme--cockpit-panel .messages {
+    padding-left: 80px;
+  }
+}
+
 @keyframes message-in {
   to {
     opacity: 1;
@@ -233,5 +572,24 @@ body.overlay-theme--dashboard.overlay--compact {
   to {
     opacity: 0;
     transform: translateY(-4px);
+  }
+}
+
+@keyframes cockpit-message-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes cockpit-message-out {
+  to {
+    opacity: 0;
+    filter: blur(2px);
   }
 }

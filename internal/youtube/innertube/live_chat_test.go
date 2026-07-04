@@ -49,6 +49,43 @@ func TestParseLiveChatPollResponse_WhenTextMessagePresent_ExpectItem(t *testing.
 	require.Contains(t, result.Items[0].Badges, "moderator")
 }
 
+func TestParseLiveChatPollResponse_WhenEmojiRunHasShortcuts_ExpectMessageTextWithShortcut(t *testing.T) {
+	t.Parallel()
+
+	body := []byte(`{
+		"continuationContents": {
+			"liveChatContinuation": {
+				"actions": [{
+					"addChatItemAction": {
+						"item": {
+							"liveChatTextMessageRenderer": {
+								"id": "msg-emoji",
+								"authorExternalChannelId": "UC123",
+								"authorName": {"simpleText": "Viewer"},
+								"message": {"runs": [
+									{"text": "hello "},
+									{"emoji": {
+										"emojiId": "face-blue-smiling",
+										"shortcuts": [":face-blue-smiling:"],
+										"image": {"thumbnails": [{"url": "https://yt3.ggpht.com/emoji.png"}]}
+									}},
+									{"text": " chat"}
+								]}
+							}
+						}
+					}
+				}]
+			}
+		}
+	}`)
+
+	result, err := ParseLiveChatPollResponse(body)
+	require.NoError(t, err)
+	require.Len(t, result.Items, 1)
+	require.Equal(t, "hello :face-blue-smiling: chat", result.Items[0].Message)
+	require.Equal(t, "hello :face-blue-smiling: chat", result.Items[0].MessageText)
+}
+
 func TestParseLiveChatPollResponse_WhenOfflineBannerPresent_ExpectOffline(t *testing.T) {
 	t.Parallel()
 

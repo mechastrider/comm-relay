@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CommRelay stream template mockup - floating phrases</title>
+  <style>
+    :root {
+      --hud-cyan: #35d2d0;
+      --hud-green: #8ed83f;
+      --hud-amber: #f0df58;
+      --hud-red: #ff443c;
+      --text: #f8faf4;
+      --muted: #b6ccca;
+      --glass: rgba(4, 13, 17, 0.76);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: #000;
+      color: var(--text);
+      font-family: "Roboto Condensed", "Arial Narrow", "Bahnschrift", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.2)),
+        url("../../var/20251022080049_1.jpg") center / cover no-repeat;
+      isolation: isolate;
+    }
+
+    .scene::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 44%, transparent 0 57%, rgba(0, 0, 0, 0.24) 100%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.026) 0 1px, transparent 1px 5px);
+      opacity: 0.54;
+      z-index: 1;
+    }
+
+    .phrase-layer {
+      position: absolute;
+      left: clamp(380px, 32vw, 630px);
+      top: clamp(168px, 21vh, 245px);
+      z-index: 2;
+      width: min(720px, 50vw);
+      height: min(316px, 34vh);
+      pointer-events: none;
+    }
+
+    .phrase-layer::before {
+      content: "";
+      position: absolute;
+      inset: -14px;
+      border: 1px solid rgba(53, 210, 208, 0.18);
+      clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+      opacity: 0.72;
+      pointer-events: none;
+    }
+
+    .phrase-layer::after {
+      content: "";
+      position: absolute;
+      left: -10px;
+      right: 42%;
+      bottom: -18px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--hud-cyan), transparent);
+      opacity: 0.48;
+      pointer-events: none;
+    }
+
+    .phrase {
+      position: absolute;
+      display: grid;
+      grid-template-columns: 5px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      left: 0;
+      right: 0;
+      width: 100%;
+      min-height: 70px;
+      padding: 14px 19px 16px 15px;
+      border: 1px solid rgba(53, 210, 208, 0.4);
+      background:
+        linear-gradient(90deg, rgba(53, 210, 208, 0.18), transparent 34%),
+        var(--glass);
+      clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 14px 100%, 0 calc(100% - 14px));
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.58) inset,
+        0 0 22px rgba(53, 210, 208, 0.16),
+        0 12px 24px rgba(0, 0, 0, 0.28);
+      opacity: 0;
+      animation: phrase-cycle 13.5s cubic-bezier(0.18, 0.82, 0.26, 1) infinite both;
+    }
+
+    .phrase::before,
+    .phrase::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .phrase::before {
+      left: 12px;
+      right: 24px;
+      top: 7px;
+      height: 2px;
+      background:
+        linear-gradient(90deg, var(--hud-cyan), transparent 72%),
+        repeating-linear-gradient(90deg, transparent 0 18px, rgba(53, 210, 208, 0.7) 18px 20px);
+      opacity: 0.72;
+    }
+
+    .phrase::after {
+      right: 10px;
+      bottom: 8px;
+      width: 58px;
+      height: 9px;
+      border-right: 2px solid var(--hud-cyan);
+      border-bottom: 2px solid var(--hud-cyan);
+      opacity: 0.7;
+    }
+
+    .phrase:nth-child(1) {
+      top: 0;
+      animation-delay: 0s;
+    }
+
+    .phrase:nth-child(2) {
+      top: 82px;
+      animation-delay: 2.8s;
+    }
+
+    .phrase:nth-child(3) {
+      top: 164px;
+      animation-delay: 5.6s;
+    }
+
+    .phrase:nth-child(4) {
+      top: 246px;
+      animation-delay: 8.4s;
+    }
+
+    .phrase__rail {
+      width: 5px;
+      min-height: 54px;
+      background: var(--accent, var(--hud-cyan));
+      box-shadow: 0 0 13px var(--accent, var(--hud-cyan));
+    }
+
+    .phrase__body {
+      min-width: 0;
+    }
+
+    .phrase__meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: clamp(12px, 0.88vw, 15px);
+      font-weight: 800;
+      line-height: 1.1;
+      text-transform: uppercase;
+      text-shadow: 0 2px 3px #000;
+    }
+
+    .phrase__author {
+      color: var(--accent, var(--hud-cyan));
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .phrase__platform {
+      display: inline-grid;
+      place-items: center;
+      min-width: 38px;
+      height: 18px;
+      padding: 0 6px;
+      border: 1px solid rgba(240, 223, 88, 0.45);
+      color: var(--hud-amber);
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    .phrase__text {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(20px, 1.45vw, 28px);
+      font-weight: 800;
+      line-height: 1.16;
+      text-shadow:
+        0 2px 3px #000,
+        0 0 11px rgba(255, 255, 255, 0.16);
+      overflow-wrap: anywhere;
+    }
+
+    .aim-marker {
+      position: absolute;
+      left: 50%;
+      top: 49.2%;
+      z-index: 2;
+      width: 92px;
+      height: 92px;
+      transform: translate(-50%, -50%);
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .aim-marker::before,
+    .aim-marker::after {
+      content: "";
+      position: absolute;
+      inset: 29px;
+      border: 2px solid rgba(53, 210, 208, 0.72);
+    }
+
+    .aim-marker::before {
+      transform: rotate(45deg);
+    }
+
+    .aim-marker::after {
+      border-color: transparent;
+      border-top-color: rgba(53, 210, 208, 0.72);
+      border-bottom-color: rgba(53, 210, 208, 0.72);
+    }
+
+    @keyframes phrase-cycle {
+      0%,
+      16%,
+      100% {
+        opacity: 0;
+        filter: blur(3px);
+      }
+
+      20% {
+        opacity: 1;
+        filter: blur(0);
+      }
+
+      25%,
+      48% {
+        opacity: 1;
+        filter: blur(0);
+      }
+
+      56% {
+        opacity: 0;
+        filter: blur(2px);
+      }
+    }
+
+    @media (max-width: 980px) {
+      .phrase-layer {
+        left: 7vw;
+        top: 16vh;
+        width: 86vw;
+        height: 390px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="scene" aria-label="OBS overlay mockup with floating phrases">
+    <div class="phrase-layer" aria-live="polite">
+      <article class="phrase" style="--accent: #35d2d0;">
+        <span class="phrase__rail" aria-hidden="true"></span>
+        <div class="phrase__body">
+          <div class="phrase__meta">
+            <span class="phrase__author">NightSignal</span>
+            <span class="phrase__platform">TW</span>
+          </div>
+          <p class="phrase__text">Башня справа выглядит как идеальная мишень.</p>
+        </div>
+      </article>
+
+      <article class="phrase" style="--accent: #8ed83f;">
+        <span class="phrase__rail" aria-hidden="true"></span>
+        <div class="phrase__body">
+          <div class="phrase__meta">
+            <span class="phrase__author">IronVera</span>
+            <span class="phrase__platform">YT</span>
+          </div>
+          <p class="phrase__text">Если сейчас дать залп, камера будет прямо как в трейлере.</p>
+        </div>
+      </article>
+
+      <article class="phrase" style="--accent: #f0df58;">
+        <span class="phrase__rail" aria-hidden="true"></span>
+        <div class="phrase__body">
+          <div class="phrase__meta">
+            <span class="phrase__author">ColdOrbit</span>
+            <span class="phrase__platform">TW</span>
+          </div>
+          <p class="phrase__text">Осторожно, фланг открыт.</p>
+        </div>
+      </article>
+
+      <article class="phrase" style="--accent: #ff443c;">
+        <span class="phrase__rail" aria-hidden="true"></span>
+        <div class="phrase__body">
+          <div class="phrase__meta">
+            <span class="phrase__author">RetroKeys</span>
+            <span class="phrase__platform">VK</span>
+          </div>
+          <p class="phrase__text">Вот это уже похоже на переговоры под огнем.</p>
+        </div>
+      </article>
+    </div>
+    <div class="aim-marker" aria-hidden="true"></div>
+  </main>
+</body>
+</html>

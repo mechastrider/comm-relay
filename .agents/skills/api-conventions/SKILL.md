@@ -10,6 +10,7 @@ description: HTTP and WebSocket API conventions for comm-relay — routes, snake
 | Route | Method | Purpose |
 |-------|--------|---------|
 | `/` | GET | Admin control panel (static) |
+| `/dock/messages` | GET | Messages-only OBS Custom Browser Dock |
 | `/overlay` | GET | OBS Browser Source page |
 | `/ws` | GET | WebSocket upgrade for overlay |
 | `/healthz` | GET | Liveness |
@@ -59,7 +60,7 @@ Keep `error` strings short and UI-safe; log details with `clog.Errorf` server-si
 
 ## Static files
 
-- Serve `web/admin` and `web/overlay` with correct `Content-Type`.
+- Serve `web/admin`, `web/dock`, and `web/overlay` with correct `Content-Type`.
 - Overlay: allow embedding; no restrictive `X-Frame-Options` for local OBS use.
 - Cache-Control: `no-cache` during development; versioned assets later if needed.
 

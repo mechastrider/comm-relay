@@ -40,6 +40,25 @@
   const overlayFontSize = document.getElementById("overlay-font-size");
   const overlayDisplayMode = document.getElementById("overlay-display-mode");
   const overlayTheme = document.getElementById("overlay-theme");
+  const overlayDialog = document.getElementById("overlay-dialog");
+  const overlayPreviewFrame = document.getElementById("overlay-preview-frame");
+  const overlayPreviewStage = document.getElementById("overlay-preview-stage");
+  const overlayPreviewViewport = document.getElementById("overlay-preview-viewport");
+  const overlayPreviewMode = document.getElementById("overlay-preview-mode");
+  const overlayPreviewSize = document.getElementById("overlay-preview-size");
+  const overlayPreviewWidth = document.getElementById("overlay-preview-width");
+  const overlayPreviewHeight = document.getElementById("overlay-preview-height");
+  const overlayPreviewBackground = document.getElementById("overlay-preview-background");
+  const overlayPreviewReplay = document.getElementById("overlay-preview-replay");
+  const overlayPreviewOpen = document.getElementById("overlay-preview-open");
+  const overlayPreviewNote = document.getElementById("overlay-preview-note");
+  const obsSetupTab = document.getElementById("obs-setup-tab");
+  const obsAppearanceTab = document.getElementById("obs-appearance-tab");
+  const obsSetupPanel = document.getElementById("obs-setup-panel");
+  const obsAppearancePanel = document.getElementById("obs-appearance-panel");
+  const obsCopyStatus = document.getElementById("obs-copy-status");
+  const obsOverlayOpen = document.getElementById("obs-overlay-open");
+  const obsDockOpen = document.getElementById("obs-dock-open");
   const emotesTwitch = document.getElementById("emotes-twitch");
   const emotesYouTube = document.getElementById("emotes-youtube");
   const emotesVK = document.getElementById("emotes-vk");
@@ -61,6 +80,7 @@
   const messageSoundVolumeLabel = document.getElementById("message-sound-volume-label");
   const messageSoundTypeInput = document.getElementById("message-sound-type");
   const testMessageSound = document.getElementById("test-message-sound");
+  const statusErrorPopover = document.getElementById("status-error-popover");
 
   const MESSAGE_SOUND_TYPES = ["chime", "ping", "soft", "alert"];
   const RECENT_MESSAGE_LIMIT = 20;
@@ -68,9 +88,27 @@
   const BANNER_SUCCESS_DISMISS_MS = 4000;
   const OVERLAY_FONT_SIZE_MIN = 12;
   const OVERLAY_FONT_SIZE_MAX = 48;
+  const OVERLAY_THEMES = ["default", "dashboard", "cockpit_panel", "cockpit_popups"];
   const INITIAL_WS_RECONNECT_MS = 1000;
   const MAX_WS_RECONNECT_MS = 30000;
   const SIDEBAR_COLLAPSED_KEY = "commRelay.sidebarCollapsed";
+  const OVERLAY_PREVIEW_MODE_KEY = "commRelay.overlayPreview.mode";
+  const OVERLAY_PREVIEW_BACKGROUND_KEY = "commRelay.overlayPreview.background";
+  const OVERLAY_PREVIEW_WIDTH_KEY = "commRelay.overlayPreview.width";
+  const OVERLAY_PREVIEW_HEIGHT_KEY = "commRelay.overlayPreview.height";
+  const OVERLAY_PREVIEW_REFRESH_MS = 120;
+  const OVERLAY_PREVIEW_DEFAULT_WIDTH = 640;
+  const OVERLAY_PREVIEW_DEFAULT_HEIGHT = 360;
+  const OVERLAY_PREVIEW_WIDTH_MIN = 240;
+  const OVERLAY_PREVIEW_WIDTH_MAX = 3840;
+  const OVERLAY_PREVIEW_HEIGHT_MIN = 180;
+  const OVERLAY_PREVIEW_HEIGHT_MAX = 2160;
+  const OVERLAY_PREVIEW_SIZES = {
+    "640x360": [640, 360],
+    "800x600": [800, 600],
+    "1280x720": [1280, 720],
+    "480x720": [480, 720],
+  };
 
   const fieldErrors = {
     twitch_channel: document.getElementById("twitch-channel-error"),
@@ -131,10 +169,274 @@
   let wsReconnectTimer = null;
   let audioCtx = null;
   let bannerTimer = null;
+  let activeErrorTrigger = null;
+  let errorPopoverPinned = false;
+  let overlayPreviewRefreshTimer = null;
+  let overlayPreviewRevision = 0;
+  let overlayPreviewResizeObserver = null;
+  let obsCopyFeedbackTimer = null;
+  let obsCopyFeedbackButton = null;
 
   function apiURL(path) {
     return window.location.origin + path;
   }
+
+  function updateOBSSetupURLs() {
+    document.querySelectorAll("[data-obs-url-path]").forEach(function (input) {
+      input.value = apiURL(input.dataset.obsUrlPath || "/");
+    });
+    if (obsOverlayOpen) {
+      obsOverlayOpen.href = apiURL("/overlay");
+    }
+    if (obsDockOpen) {
+      obsDockOpen.href = apiURL("/dock/messages");
+    }
+  }
+
+  function resetOBSCopyFeedback() {
+    if (obsCopyFeedbackTimer !== null) {
+      window.clearTimeout(obsCopyFeedbackTimer);
+      obsCopyFeedbackTimer = null;
+    }
+    if (obsCopyFeedbackButton) {
+      obsCopyFeedbackButton.textContent = obsCopyFeedbackButton.dataset.copyDefaultText || "Copy URL";
+      obsCopyFeedbackButton = null;
+    }
+  }
+
+  function showOBSCopyFeedback(button, message, copied) {
+    resetOBSCopyFeedback();
+    button.dataset.copyDefaultText = button.dataset.copyDefaultText || button.textContent;
+    button.textContent = copied ? "Copied" : "Copy failed";
+    obsCopyFeedbackButton = button;
+    if (obsCopyStatus) {
+      obsCopyStatus.textContent = message;
+      obsCopyStatus.classList.toggle("obs-copy-status--error", !copied);
+    }
+    obsCopyFeedbackTimer = window.setTimeout(function () {
+      resetOBSCopyFeedback();
+    }, 2500);
+  }
+
+  function fallbackCopyFromInput(input) {
+    try {
+      input.focus();
+      input.select();
+      input.setSelectionRange(0, input.value.length);
+      const copied = document.execCommand("copy");
+      if (copied) {
+        input.setSelectionRange(0, 0);
+      }
+      return copied;
+    } catch {
+      return false;
+    }
+  }
+
+  async function copyOBSURL(input) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      try {
+        await navigator.clipboard.writeText(input.value);
+        return true;
+      } catch {
+        return fallbackCopyFromInput(input);
+      }
+    }
+    return fallbackCopyFromInput(input);
+  }
+
+  function setOBSSection(section, options) {
+    if (!obsSetupTab || !obsAppearanceTab || !obsSetupPanel || !obsAppearancePanel) {
+      return;
+    }
+    const showAppearance = section === "appearance";
+    obsSetupTab.setAttribute("aria-selected", showAppearance ? "false" : "true");
+    obsSetupTab.tabIndex = showAppearance ? -1 : 0;
+    obsAppearanceTab.setAttribute("aria-selected", showAppearance ? "true" : "false");
+    obsAppearanceTab.tabIndex = showAppearance ? 0 : -1;
+    obsSetupPanel.hidden = showAppearance;
+    obsAppearancePanel.hidden = !showAppearance;
+    document.querySelectorAll("[data-obs-appearance-only]").forEach(function (element) {
+      element.hidden = !showAppearance;
+    });
+
+    if (overlayDialog && overlayDialog.open) {
+      if (showAppearance) {
+        mountOverlayPreview();
+      } else {
+        unmountOverlayPreview();
+      }
+    }
+
+    if (options && options.focusTab) {
+      (showAppearance ? obsAppearanceTab : obsSetupTab).focus();
+    }
+  }
+
+  function initOBSSetup() {
+    if (!overlayDialog || !obsSetupTab || !obsAppearanceTab) {
+      return;
+    }
+
+    updateOBSSetupURLs();
+    setOBSSection("setup");
+
+    overlayDialog.querySelectorAll("[data-obs-section]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        setOBSSection(button.dataset.obsSection, {
+          focusTab: button.getAttribute("role") !== "tab",
+        });
+      });
+    });
+
+    [obsSetupTab, obsAppearanceTab].forEach(function (tab) {
+      tab.addEventListener("keydown", function (event) {
+        if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(event.key) === -1) {
+          return;
+        }
+        event.preventDefault();
+        const showAppearance = event.key === "ArrowRight" || event.key === "End";
+        setOBSSection(showAppearance ? "appearance" : "setup", { focusTab: true });
+      });
+    });
+
+    overlayDialog.querySelectorAll("[data-copy-obs-url]").forEach(function (button) {
+      button.addEventListener("click", async function () {
+        const input = document.getElementById(button.dataset.copyObsUrl);
+        if (!input) {
+          return;
+        }
+        const copied = await copyOBSURL(input);
+        const label = button.dataset.copyLabel || "URL";
+        showOBSCopyFeedback(
+          button,
+          copied
+            ? label + " copied. Paste it into OBS."
+            : "Could not copy automatically. Select the URL and copy it manually.",
+          copied
+        );
+      });
+    });
+
+    overlayDialog.addEventListener("close", function () {
+      resetOBSCopyFeedback();
+      if (obsCopyStatus) {
+        obsCopyStatus.textContent = "";
+        obsCopyStatus.classList.remove("obs-copy-status--error");
+      }
+    });
+  }
+
+  function positionErrorPopover(trigger) {
+    if (!statusErrorPopover || statusErrorPopover.hidden) {
+      return;
+    }
+
+    const viewportGap = 12;
+    const triggerGap = 7;
+    const triggerRect = trigger.getBoundingClientRect();
+    const popoverRect = statusErrorPopover.getBoundingClientRect();
+    let left = triggerRect.right - popoverRect.width;
+    let top = triggerRect.bottom + triggerGap;
+
+    left = Math.max(
+      viewportGap,
+      Math.min(left, window.innerWidth - popoverRect.width - viewportGap)
+    );
+    if (top + popoverRect.height > window.innerHeight - viewportGap) {
+      top = Math.max(viewportGap, triggerRect.top - popoverRect.height - triggerGap);
+    }
+
+    statusErrorPopover.style.left = Math.round(left) + "px";
+    statusErrorPopover.style.top = Math.round(top) + "px";
+  }
+
+  function hideErrorPopover() {
+    if (activeErrorTrigger) {
+      activeErrorTrigger.setAttribute("aria-expanded", "false");
+    }
+    activeErrorTrigger = null;
+    errorPopoverPinned = false;
+    if (!statusErrorPopover) {
+      return;
+    }
+    statusErrorPopover.hidden = true;
+    statusErrorPopover.textContent = "";
+    statusErrorPopover.style.left = "";
+    statusErrorPopover.style.top = "";
+  }
+
+  function showErrorPopover(trigger, pin) {
+    if (!statusErrorPopover || !trigger) {
+      return;
+    }
+    if (activeErrorTrigger === trigger && errorPopoverPinned && !pin) {
+      return;
+    }
+    if (activeErrorTrigger && activeErrorTrigger !== trigger) {
+      activeErrorTrigger.setAttribute("aria-expanded", "false");
+    }
+
+    activeErrorTrigger = trigger;
+    errorPopoverPinned = Boolean(pin);
+    trigger.setAttribute("aria-expanded", "true");
+    statusErrorPopover.textContent = trigger.dataset.errorText || "";
+    statusErrorPopover.hidden = false;
+    positionErrorPopover(trigger);
+  }
+
+  function createErrorDetailTrigger(errorText, contextLabel) {
+    const trigger = document.createElement("button");
+    trigger.className = "error-detail-trigger";
+    trigger.type = "button";
+    trigger.textContent = "Error";
+    trigger.dataset.errorText = "Last error: " + errorText;
+    trigger.setAttribute("aria-label", contextLabel + " technical error details");
+    trigger.setAttribute("aria-controls", "status-error-popover");
+    trigger.setAttribute("aria-describedby", "status-error-popover");
+    trigger.setAttribute("aria-expanded", "false");
+
+    trigger.addEventListener("mouseenter", function () {
+      showErrorPopover(trigger, false);
+    });
+    trigger.addEventListener("mouseleave", function () {
+      if (!errorPopoverPinned && document.activeElement !== trigger) {
+        hideErrorPopover();
+      }
+    });
+    trigger.addEventListener("focus", function () {
+      showErrorPopover(trigger, false);
+    });
+    trigger.addEventListener("blur", function () {
+      hideErrorPopover();
+    });
+    trigger.addEventListener("click", function () {
+      if (activeErrorTrigger === trigger && errorPopoverPinned) {
+        hideErrorPopover();
+        return;
+      }
+      showErrorPopover(trigger, true);
+    });
+
+    return trigger;
+  }
+
+  document.addEventListener("pointerdown", function (event) {
+    if (
+      errorPopoverPinned &&
+      activeErrorTrigger &&
+      event.target !== activeErrorTrigger
+    ) {
+      hideErrorPopover();
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && activeErrorTrigger) {
+      hideErrorPopover();
+    }
+  });
+  window.addEventListener("resize", hideErrorPopover);
+  window.addEventListener("scroll", hideErrorPopover, true);
 
   function showBanner(kind, message) {
     if (bannerTimer) {
@@ -328,6 +630,9 @@
     if (dialog && typeof dialog.showModal === "function" && !dialog.open) {
       dialog.showModal();
     }
+    if (dialog === overlayDialog) {
+      setOBSSection("appearance");
+    }
   }
 
   function closeOpenDialogs() {
@@ -505,8 +810,7 @@
     );
     overlayDisplayMode.value =
       overlay.display_mode === "compact" ? "compact" : "normal";
-    overlayTheme.value =
-      overlay.theme === "dashboard" ? "dashboard" : "default";
+    overlayTheme.value = normalizeOverlayTheme(overlay.theme);
     applyRichChatFromConfig(overlay);
 
     if (config.youtube) {
@@ -543,6 +847,7 @@
 
     applyMessageSoundFromConfig(config);
     markSettingsClean();
+    scheduleOverlayPreviewRefresh();
   }
 
   function normalizeMessageSoundType(raw) {
@@ -601,8 +906,397 @@
       next.font_size_px !==
         (typeof prev.font_size_px === "number" ? prev.font_size_px : 18) ||
       next.display_mode !== (prev.display_mode === "compact" ? "compact" : "normal") ||
-      next.theme !== (prev.theme === "dashboard" ? "dashboard" : "default")
+      next.theme !== normalizeOverlayTheme(prev.theme)
     );
+  }
+
+  function normalizeOverlayTheme(raw) {
+    return typeof raw === "string" && OVERLAY_THEMES.indexOf(raw) !== -1
+      ? raw
+      : "default";
+  }
+
+  function readOverlayPreviewPreference(key, fallback) {
+    try {
+      const value = window.localStorage.getItem(key);
+      return value === null ? fallback : value;
+    } catch (error) {
+      return fallback;
+    }
+  }
+
+  function writeOverlayPreviewPreference(key, value) {
+    try {
+      window.localStorage.setItem(key, String(value));
+    } catch (error) {
+      /* localStorage can be unavailable in locked-down browser contexts. */
+    }
+  }
+
+  function clampOverlayPreviewDimension(value, min, max, fallback) {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+    return Math.min(max, Math.max(min, parsed));
+  }
+
+  function overlayPreviewDimensions() {
+    return {
+      width: clampOverlayPreviewDimension(
+        overlayPreviewWidth && overlayPreviewWidth.value,
+        OVERLAY_PREVIEW_WIDTH_MIN,
+        OVERLAY_PREVIEW_WIDTH_MAX,
+        OVERLAY_PREVIEW_DEFAULT_WIDTH
+      ),
+      height: clampOverlayPreviewDimension(
+        overlayPreviewHeight && overlayPreviewHeight.value,
+        OVERLAY_PREVIEW_HEIGHT_MIN,
+        OVERLAY_PREVIEW_HEIGHT_MAX,
+        OVERLAY_PREVIEW_DEFAULT_HEIGHT
+      ),
+    };
+  }
+
+  function overlayPreviewSizePreset(width, height) {
+    const presets = Object.keys(OVERLAY_PREVIEW_SIZES);
+    for (let i = 0; i < presets.length; i += 1) {
+      const size = OVERLAY_PREVIEW_SIZES[presets[i]];
+      if (size[0] === width && size[1] === height) {
+        return presets[i];
+      }
+    }
+    return "custom";
+  }
+
+  function updateOverlayPreviewScale() {
+    if (!overlayPreviewStage || !overlayPreviewViewport) {
+      return;
+    }
+    const dimensions = overlayPreviewDimensions();
+    const availableWidth = Math.max(0, overlayPreviewStage.clientWidth - 20);
+    const availableHeight = Math.max(0, overlayPreviewStage.clientHeight - 20);
+    if (availableWidth === 0 || availableHeight === 0) {
+      return;
+    }
+    const scale = Math.min(
+      1,
+      availableWidth / dimensions.width,
+      availableHeight / dimensions.height
+    );
+    overlayPreviewViewport.style.transform =
+      "translate(-50%, -50%) scale(" + String(scale) + ")";
+  }
+
+  function applyOverlayPreviewDimensions(options) {
+    if (!overlayPreviewViewport || !overlayPreviewWidth || !overlayPreviewHeight) {
+      return;
+    }
+    const dimensions = overlayPreviewDimensions();
+    const shouldNormalize = !options || options.normalize !== false;
+    const shouldPersist = !options || options.persist !== false;
+    if (shouldNormalize) {
+      overlayPreviewWidth.value = String(dimensions.width);
+      overlayPreviewHeight.value = String(dimensions.height);
+    }
+    overlayPreviewViewport.style.width = String(dimensions.width) + "px";
+    overlayPreviewViewport.style.height = String(dimensions.height) + "px";
+    if (overlayPreviewSize) {
+      overlayPreviewSize.value = overlayPreviewSizePreset(
+        dimensions.width,
+        dimensions.height
+      );
+    }
+    if (shouldPersist) {
+      writeOverlayPreviewPreference(OVERLAY_PREVIEW_WIDTH_KEY, dimensions.width);
+      writeOverlayPreviewPreference(OVERLAY_PREVIEW_HEIGHT_KEY, dimensions.height);
+    }
+    updateOverlayPreviewScale();
+  }
+
+  function applyOverlayPreviewBackground() {
+    if (!overlayPreviewBackground) {
+      return;
+    }
+    const backgrounds = ["busy", "checker", "dark"];
+    const background = backgrounds.indexOf(overlayPreviewBackground.value) !== -1
+      ? overlayPreviewBackground.value
+      : "busy";
+    overlayPreviewBackground.value = background;
+  }
+
+  function overlayPreviewNumber(input, min, max, fallback) {
+    const value = Number.parseInt(input && input.value, 10);
+    if (!Number.isFinite(value) || value < min || value > max) {
+      return fallback;
+    }
+    return value;
+  }
+
+  function buildOverlayPreviewURL(previewMode) {
+    const persistedOverlay = currentConfig && currentConfig.overlay
+      ? currentConfig.overlay
+      : {};
+    const url = new URL("/overlay", window.location.origin);
+    if (previewMode) {
+      url.searchParams.set("preview", previewMode);
+      url.searchParams.set(
+        "preview_background",
+        overlayPreviewBackground && ["busy", "checker", "dark"].indexOf(
+          overlayPreviewBackground.value
+        ) !== -1
+          ? overlayPreviewBackground.value
+          : "busy"
+      );
+    }
+    url.searchParams.set(
+      "max_messages",
+      String(
+        overlayPreviewNumber(
+          overlayMaxMessages,
+          1,
+          Number.MAX_SAFE_INTEGER,
+          typeof persistedOverlay.max_messages === "number"
+            ? persistedOverlay.max_messages
+            : 30
+        )
+      )
+    );
+    url.searchParams.set(
+      "message_ttl_seconds",
+      String(
+        overlayPreviewNumber(
+          overlayMessageTTL,
+          0,
+          Number.MAX_SAFE_INTEGER,
+          typeof persistedOverlay.message_ttl_seconds === "number"
+            ? persistedOverlay.message_ttl_seconds
+            : 20
+        )
+      )
+    );
+    url.searchParams.set(
+      "font_size_px",
+      String(
+        overlayPreviewNumber(
+          overlayFontSize,
+          OVERLAY_FONT_SIZE_MIN,
+          OVERLAY_FONT_SIZE_MAX,
+          typeof persistedOverlay.font_size_px === "number"
+            ? persistedOverlay.font_size_px
+            : 18
+        )
+      )
+    );
+    url.searchParams.set(
+      "display_mode",
+      overlayDisplayMode && overlayDisplayMode.value === "compact"
+        ? "compact"
+        : "normal"
+    );
+    url.searchParams.set(
+      "theme",
+      normalizeOverlayTheme(overlayTheme && overlayTheme.value)
+    );
+    return url;
+  }
+
+  function updateOverlayPreviewOpenLink() {
+    if (overlayPreviewOpen) {
+      overlayPreviewOpen.href = buildOverlayPreviewURL("").toString();
+    }
+  }
+
+  function updateOverlayPreviewNote() {
+    if (!overlayPreviewNote || !overlayPreviewMode) {
+      return;
+    }
+    overlayPreviewNote.textContent = overlayPreviewMode.value === "live"
+      ? "Live chat restores recent messages and follows new messages through WebSocket."
+      : "Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.";
+  }
+
+  function refreshOverlayPreview(force) {
+    if (overlayPreviewRefreshTimer !== null) {
+      window.clearTimeout(overlayPreviewRefreshTimer);
+      overlayPreviewRefreshTimer = null;
+    }
+    updateOverlayPreviewOpenLink();
+    if (!overlayDialog || !overlayDialog.open || !overlayPreviewFrame) {
+      return;
+    }
+    const mode = overlayPreviewMode && overlayPreviewMode.value === "live"
+      ? "live"
+      : "sample";
+    const url = buildOverlayPreviewURL(mode);
+    const baseURL = url.toString();
+    if (!force && overlayPreviewFrame.dataset.previewUrl === baseURL) {
+      return;
+    }
+    overlayPreviewRevision += 1;
+    url.searchParams.set("_preview_revision", String(overlayPreviewRevision));
+    overlayPreviewFrame.dataset.previewUrl = baseURL;
+    overlayPreviewFrame.src = url.toString();
+  }
+
+  function scheduleOverlayPreviewRefresh() {
+    updateOverlayPreviewOpenLink();
+    if (!overlayDialog || !overlayDialog.open) {
+      return;
+    }
+    if (overlayPreviewRefreshTimer !== null) {
+      window.clearTimeout(overlayPreviewRefreshTimer);
+    }
+    overlayPreviewRefreshTimer = window.setTimeout(function () {
+      overlayPreviewRefreshTimer = null;
+      refreshOverlayPreview(false);
+    }, OVERLAY_PREVIEW_REFRESH_MS);
+  }
+
+  function mountOverlayPreview() {
+    if (!overlayPreviewFrame) {
+      return;
+    }
+    applyOverlayPreviewDimensions({ normalize: true });
+    applyOverlayPreviewBackground();
+    updateOverlayPreviewNote();
+    window.requestAnimationFrame(updateOverlayPreviewScale);
+    refreshOverlayPreview(true);
+  }
+
+  function unmountOverlayPreview() {
+    if (overlayPreviewRefreshTimer !== null) {
+      window.clearTimeout(overlayPreviewRefreshTimer);
+      overlayPreviewRefreshTimer = null;
+    }
+    if (!overlayPreviewFrame) {
+      return;
+    }
+    overlayPreviewFrame.dataset.previewUrl = "";
+    overlayPreviewFrame.src = "about:blank";
+  }
+
+  function initOverlayPreview() {
+    if (
+      !overlayDialog ||
+      !overlayPreviewFrame ||
+      !overlayPreviewMode ||
+      !overlayPreviewBackground ||
+      !overlayPreviewWidth ||
+      !overlayPreviewHeight
+    ) {
+      return;
+    }
+
+    const storedMode = readOverlayPreviewPreference(
+      OVERLAY_PREVIEW_MODE_KEY,
+      "sample"
+    );
+    overlayPreviewMode.value = storedMode === "live" ? "live" : "sample";
+
+    const storedBackground = readOverlayPreviewPreference(
+      OVERLAY_PREVIEW_BACKGROUND_KEY,
+      "busy"
+    );
+    overlayPreviewBackground.value = ["busy", "checker", "dark"].indexOf(
+      storedBackground
+    ) !== -1
+      ? storedBackground
+      : "busy";
+
+    overlayPreviewWidth.value = String(
+      clampOverlayPreviewDimension(
+        readOverlayPreviewPreference(
+          OVERLAY_PREVIEW_WIDTH_KEY,
+          OVERLAY_PREVIEW_DEFAULT_WIDTH
+        ),
+        OVERLAY_PREVIEW_WIDTH_MIN,
+        OVERLAY_PREVIEW_WIDTH_MAX,
+        OVERLAY_PREVIEW_DEFAULT_WIDTH
+      )
+    );
+    overlayPreviewHeight.value = String(
+      clampOverlayPreviewDimension(
+        readOverlayPreviewPreference(
+          OVERLAY_PREVIEW_HEIGHT_KEY,
+          OVERLAY_PREVIEW_DEFAULT_HEIGHT
+        ),
+        OVERLAY_PREVIEW_HEIGHT_MIN,
+        OVERLAY_PREVIEW_HEIGHT_MAX,
+        OVERLAY_PREVIEW_DEFAULT_HEIGHT
+      )
+    );
+
+    applyOverlayPreviewDimensions({ normalize: true, persist: false });
+    applyOverlayPreviewBackground();
+    updateOverlayPreviewNote();
+    updateOverlayPreviewOpenLink();
+
+    overlayPreviewMode.addEventListener("change", function () {
+      writeOverlayPreviewPreference(
+        OVERLAY_PREVIEW_MODE_KEY,
+        overlayPreviewMode.value
+      );
+      updateOverlayPreviewNote();
+      refreshOverlayPreview(true);
+    });
+
+    overlayPreviewBackground.addEventListener("change", function () {
+      applyOverlayPreviewBackground();
+      writeOverlayPreviewPreference(
+        OVERLAY_PREVIEW_BACKGROUND_KEY,
+        overlayPreviewBackground.value
+      );
+      refreshOverlayPreview(true);
+    });
+
+    if (overlayPreviewSize) {
+      overlayPreviewSize.addEventListener("change", function () {
+        const size = OVERLAY_PREVIEW_SIZES[overlayPreviewSize.value];
+        if (!size) {
+          return;
+        }
+        overlayPreviewWidth.value = String(size[0]);
+        overlayPreviewHeight.value = String(size[1]);
+        applyOverlayPreviewDimensions({ normalize: true });
+      });
+    }
+
+    [overlayPreviewWidth, overlayPreviewHeight].forEach(function (input) {
+      input.addEventListener("input", function () {
+        if (overlayPreviewWidth.checkValidity() && overlayPreviewHeight.checkValidity()) {
+          applyOverlayPreviewDimensions({ normalize: false });
+        }
+      });
+      input.addEventListener("change", function () {
+        applyOverlayPreviewDimensions({ normalize: true });
+      });
+    });
+
+    [
+      overlayMaxMessages,
+      overlayMessageTTL,
+      overlayFontSize,
+      overlayDisplayMode,
+      overlayTheme,
+    ].forEach(function (input) {
+      input.addEventListener("input", scheduleOverlayPreviewRefresh);
+      input.addEventListener("change", scheduleOverlayPreviewRefresh);
+    });
+
+    if (overlayPreviewReplay) {
+      overlayPreviewReplay.addEventListener("click", function () {
+        refreshOverlayPreview(true);
+      });
+    }
+
+    overlayDialog.addEventListener("close", unmountOverlayPreview);
+    if (typeof ResizeObserver === "function" && overlayPreviewStage) {
+      overlayPreviewResizeObserver = new ResizeObserver(updateOverlayPreviewScale);
+      overlayPreviewResizeObserver.observe(overlayPreviewStage);
+    } else {
+      window.addEventListener("resize", updateOverlayPreviewScale);
+    }
   }
 
   function buildPayload() {
@@ -709,10 +1403,9 @@
     }
 
     if (
-      payload.overlay.theme !== "default" &&
-      payload.overlay.theme !== "dashboard"
+      OVERLAY_THEMES.indexOf(payload.overlay.theme) === -1
     ) {
-      setFieldError("overlay_theme", "Choose default or text-only theme.");
+      setFieldError("overlay_theme", "Choose a supported overlay theme.");
       firstInvalid = firstInvalid || overlayTheme;
     }
 
@@ -808,13 +1501,10 @@
     return " · " + String(count) + " msg";
   }
 
-  function platformDetailText(platform) {
+  function platformSummaryText(platform) {
     const parts = [];
     if (typeof platform.detail === "string" && platform.detail !== "") {
       parts.push(platform.detail);
-    }
-    if (typeof platform.last_error === "string" && platform.last_error !== "") {
-      parts.push("Last error: " + platform.last_error);
     }
     const countSuffix = formatMessageCount(platform.message_count);
     if (countSuffix !== "") {
@@ -823,24 +1513,39 @@
     return parts.join(" ");
   }
 
-  function renderPlatformDetail(el, platform) {
-    const text = platformDetailText(platform);
+  function renderPlatformDetail(el, platform, platformLabel) {
+    const summary = platformSummaryText(platform);
+    const lastError =
+      typeof platform.last_error === "string" ? platform.last_error.trim() : "";
     if (!el) {
       return;
     }
-    if (text !== "") {
-      el.hidden = false;
-      el.textContent = text;
+    const renderKey = summary + "\0" + lastError;
+    if (el.dataset.renderKey === renderKey) {
       return;
     }
-    el.hidden = true;
-    el.textContent = "";
+    if (activeErrorTrigger && el.contains(activeErrorTrigger)) {
+      hideErrorPopover();
+    }
+
+    el.dataset.renderKey = renderKey;
+    el.replaceChildren();
+    if (summary !== "") {
+      const summaryText = document.createElement("span");
+      summaryText.className = "status-detail__summary";
+      summaryText.textContent = summary;
+      el.appendChild(summaryText);
+    }
+    if (lastError !== "") {
+      el.appendChild(createErrorDetailTrigger(lastError, platformLabel));
+    }
+    el.hidden = summary === "" && lastError === "";
   }
 
   function renderStatus(status) {
     const twitch = status.twitch || {};
     renderPlatformStatus(twitchStatus, twitch);
-    renderPlatformDetail(twitchDetail, twitch);
+    renderPlatformDetail(twitchDetail, twitch, "Twitch");
 
     const youtube = status.youtube || {};
     renderPlatformStatus(youtubeStatus, youtube);
@@ -867,11 +1572,11 @@
       }
     }
 
-    renderPlatformDetail(youtubeDetail, youtube);
+    renderPlatformDetail(youtubeDetail, youtube, "YouTube");
 
     const vk = status.vk || {};
     renderPlatformStatus(vkStatus, vk);
-    renderPlatformDetail(vkDetail, vk);
+    renderPlatformDetail(vkDetail, vk, "VK Live");
   }
 
   function formatUptime(seconds) {
@@ -923,6 +1628,10 @@
         emoteCacheEntries.textContent = "-";
       }
       if (emoteProviderList) {
+        if (activeErrorTrigger && emoteProviderList.contains(activeErrorTrigger)) {
+          hideErrorPopover();
+        }
+        emoteProviderList.dataset.renderKey = "";
         emoteProviderList.textContent = "";
       }
       return;
@@ -942,6 +1651,14 @@
       return;
     }
 
+    const renderKey = JSON.stringify(emoteCache);
+    if (emoteProviderList.dataset.renderKey === renderKey) {
+      return;
+    }
+    if (activeErrorTrigger && emoteProviderList.contains(activeErrorTrigger)) {
+      hideErrorPopover();
+    }
+    emoteProviderList.dataset.renderKey = renderKey;
     emoteProviderList.textContent = "";
     const providers = emoteCache.providers || {};
     const keys = Object.keys(providers).sort();
@@ -972,10 +1689,9 @@
       item.appendChild(stats);
 
       if (typeof snap.last_error === "string" && snap.last_error !== "") {
-        const err = document.createElement("p");
-        err.className = "provider-list__error";
-        appendText(err, "Last error: " + snap.last_error);
-        item.appendChild(err);
+        item.appendChild(
+          createErrorDetailTrigger(snap.last_error, (PROVIDER_LABELS[key] || key) + " emotes")
+        );
       }
 
       emoteProviderList.appendChild(item);
@@ -1848,6 +2564,10 @@
         const dialog = document.getElementById(button.getAttribute("data-dialog-target"));
         if (dialog && typeof dialog.showModal === "function") {
           dialog.showModal();
+          if (dialog === overlayDialog) {
+            updateOBSSetupURLs();
+            setOBSSection("setup");
+          }
         }
       });
     });
@@ -1889,8 +2609,16 @@
   }
 
   form.addEventListener("submit", saveSettings);
-  form.addEventListener("input", markSettingsDirty);
-  form.addEventListener("change", markSettingsDirty);
+  form.addEventListener("input", function (event) {
+    if (!(event.target instanceof Element) || !event.target.closest("[data-preview-only]")) {
+      markSettingsDirty();
+    }
+  });
+  form.addEventListener("change", function (event) {
+    if (!(event.target instanceof Element) || !event.target.closest("[data-preview-only]")) {
+      markSettingsDirty();
+    }
+  });
   refreshMessages.addEventListener("click", function () {
     loadRecentMessages().catch(function () {
       showBanner("error", "Cannot load recent messages.");
@@ -1899,6 +2627,8 @@
 
   handleOAuthQuery();
   initSidebarToggle();
+  initOverlayPreview();
+  initOBSSetup();
   initSettingsDialogs();
   initMessageSoundControls();
 
@@ -1927,6 +2657,10 @@
 
   window.addEventListener("beforeunload", function () {
     disconnectMessageWebSocket();
+    if (overlayPreviewResizeObserver) {
+      overlayPreviewResizeObserver.disconnect();
+    }
+    window.removeEventListener("resize", updateOverlayPreviewScale);
     window.clearInterval(statusTimer);
     window.clearInterval(messagesTimer);
   });

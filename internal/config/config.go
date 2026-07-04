@@ -43,8 +43,10 @@ const (
 
 // Overlay visual themes.
 const (
-	OverlayThemeDefault   = "default"
-	OverlayThemeDashboard = "dashboard"
+	OverlayThemeDefault       = "default"
+	OverlayThemeDashboard     = "dashboard"
+	OverlayThemeCockpitPanel  = "cockpit_panel"
+	OverlayThemeCockpitPopups = "cockpit_popups"
 )
 
 // Overlay font size bounds (px).

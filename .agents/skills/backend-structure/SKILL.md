@@ -21,6 +21,7 @@ description: Backend layout for comm-relay (cmd/, internal/). Use when adding HT
 │   └── pkg/                 # tiny shared helpers only (avoid junk drawer)
 ├── web/
 │   ├── admin/               # control panel (/)
+│   ├── dock/                # OBS operator message dock (/dock/messages)
 │   └── overlay/             # OBS page (/overlay)
 ├── docs/concept.md
 └── .agents/skills/

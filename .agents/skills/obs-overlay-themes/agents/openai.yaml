@@ -1,0 +1,4 @@
+interface:
+  display_name: "OBS Overlay Themes"
+  short_description: "Design and refine CommRelay OBS chat overlay themes"
+  default_prompt: "Create or refine a CommRelay OBS overlay theme, keeping Browser Source sizing, message queue behavior, clipping, fading, and stream readability in mind."

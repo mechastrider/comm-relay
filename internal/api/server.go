@@ -67,6 +67,10 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /oauth/youtube/start", youtubeOAuth.handleStart)
 	mux.HandleFunc("GET /oauth/youtube/callback", youtubeOAuth.handleCallback)
 	mux.HandleFunc("GET /api/messages/recent", messagesHandler.handleRecent)
+	mux.Handle("GET /dock/messages/", http.StripPrefix("/dock/messages/", http.FileServer(http.FS(static.dock))))
+	mux.HandleFunc("GET /dock/messages", func(w http.ResponseWriter, r *http.Request) {
+		serveFSFile(w, r, static.dock, "index.html")
+	})
 	mux.Handle("GET /overlay/", http.StripPrefix("/overlay/", http.FileServer(http.FS(static.overlay))))
 	mux.HandleFunc("GET /overlay", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.overlay, "index.html")
