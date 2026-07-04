@@ -23,7 +23,7 @@ func (h *configHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, h.store.Snapshot().Public())
 }
 
-func (h *configHandler) handlePatch(w http.ResponseWriter, r *http.Request) {
+func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))

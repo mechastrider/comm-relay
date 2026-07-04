@@ -43,7 +43,7 @@ func TestConfig_WhenPatchValid_ExpectSaved(t *testing.T) {
   "overlay": { "max_messages": 25, "message_ttl_seconds": 15, "theme": "dashboard" }
 }`)
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPatch, "/api/config", body)
+	req := httptest.NewRequest(http.MethodPost, "/api/config/update", body)
 	req.Header.Set("Content-Type", "application/json")
 	handler.ServeHTTP(rec, req)
 
@@ -85,7 +85,7 @@ func TestConfig_WhenGet_ExpectYouTubeOAuthRedacted(t *testing.T) {
   "overlay": { "max_messages": 30, "message_ttl_seconds": 20 }
 }`)
 	patchRec := httptest.NewRecorder()
-	patchReq := httptest.NewRequest(http.MethodPatch, "/api/config", patchBody)
+	patchReq := httptest.NewRequest(http.MethodPost, "/api/config/update", patchBody)
 	patchReq.Header.Set("Content-Type", "application/json")
 	handler.ServeHTTP(patchRec, patchReq)
 	require.Equal(t, http.StatusOK, patchRec.Code)
@@ -114,7 +114,7 @@ func TestConfig_WhenPatchMessageSound_ExpectSaved(t *testing.T) {
   }
 }`)
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPatch, "/api/config", body)
+	req := httptest.NewRequest(http.MethodPost, "/api/config/update", body)
 	req.Header.Set("Content-Type", "application/json")
 	handler.ServeHTTP(rec, req)
 
@@ -151,7 +151,7 @@ func TestConfig_WhenPatchInvalidImagePreviewHost_ExpectFieldErrors(t *testing.T)
   }
 }`)
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPatch, "/api/config", body)
+	req := httptest.NewRequest(http.MethodPost, "/api/config/update", body)
 	req.Header.Set("Content-Type", "application/json")
 	handler.ServeHTTP(rec, req)
 
@@ -178,7 +178,7 @@ func TestConfig_WhenPatchInvalid_ExpectBadRequest(t *testing.T) {
   "overlay": { "max_messages": 30, "message_ttl_seconds": 20 }
 }`)
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPatch, "/api/config", body)
+	req := httptest.NewRequest(http.MethodPost, "/api/config/update", body)
 	req.Header.Set("Content-Type", "application/json")
 	handler.ServeHTTP(rec, req)
 

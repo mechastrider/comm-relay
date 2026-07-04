@@ -23,7 +23,7 @@ func TestConfig_WhenPatchVK_ExpectSaved(t *testing.T) {
   "admin": { "message_sound": { "enabled": false, "volume": 0.5, "sound": "chime" } }
 }`)
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPatch, "/api/config", body)
+	req := httptest.NewRequest(http.MethodPost, "/api/config/update", body)
 	req.Header.Set("Content-Type", "application/json")
 	handler.ServeHTTP(rec, req)
 

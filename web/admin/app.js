@@ -2507,8 +2507,8 @@
     renderSettingsState();
 
     try {
-      const response = await fetch(apiURL("/api/config"), {
-        method: "PATCH",
+      const response = await fetch(apiURL("/api/config/update"), {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
