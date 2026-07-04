@@ -1,6 +1,6 @@
 ---
 name: golang-logging
-description: Contextual logging in Go with github.com/muonsoft/clog. Use when adding logs, binding loggers to context, or logging errors with preserved stack traces in comm-relay.
+description: Contextual logging in Go with github.com/muonsoft/clog. Use when adding logs, binding loggers to context, or logging errors with preserved stack traces.
 ---
 
 # Logging in Go (muonsoft/clog)
@@ -107,8 +107,8 @@ writeError(w, http.StatusInternalServerError, "internal error")
 
 ```go
 func (c *Twitch) Run(ctx context.Context) error {
-    clog.Info(ctx, "connector started")
-    defer clog.Info(ctx, "connector stopped")
+    clog.Info(ctx, "worker started")
+    defer clog.Info(ctx, "worker stopped")
 
     for {
         select {
@@ -119,7 +119,7 @@ func (c *Twitch) Run(ctx context.Context) error {
                 if ctx.Err() != nil {
                     return nil
                 }
-                clog.Errorf(ctx, "connector read: %w", err)
+                clog.Errorf(ctx, "worker read: %w", err)
                 // backoff …
             }
         }
@@ -138,7 +138,7 @@ func (c *Twitch) Run(ctx context.Context) error {
 
 1. Do not log passwords, tokens, or session secrets.
 2. Always pass `context.Context` as the first argument to `clog.*`.
-3. Business logic in `internal/` uses **`clog` only** — do not add `*slog.Logger` fields to domain types; bind logger into context at the edge (`main`, HTTP middleware, connector `Run`).
+3. Business logic in `internal/` uses **`clog` only** — do not add `*slog.Logger` fields to domain types; bind logger into context at the edge (`main`, HTTP middleware, worker `Run`).
 4. Errors: `clog.Errorf` with `%w`, or `slog.*` attributes for non-error fields.
 5. Do not duplicate attributes already on the request context logger.
 6. Do not call `slog.Info` / `slog.Default()` directly in `internal/` packages.
