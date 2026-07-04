@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CommRelay mockup — Space Marine 2 vox popups</title>
+  <style>
+    :root {
+      --brass: #b59658;
+      --bone: #f0eadb;
+      --signal-red: #b62622;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: #020305;
+      color: var(--bone);
+      font-family: "Roboto Condensed", "Arial Narrow", "Bahnschrift Condensed", Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .scene {
+      container-type: inline-size;
+      position: absolute;
+      inset: 0;
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      margin: auto;
+      overflow: hidden;
+      background: url("../../var/screenshot.warhammer-40-000-space-marine-2.1920x1080.2024-10-25.35.jpg") center / 100% 100% no-repeat;
+      isolation: isolate;
+    }
+
+    .vox-stack {
+      position: absolute;
+      z-index: 1;
+      top: 12%;
+      right: 2.2%;
+      width: 25.5%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7cqw;
+      filter: drop-shadow(0 0.55cqw 0.7cqw rgba(0, 0, 0, 0.32));
+    }
+
+    .vox-message {
+      --accent: var(--brass);
+      position: relative;
+      min-height: 4.55cqw;
+      padding: 0.7cqw 1cqw 0.78cqw 1.05cqw;
+      border: 1px solid rgba(205, 173, 103, 0.42);
+      border-left: 0.2cqw solid var(--accent);
+      color: var(--bone);
+      background:
+        linear-gradient(90deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 30%),
+        rgba(5, 9, 12, 0.82);
+      clip-path: polygon(
+        0 0,
+        calc(100% - 0.75cqw) 0,
+        100% 0.75cqw,
+        100% 100%,
+        0.55cqw 100%,
+        0 calc(100% - 0.55cqw)
+      );
+      box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+        0 0.28cqw 0.7cqw rgba(0, 0, 0, 0.36);
+    }
+
+    .vox-message::before,
+    .vox-message::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .vox-message::before {
+      left: 0.75cqw;
+      top: 0;
+      width: 5.2cqw;
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent), rgba(181, 150, 88, 0.16), transparent);
+      opacity: 0.72;
+    }
+
+    .vox-message::after {
+      right: 0.5cqw;
+      top: 0.48cqw;
+      width: 0.23cqw;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--signal-red);
+      box-shadow: 0 0 0.3cqw rgba(255, 50, 42, 0.8);
+    }
+
+    .vox-message__content {
+      min-width: 0;
+      padding-right: 0.35cqw;
+    }
+
+    .vox-message__meta {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 0.48cqw;
+      margin-bottom: 0.24cqw;
+    }
+
+    .vox-message__platform {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 1.05cqw;
+      aspect-ratio: 1;
+      color: #fff;
+      background: color-mix(in srgb, var(--accent) 72%, #080b0d);
+      font-family: Arial, sans-serif;
+      font-size: 0.44cqw;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .vox-message__author {
+      min-width: 0;
+      overflow: hidden;
+      color: #d5c89f;
+      font-size: 0.86cqw;
+      font-weight: 800;
+      letter-spacing: 0.045em;
+      line-height: 1;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+      text-shadow: 0 2px 3px #000;
+    }
+
+    .vox-message__text {
+      margin: 0;
+      color: #f4f0e5;
+      font-size: 0.95cqw;
+      font-weight: 700;
+      line-height: 1.22;
+      overflow-wrap: anywhere;
+      text-shadow:
+        0 1px 0 #000,
+        0 2px 4px rgba(0, 0, 0, 0.95);
+    }
+
+  </style>
+</head>
+<body>
+  <main class="scene" aria-label="Мокап OBS-оверлея CommRelay для Space Marine 2">
+    <section class="vox-stack" aria-label="Сообщения чата">
+      <article class="vox-message" style="--accent: #8e58d9;">
+        <div class="vox-message__content">
+          <div class="vox-message__meta">
+            <span class="vox-message__platform" title="Twitch">TW</span>
+            <span class="vox-message__author">Nova Pilot</span>
+          </div>
+          <p class="vox-message__text">За Императора! Связь чистая.</p>
+        </div>
+      </article>
+
+      <article class="vox-message" style="--accent: #4f9ee8;">
+        <div class="vox-message__content">
+          <div class="vox-message__meta">
+            <span class="vox-message__platform" title="Общий чат">CH</span>
+            <span class="vox-message__author">Кайрон</span>
+          </div>
+          <p class="vox-message__text">Справа ещё одна волна. Держим строй!</p>
+        </div>
+      </article>
+
+      <article class="vox-message" style="--accent: #71b94a;">
+        <div class="vox-message__content">
+          <div class="vox-message__meta">
+            <span class="vox-message__platform" title="VK">VK</span>
+            <span class="vox-message__author">Мех Оператор</span>
+          </div>
+          <p class="vox-message__text">Броня держится. Продолжаем!</p>
+        </div>
+      </article>
+
+      <article class="vox-message" style="--accent: #d4453f;">
+        <div class="vox-message__content">
+          <div class="vox-message__meta">
+            <span class="vox-message__platform" title="YouTube">YT</span>
+            <span class="vox-message__author">CommRelay</span>
+          </div>
+          <p class="vox-message__text">Все каналы объединены.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

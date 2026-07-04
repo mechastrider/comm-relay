@@ -88,7 +88,15 @@
   const BANNER_SUCCESS_DISMISS_MS = 4000;
   const OVERLAY_FONT_SIZE_MIN = 12;
   const OVERLAY_FONT_SIZE_MAX = 48;
-  const OVERLAY_THEMES = ["default", "dashboard", "cockpit_panel", "cockpit_popups"];
+  const OVERLAY_THEMES = [
+    "default",
+    "dashboard",
+    "cockpit_panel",
+    "cockpit_popups",
+    "sm2_vox_popups",
+    "sm2_vox_austere",
+    "sm2_vox_identities",
+  ];
   const INITIAL_WS_RECONNECT_MS = 1000;
   const MAX_WS_RECONNECT_MS = 30000;
   const SIDEBAR_COLLAPSED_KEY = "commRelay.sidebarCollapsed";

@@ -9,7 +9,15 @@
   const DEFAULT_DISPLAY_MODE = "normal";
   const DEFAULT_THEME = "default";
   const DISPLAY_MODES = new Set(["normal", "compact"]);
-  const THEMES = new Set(["default", "dashboard", "cockpit_panel", "cockpit_popups"]);
+  const THEMES = new Set([
+    "default",
+    "dashboard",
+    "cockpit_panel",
+    "cockpit_popups",
+    "sm2_vox_popups",
+    "sm2_vox_austere",
+    "sm2_vox_identities",
+  ]);
   const INITIAL_RECONNECT_MS = 1000;
   const MAX_RECONNECT_MS = 30000;
   const LEAVE_ANIMATION_MS = 220;
@@ -239,7 +247,10 @@
       "overlay-theme--default",
       "overlay-theme--dashboard",
       "overlay-theme--cockpit-panel",
-      "overlay-theme--cockpit-popups"
+      "overlay-theme--cockpit-popups",
+      "overlay-theme--sm2-vox-popups",
+      "overlay-theme--sm2-vox-austere",
+      "overlay-theme--sm2-vox-identities"
     );
     document.body.classList.add("overlay-theme--" + config.theme.replace(/_/g, "-"));
     document.body.classList.remove(
@@ -632,8 +643,10 @@
     return avatar;
   }
 
-  function cockpitThemeEnabled() {
-    return config.theme === "cockpit_panel" || config.theme === "cockpit_popups";
+  function avatarThemeEnabled() {
+    return config.theme === "cockpit_panel" ||
+      config.theme === "cockpit_popups" ||
+      config.theme === "sm2_vox_identities";
   }
 
   function normalizePlatform(platform) {
@@ -727,7 +740,7 @@
     platformEl.className = "message__platform";
     appendPlatformIcon(platformEl, frame.platform);
 
-    const avatarEl = cockpitThemeEnabled()
+    const avatarEl = avatarThemeEnabled()
       ? buildAvatarImage(frame)
       : buildHiddenAvatarPlaceholder();
 

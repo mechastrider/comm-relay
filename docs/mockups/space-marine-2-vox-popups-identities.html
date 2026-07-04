@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CommRelay mockup — Space Marine 2 identity accents</title>
+  <style>
+    :root {
+      --bone: #ece8de;
+      --muted: #a7a69f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: #020305;
+      color: var(--bone);
+      font-family: "Roboto Condensed", "Arial Narrow", "Bahnschrift Condensed", Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .scene {
+      container-type: inline-size;
+      position: absolute;
+      inset: 0;
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      margin: auto;
+      overflow: hidden;
+      background: url("../../var/screenshot.warhammer-40-000-space-marine-2.1920x1080.2024-10-25.35.jpg") center / 100% 100% no-repeat;
+      isolation: isolate;
+    }
+
+    .vox-stack {
+      position: absolute;
+      z-index: 1;
+      top: 15%;
+      right: 2.2%;
+      width: 24.5%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.78cqw;
+    }
+
+    .vox-message {
+      --accent: #b2a27e;
+      --bar-width: 68%;
+      position: relative;
+      display: grid;
+      grid-template-columns: 2.3cqw minmax(0, 1fr);
+      align-items: start;
+      gap: 0.58cqw;
+      min-height: 3.4cqw;
+      padding: 0.08cqw 0.35cqw 0.3cqw 0;
+      filter: drop-shadow(0 0.2cqw 0.38cqw rgba(0, 0, 0, 0.72));
+    }
+
+    .vox-message__avatar {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 2.2cqw;
+      aspect-ratio: 1;
+      overflow: hidden;
+      border: 1px solid rgba(226, 224, 215, 0.68);
+      color: color-mix(in srgb, var(--accent) 82%, #fff);
+      background:
+        radial-gradient(circle at 34% 26%, color-mix(in srgb, var(--accent) 28%, transparent) 0 17%, transparent 18%),
+        linear-gradient(145deg, color-mix(in srgb, var(--accent) 17%, #293035), #090d0f 68%);
+      clip-path: polygon(0.28cqw 0, 100% 0, 100% calc(100% - 0.28cqw), calc(100% - 0.28cqw) 100%, 0 100%, 0 0.28cqw);
+      box-shadow:
+        inset 0 0 0 0.15cqw #0a0e10,
+        inset 0 0 0 0.19cqw color-mix(in srgb, var(--accent) 36%, transparent);
+      font-size: 0.72cqw;
+      font-weight: 900;
+      letter-spacing: 0.035em;
+      line-height: 1;
+      text-shadow: 0 2px 3px #000;
+    }
+
+    .vox-message__avatar::after {
+      content: "";
+      position: absolute;
+      left: 22%;
+      right: 22%;
+      bottom: 12%;
+      height: 0.11cqw;
+      background: var(--accent);
+      box-shadow: 0 0 0.28cqw color-mix(in srgb, var(--accent) 70%, transparent);
+    }
+
+    .vox-message__content {
+      position: relative;
+      isolation: isolate;
+      min-width: 0;
+      min-height: 2.65cqw;
+      padding: 0.02cqw 0 0.45cqw 0.15cqw;
+    }
+
+    .vox-message__content::before,
+    .vox-message__content::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .vox-message__content::before {
+      z-index: -1;
+      inset: -0.22cqw -0.4cqw 0.08cqw -0.3cqw;
+      background: linear-gradient(90deg, rgba(3, 6, 8, 0.62), rgba(3, 6, 8, 0.34) 76%, transparent);
+    }
+
+    .vox-message__content::after {
+      left: 0.15cqw;
+      bottom: 0.08cqw;
+      width: var(--bar-width);
+      height: 0.13cqw;
+      background: linear-gradient(90deg, var(--accent) 0 84%, transparent);
+      box-shadow:
+        0 1px 0 rgba(0, 0, 0, 0.9),
+        0 0 0.22cqw color-mix(in srgb, var(--accent) 42%, transparent);
+    }
+
+    .vox-message__meta {
+      display: flex;
+      align-items: baseline;
+      min-width: 0;
+      gap: 0.43cqw;
+      margin-bottom: 0.18cqw;
+      font-size: 0.72cqw;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      text-shadow: 0 2px 3px #000;
+    }
+
+    .vox-message__platform {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 0.54cqw;
+      letter-spacing: 0.12em;
+    }
+
+    .vox-message__platform::after {
+      content: "/";
+      margin-left: 0.4cqw;
+      color: rgba(236, 232, 222, 0.3);
+    }
+
+    .vox-message__author {
+      min-width: 0;
+      overflow: hidden;
+      color: color-mix(in srgb, var(--accent) 74%, var(--bone));
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .vox-message__text {
+      margin: 0;
+      color: var(--bone);
+      font-size: 0.9cqw;
+      font-weight: 680;
+      line-height: 1.22;
+      overflow-wrap: anywhere;
+      text-shadow:
+        0 1px 0 #000,
+        0 2px 4px rgba(0, 0, 0, 0.92);
+    }
+  </style>
+</head>
+<body>
+  <main class="scene" aria-label="Аскетичный мокап OBS-оверлея CommRelay с цветовыми акцентами пользователей">
+    <section class="vox-stack" aria-label="Сообщения чата">
+      <article class="vox-message" style="--accent: #a989cf; --bar-width: 72%;">
+        <div class="vox-message__avatar" aria-label="Аватар Nova Pilot">NP</div>
+        <div class="vox-message__content">
+          <div class="vox-message__meta">
+            <span class="vox-message__platform">TW</span>
+            <span class="vox-message__author">Nova Pilot</span>
+          </div>
+          <p class="vox-message__text">За Императора! Связь чистая.</p>
+        </div>
+      </article>
+
+      <article class="vox-message" style="--accent: #6f9fc1; --bar-width: 58%;">
+        <div class="vox-message__avatar" aria-label="Аватар Кайрона">К</div>
+        <div class="vox-message__content">
+          <div class="vox-message__meta">
+            <span class="vox-message__platform">CH</span>
+            <span class="vox-message__author">Кайрон</span>
+          </div>
+          <p class="vox-message__text">Справа ещё одна волна. Держим строй!</p>
+        </div>
+      </article>
+
+      <article class="vox-message" style="--accent: #8da66a; --bar-width: 66%;">
+        <div class="vox-message__avatar" aria-label="Аватар Мех Оператора">МО</div>
+        <div class="vox-message__content">
+          <div class="vox-message__meta">
+            <span class="vox-message__platform">VK</span>
+            <span class="vox-message__author">Мех Оператор</span>
+          </div>
+          <p class="vox-message__text">Броня держится. Продолжаем!</p>
+        </div>
+      </article>
+
+      <article class="vox-message" style="--accent: #bd7664; --bar-width: 48%;">
+        <div class="vox-message__avatar" aria-label="Аватар CommRelay">CR</div>
+        <div class="vox-message__content">
+          <div class="vox-message__meta">
+            <span class="vox-message__platform">YT</span>
+            <span class="vox-message__author">CommRelay</span>
+          </div>
+          <p class="vox-message__text">Все каналы объединены.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
