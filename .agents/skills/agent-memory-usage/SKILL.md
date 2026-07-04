@@ -11,7 +11,7 @@ Install this skill in project repos that connect to agentmem MCP.
 
 | Phase | Tool |
 |-------|------|
-| Task start | `memory.get_context_pack` with `projectId` (e.g. `owner/repo`) or `repoUrl` |
+| Task start | `memory.get_context_pack` with `project_id` (e.g. `owner/repo`) or `repo_url` |
 | Stuck / need precedent | `memory.search` with filters |
 | After review feedback | `memory.record_event` |
 | Stable lesson, not yet a rule | `memory.propose_entry` as **draft** |
@@ -48,10 +48,10 @@ Canonical positive event types:
 
 ```json
 {
-  "eventType": "decision_confirmed",
+  "event_type": "decision_confirmed",
   "summary": "User selected favicon direction A for the public site",
   "details": { "selectedOption": "A", "verifiedIn": "browser" },
-  "memoryTypeHint": "decision",
+  "memory_type_hint": "decision",
   "evidence": [{ "kind": "file", "uri": "web/public/favicon.svg" }]
 }
 ```
@@ -62,7 +62,7 @@ Then propose draft memory with actionable wording (selected direction, where imp
 
 ```json
 {
-  "eventType": "workflow_validated",
+  "event_type": "workflow_validated",
   "summary": "Release checklist passed for v1.2",
   "details": { "commands": ["task test", "task web:build"] }
 }
@@ -77,4 +77,4 @@ Then propose draft memory with actionable wording (selected direction, where imp
 - Never request `active` via `propose_entry` — server ignores it
 - Prefer summaries + structured evidence (`{ "kind", "uri" }`) over pasting file paths into memory bodies
 - Use `memory.record_feedback` when retrieved memory is wrong or outdated
-- When proposing a multi-file skill via `memory.create_skill_proposal`/`update_skill_proposal`, keep `SKILL.md` in `proposedText` and pass supplementary files (`references/`, `scripts/`, `assets/`) in `proposedFiles` as `{ path, content, encoding }` (`encoding`: `utf8` or `base64`); paths must be relative and not `SKILL.md`
+- When proposing a multi-file skill via `memory.create_skill_proposal`/`update_skill_proposal`, keep `SKILL.md` in `proposed_text` and pass supplementary files (`references/`, `scripts/`, `assets/`) in `proposed_files` as `{ path, content, encoding }` (`encoding`: `utf8` or `base64`); paths must be relative and not `SKILL.md`

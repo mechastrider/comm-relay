@@ -2,7 +2,7 @@ version: 2
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 46c1fb71c989fc780912d3fec64ff1618d9da315
+    commit: 27456e72cdde70c0b5c7b866f80e3449c3dfaa18
 preset: desktop-app
 include:
     - theme: backend/go
@@ -26,8 +26,8 @@ selected_paths:
     - ux-form-practices
     - web-static-frontend
 hashes:
-    agent-memory-usage: sha256:ac3730a8242f0a083e2ff35a9c6f8e3516df4719475b9ef778260cd05ffbf9d9
-    closeout: sha256:8f8b5de14f15e36deac38dd9c580f74bde46614a0f9daae8b93268ed2e99e629
+    agent-memory-usage: sha256:ad73f95434d1de4f2cd1abbf93865f61a6ff4eb9f0f2d02f6e3f7d92da1360f4
+    closeout: sha256:6457b351aa4e6d3a922bd2d6cf66fa4cec35fa72124bb4963802316aa31ee180
     database-migrations: sha256:118ce23f4e0e7ccea54c898798d1678dc05e2b9127ad3b44a863be9a59f8bd57
     golang-errors: sha256:edfadb39be2294f33b43200e73498828a8ca763f89370edb0e223e2fea60bb96
     golang-logging: sha256:783a784cbb4b0e3463466a21f811f677e5e7bd9df6a022656f25fdc13e243605
