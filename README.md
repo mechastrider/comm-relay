@@ -169,31 +169,98 @@ OAuth не требуется. Укажите slug канала или URL `live
 
 ## Для разработчиков
 
-Нужен **Go 1.26.3+**. Статика админки, OBS-дока и overlay встроена в бинарник; для разработки UI можно подменить её папкой `web/`.
+Нужен **Go 1.26.3+** (версия из `go.mod`). Статика админки, OBS-дока и overlay встроена в бинарник; при локальной разработке UI её можно подменить папкой `web/` через флаг `-web`.
 
-```powershell
+### Общие команды
+
+Работают одинаково в **Windows**, **Linux** и **macOS** (в PowerShell, cmd, bash или zsh):
+
+```bash
 go mod download
-go test ./...
 go build ./...
+go test ./... -race
+```
+
+Линтер как в CI (установка один раз):
+
+```bash
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+golangci-lint run ./...
+```
+
+### Headless-сервер (основной цикл разработки)
+
+Для backend, админки и overlay удобнее запускать сервер без desktop-оболочки:
+
+```bash
 go run ./cmd/comm-relay-server -web ./web
 ```
 
-Desktop-сборка использует [Wails v2](https://wails.io/):
+По умолчанию слушает `127.0.0.1:17877`, создаёт `config.json` рядом с рабочей директорией (в релизной desktop-сборке — в пользовательском каталоге, см. таблицу выше).
 
-```powershell
+| Флаг | Назначение |
+|------|------------|
+| `-web ./web` | Подменить встроенную статику файлами из репозитория |
+| `-config путь` | Другой `config.json` |
+| `-addr 127.0.0.1:порт` | Переопределить порт из конфига |
+| `-debug` | Подробные логи |
+
+Собрать и запустить бинарник без `go run`:
+
+| Система | Сборка | Запуск |
+|---------|--------|--------|
+| Windows | `go build -o comm-relay.exe ./cmd/comm-relay-server` | `.\comm-relay.exe -web .\web` |
+| Linux / macOS | `go build -o comm-relay ./cmd/comm-relay-server` | `./comm-relay -web ./web` |
+
+Откройте в браузере `http://127.0.0.1:17877/` — изменения в `web/` видны после обновления страницы, пересборка Go нужна только при правках backend.
+
+### Desktop-сборка (Wails)
+
+Релизные архивы — это desktop-приложение на [Wails v2](https://wails.io/). Собирайте его, когда нужно проверить окно, иконку в трее или упаковку; для ежедневной разработки UI и API достаточно headless-сервера.
+
+Установите CLI (один раз):
+
+```bash
 go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+```
+
+Сборка из корня репозитория:
+
+```bash
 cd cmd/comm-relay-desktop
 wails build
 ```
 
-Headless server без desktop-окна:
+Готовый бинарник — в `cmd/comm-relay-desktop/build/bin/` (`CommRelay.exe`, `CommRelay` или `CommRelay.app`).
 
-```powershell
-go build -o comm-relay.exe ./cmd/comm-relay-server
-.\comm-relay.exe
+#### Windows
+
+- **Go 1.26.3+** и **WebView2** (на Windows 11 обычно уже есть).
+- Дополнительные SDK для Wails не нужны.
+- Проверка окружения: `wails doctor`.
+
+#### Linux (Ubuntu, Debian, Linux Mint и др.)
+
+Пакеты для **сборки** desktop (отдельно от runtime-зависимостей в разделе «Linux зависимости» выше):
+
+```bash
+sudo apt update
+sudo apt install build-essential pkg-config \
+  libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev
 ```
 
-Основные URL:
+Если `libwebkit2gtk-4.1-dev` недоступен, установите эквивалент **WebKitGTK 4.1** из репозитория дистрибутива.
+
+**OBS на Linux:** источник **Browser** и **Custom Browser Docks** есть не во всех сборках OBS из стандартных репозиториев. Для теста overlay и dock установите OBS из [официального PPA](https://obsproject.com/kb/linux-installation) (`ppa:obsproject/obs-studio`) или Flatpak с Flathub. На Wayland док-панели OBS могут быть недоступны — при необходимости войдите в сессию **X11**.
+
+#### macOS
+
+- **Go 1.26.3+** и **Xcode Command Line Tools** (`xcode-select --install`).
+- Сборка под текущую машину: `wails build` в `cmd/comm-relay-desktop`.
+- Универсальный бинарник (как в CI): `wails build -platform darwin/universal`.
+- Неподписанная локальная сборка может не открываться двойным кликом — **Open** из контекстного меню Finder или запуск из терминала.
+
+### Основные URL
 
 | URL | Назначение |
 |-----|------------|
