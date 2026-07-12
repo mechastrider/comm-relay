@@ -1,0 +1,226 @@
+.cockpit-shell {
+  position: fixed;
+  inset: 6px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  background: var(--panel-bg);
+  box-shadow: inset 0 0 0 1px #101013;
+}
+
+.cockpit-shell::before,
+.cockpit-shell::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  z-index: 2;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #555 35%, #2d2d30 65%);
+}
+
+.cockpit-shell::before {
+  left: 5px;
+}
+
+.cockpit-shell::after {
+  right: 5px;
+}
+
+.top-bar,
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.top-bar {
+  min-height: 64px;
+  padding: 8px 16px 8px 20px;
+  border-bottom: 2px solid var(--amber-dim);
+}
+
+.brand-stack {
+  min-width: 180px;
+}
+
+.brand-kicker,
+.console-label,
+.dialog-kicker {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+
+.brand-stack h1 {
+  margin: 0;
+  color: var(--amber);
+  font-size: 18px;
+  line-height: 1.1;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(212, 160, 23, 0.42);
+  white-space: nowrap;
+}
+
+.connector-rack {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 142px;
+  min-height: 34px;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface-raised);
+}
+
+.indicator__label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.top-actions,
+.console-actions,
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-physical,
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 6px 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--border-strong);
+  border-left-color: var(--border-strong);
+  border-bottom-color: var(--border-dark);
+  border-right-color: var(--border-dark);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #3a3a3e 0%, #28282c 100%);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-decoration: none;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.btn-physical:hover:not(:disabled),
+.button-secondary:hover {
+  color: var(--amber);
+  border-color: var(--amber-dim);
+}
+
+.btn-physical:active:not(:disabled),
+.button-secondary:active {
+  border-top-color: var(--border-dark);
+  border-left-color: var(--border-dark);
+  border-bottom-color: var(--border-strong);
+  border-right-color: var(--border-strong);
+  background: linear-gradient(180deg, #28282c 0%, #3a3a3e 100%);
+}
+
+.btn-physical:disabled,
+.button-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.btn-start {
+  border-color: #1c6e3a;
+  color: var(--success);
+  text-shadow: 0 0 5px rgba(51, 204, 102, 0.38);
+}
+
+.btn-small {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.button-secondary {
+  min-height: 36px;
+}
+
+.button-secondary--small {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.main-area {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  min-height: 0;
+  overflow: hidden;
+  transition: grid-template-columns 160ms ease;
+}
+
+.cockpit-shell.sidebar-collapsed .main-area {
+  grid-template-columns: minmax(0, 1fr) 34px;
+}
+
+.banner {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 284px;
+  z-index: 3;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-weight: 700;
+  transition: right 160ms ease;
+}
+
+.cockpit-shell.sidebar-collapsed .banner {
+  right: 48px;
+}
+
+.banner--error {
+  border-color: #962428;
+  color: #ffd2d5;
+}
+
+.banner--success {
+  border-color: #1c6e3a;
+  color: #d7ffe3;
+}

@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/mechastrider/comm-relay/internal/connector/retry"
 	"github.com/mechastrider/comm-relay/internal/connector/youtube/grpcproto"
 )
 
@@ -38,7 +39,7 @@ func (c *Connector) runStream(ctx context.Context, grpcClient grpcproto.V3DataLi
 			if openFailures >= maxStreamOpenFailures {
 				return errors.Errorf("%w: %w", errStreamUnavailable, err)
 			}
-			if waitErr := waitContext(ctx, streamReconnectDelay); waitErr != nil {
+			if waitErr := retry.Wait(ctx, streamReconnectDelay); waitErr != nil {
 				return nil
 			}
 			continue

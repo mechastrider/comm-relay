@@ -33,8 +33,14 @@ func TestNewHandlerRoutes(t *testing.T) {
 		jsRec := httptest.NewRecorder()
 		handler.ServeHTTP(jsRec, httptest.NewRequest(http.MethodGet, "/app.js", nil))
 		require.Equal(t, http.StatusOK, jsRec.Code)
-		require.Contains(t, jsRec.Body.String(), "setOBSSection")
-		require.Contains(t, jsRec.Body.String(), "navigator.clipboard")
+		require.Contains(t, jsRec.Body.String(), "initOBSSetup")
+		require.Contains(t, jsRec.Body.String(), "./js/obs-setup.js")
+
+		obsRec := httptest.NewRecorder()
+		handler.ServeHTTP(obsRec, httptest.NewRequest(http.MethodGet, "/js/obs-setup.js", nil))
+		require.Equal(t, http.StatusOK, obsRec.Code)
+		require.Contains(t, obsRec.Body.String(), "setOBSSection")
+		require.Contains(t, obsRec.Body.String(), "navigator.clipboard")
 	})
 
 	t.Run("favicon", func(t *testing.T) {
@@ -59,6 +65,14 @@ func TestNewHandlerRoutes(t *testing.T) {
 		handler.ServeHTTP(cssRec, httptest.NewRequest(http.MethodGet, "/overlay/overlay.css", nil))
 		require.Equal(t, http.StatusOK, cssRec.Code)
 		require.Contains(t, cssRec.Body.String(), "background: transparent")
+	})
+
+	t.Run("shared chat render module", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/shared/chat-render.js", nil))
+		require.Equal(t, http.StatusOK, rec.Code)
+		require.Contains(t, rec.Body.String(), "export function appendText")
+		require.Contains(t, rec.Body.String(), "createChatRender")
 	})
 
 	t.Run("message dock", func(t *testing.T) {

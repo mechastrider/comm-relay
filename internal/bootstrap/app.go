@@ -132,28 +132,13 @@ func New(opts Options) (*App, error) {
 	}
 
 	twitchConn := twitchconnector.New(eventBus, store, statusRegistry, emoteEnricher)
-	processes = append(processes, runnable.Func(func(ctx context.Context) error {
-		if err := twitchConn.Run(ctx); err != nil {
-			clog.Errorf(ctx, "twitch connector stopped with error: %w", err)
-		}
-		return nil
-	}).Name("twitch"))
+	processes = append(processes, connectorRunnable("twitch", twitchConn.Run))
 
-	youtubeConn := youtubeconnector.New(eventBus, store, statusRegistry, youtubeEmojiCatalog, emoteHTTP)
-	processes = append(processes, runnable.Func(func(ctx context.Context) error {
-		if err := youtubeConn.Run(ctx); err != nil {
-			clog.Errorf(ctx, "youtube connector stopped with error: %w", err)
-		}
-		return nil
-	}).Name("youtube"))
+	youtubeConn := youtubeconnector.New(eventBus, store, statusRegistry, youtubeEmojiCatalog, emoteHTTP, youtubeEmojiRefresher)
+	processes = append(processes, connectorRunnable("youtube", youtubeConn.Run))
 
 	vkConn := vkconnector.New(eventBus, store, statusRegistry)
-	processes = append(processes, runnable.Func(func(ctx context.Context) error {
-		if err := vkConn.Run(ctx); err != nil {
-			clog.Errorf(ctx, "vk connector stopped with error: %w", err)
-		}
-		return nil
-	}).Name("vk"))
+	processes = append(processes, connectorRunnable("vk", vkConn.Run))
 
 	mgr.Register(processes...)
 
@@ -163,6 +148,15 @@ func New(opts Options) (*App, error) {
 		adminURL:  config.AdminBaseURLForListenAddr(addr, cfg),
 		healthURL: config.HealthURLForListenAddr(addr, cfg),
 	}, nil
+}
+
+func connectorRunnable(name string, run func(context.Context) error) runnable.Runnable {
+	return runnable.Func(func(ctx context.Context) error {
+		if err := run(ctx); err != nil {
+			clog.Errorf(ctx, "%s connector stopped with error: %w", name, err)
+		}
+		return nil
+	}).Name(name)
 }
 
 // AdminURL is the loopback URL of the admin panel (trailing slash).
