@@ -1,5 +1,6 @@
-(function () {
-  "use strict";
+import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.js?v=12";
+
+"use strict";
 
   const DEFAULT_MAX_MESSAGES = 30;
   const DEFAULT_MESSAGE_TTL_SECONDS = 20;
@@ -275,9 +276,12 @@
 
   const listEl = document.getElementById("messages");
   if (!listEl) {
-    return;
+    console.error("CommRelay overlay: #messages element is missing");
+  } else {
+    initOverlay(listEl);
   }
 
+  function initOverlay(listEl) {
   applyAppearance();
 
   /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, messageKey: string }>} */
@@ -422,232 +426,34 @@
     });
   }
 
-  function appendText(el, text) {
-    el.appendChild(document.createTextNode(text));
-  }
-
-  function readFragmentText(fragment) {
-    return typeof fragment.text === "string" ? fragment.text : "";
-  }
-
-  function safeImageURL(rawURL) {
-    if (typeof rawURL !== "string" || rawURL.trim() === "") {
-      return "";
-    }
-    try {
-      const url = new URL(rawURL, window.location.href);
-      if (url.protocol !== "https:" && url.protocol !== "http:") {
+  const chatRender = createChatRender({
+    classes: {
+      emote: "message__emote",
+      imagePreview: "message__image-preview",
+      avatar: "message__avatar",
+    },
+    usernameField: "user",
+    imagePreviewEnabled: function () {
+      return config.imagePreviews.enabled;
+    },
+    resolvePreviewURL: function (rawURL) {
+      const url = safeImageURL(rawURL);
+      if (url === "" || !isPreviewImageURL(url)) {
         return "";
       }
-      return url.href;
-    } catch {
-      return "";
-    }
-  }
+      return url;
+    },
+  });
 
-  function replaceBrokenImageWithText(img, text) {
-    img.addEventListener(
-      "error",
-      function () {
-        const fallback = document.createTextNode(text);
-        img.replaceWith(fallback);
-      },
-      { once: true }
-    );
-  }
-
-  function appendImageLinkFragment(el, fragment) {
-    const text = readFragmentText(fragment);
-    if (!config.imagePreviews.enabled) {
-      appendText(el, text);
-      return;
-    }
-
-    const url = safeImageURL(fragment.url);
-    if (url === "" || !isPreviewImageURL(url)) {
-      appendText(el, text);
-      return;
-    }
-
-    const img = document.createElement("img");
-    img.className = "message__image-preview";
-    img.src = url;
-    img.alt = "chat image";
-    img.title = text;
-    img.decoding = "async";
-    img.draggable = false;
-    img.referrerPolicy = "no-referrer";
-    replaceBrokenImageWithText(img, text);
-    el.appendChild(img);
-  }
-
-  function appendEmoteFragment(el, fragment) {
-    const text = readFragmentText(fragment);
-    const url = safeImageURL(fragment.url);
-    if (url === "") {
-      appendText(el, text);
-      return;
-    }
-
-    const img = document.createElement("img");
-    img.className = "message__emote";
-    img.src = url;
-    img.alt = text;
-    img.title = text;
-    img.decoding = "async";
-    img.draggable = false;
-    img.referrerPolicy = "no-referrer";
-    replaceBrokenImageWithText(img, text);
-    el.appendChild(img);
-  }
-
-  function appendFragment(el, fragment) {
-    if (!fragment || typeof fragment !== "object") {
-      return;
-    }
-
-    const type = typeof fragment.type === "string" ? fragment.type : "";
-    if (type === "text") {
-      appendText(el, readFragmentText(fragment));
-      return;
-    }
-    if (type === "emote") {
-      appendEmoteFragment(el, fragment);
-      return;
-    }
-    if (type === "image_link") {
-      appendImageLinkFragment(el, fragment);
-      return;
-    }
-
-    appendText(el, readFragmentText(fragment));
-  }
-
-  function appendMessageContent(el, frame, fallbackText) {
-    if (!Array.isArray(frame.fragments) || frame.fragments.length === 0) {
-      appendText(el, fallbackText);
-      return;
-    }
-
-    const before = el.childNodes.length;
-    frame.fragments.forEach(function (fragment) {
-      appendFragment(el, fragment);
-    });
-    if (el.childNodes.length === before) {
-      appendText(el, fallbackText);
-    }
-  }
+  const {
+    appendMessageContent,
+    buildAvatarImage,
+    messageDisplayName,
+    userAccent,
+  } = chatRender;
 
   function hasFragments(frame) {
     return Array.isArray(frame.fragments) && frame.fragments.length > 0;
-  }
-
-  function messageDisplayName(frame) {
-    if (typeof frame.display_name === "string" && frame.display_name !== "") {
-      return frame.display_name;
-    }
-    if (typeof frame.user === "string" && frame.user !== "") {
-      return frame.user;
-    }
-    return "?";
-  }
-
-  function messageIdentity(frame) {
-    const platform = typeof frame.platform === "string" ? frame.platform.trim().toLowerCase() : "";
-    const username = typeof frame.user === "string" ? frame.user.trim().toLowerCase() : "";
-    const displayName = messageDisplayName(frame).trim().toLowerCase();
-    return [platform, username || displayName || "?"].join(":");
-  }
-
-  function hashString(value) {
-    let hash = 2166136261;
-    for (let i = 0; i < value.length; i += 1) {
-      hash ^= value.charCodeAt(i);
-      hash = Math.imul(hash, 16777619);
-    }
-    return hash >>> 0;
-  }
-
-  function userAccent(frame) {
-    const palette = [
-      "#57d68d",
-      "#5ec8ff",
-      "#ffca55",
-      "#ff8f70",
-      "#c89cff",
-      "#66e3d4",
-      "#f06ea9",
-      "#a5d65e",
-      "#8ca8ff",
-      "#f0a84f",
-    ];
-    const hash = hashString(messageIdentity(frame));
-    return palette[hash % palette.length];
-  }
-
-  function initialsForName(name) {
-    return name
-      .split(/[\s._-]+/)
-      .filter(function (part) {
-        return part !== "";
-      })
-      .slice(0, 2)
-      .map(function (part) {
-        return part.charAt(0).toUpperCase();
-      })
-      .join("") || "?";
-  }
-
-  function escapeSVGText(value) {
-    return value
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-  }
-
-  function avatarFallbackURL(frame) {
-    const identity = messageIdentity(frame);
-    const hash = hashString(identity);
-    const accent = userAccent(frame);
-    const initials = escapeSVGText(initialsForName(messageDisplayName(frame)));
-    const bgPalette = ["#1e2d24", "#1c2b36", "#33281a", "#332022", "#2b2340"];
-    const variant = hash % 5;
-    const bg = bgPalette[hash % bgPalette.length];
-    const shapes = [
-      '<circle cx="18" cy="20" r="10" fill="' + accent + '" opacity="0.95"/>',
-      '<rect x="9" y="9" width="30" height="30" rx="12" fill="' + accent + '" opacity="0.95"/>',
-      '<path d="M24 6 43 18 36 41H12L5 18Z" fill="' + accent + '" opacity="0.95"/>',
-      '<circle cx="17" cy="18" r="9" fill="' + accent + '" opacity="0.9"/><circle cx="31" cy="29" r="12" fill="' + accent + '" opacity="0.72"/>',
-      '<path d="M8 32c6-18 26-22 32-6 2 6-2 12-8 14H16c-6-1-10-3-8-8Z" fill="' + accent + '" opacity="0.95"/>',
-    ];
-    const svg =
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">' +
-      '<rect width="48" height="48" rx="12" fill="' + bg + '"/>' +
-      '<circle cx="40" cy="8" r="12" fill="#ffffff" opacity="0.08"/>' +
-      shapes[variant] +
-      '<text x="24" y="31" text-anchor="middle" font-family="Consolas,monospace" font-size="14" font-weight="700" fill="#fff">' +
-      initials +
-      "</text></svg>";
-    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
-  }
-
-  function buildAvatarImage(frame) {
-    const avatar = document.createElement("img");
-    avatar.className = "message__avatar";
-    avatar.alt = "";
-    avatar.decoding = "async";
-    avatar.draggable = false;
-    avatar.referrerPolicy = "no-referrer";
-
-    const fallback = avatarFallbackURL(frame);
-    const url = safeImageURL(frame.avatar_url);
-    avatar.src = url !== "" ? url : fallback;
-    if (url !== "") {
-      avatar.addEventListener("error", function () {
-        avatar.src = fallback;
-      }, { once: true });
-    }
-    return avatar;
   }
 
   function buildHiddenAvatarPlaceholder() {
@@ -925,4 +731,4 @@
   } else {
     loadServerConfig().then(loadRecentMessages).finally(connect);
   }
-})();
+}

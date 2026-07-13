@@ -12,6 +12,7 @@ import (
 
 	"github.com/muonsoft/errors"
 
+	"github.com/mechastrider/comm-relay/internal/connector/retry"
 	"github.com/mechastrider/comm-relay/internal/youtube/innertube"
 )
 
@@ -97,7 +98,7 @@ func (c *defaultPageClient) RunSession(ctx context.Context, videoID string, onIt
 			pollInterval = time.Second
 		}
 
-		if err := waitContext(ctx, pollInterval); err != nil {
+		if err := retry.Wait(ctx, pollInterval); err != nil {
 			return nil
 		}
 	}

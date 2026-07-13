@@ -55,7 +55,7 @@ func TestRunStream_WhenMessagesArrive_ExpectPublish(t *testing.T) {
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())
-	connector := New(eventBus, store, nil, nil, nil)
+	connector := New(eventBus, store, nil, nil, nil, nil)
 
 	text := "stream hello"
 	grpcClient := &fakeGRPCClient{

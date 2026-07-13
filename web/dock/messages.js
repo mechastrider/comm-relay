@@ -1,5 +1,6 @@
-(function () {
-  "use strict";
+import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
+
+"use strict";
 
   const MESSAGE_LIMIT = 100;
   const SCROLL_THRESHOLD_PX = 48;
@@ -33,126 +34,6 @@
     });
   }
 
-  function appendText(element, value) {
-    element.appendChild(document.createTextNode(typeof value === "string" ? value : ""));
-  }
-
-  function displayName(message) {
-    if (typeof message.display_name === "string" && message.display_name !== "") {
-      return message.display_name;
-    }
-    if (typeof message.username === "string" && message.username !== "") {
-      return message.username;
-    }
-    return "?";
-  }
-
-  function messageKey(message) {
-    const id = typeof message.id === "string" ? message.id.trim() : "";
-    if (id !== "") {
-      return [message.platform || "", id].join("\0");
-    }
-    return [
-      message.platform || "",
-      displayName(message),
-      message.message || "",
-      message.timestamp || "",
-    ].join("\0");
-  }
-
-  function messageIdentity(message) {
-    const platform = typeof message.platform === "string"
-      ? message.platform.trim().toLowerCase()
-      : "";
-    const username = typeof message.username === "string"
-      ? message.username.trim().toLowerCase()
-      : "";
-    return platform + ":" + (username || displayName(message).trim().toLowerCase());
-  }
-
-  function hashString(value) {
-    let hash = 2166136261;
-    for (let index = 0; index < value.length; index += 1) {
-      hash ^= value.charCodeAt(index);
-      hash = Math.imul(hash, 16777619);
-    }
-    return hash >>> 0;
-  }
-
-  function userAccent(message) {
-    const palette = [
-      "#57d68d", "#5ec8ff", "#ffca55", "#ff8f70", "#c89cff",
-      "#66e3d4", "#f06ea9", "#a5d65e", "#8ca8ff", "#f0a84f",
-    ];
-    return palette[hashString(messageIdentity(message)) % palette.length];
-  }
-
-  function safeImageURL(value) {
-    if (typeof value !== "string" || value.trim() === "") {
-      return "";
-    }
-    try {
-      const url = new URL(value, window.location.href);
-      return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
-    } catch {
-      return "";
-    }
-  }
-
-  function initialsForName(name) {
-    return name
-      .split(/[\s._-]+/)
-      .filter(function (part) { return part !== ""; })
-      .slice(0, 2)
-      .map(function (part) { return part.charAt(0).toUpperCase(); })
-      .join("") || "?";
-  }
-
-  function escapeSVGText(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
-  function avatarFallbackURL(message) {
-    const hash = hashString(messageIdentity(message));
-    const accent = userAccent(message);
-    const initials = escapeSVGText(initialsForName(displayName(message)));
-    const backgrounds = ["#1e2d24", "#1c2b36", "#33281a", "#332022", "#2b2340"];
-    const svg =
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">' +
-      '<rect width="48" height="48" rx="10" fill="' + backgrounds[hash % backgrounds.length] + '"/>' +
-      '<circle cx="24" cy="24" r="17" fill="' + accent + '" opacity="0.82"/>' +
-      '<text x="24" y="30" text-anchor="middle" font-family="Consolas,monospace" font-size="14" font-weight="700" fill="#fff">' +
-      initials + "</text></svg>";
-    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
-  }
-
-  function buildAvatar(message) {
-    const avatar = document.createElement("img");
-    avatar.className = "message-list__avatar";
-    avatar.alt = "";
-    avatar.decoding = "async";
-    avatar.draggable = false;
-    avatar.referrerPolicy = "no-referrer";
-
-    const fallback = avatarFallbackURL(message);
-    const url = safeImageURL(message.avatar_url);
-    avatar.src = url || fallback;
-    if (url !== "") {
-      avatar.addEventListener("error", function () { avatar.src = fallback; }, { once: true });
-    }
-    return avatar;
-  }
-
-  function readFragmentText(fragment) {
-    return typeof fragment.text === "string" ? fragment.text : "";
-  }
-
-  function replaceBrokenImageWithText(image, text) {
-    image.addEventListener("error", function () {
-      image.replaceWith(document.createTextNode(text));
-    }, { once: true });
-  }
-
   function imagePreviewHostAllowed(hostname) {
     const host = hostname.trim().toLowerCase();
     return Array.isArray(previewSettings.allowed_hosts) && previewSettings.allowed_hosts.some(function (allowed) {
@@ -179,71 +60,41 @@
     }
   }
 
-  function appendFragment(element, fragment) {
-    if (!fragment || typeof fragment !== "object") {
-      return;
-    }
+  const chatRender = createChatRender({
+    classes: {
+      emote: "message-list__emote",
+      imagePreview: "message-list__image-preview",
+      avatar: "message-list__avatar",
+    },
+    avatarFallback: "compact",
+    imagePreviewEnabled: function () {
+      return previewSettings.enabled;
+    },
+    resolvePreviewURL: safePreviewURL,
+    applyImagePreviewStyles: function (img) {
+      img.style.setProperty("--preview-max-width", String(previewSettings.max_width_px || 320) + "px");
+      img.style.setProperty("--preview-max-height", String(previewSettings.max_height_px || 180) + "px");
+    },
+  });
 
-    const text = readFragmentText(fragment);
-    if (fragment.type === "text") {
-      appendText(element, text);
-      return;
-    }
+  const {
+    appendMessageContent,
+    buildAvatarImage: buildAvatar,
+    messageDisplayName: displayName,
+    userAccent,
+  } = chatRender;
 
-    if (fragment.type === "emote") {
-      const url = safeImageURL(fragment.url);
-      if (url === "") {
-        appendText(element, text);
-        return;
-      }
-      const image = document.createElement("img");
-      image.className = "message-list__emote";
-      image.src = url;
-      image.alt = text;
-      image.title = text;
-      image.decoding = "async";
-      image.draggable = false;
-      image.referrerPolicy = "no-referrer";
-      replaceBrokenImageWithText(image, text);
-      element.appendChild(image);
-      return;
+  function messageKey(message) {
+    const id = typeof message.id === "string" ? message.id.trim() : "";
+    if (id !== "") {
+      return [message.platform || "", id].join("\0");
     }
-
-    if (fragment.type === "image_link") {
-      const url = safePreviewURL(fragment.url);
-      if (url === "") {
-        appendText(element, text);
-        return;
-      }
-      const image = document.createElement("img");
-      image.className = "message-list__image-preview";
-      image.src = url;
-      image.alt = "chat image";
-      image.title = text;
-      image.decoding = "async";
-      image.draggable = false;
-      image.referrerPolicy = "no-referrer";
-      image.style.setProperty("--preview-max-width", String(previewSettings.max_width_px || 320) + "px");
-      image.style.setProperty("--preview-max-height", String(previewSettings.max_height_px || 180) + "px");
-      replaceBrokenImageWithText(image, text);
-      element.appendChild(image);
-      return;
-    }
-
-    appendText(element, text);
-  }
-
-  function appendMessageContent(element, message) {
-    const fallback = typeof message.message === "string" ? message.message : "";
-    if (!Array.isArray(message.fragments) || message.fragments.length === 0) {
-      appendText(element, fallback);
-      return;
-    }
-    const before = element.childNodes.length;
-    message.fragments.forEach(function (fragment) { appendFragment(element, fragment); });
-    if (element.childNodes.length === before) {
-      appendText(element, fallback);
-    }
+    return [
+      message.platform || "",
+      displayName(message),
+      message.message || "",
+      message.timestamp || "",
+    ].join("\0");
   }
 
   function formatTime(value) {
@@ -506,4 +357,3 @@
 
   renderMessages(true);
   Promise.all([loadDisplaySettings(), loadRecentMessages()]).finally(connectWebSocket);
-}());

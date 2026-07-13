@@ -1,0 +1,187 @@
+import * as dom from './dom.js';
+import { state } from './state.js';
+import { SIDEBAR_COLLAPSED_KEY, BANNER_SUCCESS_DISMISS_MS } from './constants.js';
+
+export function showBanner(kind, message) {
+    if (state.bannerTimer) {
+      window.clearTimeout(state.bannerTimer);
+      state.bannerTimer = null;
+    }
+    dom.banner.hidden = false;
+    dom.banner.className = "banner banner--" + kind;
+    dom.banner.textContent = message;
+    if (kind === "success") {
+      state.bannerTimer = window.setTimeout(function () {
+        state.bannerTimer = null;
+        hideBanner();
+      }, BANNER_SUCCESS_DISMISS_MS);
+    }
+  }
+
+export function hideBanner() {
+    if (state.bannerTimer) {
+      window.clearTimeout(state.bannerTimer);
+      state.bannerTimer = null;
+    }
+    dom.banner.hidden = true;
+    dom.banner.textContent = "";
+    dom.banner.className = "banner";
+  }
+
+export function readSidebarCollapsedPreference() {
+    try {
+      return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+    } catch (error) {
+      return false;
+    }
+  }
+
+export function writeSidebarCollapsedPreference(collapsed) {
+    try {
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "true" : "false");
+    } catch (error) {
+      /* localStorage can be unavailable in locked-down browser contexts. */
+    }
+  }
+
+export function setSidebarCollapsed(collapsed, options) {
+    const shouldPersist = !options || options.persist !== false;
+    if (!dom.cockpitShell || !dom.sidebarToggle) {
+      return;
+    }
+
+    dom.cockpitShell.classList.toggle("sidebar-collapsed", collapsed);
+    dom.sidebarToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    dom.sidebarToggle.setAttribute(
+      "aria-label",
+      collapsed ? "Expand systems panel" : "Collapse systems panel"
+    );
+    dom.sidebarToggle.title = collapsed ? "Expand systems panel" : "Collapse systems panel";
+
+    const chevron = dom.sidebarToggle.querySelector(".sidebar-toggle__chevron");
+    if (chevron) {
+      chevron.textContent = collapsed ? "<" : ">";
+    }
+
+    if (shouldPersist) {
+      writeSidebarCollapsedPreference(collapsed);
+    }
+  }
+
+export function initSidebarToggle() {
+    if (!dom.cockpitShell || !dom.sidebarToggle) {
+      return;
+    }
+
+    setSidebarCollapsed(readSidebarCollapsedPreference(), { persist: false });
+    dom.sidebarToggle.addEventListener("click", function () {
+      setSidebarCollapsed(!dom.cockpitShell.classList.contains("sidebar-collapsed"));
+    });
+  }
+
+export function setSaveButtonsDisabled(disabled) {
+    dom.saveButtons.forEach(function (button) {
+      button.disabled = disabled;
+    });
+  }
+
+export function setSettingsStateText(message, stateClass) {
+    if (dom.settingsState) {
+      dom.settingsState.textContent = message;
+      dom.settingsState.className = stateClass ? "settings-state " + stateClass : "settings-state";
+    }
+    if (dom.footerSettingsState) {
+      dom.footerSettingsState.textContent = message;
+      dom.footerSettingsState.className = stateClass || "";
+    }
+  }
+
+export function renderSettingsState() {
+    if (state.saveInFlight) {
+      setSettingsStateText("Saving", "");
+      setSaveButtonsDisabled(true);
+      return;
+    }
+
+    if (!state.settingsLoaded) {
+      setSettingsStateText("Loading settings", "");
+      setSaveButtonsDisabled(true);
+      return;
+    }
+
+    if (state.settingsDirty) {
+      setSettingsStateText("Unsaved changes", "settings-state--dirty");
+      setSaveButtonsDisabled(false);
+      return;
+    }
+
+    setSettingsStateText("Settings saved", "settings-state--saved");
+    setSaveButtonsDisabled(true);
+  }
+
+export function markSettingsDirty() {
+    if (!state.settingsLoaded || state.saveInFlight) {
+      return;
+    }
+    state.settingsDirty = true;
+    renderSettingsState();
+  }
+
+export function markSettingsClean() {
+    state.settingsLoaded = true;
+    state.settingsDirty = false;
+    renderSettingsState();
+  }
+
+export function markSettingsUnavailable() {
+    state.settingsLoaded = false;
+    state.settingsDirty = false;
+    renderSettingsState();
+    setSettingsStateText("Settings unavailable", "");
+  }
+
+export function clearFieldErrors() {
+    Object.keys(dom.fieldErrors).forEach(function (key) {
+      const el = dom.fieldErrors[key];
+      const input = dom.fieldInputs[key];
+      if (el) {
+        el.hidden = true;
+        el.textContent = "";
+      }
+      if (input) {
+        input.removeAttribute("aria-invalid");
+        input.removeAttribute("aria-describedby");
+      }
+    });
+  }
+
+export function applyServerFieldErrors(fields) {
+    if (!fields || typeof fields !== "object") {
+      return null;
+    }
+    clearFieldErrors();
+    let firstInvalid = null;
+    Object.keys(fields).forEach(function (key) {
+      const message = fields[key];
+      if (typeof message !== "string" || message === "") {
+        return;
+      }
+      setFieldError(key, message);
+      if (!firstInvalid && dom.fieldInputs[key]) {
+        firstInvalid = dom.fieldInputs[key];
+      }
+    });
+    return firstInvalid;
+  }
+
+export function setFieldError(field, message) {
+    const el = dom.fieldErrors[field];
+    const input = dom.fieldInputs[field];
+    if (!el || !input) {
+      return;
+    }
+    el.hidden = false;
+    el.textContent = message;
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-describedby", el.id);
+  }

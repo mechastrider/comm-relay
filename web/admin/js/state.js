@@ -1,0 +1,27 @@
+import { INITIAL_WS_RECONNECT_MS } from "./constants.js";
+
+export const state = {
+  currentConfig: null,
+  settingsLoaded: false,
+  settingsDirty: false,
+  saveInFlight: false,
+  statusTimer: null,
+  messagesTimer: null,
+  soundReady: false,
+  knownMessageKeys: new Set(),
+  recentMessageCache: [],
+  renderedMessagesFingerprint: "",
+  wsSocket: null,
+  wsShouldRun: true,
+  wsReconnectDelayMs: INITIAL_WS_RECONNECT_MS,
+  wsReconnectTimer: null,
+  audioCtx: null,
+  bannerTimer: null,
+  activeErrorTrigger: null,
+  errorPopoverPinned: false,
+  overlayPreviewRefreshTimer: null,
+  overlayPreviewRevision: 0,
+  overlayPreviewResizeObserver: null,
+  obsCopyFeedbackTimer: null,
+  obsCopyFeedbackButton: null,
+};

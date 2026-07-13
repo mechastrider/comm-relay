@@ -11,6 +11,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/connector/retry"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/imagelink"
 )
@@ -42,7 +43,7 @@ func (c *Connector) Run(ctx context.Context) error {
 	clog.Info(ctx, "vk connector starting", slog.String("platform", platformVK))
 	defer clog.Info(ctx, "vk connector stopped", slog.String("platform", platformVK))
 
-	backoff := newReconnectBackoff()
+	backoff := retry.NewBackoff(time.Second, 30*time.Second)
 
 	for {
 		if ctx.Err() != nil {
@@ -52,8 +53,8 @@ func (c *Connector) Run(ctx context.Context) error {
 		vkCfg := c.store.Snapshot().VK
 		if !vkCfg.Enabled {
 			c.setStatus(status.StateDisabled, "", "")
-			backoff = newReconnectBackoff()
-			if err := waitContext(ctx, configPollInterval); err != nil {
+			backoff = backoff.Reset()
+			if err := retry.Wait(ctx, configPollInterval); err != nil {
 				return nil
 			}
 			continue
@@ -62,7 +63,7 @@ func (c *Connector) Run(ctx context.Context) error {
 		channel := normalizeChannel(vkCfg.Channel)
 		if channel == "" {
 			c.setStatus(status.StateError, "Set VK channel slug in admin.", "")
-			if err := waitContext(ctx, configPollInterval); err != nil {
+			if err := retry.Wait(ctx, configPollInterval); err != nil {
 				return nil
 			}
 			continue
@@ -86,14 +87,14 @@ func (c *Connector) Run(ctx context.Context) error {
 			c.setStatus(status.StateDisconnected, "", "")
 		}
 
-		wait := backoff.current()
+		wait := backoff.Current()
 		c.setStatus(status.StateReconnecting, "", "")
 		clog.Info(sessionCtx, "vk reconnect scheduled", slog.Duration("after", wait))
-		if err := waitContext(ctx, wait); err != nil {
+		if err := retry.Wait(ctx, wait); err != nil {
 			return nil
 		}
 
-		backoff = backoff.next()
+		backoff = backoff.Next()
 	}
 }
 
@@ -146,20 +147,4 @@ func (c *Connector) setStatusFromError(err error) {
 		return
 	}
 	c.setStatus(status.StateError, "VK connector error — see server logs.", status.SanitizeError(err.Error()))
-}
-
-func waitContext(ctx context.Context, d time.Duration) error {
-	if d <= 0 {
-		return nil
-	}
-
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-timer.C:
-		return nil
-	}
 }

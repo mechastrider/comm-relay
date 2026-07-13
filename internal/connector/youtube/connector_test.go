@@ -38,7 +38,7 @@ func TestConnector_Run_WhenDisabled_ExpectDisabledStatus(t *testing.T) {
 	eventBus := bus.New(8)
 	registry := status.NewRegistry()
 	store := testStore(t, config.YouTubeConfig{Enabled: false})
-	connector := New(eventBus, store, registry, nil, nil)
+	connector := New(eventBus, store, registry, nil, nil, nil)
 	connector.newClient = func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error) {
 		t.Fatal("client should not be created when disabled")
 		return nil, nil
@@ -60,7 +60,7 @@ func TestConnector_Run_WhenPageModeWithoutSource_ExpectErrorStatus(t *testing.T)
 		Enabled:        true,
 		ConnectionMode: config.YouTubeConnectionModePage,
 	})
-	connector := New(eventBus, store, registry, nil, nil)
+	connector := New(eventBus, store, registry, nil, nil, nil)
 	connector.newPageClient = func() pageChatClient {
 		t.Fatal("page client should not be created without source")
 		return nil
@@ -83,7 +83,7 @@ func TestConnectorRunPageSession_WhenChannelAutoDetect_ExpectResolvedVideo(t *te
 		ConnectionMode: config.YouTubeConnectionModePage,
 		ChannelHandle:  "@example",
 	})
-	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -123,7 +123,7 @@ func TestConnectorRunPageSession_WhenMessagesReturned_ExpectPublish(t *testing.T
 		ConnectionMode: config.YouTubeConnectionModePage,
 		VideoInput:     "dQw4w9WgXcQ",
 	})
-	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -156,7 +156,7 @@ func TestConnectorRunPageSession_WhenYouTubeEmojiShortcutReturned_ExpectEmoteFra
 		ConnectionMode: config.YouTubeConnectionModePage,
 		VideoInput:     "dQw4w9WgXcQ",
 	})
-	connector := New(eventBus, store, status.NewRegistry(), ytemoji.NewCatalog(), nil)
+	connector := New(eventBus, store, status.NewRegistry(), ytemoji.NewCatalog(), nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -195,7 +195,7 @@ func TestConnectorRunSession_WhenLiveChatReturnsDuplicateIDs_ExpectSinglePublish
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())
-	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -218,7 +218,7 @@ func TestConnectorRunSession_WhenReconnectedAndAPIReplaysMessage_ExpectDuplicate
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())
-	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	connector.newClient = testClientFactory(t, cancel, []*youtube.LiveChatMessage{
@@ -247,7 +247,7 @@ func TestConnectorRunSession_WhenAutoAndStreamFails_ExpectPollFallback(t *testin
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())
-	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
