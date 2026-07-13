@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=CommRelay
+Comment=Local multi-platform chat overlay for OBS
+# Exec and Icon are rewritten by install-desktop.sh to absolute paths in this folder.
+Exec=CommRelay
+Icon=comm-relay
+Terminal=false
+Categories=AudioVideo;Network;
+StartupNotify=true
+StartupWMClass=CommRelay

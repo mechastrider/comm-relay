@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
+	goruntime "runtime"
 	"sync"
 	"time"
 
@@ -17,15 +19,21 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/linux"
+	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"github.com/mechastrider/comm-relay/internal/bootstrap"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/desktopentry"
 	"github.com/mechastrider/comm-relay/internal/logging"
 )
 
 //go:embed frontend
 var frontendAssets embed.FS
+
+//go:embed build/appicon.png
+var appIcon []byte
 
 type desktopApp struct {
 	relay      *bootstrap.App
@@ -55,6 +63,7 @@ func (a *desktopApp) tryNavigateAdmin() {
 func (a *desktopApp) startup(ctx context.Context) {
 	a.wailsCtx = ctx
 	logging.SetupStderr(a.debug)
+	a.ensureLinuxDesktopEntry(ctx)
 
 	configPath := a.configPath()
 	cfg, err := config.Load(configPath)
@@ -155,6 +164,32 @@ func (a *desktopApp) webRoot() string {
 	return webRootFlag
 }
 
+// ensureLinuxDesktopEntry installs an XDG .desktop file and icon so Linux Mint /
+// Cinnamon (and similar DEs) can show CommRelay in the panel and application menu.
+// Linux does not embed application icons in binaries.
+func (a *desktopApp) ensureLinuxDesktopEntry(ctx context.Context) {
+	if goruntime.GOOS != "linux" || len(appIcon) == 0 {
+		return
+	}
+
+	exe, err := os.Executable()
+	if err != nil {
+		clog.Warn(ctx, "resolve executable for desktop entry", slog.Any("error", err))
+		return
+	}
+	if resolved, err := filepath.EvalSymlinks(exe); err == nil {
+		exe = resolved
+	}
+
+	if err := desktopentry.Install(desktopentry.Options{
+		ExecPath:       exe,
+		IconPNG:        appIcon,
+		StartupWMClass: "CommRelay",
+	}); err != nil {
+		clog.Warn(ctx, "install linux desktop entry", slog.Any("error", err))
+	}
+}
+
 var (
 	configPathFlag string
 	webRootFlag    string
@@ -184,6 +219,18 @@ func main() {
 		OnStartup:  app.startup,
 		OnDomReady: app.domReady,
 		OnShutdown: app.shutdown,
+		Linux: &linux.Options{
+			Icon:             appIcon,
+			ProgramName:      "CommRelay",
+			WebviewGpuPolicy: linux.WebviewGpuPolicyNever,
+		},
+		Mac: &mac.Options{
+			About: &mac.AboutInfo{
+				Title:   "CommRelay",
+				Message: "Local multi-platform chat overlay for OBS",
+				Icon:    appIcon,
+			},
+		},
 		SingleInstanceLock: &options.SingleInstanceLock{
 			UniqueId: "mechastrider.comm-relay.desktop",
 			OnSecondInstanceLaunch: func(options.SecondInstanceData) {
