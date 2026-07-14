@@ -59,6 +59,11 @@ export function ensureAudioContext() {
     return Promise.resolve();
   }
 
+/** True when Web Audio is ready to emit sound immediately. */
+export function isAudioContextRunning() {
+    return Boolean(state.audioCtx && state.audioCtx.state === "running");
+  }
+
 export function playTone(ctx, start, options) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -114,10 +119,34 @@ export function playMessageSound(force) {
       return;
     }
 
+    function scheduleIfRunning() {
+      if (!isAudioContextRunning()) {
+        return;
+      }
+      scheduleMessageSound(
+        state.audioCtx,
+        settings.sound,
+        settings.volume,
+        state.audioCtx.currentTime
+      );
+    }
+
+    // Automatic alerts must not wait on resume(): without a user gesture that
+    // promise often resolves only on the next click (e.g. opening settings),
+    // which made the beep appear delayed.
+    if (!force) {
+      if (!isAudioContextRunning()) {
+        ensureAudioContext().catch(function () {
+          /* autoplay policy or missing Web Audio */
+        });
+        return;
+      }
+      scheduleIfRunning();
+      return;
+    }
+
     ensureAudioContext()
-      .then(function () {
-        scheduleMessageSound(state.audioCtx, settings.sound, settings.volume, state.audioCtx.currentTime);
-      })
+      .then(scheduleIfRunning)
       .catch(function () {
         /* autoplay policy or missing Web Audio */
       });
@@ -129,8 +158,9 @@ export function initMessageSoundControls() {
         /* A later explicit Test click can retry browser audio activation. */
       });
     }
-    document.addEventListener("pointerdown", unlockAudio, { once: true });
-    document.addEventListener("keydown", unlockAudio, { once: true });
+    // Keep unlocking on every gesture: browsers re-suspend AudioContext after idle.
+    document.addEventListener("pointerdown", unlockAudio);
+    document.addEventListener("keydown", unlockAudio);
 
     dom.messageSoundEnabledInput.addEventListener("change", function () {
       if (dom.messageSoundEnabledInput.checked) {
