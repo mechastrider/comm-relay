@@ -31,7 +31,7 @@ export function hideBanner() {
 export function readSidebarCollapsedPreference() {
     try {
       return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -39,7 +39,7 @@ export function readSidebarCollapsedPreference() {
 export function writeSidebarCollapsedPreference(collapsed) {
     try {
       window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "true" : "false");
-    } catch (error) {
+    } catch {
       /* localStorage can be unavailable in locked-down browser contexts. */
     }
   }

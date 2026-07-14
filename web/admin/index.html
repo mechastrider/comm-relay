@@ -129,6 +129,33 @@
         </div>
 
         <div class="connection-grid">
+          <section class="panel" aria-labelledby="network-proxy-heading">
+            <div class="panel__header">
+              <h3 id="network-proxy-heading">SOCKS5 proxy</h3>
+            </div>
+
+            <div class="form">
+              <p class="field-hint">Configure once; enable per platform below.</p>
+
+              <div class="form__field">
+                <label for="network-socks5-address">Proxy address</label>
+                <input id="network-socks5-address" name="network_socks5_address" type="text" autocomplete="off" spellcheck="false" inputmode="text" placeholder="127.0.0.1:1080">
+                <p id="network-socks5-address-error" class="field-error" role="alert" hidden></p>
+              </div>
+
+              <div class="form__field">
+                <label for="network-socks5-username">Username <span class="field-optional">(optional)</span></label>
+                <input id="network-socks5-username" name="network_socks5_username" type="text" autocomplete="off" spellcheck="false">
+              </div>
+
+              <div class="form__field">
+                <label for="network-socks5-password">Password <span class="field-optional">(optional)</span></label>
+                <input id="network-socks5-password" name="network_socks5_password" type="password" autocomplete="off">
+                <p class="field-hint">Leave blank to keep the existing password.</p>
+              </div>
+            </div>
+          </section>
+
           <section class="panel platform-panel" aria-labelledby="twitch-heading">
             <div class="panel__header">
               <h3 id="twitch-heading">Twitch</h3>
@@ -146,6 +173,14 @@
                 <label for="twitch-channel">Channel</label>
                 <input id="twitch-channel" name="twitch_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
                 <p id="twitch-channel-error" class="field-error" role="alert" hidden></p>
+              </div>
+
+              <div class="form__field">
+                <label class="checkbox checkbox--disabled" for="twitch-use-proxy">
+                  <input id="twitch-use-proxy" name="twitch_use_proxy" type="checkbox" disabled aria-disabled="true">
+                  <span>Use SOCKS5 proxy</span>
+                </label>
+                <p class="field-hint">Not available for Twitch yet.</p>
               </div>
             </div>
           </section>
@@ -211,6 +246,13 @@
                   <p class="field-hint">Leave blank to keep the existing secret.</p>
                 </div>
               </div>
+
+              <div class="form__field">
+                <label class="checkbox" for="youtube-use-proxy">
+                  <input id="youtube-use-proxy" name="youtube_use_proxy" type="checkbox">
+                  <span>Use SOCKS5 proxy</span>
+                </label>
+              </div>
             </div>
           </section>
 
@@ -232,6 +274,13 @@
                 <input id="vk-channel" name="vk_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
                 <p class="field-hint">Accepts a slug or live.vkvideo.ru URL.</p>
                 <p id="vk-channel-error" class="field-error" role="alert" hidden></p>
+              </div>
+
+              <div class="form__field">
+                <label class="checkbox" for="vk-use-proxy">
+                  <input id="vk-use-proxy" name="vk_use_proxy" type="checkbox">
+                  <span>Use SOCKS5 proxy</span>
+                </label>
               </div>
             </div>
           </section>

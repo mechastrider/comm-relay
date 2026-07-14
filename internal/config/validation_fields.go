@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 
 	"github.com/muonsoft/errors"
@@ -80,10 +82,40 @@ func (c *Config) validateFields() error {
 		fields["logging_retain_sessions"] = "Keep between 1 and 100 session logs."
 	}
 
+	if c.ProxyRequired() {
+		if msg := socks5AddressError(c.Network.SOCKS5.Address); msg != "" {
+			fields["network_socks5_address"] = msg
+		}
+	}
+
 	if len(fields) > 0 {
 		return fields
 	}
 	return nil
+}
+
+func socks5AddressError(address string) string {
+	address = strings.TrimSpace(address)
+	if address == "" {
+		return "SOCKS5 address is required when a platform uses the proxy."
+	}
+
+	host, portStr, err := net.SplitHostPort(address)
+	if err != nil {
+		return "Enter a valid host:port address (e.g. 127.0.0.1:1080)."
+	}
+
+	host = strings.TrimSpace(host)
+	if host == "" {
+		return "Enter a valid host:port address (e.g. 127.0.0.1:1080)."
+	}
+
+	port, err := strconv.Atoi(portStr)
+	if err != nil || port < 1 || port > 65535 {
+		return "Port must be between 1 and 65535."
+	}
+
+	return ""
 }
 
 func mergeFieldErrors(dst FieldErrors, src FieldErrors) {

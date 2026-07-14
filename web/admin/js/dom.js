@@ -9,6 +9,11 @@ export const twitchStatus = document.getElementById("twitch-status");
 export const twitchDetail = document.getElementById("twitch-detail");
 export const twitchEnabled = document.getElementById("twitch-enabled");
 export const twitchChannel = document.getElementById("twitch-channel");
+export const networkSocks5Address = document.getElementById("network-socks5-address");
+export const networkSocks5Username = document.getElementById("network-socks5-username");
+export const networkSocks5Password = document.getElementById("network-socks5-password");
+export const youtubeUseProxy = document.getElementById("youtube-use-proxy");
+export const vkUseProxy = document.getElementById("vk-use-proxy");
 export const youtubeStatus = document.getElementById("youtube-status");
 export const youtubeOAuthLabel = document.getElementById("youtube-oauth-label");
 export const youtubeDetail = document.getElementById("youtube-detail");
@@ -83,6 +88,7 @@ export const statusErrorPopover = document.getElementById("status-error-popover"
 
 export const fieldErrors = {
     twitch_channel: document.getElementById("twitch-channel-error"),
+    network_socks5_address: document.getElementById("network-socks5-address-error"),
     vk_channel: document.getElementById("vk-channel-error"),
     youtube_video_input: document.getElementById("youtube-video-input-error"),
     youtube_channel_handle: document.getElementById("youtube-channel-handle-error"),
@@ -103,6 +109,7 @@ export const fieldErrors = {
 
 export const fieldInputs = {
     twitch_channel: twitchChannel,
+    network_socks5_address: networkSocks5Address,
     vk_channel: vkChannel,
     youtube_video_input: youtubeVideoInput,
     youtube_channel_handle: youtubeChannelHandle,

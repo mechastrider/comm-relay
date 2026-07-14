@@ -21,6 +21,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
 	"github.com/mechastrider/comm-relay/internal/imagelink"
+	"github.com/mechastrider/comm-relay/internal/netproxy"
 	"github.com/mechastrider/comm-relay/internal/youtube/channel"
 	"github.com/mechastrider/comm-relay/internal/youtube/innertube"
 	"github.com/mechastrider/comm-relay/internal/youtube/videoid"
@@ -32,7 +33,7 @@ const (
 	recentYouTubeMessageIDCapacity = 2048
 )
 
-type clientFactory func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error)
+type clientFactory func(ctx context.Context, tokenSource oauth2.TokenSource, proxyCfg *config.SOCKS5Config) (liveChatAPI, error)
 
 type liveVideoResolver interface {
 	ResolveLiveVideoID(ctx context.Context, ref channel.Ref) (string, error)
@@ -50,8 +51,8 @@ type Connector struct {
 	seenMessages    *recentMessageIDs
 	newClient       clientFactory
 	newGRPC         grpcClientFactory
-	newPageClient   func() pageChatClient
-	newLiveResolver func() liveVideoResolver
+	newPageClient   func(proxyCfg *config.SOCKS5Config) (pageChatClient, error)
+	newLiveResolver func(proxyCfg *config.SOCKS5Config) liveVideoResolver
 }
 
 // New creates a YouTube Live Chat connector.
@@ -71,16 +72,23 @@ func New(
 		emojiClient:  emojiClient,
 		emojiRefresh: emojiRefresh,
 		seenMessages: newRecentMessageIDs(recentYouTubeMessageIDCapacity),
-		newClient: func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error) {
-			httpClient := oauth2.NewClient(ctx, tokenSource)
+		newClient: func(ctx context.Context, tokenSource oauth2.TokenSource, proxyCfg *config.SOCKS5Config) (liveChatAPI, error) {
+			httpClient, err := netproxy.OAuth2Client(proxyCfg, tokenSource)
+			if err != nil {
+				return nil, errors.Errorf("create youtube oauth client: %w", err)
+			}
 			return newAPIClient(ctx, option.WithHTTPClient(httpClient))
 		},
 		newGRPC: defaultGRPCClientFactory,
-		newPageClient: func() pageChatClient {
-			return newDefaultPageClient()
+		newPageClient: func(proxyCfg *config.SOCKS5Config) (pageChatClient, error) {
+			return newDefaultPageClient(proxyCfg)
 		},
-		newLiveResolver: func() liveVideoResolver {
-			return channel.NewLiveResolver(nil)
+		newLiveResolver: func(proxyCfg *config.SOCKS5Config) liveVideoResolver {
+			client, err := netproxy.HTTPClient(proxyCfg, 20*time.Second)
+			if err != nil {
+				return channel.NewLiveResolver(nil)
+			}
+			return channel.NewLiveResolver(client)
 		},
 	}
 }
@@ -114,7 +122,7 @@ func (c *Connector) Run(ctx context.Context) error {
 
 		var cont bool
 		if connectionMode == config.YouTubeConnectionModePage {
-			backoff, cont = c.runPageMode(ctx, cfg.YouTube, backoff)
+			backoff, cont = c.runPageMode(ctx, cfg, backoff)
 		} else {
 			backoff, cont = c.runAPIMode(ctx, cfg, backoff)
 		}
@@ -124,8 +132,9 @@ func (c *Connector) Run(ctx context.Context) error {
 	}
 }
 
-func (c *Connector) runPageMode(ctx context.Context, ytCfg config.YouTubeConfig, backoff retry.Backoff) (retry.Backoff, bool) {
-	videoID, autoDetect, resolveErr := c.resolvePageVideoID(ctx, ytCfg)
+func (c *Connector) runPageMode(ctx context.Context, cfg config.Config, backoff retry.Backoff) (retry.Backoff, bool) {
+	proxyCfg := config.EffectiveSOCKS5(cfg.Network.SOCKS5, cfg.YouTube.UseProxy)
+	videoID, autoDetect, resolveErr := c.resolvePageVideoID(ctx, cfg.YouTube, proxyCfg)
 	if resolveErr != nil {
 		if errors.Is(resolveErr, channel.ErrNoLiveStream) {
 			c.setStatus(status.StateConnecting, "No live stream on channel — checking again…", "")
@@ -154,7 +163,7 @@ func (c *Connector) runPageMode(ctx context.Context, ytCfg config.YouTubeConfig,
 		slog.Bool("channel_auto_detect", autoDetect),
 	))
 
-	err := c.runPageSession(sessionCtx, videoID)
+	err := c.runPageSession(sessionCtx, videoID, proxyCfg)
 	if ctx.Err() != nil {
 		return backoff, false
 	}
@@ -223,7 +232,7 @@ func (c *Connector) scheduleReconnect(ctx context.Context, backoff retry.Backoff
 	return backoff.Next(), true
 }
 
-func (c *Connector) resolvePageVideoID(ctx context.Context, ytCfg config.YouTubeConfig) (string, bool, error) {
+func (c *Connector) resolvePageVideoID(ctx context.Context, ytCfg config.YouTubeConfig, proxyCfg *config.SOCKS5Config) (string, bool, error) {
 	if strings.TrimSpace(ytCfg.VideoInput) != "" {
 		id, err := videoid.ParseInput(ytCfg.VideoInput)
 		return id, false, err
@@ -238,7 +247,7 @@ func (c *Connector) resolvePageVideoID(ctx context.Context, ytCfg config.YouTube
 		return "", true, errors.Errorf("%w: %w", errNoChannelHandle, err)
 	}
 
-	resolver := c.newLiveResolver()
+	resolver := c.newLiveResolver(proxyCfg)
 	if resolver == nil {
 		return "", true, errors.New("youtube live resolver is not configured")
 	}
@@ -247,7 +256,7 @@ func (c *Connector) resolvePageVideoID(ctx context.Context, ytCfg config.YouTube
 	return id, true, err
 }
 
-func (c *Connector) runPageSession(ctx context.Context, videoID string) error {
+func (c *Connector) runPageSession(ctx context.Context, videoID string, proxyCfg *config.SOCKS5Config) error {
 	c.setStatus(status.StateConnecting, "", "")
 
 	if c.emojiRefresh != nil {
@@ -257,7 +266,10 @@ func (c *Connector) runPageSession(ctx context.Context, videoID string) error {
 		clog.Debug(ctx, "youtube channel emoji refresh failed", slog.Any("error", err))
 	}
 
-	client := c.newPageClient()
+	client, err := c.newPageClient(proxyCfg)
+	if err != nil {
+		return err
+	}
 	if client == nil {
 		return errors.New("youtube page client is not configured")
 	}
@@ -287,12 +299,13 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
+	proxyCfg := config.EffectiveSOCKS5(cfg.Network.SOCKS5, cfg.YouTube.UseProxy)
 	token := tokenFromConfig(cfg.YouTube.OAuth)
-	tokenSource := NewPersistingTokenSource(c.store, oauthCfg, token)
+	tokenSource := NewPersistingTokenSource(c.store, oauthCfg, token, proxyCfg)
 
 	c.setStatus(status.StateConnecting, "", "")
 
-	client, err := c.newClient(ctx, tokenSource)
+	client, err := c.newClient(ctx, tokenSource, proxyCfg)
 	if err != nil {
 		return errors.Errorf("create youtube client: %w", err)
 	}
@@ -327,7 +340,7 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 	case config.YouTubeChatModePoll:
 		return c.runPoll(sessionCtx, client, session)
 	case config.YouTubeChatModeAuto:
-		grpcClient, closer, err := c.newGRPC(sessionCtx, tokenSource)
+		grpcClient, closer, err := c.newGRPC(sessionCtx, tokenSource, proxyCfg)
 		if err != nil {
 			clog.Warn(sessionCtx, "youtube grpc unavailable, falling back to REST polling", slog.Any("error", err))
 			c.setStatus(status.StateConnected, "Using REST polling (gRPC unavailable).", "")
@@ -346,7 +359,7 @@ func (c *Connector) runSession(ctx context.Context, cfg config.Config) error {
 		}
 		return err
 	default:
-		grpcClient, closer, err := c.newGRPC(sessionCtx, tokenSource)
+		grpcClient, closer, err := c.newGRPC(sessionCtx, tokenSource, proxyCfg)
 		if err != nil {
 			return errors.Errorf("create youtube grpc client: %w", err)
 		}

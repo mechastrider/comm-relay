@@ -12,6 +12,9 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/muonsoft/errors"
+
+	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/netproxy"
 )
 
 const (
@@ -38,13 +41,21 @@ type defaultClient struct {
 	dialer     *websocket.Dialer
 }
 
-func newDefaultClient() *defaultClient {
-	return &defaultClient{
-		httpClient: &http.Client{Timeout: 15 * time.Second},
-		dialer: &websocket.Dialer{
-			HandshakeTimeout: 10 * time.Second,
-		},
+func newDefaultClient(proxyCfg *config.SOCKS5Config) (*defaultClient, error) {
+	httpClient, err := netproxy.HTTPClient(proxyCfg, 15*time.Second)
+	if err != nil {
+		return nil, errors.Errorf("create vk http client: %w", err)
 	}
+
+	wsDialer, err := netproxy.WebSocketDialer(proxyCfg, 10*time.Second)
+	if err != nil {
+		return nil, errors.Errorf("create vk websocket dialer: %w", err)
+	}
+
+	return &defaultClient{
+		httpClient: httpClient,
+		dialer:     wsDialer,
+	}, nil
 }
 
 func (c *defaultClient) RunSession(ctx context.Context, channel string, onMessage func([]byte)) error {

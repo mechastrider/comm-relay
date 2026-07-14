@@ -46,7 +46,7 @@ export function readOverlayPreviewPreference(key, fallback) {
     try {
       const value = window.localStorage.getItem(key);
       return value === null ? fallback : value;
-    } catch (error) {
+    } catch {
       return fallback;
     }
   }
@@ -54,7 +54,7 @@ export function readOverlayPreviewPreference(key, fallback) {
 export function writeOverlayPreviewPreference(key, value) {
     try {
       window.localStorage.setItem(key, String(value));
-    } catch (error) {
+    } catch {
       /* localStorage can be unavailable in locked-down browser contexts. */
     }
   }

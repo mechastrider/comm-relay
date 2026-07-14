@@ -98,6 +98,7 @@ Before reporting a task as done:
 - `gofmt` / `goimports` on touched Go files.
 - `go test ./...` (or targeted packages); `-race` when changing concurrency.
 - `golangci-lint run ./...` (config: `.golangci.yml`, v2).
+- If you changed `web/**/*.js`: `npm ci` (once) and `npm run lint`.
 - If the change is user-visible (see Core Principle 6): update `CHANGELOG.md` under `[Unreleased]` with skill `changelog` — do not wait for a release task. If the change is a no-behavior refactor of admin/overlay code, skip the changelog.
 - If preparing a release: move `[Unreleased]` into a versioned section, set the date, and keep README artifact names/install steps in sync.
 - If static UI changed: smoke-check overlay (transparent background, message limit) and admin forms.
@@ -115,6 +116,7 @@ Standard commands from the repo root (documented in **Completion Checklist** abo
 - Tests: `go test ./...` (use `-race` when changing concurrency)
 - Build: `go build -o comm-relay ./cmd/comm-relay-server` or `go build ./...`
 - **golangci-lint** v2.12.2: `golangci-lint run ./...` (install: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2`)
+- **ESLint** (static web under `web/`): `npm ci && npm run lint` (Node 22+; config: `eslint.config.js`)
 
 ### Running the server
 

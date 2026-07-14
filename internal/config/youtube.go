@@ -22,6 +22,7 @@ type YouTubeConfig struct {
 	VideoInput     string       `json:"video_input"`
 	ChannelHandle  string       `json:"channel_handle"`
 	ChatMode       string       `json:"chat_mode"`
+	UseProxy       bool         `json:"use_proxy"`
 	OAuth          YouTubeOAuth `json:"oauth"`
 }
 
@@ -65,6 +66,7 @@ type YouTubeConfigPublic struct {
 	VideoInput     string             `json:"video_input"`
 	ChannelHandle  string             `json:"channel_handle"`
 	ChatMode       string             `json:"chat_mode"`
+	UseProxy       bool               `json:"use_proxy"`
 	OAuth          YouTubeOAuthPublic `json:"oauth"`
 }
 
@@ -85,6 +87,7 @@ func (c YouTubeConfig) public() YouTubeConfigPublic {
 		VideoInput:     c.VideoInput,
 		ChannelHandle:  c.ChannelHandle,
 		ChatMode:       c.ChatMode,
+		UseProxy:       c.UseProxy,
 		OAuth: YouTubeOAuthPublic{
 			ClientID:        c.OAuth.ClientID,
 			HasClientSecret: c.OAuth.ClientSecret != "",

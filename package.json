@@ -1,0 +1,14 @@
+{
+  "name": "comm-relay-web",
+  "private": true,
+  "type": "module",
+  "description": "Dev tooling for CommRelay static web assets (admin, overlay, dock)",
+  "scripts": {
+    "lint": "eslint web/"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "globals": "^16.5.0"
+  }
+}

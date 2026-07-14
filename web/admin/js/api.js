@@ -1,6 +1,3 @@
-import * as dom from './dom.js';
-import { state } from './state.js';
-
 export function apiURL(path) {
     return window.location.origin + path;
   }

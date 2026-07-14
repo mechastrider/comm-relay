@@ -1,11 +1,11 @@
-import { createChatRender, safeImageURL } from '/shared/chat-render.js?v=12';
+import { createChatRender, safeImageURL, appendText } from '/shared/chat-render.js?v=12';
 import * as dom from './dom.js';
 import { state } from './state.js';
 import {
   RECENT_MESSAGE_LIMIT,
   MESSAGE_SCROLL_THRESHOLD_PX,
 } from './constants.js';
-import { apiURL, readJSON, mapHTTPError } from './api.js';
+import { apiURL } from './api.js';
 import { showBanner } from './ui-shell.js';
 import { getMessageSoundSettings, playMessageSound } from './sound.js';
 

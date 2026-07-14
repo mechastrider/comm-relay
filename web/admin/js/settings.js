@@ -5,20 +5,23 @@ import {
   OVERLAY_FONT_SIZE_MIN,
   OVERLAY_FONT_SIZE_MAX,
   OVERLAY_THEMES,
+  RECENT_MESSAGE_LIMIT,
 } from './constants.js';
 import { apiURL, readJSON, mapHTTPError } from './api.js';
 import { showBanner, hideBanner } from './ui-shell.js';
 import { openDialogForElement, closeOpenDialogs } from './dialogs.js';
 import {
   renderSettingsState,
-  markSettingsDirty,
   markSettingsClean,
-  markSettingsUnavailable,
   clearFieldErrors,
   applyServerFieldErrors,
   setFieldError,
 } from './ui-shell.js';
-import { scheduleOverlayPreviewRefresh, normalizeOverlayTheme } from './overlay-preview.js';
+import {
+  scheduleOverlayPreviewRefresh,
+  normalizeOverlayTheme,
+  overlayDisplaySettingsChanged,
+} from './overlay-preview.js';
 import {
   applyMessageSoundFromConfig,
   getMessageSoundSettings,
@@ -160,6 +163,26 @@ export function getRichChatSettings() {
     };
   }
 
+export function proxyRequired(payload) {
+    return Boolean(
+      (payload.youtube && payload.youtube.use_proxy) ||
+      (payload.vk && payload.vk.use_proxy)
+    );
+  }
+
+export function validateSocks5Address(address) {
+    const trimmed = String(address || "").trim();
+    if (trimmed === "") {
+      return false;
+    }
+    const match = trimmed.match(/^\[([^\]]+)\]:(\d+)$|^([^:]+):(\d+)$/);
+    if (!match) {
+      return false;
+    }
+    const port = Number.parseInt(match[2] || match[4], 10);
+    return Number.isFinite(port) && port >= 1 && port <= 65535;
+  }
+
 export function applyConfig(config) {
     const previousLocale = state.currentConfig && state.currentConfig.admin
       ? state.currentConfig.admin.time_locale
@@ -167,6 +190,19 @@ export function applyConfig(config) {
     state.currentConfig = config;
     dom.twitchEnabled.checked = Boolean(config.twitch && config.twitch.enabled);
     dom.twitchChannel.value = config.twitch && config.twitch.channel ? config.twitch.channel : "";
+
+    const network = config.network || {};
+    const socks5 = network.socks5 || {};
+    if (dom.networkSocks5Address) {
+      dom.networkSocks5Address.value = socks5.address || "";
+    }
+    if (dom.networkSocks5Username) {
+      dom.networkSocks5Username.value = socks5.username || "";
+    }
+    if (dom.networkSocks5Password) {
+      dom.networkSocks5Password.value = "";
+    }
+
     const overlay = config.overlay || {};
     dom.overlayMaxMessages.value = String(
       typeof overlay.max_messages === "number" ? overlay.max_messages : 30
@@ -203,15 +239,21 @@ export function applyConfig(config) {
       const oauth = config.youtube.oauth || {};
       dom.youtubeClientId.value = oauth.client_id || "";
       dom.youtubeClientSecret.value = "";
+      if (dom.youtubeUseProxy) {
+        dom.youtubeUseProxy.checked = Boolean(config.youtube.use_proxy);
+      }
       updateYouTubeConnectionModeUI();
     }
 
-    const vk = config.vk || { enabled: false, channel: "" };
+    const vk = config.vk || { enabled: false, channel: "", use_proxy: false };
     if (dom.vkEnabled) {
       dom.vkEnabled.checked = Boolean(vk.enabled);
     }
     if (dom.vkChannel) {
       dom.vkChannel.value = vk.channel ? vk.channel : "";
+    }
+    if (dom.vkUseProxy) {
+      dom.vkUseProxy.checked = Boolean(vk.use_proxy);
     }
 
     applyMessageSoundFromConfig(config);
@@ -233,6 +275,13 @@ export function buildPayload() {
     const richChat = getRichChatSettings();
     return {
       server_port: state.currentConfig ? state.currentConfig.server_port : 17877,
+      network: {
+        socks5: {
+          address: dom.networkSocks5Address ? dom.networkSocks5Address.value.trim() : "",
+          username: dom.networkSocks5Username ? dom.networkSocks5Username.value.trim() : "",
+          password: dom.networkSocks5Password ? dom.networkSocks5Password.value : "",
+        },
+      },
       twitch: {
         enabled: dom.twitchEnabled.checked,
         channel: dom.twitchChannel.value.trim().toLowerCase(),
@@ -245,12 +294,15 @@ export function buildPayload() {
         video_input: dom.youtubeVideoInput ? dom.youtubeVideoInput.value.trim() : "",
         channel_handle: dom.youtubeChannelHandle ? dom.youtubeChannelHandle.value.trim() : "",
         chat_mode: dom.youtubeChatMode ? dom.youtubeChatMode.value : "stream",
+        use_proxy: dom.youtubeUseProxy ? dom.youtubeUseProxy.checked : false,
         oauth: {
           client_id: dom.youtubeClientId.value.trim(),
           client_secret: dom.youtubeClientSecret.value,
         },
       },
-      vk: readVkSettings(),
+      vk: Object.assign(readVkSettings(), {
+        use_proxy: dom.vkUseProxy ? dom.vkUseProxy.checked : false,
+      }),
       overlay: {
         max_messages: Number.parseInt(dom.overlayMaxMessages.value, 10),
         message_ttl_seconds: Number.parseInt(dom.overlayMessageTTL.value, 10),
@@ -272,6 +324,16 @@ export function buildPayload() {
 export function validateClient(payload) {
     clearFieldErrors();
     let firstInvalid = null;
+
+    if (proxyRequired(payload)) {
+      if (!validateSocks5Address(payload.network.socks5.address)) {
+        setFieldError(
+          "network_socks5_address",
+          "Enter a valid host:port address when a platform uses the proxy."
+        );
+        firstInvalid = dom.networkSocks5Address;
+      }
+    }
 
     if (payload.twitch.enabled && payload.twitch.channel === "") {
       setFieldError("twitch_channel", "Channel is required when Twitch is enabled.");

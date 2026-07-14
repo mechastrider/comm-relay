@@ -23,7 +23,7 @@ type Connector struct {
 	bus       *bus.Bus
 	store     *config.Store
 	registry  *status.Registry
-	newClient func() chatClient
+	newClient func(proxyCfg *config.SOCKS5Config) (chatClient, error)
 }
 
 // New creates a VK Live connector that reads settings from the config store.
@@ -32,8 +32,8 @@ func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry) *Con
 		bus:      eventBus,
 		store:    store,
 		registry: registry,
-		newClient: func() chatClient {
-			return newDefaultClient()
+		newClient: func(proxyCfg *config.SOCKS5Config) (chatClient, error) {
+			return newDefaultClient(proxyCfg)
 		},
 	}
 }
@@ -51,6 +51,8 @@ func (c *Connector) Run(ctx context.Context) error {
 		}
 
 		vkCfg := c.store.Snapshot().VK
+		cfg := c.store.Snapshot()
+		proxyCfg := config.EffectiveSOCKS5(cfg.Network.SOCKS5, vkCfg.UseProxy)
 		if !vkCfg.Enabled {
 			c.setStatus(status.StateDisabled, "", "")
 			backoff = backoff.Reset()
@@ -74,7 +76,7 @@ func (c *Connector) Run(ctx context.Context) error {
 			slog.String("channel", channel),
 		))
 
-		err := c.runSession(sessionCtx, channel)
+		err := c.runSession(sessionCtx, channel, proxyCfg)
 		if ctx.Err() != nil {
 			return nil
 		}
@@ -98,8 +100,11 @@ func (c *Connector) Run(ctx context.Context) error {
 	}
 }
 
-func (c *Connector) runSession(ctx context.Context, channel string) error {
-	client := c.newClient()
+func (c *Connector) runSession(ctx context.Context, channel string, proxyCfg *config.SOCKS5Config) error {
+	client, err := c.newClient(proxyCfg)
+	if err != nil {
+		return err
+	}
 	c.setStatus(status.StateConnecting, "", "")
 
 	return client.RunSession(ctx, channel, func(raw []byte) {

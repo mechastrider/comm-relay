@@ -13,6 +13,7 @@ After implementing code changes, the agent **must** run checks before finishing:
 
 2. **Linter** when `.golangci.yml` exists:
    - `golangci-lint run ./...` from repo root
+   - For `web/**/*.js`: `npm run lint` (after `npm ci` if needed)
 
 3. **Result**: fix failures and re-run; do not leave broken checks unmentioned.
 

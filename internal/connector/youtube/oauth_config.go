@@ -8,6 +8,7 @@ import (
 	"golang.org/x/oauth2/google"
 
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/netproxy"
 )
 
 const (
@@ -75,10 +76,19 @@ type PersistingTokenSource struct {
 }
 
 // NewPersistingTokenSource wraps a token source that writes refreshed tokens to disk.
-func NewPersistingTokenSource(store *config.Store, oauthCfg *oauth2.Config, token *oauth2.Token) *PersistingTokenSource {
+func NewPersistingTokenSource(store *config.Store, oauthCfg *oauth2.Config, token *oauth2.Token, proxyCfg *config.SOCKS5Config) *PersistingTokenSource {
+	ctx := context.Background()
+	if proxyCfg != nil {
+		var err error
+		ctx, err = netproxy.OAuth2Context(ctx, proxyCfg)
+		if err != nil {
+			ctx = context.Background()
+		}
+	}
+
 	return &PersistingTokenSource{
 		store: store,
-		base:  oauthCfg.TokenSource(context.Background(), token),
+		base:  oauthCfg.TokenSource(ctx, token),
 	}
 }
 

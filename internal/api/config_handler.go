@@ -41,6 +41,7 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 
 	prev := h.store.Snapshot()
 	incoming.MergeYouTubeOAuthFrom(prev)
+	incoming.MergeNetworkSOCKS5From(prev)
 	incoming.ApplyDefaults()
 
 	if err := h.store.Replace(incoming); err != nil {
