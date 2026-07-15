@@ -1,0 +1,11 @@
+# NOTICE — vendored skill "ui-ux-pro-max"
+
+This skill is vendored from an external source. It is not affiliated with,
+endorsed by, or sponsored by the upstream project or its trademark holders.
+
+- Source:   nextlevelbuilder/ui-ux-pro-max-skill/.claude/skills/ui-ux-pro-max
+- Upstream: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git
+- Ref:      9ceab49a1c6e9bf23fa9ebc49ca7d4f0c6303a99
+- License:  MIT
+
+Do not edit vendored skill content in place; re-vendor from upstream instead.
