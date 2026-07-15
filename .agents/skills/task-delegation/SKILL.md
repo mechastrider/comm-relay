@@ -1,177 +1,119 @@
 ---
 name: task-delegation
-description: Orchestrate coding work by routing each task to the right executor — an Opus subagent for hard design/complex coding/deep research, the Cursor CLI (composer-2.5) for medium-and-below coding, and inline for trivial fixes. Covers slicing work along semantic seams, writing self-contained task files, signalling when the Cursor plugin is unavailable, and reviewing every diff. Use in any project that runs an orchestrator-executor model.
+description: Host-neutral orchestration policy for coding work — parent models resolve uncertainty, slice along semantic seams, write task packets, and independently review/verify; Composer 2.5 is the only Cursor CLI code writer. Use when delegating bounded coding slices from Codex, Claude Code, or any orchestrator-executor workflow.
 ---
 
 # Task Delegation
 
-Run coding work as an **orchestrator-executor loop**. The **orchestrator** (you)
-understands the request, explores the codebase, plans, **routes** each task to the right
-executor, **reviews** the result, and decides the next step. Executors write the code. The
-orchestrator does not hand-write product code beyond trivial fixes — it plans, routes, and
-reviews.
+Run coding work as an **orchestrator-executor loop**. The **orchestrator** (parent
+model) explores, plans, slices, routes, and **reviews**. Executors write code.
+The orchestrator does not hand-write product code beyond trivial fixes.
 
-> Executors have **no conversation context**. Every delegation must be self-contained.
+> Executors have **no conversation context**. Every delegation must be
+> self-contained via a task packet.
 
-## Route by task tier
+## Roles
 
-Pick the executor by how hard the task is, not by habit:
-
-| Tier | Examples | Executor |
+| Role | Owner | Responsibility |
 |---|---|---|
-| **Hard** | architecture/design decisions, thorny spec elaboration, complex multi-file coding, deep research | **Opus subagent** (dedicated, high-reasoning) |
-| **Medium & below** | well-scoped features, refactors, tests, migrations, mechanical edits | **Cursor CLI** (`cursor-agent`, model `composer-2.5`) via the plugin |
-| **Trivial** | a typo, a one-line rename, a mechanical fix a round-trip would only slow down | **orchestrator, inline** |
+| **Orchestrator** | Parent model (any host) | Uncertainty reduction, slicing, routing, diff review, verify runs, acceptance |
+| **Cursor CLI executor** | `cursor-agent` via vendored script | All non-trivial coding slices after decomposition |
+| **Opus / strong parent** | Dedicated high-reasoning agent | Research, design, decomposition, review — **not** product coding |
+| **Inline** | Orchestrator | Truly trivial mechanical edits where a round-trip would only slow down |
 
-Never delegate the **review** or the **routing decision** — those stay with the orchestrator.
-Never let a review command apply its own findings — collect them, then delegate the fix.
+Never delegate **review** or **routing decisions**. Never let a review command
+apply its own findings.
 
-## Cursor executor — mechanics
+## Routing
 
-- **Model: strictly `composer-2.5`.** This is the single source of truth — when Cursor ships
-  a newer composer, bump the number **here** and nowhere else. Do **not** use a `-fast`
-  variant or escalate to another model. If a slice fails on `composer-2.5`, the fix is a
-  **sharper task file**, not a bigger model.
-- **Check the plugin is available before delegating, and signal if it is not.** Confirm
-  `cursor-agent` is on PATH and authenticated (the API key often lives only in a login
-  shell). If the Cursor plugin/CLI is unavailable or unauthenticated, **stop and say so
-  explicitly** — do not silently hand the task to another executor or write the code
-  yourself. Surface it to the user (or, only with their go-ahead, reroute a hard-enough
-  task to the Opus subagent).
-- **Invocation:** put the task in a **file**; send a one-line pointer prompt. Pass the model
-  as a real flag, not prose. Run quick slices in the foreground; for long slices run in the
-  **background** and prepare the next task file meanwhile (poll the job state — background
-  jobs may not notify on their own). If you manage commits yourself, disable the executor's
-  git gate and tell it "leave changes in the working tree; do not commit."
+| Work type | Examples | Executor |
+|---|---|---|
+| **Uncertainty / research / design / decompose / review** | thorny spec, architecture choices, deep research, acceptance review | **Opus or strong parent model** |
+| **Non-trivial coding** | scoped features, refactors, tests, migrations, multi-file fixes | **Cursor CLI** (`composer-2.5` only) |
+| **Trivial / mechanical** | typo, one-line rename, obvious import fix | **orchestrator, inline** |
 
-## Opus subagent — for the hard tier
+**Composer 2.5 is the only CLI code-writing model.** No `-fast` variant, no auto
+selection, no Opus coding route, no escalation on failure — sharpen the task
+packet and re-delegate.
 
-- **Design/architecture/spec:** give it the problem, the relevant specs/skills, and the
-  constraints; ask for a **plan or design writeup with tradeoffs and non-goals — not code
-  edits**. Fold the returned plan into your artifacts, then slice it for Cursor.
-- **Complex coding / deep research:** it may produce code or a report; the orchestrator
-  still **reviews** the output and slices any follow-up.
-- Reserve it for genuinely hard work — routine scoping and obvious slices stay inline.
+If the executor, `cursor-agent`, or authentication is unavailable, **stop and
+report explicitly** — do not silently fall back to another executor or write the
+code yourself.
 
 ## The loop
 
-1. **Plan** — explore, decide the change, **route** it (tier), and for coding break it into
-   slices (see *Slicing*).
-2. **Delegate** — write the full slice into a task file; send a one-line pointer.
-3. **Execute** — the executor produces the code/plan for one slice.
-4. **Review** — read the diff **yourself**; run the verify commands **yourself**.
-5. **Iterate** — resume the same thread for tight follow-ups, or a fresh delegation when the
-   topic changed.
-6. **Commit / close out** — commit the green slice; move on.
+1. **Plan** — explore, decide the change, route by tier, slice (see below).
+2. **Packet** — write the full slice into a task file ([format](references/task-packet.md)).
+3. **Delegate** — one-line pointer only; use the project-local executor ([hosts](references/host-adapters.md)).
+4. **Review** — read the diff yourself; run verify commands yourself.
+5. **Iterate** — resume for tight follow-ups; fresh packet when the topic changed.
+6. **Commit** — green slice only; orchestrator owns commits unless the packet says otherwise.
 
-## Principle 1 — Slice along semantic seams (highest-leverage decision)
+## Managed skills
 
-Where you cut matters more than how small you cut.
+When a slice touches paths under `.agents/skills/` that appear in
+`skills.lock.yaml` `selected_paths`, treat them as **hub-managed**:
 
-- **Cut vertically, by meaning — not horizontally, by layer.** A change that renames one
-  concept across, say, storage + service + tests is **one** slice, not one per layer.
-  Horizontal slicing of a vertical change leaves broken intermediate states and spawns pure
-  bookkeeping "fix the fixtures" slices.
-- **Green-at-every-commit test.** A correctly-cut slice builds and passes tests on its own.
-  *If a slice can't be green alone, it's the wrong seam* — merge it with what makes it green
-  (usually its downstream call-sites and test fixtures).
-- **Include the fallout.** When a slice changes a contract (a signature, an invariant, a
-  storage key), the call-site updates and mechanical fixture rewrites belong **in that same
-  slice**. Do not fence them out ("don't touch package X") — fencing creates red states and
-  extra round-trips.
-- **Separate only genuinely independent work.** An orthogonal add-on that shares no contract
-  is its own slice. Coupled work is not.
-- **Size, once the seam is right:** statable in **≤5 acceptance bullets**, roughly **≤10
-  files**, **≤2 layers**. Do **not** over-shrink — one coherent 9-file slice beats three red
-  3-file micro-slices. Good task files make larger coherent slices land in one shot.
+1. Edit locally for iteration.
+2. Run `agentmem skills verify` — offline check against `upstream_hash`.
+3. On verify failure after intentional edits: **`agentmem skills push`** (opens hub PR).
+4. After hub merge: **`agentmem skills pull`** in consumer repos.
+5. **Never** hand-edit `upstream_hash` or `hub.commit` in the lock file.
 
-## Principle 2 — The task file is the interface
+`skills push` compares local content to hub HEAD, not lock hashes — stale
+`upstream_hash` after a local edit is expected until pull.
 
-Write the whole task into a **file**; the delegation prompt is one pointer sentence
-("Read `<file>` fully and execute it exactly"). This keeps shell quoting trivial, makes the
-task reviewable/versionable, and forces you to bake in everything a context-less executor
-needs.
+## Slicing (highest-leverage decision)
 
-```markdown
-# <Slice name>
+- **Cut vertically by meaning**, not horizontally by layer.
+- **Green-at-every-commit** — if a slice cannot be green alone, merge seams.
+- **Include fallout** — contract changes carry call-site and fixture updates in the same slice.
+- **Size** (once the seam is right): ≤5 acceptance bullets, roughly ≤10 files, ≤2 layers.
 
-## Goal
-1–2 sentences: the outcome, not the steps.
+## Task packet
 
-## Repo context
-- Point at the project's AGENTS.md + the specific skill(s) to read.
-- Name the exact files/functions to change and their CURRENT behavior.
-- State what PRIOR slices already landed, so this one builds on them.
+The packet is the portable execution contract. Fixed sections, pointer-only
+delegation, orchestrator-owned review — see
+[references/task-packet.md](references/task-packet.md).
 
-## Acceptance criteria
-Numbered, testable, specific. These become the tests.
+### Ephemeral default location
 
-## Files to touch
-Explicit list — bounds the blast radius and anchors your review.
+One-off delegation slices belong in **`.agent-orchestration/tasks/<slice>.md`**
+by default. These packets are orchestration scratch space — not product artifacts
+and not intended for version control. Consuming projects ignore
+`.agent-orchestration/` (for example via `.gitignore` and `agentmem attach`).
 
-## How to verify
-The exact commands that must pass (build + test + lint), copy-pasteable.
+**Durable planning** — OpenSpec changes, ADRs, design docs, and other
+project-native artifacts — stay in the project's established planning system.
+Write a temporary executor packet when delegating a bounded slice; do not
+collapse durable specs into ephemeral packets.
 
-## Guardrails
-- What NOT to touch; invariants to preserve.
-- "If X seems wrong (a real production gap, not a fixture), STOP and report — don't patch."
-- "One slice only, no unrelated refactors."
-```
+The executor accepts any repository-local path; the default directory is an
+orchestrator convention, not a CLI restriction.
 
-*Acceptance criteria + Files to touch + How to verify* are what turn a delegation into a
-one-shot success. Vague task file → drift and rework.
+## Host adapters
 
-## Principle 3 — Review is not optional
+Codex, Claude Code, and Cursor each invoke or bypass the CLI executor per host
+boundaries — see [references/host-adapters.md](references/host-adapters.md).
 
-The executor's summary is a **claim**, not proof.
+## Reliability
 
-- **Read the diff yourself** (`git diff --stat`, then the substantive files).
-- **Run the verify commands yourself** — never trust "all green" in the summary.
-- **Look for:** scope creep beyond *Files to touch*; tests or guardrails weakened to force
-  green; and **unrequested production changes** — evaluate these rather than reflexively
-  accepting or rejecting. Sometimes the executor surfaces a real gap you under-scoped (a
-  call-site of the contract you're changing) — fold it in. Sometimes it's drift — revert it.
-- A read-only second-opinion review is fine — but it reports only; it never applies fixes.
-
-## Principle 4 — Iterate deliberately
-
-- **Resume the same thread** for a tight follow-up that shares context ("also cover the 429
-  path").
-- **Fresh delegation** when the topic changed or the previous run drifted — a stale thread
-  drags its confusion forward.
-- **Don't escalate the model on failure** — sharpen the task file and re-delegate.
-- **Executor-surfaced findings are signal**, not noise — evaluate, then scope them in or
-  schedule the next slice.
+Durable jobs, per-repo locking, timeout/cancel/resume, Git path snapshots,
+redacted logs, and stream-json tolerance — see
+[references/reliability.md](references/reliability.md).
 
 ## Anti-patterns
 
-- **Horizontal slicing of a vertical change** → red intermediate states, bookkeeping slices.
-- **Fencing out the mechanical fallout** → forces a separate fixup slice and a red suite.
-- **Over-shrinking** → death by round-trips.
-- **Trusting the summary** → skipping your own diff-read and verify run.
-- **Escalating the model on failure** → the fix is almost always a sharper task file.
-- **Silently proceeding when the Cursor plugin is unavailable** → signal it instead.
-- **Delegating design or review** → design goes to the Opus subagent as a *plan*; review
-  never leaves the orchestrator.
-
-## Worked example (shape)
-
-Rename a stored key from a nested path to a flat id across catalog → lock → service → a
-downstream command → tests:
-
-1. Slice 1 (foundational, independent): add a resolver returning both keys. Additive, green.
-2. Slice 2 (**one vertical slice**): flip the storage/validation contract **and** every
-   consumer **and** all fixtures that assert the old shape — to green. Don't split the
-   consumers apart; they share the contract. During review the executor flags that a
-   downstream command also read files by the old key — a call-site you under-scoped; accept
-   the minimal fix into the slice rather than ship it broken.
-3. Slice 3 (independent optional feature): the orthogonal add-on — separate, shares no
-   contract with slice 2.
+- Horizontal slicing of a vertical change.
+- Fencing out mechanical fallout into a follow-up slice.
+- Trusting the executor summary without diff + verify.
+- Escalating the model on failure.
+- Routing non-trivial coding to Opus or inline.
+- Silent fallback when Cursor is unavailable.
+- Delegating design or review.
 
 ## Per-project configuration
 
-Keep this skill portable — read the volatile bits from the consuming project's **AGENTS.md**:
-the exact verify commands (`task test`, `go test ./...`, `npm test`, …), the Cursor
-auth/env recipe, and any slash-command wrappers for delegate/resume/review. This skill owns
-the **method and the routing**; AGENTS.md owns the project **mechanics**. The Cursor model
-(`composer-2.5`) is pinned in this skill on purpose.
+Read volatile mechanics from the consuming project's **AGENTS.md**: verify
+commands, Cursor auth recipe, and slash-command wrappers. This skill owns
+**policy and routing**; AGENTS.md owns **project mechanics**.

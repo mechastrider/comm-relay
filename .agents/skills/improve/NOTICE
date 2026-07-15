@@ -1,0 +1,11 @@
+# NOTICE — vendored skill "improve"
+
+This skill is vendored from an external source. It is not affiliated with,
+endorsed by, or sponsored by the upstream project or its trademark holders.
+
+- Source:   shadcn/improve/skills/improve
+- Upstream: https://github.com/shadcn/improve.git
+- Ref:      03369ee6d7cafbfcecc4346539b05b3dc0a603bb
+- License:  MIT
+
+Do not edit vendored skill content in place; re-vendor from upstream instead.
