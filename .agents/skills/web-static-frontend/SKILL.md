@@ -14,10 +14,14 @@ Stack:
 
 ```text
 web/
+├── shared/
+│   └── chat-render.js  # shared fragment/avatar DOM helpers (ES module)
 ├── admin/
 │   ├── index.html
-│   ├── app.js          # status, config, OAuth links
-│   └── styles.css
+│   ├── app.js          # thin ES module entry (init/wiring)
+│   ├── js/             # settings, messages, status, overlay preview, …
+│   ├── styles.css      # @import aggregator
+│   └── styles/         # section stylesheets
 ├── dock/
 │   ├── index.html
 │   ├── messages.js     # recent history + live WebSocket messages

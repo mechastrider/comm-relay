@@ -27,7 +27,7 @@ CommRelay собирает сообщения из Twitch, YouTube Live и VK Li
 |---------|-------------|--------|
 | Windows 11, 64-bit | `CommRelay-v0.1.0-windows-amd64.zip` | Распакуйте архив и запустите `CommRelay.exe`. |
 | macOS, 64-bit | `CommRelay-v0.1.0-macos-universal.zip` | Распакуйте архив и откройте `CommRelay.app`. |
-| Linux, 64-bit | `CommRelay-v0.1.0-linux-amd64.tar.gz` | Распакуйте архив, сделайте файл исполняемым и запустите `./CommRelay`. |
+| Linux, 64-bit | `CommRelay-v0.1.0-linux-amd64.tar.gz` | Распакуйте архив, сделайте файл исполняемым и запустите `./CommRelay`. При первом запуске приложение само добавит иконку в меню (Linux Mint, Ubuntu и др.). |
 
 Windows и macOS могут предупредить, что приложение не подписано. Это ожидаемо для раннего релиза: на macOS используйте **Open** через контекстное меню Finder, на Windows подтвердите запуск через **More info** → **Run anyway**.
 
@@ -41,6 +41,19 @@ sudo apt install libgtk-3-0 libwebkit2gtk-4.1-0
 ```
 
 Если в вашем дистрибутиве нет пакета `libwebkit2gtk-4.1-0`, установите эквивалент WebKitGTK 4.1 из репозитория дистрибутива.
+
+### Иконка в меню Linux (Mint, Ubuntu, …)
+
+На Linux иконка приложения не вшивается в бинарник — окружение рабочего стола читает файл `.desktop`. CommRelay при первом запуске сам ставит запись в `~/.local/share/applications/` и PNG-иконку. Если иконка не появилась сразу, перезапустите панель или выйдите из сеанса и войдите снова.
+
+Вручную из распакованного архива:
+
+```bash
+chmod +x CommRelay install-desktop.sh
+./install-desktop.sh
+```
+
+Не переносите папку с `CommRelay` после установки ярлыка без повторного запуска `./install-desktop.sh` (или без повторного запуска приложения) — путь в `.desktop` должен указывать на актуальный бинарник.
 
 ## Первый запуск
 

@@ -1,0 +1,64 @@
+:root {
+  color-scheme: dark;
+  --panel-bg: #171719;
+  --surface: #242428;
+  --surface-raised: #2e2e34;
+  --surface-dark: #0d0d10;
+  --surface-darker: #08080a;
+  --border: #444;
+  --border-strong: #666;
+  --border-dark: #222;
+  --text: #d9d9dd;
+  --muted: #98989f;
+  --subtle: #727278;
+  --amber: #d4a017;
+  --amber-dim: #8a6a10;
+  --focus: #33cc66;
+  --danger: #ff6268;
+  --success: #33cc66;
+  --warning: #ffcc00;
+  --shadow: 0 22px 42px rgba(0, 0, 0, 0.36);
+  --mono: Consolas, "Courier New", monospace;
+  font-family: var(--mono);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18px 18px, #333 1.5px, transparent 2px),
+    radial-gradient(circle at calc(100% - 18px) 18px, #333 1.5px, transparent 2px),
+    radial-gradient(circle at 18px calc(100% - 18px), #333 1.5px, transparent 2px),
+    radial-gradient(circle at calc(100% - 18px) calc(100% - 18px), #333 1.5px, transparent 2px),
+    var(--panel-bg);
+  background-size: 100% 100%;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}

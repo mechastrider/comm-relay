@@ -38,8 +38,8 @@ func TestConnector_Run_WhenDisabled_ExpectDisabledStatus(t *testing.T) {
 	eventBus := bus.New(8)
 	registry := status.NewRegistry()
 	store := testStore(t, config.YouTubeConfig{Enabled: false})
-	connector := New(eventBus, store, registry, nil, nil)
-	connector.newClient = func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error) {
+	connector := New(eventBus, store, registry, nil, nil, nil)
+	connector.newClient = func(ctx context.Context, tokenSource oauth2.TokenSource, proxyCfg *config.SOCKS5Config) (liveChatAPI, error) {
 		t.Fatal("client should not be created when disabled")
 		return nil, nil
 	}
@@ -60,10 +60,10 @@ func TestConnector_Run_WhenPageModeWithoutSource_ExpectErrorStatus(t *testing.T)
 		Enabled:        true,
 		ConnectionMode: config.YouTubeConnectionModePage,
 	})
-	connector := New(eventBus, store, registry, nil, nil)
-	connector.newPageClient = func() pageChatClient {
+	connector := New(eventBus, store, registry, nil, nil, nil)
+	connector.newPageClient = func(proxyCfg *config.SOCKS5Config) (pageChatClient, error) {
 		t.Fatal("page client should not be created without source")
-		return nil
+		return nil, nil
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
@@ -83,15 +83,15 @@ func TestConnectorRunPageSession_WhenChannelAutoDetect_ExpectResolvedVideo(t *te
 		ConnectionMode: config.YouTubeConnectionModePage,
 		ChannelHandle:  "@example",
 	})
-	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	connector.newLiveResolver = func() liveVideoResolver {
+	connector.newLiveResolver = func(proxyCfg *config.SOCKS5Config) liveVideoResolver {
 		return &fakeLiveResolver{videoID: "dQw4w9WgXcQ"}
 	}
-	connector.newPageClient = func() pageChatClient {
+	connector.newPageClient = func(proxyCfg *config.SOCKS5Config) (pageChatClient, error) {
 		return &fakePageChatClient{
 			cancel: cancel,
 			items: []innertube.LiveChatItem{
@@ -102,14 +102,14 @@ func TestConnectorRunPageSession_WhenChannelAutoDetect_ExpectResolvedVideo(t *te
 					Message:     "hello",
 				},
 			},
-		}
+		}, nil
 	}
 
-	videoID, autoDetect, err := connector.resolvePageVideoID(ctx, store.Snapshot().YouTube)
+	videoID, autoDetect, err := connector.resolvePageVideoID(ctx, store.Snapshot().YouTube, nil)
 	require.NoError(t, err)
 	require.True(t, autoDetect)
 	require.Equal(t, "dQw4w9WgXcQ", videoID)
-	require.NoError(t, connector.runPageSession(ctx, videoID))
+	require.NoError(t, connector.runPageSession(ctx, videoID, nil))
 	require.Equal(t, []string{"msg-1"}, collectMessageIDs(events))
 }
 
@@ -123,12 +123,12 @@ func TestConnectorRunPageSession_WhenMessagesReturned_ExpectPublish(t *testing.T
 		ConnectionMode: config.YouTubeConnectionModePage,
 		VideoInput:     "dQw4w9WgXcQ",
 	})
-	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	connector.newPageClient = func() pageChatClient {
+	connector.newPageClient = func(proxyCfg *config.SOCKS5Config) (pageChatClient, error) {
 		return &fakePageChatClient{
 			cancel: cancel,
 			items: []innertube.LiveChatItem{
@@ -139,10 +139,10 @@ func TestConnectorRunPageSession_WhenMessagesReturned_ExpectPublish(t *testing.T
 					Message:     "hello",
 				},
 			},
-		}
+		}, nil
 	}
 
-	require.NoError(t, connector.runPageSession(ctx, "dQw4w9WgXcQ"))
+	require.NoError(t, connector.runPageSession(ctx, "dQw4w9WgXcQ", nil))
 	require.Equal(t, []string{"msg-1"}, collectMessageIDs(events))
 }
 
@@ -156,12 +156,12 @@ func TestConnectorRunPageSession_WhenYouTubeEmojiShortcutReturned_ExpectEmoteFra
 		ConnectionMode: config.YouTubeConnectionModePage,
 		VideoInput:     "dQw4w9WgXcQ",
 	})
-	connector := New(eventBus, store, status.NewRegistry(), ytemoji.NewCatalog(), nil)
+	connector := New(eventBus, store, status.NewRegistry(), ytemoji.NewCatalog(), nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	connector.newPageClient = func() pageChatClient {
+	connector.newPageClient = func(proxyCfg *config.SOCKS5Config) (pageChatClient, error) {
 		return &fakePageChatClient{
 			cancel: cancel,
 			items: []innertube.LiveChatItem{
@@ -173,10 +173,10 @@ func TestConnectorRunPageSession_WhenYouTubeEmojiShortcutReturned_ExpectEmoteFra
 					MessageText: "hello :face-blue-smiling:",
 				},
 			},
-		}
+		}, nil
 	}
 
-	require.NoError(t, connector.runPageSession(ctx, "dQw4w9WgXcQ"))
+	require.NoError(t, connector.runPageSession(ctx, "dQw4w9WgXcQ", nil))
 
 	messages := collectMessages(events)
 	require.Len(t, messages, 1)
@@ -195,7 +195,7 @@ func TestConnectorRunSession_WhenLiveChatReturnsDuplicateIDs_ExpectSinglePublish
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())
-	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -218,7 +218,7 @@ func TestConnectorRunSession_WhenReconnectedAndAPIReplaysMessage_ExpectDuplicate
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())
-	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	connector.newClient = testClientFactory(t, cancel, []*youtube.LiveChatMessage{
@@ -247,12 +247,12 @@ func TestConnectorRunSession_WhenAutoAndStreamFails_ExpectPollFallback(t *testin
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())
-	connector := New(eventBus, store, status.NewRegistry(), nil, nil)
+	connector := New(eventBus, store, status.NewRegistry(), nil, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	connector.newGRPC = func(ctx context.Context, tokenSource oauth2.TokenSource) (grpcproto.V3DataLiveChatMessageServiceClient, io.Closer, error) {
+	connector.newGRPC = func(ctx context.Context, tokenSource oauth2.TokenSource, proxyCfg *config.SOCKS5Config) (grpcproto.V3DataLiveChatMessageServiceClient, io.Closer, error) {
 		return &fakeGRPCClient{err: errStreamUnavailable}, io.NopCloser(nil), nil
 	}
 	connector.newClient = testClientFactory(t, cancel, []*youtube.LiveChatMessage{
@@ -308,7 +308,7 @@ func (r *fakeLiveResolver) ResolveLiveVideoID(ctx context.Context, ref channel.R
 func testClientFactory(t *testing.T, cancel context.CancelFunc, items []*youtube.LiveChatMessage) clientFactory {
 	t.Helper()
 
-	return func(ctx context.Context, tokenSource oauth2.TokenSource) (liveChatAPI, error) {
+	return func(ctx context.Context, tokenSource oauth2.TokenSource, proxyCfg *config.SOCKS5Config) (liveChatAPI, error) {
 		return &fakeLiveChatAPI{
 			cancel: cancel,
 			items:  items,

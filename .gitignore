@@ -27,3 +27,6 @@ var/
 /cmd/comm-relay-desktop/build/windows/*
 !/cmd/comm-relay-desktop/build/windows/icon.ico
 /cmd/comm-relay-desktop/frontend/wailsjs/
+
+# JavaScript dev tooling (ESLint)
+node_modules/

@@ -76,6 +76,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /overlay", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.overlay, "index.html")
 	})
+	mux.Handle("GET /shared/", http.StripPrefix("/shared/", http.FileServer(http.FS(static.shared))))
 	mux.Handle("GET /", http.FileServer(http.FS(static.admin)))
 
 	return mux, nil

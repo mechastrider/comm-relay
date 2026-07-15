@@ -36,7 +36,7 @@ comm-relay/
 3. **Simple deployment**: single executable, Windows-friendly, minimal memory.
 4. **Logging**: `github.com/muonsoft/clog` (on `log/slog`) — Debug/Info/Warn/Error — see skill `golang-logging`.
 5. **Small, explicit changes**: match existing package layout; update `docs/concept.md` only when the product contract changes.
-6. **Changelog for user-visible work**: when a task changes application behavior, config, API, admin/overlay UI, connectors, or user-facing docs (README), append concise Russian bullets to `CHANGELOG.md` under `## [Unreleased]` (skill `changelog`). Skip changelog-only updates for refactors, tests-only, or internal agent/tooling edits with no user impact.
+6. **Changelog for user-visible work**: when a task changes **behavior** the user can notice — config, API contract, admin/overlay/dock UX, connectors as experienced in the UI, or user-facing docs (README) — append concise Russian bullets to `CHANGELOG.md` under `## [Unreleased]` (skill `changelog`). Skip when there is no user-visible impact: refactors, file/module splits, tests-only, lint, or internal agent/tooling — even if `web/admin` or `web/overlay` files changed. Never erase or rewrite existing `## [X.Y.Z]` sections while editing Unreleased.
 
 ## Language Conventions
 
@@ -98,7 +98,8 @@ Before reporting a task as done:
 - `gofmt` / `goimports` on touched Go files.
 - `go test ./...` (or targeted packages); `-race` when changing concurrency.
 - `golangci-lint run ./...` (config: `.golangci.yml`, v2).
-- If the change is user-visible (see Core Principle 6): update `CHANGELOG.md` under `[Unreleased]` with skill `changelog` — do not wait for a release task.
+- If you changed `web/**/*.js`: `npm ci` (once) and `npm run lint`.
+- If the change is user-visible (see Core Principle 6): update `CHANGELOG.md` under `[Unreleased]` with skill `changelog` — do not wait for a release task. If the change is a no-behavior refactor of admin/overlay code, skip the changelog.
 - If preparing a release: move `[Unreleased]` into a versioned section, set the date, and keep README artifact names/install steps in sync.
 - If static UI changed: smoke-check overlay (transparent background, message limit) and admin forms.
 - State clearly if a check could not be run and why.
@@ -115,6 +116,7 @@ Standard commands from the repo root (documented in **Completion Checklist** abo
 - Tests: `go test ./...` (use `-race` when changing concurrency)
 - Build: `go build -o comm-relay ./cmd/comm-relay-server` or `go build ./...`
 - **golangci-lint** v2.12.2: `golangci-lint run ./...` (install: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2`)
+- **ESLint** (static web under `web/`): `npm ci && npm run lint` (Node 22+; config: `eslint.config.js`)
 
 ### Running the server
 

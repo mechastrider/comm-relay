@@ -11,6 +11,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	youtubeconnector "github.com/mechastrider/comm-relay/internal/connector/youtube"
+	"github.com/mechastrider/comm-relay/internal/netproxy"
 )
 
 type youtubeOAuthHandler struct {
@@ -74,7 +75,18 @@ func (h *youtubeOAuthHandler) handleCallback(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	token, err := oauthCfg.Exchange(context.Background(), code)
+	exchangeCtx := context.Background()
+	if proxyCfg := config.EffectiveSOCKS5(cfg.Network.SOCKS5, cfg.YouTube.UseProxy); proxyCfg != nil {
+		var ctxErr error
+		exchangeCtx, ctxErr = netproxy.OAuth2Context(exchangeCtx, proxyCfg)
+		if ctxErr != nil {
+			clog.Errorf(ctx, "youtube oauth exchange context: %w", ctxErr)
+			http.Redirect(w, r, adminURLWithQuery("oauth_error", "exchange_failed"), http.StatusFound)
+			return
+		}
+	}
+
+	token, err := oauthCfg.Exchange(exchangeCtx, code)
 	if err != nil {
 		clog.Errorf(ctx, "youtube oauth token exchange failed: %w", err)
 		http.Redirect(w, r, adminURLWithQuery("oauth_error", "exchange_failed"), http.StatusFound)

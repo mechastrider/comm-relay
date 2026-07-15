@@ -183,6 +183,10 @@ jobs:
 
           cp "$bin_path" "$package_dir/CommRelay"
           chmod +x "$package_dir/CommRelay"
+          cp "$WAILS_PROJECT_DIR/build/appicon.png" "$package_dir/comm-relay.png"
+          cp "$WAILS_PROJECT_DIR/packaging/linux/CommRelay.desktop" "$package_dir/CommRelay.desktop"
+          cp "$WAILS_PROJECT_DIR/packaging/linux/install-desktop.sh" "$package_dir/install-desktop.sh"
+          chmod +x "$package_dir/install-desktop.sh"
           cp README.md CHANGELOG.md LICENSE "$package_dir/"
           tar -C dist -czf "dist/CommRelay-$version-linux-amd64.tar.gz" "$(basename "$package_dir")"
 

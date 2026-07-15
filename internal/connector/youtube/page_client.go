@@ -12,6 +12,9 @@ import (
 
 	"github.com/muonsoft/errors"
 
+	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/connector/retry"
+	"github.com/mechastrider/comm-relay/internal/netproxy"
 	"github.com/mechastrider/comm-relay/internal/youtube/innertube"
 )
 
@@ -35,10 +38,14 @@ type defaultPageClient struct {
 	httpClient pageHTTPDoer
 }
 
-func newDefaultPageClient() *defaultPageClient {
-	return &defaultPageClient{
-		httpClient: &http.Client{Timeout: 20 * time.Second},
+func newDefaultPageClient(proxyCfg *config.SOCKS5Config) (*defaultPageClient, error) {
+	client, err := netproxy.HTTPClient(proxyCfg, 20*time.Second)
+	if err != nil {
+		return nil, errors.Errorf("create youtube page http client: %w", err)
 	}
+	return &defaultPageClient{
+		httpClient: client,
+	}, nil
 }
 
 func (c *defaultPageClient) RunSession(ctx context.Context, videoID string, onItems func([]innertube.LiveChatItem) error) error {
@@ -97,7 +104,7 @@ func (c *defaultPageClient) RunSession(ctx context.Context, videoID string, onIt
 			pollInterval = time.Second
 		}
 
-		if err := waitContext(ctx, pollInterval); err != nil {
+		if err := retry.Wait(ctx, pollInterval); err != nil {
 			return nil
 		}
 	}

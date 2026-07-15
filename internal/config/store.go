@@ -36,20 +36,13 @@ func (s *Store) Snapshot() Config {
 	return s.cfg
 }
 
-// Replace validates, persists, and stores new settings.
+// Replace validates, persists, and stores new settings under the write lock
+// (same atomicity as Mutate) so concurrent Mutate callers cannot diverge disk vs memory.
 func (s *Store) Replace(cfg Config) error {
-	if err := cfg.Validate(); err != nil {
-		return err
-	}
-	if err := cfg.Save(s.path); err != nil {
-		return errors.Errorf("save config: %w", err)
-	}
-
-	s.mu.Lock()
-	s.cfg = cfg
-	s.mu.Unlock()
-
-	return nil
+	return s.Mutate(func(current *Config) error {
+		*current = cfg
+		return nil
+	})
 }
 
 // Mutate updates settings under the store lock, then validates and persists.

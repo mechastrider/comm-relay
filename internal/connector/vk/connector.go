@@ -11,6 +11,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/connector/retry"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/imagelink"
 )
@@ -22,7 +23,7 @@ type Connector struct {
 	bus       *bus.Bus
 	store     *config.Store
 	registry  *status.Registry
-	newClient func() chatClient
+	newClient func(proxyCfg *config.SOCKS5Config) (chatClient, error)
 }
 
 // New creates a VK Live connector that reads settings from the config store.
@@ -31,8 +32,8 @@ func New(eventBus *bus.Bus, store *config.Store, registry *status.Registry) *Con
 		bus:      eventBus,
 		store:    store,
 		registry: registry,
-		newClient: func() chatClient {
-			return newDefaultClient()
+		newClient: func(proxyCfg *config.SOCKS5Config) (chatClient, error) {
+			return newDefaultClient(proxyCfg)
 		},
 	}
 }
@@ -42,7 +43,7 @@ func (c *Connector) Run(ctx context.Context) error {
 	clog.Info(ctx, "vk connector starting", slog.String("platform", platformVK))
 	defer clog.Info(ctx, "vk connector stopped", slog.String("platform", platformVK))
 
-	backoff := newReconnectBackoff()
+	backoff := retry.NewBackoff(time.Second, 30*time.Second)
 
 	for {
 		if ctx.Err() != nil {
@@ -50,10 +51,12 @@ func (c *Connector) Run(ctx context.Context) error {
 		}
 
 		vkCfg := c.store.Snapshot().VK
+		cfg := c.store.Snapshot()
+		proxyCfg := config.EffectiveSOCKS5(cfg.Network.SOCKS5, vkCfg.UseProxy)
 		if !vkCfg.Enabled {
 			c.setStatus(status.StateDisabled, "", "")
-			backoff = newReconnectBackoff()
-			if err := waitContext(ctx, configPollInterval); err != nil {
+			backoff = backoff.Reset()
+			if err := retry.Wait(ctx, configPollInterval); err != nil {
 				return nil
 			}
 			continue
@@ -62,7 +65,7 @@ func (c *Connector) Run(ctx context.Context) error {
 		channel := normalizeChannel(vkCfg.Channel)
 		if channel == "" {
 			c.setStatus(status.StateError, "Set VK channel slug in admin.", "")
-			if err := waitContext(ctx, configPollInterval); err != nil {
+			if err := retry.Wait(ctx, configPollInterval); err != nil {
 				return nil
 			}
 			continue
@@ -73,7 +76,7 @@ func (c *Connector) Run(ctx context.Context) error {
 			slog.String("channel", channel),
 		))
 
-		err := c.runSession(sessionCtx, channel)
+		err := c.runSession(sessionCtx, channel, proxyCfg)
 		if ctx.Err() != nil {
 			return nil
 		}
@@ -86,19 +89,22 @@ func (c *Connector) Run(ctx context.Context) error {
 			c.setStatus(status.StateDisconnected, "", "")
 		}
 
-		wait := backoff.current()
+		wait := backoff.Current()
 		c.setStatus(status.StateReconnecting, "", "")
 		clog.Info(sessionCtx, "vk reconnect scheduled", slog.Duration("after", wait))
-		if err := waitContext(ctx, wait); err != nil {
+		if err := retry.Wait(ctx, wait); err != nil {
 			return nil
 		}
 
-		backoff = backoff.next()
+		backoff = backoff.Next()
 	}
 }
 
-func (c *Connector) runSession(ctx context.Context, channel string) error {
-	client := c.newClient()
+func (c *Connector) runSession(ctx context.Context, channel string, proxyCfg *config.SOCKS5Config) error {
+	client, err := c.newClient(proxyCfg)
+	if err != nil {
+		return err
+	}
 	c.setStatus(status.StateConnecting, "", "")
 
 	return client.RunSession(ctx, channel, func(raw []byte) {
@@ -146,20 +152,4 @@ func (c *Connector) setStatusFromError(err error) {
 		return
 	}
 	c.setStatus(status.StateError, "VK connector error — see server logs.", status.SanitizeError(err.Error()))
-}
-
-func waitContext(ctx context.Context, d time.Duration) error {
-	if d <= 0 {
-		return nil
-	}
-
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-timer.C:
-		return nil
-	}
 }

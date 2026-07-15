@@ -15,6 +15,7 @@ var ErrInvalidConfig = errors.New("invalid config")
 // Config holds application settings persisted in config.json.
 type Config struct {
 	ServerPort int           `json:"server_port"`
+	Network    NetworkConfig `json:"network"`
 	Twitch     TwitchConfig  `json:"twitch"`
 	YouTube    YouTubeConfig `json:"youtube"`
 	VK         VKConfig      `json:"vk"`
@@ -31,8 +32,9 @@ type TwitchConfig struct {
 
 // VKConfig holds VK Live / VK Video connector settings.
 type VKConfig struct {
-	Enabled bool   `json:"enabled"`
-	Channel string `json:"channel"`
+	Enabled  bool   `json:"enabled"`
+	Channel  string `json:"channel"`
+	UseProxy bool   `json:"use_proxy"`
 }
 
 // Overlay display density modes.

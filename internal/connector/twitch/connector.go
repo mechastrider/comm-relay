@@ -11,6 +11,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/connector/retry"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/imagelink"
@@ -57,7 +58,7 @@ func (c *Connector) Run(ctx context.Context) error {
 	clog.Info(ctx, "twitch connector starting", slog.String("platform", platformTwitch))
 	defer clog.Info(ctx, "twitch connector stopped", slog.String("platform", platformTwitch))
 
-	backoff := newReconnectBackoff()
+	backoff := retry.NewBackoff(time.Second, 30*time.Second)
 
 	for {
 		if ctx.Err() != nil {
@@ -67,8 +68,8 @@ func (c *Connector) Run(ctx context.Context) error {
 		twitchCfg := c.store.Snapshot().Twitch
 		if !twitchCfg.Enabled {
 			c.setStatus(status.StateDisabled, "", "")
-			backoff = newReconnectBackoff()
-			if err := waitContext(ctx, configPollInterval); err != nil {
+			backoff = backoff.Reset()
+			if err := retry.Wait(ctx, configPollInterval); err != nil {
 				return nil
 			}
 			continue
@@ -77,7 +78,7 @@ func (c *Connector) Run(ctx context.Context) error {
 		channel := normalizeChannel(twitchCfg.Channel)
 		if channel == "" {
 			c.setStatus(status.StateError, "Set Twitch channel in admin.", "")
-			if err := waitContext(ctx, configPollInterval); err != nil {
+			if err := retry.Wait(ctx, configPollInterval); err != nil {
 				return nil
 			}
 			continue
@@ -100,14 +101,14 @@ func (c *Connector) Run(ctx context.Context) error {
 			clog.Info(sessionCtx, "twitch session ended")
 		}
 
-		wait := backoff.current()
+		wait := backoff.Current()
 		c.setStatus(status.StateReconnecting, "", "")
 		clog.Info(sessionCtx, "twitch reconnect scheduled", slog.Duration("after", wait))
-		if err := waitContext(ctx, wait); err != nil {
+		if err := retry.Wait(ctx, wait); err != nil {
 			return nil
 		}
 
-		backoff = backoff.next()
+		backoff = backoff.Next()
 	}
 }
 
@@ -169,20 +170,4 @@ func (c *Connector) setStatus(state status.State, detail, lastError string) {
 		snap.Detail = ""
 	}
 	c.registry.SetTwitch(snap)
-}
-
-func waitContext(ctx context.Context, d time.Duration) error {
-	if d <= 0 {
-		return nil
-	}
-
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-timer.C:
-		return nil
-	}
 }

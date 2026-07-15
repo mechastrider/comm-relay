@@ -32,9 +32,9 @@ func TestConnector_Run_WhenDisabled_ExpectDisabledStatus(t *testing.T) {
 	registry := status.NewRegistry()
 	store := testStore(t, config.VKConfig{Enabled: false})
 	connector := New(eventBus, store, registry)
-	connector.newClient = func() chatClient {
+	connector.newClient = func(proxyCfg *config.SOCKS5Config) (chatClient, error) {
 		t.Fatal("client should not be created when disabled")
-		return nil
+		return nil, nil
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
@@ -51,9 +51,9 @@ func TestConnector_Run_WhenChannelMissing_ExpectErrorStatus(t *testing.T) {
 	registry := status.NewRegistry()
 	store := testStore(t, config.VKConfig{Enabled: true, Channel: ""})
 	connector := New(eventBus, store, registry)
-	connector.newClient = func() chatClient {
+	connector.newClient = func(proxyCfg *config.SOCKS5Config) (chatClient, error) {
 		t.Fatal("client should not be created without channel")
-		return nil
+		return nil, nil
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
@@ -87,8 +87,8 @@ func TestConnector_RunSession_PublishesMappedMessage(t *testing.T) {
 		}
 	}`)
 
-	connector.newClient = func() chatClient {
-		return &sessionFakeClient{raw: raw}
+	connector.newClient = func(proxyCfg *config.SOCKS5Config) (chatClient, error) {
+		return &sessionFakeClient{raw: raw}, nil
 	}
 
 	events, unsub := eventBus.Subscribe()
