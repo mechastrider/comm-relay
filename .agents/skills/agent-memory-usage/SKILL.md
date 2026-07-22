@@ -11,7 +11,7 @@ Install this skill in project repos that connect to agentmem MCP.
 
 | Phase | Tool |
 |-------|------|
-| Task start | `memory.get_context_pack` with `project_id` (e.g. `owner/repo`) or `repo_url` |
+| Task start | `memory.get_context_pack` with `project_id` (e.g. `muonsoft/agentmem`) or `repo_url` |
 | Stuck / need precedent | `memory.search` with filters |
 | After review feedback | `memory.record_event` |
 | Stable lesson, not yet a rule | `memory.propose_entry` as **draft** |
@@ -71,6 +71,80 @@ Then propose draft memory with actionable wording (selected direction, where imp
 **Do not record** — `npm test` passed on a routine fix with no new decision, workflow lesson, or reusable pattern.
 
 `memory.record_event` does not warn about low-value positive events. Apply the closeout criteria yourself; curators can decline promotion later.
+
+## Structured payloads
+
+Supported memory types accept optional `structured_payload` alongside required prose.
+`title` / `body` / `summary` remain required. Empty `{}` is treated as no payload.
+
+**Source of truth:** call `memory.get_schema` before inventing fields or areas — the live
+server may be newer than this skill. The cheat sheet below matches the current soft schema
+and is enough for routine proposes without guessing keys.
+
+### Soft-schema cheat sheet
+
+Unknown top-level keys are rejected. All listed fields are optional; omit rather than invent.
+
+| Memory type | Role | Allowed keys | Notes |
+|-------------|------|--------------|-------|
+| `coding` | MVP | `area` (string enum), `rule` (string), `examples` (string[]) | Prefer both `area` + `rule` for dedupe |
+| `workflow` | MVP | `when` (string), `steps` (string[]), `pitfalls` (string[]), `related_files` (string[]) | Prefer `when` (+ `steps` when useful) |
+| `decision` | stub | `chosen` (string), `rejected` (string[]), `constraints` (string[]), `supersedes` (uuid) | Prose primary until stubs stabilize |
+| `review_pattern` | stub | `fingerprint`, `symptom`, `root_cause`, `fix`, `prevention` (strings), `related_files` (string[]) | Same |
+
+**`coding.area` closed enum** (do not invent values such as `android`, `rust`, `kubernetes`):
+
+`go` · `tests` · `database` · `api` · `logging` · `errors` · `security` · `frontend` · `docs` · `auth` · `ci` · `github` · `skills` · `mcp` · `observability` · `tasks`
+
+If no enum value fits, omit `area` and set `rule` only — or skip the payload and keep prose.
+
+**Rejected / prose-only**
+
+- Do **not** use `memory_type` `testing` — use `coding` with `area: "tests"` (keep tag `testing` if useful).
+- `architecture`, `product`, `tech_debt`, `skill_candidate` (and undeclared types like `ux-ui`) reject non-empty payloads — prose only.
+
+### Coding payload example
+
+```json
+{
+  "memory_type": "coding",
+  "title": "Export PATH before task commands",
+  "summary": "Taskfile targets need ~/go/bin on PATH.",
+  "body": "In this repo, go-task is installed to ~/go/bin. Export PATH before running task targets in a fresh shell.",
+  "structured_payload": {
+    "area": "ci",
+    "rule": "Export PATH=\"$HOME/go/bin:$PATH\" before running task commands in a fresh shell.",
+    "examples": ["export PATH=\"$HOME/go/bin:$PATH\"", "task test"]
+  },
+  "tags": ["devtool"],
+  "suggested_status": "draft"
+}
+```
+
+### Workflow payload example
+
+```json
+{
+  "memory_type": "workflow",
+  "title": "Verify entry detail after API shape changes",
+  "summary": "Spot-check the admin entry detail page when entry JSON fields change.",
+  "body": "After changing memory entry API fields, load an entry with evidence and versions in the admin UI.",
+  "structured_payload": {
+    "when": "After adding or renaming fields on memory entry API responses",
+    "steps": [
+      "Run task web:build",
+      "Open /memory/entries and drill into an entry with versions",
+      "Confirm metadata, evidence, and any new payload sections render"
+    ],
+    "related_files": ["web/src/pages/EntryDetailPage.tsx", "web/src/services/types.ts"]
+  },
+  "suggested_status": "draft"
+}
+```
+
+`memory.propose_entry` returns explicit write-result fields (`operation`: `insert` | `update` | `noop` | `conflict`). Identity-key dedupe updates an existing draft/candidate/active row instead of creating duplicates.
+
+For `decision` / `review_pattern`, prose remains primary until stub schemas stabilize — add minimal payload only when it aids dedupe.
 
 ## Rules
 
