@@ -172,6 +172,7 @@ func TestValidate_WhenOverlayThemeKnown_ExpectValid(t *testing.T) {
 		OverlayThemeDashboard,
 		OverlayThemeCockpitPanel,
 		OverlayThemeCockpitPopups,
+		OverlayThemeGRebelsPopups,
 	}
 
 	for _, theme := range themes {

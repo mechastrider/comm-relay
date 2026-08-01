@@ -10,7 +10,7 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
   const DEFAULT_DISPLAY_MODE = "normal";
   const DEFAULT_THEME = "default";
   const DISPLAY_MODES = new Set(["normal", "compact"]);
-  const THEMES = new Set(["default", "dashboard", "cockpit_panel", "cockpit_popups"]);
+  const THEMES = new Set(["default", "dashboard", "cockpit_panel", "cockpit_popups", "g_rebels_popups"]);
   const INITIAL_RECONNECT_MS = 1000;
   const MAX_RECONNECT_MS = 30000;
   const LEAVE_ANIMATION_MS = 220;
@@ -240,7 +240,8 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
       "overlay-theme--default",
       "overlay-theme--dashboard",
       "overlay-theme--cockpit-panel",
-      "overlay-theme--cockpit-popups"
+      "overlay-theme--cockpit-popups",
+      "overlay-theme--g-rebels-popups"
     );
     document.body.classList.add("overlay-theme--" + config.theme.replace(/_/g, "-"));
     document.body.classList.remove(
@@ -464,7 +465,7 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
   }
 
   function cockpitThemeEnabled() {
-    return config.theme === "cockpit_panel" || config.theme === "cockpit_popups";
+    return config.theme === "cockpit_panel" || config.theme === "cockpit_popups" || config.theme === "g_rebels_popups";
   }
 
   function normalizePlatform(platform) {

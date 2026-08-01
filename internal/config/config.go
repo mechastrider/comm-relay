@@ -49,6 +49,7 @@ const (
 	OverlayThemeDashboard     = "dashboard"
 	OverlayThemeCockpitPanel  = "cockpit_panel"
 	OverlayThemeCockpitPopups = "cockpit_popups"
+	OverlayThemeGRebelsPopups = "g_rebels_popups"
 )
 
 // Overlay font size bounds (px).
