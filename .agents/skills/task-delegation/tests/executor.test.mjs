@@ -29,6 +29,32 @@ function jobRecordPath(stateDir, repoRoot, jobId) {
   return join(stateDir, 'agent-orchestration', 'jobs', repoHash, jobId, 'job.json');
 }
 
+function readPersistedJob(stateDir, repoRoot, jobId) {
+  return JSON.parse(readFileSync(jobRecordPath(stateDir, repoRoot, jobId), 'utf8'));
+}
+
+const OMITTED_PUBLIC_FIELDS = [
+  'repoRoot',
+  'repoHash',
+  'wrapperPid',
+  'childPid',
+  'argv',
+  'cancelRequested',
+  'baselineDirtyPaths',
+  'baselinePathHashes',
+  'diagnostics',
+];
+
+function assertPublicJobShape(job) {
+  assert.ok(job.jobId);
+  assert.ok(job.status);
+  assert.ok(job.stdoutLog);
+  assert.ok(job.stderrLog);
+  for (const field of OMITTED_PUBLIC_FIELDS) {
+    assert.equal(job[field], undefined, `public output must omit ${field}`);
+  }
+}
+
 function lockPathFor(stateDir, repoRoot) {
   const repoHash = hashRepoRoot(repoRoot);
   return join(stateDir, 'agent-orchestration', 'jobs', repoHash, 'writer.lock');
@@ -332,6 +358,9 @@ test('rejects forbidden and unknown CLI flags', () => {
     ['start', ['--task', task, '--fast']],
     ['start', ['--task', task, '--auto']],
     ['resume', ['--job', 'job-1', '--task', task, '--model', 'opus']],
+    ['start', ['--task', task, '--verbose']],
+    ['result', ['--job', 'job-1', '--verbose']],
+    ['cancel', ['--job', 'job-1', '--verbose']],
     ['status', ['--job', 'job-1', '--background']],
     ['doctor', ['--task', task]],
   ];
@@ -346,12 +375,20 @@ test('malformed and unknown stream events are preserved', () => {
   const h = setupHarness({ scenario: 'malformed' });
   const task = writeTaskPacket(h.repoRoot);
   const job = runExecutor(['start', '--task', task], h);
-  assert.ok(job.diagnostics.length >= 1);
+  assertPublicJobShape(job);
+  const persisted = readPersistedJob(h.stateDir, h.repoRoot, job.jobId);
+  assert.ok(persisted.diagnostics.length >= 1);
 
   const unknownHarness = setupHarness({ scenario: 'unknown' });
   const unknownTask = writeTaskPacket(unknownHarness.repoRoot);
   const unknownJob = runExecutor(['start', '--task', unknownTask], unknownHarness);
-  assert.ok(unknownJob.diagnostics.some((d) => d.streamEvent === 'unknown'));
+  assertPublicJobShape(unknownJob);
+  const unknownPersisted = readPersistedJob(
+    unknownHarness.stateDir,
+    unknownHarness.repoRoot,
+    unknownJob.jobId,
+  );
+  assert.ok(unknownPersisted.diagnostics.some((d) => d.streamEvent === 'unknown'));
 });
 
 test('missing terminal result fails even with exit code zero', () => {
@@ -405,7 +442,9 @@ test('records baseline dirty paths, post-run changes, and touched files', () => 
   h.env.FAKE_AGENT_TOUCH_PATH = touchPath;
   const task = writeTaskPacket(h.repoRoot);
   const job = runExecutor(['start', '--task', task], h);
-  assert.ok(job.baselineDirtyPaths.includes('pre-existing.txt'));
+  assertPublicJobShape(job);
+  const persisted = readPersistedJob(h.stateDir, h.repoRoot, job.jobId);
+  assert.ok(persisted.baselineDirtyPaths.includes('pre-existing.txt'));
   assert.ok(job.postRunChangedPaths.includes('new-file.txt'));
   assert.ok(!job.postRunChangedPaths.includes('pre-existing.txt'));
   assert.ok(job.touchedFiles.includes('new-file.txt'));
@@ -418,7 +457,9 @@ test('pre-dirty file modified during the run appears in touchedFiles', () => {
   h.env.FAKE_AGENT_TOUCH_PATH = existingDirty;
   const task = writeTaskPacket(h.repoRoot);
   const job = runExecutor(['start', '--task', task], h);
-  assert.ok(job.baselineDirtyPaths.includes('pre-existing.txt'));
+  assertPublicJobShape(job);
+  const persisted = readPersistedJob(h.stateDir, h.repoRoot, job.jobId);
+  assert.ok(persisted.baselineDirtyPaths.includes('pre-existing.txt'));
   assert.ok(job.touchedFiles.includes('pre-existing.txt'));
   assert.ok(!job.postRunChangedPaths.includes('pre-existing.txt'));
 });
@@ -487,4 +528,77 @@ test('task path outside repo is rejected', () => {
   const out = runExecutorRaw(['start', '--task', outside], h);
   assert.equal(out.ok, false);
   assert.match(out.json.error, /inside repository work tree/);
+});
+
+test('public start resume status and cancel omit heavy fields', () => {
+  const h = setupHarness({ scenario: 'resume' });
+  const firstTask = writeTaskPacket(h.repoRoot, '.agent-orchestration/tasks/first.md');
+  const first = runExecutor(['start', '--task', firstTask], h);
+  assertPublicJobShape(first);
+  assert.equal(first.requestedModel, 'composer-2.5');
+  assert.equal(first.taskPath, '.agent-orchestration/tasks/first.md');
+  assert.ok(first.taskHash);
+
+  const followUpTask = writeTaskPacket(h.repoRoot, '.agent-orchestration/tasks/follow-up.md');
+  const resumed = runExecutor(['resume', '--job', first.jobId, '--task', followUpTask], {
+    ...h,
+    env: { ...h.env, FAKE_AGENT_SCENARIO: 'resume' },
+  });
+  assertPublicJobShape(resumed);
+  assert.equal(resumed.priorJobId, first.jobId);
+
+  const status = runExecutor(['status', '--job', resumed.jobId], h);
+  assertPublicJobShape(status);
+  assert.equal(status.jobId, resumed.jobId);
+
+  const hCancel = setupHarness({
+    scenario: 'cancel-me',
+    extraEnv: { CURSOR_EXECUTOR_RESULT_WATCHDOG_MS: '200' },
+  });
+  const cancelTask = writeTaskPacket(hCancel.repoRoot);
+  const started = runExecutor(['start', '--task', cancelTask, '--background'], hCancel);
+  assertPublicJobShape(started);
+  const cancelled = runExecutor(['cancel', '--job', started.jobId], hCancel);
+  assertPublicJobShape(cancelled);
+});
+
+test('status --verbose returns the full persisted job record', () => {
+  const h = setupHarness();
+  const task = writeTaskPacket(h.repoRoot);
+  const job = runExecutor(['start', '--task', task], h);
+  const verbose = runExecutor(['status', '--job', job.jobId, '--verbose'], h);
+  const persisted = readPersistedJob(h.stateDir, h.repoRoot, job.jobId);
+  assert.deepEqual(verbose, persisted);
+  assert.ok(Array.isArray(verbose.diagnostics));
+  assert.ok(verbose.repoRoot);
+  assert.ok(Array.isArray(verbose.argv));
+  assert.ok(Array.isArray(verbose.baselineDirtyPaths));
+});
+
+test('large diagnostics do not inflate default status output', () => {
+  const h = setupHarness({ scenario: 'malformed' });
+  const task = writeTaskPacket(h.repoRoot);
+  const job = runExecutor(['start', '--task', task], h);
+  const persisted = readPersistedJob(h.stateDir, h.repoRoot, job.jobId);
+  const hugePayload = 'x'.repeat(500_000);
+  persisted.diagnostics.push({
+    at: new Date().toISOString(),
+    streamEvent: 'unknown',
+    raw: { blob: hugePayload },
+  });
+  writeFileSync(
+    jobRecordPath(h.stateDir, h.repoRoot, job.jobId),
+    `${JSON.stringify(persisted, null, 2)}\n`,
+    'utf8',
+  );
+
+  const compact = runExecutor(['status', '--job', job.jobId], h);
+  const compactJson = JSON.stringify(compact);
+  assert.ok(compactJson.length < 10_000, `compact status was ${compactJson.length} bytes`);
+  assert.equal(compact.diagnostics, undefined);
+  assertPublicJobShape(compact);
+
+  const verbose = runExecutor(['status', '--job', job.jobId, '--verbose'], h);
+  assert.ok(JSON.stringify(verbose).length > 500_000);
+  assert.ok(verbose.diagnostics.some((entry) => entry.raw?.blob === hugePayload));
 });

@@ -18,7 +18,7 @@ Public commands:
 - `doctor`
 - `start --task <repo-relative.md> [--background] [--timeout <seconds>]`
 - `resume --job <prior-job-id> --task <repo-relative.md> [--background] [--timeout <seconds>]`
-- `status --job <id>`
+- `status [--job <id>] [--verbose]`
 - `result --job <id> [--wait]`
 - `cancel --job <id>`
 
@@ -29,6 +29,8 @@ There is no public session, model, or cursor-agent CLI override.
 - Read this skill directly from the materialized preset.
 - Run `cursor-executor.mjs doctor` before the first delegation.
 - Delegate with `start --task <packet-path>`; poll with `status` / `result`.
+- Keep routine polling on compact `status`; use `--verbose` only for targeted
+  executor diagnostics because it exposes the complete persisted job record.
 - If the executor, `cursor-agent`, or authentication is unavailable, **stop and
   report** — do not silently write code inline or switch models.
 
@@ -67,7 +69,8 @@ runner, job store, model override, or copied executor logic.
    artifact or version-control target. Durable OpenSpec and project-native plans
    stay in their native locations.
 2. Pass **only** the executor's public flags (`--task`, `--job`, `--background`,
-   `--timeout`, `--wait`). Never pass `--model` or other overrides.
+   `--timeout`, `--wait`, and diagnostic-only `--verbose`). Never pass `--model`
+   or other overrides.
 3. Run `doctor` before the first delegation; if the wrapper, `cursor-agent`, or
    authentication is missing, **stop and report** — do not silently write product
    code or switch models.

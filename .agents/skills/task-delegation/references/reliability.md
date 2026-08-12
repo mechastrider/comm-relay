@@ -23,7 +23,7 @@ CLI delegation. This reference summarizes behavior orchestrators should expect.
 ## Lifecycle
 
 - **Foreground** — block until terminal status; print JSON result.
-- **Background** — return immediately; poll `status` / `result`.
+- **Background** — return immediately; poll compact `status`, then read `result`.
 - **Timeout** — public `--timeout` is seconds; terminate the process tree;
   record `timed_out`.
 - **Cancel** — terminate the wrapper and child process trees; do not release a
@@ -43,6 +43,19 @@ CLI delegation. This reference summarizes behavior orchestrators should expect.
 - Exit code zero without a terminal stream-json `result` is recorded as `failed`.
 - Environment values whose names contain `TOKEN`, `KEY`, `SECRET`, or `PASSWORD`
   are redacted from persisted JSON and logs, including bare secret values.
+
+## Context-safe public output
+
+- `start`, `resume`, `status`, and `cancel` return a bounded public job view;
+  baseline hashes, argv, and accumulated stream diagnostics stay in the persisted
+  job record and logs.
+- `status --verbose` is an explicit diagnostic escape hatch that prints the full
+  persisted job record. Do not use it for routine background polling or inject it
+  into an orchestrator context without narrowing the evidence first.
+- `result` returns the terminal summary/result and changed/touched paths, not raw
+  NDJSON history.
+- Inspect `stdoutLog` / `stderrLog` with targeted searches or bounded tails when a
+  job fails. Never paste the complete stream log into the parent conversation.
 
 ## Stream handling
 

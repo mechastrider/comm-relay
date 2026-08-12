@@ -27,6 +27,7 @@ import {
   waitForJob,
   toRepoRelativeTaskPath,
 } from './spawn-runner.mjs';
+import { toPublicJobView } from './public-job.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const EXECUTOR_PATH = resolve(__dirname, 'cursor-executor.mjs');
@@ -37,7 +38,7 @@ const COMMAND_FLAGS = {
   doctor: new Set(['help']),
   start: new Set(['task', 'background', 'timeout', 'help']),
   resume: new Set(['job', 'task', 'background', 'timeout', 'help']),
-  status: new Set(['job', 'help']),
+  status: new Set(['job', 'verbose', 'help']),
   result: new Set(['job', 'wait', 'help']),
   cancel: new Set(['job', 'help']),
   'run-internal': new Set(),
@@ -54,7 +55,7 @@ Usage:
   cursor-executor.mjs doctor
   cursor-executor.mjs start --task <repo-relative.md> [--background] [--timeout <seconds>]
   cursor-executor.mjs resume --job <prior-job-id> --task <repo-relative.md> [--background] [--timeout <seconds>]
-  cursor-executor.mjs status [--job <id>]
+  cursor-executor.mjs status [--job <id>] [--verbose]
   cursor-executor.mjs result [--job <id>] [--wait]
   cursor-executor.mjs cancel --job <id>
 
@@ -62,7 +63,7 @@ Commands:
   doctor   Check Node, Git, cursor-agent, auth, state dir, stream-json
   start    Run a task packet via cursor-agent (composer-2.5)
   resume   Resume a prior Cursor session with a new task packet
-  status   Show job status
+  status   Show compact job status (--verbose for full persisted record)
   result   Show terminal result for a job
   cancel   Cancel a running job
 
@@ -72,6 +73,7 @@ Options:
   --background          Return immediately; poll status/result
   --timeout <seconds>   Total job timeout in seconds (default: ${DEFAULT_TIMEOUT_SECONDS})
   --wait                Block until job is terminal (result only)
+  --verbose             Return full persisted job record (status only)
   -h, --help            Show this help
 `);
 }
@@ -87,7 +89,7 @@ function parseArgs(argv) {
     if (token.startsWith('--')) {
       const key = token.slice(2);
       const next = argv[i + 1];
-      if (['background', 'wait', 'help'].includes(key)) {
+      if (['background', 'wait', 'verbose', 'help'].includes(key)) {
         args[key] = true;
         continue;
       }
@@ -183,7 +185,7 @@ async function cmdStart(args) {
     background: Boolean(args.background),
     executorPath: EXECUTOR_PATH,
   });
-  printJson(result);
+  printJson(toPublicJobView(result));
   process.exit(TERMINAL_STATUSES.has(result.status) && result.status !== JOB_STATUS.COMPLETED ? 1 : 0);
 }
 
@@ -232,7 +234,7 @@ async function cmdResume(args) {
     background: Boolean(args.background),
     executorPath: EXECUTOR_PATH,
   });
-  printJson(result);
+  printJson(toPublicJobView(result));
   process.exit(TERMINAL_STATUSES.has(result.status) && result.status !== JOB_STATUS.COMPLETED ? 1 : 0);
 }
 
@@ -245,7 +247,7 @@ async function cmdStatus(args) {
     return;
   }
   const job = readJob(fs, repoRoot, jobId);
-  printJson(job);
+  printJson(args.verbose ? job : toPublicJobView(job));
 }
 
 async function cmdResult(args) {
@@ -290,7 +292,7 @@ async function cmdCancel(args) {
     throw new Error('cancel requires --job <id>');
   }
   const job = await cancelJob(fs, repoRoot, args.job);
-  printJson(job);
+  printJson(toPublicJobView(job));
 }
 
 async function cmdRunInternal(jobId) {

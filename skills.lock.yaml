@@ -2,7 +2,7 @@ version: 3
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 0417bb62bf8b5e18fdbc92ec7e1689b80b786673
+    commit: 3335dae04f91efedf4efacc46fb1572a1b7a2534
 preset: desktop-app
 include:
     - theme: backend/go
@@ -36,7 +36,7 @@ selected_paths:
     - web-static-frontend
 skills:
     agent-memory-usage:
-        upstream_hash: sha256:ad73f95434d1de4f2cd1abbf93865f61a6ff4eb9f0f2d02f6e3f7d92da1360f4
+        upstream_hash: sha256:05e727fa5b0d456b5d44ab28fd9d8424d7fdc82fa5fab0b36346d3aff5210661
     agentmem-onboarding:
         upstream_hash: sha256:54d2e1681d8b076b308c7f3651cfda4d3eae1ba2e8e11b0c3fd21957b5864940
     banner-design:
@@ -68,7 +68,7 @@ skills:
     slides:
         upstream_hash: sha256:c8476d4e9f23cb39a87a053ecfc4cb62aaa7697d366a438107686ba467ad2e65
     task-delegation:
-        upstream_hash: sha256:c54da2806cfa9e85461f679eaad120b029b82ea501005923b3b695d70e2eedaf
+        upstream_hash: sha256:fc4c50e96a3ae50fd6a78b0ce68e18b3d2067aee7c3b7a99e0d2e709d46a2fde
     ui-styling:
         upstream_hash: sha256:d17d754f5f37144d1a78096bb389f09d0aefdd7b202823746f6a25433548d5dc
     ui-ux-pro-max:

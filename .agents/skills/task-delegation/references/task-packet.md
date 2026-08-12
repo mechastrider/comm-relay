@@ -39,17 +39,24 @@ Use these headings in order:
 - State what prior slices already landed.
 
 ## Acceptance criteria
-Numbered, testable, specific.
+Numbered, testable, specific; no more than five. State the important cross-layer
+and async invariants up front rather than discovering them only during review.
+When the slice fulfills planning/checklist items, name all of them here; do not
+create a separate packet merely because they have separate checkbox numbers.
 
 ## Files / areas to touch
 Explicit list — bounds blast radius.
 
 ## How to verify
-Exact commands that must pass (copy-pasteable).
+Exact focused commands that prove this slice (copy-pasteable). Reserve broad
+repository suites for orchestrator-owned milestone/final verification unless the
+slice changes the test or build harness.
 
 ## Guardrails
 - What NOT to touch; invariants to preserve.
 - One slice only; no unrelated refactors.
+- Do not edit OpenSpec checkboxes, verification ledgers, or other orchestrator-owned
+  process artifacts; report evidence for the orchestrator to record.
 
 ## Return format
 What the executor must return (summary, changed files, check results).
@@ -65,7 +72,16 @@ Read <path-to-packet> fully and execute it exactly
 
 ## Orchestrator responsibilities
 
+- Create an execution map of semantic milestones and projected primary slices
+  before writing the first packet. Treat planning tasks as coverage requirements,
+  not mandatory job boundaries.
 - Write the packet before delegating.
 - Keep acceptance criteria, file bounds, and verify commands specific.
+- Combine adjacent micro-slices when they carry one contract and remain green;
+  split cross-product matrices into independently rerunnable packets.
 - After the executor finishes, **read the diff yourself** and **run verify commands
   yourself** — the executor summary is a claim, not proof.
+- Finish reviewing the whole slice before delegating corrections. Put related
+  findings into one resume packet and reserve additional resumes for newly revealed evidence.
+- Checkpoint accepted milestones so later jobs do not inherit an ever-growing dirty
+  baseline, and move long changes to a fresh parent session using durable repo artifacts.
