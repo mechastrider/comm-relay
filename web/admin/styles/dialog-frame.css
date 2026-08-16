@@ -25,17 +25,8 @@
   background: var(--surface);
 }
 
-.connection-grid,
 .panel {
   min-width: 0;
-}
-
-.connection-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  overflow: auto;
-  padding: 12px;
 }
 
 #sound-dialog .panel {

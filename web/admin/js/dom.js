@@ -43,6 +43,7 @@ export const overlayFontSize = document.getElementById("overlay-font-size");
 export const overlayDisplayMode = document.getElementById("overlay-display-mode");
 export const overlayTheme = document.getElementById("overlay-theme");
 export const overlayDialog = document.getElementById("overlay-dialog");
+export const connectionsDialog = document.getElementById("connections-dialog");
 export const overlayPreviewFrame = document.getElementById("overlay-preview-frame");
 export const overlayPreviewStage = document.getElementById("overlay-preview-stage");
 export const overlayPreviewViewport = document.getElementById("overlay-preview-viewport");

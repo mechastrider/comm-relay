@@ -337,7 +337,7 @@ export function validateClient(payload) {
 
     if (payload.twitch.enabled && payload.twitch.channel === "") {
       setFieldError("twitch_channel", "Channel is required when Twitch is enabled.");
-      firstInvalid = dom.twitchChannel;
+      firstInvalid = firstInvalid || dom.twitchChannel;
     } else if (
       payload.twitch.channel !== "" &&
       !/^[a-z0-9_]{1,25}$/.test(payload.twitch.channel)
@@ -346,7 +346,7 @@ export function validateClient(payload) {
         "twitch_channel",
         "Use a lowercase Twitch login (letters, numbers, underscore)."
       );
-      firstInvalid = dom.twitchChannel;
+      firstInvalid = firstInvalid || dom.twitchChannel;
     }
 
     if (payload.vk.enabled && payload.vk.channel === "") {

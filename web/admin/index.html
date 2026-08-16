@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body>
   <div class="cockpit-shell">
@@ -132,161 +132,178 @@
           <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close connections settings">Close</button>
         </div>
 
-        <div class="connection-grid">
-          <section class="panel" aria-labelledby="network-proxy-heading">
-            <div class="panel__header">
-              <h3 id="network-proxy-heading">SOCKS5 proxy</h3>
-            </div>
+        <div class="dialog-tab-body">
+          <div class="dialog-tabs" role="tablist" aria-label="Connection sections">
+            <button id="connections-twitch-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="connections-twitch-panel" data-connections-section="twitch">Twitch</button>
+            <button id="connections-youtube-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="connections-youtube-panel" tabindex="-1" data-connections-section="youtube">YouTube</button>
+            <button id="connections-vk-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="connections-vk-panel" tabindex="-1" data-connections-section="vk">VK Live</button>
+            <button id="connections-network-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="connections-network-panel" tabindex="-1" data-connections-section="network">Network</button>
+          </div>
 
-            <div class="form">
-              <p class="field-hint">Configure once; enable per platform below.</p>
-
-              <div class="form__field">
-                <label for="network-socks5-address">Proxy address</label>
-                <input id="network-socks5-address" name="network_socks5_address" type="text" autocomplete="off" spellcheck="false" inputmode="text" placeholder="127.0.0.1:1080">
-                <p id="network-socks5-address-error" class="field-error" role="alert" hidden></p>
+          <section id="connections-twitch-panel" class="dialog-tab-panel connections-tab-panel" role="tabpanel" aria-labelledby="connections-twitch-tab" data-connections-panel="twitch">
+            <section class="panel platform-panel" aria-labelledby="twitch-heading">
+              <div class="panel__header">
+                <h3 id="twitch-heading">Twitch</h3>
               </div>
 
-              <div class="form__field">
-                <label for="network-socks5-username">Username <span class="field-optional">(optional)</span></label>
-                <input id="network-socks5-username" name="network_socks5_username" type="text" autocomplete="off" spellcheck="false">
-              </div>
-
-              <div class="form__field">
-                <label for="network-socks5-password">Password <span class="field-optional">(optional)</span></label>
-                <input id="network-socks5-password" name="network_socks5_password" type="password" autocomplete="off">
-                <p class="field-hint">Leave blank to keep the existing password.</p>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel platform-panel" aria-labelledby="twitch-heading">
-            <div class="panel__header">
-              <h3 id="twitch-heading">Twitch</h3>
-            </div>
-
-            <div class="form">
-              <div class="form__field">
-                <label class="checkbox" for="twitch-enabled">
-                  <input id="twitch-enabled" name="twitch_enabled" type="checkbox">
-                  <span>Enable connector</span>
-                </label>
-              </div>
-
-              <div class="form__field">
-                <label for="twitch-channel">Channel</label>
-                <input id="twitch-channel" name="twitch_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
-                <p id="twitch-channel-error" class="field-error" role="alert" hidden></p>
-              </div>
-
-              <div class="form__field">
-                <label class="checkbox checkbox--disabled" for="twitch-use-proxy">
-                  <input id="twitch-use-proxy" name="twitch_use_proxy" type="checkbox" disabled aria-disabled="true">
-                  <span>Use SOCKS5 proxy</span>
-                </label>
-                <p class="field-hint">Not available for Twitch yet.</p>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel platform-panel" aria-labelledby="youtube-heading">
-            <div class="panel__header">
-              <h3 id="youtube-heading">YouTube Live</h3>
-              <button id="youtube-connect" class="button-secondary" type="button">Connect</button>
-            </div>
-
-            <div class="form">
-              <div class="form__field">
-                <label class="checkbox" for="youtube-enabled">
-                  <input id="youtube-enabled" name="youtube_enabled" type="checkbox">
-                  <span>Enable connector</span>
-                </label>
-              </div>
-
-              <div class="form__field">
-                <label for="youtube-connection-mode">Connection mode</label>
-                <select id="youtube-connection-mode" name="youtube_connection_mode">
-                  <option value="page">Simple (video URL)</option>
-                  <option value="api">API (OAuth)</option>
-                </select>
-                <p class="field-hint">Simple mode is the default and reads public live chat without Google Cloud setup.</p>
-              </div>
-
-              <div id="youtube-page-fields" class="youtube-page-fields" hidden>
+              <div class="form">
                 <div class="form__field">
-                  <label for="youtube-channel-handle">Channel handle</label>
-                  <input id="youtube-channel-handle" name="youtube_channel_handle" type="text" autocomplete="off" spellcheck="false" inputmode="text">
-                  <p class="field-hint">@name or youtube.com/@name — auto-detects the current live stream.</p>
-                  <p id="youtube-channel-handle-error" class="field-error" role="alert" hidden></p>
+                  <label class="checkbox" for="twitch-enabled">
+                    <input id="twitch-enabled" name="twitch_enabled" type="checkbox">
+                    <span>Enable connector</span>
+                  </label>
                 </div>
 
                 <div class="form__field">
-                  <label for="youtube-video-input">Live video URL or ID <span class="field-optional">(optional)</span></label>
-                  <input id="youtube-video-input" name="youtube_video_input" type="text" autocomplete="off" spellcheck="false" inputmode="url">
-                  <p class="field-hint">Overrides auto-detect when set. Paste a watch URL to pin a specific broadcast.</p>
-                  <p id="youtube-video-input-error" class="field-error" role="alert" hidden></p>
+                  <label for="twitch-channel">Channel</label>
+                  <input id="twitch-channel" name="twitch_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
+                  <p id="twitch-channel-error" class="field-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form__field">
+                  <label class="checkbox checkbox--disabled" for="twitch-use-proxy">
+                    <input id="twitch-use-proxy" name="twitch_use_proxy" type="checkbox" disabled aria-disabled="true">
+                    <span>Use SOCKS5 proxy</span>
+                  </label>
+                  <p class="field-hint">Not available for Twitch yet. Configure the proxy on the Network tab.</p>
                 </div>
               </div>
+            </section>
+          </section>
 
-              <div id="youtube-api-fields">
+          <section id="connections-youtube-panel" class="dialog-tab-panel connections-tab-panel" role="tabpanel" aria-labelledby="connections-youtube-tab" data-connections-panel="youtube" hidden>
+            <section class="panel platform-panel" aria-labelledby="youtube-heading">
+              <div class="panel__header">
+                <h3 id="youtube-heading">YouTube Live</h3>
+                <button id="youtube-connect" class="button-secondary" type="button">Connect</button>
+              </div>
+
+              <div class="form">
                 <div class="form__field">
-                  <label for="youtube-chat-mode">Chat transport</label>
-                  <select id="youtube-chat-mode" name="youtube_chat_mode">
-                    <option value="stream">gRPC stream (recommended)</option>
-                    <option value="auto">Auto (stream with poll fallback)</option>
-                    <option value="poll">REST polling</option>
+                  <label class="checkbox" for="youtube-enabled">
+                    <input id="youtube-enabled" name="youtube_enabled" type="checkbox">
+                    <span>Enable connector</span>
+                  </label>
+                </div>
+
+                <div class="form__field">
+                  <label for="youtube-connection-mode">Connection mode</label>
+                  <select id="youtube-connection-mode" name="youtube_connection_mode">
+                    <option value="page">Simple (video URL)</option>
+                    <option value="api">API (OAuth)</option>
                   </select>
-                  <p class="field-hint">Stream pushes messages with lower latency. Auto falls back to polling if gRPC fails.</p>
+                  <p class="field-hint">Simple mode is the default and reads public live chat without Google Cloud setup.</p>
+                </div>
+
+                <div id="youtube-page-fields" class="youtube-page-fields" hidden>
+                  <div class="form__field">
+                    <label for="youtube-channel-handle">Channel handle</label>
+                    <input id="youtube-channel-handle" name="youtube_channel_handle" type="text" autocomplete="off" spellcheck="false" inputmode="text">
+                    <p class="field-hint">@name or youtube.com/@name — auto-detects the current live stream.</p>
+                    <p id="youtube-channel-handle-error" class="field-error" role="alert" hidden></p>
+                  </div>
+
+                  <div class="form__field">
+                    <label for="youtube-video-input">Live video URL or ID <span class="field-optional">(optional)</span></label>
+                    <input id="youtube-video-input" name="youtube_video_input" type="text" autocomplete="off" spellcheck="false" inputmode="url">
+                    <p class="field-hint">Overrides auto-detect when set. Paste a watch URL to pin a specific broadcast.</p>
+                    <p id="youtube-video-input-error" class="field-error" role="alert" hidden></p>
+                  </div>
+                </div>
+
+                <div id="youtube-api-fields">
+                  <div class="form__field">
+                    <label for="youtube-chat-mode">Chat transport</label>
+                    <select id="youtube-chat-mode" name="youtube_chat_mode">
+                      <option value="stream">gRPC stream (recommended)</option>
+                      <option value="auto">Auto (stream with poll fallback)</option>
+                      <option value="poll">REST polling</option>
+                    </select>
+                    <p class="field-hint">Stream pushes messages with lower latency. Auto falls back to polling if gRPC fails.</p>
+                  </div>
+
+                  <div class="form__field">
+                    <label for="youtube-client-id">OAuth client ID</label>
+                    <input id="youtube-client-id" name="youtube_client_id" type="text" autocomplete="off" spellcheck="false">
+                  </div>
+
+                  <div class="form__field">
+                    <label for="youtube-client-secret">OAuth client secret</label>
+                    <input id="youtube-client-secret" name="youtube_client_secret" type="password" autocomplete="off">
+                    <p class="field-hint">Leave blank to keep the existing secret.</p>
+                  </div>
                 </div>
 
                 <div class="form__field">
-                  <label for="youtube-client-id">OAuth client ID</label>
-                  <input id="youtube-client-id" name="youtube_client_id" type="text" autocomplete="off" spellcheck="false">
-                </div>
-
-                <div class="form__field">
-                  <label for="youtube-client-secret">OAuth client secret</label>
-                  <input id="youtube-client-secret" name="youtube_client_secret" type="password" autocomplete="off">
-                  <p class="field-hint">Leave blank to keep the existing secret.</p>
+                  <label class="checkbox" for="youtube-use-proxy">
+                    <input id="youtube-use-proxy" name="youtube_use_proxy" type="checkbox">
+                    <span>Use SOCKS5 proxy</span>
+                  </label>
+                  <p class="field-hint">Configure the proxy address on the Network tab.</p>
                 </div>
               </div>
-
-              <div class="form__field">
-                <label class="checkbox" for="youtube-use-proxy">
-                  <input id="youtube-use-proxy" name="youtube_use_proxy" type="checkbox">
-                  <span>Use SOCKS5 proxy</span>
-                </label>
-              </div>
-            </div>
+            </section>
           </section>
 
-          <section class="panel platform-panel" aria-labelledby="vk-heading">
-            <div class="panel__header">
-              <h3 id="vk-heading">VK Live</h3>
-            </div>
-
-            <div class="form">
-              <div class="form__field">
-                <label class="checkbox" for="vk-enabled">
-                  <input id="vk-enabled" name="vk_enabled" type="checkbox">
-                  <span>Enable connector</span>
-                </label>
+          <section id="connections-vk-panel" class="dialog-tab-panel connections-tab-panel" role="tabpanel" aria-labelledby="connections-vk-tab" data-connections-panel="vk" hidden>
+            <section class="panel platform-panel" aria-labelledby="vk-heading">
+              <div class="panel__header">
+                <h3 id="vk-heading">VK Live</h3>
               </div>
 
-              <div class="form__field">
-                <label for="vk-channel">Channel slug</label>
-                <input id="vk-channel" name="vk_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
-                <p class="field-hint">Accepts a slug or live.vkvideo.ru URL.</p>
-                <p id="vk-channel-error" class="field-error" role="alert" hidden></p>
+              <div class="form">
+                <div class="form__field">
+                  <label class="checkbox" for="vk-enabled">
+                    <input id="vk-enabled" name="vk_enabled" type="checkbox">
+                    <span>Enable connector</span>
+                  </label>
+                </div>
+
+                <div class="form__field">
+                  <label for="vk-channel">Channel slug</label>
+                  <input id="vk-channel" name="vk_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
+                  <p class="field-hint">Accepts a slug or live.vkvideo.ru URL.</p>
+                  <p id="vk-channel-error" class="field-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form__field">
+                  <label class="checkbox" for="vk-use-proxy">
+                    <input id="vk-use-proxy" name="vk_use_proxy" type="checkbox">
+                    <span>Use SOCKS5 proxy</span>
+                  </label>
+                  <p class="field-hint">Configure the proxy address on the Network tab.</p>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <section id="connections-network-panel" class="dialog-tab-panel connections-tab-panel" role="tabpanel" aria-labelledby="connections-network-tab" data-connections-panel="network" hidden>
+            <section class="panel" aria-labelledby="network-proxy-heading">
+              <div class="panel__header">
+                <h3 id="network-proxy-heading">SOCKS5 proxy</h3>
               </div>
 
-              <div class="form__field">
-                <label class="checkbox" for="vk-use-proxy">
-                  <input id="vk-use-proxy" name="vk_use_proxy" type="checkbox">
-                  <span>Use SOCKS5 proxy</span>
-                </label>
+              <div class="form">
+                <p class="field-hint">Configure once here, then enable per platform on the Twitch, YouTube, and VK Live tabs.</p>
+
+                <div class="form__field">
+                  <label for="network-socks5-address">Proxy address</label>
+                  <input id="network-socks5-address" name="network_socks5_address" type="text" autocomplete="off" spellcheck="false" inputmode="text" placeholder="127.0.0.1:1080">
+                  <p id="network-socks5-address-error" class="field-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form__field">
+                  <label for="network-socks5-username">Username <span class="field-optional">(optional)</span></label>
+                  <input id="network-socks5-username" name="network_socks5_username" type="text" autocomplete="off" spellcheck="false">
+                </div>
+
+                <div class="form__field">
+                  <label for="network-socks5-password">Password <span class="field-optional">(optional)</span></label>
+                  <input id="network-socks5-password" name="network_socks5_password" type="password" autocomplete="off">
+                  <p class="field-hint">Leave blank to keep the existing password.</p>
+                </div>
               </div>
-            </div>
+            </section>
           </section>
         </div>
 
@@ -307,13 +324,13 @@
           <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close OBS settings">Close</button>
         </div>
 
-        <div class="obs-dialog-body">
-          <div class="obs-tabs" role="tablist" aria-label="OBS sections">
-            <button id="obs-setup-tab" class="obs-tab" type="button" role="tab" aria-selected="true" aria-controls="obs-setup-panel" data-obs-section="setup">Setup</button>
-            <button id="obs-appearance-tab" class="obs-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-appearance-panel" tabindex="-1" data-obs-section="appearance">Appearance</button>
+        <div class="dialog-tab-body">
+          <div class="dialog-tabs" role="tablist" aria-label="OBS sections">
+            <button id="obs-setup-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="obs-setup-panel" data-obs-section="setup">Setup</button>
+            <button id="obs-appearance-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-appearance-panel" tabindex="-1" data-obs-section="appearance">Appearance</button>
           </div>
 
-          <section id="obs-setup-panel" class="obs-tab-panel obs-setup" role="tabpanel" aria-labelledby="obs-setup-tab">
+          <section id="obs-setup-panel" class="dialog-tab-panel obs-setup" role="tabpanel" aria-labelledby="obs-setup-tab">
             <div class="obs-setup-intro">
               <span class="dialog-kicker">Ready to paste</span>
               <h3>Connect CommRelay to OBS</h3>
@@ -385,7 +402,7 @@
             <p id="obs-copy-status" class="obs-copy-status" role="status" aria-live="polite"></p>
           </section>
 
-          <section id="obs-appearance-panel" class="obs-tab-panel obs-tab-panel--appearance" role="tabpanel" aria-labelledby="obs-appearance-tab" hidden>
+          <section id="obs-appearance-panel" class="dialog-tab-panel obs-tab-panel--appearance" role="tabpanel" aria-labelledby="obs-appearance-tab" hidden>
             <div class="overlay-editor">
           <section class="panel overlay-settings-panel" aria-labelledby="overlay-display-heading">
             <div class="panel__header">
@@ -758,6 +775,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=14"></script>
+  <script type="module" src="app.js?v=15"></script>
 </body>
 </html>

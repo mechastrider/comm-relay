@@ -69,7 +69,6 @@
     writing-mode: horizontal-tb;
   }
 
-  .connection-grid,
   .form--compact {
     grid-template-columns: 1fr;
   }
@@ -126,8 +125,12 @@
     width: 100%;
   }
 
-  .obs-tabs {
+  .dialog-tabs {
     display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #connections-dialog .dialog-tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -137,7 +140,7 @@
     grid-template-columns: 1fr;
   }
 
-  .obs-tab {
+  .dialog-tab {
     width: 100%;
   }
 

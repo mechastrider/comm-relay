@@ -1,5 +1,6 @@
 import * as dom from './dom.js';
 import { updateOBSSetupURLs, setOBSSection } from './obs-setup.js';
+import { focusConnectionsField, setConnectionsSection } from './connections.js';
 
 export function openDialogForElement(el) {
     if (!el) {
@@ -11,6 +12,9 @@ export function openDialogForElement(el) {
     }
     if (dialog === dom.overlayDialog) {
       setOBSSection("appearance");
+    }
+    if (dialog === dom.connectionsDialog) {
+      focusConnectionsField(el);
     }
   }
 
@@ -29,6 +33,9 @@ export function initSettingsDialogs() {
           if (dialog === dom.overlayDialog) {
             updateOBSSetupURLs();
             setOBSSection("setup");
+          }
+          if (dialog === dom.connectionsDialog) {
+            setConnectionsSection("twitch");
           }
         }
       });

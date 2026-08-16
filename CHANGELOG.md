@@ -8,6 +8,7 @@
 
 ### Изменено
 
+- Диалог **Connections** в админке разбит на вкладки Twitch, YouTube, VK Live и Network; SOCKS5 настраивается на вкладке Network, а включение прокси — на каждой платформе.
 - YouTube по умолчанию использует режим **Simple (video URL)** — достаточно указать handle канала без Google Cloud.
 - Вход Google для YouTube **API (OAuth)** открывается в системном браузере; окно CommRelay больше не перенаправляет на страницу логина Google.
 
