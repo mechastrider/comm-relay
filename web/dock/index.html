@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,12 +7,24 @@
     <title>CommRelay Messages</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/dock/messages/messages.css?v=12">
+    <script>
+      (function () {
+        try {
+          var locale = localStorage.getItem("commRelay.uiLocale");
+          if (locale === "en-GB") {
+            document.documentElement.lang = "en";
+          } else if (locale === "ru-RU") {
+            document.documentElement.lang = "ru";
+          }
+        } catch (_err) { /* ignore */ }
+      })();
+    </script>
   </head>
   <body>
     <main id="message-panel" class="message-panel">
       <ol id="messages" class="message-list" aria-live="polite" aria-relevant="additions"></ol>
       <p id="empty-state" class="empty-state">Waiting for chat messages</p>
     </main>
-    <script type="module" src="/dock/messages/messages.js?v=12"></script>
+    <script type="module" src="/dock/messages/messages.js?v=13"></script>
   </body>
 </html>

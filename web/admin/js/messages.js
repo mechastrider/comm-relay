@@ -8,6 +8,7 @@ import {
 import { apiURL } from './api.js';
 import { showBanner } from './ui-shell.js';
 import { getMessageSoundSettings, playMessageSound } from './sound.js';
+import { t } from './i18n-ui.js';
 
 export function getImagePreviewSettings() {
     const overlay = state.currentConfig && state.currentConfig.overlay;
@@ -258,7 +259,7 @@ export async function deleteMessage(message, button) {
       removeMessageFromAdmin(message.platform, message.id);
     } catch {
       button.disabled = false;
-      showBanner("error", "Could not delete the message.");
+      showBanner("error", t("msg.couldNotDelete"));
     }
   }
 
@@ -294,8 +295,8 @@ export function buildMessageListItem(msg) {
       const deleteButton = document.createElement("button");
       deleteButton.className = "message-list__delete";
       deleteButton.type = "button";
-      deleteButton.textContent = "Delete";
-      deleteButton.setAttribute("aria-label", "Delete message from " + messageDisplayName(msg));
+      deleteButton.textContent = t("msg.delete");
+      deleteButton.setAttribute("aria-label", t("msg.deleteAria", { user: messageDisplayName(msg) }));
       deleteButton.addEventListener("click", function () {
         deleteMessage(msg, deleteButton);
       });

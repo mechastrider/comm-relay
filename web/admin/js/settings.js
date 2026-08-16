@@ -32,6 +32,7 @@ import {
   trackMessages,
 } from './messages.js';
 import { renderDiagnostics } from './status.js';
+import { applyAdminLocale, localeFromConfig, t } from './i18n-ui.js';
 
 export function normalizeVkChannel(raw) {
     let s = String(raw || "").trim().toLowerCase();
@@ -258,15 +259,13 @@ export function applyConfig(config) {
 
     applyMessageSoundFromConfig(config);
     if (dom.timeLocaleInput) {
-      dom.timeLocaleInput.value =
-        config.admin && config.admin.time_locale === "en-GB" ? "en-GB" : "ru-RU";
+      dom.timeLocaleInput.value = localeFromConfig(config);
     }
-    const nextLocale = config.admin && config.admin.time_locale
-      ? config.admin.time_locale
-      : "ru-RU";
+    const nextLocale = localeFromConfig(config);
     if (previousLocale !== nextLocale && state.recentMessageCache.length > 0) {
       renderRecentMessages(state.recentMessageCache, { force: true });
     }
+    applyAdminLocale(nextLocale);
     markSettingsClean();
     scheduleOverlayPreviewRefresh();
   }
@@ -520,20 +519,20 @@ export async function startYouTubeOAuth() {
       }
 
       if (body.opened) {
-        showBanner("info", "Complete sign-in in your browser, then return to CommRelay.");
+        showBanner("info", t("banner.youtubeSignIn"));
       } else if (body.authorization_url) {
         showBanner(
           "info",
-          "Open this authorization link in your browser: " + body.authorization_url
+          t("banner.youtubeOpenLink", { url: body.authorization_url })
         );
       } else {
-        showBanner("error", "Could not open the system browser for YouTube sign-in.");
+        showBanner("error", t("banner.youtubeBrowserFailed"));
         return;
       }
 
       await waitForYouTubeOAuthConnected();
     } catch {
-      showBanner("error", "Cannot reach CommRelay — is it running?");
+      showBanner("error", t("banner.cannotReach"));
     } finally {
       state.youtubeOAuthInFlight = false;
     }
@@ -544,14 +543,14 @@ async function waitForYouTubeOAuthConnected() {
     while (Date.now() < deadline) {
       await loadStatus();
       if (state.youtubeOAuthConnected) {
-        showBanner("success", "YouTube connected. Enable the connector and save settings.");
+        showBanner("success", t("banner.youtubeConnected"));
         return;
       }
       await new Promise(function (resolve) {
         window.setTimeout(resolve, YOUTUBE_OAUTH_POLL_MS);
       });
     }
-    showBanner("error", "YouTube authorization timed out. Try Connect again.");
+    showBanner("error", t("banner.youtubeTimeout"));
   }
 
 export async function loadRecentMessages(options) {
@@ -586,7 +585,7 @@ export async function saveSettings(event) {
 
     const payload = buildPayload();
     if (!validateClient(payload)) {
-      showBanner("error", "Check the highlighted fields.");
+      showBanner("error", t("banner.checkFields"));
       return;
     }
 
@@ -616,13 +615,13 @@ export async function saveSettings(event) {
         dom.vkChannel.value = readVkSettings().channel;
       }
       const savedMessage = overlayDisplayChanged
-        ? "Settings saved. Refresh the Browser Source in OBS to apply display changes."
-        : "Settings saved.";
+        ? t("banner.settingsSavedObs")
+        : t("banner.settingsSaved");
       showBanner("success", savedMessage);
       closeOpenDialogs();
       await loadStatus();
     } catch {
-      showBanner("error", "Cannot reach CommRelay — is it running?");
+      showBanner("error", t("banner.cannotReach"));
     } finally {
       state.saveInFlight = false;
       renderSettingsState();

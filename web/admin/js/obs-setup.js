@@ -2,6 +2,7 @@ import * as dom from './dom.js';
 import { state } from './state.js';
 import { apiURL } from './api.js';
 import { mountOverlayPreview, unmountOverlayPreview } from './overlay-preview.js';
+import { t } from './i18n-ui.js';
 
 export function updateOBSSetupURLs() {
     document.querySelectorAll("[data-obs-url-path]").forEach(function (input) {
@@ -21,7 +22,8 @@ export function resetOBSCopyFeedback() {
       state.obsCopyFeedbackTimer = null;
     }
     if (state.obsCopyFeedbackButton) {
-      state.obsCopyFeedbackButton.textContent = state.obsCopyFeedbackButton.dataset.copyDefaultText || "Copy URL";
+      state.obsCopyFeedbackButton.textContent =
+        state.obsCopyFeedbackButton.dataset.copyDefaultText || t("obs.copyUrl");
       state.obsCopyFeedbackButton = null;
     }
   }
@@ -29,7 +31,7 @@ export function resetOBSCopyFeedback() {
 export function showOBSCopyFeedback(button, message, copied) {
     resetOBSCopyFeedback();
     button.dataset.copyDefaultText = button.dataset.copyDefaultText || button.textContent;
-    button.textContent = copied ? "Copied" : "Copy failed";
+    button.textContent = copied ? t("obs.copyCopied") : t("obs.copyFailed");
     state.obsCopyFeedbackButton = button;
     if (dom.obsCopyStatus) {
       dom.obsCopyStatus.textContent = message;
@@ -133,8 +135,8 @@ export function initOBSSetup() {
         showOBSCopyFeedback(
           button,
           copied
-            ? label + " copied. Paste it into OBS."
-            : "Could not copy automatically. Select the URL and copy it manually.",
+            ? t("obs.copyPasted", { label: label })
+            : t("obs.copyManual"),
           copied
         );
       });

@@ -1,5 +1,6 @@
 import * as dom from './dom.js';
 import { state } from './state.js';
+import { t } from './i18n-ui.js';
 
 export function positionErrorPopover(trigger) {
     if (!dom.statusErrorPopover || dom.statusErrorPopover.hidden) {
@@ -63,9 +64,9 @@ export function createErrorDetailTrigger(errorText, contextLabel) {
     const trigger = document.createElement("button");
     trigger.className = "error-detail-trigger";
     trigger.type = "button";
-    trigger.textContent = "Error";
-    trigger.dataset.errorText = "Last error: " + errorText;
-    trigger.setAttribute("aria-label", contextLabel + " technical error details");
+    trigger.textContent = t("status.error");
+    trigger.dataset.errorText = t("status.lastError", { error: errorText });
+    trigger.setAttribute("aria-label", t("status.errorAria", { label: contextLabel }));
     trigger.setAttribute("aria-controls", "status-error-popover");
     trigger.setAttribute("aria-describedby", "status-error-popover");
     trigger.setAttribute("aria-expanded", "false");

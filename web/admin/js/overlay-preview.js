@@ -17,6 +17,7 @@ import {
   OVERLAY_PREVIEW_HEIGHT_MAX,
   OVERLAY_PREVIEW_SIZES,
 } from './constants.js';
+import { t } from './i18n-ui.js';
 
 export function overlayDisplaySettingsChanged(payload) {
     if (!state.currentConfig) {
@@ -238,8 +239,8 @@ export function updateOverlayPreviewNote() {
       return;
     }
     dom.overlayPreviewNote.textContent = dom.overlayPreviewMode.value === "live"
-      ? "Live chat restores recent messages and follows new messages through WebSocket."
-      : "Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.";
+      ? t("obs.previewNoteLive")
+      : t("obs.previewNoteSample");
   }
 
 export function refreshOverlayPreview(force) {

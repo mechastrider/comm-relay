@@ -1,12 +1,24 @@
 # CommRelay
 
-[![CI](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml/badge.svg)](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/mechastrider/comm-relay?label=release)](https://github.com/mechastrider/comm-relay/releases) ![Go](https://img.shields.io/github/go-mod/go-version/mechastrider/comm-relay) [![License](https://img.shields.io/github/license/mechastrider/comm-relay)](LICENSE) ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue) ![OBS](https://img.shields.io/badge/OBS-Browser%20Source-9146FF?logo=obsstudio&logoColor=white) [![Wails](https://img.shields.io/badge/desktop-Wails%20v2-DF2C2C)](https://wails.io/) [![DonationAlerts](https://img.shields.io/badge/DonationAlerts-Поддержать-FD6535)](https://www.donationalerts.com/r/mechastrider)
+**Язык / Language:** [Русский](README.md) · [English](README.en.md)
 
-![CommRelay — локальная панель управления, монитор чата и overlay для OBS](docs/images/poster.jpg)
+[CI](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml) [Release](https://github.com/mechastrider/comm-relay/releases) Go [License](LICENSE) Platforms OBS [Wails](https://wails.io/) [DonationAlerts](https://www.donationalerts.com/r/mechastrider)
+
+CommRelay — локальная панель управления, монитор чата и overlay для OBS
 
 CommRelay собирает сообщения из Twitch, YouTube Live и VK Live в один локальный чат для OBS. Приложение запускается на вашем компьютере, не использует облачный relay-сервер и показывает overlay через обычный OBS Browser Source.
 
-Первый публичный релиз: **v0.1.0**. История изменений ведётся в [`CHANGELOG.md`](CHANGELOG.md).
+Первый публичный релиз: **v0.1.0**. История изменений ведётся в `[CHANGELOG.md](CHANGELOG.md)`.
+
+## В действии
+
+CommRelay можно увидеть в работе на авторских стримах:
+
+- [Twitch — mechastrider](https://www.twitch.tv/mechastrider)
+- [VK Live — mechastrider](https://live.vkvideo.ru/mechastrider)
+- [YouTube — @mechastrider](https://www.youtube.com/@mechastrider/streams)
+
+
 
 ## Что умеет
 
@@ -17,17 +29,21 @@ CommRelay собирает сообщения из Twitch, YouTube Live и VK Li
 - Поддерживает Twitch emotes, FrankerFaceZ, BetterTTV, 7TV и безопасные превью картинок.
 - Автоматически переподключает коннекторы и хранит настройки локально в `config.json`.
 
+
+
 ## Скачать и установить
 
 Готовые сборки публикуются на странице [GitHub Releases](https://github.com/mechastrider/comm-relay/releases). Для обычного использования Go, Node, Docker и база данных не нужны.
 
 Выберите архив под вашу систему:
 
-| Система | Файл релиза | Запуск |
-|---------|-------------|--------|
-| Windows 11, 64-bit | `CommRelay-v0.1.0-windows-amd64.zip` | Распакуйте архив и запустите `CommRelay.exe`. |
-| macOS, 64-bit | `CommRelay-v0.1.0-macos-universal.zip` | Распакуйте архив и откройте `CommRelay.app`. |
-| Linux, 64-bit | `CommRelay-v0.1.0-linux-amd64.tar.gz` | Распакуйте архив, сделайте файл исполняемым и запустите `./CommRelay`. При первом запуске приложение само добавит иконку в меню (Linux Mint, Ubuntu и др.). |
+
+| Система            | Файл релиза                            | Запуск                                                                                                                                                      |
+| ------------------ | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Windows 11, 64-bit | `CommRelay-v0.1.0-windows-amd64.zip`   | Распакуйте архив и запустите `CommRelay.exe`.                                                                                                               |
+| macOS, 64-bit      | `CommRelay-v0.1.0-macos-universal.zip` | Распакуйте архив и откройте `CommRelay.app`.                                                                                                                |
+| Linux, 64-bit      | `CommRelay-v0.1.0-linux-amd64.tar.gz`  | Распакуйте архив, сделайте файл исполняемым и запустите `./CommRelay`. При первом запуске приложение само добавит иконку в меню (Linux Mint, Ubuntu и др.). |
+
 
 Windows и macOS могут предупредить, что приложение не подписано. Это ожидаемо для раннего релиза: на macOS используйте **Open** через контекстное меню Finder, на Windows подтвердите запуск через **More info** → **Run anyway**.
 
@@ -58,15 +74,15 @@ chmod +x CommRelay install-desktop.sh
 ## Первый запуск
 
 1. Запустите приложение. Откроется окно CommRelay, а внутри поднимется локальный сервер.
-2. Откройте **Connections** и включите нужные платформы.
-3. Нажмите **Save** после изменения настроек.
-4. В панели **Controls** нажмите **OBS**: вкладка **Setup** проведёт через подключение overlay и журнала сообщений.
+2. Откройте **Подключения** (Connections) и включите нужные платформы.
+3. Нажмите **Сохранить** (Save) после изменения настроек.
+4. В панели **Управление** (Controls) нажмите **OBS**: вкладка **Настройка** (Setup) проведёт через подключение overlay и журнала сообщений.
 
 По умолчанию CommRelay слушает `127.0.0.1:17877`. Админка доступна по `http://127.0.0.1:17877/`, а overlay по `http://127.0.0.1:17877/overlay`.
 
 ## OBS Browser Source
 
-1. В CommRelay откройте **OBS → Setup** и нажмите **Copy URL** в карточке **On-stream overlay**.
+1. В CommRelay откройте **OBS → Настройка** (Setup) и нажмите **Копировать URL** (Copy URL) в карточке **Overlay на сцене** (On-stream overlay).
 2. В OBS добавьте источник **Browser** и вставьте скопированный URL.
 3. Задайте размер под ваш макет сцены, например `800x600` или ширину всей сцены.
 4. Не добавляйте фон вручную: overlay уже прозрачный.
@@ -78,30 +94,32 @@ chmod +x CommRelay install-desktop.sh
 
 CommRelay может показывать отдельную ленту чата прямо в интерфейсе OBS. Эта панель предназначена для стримера: она не попадает в сцену и не видна зрителям.
 
-1. В CommRelay откройте **OBS → Setup** и нажмите **Copy URL** в карточке **Message dock**.
+1. В CommRelay откройте **OBS → Настройка** (Setup) и нажмите **Копировать URL** (Copy URL) в карточке **Журнал сообщений** (Message dock).
 2. В OBS откройте **View → Docks → Custom Browser Docks…** (**Вид → Док-панели → Пользовательские браузерные доки…**).
 3. Введите название, например `CommRelay Messages`, и вставьте скопированный URL.
 4. Нажмите **Apply**, затем разместите новую панель в удобной части интерфейса OBS.
 
-Панель показывает только сообщения: при открытии восстанавливает до 100 последних записей, затем получает новые в реальном времени. Если вы прокрутили журнал вверх, новые сообщения не сбрасывают позицию; чтобы вернуть автопрокрутку, прокрутите ленту вниз. Кнопка **Delete** удаляет запись из локальной истории, админки, dock и активного overlay.
+Панель показывает только сообщения: при открытии восстанавливает до 100 последних записей, затем получает новые в реальном времени. Если вы прокрутили журнал вверх, новые сообщения не сбрасывают позицию; чтобы вернуть автопрокрутку, прокрутите ленту вниз. Кнопка **Удалить** (Delete) удаляет запись из локальной истории, админки, dock и активного overlay.
 
 Если порт CommRelay изменён, замените `17877` в URL. Приложение должно оставаться запущенным во время стрима. Для вывода сообщений зрителям по-прежнему используйте отдельный источник **Browser** с URL `/overlay`.
 
 ## Настройки overlay
 
-Откройте **OBS → Appearance** в панели управления CommRelay.
+Откройте **OBS → Внешний вид** (Appearance) в панели управления CommRelay.
 
-| Настройка | Что делает |
-|-----------|------------|
-| **Max messages** | Сколько последних сообщений держит overlay на экране. |
-| **Message TTL** | Через сколько секунд сообщение исчезает (0 — не удалять по времени). |
-| **Font size** | Размер текста в overlay, от **12 до 48 px**. |
-| **Spacing** | **Comfortable** — обычные отступы. **Compact** — плотнее, если на экране много строк. |
-| **Theme** | **Default** — карточки с полупрозрачным фоном. **Text only** — только текст без фона. **Cockpit panel** — общая HUD-панель. **Cockpit popups** — отдельные всплывающие MW5 HUD-сообщения. **G-Rebels Cockpit popups** — всплывающие сообщения в золотом авиационном HUD-стиле. |
+
+| Настройка        | Что делает                                                                                                                                                                                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Макс. сообщений** (Max messages) | Сколько последних сообщений держит overlay на экране.                                                                                                                                                                                                                          |
+| **TTL сообщения** (Message TTL) | Через сколько секунд сообщение исчезает (0 — не удалять по времени).                                                                                                                                                                                                           |
+| **Размер шрифта** (Font size) | Размер текста в overlay, от **12 до 48 px**.                                                                                                                                                                                                                                   |
+| **Отступы** (Spacing) | **Comfortable** — обычные отступы. **Compact** — плотнее, если на экране много строк.                                                                                                                                                                                          |
+| **Тема** (Theme) | **Default** — карточки с полупрозрачным фоном. **Text only (без фона)** — только текст. **Cockpit panel** — общая HUD-панель. **Cockpit popups** — отдельные всплывающие MW5 HUD-сообщения. **G-Rebels Cockpit popups** — всплывающие сообщения в золотом авиационном HUD-стиле. |
+
 
 После любого изменения:
 
-1. Нажмите **Save settings**.
+1. Нажмите **Сохранить настройки** (Save settings).
 2. Обновите Browser Source в OBS: правый клик по источнику → **Refresh cache of current page** (или кнопка обновления в свойствах источника).
 
 Без перезагрузки в OBS overlay продолжит работать со старыми параметрами.
@@ -110,13 +128,15 @@ CommRelay может показывать отдельную ленту чата
 
 Для тем **Cockpit panel**, **Cockpit popups** и **G-Rebels Cockpit popups** размер панели задаётся размером самого Browser Source в OBS. Разместите источник поверх нужной области сцены, и тема растянется на этот прямоугольник.
 
-## Язык времени
+**Чат должен выглядеть как ваш стрим, а не как чужой виджет.** Если нужна тема сообщений под бренд, игру или HUD-стиль — могу сделать оформление для OBS под вас. Пишите в [Telegram](https://t.me/mechastrider_apps/2).
 
-В панели управления откройте **Interface → Time display** и выберите `Русский` или `English`. Админка и OBS dock используют выбранную локаль и одинаковый 24-часовой формат `ЧЧ:ММ:СС` без AM/PM.
+## Язык интерфейса
+
+В панели управления откройте **Интерфейс → Язык** (Interface → Language) и выберите `Русский` или `English`. Админка и OBS dock используют выбранный язык и единый 24-часовой формат `ЧЧ:ММ:СС` без AM/PM.
 
 ## Настройка платформ
 
-Все настройки находятся в панели управления, кнопка **Connections**.
+Все настройки находятся в панели управления, кнопка **Подключения** (Connections).
 
 ### Twitch
 
@@ -124,19 +144,19 @@ CommRelay может показывать отдельную ленту чата
 
 ### YouTube Live
 
-По умолчанию используется **Simple (video URL)** — без Google Cloud и OAuth:
+По умолчанию используется **Simple (URL видео)** — без Google Cloud и OAuth:
 
-1. Укажите **Channel handle** (`@name` или URL канала) — CommRelay сам найдёт текущий эфир.
+1. Укажите **Handle канала** (Channel handle) (`@name` или URL канала) — CommRelay сам найдёт текущий эфир.
 2. Либо вставьте URL/ID конкретного live-видео (имеет приоритет над автопоиском).
 3. Включите YouTube connector и сохраните настройки.
 
-Для **API (OAuth)** (автоматическое чтение чата авторизованного аккаунта) выберите **Connection mode → API (OAuth)**:
+Для **API (OAuth)** (автоматическое чтение чата авторизованного аккаунта) выберите **Режим подключения** (Connection mode) → **API (OAuth)**:
 
 1. Откройте [Google Cloud Console](https://console.cloud.google.com/).
 2. Создайте OAuth client и включите **YouTube Data API v3**.
 3. Добавьте redirect URI: `http://127.0.0.1:17877/oauth/youtube/callback`.
 4. В CommRelay вставьте **OAuth client ID** и **client secret**, сохраните настройки.
-5. Нажмите **Connect** — откроется системный браузер для входа Google. После успешной авторизации вернитесь в CommRelay.
+5. Нажмите **Подключить** (Connect) — откроется системный браузер для входа Google. После успешной авторизации вернитесь в CommRelay.
 6. Включите YouTube connector и сохраните настройки ещё раз.
 
 В simple mode читается публичный live chat по URL. В API mode сообщения появятся, когда у авторизованного аккаунта идёт активный эфир с live chat.
@@ -151,11 +171,13 @@ OAuth не требуется. Укажите slug канала или URL `live
 
 Настройки, OAuth-токены и локальные параметры хранятся только на вашем компьютере.
 
-| Система | Путь к `config.json` |
-|---------|----------------------|
-| Windows | `%AppData%\comm-relay\config.json` |
-| macOS | `~/Library/Application Support/comm-relay/config.json` |
-| Linux | `~/.config/comm-relay/config.json` |
+
+| Система | Путь к `config.json`                                   |
+| ------- | ------------------------------------------------------ |
+| Windows | `%AppData%\comm-relay\config.json`                     |
+| macOS   | `~/Library/Application Support/comm-relay/config.json` |
+| Linux   | `~/.config/comm-relay/config.json`                     |
+
 
 Не публикуйте `config.json`, если в нём есть OAuth client secret или токены.
 
@@ -163,21 +185,23 @@ OAuth не требуется. Укажите slug канала или URL `live
 
 Скачайте новый архив из [Releases](https://github.com/mechastrider/comm-relay/releases), закройте старое приложение и замените файлы приложения. Пользовательский `config.json` находится отдельно, поэтому настройки сохранятся.
 
-Перед обновлением смотрите [`CHANGELOG.md`](CHANGELOG.md): там отмечены новые возможности, исправления и возможные ручные действия.
+Перед обновлением смотрите `[CHANGELOG.md](CHANGELOG.md)`: там отмечены новые возможности, исправления и возможные ручные действия.
 
-Подробнее по типичным сбоям overlay и OBS на Linux: [`docs/FAQ.md`](docs/FAQ.md).
+Подробнее по типичным сбоям overlay и OBS на Linux: `[docs/FAQ.md](docs/FAQ.md)`.
 
 ## Частые проблемы
 
-- **Меняю шрифт или тему — ничего не меняется**: нажмите **Save settings**, затем обновите Browser Source в OBS. Размер шрифта — только от 12 до 48 px.
-- **Spacing и Theme «одинаковые»**: сравнивайте при активном чате; Compact заметнее при 5+ сообщениях; Text only лучше виден на зелёном или тёмном фоне сцены; Cockpit-темы рассчитаны на вывод поверх игрового кадра.
-- **OBS ничего не показывает**: проверьте, что CommRelay запущен, URL в Browser Source совпадает с портом, а connector в админке имеет статус `connected`. На **Linux** при чёрном квадрате в Browser Source отключите аппаратное ускорение браузера в OBS (**Файл → Настройки → Расширенные → Источники**) — см. [`docs/FAQ.md`](docs/FAQ.md).
+- **Меняю шрифт или тему — ничего не меняется**: нажмите **Сохранить настройки** (Save settings), затем обновите Browser Source в OBS. Размер шрифта — только от 12 до 48 px.
+- **Отступы** (Spacing) и **Тема** (Theme) «одинаковые»: сравнивайте при активном чате; Compact заметнее при 5+ сообщениях; Text only лучше виден на зелёном или тёмном фоне сцены; Cockpit-темы рассчитаны на вывод поверх игрового кадра.
+- **OBS ничего не показывает**: проверьте, что CommRelay запущен, URL в Browser Source совпадает с портом, а connector в админке имеет статус `подключён` (`connected`). На **Linux** при чёрном квадрате в Browser Source отключите аппаратное ускорение браузера в OBS (**Файл → Настройки → Расширенные → Источники**) — см. `[docs/FAQ.md](docs/FAQ.md)`.
 - **Порт 17877 занят**: закройте другое приложение на этом порту или запустите CommRelay с другим адресом через `-addr 127.0.0.1:<порт>`.
-- **YouTube OAuth не проходит**: redirect URI в Google Cloud должен точно совпадать с портом из `config.json`. Нажмите **Connect** в режиме API — вход откроется в системном браузере, не во встроенном окне CommRelay.
+- **YouTube OAuth не проходит**: redirect URI в Google Cloud должен точно совпадать с портом из `config.json`. Нажмите **Подключить** (Connect) в режиме API — вход откроется в системном браузере, не во встроенном окне CommRelay.
 - **Нет сообщений YouTube**: нужен активный эфир с включённым live chat; в simple mode проверьте URL видео.
 - **Simple mode не подключается**: YouTube может показать consent/captcha — попробуйте API mode или обновите URL эфира.
 - **macOS не открывает приложение**: ранние сборки не подписаны; используйте **Open** из контекстного меню Finder.
 - **Linux не запускает окно**: установите GTK/WebKit зависимости из раздела Linux.
+
+
 
 ## Для разработчиков
 
@@ -200,6 +224,8 @@ go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 golangci-lint run ./...
 ```
 
+
+
 ### Headless-сервер (основной цикл разработки)
 
 Для backend, админки и overlay удобнее запускать сервер без desktop-оболочки:
@@ -210,19 +236,23 @@ go run ./cmd/comm-relay-server -web ./web
 
 По умолчанию слушает `127.0.0.1:17877`, создаёт `config.json` рядом с рабочей директорией (в релизной desktop-сборке — в пользовательском каталоге, см. таблицу выше).
 
-| Флаг | Назначение |
-|------|------------|
-| `-web ./web` | Подменить встроенную статику файлами из репозитория |
-| `-config путь` | Другой `config.json` |
-| `-addr 127.0.0.1:порт` | Переопределить порт из конфига |
-| `-debug` | Подробные логи |
+
+| Флаг                   | Назначение                                          |
+| ---------------------- | --------------------------------------------------- |
+| `-web ./web`           | Подменить встроенную статику файлами из репозитория |
+| `-config путь`         | Другой `config.json`                                |
+| `-addr 127.0.0.1:порт` | Переопределить порт из конфига                      |
+| `-debug`               | Подробные логи                                      |
+
 
 Собрать и запустить бинарник без `go run`:
 
-| Система | Сборка | Запуск |
-|---------|--------|--------|
-| Windows | `go build -o comm-relay.exe ./cmd/comm-relay-server` | `.\comm-relay.exe -web .\web` |
-| Linux / macOS | `go build -o comm-relay ./cmd/comm-relay-server` | `./comm-relay -web ./web` |
+
+| Система       | Сборка                                               | Запуск                        |
+| ------------- | ---------------------------------------------------- | ----------------------------- |
+| Windows       | `go build -o comm-relay.exe ./cmd/comm-relay-server` | `.\comm-relay.exe -web .\web` |
+| Linux / macOS | `go build -o comm-relay ./cmd/comm-relay-server`     | `./comm-relay -web ./web`     |
+
 
 Откройте в браузере `http://127.0.0.1:17877/` — изменения в `web/` видны после обновления страницы, пересборка Go нужна только при правках backend.
 
@@ -251,6 +281,8 @@ wails build
 - Дополнительные SDK для Wails не нужны.
 - Проверка окружения: `wails doctor`.
 
+
+
 #### Linux (Ubuntu, Debian, Linux Mint и др.)
 
 Пакеты для **сборки** desktop (отдельно от runtime-зависимостей в разделе «Linux зависимости» выше):
@@ -272,23 +304,27 @@ sudo apt install build-essential pkg-config \
 - Универсальный бинарник (как в CI): `wails build -platform darwin/universal`.
 - Неподписанная локальная сборка может не открываться двойным кликом — **Open** из контекстного меню Finder или запуск из терминала.
 
+
+
 ### Основные URL
 
-| URL | Назначение |
-|-----|------------|
-| `http://127.0.0.1:17877/` | Админка |
-| `http://127.0.0.1:17877/dock/messages` | Журнал сообщений в интерфейсе OBS |
-| `http://127.0.0.1:17877/overlay` | OBS Browser Source |
-| `http://127.0.0.1:17877/health` | Health check |
-| `ws://127.0.0.1:17877/ws` | WebSocket с сообщениями |
 
-Структура проекта и правила для агентов: [`AGENTS.md`](AGENTS.md). Подробнее о продукте: [`docs/concept.md`](docs/concept.md).
+| URL                                    | Назначение                        |
+| -------------------------------------- | --------------------------------- |
+| `http://127.0.0.1:17877/`              | Админка                           |
+| `http://127.0.0.1:17877/dock/messages` | Журнал сообщений в интерфейсе OBS |
+| `http://127.0.0.1:17877/overlay`       | OBS Browser Source                |
+| `http://127.0.0.1:17877/health`        | Health check                      |
+| `ws://127.0.0.1:17877/ws`              | WebSocket с сообщениями           |
+
+
+Структура проекта и правила для агентов: `[AGENTS.md](AGENTS.md)`. Подробнее о продукте: `[docs/concept.md](docs/concept.md)`.
 
 ## Релизы
 
 Release workflow собирает desktop-архивы для Windows, macOS и Linux при публикации тега `v*.*.*`, а также доступен вручную через GitHub Actions.
 
-Перед релизом добавляйте пользовательские изменения в секцию **`## [Unreleased]`** в [`CHANGELOG.md`](CHANGELOG.md). При публикации workflow сам:
+Перед релизом добавляйте пользовательские изменения в секцию `## [Unreleased]` в `[CHANGELOG.md](CHANGELOG.md)`. При публикации workflow сам:
 
 1. проверит, что в `[Unreleased]` есть записи;
 2. перенесёт их в `## [X.Y.Z] - YYYY-MM-DD`;
@@ -307,15 +343,21 @@ git push origin v0.1.2
 
 ## Поддержка и вопросы
 
-- **Вопросы, баги и отзывы** — [Telegram-чат поддержки](https://t.me/mechastrider_apps/2).
+- **Вопросы, предложения и пожелания** — [Telegram-чат поддержки](https://t.me/mechastrider_apps/2).
 - **Исходники и issues** — [GitHub](https://github.com/mechastrider/comm-relay).
-- В админке: **Controls → About** (версия и ссылки на поддержку).
+- В админке: **Управление → О программе** (Controls → About) — версия и ссылки на поддержку.
+
+
+
+### Тема сообщений под ваш стрим
+
+Встроенные темы — только старт. Если нужен чат **в стиле вашего канала**, игры или сцены, могу сделать **тему сообщений для OBS** под вас: цвета, шрифты, HUD, попапы. Напишите в [Telegram](https://t.me/mechastrider_apps/2) — обсудим референсы и что должно попасть в кадр.
 
 ## Поддержка автора
 
 CommRelay — бесплатный open-source проект. Если приложение помогает вашим стримам, можно поддержать автора через [DonationAlerts](https://www.donationalerts.com/r/mechastrider):
 
-[![DonationAlerts](https://img.shields.io/badge/DonationAlerts-Поддержать-FD6535)](https://www.donationalerts.com/r/mechastrider)
+[DonationAlerts](https://www.donationalerts.com/r/mechastrider)
 
 ## Лицензия
 

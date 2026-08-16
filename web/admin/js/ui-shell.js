@@ -1,6 +1,12 @@
 import * as dom from './dom.js';
 import { state } from './state.js';
 import { SIDEBAR_COLLAPSED_KEY, BANNER_SUCCESS_DISMISS_MS } from './constants.js';
+import { t } from './i18n-ui.js';
+import { translateFieldError } from '/shared/i18n.js?v=16';
+
+function translateFieldErrorMessage(fieldKey, serverMessage) {
+  return translateFieldError(fieldKey, serverMessage);
+}
 
 export function showBanner(kind, message) {
     if (state.bannerTimer) {
@@ -54,9 +60,9 @@ export function setSidebarCollapsed(collapsed, options) {
     dom.sidebarToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
     dom.sidebarToggle.setAttribute(
       "aria-label",
-      collapsed ? "Expand systems panel" : "Collapse systems panel"
+      collapsed ? t("shell.expandPanel") : t("shell.collapsePanel")
     );
-    dom.sidebarToggle.title = collapsed ? "Expand systems panel" : "Collapse systems panel";
+    dom.sidebarToggle.title = collapsed ? t("shell.expandPanel") : t("shell.collapsePanel");
 
     const chevron = dom.sidebarToggle.querySelector(".sidebar-toggle__chevron");
     if (chevron) {
@@ -98,24 +104,24 @@ export function setSettingsStateText(message, stateClass) {
 
 export function renderSettingsState() {
     if (state.saveInFlight) {
-      setSettingsStateText("Saving", "");
+      setSettingsStateText(t("shell.saving"), "");
       setSaveButtonsDisabled(true);
       return;
     }
 
     if (!state.settingsLoaded) {
-      setSettingsStateText("Loading settings", "");
+      setSettingsStateText(t("shell.loadingSettings"), "");
       setSaveButtonsDisabled(true);
       return;
     }
 
     if (state.settingsDirty) {
-      setSettingsStateText("Unsaved changes", "settings-state--dirty");
+      setSettingsStateText(t("shell.unsavedChanges"), "settings-state--dirty");
       setSaveButtonsDisabled(false);
       return;
     }
 
-    setSettingsStateText("Settings saved", "settings-state--saved");
+    setSettingsStateText(t("shell.settingsSaved"), "settings-state--saved");
     setSaveButtonsDisabled(true);
   }
 
@@ -137,7 +143,7 @@ export function markSettingsUnavailable() {
     state.settingsLoaded = false;
     state.settingsDirty = false;
     renderSettingsState();
-    setSettingsStateText("Settings unavailable", "");
+    setSettingsStateText(t("shell.settingsUnavailable"), "");
   }
 
 export function clearFieldErrors() {
@@ -166,7 +172,7 @@ export function applyServerFieldErrors(fields) {
       if (typeof message !== "string" || message === "") {
         return;
       }
-      setFieldError(key, message);
+      setFieldError(key, translateFieldErrorMessage(key, message));
       if (!firstInvalid && dom.fieldInputs[key]) {
         firstInvalid = dom.fieldInputs[key];
       }

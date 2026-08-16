@@ -2,6 +2,7 @@ import { apiURL, readJSON, mapHTTPError } from "./api.js";
 import { showBanner } from "./ui-shell.js";
 import { state } from "./state.js";
 import * as dom from "./dom.js";
+import { t } from "./i18n-ui.js";
 
 export const SUPPORT_TELEGRAM_URL = "https://t.me/mechastrider_apps/2";
 export const PROJECT_GITHUB_URL = "https://github.com/mechastrider/comm-relay";
@@ -16,7 +17,7 @@ export function renderAboutVersion() {
     return;
   }
   const version = state.appVersion || "unknown";
-  dom.aboutVersion.textContent = "Version " + version;
+  dom.aboutVersion.textContent = t("about.version", { version: version });
 }
 
 function setAboutFeedback(message) {
@@ -42,11 +43,11 @@ async function openSupportLink(url) {
     });
     const body = await readJSON(response);
     if (!response.ok) {
-      showBanner("error", mapHTTPError(response.status, body && body.error) || "Could not open the link.");
+      showBanner("error", mapHTTPError(response.status, body && body.error) || t("banner.couldNotOpenLink"));
       return;
     }
   } catch {
-    showBanner("error", "Cannot reach CommRelay — is it running?");
+    showBanner("error", t("banner.cannotReach"));
   }
 }
 
@@ -54,9 +55,9 @@ async function copyAboutVersion() {
   setAboutFeedback("");
   try {
     await navigator.clipboard.writeText(aboutProductLine());
-    setAboutFeedback("Version copied.");
+    setAboutFeedback(t("about.versionCopied"));
   } catch {
-    setAboutFeedback("Copy failed.");
+    setAboutFeedback(t("about.copyFailed"));
   }
 }
 

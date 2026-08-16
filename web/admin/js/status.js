@@ -1,15 +1,17 @@
 import { appendText } from '/shared/chat-render.js?v=12';
+import { translatePlatformState } from '/shared/i18n.js?v=16';
 import * as dom from './dom.js';
 import { state } from './state.js';
 import { PROVIDER_LABELS } from './constants.js';
 import { createErrorDetailTrigger, hideErrorPopover } from './ui-error-popover.js';
 import { showBanner } from './ui-shell.js';
 import { renderAboutVersion } from './about.js';
+import { t, rememberDiagnosticsPayload } from './i18n-ui.js';
 
 export function renderPlatformStatus(el, platform) {
-    const state = typeof platform.state === "string" ? platform.state : "unknown";
-    el.textContent = state.replace(/_/g, " ");
-    el.className = "status-pill status-pill--" + state;
+    const platformState = typeof platform.state === "string" ? platform.state : "unknown";
+    el.textContent = translatePlatformState(platformState);
+    el.className = "status-pill status-pill--" + platformState;
   }
 
 export function formatMessageCount(count) {
@@ -19,7 +21,7 @@ export function formatMessageCount(count) {
     if (count === 0) {
       return "";
     }
-    return " · " + String(count) + " msg";
+    return " · " + String(count) + " " + t("status.msgSuffix");
   }
 
 export function platformSummaryText(platform) {
@@ -29,7 +31,7 @@ export function platformSummaryText(platform) {
     }
     const countSuffix = formatMessageCount(platform.message_count);
     if (countSuffix !== "") {
-      parts.push("Received" + countSuffix);
+      parts.push(t("status.received") + countSuffix);
     }
     return parts.join(" ");
   }
@@ -74,20 +76,20 @@ export function renderStatus(status) {
 
     if (youtube.connection_mode === "page") {
       if (youtube.channel) {
-        dom.youtubeOAuthLabel.textContent = "Simple · @" + youtube.channel;
+        dom.youtubeOAuthLabel.textContent = t("status.simpleChannel", { channel: youtube.channel });
       } else if (youtube.video_id) {
-        dom.youtubeOAuthLabel.textContent = "Simple · " + youtube.video_id;
+        dom.youtubeOAuthLabel.textContent = t("status.simpleVideo", { id: youtube.video_id });
       } else {
-        dom.youtubeOAuthLabel.textContent = "Simple (channel or video URL)";
+        dom.youtubeOAuthLabel.textContent = t("status.simpleFallback");
       }
       if (dom.youtubeConnect) {
         dom.youtubeConnect.hidden = true;
       }
     } else {
       if (youtube.oauth_connected) {
-        dom.youtubeOAuthLabel.textContent = "API · Connected";
+        dom.youtubeOAuthLabel.textContent = t("status.apiConnected");
       } else {
-        dom.youtubeOAuthLabel.textContent = "API · Not connected";
+        dom.youtubeOAuthLabel.textContent = t("status.apiNotConnected");
       }
       if (dom.youtubeConnect) {
         dom.youtubeConnect.hidden = false;
@@ -120,7 +122,7 @@ export function formatUptime(seconds) {
 
 export function formatMessageCounts(counts) {
     if (!counts || typeof counts !== "object") {
-      return "None yet";
+      return t("status.noneYet");
     }
     const entries = Object.keys(counts)
       .sort()
@@ -128,18 +130,18 @@ export function formatMessageCounts(counts) {
         return platform + ": " + String(counts[platform]);
       });
     if (entries.length === 0) {
-      return "None yet";
+      return t("status.noneYet");
     }
     return entries.join(", ");
   }
 
 export function formatRefreshTime(value) {
     if (typeof value !== "string" || value === "") {
-      return "Never";
+      return t("status.never");
     }
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) {
-      return "Never";
+      return t("status.never");
     }
     return date.toLocaleString();
   }
@@ -163,7 +165,10 @@ export function renderEmoteDiagnostics(emoteCache) {
       const total = emoteCache.total_entries;
       const scopes = emoteCache.total_scopes;
       if (typeof total === "number" && typeof scopes === "number") {
-        dom.emoteCacheEntries.textContent = String(total) + " emotes · " + String(scopes) + " scopes";
+        dom.emoteCacheEntries.textContent = t("status.emotesScopes", {
+          total: String(total),
+          scopes: String(scopes),
+        });
       } else {
         dom.emoteCacheEntries.textContent = "-";
       }
@@ -187,7 +192,7 @@ export function renderEmoteDiagnostics(emoteCache) {
     if (keys.length === 0) {
       const empty = document.createElement("li");
       empty.className = "provider-list__item provider-list__item--empty";
-      appendText(empty, "No provider data yet.");
+      appendText(empty, t("status.noProviderData"));
       dom.emoteProviderList.appendChild(empty);
       return;
     }
@@ -205,14 +210,20 @@ export function renderEmoteDiagnostics(emoteCache) {
       stats.className = "provider-list__stats";
       const count =
         typeof snap.emote_count === "number" ? String(snap.emote_count) : "0";
-      appendText(stats, count + " emotes · refreshed " + formatRefreshTime(snap.last_refresh_at));
+      appendText(
+        stats,
+        t("status.emotesRefreshed", {
+          count: count,
+          time: formatRefreshTime(snap.last_refresh_at),
+        })
+      );
 
       item.appendChild(title);
       item.appendChild(stats);
 
       if (typeof snap.last_error === "string" && snap.last_error !== "") {
         item.appendChild(
-          createErrorDetailTrigger(snap.last_error, (PROVIDER_LABELS[key] || key) + " emotes")
+          createErrorDetailTrigger(snap.last_error, (PROVIDER_LABELS[key] || key) + " " + t("status.emotesSuffix"))
         );
       }
 
@@ -224,6 +235,7 @@ export function renderDiagnostics(payload) {
     if (!payload) {
       return;
     }
+    rememberDiagnosticsPayload(payload);
     if (typeof payload.app_version === "string" && payload.app_version) {
       state.appVersion = payload.app_version;
       renderAboutVersion();
@@ -251,17 +263,17 @@ export function handleOAuthQuery() {
     const oauthError = params.get("oauth_error");
 
     if (oauth === "success") {
-      showBanner("success", "YouTube connected. Enable the connector and save settings.");
+      showBanner("success", t("banner.youtubeConnected"));
     } else if (oauth === "pending") {
-      showBanner("info", "Complete sign-in in your browser, then return to CommRelay.");
+      showBanner("info", t("banner.youtubeSignIn"));
     } else if (oauthError) {
       const messages = {
-        denied: "YouTube authorization was denied.",
-        not_configured: "Set OAuth client ID and secret, save, then connect again.",
-        exchange_failed: "YouTube token exchange failed — check credentials and redirect URI.",
-        open_failed: "Could not open the system browser. Save OAuth settings and use Connect again.",
+        denied: t("banner.youtubeDenied"),
+        not_configured: t("banner.youtubeNotConfigured"),
+        exchange_failed: t("banner.youtubeExchangeFailed"),
+        open_failed: t("banner.youtubeOpenFailed"),
       };
-      showBanner("error", messages[oauthError] || "YouTube authorization failed.");
+      showBanner("error", messages[oauthError] || t("banner.youtubeAuthFailed"));
     }
 
     if (oauth || oauthError) {

@@ -1,21 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css?v=14">
+  <script>
+    (function () {
+      try {
+        var locale = localStorage.getItem("commRelay.uiLocale");
+        if (locale === "en-GB") {
+          document.documentElement.lang = "en";
+        } else if (locale === "ru-RU") {
+          document.documentElement.lang = "ru";
+        }
+      } catch (_err) { /* ignore */ }
+    })();
+  </script>
 </head>
 <body>
   <div class="cockpit-shell">
-    <header class="top-bar" aria-label="System status">
+    <header class="top-bar" data-i18n-aria-label="shell.systemStatus">
       <div class="brand-stack">
-        <span class="brand-kicker">LOCAL OBS COMM RELAY</span>
+        <span class="brand-kicker" data-i18n="shell.brandKicker">LOCAL OBS COMM RELAY</span>
         <h1>CommRelay</h1>
       </div>
 
-      <div class="connector-rack" aria-label="Connector states">
+      <div class="connector-rack" data-i18n-aria-label="shell.connectorStates">
         <div class="indicator">
           <span class="indicator__label">Twitch</span>
           <span id="twitch-status" class="status-pill">-</span>
@@ -31,7 +43,7 @@
       </div>
 
       <div class="top-actions">
-        <button id="save-button" class="btn-physical btn-start" type="submit" form="settings-form" data-save-button disabled>Save</button>
+        <button id="save-button" class="btn-physical btn-start" type="submit" form="settings-form" data-save-button disabled data-i18n="shell.save">Save</button>
       </div>
     </header>
 
@@ -41,83 +53,83 @@
       <section class="console-panel" aria-labelledby="messages-heading">
         <div class="console-header">
           <div>
-            <span class="console-label">Monitor</span>
-            <h2 id="messages-heading">Live messages</h2>
+            <span class="console-label" data-i18n="shell.monitor">Monitor</span>
+            <h2 id="messages-heading" data-i18n="shell.liveMessages">Live messages</h2>
           </div>
           <div class="console-actions">
-            <span id="settings-state" class="settings-state" aria-live="polite">Loading settings</span>
-            <button id="refresh-messages" type="button" class="btn-physical btn-small">Refresh</button>
+            <span id="settings-state" class="settings-state" aria-live="polite" data-i18n="shell.loadingSettings">Loading settings</span>
+            <button id="refresh-messages" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
           </div>
         </div>
 
         <div class="message-panel">
           <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
-          <p id="recent-messages-empty" class="empty-state">No messages yet.</p>
+          <p id="recent-messages-empty" class="empty-state" data-i18n="shell.noMessagesYet">No messages yet.</p>
         </div>
       </section>
 
       <aside class="systems-panel" aria-labelledby="controls-heading">
-        <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="systems-content" aria-expanded="true" aria-label="Collapse systems panel">
+        <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="systems-content" aria-expanded="true" data-i18n-aria-label="shell.collapsePanel">
           <span class="sidebar-toggle__chevron" aria-hidden="true">&gt;</span>
-          <span class="sidebar-toggle__label" aria-hidden="true">Controls</span>
+          <span class="sidebar-toggle__label" aria-hidden="true" data-i18n="shell.controls">Controls</span>
         </button>
 
         <div id="systems-content" class="systems-panel__content">
           <div class="panel-heading">
-            <h2 id="controls-heading">Controls</h2>
+            <h2 id="controls-heading" data-i18n="shell.controls">Controls</h2>
           </div>
 
           <div class="control-grid">
-            <button class="btn-physical" type="button" data-dialog-target="connections-dialog">Connections</button>
-            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog">OBS</button>
-            <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog">Rich chat</button>
-            <button class="btn-physical" type="button" data-dialog-target="sound-dialog">Sound</button>
-            <button class="btn-physical" type="button" data-dialog-target="interface-dialog">Interface</button>
+            <button class="btn-physical" type="button" data-dialog-target="connections-dialog" data-i18n="shell.connections">Connections</button>
+            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog" data-i18n="shell.obs">OBS</button>
+            <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog" data-i18n="shell.richChat">Rich chat</button>
+            <button class="btn-physical" type="button" data-dialog-target="sound-dialog" data-i18n="shell.sound">Sound</button>
+            <button class="btn-physical" type="button" data-dialog-target="interface-dialog" data-i18n="shell.interface">Interface</button>
             <button class="btn-physical control-grid-about about-btn" type="button" data-dialog-target="about-dialog">
-              <span>About</span>
-              <small>VERSION · SUPPORT</small>
+              <span data-i18n="shell.about">About</span>
+              <small data-i18n="shell.aboutSubtitle">VERSION · SUPPORT</small>
             </button>
           </div>
 
           <div class="panel-heading panel-heading--spaced">
-            <h2 id="systems-heading">Systems</h2>
+            <h2 id="systems-heading" data-i18n="shell.systems">Systems</h2>
           </div>
 
           <dl class="overview-list">
             <div class="overview-list__row">
-              <dt>YouTube OAuth</dt>
+              <dt data-i18n="shell.youtubeOAuth">YouTube OAuth</dt>
               <dd id="youtube-oauth-label" class="overview-list__value">-</dd>
             </div>
           </dl>
 
-          <div class="detail-stack" aria-label="Connector details">
+          <div class="detail-stack" data-i18n-aria-label="shell.connectorDetails">
             <p id="twitch-detail" class="status-detail" hidden></p>
             <p id="youtube-detail" class="status-detail" hidden></p>
             <p id="vk-detail" class="status-detail" hidden></p>
           </div>
 
           <div class="panel-heading panel-heading--spaced">
-            <h2>Rich chat</h2>
+            <h2 data-i18n="shell.richChat">Rich chat</h2>
           </div>
 
-          <dl id="emote-diagnostics" class="overview-list emote-diagnostics" aria-label="Emote provider cache">
+          <dl id="emote-diagnostics" class="overview-list emote-diagnostics" data-i18n-aria-label="shell.emoteProviderCache">
             <div class="overview-list__row">
-              <dt>Cache entries</dt>
+              <dt data-i18n="shell.cacheEntries">Cache entries</dt>
               <dd id="emote-cache-entries" class="overview-list__value">-</dd>
             </div>
           </dl>
-          <ul id="emote-provider-list" class="provider-list" aria-label="Emote provider status"></ul>
+          <ul id="emote-provider-list" class="provider-list" data-i18n-aria-label="shell.emoteProviderStatus"></ul>
         </div>
       </aside>
     </main>
 
-    <footer class="status-bar" aria-label="Runtime diagnostics">
+    <footer class="status-bar" data-i18n-aria-label="shell.runtimeDiagnostics">
       <span class="tag">ADMIN</span>
-      <span>Uptime: <strong id="diag-uptime">-</strong></span>
-      <span>WS: <strong id="diag-ws-clients">-</strong></span>
-      <span>Messages: <strong id="diag-message-counts">-</strong></span>
+      <span><span data-i18n="shell.uptime">Uptime:</span> <strong id="diag-uptime">-</strong></span>
+      <span><span data-i18n="shell.ws">WS:</span> <strong id="diag-ws-clients">-</strong></span>
+      <span><span data-i18n="shell.messages">Messages:</span> <strong id="diag-message-counts">-</strong></span>
       <span class="status-bar__spacer"></span>
-      <span>State: <strong id="footer-settings-state">Loading settings</strong></span>
+      <span><span data-i18n="shell.state">State:</span> <strong id="footer-settings-state" data-i18n="shell.loadingSettings">Loading settings</strong></span>
     </footer>
   </div>
 
@@ -126,18 +138,18 @@
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>
-            <span class="dialog-kicker">Configuration</span>
-            <h2 id="connections-heading">Connections</h2>
+            <span class="dialog-kicker" data-i18n="dialog.configuration">Configuration</span>
+            <h2 id="connections-heading" data-i18n="shell.connections">Connections</h2>
           </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close connections settings">Close</button>
+          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeConnections" aria-label="Close connections settings">Close</button>
         </div>
 
         <div class="dialog-tab-body">
-          <div class="dialog-tabs" role="tablist" aria-label="Connection sections">
+          <div class="dialog-tabs" role="tablist" data-i18n-aria-label="dialog.connectionSections" aria-label="Connection sections">
             <button id="connections-twitch-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="connections-twitch-panel" data-connections-section="twitch">Twitch</button>
             <button id="connections-youtube-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="connections-youtube-panel" tabindex="-1" data-connections-section="youtube">YouTube</button>
             <button id="connections-vk-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="connections-vk-panel" tabindex="-1" data-connections-section="vk">VK Live</button>
-            <button id="connections-network-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="connections-network-panel" tabindex="-1" data-connections-section="network">Network</button>
+            <button id="connections-network-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="connections-network-panel" tabindex="-1" data-connections-section="network" data-i18n="dialog.network">Network</button>
           </div>
 
           <section id="connections-twitch-panel" class="dialog-tab-panel connections-tab-panel" role="tabpanel" aria-labelledby="connections-twitch-tab" data-connections-panel="twitch">
@@ -150,12 +162,12 @@
                 <div class="form__field">
                   <label class="checkbox" for="twitch-enabled">
                     <input id="twitch-enabled" name="twitch_enabled" type="checkbox">
-                    <span>Enable connector</span>
+                    <span data-i18n="conn.enableConnector">Enable connector</span>
                   </label>
                 </div>
 
                 <div class="form__field">
-                  <label for="twitch-channel">Channel</label>
+                  <label for="twitch-channel" data-i18n="conn.channel">Channel</label>
                   <input id="twitch-channel" name="twitch_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
                   <p id="twitch-channel-error" class="field-error" role="alert" hidden></p>
                 </div>
@@ -163,9 +175,9 @@
                 <div class="form__field">
                   <label class="checkbox checkbox--disabled" for="twitch-use-proxy">
                     <input id="twitch-use-proxy" name="twitch_use_proxy" type="checkbox" disabled aria-disabled="true">
-                    <span>Use SOCKS5 proxy</span>
+                    <span data-i18n="conn.useSocks5">Use SOCKS5 proxy</span>
                   </label>
-                  <p class="field-hint">Not available for Twitch yet. Configure the proxy on the Network tab.</p>
+                  <p class="field-hint" data-i18n="conn.twitchProxyHint">Not available for Twitch yet. Configure the proxy on the Network tab.</p>
                 </div>
               </div>
             </section>
@@ -175,51 +187,51 @@
             <section class="panel platform-panel" aria-labelledby="youtube-heading">
               <div class="panel__header">
                 <h3 id="youtube-heading">YouTube Live</h3>
-                <button id="youtube-connect" class="button-secondary" type="button">Connect</button>
+                <button id="youtube-connect" class="button-secondary" type="button" data-i18n="conn.connect">Connect</button>
               </div>
 
               <div class="form">
                 <div class="form__field">
                   <label class="checkbox" for="youtube-enabled">
                     <input id="youtube-enabled" name="youtube_enabled" type="checkbox">
-                    <span>Enable connector</span>
+                    <span data-i18n="conn.enableConnector">Enable connector</span>
                   </label>
                 </div>
 
                 <div class="form__field">
-                  <label for="youtube-connection-mode">Connection mode</label>
+                  <label for="youtube-connection-mode" data-i18n="conn.connectionMode">Connection mode</label>
                   <select id="youtube-connection-mode" name="youtube_connection_mode">
-                    <option value="page">Simple (video URL)</option>
-                    <option value="api">API (OAuth)</option>
+                    <option value="page" data-i18n="conn.youtubeSimple">Simple (video URL)</option>
+                    <option value="api" data-i18n="conn.youtubeApi">API (OAuth)</option>
                   </select>
-                  <p class="field-hint">Simple mode is the default and reads public live chat without Google Cloud setup.</p>
+                  <p class="field-hint" data-i18n="conn.youtubeSimpleHint">Simple mode is the default and reads public live chat without Google Cloud setup.</p>
                 </div>
 
                 <div id="youtube-page-fields" class="youtube-page-fields" hidden>
                   <div class="form__field">
-                    <label for="youtube-channel-handle">Channel handle</label>
+                    <label for="youtube-channel-handle" data-i18n="conn.channelHandle">Channel handle</label>
                     <input id="youtube-channel-handle" name="youtube_channel_handle" type="text" autocomplete="off" spellcheck="false" inputmode="text">
-                    <p class="field-hint">@name or youtube.com/@name — auto-detects the current live stream.</p>
+                    <p class="field-hint" data-i18n="conn.channelHandleHint">@name or youtube.com/@name — auto-detects the current live stream.</p>
                     <p id="youtube-channel-handle-error" class="field-error" role="alert" hidden></p>
                   </div>
 
                   <div class="form__field">
-                    <label for="youtube-video-input">Live video URL or ID <span class="field-optional">(optional)</span></label>
+                    <label for="youtube-video-input"><span data-i18n="conn.liveVideoUrl">Live video URL or ID</span> <span class="field-optional" data-i18n="conn.optional">(optional)</span></label>
                     <input id="youtube-video-input" name="youtube_video_input" type="text" autocomplete="off" spellcheck="false" inputmode="url">
-                    <p class="field-hint">Overrides auto-detect when set. Paste a watch URL to pin a specific broadcast.</p>
+                    <p class="field-hint" data-i18n="conn.liveVideoHint">Overrides auto-detect when set. Paste a watch URL to pin a specific broadcast.</p>
                     <p id="youtube-video-input-error" class="field-error" role="alert" hidden></p>
                   </div>
                 </div>
 
                 <div id="youtube-api-fields">
                   <div class="form__field">
-                    <label for="youtube-chat-mode">Chat transport</label>
+                    <label for="youtube-chat-mode" data-i18n="conn.chatTransport">Chat transport</label>
                     <select id="youtube-chat-mode" name="youtube_chat_mode">
-                      <option value="stream">gRPC stream (recommended)</option>
-                      <option value="auto">Auto (stream with poll fallback)</option>
-                      <option value="poll">REST polling</option>
+                      <option value="stream" data-i18n="conn.grpcStream">gRPC stream (recommended)</option>
+                      <option value="auto" data-i18n="conn.autoTransport">Auto (stream with poll fallback)</option>
+                      <option value="poll" data-i18n="conn.restPolling">REST polling</option>
                     </select>
-                    <p class="field-hint">Stream pushes messages with lower latency. Auto falls back to polling if gRPC fails.</p>
+                    <p class="field-hint" data-i18n="conn.chatTransportHint">Stream pushes messages with lower latency. Auto falls back to polling if gRPC fails.</p>
                   </div>
 
                   <div class="form__field">
@@ -230,16 +242,16 @@
                   <div class="form__field">
                     <label for="youtube-client-secret">OAuth client secret</label>
                     <input id="youtube-client-secret" name="youtube_client_secret" type="password" autocomplete="off">
-                    <p class="field-hint">Leave blank to keep the existing secret.</p>
+                    <p class="field-hint" data-i18n="conn.keepSecretHint">Leave blank to keep the existing secret.</p>
                   </div>
                 </div>
 
                 <div class="form__field">
                   <label class="checkbox" for="youtube-use-proxy">
                     <input id="youtube-use-proxy" name="youtube_use_proxy" type="checkbox">
-                    <span>Use SOCKS5 proxy</span>
+                    <span data-i18n="conn.useSocks5">Use SOCKS5 proxy</span>
                   </label>
-                  <p class="field-hint">Configure the proxy address on the Network tab.</p>
+                  <p class="field-hint" data-i18n="conn.proxyNetworkHint">Configure the proxy address on the Network tab.</p>
                 </div>
               </div>
             </section>
@@ -255,23 +267,23 @@
                 <div class="form__field">
                   <label class="checkbox" for="vk-enabled">
                     <input id="vk-enabled" name="vk_enabled" type="checkbox">
-                    <span>Enable connector</span>
+                    <span data-i18n="conn.enableConnector">Enable connector</span>
                   </label>
                 </div>
 
                 <div class="form__field">
-                  <label for="vk-channel">Channel slug</label>
+                  <label for="vk-channel" data-i18n="conn.channelSlug">Channel slug</label>
                   <input id="vk-channel" name="vk_channel" type="text" autocomplete="off" spellcheck="false" inputmode="text">
-                  <p class="field-hint">Accepts a slug or live.vkvideo.ru URL.</p>
+                  <p class="field-hint" data-i18n="conn.vkSlugHint">Accepts a slug or live.vkvideo.ru URL.</p>
                   <p id="vk-channel-error" class="field-error" role="alert" hidden></p>
                 </div>
 
                 <div class="form__field">
                   <label class="checkbox" for="vk-use-proxy">
                     <input id="vk-use-proxy" name="vk_use_proxy" type="checkbox">
-                    <span>Use SOCKS5 proxy</span>
+                    <span data-i18n="conn.useSocks5">Use SOCKS5 proxy</span>
                   </label>
-                  <p class="field-hint">Configure the proxy address on the Network tab.</p>
+                  <p class="field-hint" data-i18n="conn.proxyNetworkHint">Configure the proxy address on the Network tab.</p>
                 </div>
               </div>
             </section>
@@ -280,27 +292,27 @@
           <section id="connections-network-panel" class="dialog-tab-panel connections-tab-panel" role="tabpanel" aria-labelledby="connections-network-tab" data-connections-panel="network" hidden>
             <section class="panel" aria-labelledby="network-proxy-heading">
               <div class="panel__header">
-                <h3 id="network-proxy-heading">SOCKS5 proxy</h3>
+                <h3 id="network-proxy-heading" data-i18n="conn.socks5Proxy">SOCKS5 proxy</h3>
               </div>
 
               <div class="form">
-                <p class="field-hint">Configure once here, then enable per platform on the Twitch, YouTube, and VK Live tabs.</p>
+                <p class="field-hint" data-i18n="conn.socks5Intro">Configure once here, then enable per platform on the Twitch, YouTube, and VK Live tabs.</p>
 
                 <div class="form__field">
-                  <label for="network-socks5-address">Proxy address</label>
+                  <label for="network-socks5-address" data-i18n="conn.proxyAddress">Proxy address</label>
                   <input id="network-socks5-address" name="network_socks5_address" type="text" autocomplete="off" spellcheck="false" inputmode="text" placeholder="127.0.0.1:1080">
                   <p id="network-socks5-address-error" class="field-error" role="alert" hidden></p>
                 </div>
 
                 <div class="form__field">
-                  <label for="network-socks5-username">Username <span class="field-optional">(optional)</span></label>
+                  <label for="network-socks5-username"><span data-i18n="conn.username">Username</span> <span class="field-optional" data-i18n="conn.optional">(optional)</span></label>
                   <input id="network-socks5-username" name="network_socks5_username" type="text" autocomplete="off" spellcheck="false">
                 </div>
 
                 <div class="form__field">
-                  <label for="network-socks5-password">Password <span class="field-optional">(optional)</span></label>
+                  <label for="network-socks5-password"><span data-i18n="conn.password">Password</span> <span class="field-optional" data-i18n="conn.optional">(optional)</span></label>
                   <input id="network-socks5-password" name="network_socks5_password" type="password" autocomplete="off">
-                  <p class="field-hint">Leave blank to keep the existing password.</p>
+                  <p class="field-hint" data-i18n="conn.keepPasswordHint">Leave blank to keep the existing password.</p>
                 </div>
               </div>
             </section>
@@ -308,8 +320,8 @@
         </div>
 
         <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close>Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
+          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
         </div>
       </div>
     </dialog>
@@ -318,83 +330,83 @@
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>
-            <span class="dialog-kicker">Streaming integration</span>
+            <span class="dialog-kicker" data-i18n="dialog.streamingIntegration">Streaming integration</span>
             <h2 id="overlay-heading">OBS</h2>
           </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close OBS settings">Close</button>
+          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeObs" aria-label="Close OBS settings">Close</button>
         </div>
 
         <div class="dialog-tab-body">
-          <div class="dialog-tabs" role="tablist" aria-label="OBS sections">
-            <button id="obs-setup-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="obs-setup-panel" data-obs-section="setup">Setup</button>
-            <button id="obs-appearance-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-appearance-panel" tabindex="-1" data-obs-section="appearance">Appearance</button>
+          <div class="dialog-tabs" role="tablist" data-i18n-aria-label="dialog.obsSections" aria-label="OBS sections">
+            <button id="obs-setup-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="obs-setup-panel" data-obs-section="setup" data-i18n="obs.setup">Setup</button>
+            <button id="obs-appearance-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-appearance-panel" tabindex="-1" data-obs-section="appearance" data-i18n="obs.appearance">Appearance</button>
           </div>
 
           <section id="obs-setup-panel" class="dialog-tab-panel obs-setup" role="tabpanel" aria-labelledby="obs-setup-tab">
             <div class="obs-setup-intro">
-              <span class="dialog-kicker">Ready to paste</span>
-              <h3>Connect CommRelay to OBS</h3>
-              <p>Choose where messages should appear. URLs use the address currently serving CommRelay, so custom ports are included automatically.</p>
+              <span class="dialog-kicker" data-i18n="obs.readyToPaste">Ready to paste</span>
+              <h3 data-i18n="obs.connectTitle">Connect CommRelay to OBS</h3>
+              <p data-i18n="obs.connectIntro">Choose where messages should appear. URLs use the address currently serving CommRelay, so custom ports are included automatically.</p>
             </div>
 
             <div class="obs-integration-grid">
               <article class="obs-integration-card" aria-labelledby="obs-overlay-card-heading">
                 <div class="obs-integration-card__header">
                   <div>
-                    <span class="obs-integration-card__eyebrow">Browser Source</span>
-                    <h3 id="obs-overlay-card-heading">On-stream overlay</h3>
+                    <span class="obs-integration-card__eyebrow" data-i18n="obs.browserSource">Browser Source</span>
+                    <h3 id="obs-overlay-card-heading" data-i18n="obs.onStreamOverlay">On-stream overlay</h3>
                   </div>
-                  <span class="obs-audience-badge obs-audience-badge--live">Visible to viewers</span>
+                  <span class="obs-audience-badge obs-audience-badge--live" data-i18n="obs.visibleToViewers">Visible to viewers</span>
                 </div>
-                <p class="obs-integration-card__summary">Adds chat messages to the scene output seen by your audience.</p>
+                <p class="obs-integration-card__summary" data-i18n="obs.overlaySummary">Adds chat messages to the scene output seen by your audience.</p>
 
                 <div class="obs-url-field">
-                  <label for="obs-overlay-url">Overlay URL</label>
+                  <label for="obs-overlay-url" data-i18n="obs.overlayUrl">Overlay URL</label>
                   <div class="obs-url-row">
                     <input id="obs-overlay-url" type="text" readonly value="/overlay" data-obs-url-path="/overlay">
-                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-overlay-url" data-copy-label="Overlay URL">Copy URL</button>
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-overlay-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
                   </div>
                 </div>
 
                 <ol class="obs-setup-steps">
-                  <li>In OBS Sources, add a <strong>Browser</strong> source.</li>
-                  <li>Paste the URL above into its URL field.</li>
-                  <li>Set the source width and height for your scene.</li>
-                  <li>Keep CommRelay running while you stream.</li>
+                  <li data-i18n-html="obs.stepBrowser">In OBS Sources, add a <strong>Browser</strong> source.</li>
+                  <li data-i18n="obs.stepPaste">Paste the URL above into its URL field.</li>
+                  <li data-i18n="obs.stepSize">Set the source width and height for your scene.</li>
+                  <li data-i18n="obs.stepRunning">Keep CommRelay running while you stream.</li>
                 </ol>
 
                 <div class="obs-integration-actions">
-                  <a id="obs-overlay-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener">Open overlay</a>
-                  <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance">Customize appearance</button>
+                  <a id="obs-overlay-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener" data-i18n="obs.openOverlay">Open overlay</a>
+                  <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance" data-i18n="obs.customizeAppearance">Customize appearance</button>
                 </div>
               </article>
 
               <article class="obs-integration-card" aria-labelledby="obs-dock-card-heading">
                 <div class="obs-integration-card__header">
                   <div>
-                    <span class="obs-integration-card__eyebrow">Custom Browser Dock</span>
-                    <h3 id="obs-dock-card-heading">Message dock</h3>
+                    <span class="obs-integration-card__eyebrow" data-i18n="obs.customDock">Custom Browser Dock</span>
+                    <h3 id="obs-dock-card-heading" data-i18n="obs.messageDock">Message dock</h3>
                   </div>
-                  <span class="obs-audience-badge">Only visible to you</span>
+                  <span class="obs-audience-badge" data-i18n="obs.onlyVisibleToYou">Only visible to you</span>
                 </div>
-                <p class="obs-integration-card__summary">Keeps a compact message journal inside the OBS interface without adding it to the scene.</p>
+                <p class="obs-integration-card__summary" data-i18n="obs.dockSummary">Keeps a compact message journal inside the OBS interface without adding it to the scene.</p>
 
                 <div class="obs-url-field">
-                  <label for="obs-dock-url">Message dock URL</label>
+                  <label for="obs-dock-url" data-i18n="obs.dockUrl">Message dock URL</label>
                   <div class="obs-url-row">
                     <input id="obs-dock-url" type="text" readonly value="/dock/messages" data-obs-url-path="/dock/messages">
-                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-dock-url" data-copy-label="Message dock URL">Copy URL</button>
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-dock-url" data-copy-label="Message dock URL" data-i18n="obs.copyUrl">Copy URL</button>
                   </div>
                 </div>
 
                 <ol class="obs-setup-steps">
-                  <li>Open <strong>View → Docks → Custom Browser Docks…</strong> in OBS.</li>
-                  <li>Enter a dock name and paste the URL above.</li>
-                  <li>Apply the change and place the dock where it is convenient.</li>
+                  <li data-i18n-html="obs.stepDocks">Open <strong>View → Docks → Custom Browser Docks…</strong> in OBS.</li>
+                  <li data-i18n="obs.stepDockName">Enter a dock name and paste the URL above.</li>
+                  <li data-i18n="obs.stepDockPlace">Apply the change and place the dock where it is convenient.</li>
                 </ol>
 
                 <div class="obs-integration-actions">
-                  <a id="obs-dock-open" class="button-secondary button-secondary--small" href="/dock/messages" target="_blank" rel="noopener">Open message dock</a>
+                  <a id="obs-dock-open" class="button-secondary button-secondary--small" href="/dock/messages" target="_blank" rel="noopener" data-i18n="obs.openMessageDock">Open message dock</a>
                 </div>
               </article>
             </div>
@@ -406,53 +418,53 @@
             <div class="overlay-editor">
           <section class="panel overlay-settings-panel" aria-labelledby="overlay-display-heading">
             <div class="panel__header">
-              <h3 id="overlay-display-heading">Display</h3>
+              <h3 id="overlay-display-heading" data-i18n="obs.display">Display</h3>
             </div>
 
             <div class="panel__body">
-              <p class="panel-intro">Appearance settings for the OBS Browser Source overlay. The preview reflects unsaved display changes.</p>
+              <p class="panel-intro" data-i18n="obs.displayIntro">Appearance settings for the OBS Browser Source overlay. The preview reflects unsaved display changes.</p>
 
               <div class="form form--compact form--overlay-display">
                 <div class="form__field">
-                  <label for="overlay-max-messages">Max messages</label>
+                  <label for="overlay-max-messages" data-i18n="obs.maxMessages">Max messages</label>
                   <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
                   <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
                 </div>
 
                 <div class="form__field">
-                  <label for="overlay-message-ttl">Message TTL (seconds)</label>
+                  <label for="overlay-message-ttl" data-i18n="obs.messageTtl">Message TTL (seconds)</label>
                   <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
-                  <p class="field-hint">0 keeps messages until they scroll off (max messages limit).</p>
+                  <p class="field-hint" data-i18n="obs.ttlHint">0 keeps messages until they scroll off (max messages limit).</p>
                   <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
                 </div>
 
                 <div class="form__field">
-                  <label for="overlay-font-size">Font size (px)</label>
+                  <label for="overlay-font-size" data-i18n="obs.fontSize">Font size (px)</label>
                   <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="48" step="1">
-                  <p class="field-hint">12–48 px. After saving, refresh the Browser Source in OBS.</p>
+                  <p class="field-hint" data-i18n="obs.fontSizeHint">12–48 px. After saving, refresh the Browser Source in OBS.</p>
                   <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
                 </div>
 
                 <div class="form__field">
-                  <label for="overlay-display-mode">Spacing</label>
+                  <label for="overlay-display-mode" data-i18n="obs.spacing">Spacing</label>
                   <select id="overlay-display-mode" name="overlay_display_mode">
-                    <option value="normal">Comfortable</option>
-                    <option value="compact">Compact</option>
+                    <option value="normal" data-i18n="obs.comfortable">Comfortable</option>
+                    <option value="compact" data-i18n="obs.compact">Compact</option>
                   </select>
-                  <p class="field-hint">Compact reduces gaps between lines — useful with a busy chat.</p>
+                  <p class="field-hint" data-i18n="obs.spacingHint">Compact reduces gaps between lines — useful with a busy chat.</p>
                   <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
                 </div>
 
                 <div class="form__field form__field--full">
-                  <label for="overlay-theme">Theme</label>
+                  <label for="overlay-theme" data-i18n="obs.theme">Theme</label>
                   <select id="overlay-theme" name="overlay_theme">
-                    <option value="default">Default</option>
-                    <option value="dashboard">Text only (no background)</option>
-                    <option value="cockpit_panel">MW5 Mercs Cockpit panel</option>
-                    <option value="cockpit_popups">MW5 Mercs Cockpit popups</option>
-                    <option value="g_rebels_popups">G-Rebels Cockpit popups</option>
+                    <option value="default" data-i18n="obs.themeDefault">Default</option>
+                    <option value="dashboard" data-i18n="obs.themeTextOnly">Text only (no background)</option>
+                    <option value="cockpit_panel" data-i18n="obs.themeCockpitPanel">MW5 Mercs Cockpit panel</option>
+                    <option value="cockpit_popups" data-i18n="obs.themeCockpitPopups">MW5 Mercs Cockpit popups</option>
+                    <option value="g_rebels_popups" data-i18n="obs.themeGRebels">G-Rebels Cockpit popups</option>
                   </select>
-                  <p class="field-hint">Cockpit themes use HUD-style panels for streams over gameplay.</p>
+                  <p class="field-hint" data-i18n="obs.themeHint">Cockpit themes use HUD-style panels for streams over gameplay.</p>
                   <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
                 </div>
               </div>
@@ -461,70 +473,70 @@
 
           <section class="panel overlay-preview-panel" aria-labelledby="overlay-preview-heading" data-preview-only>
             <div class="panel__header overlay-preview-header">
-              <h3 id="overlay-preview-heading">Preview</h3>
+              <h3 id="overlay-preview-heading" data-i18n="obs.preview">Preview</h3>
               <div class="overlay-preview-actions">
-                <button id="overlay-preview-replay" class="btn-physical btn-small" type="button">Replay</button>
-                <a id="overlay-preview-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener">Open overlay</a>
+                <button id="overlay-preview-replay" class="btn-physical btn-small" type="button" data-i18n="obs.replay">Replay</button>
+                <a id="overlay-preview-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener" data-i18n="obs.openOverlay">Open overlay</a>
               </div>
             </div>
 
             <div class="overlay-preview-controls">
               <div class="preview-control">
-                <label for="overlay-preview-mode">Messages</label>
+                <label for="overlay-preview-mode" data-i18n="obs.previewMessages">Messages</label>
                 <select id="overlay-preview-mode">
-                  <option value="sample">Sample</option>
-                  <option value="live">Live chat</option>
+                  <option value="sample" data-i18n="obs.sample">Sample</option>
+                  <option value="live" data-i18n="obs.liveChat">Live chat</option>
                 </select>
               </div>
 
               <div class="preview-control preview-control--size">
-                <label for="overlay-preview-size">Source size</label>
+                <label for="overlay-preview-size" data-i18n="obs.sourceSize">Source size</label>
                 <select id="overlay-preview-size">
                   <option value="640x360">640 × 360</option>
                   <option value="800x600">800 × 600</option>
                   <option value="1280x720">1280 × 720</option>
                   <option value="480x720">480 × 720</option>
-                  <option value="custom">Custom</option>
+                  <option value="custom" data-i18n="obs.custom">Custom</option>
                 </select>
               </div>
 
               <div class="preview-control preview-control--dimension">
-                <label for="overlay-preview-width">Width</label>
+                <label for="overlay-preview-width" data-i18n="obs.width">Width</label>
                 <input id="overlay-preview-width" type="number" min="240" max="3840" step="1" inputmode="numeric" value="640">
               </div>
 
               <span class="preview-dimension-mark" aria-hidden="true">×</span>
 
               <div class="preview-control preview-control--dimension">
-                <label for="overlay-preview-height">Height</label>
+                <label for="overlay-preview-height" data-i18n="obs.height">Height</label>
                 <input id="overlay-preview-height" type="number" min="180" max="2160" step="1" inputmode="numeric" value="360">
               </div>
 
               <div class="preview-control">
-                <label for="overlay-preview-background">Background</label>
+                <label for="overlay-preview-background" data-i18n="obs.background">Background</label>
                 <select id="overlay-preview-background">
-                  <option value="busy">Busy scene</option>
-                  <option value="checker">Checkerboard</option>
-                  <option value="dark">Dark</option>
+                  <option value="busy" data-i18n="obs.bgBusy">Busy scene</option>
+                  <option value="checker" data-i18n="obs.bgChecker">Checkerboard</option>
+                  <option value="dark" data-i18n="obs.bgDark">Dark</option>
                 </select>
               </div>
             </div>
 
             <div id="overlay-preview-stage" class="overlay-preview-stage">
               <div id="overlay-preview-viewport" class="overlay-preview-viewport">
-                <iframe id="overlay-preview-frame" title="OBS overlay preview" referrerpolicy="no-referrer"></iframe>
+                <iframe id="overlay-preview-frame" data-i18n-title="obs.previewTitle" title="OBS overlay preview" referrerpolicy="no-referrer"></iframe>
               </div>
             </div>
 
-            <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
+            <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite" data-i18n="obs.previewNoteSample">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
           </section>
         </div>
           </section>
         </div>
 
         <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close>Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button data-obs-appearance-only disabled hidden>Save settings</button>
+          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button data-obs-appearance-only disabled hidden data-i18n="dialog.saveSettings">Save settings</button>
         </div>
       </div>
     </dialog>
@@ -533,57 +545,57 @@
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>
-            <span class="dialog-kicker">Configuration</span>
-            <h2 id="rich-chat-heading">Rich chat</h2>
+            <span class="dialog-kicker" data-i18n="dialog.configuration">Configuration</span>
+            <h2 id="rich-chat-heading" data-i18n="shell.richChat">Rich chat</h2>
           </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close rich chat settings">Close</button>
+          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeRichChat" aria-label="Close rich chat settings">Close</button>
         </div>
 
         <section class="panel" aria-labelledby="emote-providers-heading">
           <div class="panel__header">
-            <h3 id="emote-providers-heading">Emote providers</h3>
+            <h3 id="emote-providers-heading" data-i18n="rich.emoteProviders">Emote providers</h3>
           </div>
 
           <div class="form form--compact">
             <div class="form__field">
               <label class="checkbox" for="emotes-twitch">
                 <input id="emotes-twitch" name="emotes_twitch" type="checkbox">
-                <span>Twitch native emotes</span>
+                <span data-i18n="rich.twitchEmotes">Twitch native emotes</span>
               </label>
             </div>
 
             <div class="form__field">
               <label class="checkbox" for="emotes-youtube">
                 <input id="emotes-youtube" name="emotes_youtube" type="checkbox">
-                <span>YouTube emoji</span>
+                <span data-i18n="rich.youtubeEmoji">YouTube emoji</span>
               </label>
             </div>
 
             <div class="form__field">
               <label class="checkbox" for="emotes-vk">
                 <input id="emotes-vk" name="emotes_vk" type="checkbox">
-                <span>VK Live emoji</span>
+                <span data-i18n="rich.vkEmoji">VK Live emoji</span>
               </label>
             </div>
 
             <div class="form__field">
               <label class="checkbox" for="emotes-ffz">
                 <input id="emotes-ffz" name="emotes_ffz" type="checkbox">
-                <span>FrankerFaceZ (FFZ)</span>
+                <span data-i18n="rich.ffz">FrankerFaceZ (FFZ)</span>
               </label>
             </div>
 
             <div class="form__field">
               <label class="checkbox" for="emotes-bttv">
                 <input id="emotes-bttv" name="emotes_bttv" type="checkbox">
-                <span>BetterTTV (BTTV)</span>
+                <span data-i18n="rich.bttv">BetterTTV (BTTV)</span>
               </label>
             </div>
 
             <div class="form__field">
               <label class="checkbox" for="emotes-7tv">
                 <input id="emotes-7tv" name="emotes_7tv" type="checkbox">
-                <span>7TV</span>
+                <span data-i18n="rich.sevenTv">7TV</span>
               </label>
             </div>
           </div>
@@ -591,39 +603,39 @@
 
         <section class="panel" aria-labelledby="image-previews-heading">
           <div class="panel__header">
-            <h3 id="image-previews-heading">Image link previews</h3>
+            <h3 id="image-previews-heading" data-i18n="rich.imagePreviews">Image link previews</h3>
           </div>
 
           <div class="form form--compact">
             <div class="form__field">
               <label class="checkbox" for="image-previews-enabled">
                 <input id="image-previews-enabled" name="image_previews_enabled" type="checkbox">
-                <span>Enable safe image previews</span>
+                <span data-i18n="rich.enablePreviews">Enable safe image previews</span>
               </label>
-              <p class="field-hint">Only HTTPS links on allowed hosts are rendered. The server never fetches user URLs.</p>
+              <p class="field-hint" data-i18n="rich.previewsHint">Only HTTPS links on allowed hosts are rendered. The server never fetches user URLs.</p>
             </div>
 
             <div class="form__field">
-              <label for="image-previews-allowed-hosts">Allowed hosts</label>
+              <label for="image-previews-allowed-hosts" data-i18n="rich.allowedHosts">Allowed hosts</label>
               <textarea id="image-previews-allowed-hosts" name="image_previews_allowed_hosts" rows="5" spellcheck="false" autocomplete="off"></textarea>
-              <p class="field-hint">One hostname per line, without <code>https://</code> or paths.</p>
+              <p class="field-hint" data-i18n="rich.hostsHint">One hostname per line, without https:// or paths.</p>
               <p id="image-previews-allowed-hosts-error" class="field-error" role="alert" hidden></p>
             </div>
 
             <div class="form__field">
-              <label for="image-previews-max-width">Max width (px)</label>
+              <label for="image-previews-max-width" data-i18n="rich.maxWidth">Max width (px)</label>
               <input id="image-previews-max-width" name="image_previews_max_width_px" type="number" min="32" max="1920" step="1">
               <p id="image-previews-max-width-error" class="field-error" role="alert" hidden></p>
             </div>
 
             <div class="form__field">
-              <label for="image-previews-max-height">Max height (px)</label>
+              <label for="image-previews-max-height" data-i18n="rich.maxHeight">Max height (px)</label>
               <input id="image-previews-max-height" name="image_previews_max_height_px" type="number" min="32" max="1080" step="1">
               <p id="image-previews-max-height-error" class="field-error" role="alert" hidden></p>
             </div>
 
             <div class="form__field">
-              <label for="image-previews-max-per-message">Max previews per message</label>
+              <label for="image-previews-max-per-message" data-i18n="rich.maxPerMessage">Max previews per message</label>
               <input id="image-previews-max-per-message" name="image_previews_max_per_message" type="number" min="1" max="5" step="1">
               <p id="image-previews-max-per-message-error" class="field-error" role="alert" hidden></p>
             </div>
@@ -631,8 +643,8 @@
         </section>
 
         <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close>Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
+          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
         </div>
       </div>
     </dialog>
@@ -641,33 +653,33 @@
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>
-            <span class="dialog-kicker">Configuration</span>
-            <h2 id="interface-heading">Interface</h2>
+            <span class="dialog-kicker" data-i18n="dialog.configuration">Configuration</span>
+            <h2 id="interface-heading" data-i18n="shell.interface">Interface</h2>
           </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close interface settings">Close</button>
+          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeInterface" aria-label="Close interface settings">Close</button>
         </div>
 
         <section class="panel" aria-labelledby="time-display-heading">
           <div class="panel__header">
-            <h3 id="time-display-heading">Time display</h3>
+            <h3 id="time-display-heading" data-i18n="iface.language">Language</h3>
           </div>
 
           <div class="form form--compact">
             <div class="form__field">
-              <label for="time-locale">Locale</label>
+              <label for="time-locale" data-i18n="iface.language">Language</label>
               <select id="time-locale" name="time_locale">
-                <option value="ru-RU">Русский — 20:37:08</option>
-                <option value="en-GB">English — 20:37:08</option>
+                <option value="ru-RU" data-i18n="iface.localeRu">Русский — 20:37:08</option>
+                <option value="en-GB" data-i18n="iface.localeEn">English — 20:37:08</option>
               </select>
-              <p class="field-hint">The admin message list and OBS dock always use the same 24-hour format.</p>
+              <p class="field-hint" data-i18n="iface.languageHint">Controls admin and OBS dock labels and the 24-hour time format.</p>
               <p id="time-locale-error" class="field-error" role="alert" hidden></p>
             </div>
           </div>
         </section>
 
         <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close>Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
+          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
         </div>
       </div>
     </dialog>
@@ -676,28 +688,28 @@
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>
-            <span class="dialog-kicker">Configuration</span>
+            <span class="dialog-kicker" data-i18n="dialog.configuration">Configuration</span>
             <h2 id="message-sound-heading">Message sound</h2>
           </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close sound settings">Close</button>
+          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeSound" aria-label="Close sound settings">Close</button>
         </div>
 
         <section class="panel" aria-labelledby="message-sound-panel-heading">
           <div class="panel__header">
-            <h3 id="message-sound-panel-heading">Alert tone</h3>
-            <button id="test-message-sound" type="button" class="button-secondary">Test</button>
+            <h3 id="message-sound-panel-heading" data-i18n="sound.alertTone">Alert tone</h3>
+            <button id="test-message-sound" type="button" class="button-secondary" data-i18n="sound.test">Test</button>
           </div>
 
           <div class="form form--compact">
             <div class="form__field">
               <label class="checkbox" for="message-sound-enabled">
                 <input id="message-sound-enabled" name="message_sound_enabled" type="checkbox">
-                <span>Play sound on new message</span>
+                <span data-i18n="sound.playOnMessage">Play sound on new message</span>
               </label>
             </div>
 
             <div class="form__field">
-              <label for="message-sound-volume">Volume</label>
+              <label for="message-sound-volume" data-i18n="sound.volume">Volume</label>
               <div class="volume-control">
                 <input id="message-sound-volume" name="message_sound_volume" type="range" min="0" max="100" step="1" value="50">
                 <output id="message-sound-volume-label" for="message-sound-volume">50%</output>
@@ -706,12 +718,12 @@
             </div>
 
             <div class="form__field">
-              <label for="message-sound-type">Sound type</label>
+              <label for="message-sound-type" data-i18n="sound.soundType">Sound type</label>
               <select id="message-sound-type" name="message_sound_type">
-                <option value="chime">Chime - soft two-tone</option>
-                <option value="ping">Ping - short high note</option>
-                <option value="soft">Soft - quiet low tone</option>
-                <option value="alert">Alert - quick double beep</option>
+                <option value="chime" data-i18n="sound.chime">Chime - soft two-tone</option>
+                <option value="ping" data-i18n="sound.ping">Ping - short high note</option>
+                <option value="soft" data-i18n="sound.soft">Soft - quiet low tone</option>
+                <option value="alert" data-i18n="sound.alert">Alert - quick double beep</option>
               </select>
               <p id="message-sound-type-error" class="field-error" role="alert" hidden></p>
             </div>
@@ -719,8 +731,8 @@
         </section>
 
         <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close>Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled>Save settings</button>
+          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
+          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
         </div>
       </div>
     </dialog>
@@ -730,44 +742,44 @@
         <div class="dialog-header">
           <div>
             <span class="dialog-kicker">CommRelay</span>
-            <h2 id="about-heading">About</h2>
-            <p class="dialog-subtitle">Version, privacy, and how to reach support.</p>
+            <h2 id="about-heading" data-i18n="shell.about">About</h2>
+            <p class="dialog-subtitle" data-i18n="about.subtitle">Version, privacy, and how to reach support.</p>
           </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close about dialog">Close</button>
+          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeAbout" aria-label="Close about dialog">Close</button>
         </div>
 
-        <section class="panel about-panel" aria-label="About CommRelay">
+        <section class="panel about-panel" data-i18n-aria-label="about.aboutCommRelay" aria-label="About CommRelay">
           <div class="about-identity">
             <div class="about-product">CommRelay</div>
             <div id="about-version" class="about-version" aria-live="polite">Version —</div>
-            <p class="about-status">Local app · no telemetry · diagnostics stay on your machine.</p>
+            <p class="about-status" data-i18n="about.privacy">Local app · no telemetry · diagnostics stay on your machine.</p>
           </div>
 
           <section class="about-section" aria-labelledby="about-support-heading">
-            <h3 class="about-section-title" id="about-support-heading">Support</h3>
-            <p class="about-section-body">
+            <h3 class="about-section-title" id="about-support-heading" data-i18n="about.support">Support</h3>
+            <p class="about-section-body" data-i18n="about.supportBody">
               Questions, bug reports, and feedback — Telegram chat is the fastest channel.
               Source and issues live on GitHub.
             </p>
             <div class="about-actions">
               <button id="about-telegram" class="btn-physical btn-start about-link-btn" type="button">
-                <span>Telegram chat</span>
-                <small>SUPPORT</small>
+                <span data-i18n="about.telegram">Telegram chat</span>
+                <small data-i18n="about.telegramSmall">SUPPORT</small>
               </button>
               <button id="about-github" class="btn-physical about-link-btn" type="button">
-                <span>GitHub</span>
-                <small>SOURCE · ISSUES</small>
+                <span data-i18n="about.github">GitHub</span>
+                <small data-i18n="about.githubSmall">SOURCE · ISSUES</small>
               </button>
             </div>
           </section>
 
-          <p class="about-license">MIT License. Copyright (c) 2026 Igor Lazarev. Provided without warranty.</p>
+          <p class="about-license" data-i18n="about.license">MIT License. Copyright (c) 2026 Igor Lazarev. Provided without warranty.</p>
         </section>
 
         <div class="dialog-actions">
-          <button id="about-copy-version" class="btn-physical" type="button">Copy version</button>
+          <button id="about-copy-version" class="btn-physical" type="button" data-i18n="about.copyVersion">Copy version</button>
           <span id="about-feedback" class="about-feedback" role="status" hidden></span>
-          <button class="btn-physical" type="button" data-dialog-close>Close</button>
+          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
         </div>
       </div>
     </dialog>
@@ -775,6 +787,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=15"></script>
+  <script type="module" src="app.js?v=16"></script>
 </body>
 </html>

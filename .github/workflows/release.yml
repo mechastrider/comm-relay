@@ -143,7 +143,7 @@ jobs:
           $packageDir = "dist/CommRelay-$version-windows-amd64"
           New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
           Copy-Item $exePath "$packageDir/CommRelay.exe"
-          Copy-Item "README.md", "CHANGELOG.md", "LICENSE" $packageDir
+          Copy-Item "README.md", "README.en.md", "CHANGELOG.md", "LICENSE" $packageDir
           Compress-Archive -Path $packageDir -DestinationPath "dist/CommRelay-$version-windows-amd64.zip" -Force
 
       - name: Package macOS
@@ -163,7 +163,7 @@ jobs:
           fi
 
           cp -R "$app_path" "$package_dir/"
-          cp README.md CHANGELOG.md LICENSE "$package_dir/"
+          cp README.md README.en.md CHANGELOG.md LICENSE "$package_dir/"
           ditto -c -k --sequesterRsrc --keepParent "$package_dir" "dist/CommRelay-$version-macos-universal.zip"
 
       - name: Package Linux
@@ -188,7 +188,7 @@ jobs:
           cp "$WAILS_PROJECT_DIR/packaging/linux/CommRelay.desktop" "$package_dir/CommRelay.desktop"
           cp "$WAILS_PROJECT_DIR/packaging/linux/install-desktop.sh" "$package_dir/install-desktop.sh"
           chmod +x "$package_dir/install-desktop.sh"
-          cp README.md CHANGELOG.md LICENSE "$package_dir/"
+          cp README.md README.en.md CHANGELOG.md LICENSE "$package_dir/"
           tar -C dist -czf "dist/CommRelay-$version-linux-amd64.tar.gz" "$(basename "$package_dir")"
 
       - name: Upload release artifact

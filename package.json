@@ -4,7 +4,8 @@
   "type": "module",
   "description": "Dev tooling for CommRelay static web assets (admin, overlay, dock)",
   "scripts": {
-    "lint": "eslint web/"
+    "lint": "eslint web/",
+    "test:i18n": "node --test web/shared/i18n-parity.test.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

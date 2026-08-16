@@ -49,6 +49,11 @@ Admin or operator UI served as static HTML:
 - `async/await` for API calls; handle `response.ok` and parse `{"error":"..."}`.
 - No build step required for MVP (optional minify later).
 
+## Internationalization
+
+- User-visible strings in `web/admin` and `web/dock` go through `web/shared/i18n.js` (`t()`, `data-i18n` on static HTML).
+- Add keys to both `web/shared/locales/en.js` and `web/shared/locales/ru.js`; run `npm run test:i18n` for parity.
+
 ## Security
 
 - Treat admin pages as trusted only in their intended deployment context; still avoid `innerHTML` with unsanitized user content — use `textContent` or escape.

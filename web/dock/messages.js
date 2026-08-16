@@ -1,4 +1,5 @@
 import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
+import { setLocale, t } from "/shared/i18n.js?v=16";
 
 "use strict";
 
@@ -22,9 +23,6 @@ import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
     max_width_px: 320,
     max_height_px: 180,
   };
-  let timeLocale = "ru-RU";
-  let timeFormatter = createTimeFormatter(timeLocale);
-
   function createTimeFormatter(locale) {
     return new Intl.DateTimeFormat(locale, {
       hour: "2-digit",
@@ -33,6 +31,24 @@ import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
       hourCycle: "h23",
     });
   }
+
+  function applyDockLocale(locale) {
+    const next = locale === "en-GB" ? "en-GB" : "ru-RU";
+    setLocale(next);
+    if (emptyState) {
+      emptyState.textContent = t("dock.waiting");
+    }
+  }
+
+  function refreshTimeLocale(locale) {
+    timeLocale = locale === "en-GB" ? "en-GB" : "ru-RU";
+    applyDockLocale(timeLocale);
+    timeFormatter = createTimeFormatter(timeLocale);
+  }
+
+  let timeLocale = "ru-RU";
+  applyDockLocale(timeLocale);
+  let timeFormatter = createTimeFormatter(timeLocale);
 
   function imagePreviewHostAllowed(hostname) {
     const host = hostname.trim().toLowerCase();
@@ -144,8 +160,8 @@ import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
       const deleteButton = document.createElement("button");
       deleteButton.className = "message-list__delete";
       deleteButton.type = "button";
-      deleteButton.textContent = "Delete";
-      deleteButton.setAttribute("aria-label", "Delete message from " + displayName(message));
+      deleteButton.textContent = t("dock.delete");
+      deleteButton.setAttribute("aria-label", t("dock.deleteAria", { user: displayName(message) }));
       deleteButton.addEventListener("click", function () {
         deleteMessage(message, deleteButton);
       });
@@ -283,8 +299,7 @@ import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
         previewSettings = settings;
       }
       const locale = payload && payload.admin && payload.admin.time_locale;
-      timeLocale = locale === "en-GB" ? "en-GB" : "ru-RU";
-      timeFormatter = createTimeFormatter(timeLocale);
+      refreshTimeLocale(locale);
       renderMessages(false);
     } catch {
       /* Direct image previews stay disabled; text and emotes still render. */

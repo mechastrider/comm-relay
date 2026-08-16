@@ -2,6 +2,7 @@ import * as dom from './dom.js';
 import { state } from './state.js';
 import { MESSAGE_SOUND_TYPES } from './constants.js';
 import { showBanner } from './ui-shell.js';
+import { t } from './i18n-ui.js';
 
 export function normalizeMessageSoundType(raw) {
     if (typeof raw === "string" && MESSAGE_SOUND_TYPES.indexOf(raw) !== -1) {
@@ -183,7 +184,7 @@ export function initMessageSoundControls() {
           playMessageSound(true);
         })
         .catch(function () {
-          showBanner("error", "Sound is not available in this browser.");
+          showBanner("error", t("banner.soundUnavailable"));
         });
     });
   }

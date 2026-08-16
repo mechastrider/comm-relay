@@ -16,6 +16,7 @@ import { initConnectionsTabs } from "./js/connections.js";
 import { initSettingsDialogs } from "./js/dialogs.js";
 import { initAboutDialog } from "./js/about.js";
 import { initMessageSoundControls } from "./js/sound.js";
+import { initI18n, bindLocaleSelect, t } from "./js/i18n-ui.js";
 import {
   bindFieldClear,
   refreshAll,
@@ -27,6 +28,8 @@ import {
   startYouTubeOAuth,
 } from "./js/settings.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
+
+initI18n();
 
 Object.keys(dom.fieldInputs).forEach(bindFieldClear);
 
@@ -40,7 +43,7 @@ if (dom.youtubeConnectionMode) {
 if (dom.youtubeConnect) {
   dom.youtubeConnect.addEventListener("click", function () {
     startYouTubeOAuth().catch(function () {
-      showBanner("error", "YouTube authorization failed.");
+      showBanner("error", t("banner.youtubeAuthFailed"));
     });
   });
 }
@@ -67,7 +70,7 @@ dom.form.addEventListener("change", function (event) {
 });
 dom.refreshMessages.addEventListener("click", function () {
   loadRecentMessages().catch(function () {
-    showBanner("error", "Cannot load recent messages.");
+    showBanner("error", t("banner.cannotLoadMessages"));
   });
 });
 
@@ -79,6 +82,7 @@ initConnectionsTabs();
 initSettingsDialogs();
 initAboutDialog();
 initMessageSoundControls();
+bindLocaleSelect();
 
 renderSettingsState();
 
@@ -87,7 +91,7 @@ refreshAll()
     if (!state.currentConfig) {
       markSettingsUnavailable();
     }
-    showBanner("error", "Cannot reach CommRelay — is it running?");
+    showBanner("error", t("banner.cannotReach"));
   })
   .finally(function () {
     state.soundReady = true;

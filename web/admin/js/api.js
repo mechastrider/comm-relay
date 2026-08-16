@@ -2,17 +2,19 @@ export function apiURL(path) {
     return window.location.origin + path;
   }
 
+import { t } from "./i18n-ui.js";
+
 export function mapHTTPError(status, bodyError) {
     if (bodyError) {
       return bodyError;
     }
     if (status === 400) {
-      return "Check the highlighted fields.";
+      return t("banner.checkFields");
     }
     if (status >= 500) {
-      return "Server error — try again.";
+      return t("banner.serverError");
     }
-    return "Request failed.";
+    return t("banner.requestFailed");
   }
 
 export async function readJSON(response) {
