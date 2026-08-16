@@ -31,10 +31,33 @@ func TestValidate_WhenYouTubeConnectionModeInvalid_ExpectFieldError(t *testing.T
 	require.Equal(t, "Choose API (OAuth) or simple (video URL).", fields["youtube_connection_mode"])
 }
 
-func TestApplyYouTubeDefaults_WhenConnectionModeMissing_ExpectAPI(t *testing.T) {
+func TestApplyYouTubeDefaults_WhenConnectionModeMissing_ExpectPage(t *testing.T) {
 	t.Parallel()
 
 	cfg := YouTubeConfig{}
 	cfg.ApplyYouTubeDefaults()
+	require.Equal(t, YouTubeConnectionModePage, cfg.ConnectionMode)
+}
+
+func TestApplyYouTubeDefaults_WhenConnectionModeMissingWithRefreshToken_ExpectAPI(t *testing.T) {
+	t.Parallel()
+
+	cfg := YouTubeConfig{
+		OAuth: YouTubeOAuth{RefreshToken: "refresh-token"},
+	}
+	cfg.ApplyYouTubeDefaults()
 	require.Equal(t, YouTubeConnectionModeAPI, cfg.ConnectionMode)
+}
+
+func TestEffectiveConnectionMode_WhenMissingWithoutRefreshToken_ExpectPage(t *testing.T) {
+	t.Parallel()
+
+	require.Equal(t, YouTubeConnectionModePage, YouTubeConfig{}.EffectiveConnectionMode())
+}
+
+func TestEffectiveConnectionMode_WhenMissingWithRefreshToken_ExpectAPI(t *testing.T) {
+	t.Parallel()
+
+	cfg := YouTubeConfig{OAuth: YouTubeOAuth{RefreshToken: "refresh-token"}}
+	require.Equal(t, YouTubeConnectionModeAPI, cfg.EffectiveConnectionMode())
 }

@@ -22,6 +22,7 @@ import {
   loadRecentMessages,
   normalizeVkChannel,
   updateYouTubeConnectionModeUI,
+  startYouTubeOAuth,
 } from "./js/settings.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
 
@@ -31,6 +32,14 @@ if (dom.youtubeConnectionMode) {
   dom.youtubeConnectionMode.addEventListener("change", function () {
     updateYouTubeConnectionModeUI();
     markSettingsDirty();
+  });
+}
+
+if (dom.youtubeConnect) {
+  dom.youtubeConnect.addEventListener("click", function () {
+    startYouTubeOAuth().catch(function () {
+      showBanner("error", "YouTube authorization failed.");
+    });
   });
 }
 

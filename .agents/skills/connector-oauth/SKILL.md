@@ -9,15 +9,18 @@ Patterns adapted from knowledge-db (`internal/oauthcommon`, `internal/googleoaut
 
 ## Goals
 
-- Minimal steps: user clicks **Connect** in admin → browser → provider → redirect back to localhost.
+- Minimal steps: user clicks **Connect** in admin → **system browser** → provider → redirect back to localhost callback.
+- Never navigate the CommRelay admin webview (Wails) to the provider login page.
 - Tokens stored on disk in config (or encrypted sidecar); never logged.
 - Refresh tokens used automatically before Live Chat API calls expire.
 
 ## Flow
 
-1. `GET /oauth/youtube/start` — generate `state`, store in memory or short-lived cookie, redirect to Google authorize URL with `access_type=offline` and required scopes for YouTube Live Chat.
-2. `GET /oauth/youtube/callback?code=...&state=...` — verify `state`, exchange `code` for tokens, persist refresh token, redirect to `/` with success query flag.
-3. Connector reads tokens from config on `Run`.
+1. `POST /api/youtube/oauth/start` — generate `state`, open Google authorize URL in the OS browser, return `{ "opened", "authorization_url" }` to admin JS.
+2. Legacy `GET /oauth/youtube/start` — same browser open, redirect admin to `/?oauth=pending` (do **not** redirect the client to Google).
+3. `GET /oauth/youtube/callback?code=...&state=...` — verify `state`, exchange `code` for tokens, persist refresh token, render a short HTML completion page in the browser tab.
+4. Admin polls `/api/diagnostics` (connectors) until `oauth_connected` is true.
+5. Connector reads tokens from config on `Run`.
 
 ## State parameter
 
@@ -34,11 +37,13 @@ Patterns adapted from knowledge-db (`internal/oauthcommon`, `internal/googleoaut
 - Bind HTTP to `127.0.0.1` by default.
 - Do not expose admin on `0.0.0.0` without explicit flag.
 - `config.json` in `.gitignore`; example file without secrets.
+- Use `internal/browser.OpenURL` (xdg-open / open / rundll32) for provider login — not embedded webview.
 
 ## Error handling
 
-- User denies consent → redirect with `?oauth_error=denied` and friendly admin message.
-- Token exchange failure → Error log without response body secrets; 500 on callback with generic message.
+- User denies consent → HTML result page in browser tab; admin may show `?oauth_error=denied` for legacy GET start failures.
+- Token exchange failure → Error log without response body secrets; HTML error page on callback.
+- Browser open failure → `opened: false` in POST response; admin shows authorization URL or error banner.
 
 ## Twitch (MVP)
 

@@ -25,7 +25,7 @@ func TestConfig_WhenProxySettingsSaved_ExpectRoundTrip(t *testing.T) {
     }
   },
   "twitch": { "enabled": false, "channel": "" },
-  "youtube": { "enabled": true, "use_proxy": true, "oauth": { "client_id": "" } },
+  "youtube": { "enabled": true, "use_proxy": true, "channel_handle": "@test", "oauth": { "client_id": "" } },
   "vk": { "enabled": true, "channel": "vkplay", "use_proxy": false },
   "overlay": { "max_messages": 30, "message_ttl_seconds": 20, "theme": "default" }
 }`)
@@ -87,7 +87,7 @@ func TestConfig_WhenProxyPasswordBlank_ExpectPreviousPasswordKept(t *testing.T) 
   "server_port": 17877,
   "network": { "socks5": { "address": "127.0.0.1:1080", "password": "keep-me" } },
   "twitch": { "enabled": false, "channel": "" },
-  "youtube": { "enabled": true, "use_proxy": true, "oauth": { "client_id": "" } },
+  "youtube": { "enabled": true, "use_proxy": true, "channel_handle": "@test", "oauth": { "client_id": "" } },
   "vk": { "enabled": false },
   "overlay": { "max_messages": 30, "message_ttl_seconds": 20, "theme": "default" }
 }`)
@@ -99,7 +99,7 @@ func TestConfig_WhenProxyPasswordBlank_ExpectPreviousPasswordKept(t *testing.T) 
   "server_port": 17877,
   "network": { "socks5": { "address": "127.0.0.1:1080", "password": "" } },
   "twitch": { "enabled": false, "channel": "" },
-  "youtube": { "enabled": true, "use_proxy": true, "oauth": { "client_id": "" } },
+  "youtube": { "enabled": true, "use_proxy": true, "channel_handle": "@test", "oauth": { "client_id": "" } },
   "vk": { "enabled": false },
   "overlay": { "max_messages": 30, "message_ttl_seconds": 20, "theme": "default" }
 }`)

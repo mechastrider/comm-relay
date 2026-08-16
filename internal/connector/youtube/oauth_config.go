@@ -20,7 +20,7 @@ const (
 func OAuthConfig(cfg config.Config) (*oauth2.Config, error) {
 	oauth := cfg.YouTube.OAuth
 	if !oauth.HasClientCredentials() {
-		return nil, errNotConfigured
+		return nil, ErrNotConfigured
 	}
 
 	redirectURL, err := redirectURL(cfg.ServerPort)

@@ -188,7 +188,7 @@
           <section class="panel platform-panel" aria-labelledby="youtube-heading">
             <div class="panel__header">
               <h3 id="youtube-heading">YouTube Live</h3>
-              <a id="youtube-connect" class="button-secondary" href="/oauth/youtube/start">Connect</a>
+              <button id="youtube-connect" class="button-secondary" type="button">Connect</button>
             </div>
 
             <div class="form">
@@ -202,10 +202,10 @@
               <div class="form__field">
                 <label for="youtube-connection-mode">Connection mode</label>
                 <select id="youtube-connection-mode" name="youtube_connection_mode">
-                  <option value="api">API (OAuth)</option>
                   <option value="page">Simple (video URL)</option>
+                  <option value="api">API (OAuth)</option>
                 </select>
-                <p class="field-hint">Simple mode reads public live chat without Google Cloud setup.</p>
+                <p class="field-hint">Simple mode is the default and reads public live chat without Google Cloud setup.</p>
               </div>
 
               <div id="youtube-page-fields" class="youtube-page-fields" hidden>

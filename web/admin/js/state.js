@@ -5,6 +5,8 @@ export const state = {
   settingsLoaded: false,
   settingsDirty: false,
   saveInFlight: false,
+  youtubeOAuthConnected: false,
+  youtubeOAuthInFlight: false,
   statusTimer: null,
   messagesTimer: null,
   soundReady: false,

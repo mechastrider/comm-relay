@@ -78,8 +78,9 @@ func Default() *Config {
 			Channel: "",
 		},
 		YouTube: YouTubeConfig{
-			Enabled:  false,
-			ChatMode: YouTubeChatModeStream,
+			Enabled:        false,
+			ConnectionMode: YouTubeConnectionModePage,
+			ChatMode:       YouTubeChatModeStream,
 		},
 		VK: VKConfig{
 			Enabled: false,

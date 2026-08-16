@@ -115,10 +115,7 @@ func (c *Connector) Run(ctx context.Context) error {
 			continue
 		}
 
-		connectionMode := cfg.YouTube.ConnectionMode
-		if connectionMode == "" {
-			connectionMode = config.YouTubeConnectionModeAPI
-		}
+		connectionMode := cfg.YouTube.EffectiveConnectionMode()
 
 		var cont bool
 		if connectionMode == config.YouTubeConnectionModePage {
@@ -483,7 +480,7 @@ func (c *Connector) setStatusFromError(err error) {
 		c.setStatus(status.StateConnecting, "No live stream on channel — checking again…", "")
 		return
 	}
-	if errors.Is(err, errNotConnected) || errors.Is(err, errNotConfigured) {
+	if errors.Is(err, errNotConnected) || errors.Is(err, ErrNotConfigured) {
 		c.setStatus(status.StateError, err.Error(), "")
 		return
 	}

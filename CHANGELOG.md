@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+### Изменено
+
+- YouTube по умолчанию использует режим **Simple (video URL)** — достаточно указать handle канала без Google Cloud.
+- Вход Google для YouTube **API (OAuth)** открывается в системном браузере; окно CommRelay больше не перенаправляет на страницу логина Google.
+
+### Миграция
+
+- Если в `config.json` уже задан `youtube.connection_mode: "api"`, ничего менять не нужно.
+- Старые установки без `connection_mode`, но с сохранённым OAuth refresh token, остаются в API-режиме.
+
 ### Добавлено
 
 - FAQ [`docs/FAQ.md`](docs/FAQ.md): устранение чёрного квадрата OBS Browser Source на Linux (отключение аппаратного ускорения браузера), проверка overlay вне OBS и типичные причины пустого чата.

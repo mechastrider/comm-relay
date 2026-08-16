@@ -69,6 +69,7 @@ export function renderStatus(status) {
 
     const youtube = status.youtube || {};
     renderPlatformStatus(dom.youtubeStatus, youtube);
+    state.youtubeOAuthConnected = Boolean(youtube.oauth_connected);
 
     if (youtube.connection_mode === "page") {
       if (youtube.channel) {
@@ -246,11 +247,14 @@ export function handleOAuthQuery() {
 
     if (oauth === "success") {
       showBanner("success", "YouTube connected. Enable the connector and save settings.");
+    } else if (oauth === "pending") {
+      showBanner("info", "Complete sign-in in your browser, then return to CommRelay.");
     } else if (oauthError) {
       const messages = {
         denied: "YouTube authorization was denied.",
         not_configured: "Set OAuth client ID and secret, save, then connect again.",
         exchange_failed: "YouTube token exchange failed — check credentials and redirect URI.",
+        open_failed: "Could not open the system browser. Save OAuth settings and use Connect again.",
       };
       showBanner("error", messages[oauthError] || "YouTube authorization failed.");
     }

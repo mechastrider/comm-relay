@@ -70,10 +70,21 @@ type YouTubeConfigPublic struct {
 	OAuth          YouTubeOAuthPublic `json:"oauth"`
 }
 
+// EffectiveConnectionMode returns the resolved YouTube connection mode.
+func (c YouTubeConfig) EffectiveConnectionMode() string {
+	if c.ConnectionMode != "" {
+		return c.ConnectionMode
+	}
+	if c.OAuth.HasRefreshToken() {
+		return YouTubeConnectionModeAPI
+	}
+	return YouTubeConnectionModePage
+}
+
 // ApplyYouTubeDefaults fills omitted YouTube settings from older config files.
 func (c *YouTubeConfig) ApplyYouTubeDefaults() {
 	if c.ConnectionMode == "" {
-		c.ConnectionMode = YouTubeConnectionModeAPI
+		c.ConnectionMode = c.EffectiveConnectionMode()
 	}
 	if c.ChatMode == "" {
 		c.ChatMode = YouTubeChatModeStream

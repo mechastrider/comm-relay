@@ -224,3 +224,8 @@ select:focus-visible {
   border-color: #1c6e3a;
   color: #d7ffe3;
 }
+
+.banner--info {
+  border-color: #2f5f8f;
+  color: #d8ecff;
+}

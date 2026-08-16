@@ -124,22 +124,19 @@ CommRelay может показывать отдельную ленту чата
 
 ### YouTube Live
 
-Есть два режима подключения:
+По умолчанию используется **Simple (video URL)** — без Google Cloud и OAuth:
 
-**Simple (video URL)** — без Google Cloud и OAuth:
+1. Укажите **Channel handle** (`@name` или URL канала) — CommRelay сам найдёт текущий эфир.
+2. Либо вставьте URL/ID конкретного live-видео (имеет приоритет над автопоиском).
+3. Включите YouTube connector и сохраните настройки.
 
-1. В админке выберите **Connection mode → Simple (video URL)**.
-2. Укажите **Channel handle** (`@name` или URL канала) — CommRelay сам найдёт текущий эфир.
-3. Либо вставьте URL/ID конкретного live-видео (имеет приоритет над автопоиском).
-4. Включите YouTube connector и сохраните настройки.
-
-**API (OAuth)** — для автоматического чтения чата авторизованного аккаунта:
+Для **API (OAuth)** (автоматическое чтение чата авторизованного аккаунта) выберите **Connection mode → API (OAuth)**:
 
 1. Откройте [Google Cloud Console](https://console.cloud.google.com/).
 2. Создайте OAuth client и включите **YouTube Data API v3**.
 3. Добавьте redirect URI: `http://127.0.0.1:17877/oauth/youtube/callback`.
 4. В CommRelay вставьте **OAuth client ID** и **client secret**, сохраните настройки.
-5. Нажмите **Connect YouTube** и пройдите авторизацию Google.
+5. Нажмите **Connect** — откроется системный браузер для входа Google. После успешной авторизации вернитесь в CommRelay.
 6. Включите YouTube connector и сохраните настройки ещё раз.
 
 В simple mode читается публичный live chat по URL. В API mode сообщения появятся, когда у авторизованного аккаунта идёт активный эфир с live chat.
@@ -176,7 +173,7 @@ OAuth не требуется. Укажите slug канала или URL `live
 - **Spacing и Theme «одинаковые»**: сравнивайте при активном чате; Compact заметнее при 5+ сообщениях; Text only лучше виден на зелёном или тёмном фоне сцены; Cockpit-темы рассчитаны на вывод поверх игрового кадра.
 - **OBS ничего не показывает**: проверьте, что CommRelay запущен, URL в Browser Source совпадает с портом, а connector в админке имеет статус `connected`. На **Linux** при чёрном квадрате в Browser Source отключите аппаратное ускорение браузера в OBS (**Файл → Настройки → Расширенные → Источники**) — см. [`docs/FAQ.md`](docs/FAQ.md).
 - **Порт 17877 занят**: закройте другое приложение на этом порту или запустите CommRelay с другим адресом через `-addr 127.0.0.1:<порт>`.
-- **YouTube OAuth не проходит**: redirect URI в Google Cloud должен точно совпадать с портом из `config.json`.
+- **YouTube OAuth не проходит**: redirect URI в Google Cloud должен точно совпадать с портом из `config.json`. Нажмите **Connect** в режиме API — вход откроется в системном браузере, не во встроенном окне CommRelay.
 - **Нет сообщений YouTube**: нужен активный эфир с включённым live chat; в simple mode проверьте URL видео.
 - **Simple mode не подключается**: YouTube может показать consent/captcha — попробуйте API mode или обновите URL эфира.
 - **macOS не открывает приложение**: ранние сборки не подписаны; используйте **Open** из контекстного меню Finder.

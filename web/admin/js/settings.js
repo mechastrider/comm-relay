@@ -221,7 +221,7 @@ export function applyConfig(config) {
     if (config.youtube) {
       dom.youtubeEnabled.checked = Boolean(config.youtube.enabled);
       if (dom.youtubeConnectionMode) {
-        const connectionMode = config.youtube.connection_mode || "api";
+        const connectionMode = config.youtube.connection_mode || "page";
         dom.youtubeConnectionMode.value =
           connectionMode === "page" ? "page" : "api";
       }
@@ -290,7 +290,7 @@ export function buildPayload() {
         enabled: dom.youtubeEnabled.checked,
         connection_mode: dom.youtubeConnectionMode
           ? dom.youtubeConnectionMode.value
-          : "api",
+          : "page",
         video_input: dom.youtubeVideoInput ? dom.youtubeVideoInput.value.trim() : "",
         channel_handle: dom.youtubeChannelHandle ? dom.youtubeChannelHandle.value.trim() : "",
         chat_mode: dom.youtubeChatMode ? dom.youtubeChatMode.value : "stream",
@@ -496,6 +496,62 @@ export async function loadStatus() {
       throw new Error(mapHTTPError(response.status, payload && payload.error));
     }
     renderDiagnostics(payload);
+  }
+
+const YOUTUBE_OAUTH_WAIT_MS = 5 * 60 * 1000;
+const YOUTUBE_OAUTH_POLL_MS = 1000;
+
+export async function startYouTubeOAuth() {
+    if (state.youtubeOAuthInFlight) {
+      return;
+    }
+
+    hideBanner();
+    state.youtubeOAuthInFlight = true;
+
+    try {
+      const response = await fetch(apiURL("/api/youtube/oauth/start"), {
+        method: "POST",
+      });
+      const body = await readJSON(response);
+      if (!response.ok) {
+        showBanner("error", mapHTTPError(response.status, body && body.error));
+        return;
+      }
+
+      if (body.opened) {
+        showBanner("info", "Complete sign-in in your browser, then return to CommRelay.");
+      } else if (body.authorization_url) {
+        showBanner(
+          "info",
+          "Open this authorization link in your browser: " + body.authorization_url
+        );
+      } else {
+        showBanner("error", "Could not open the system browser for YouTube sign-in.");
+        return;
+      }
+
+      await waitForYouTubeOAuthConnected();
+    } catch {
+      showBanner("error", "Cannot reach CommRelay — is it running?");
+    } finally {
+      state.youtubeOAuthInFlight = false;
+    }
+  }
+
+async function waitForYouTubeOAuthConnected() {
+    const deadline = Date.now() + YOUTUBE_OAUTH_WAIT_MS;
+    while (Date.now() < deadline) {
+      await loadStatus();
+      if (state.youtubeOAuthConnected) {
+        showBanner("success", "YouTube connected. Enable the connector and save settings.");
+        return;
+      }
+      await new Promise(function (resolve) {
+        window.setTimeout(resolve, YOUTUBE_OAUTH_POLL_MS);
+      });
+    }
+    showBanner("error", "YouTube authorization timed out. Try Connect again.");
   }
 
 export async function loadRecentMessages(options) {

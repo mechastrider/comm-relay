@@ -105,10 +105,7 @@ func vkStatusResponse(cfg config.Config, registry *status.Registry) platformStat
 }
 
 func youtubeStatusResponse(cfg config.Config, registry *status.Registry) platformStatusResponse {
-	connectionMode := cfg.YouTube.ConnectionMode
-	if connectionMode == "" {
-		connectionMode = config.YouTubeConnectionModeAPI
-	}
+	connectionMode := cfg.YouTube.EffectiveConnectionMode()
 
 	resp := platformStatusResponse{
 		Enabled:        cfg.YouTube.Enabled,
