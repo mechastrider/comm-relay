@@ -42,7 +42,7 @@ func TestWebSocket_WhenChatPublished_ExpectJSONMessage(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = conn.Close() })
 
-	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	time.Sleep(50 * time.Millisecond)
 
 	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
 		ID:          "overlay-1",
@@ -53,6 +53,7 @@ func TestWebSocket_WhenChatPublished_ExpectJSONMessage(t *testing.T) {
 		Timestamp:   time.Date(2026, 6, 5, 10, 11, 12, 0, time.UTC),
 	})))
 
+	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	_, data, err := conn.ReadMessage()
 	require.NoError(t, err)
 
@@ -78,7 +79,8 @@ func TestWebSocket_WhenMessageDeleted_ExpectDeletionEvent(t *testing.T) {
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = conn.Close() })
-	require.NoError(t, conn.SetReadDeadline(time.Now().Add(2*time.Second)))
+
+	time.Sleep(50 * time.Millisecond)
 
 	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
 		ID:       "delete-1",
@@ -86,6 +88,8 @@ func TestWebSocket_WhenMessageDeleted_ExpectDeletionEvent(t *testing.T) {
 		Username: "viewer",
 		Message:  "remove me",
 	})))
+
+	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	_, _, err = conn.ReadMessage()
 	require.NoError(t, err)
 
@@ -111,6 +115,7 @@ func TestWebSocket_WhenMessageDeleted_ExpectDeletionEvent(t *testing.T) {
 	t.Cleanup(func() { _ = response.Body.Close() })
 	require.Equal(t, http.StatusOK, response.StatusCode)
 
+	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	_, data, err := conn.ReadMessage()
 	require.NoError(t, err)
 
