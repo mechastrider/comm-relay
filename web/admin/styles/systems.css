@@ -208,6 +208,32 @@
   letter-spacing: 0.6px;
 }
 
+.sidebar-actions {
+  margin-top: 8px;
+}
+
+.sidebar-action {
+  width: 100%;
+  min-height: 40px;
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.sidebar-action > span {
+  font-size: 10px;
+  letter-spacing: 0.6px;
+}
+
+.sidebar-action small {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
 .status-bar {
   min-height: 34px;
   padding: 5px 16px;

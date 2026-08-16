@@ -4,6 +4,10 @@
 
 См. также [`README.md`](../README.md) (установка, настройка платформ) и [`CHANGELOG.md`](../CHANGELOG.md).
 
+## Поддержка
+
+**Где задать вопрос или сообщить о баге:** напишите в [Telegram-чат поддержки](https://t.me/mechastrider_apps/2) — это самый быстрый канал. Исходники и issues — на [GitHub](https://github.com/mechastrider/comm-relay). В админке CommRelay ссылки и версия приложения доступны в **Controls → About**.
+
 ## OBS overlay
 
 ### В OBS чёрный квадрат вместо чата (Linux)

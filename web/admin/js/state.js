@@ -26,4 +26,5 @@ export const state = {
   overlayPreviewResizeObserver: null,
   obsCopyFeedbackTimer: null,
   obsCopyFeedbackButton: null,
+  appVersion: null,
 };

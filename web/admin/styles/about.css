@@ -1,0 +1,101 @@
+.about-btn {
+  border-color: var(--amber-dim);
+}
+
+.about-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.about-identity {
+  display: grid;
+  gap: 4px;
+}
+
+.about-product {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.about-version {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.about-status,
+.about-section-body,
+.about-license {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.about-section {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-dark);
+}
+
+.about-section-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+
+.about-actions {
+  display: grid;
+  gap: 6px;
+}
+
+.about-link-btn {
+  width: 100%;
+  min-height: 40px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0 10px;
+  text-align: left;
+}
+
+.about-link-btn > span,
+.about-link-btn small {
+  line-height: 1;
+}
+
+.about-link-btn small {
+  justify-self: end;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.about-license {
+  padding-top: 2px;
+  border-top: 1px solid var(--border-dark);
+  font-size: 0.68rem;
+}
+
+.about-feedback {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.about-dialog .dialog-subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}

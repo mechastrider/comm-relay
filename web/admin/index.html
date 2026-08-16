@@ -75,6 +75,13 @@
             <button class="btn-physical" type="button" data-dialog-target="interface-dialog">Interface</button>
           </div>
 
+          <div class="sidebar-actions">
+            <button class="btn-physical sidebar-action about-btn" type="button" data-dialog-target="about-dialog">
+              <span>About</span>
+              <small>VERSION · SUPPORT</small>
+            </button>
+          </div>
+
           <div class="panel-heading panel-heading--spaced">
             <h2 id="systems-heading">Systems</h2>
           </div>
@@ -703,10 +710,57 @@
         </div>
       </div>
     </dialog>
+
+    <dialog id="about-dialog" class="settings-dialog about-dialog" aria-labelledby="about-heading">
+      <div class="dialog-frame">
+        <div class="dialog-header">
+          <div>
+            <span class="dialog-kicker">CommRelay</span>
+            <h2 id="about-heading">About</h2>
+            <p class="dialog-subtitle">Version, privacy, and how to reach support.</p>
+          </div>
+          <button class="btn-physical btn-small" type="button" data-dialog-close aria-label="Close about dialog">Close</button>
+        </div>
+
+        <section class="panel about-panel" aria-label="About CommRelay">
+          <div class="about-identity">
+            <div class="about-product">CommRelay</div>
+            <div id="about-version" class="about-version" aria-live="polite">Version —</div>
+            <p class="about-status">Local app · no telemetry · diagnostics stay on your machine.</p>
+          </div>
+
+          <section class="about-section" aria-labelledby="about-support-heading">
+            <h3 class="about-section-title" id="about-support-heading">Support</h3>
+            <p class="about-section-body">
+              Questions, bug reports, and feedback — Telegram chat is the fastest channel.
+              Source and issues live on GitHub.
+            </p>
+            <div class="about-actions">
+              <button id="about-telegram" class="btn-physical btn-start about-link-btn" type="button">
+                <span>Telegram chat</span>
+                <small>SUPPORT</small>
+              </button>
+              <button id="about-github" class="btn-physical about-link-btn" type="button">
+                <span>GitHub</span>
+                <small>SOURCE · ISSUES</small>
+              </button>
+            </div>
+          </section>
+
+          <p class="about-license">MIT License. Copyright (c) 2026 Igor Lazarev. Provided without warranty.</p>
+        </section>
+
+        <div class="dialog-actions">
+          <button id="about-copy-version" class="btn-physical" type="button">Copy version</button>
+          <span id="about-feedback" class="about-feedback" role="status" hidden></span>
+          <button class="btn-physical" type="button" data-dialog-close>Close</button>
+        </div>
+      </div>
+    </dialog>
   </form>
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=13"></script>
+  <script type="module" src="app.js?v=14"></script>
 </body>
 </html>
