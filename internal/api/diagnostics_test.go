@@ -55,6 +55,7 @@ func TestDiagnostics_WhenGet_ExpectRuntimeFields(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 
 	var payload struct {
+		AppVersion        string            `json:"app_version"`
 		UptimeSeconds     int64             `json:"uptime_seconds"`
 		WebSocketClients  int               `json:"websocket_clients"`
 		EnabledConnectors []string          `json:"enabled_connectors"`
@@ -72,6 +73,7 @@ func TestDiagnostics_WhenGet_ExpectRuntimeFields(t *testing.T) {
 		} `json:"emote_cache"`
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Equal(t, "dev", payload.AppVersion)
 	require.GreaterOrEqual(t, payload.UptimeSeconds, int64(0))
 	require.Equal(t, 0, payload.WebSocketClients)
 	require.Equal(t, "connected", payload.Connectors.Twitch.State)

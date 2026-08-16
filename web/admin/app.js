@@ -13,6 +13,7 @@ import {
 import { initOverlayPreview, updateOverlayPreviewScale } from "./js/overlay-preview.js";
 import { initOBSSetup } from "./js/obs-setup.js";
 import { initSettingsDialogs } from "./js/dialogs.js";
+import { initAboutDialog } from "./js/about.js";
 import { initMessageSoundControls } from "./js/sound.js";
 import {
   bindFieldClear,
@@ -74,6 +75,7 @@ initSidebarToggle();
 initOverlayPreview();
 initOBSSetup();
 initSettingsDialogs();
+initAboutDialog();
 initMessageSoundControls();
 
 renderSettingsState();

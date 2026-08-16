@@ -305,6 +305,12 @@ git push origin v0.1.2
 
 Если секция для версии уже есть в `CHANGELOG.md`, workflow не дублирует её и только публикует релиз.
 
+## Поддержка и вопросы
+
+- **Вопросы, баги и отзывы** — [Telegram-чат поддержки](https://t.me/mechastrider_apps/2).
+- **Исходники и issues** — [GitHub](https://github.com/mechastrider/comm-relay).
+- В админке: **Controls → About** (версия и ссылки на поддержку).
+
 ## Поддержка автора
 
 CommRelay — бесплатный open-source проект. Если приложение помогает вашим стримам, можно поддержать автора через [DonationAlerts](https://www.donationalerts.com/r/mechastrider):

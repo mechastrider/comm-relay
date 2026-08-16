@@ -56,6 +56,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	messagesHandler := newMessagesHandler(opts.History, opts.Hub)
 	oauthState := newOAuthStateStore()
 	youtubeOAuth := newYouTubeOAuthHandler(opts.Store, oauthState)
+	supportOpen := newSupportOpenHandler()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", handleHealth)
@@ -65,6 +66,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /api/status", statusHandler.handleGet)
 	mux.HandleFunc("GET /api/diagnostics", diagnosticsHandler.handleGet)
 	mux.HandleFunc("POST /api/youtube/oauth/start", youtubeOAuth.handleStartAPI)
+	mux.HandleFunc("POST /api/support/open", supportOpen.handleOpen)
 	mux.HandleFunc("GET /oauth/youtube/start", youtubeOAuth.handleStart)
 	mux.HandleFunc("GET /oauth/youtube/callback", youtubeOAuth.handleCallback)
 	mux.HandleFunc("GET /api/messages/recent", messagesHandler.handleRecent)

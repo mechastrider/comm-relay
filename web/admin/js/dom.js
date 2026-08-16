@@ -83,6 +83,11 @@ export const messageSoundVolumeLabel = document.getElementById("message-sound-vo
 export const messageSoundTypeInput = document.getElementById("message-sound-type");
 export const testMessageSound = document.getElementById("test-message-sound");
 export const timeLocaleInput = document.getElementById("time-locale");
+export const aboutVersion = document.getElementById("about-version");
+export const aboutTelegram = document.getElementById("about-telegram");
+export const aboutGitHub = document.getElementById("about-github");
+export const aboutCopyVersion = document.getElementById("about-copy-version");
+export const aboutFeedback = document.getElementById("about-feedback");
 export const statusErrorPopover = document.getElementById("status-error-popover");
 
 

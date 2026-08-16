@@ -4,6 +4,7 @@ import { state } from './state.js';
 import { PROVIDER_LABELS } from './constants.js';
 import { createErrorDetailTrigger, hideErrorPopover } from './ui-error-popover.js';
 import { showBanner } from './ui-shell.js';
+import { renderAboutVersion } from './about.js';
 
 export function renderPlatformStatus(el, platform) {
     const state = typeof platform.state === "string" ? platform.state : "unknown";
@@ -222,6 +223,10 @@ export function renderEmoteDiagnostics(emoteCache) {
 export function renderDiagnostics(payload) {
     if (!payload) {
       return;
+    }
+    if (typeof payload.app_version === "string" && payload.app_version) {
+      state.appVersion = payload.app_version;
+      renderAboutVersion();
     }
     if (dom.diagUptime) {
       dom.diagUptime.textContent = formatUptime(payload.uptime_seconds);

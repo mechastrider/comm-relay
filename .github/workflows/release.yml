@@ -124,7 +124,8 @@ jobs:
         shell: bash
         run: |
           cd "$WAILS_PROJECT_DIR"
-          wails build -clean -platform "${{ matrix.platform }}"
+          wails build -clean -platform "${{ matrix.platform }}" \
+            -ldflags "-X github.com/mechastrider/comm-relay/internal/version.Version=${{ steps.version.outputs.version }}"
 
       - name: Package Windows
         if: runner.os == 'Windows'

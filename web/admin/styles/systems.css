@@ -208,6 +208,29 @@
   letter-spacing: 0.6px;
 }
 
+.control-grid-about {
+  display: grid;
+  gap: 2px;
+  align-content: center;
+  min-height: 40px;
+  padding: 5px 6px;
+  text-align: left;
+}
+
+.control-grid-about > span {
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  line-height: 1.1;
+}
+
+.control-grid-about small {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.4px;
+  line-height: 1.2;
+}
+
 .status-bar {
   min-height: 34px;
   padding: 5px 16px;
