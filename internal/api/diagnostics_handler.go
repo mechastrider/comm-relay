@@ -7,6 +7,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/runtime"
+	"github.com/mechastrider/comm-relay/internal/version"
 )
 
 type diagnosticsHandler struct {
@@ -28,6 +29,7 @@ func newDiagnosticsHandler(store *config.Store, registry *status.Registry, hub *
 }
 
 type diagnosticsResponse struct {
+	AppVersion        string            `json:"app_version"`
 	UptimeSeconds     int64             `json:"uptime_seconds"`
 	WebSocketClients  int               `json:"websocket_clients"`
 	EnabledConnectors []string          `json:"enabled_connectors"`
@@ -63,6 +65,7 @@ func (h *diagnosticsHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, diagnosticsResponse{
+		AppVersion:        version.Version,
 		UptimeSeconds:     uptimeSeconds,
 		WebSocketClients:  wsClients,
 		EnabledConnectors: enabledConnectors(cfg),
