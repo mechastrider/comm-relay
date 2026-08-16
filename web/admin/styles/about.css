@@ -2,14 +2,20 @@
   border-color: var(--amber-dim);
 }
 
+#about-dialog .about-panel {
+  margin: 12px;
+  padding: 14px 16px;
+  overflow: auto;
+}
+
 .about-panel {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .about-identity {
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
 .about-product {
@@ -37,8 +43,8 @@
 
 .about-section {
   display: grid;
-  gap: 8px;
-  padding-top: 4px;
+  gap: 10px;
+  padding-top: 12px;
   border-top: 1px solid var(--border-dark);
 }
 
@@ -82,7 +88,7 @@
 }
 
 .about-license {
-  padding-top: 2px;
+  padding-top: 12px;
   border-top: 1px solid var(--border-dark);
   font-size: 0.68rem;
 }
@@ -94,8 +100,15 @@
 }
 
 .about-dialog .dialog-subtitle {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.4;
+}
+
+#about-dialog .dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }

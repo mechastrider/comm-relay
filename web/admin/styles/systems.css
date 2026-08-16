@@ -208,29 +208,26 @@
   letter-spacing: 0.6px;
 }
 
-.sidebar-actions {
-  margin-top: 8px;
-}
-
-.sidebar-action {
-  width: 100%;
-  min-height: 40px;
+.control-grid-about {
   display: grid;
   gap: 2px;
-  padding: 6px 8px;
+  align-content: center;
+  min-height: 40px;
+  padding: 5px 6px;
   text-align: left;
 }
 
-.sidebar-action > span {
+.control-grid-about > span {
   font-size: 10px;
   letter-spacing: 0.6px;
+  line-height: 1.1;
 }
 
-.sidebar-action small {
+.control-grid-about small {
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 8px;
-  letter-spacing: 0.5px;
+  font-size: 7px;
+  letter-spacing: 0.4px;
   line-height: 1.2;
 }
 
