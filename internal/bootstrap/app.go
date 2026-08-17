@@ -22,6 +22,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote/seventv"
 	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
 	"github.com/mechastrider/comm-relay/internal/runtime"
+	"github.com/mechastrider/comm-relay/internal/streamstatus"
 )
 
 // App runs CommRelay HTTP services and connectors until stopped.
@@ -77,15 +78,17 @@ func New(opts Options) (*App, error) {
 	emoteRefresher := emote.NewRefresher(emoteCache, store)
 	youtubeEmojiCatalog := ytemoji.NewCatalog()
 	youtubeEmojiRefresher := ytemoji.NewRefresher(youtubeEmojiCatalog, emoteHTTP)
+	streamStatusStore := streamstatus.NewStore(streamstatus.StoreOptions{})
 
 	handler, err := api.NewHandler(api.Options{
-		WebRoot:    webRoot,
-		Hub:        hub,
-		Store:      store,
-		History:    history,
-		Registry:   statusRegistry,
-		Runtime:    runtimeInfo,
-		EmoteCache: emoteCache,
+		WebRoot:      webRoot,
+		Hub:          hub,
+		Store:        store,
+		History:      history,
+		Registry:     statusRegistry,
+		Runtime:      runtimeInfo,
+		EmoteCache:   emoteCache,
+		StreamStatus: streamStatusStore,
 	})
 	if err != nil {
 		return nil, errors.Errorf("create handler: %w", err)

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
   <script>
     (function () {
       try {
@@ -94,6 +94,12 @@
           <div class="panel-heading panel-heading--spaced">
             <h2 id="systems-heading" data-i18n="shell.systems">Systems</h2>
           </div>
+
+          <div class="panel-heading panel-heading--spaced">
+            <h2 id="streams-heading" data-i18n="streams.heading">Streams</h2>
+          </div>
+          <div id="streams-strip" class="streams-strip" aria-labelledby="streams-heading"></div>
+          <p id="streams-total-caption" class="streams-strip__caption" data-i18n="streams.totalCaption">Sum across platforms</p>
 
           <dl class="overview-list">
             <div class="overview-list__row">

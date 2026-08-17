@@ -9,18 +9,20 @@ import (
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/runtime"
+	"github.com/mechastrider/comm-relay/internal/streamstatus"
 )
 
 // Options configures the HTTP handler.
 type Options struct {
 	// WebRoot overrides embedded static assets with files from disk (for local UI dev).
-	WebRoot    string
-	Hub        *Hub
-	Store      *config.Store
-	History    *MessageHistory
-	Registry   *status.Registry
-	Runtime    *runtime.Info
-	EmoteCache *emote.Cache
+	WebRoot      string
+	Hub          *Hub
+	Store        *config.Store
+	History      *MessageHistory
+	Registry     *status.Registry
+	Runtime      *runtime.Info
+	EmoteCache   *emote.Cache
+	StreamStatus *streamstatus.Store
 }
 
 // NewHandler returns the root HTTP handler for CommRelay.
@@ -52,7 +54,13 @@ func NewHandler(opts Options) (http.Handler, error) {
 
 	configHandler := newConfigHandler(opts.Store)
 	statusHandler := newStatusHandler(opts.Store, registry)
+	streamStore := opts.StreamStatus
+	if streamStore == nil {
+		streamStore = streamstatus.NewStore(streamstatus.StoreOptions{})
+	}
+
 	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt, opts.EmoteCache)
+	streamsStatusHandler := newStreamsStatusHandler(opts.Store, registry, streamStore)
 	messagesHandler := newMessagesHandler(opts.History, opts.Hub)
 	oauthState := newOAuthStateStore()
 	youtubeOAuth := newYouTubeOAuthHandler(opts.Store, oauthState)
@@ -65,6 +73,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("POST /api/config/update", configHandler.handleUpdate)
 	mux.HandleFunc("GET /api/status", statusHandler.handleGet)
 	mux.HandleFunc("GET /api/diagnostics", diagnosticsHandler.handleGet)
+	mux.HandleFunc("GET /api/streams/status", streamsStatusHandler.handleGet)
 	mux.HandleFunc("POST /api/youtube/oauth/start", youtubeOAuth.handleStartAPI)
 	mux.HandleFunc("POST /api/support/open", supportOpen.handleOpen)
 	mux.HandleFunc("GET /oauth/youtube/start", youtubeOAuth.handleStart)

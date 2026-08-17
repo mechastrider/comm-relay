@@ -32,6 +32,8 @@ export const vkDetail = document.getElementById("vk-detail");
 export const diagUptime = document.getElementById("diag-uptime");
 export const diagWsClients = document.getElementById("diag-ws-clients");
 export const diagMessageCounts = document.getElementById("diag-message-counts");
+export const streamsStrip = document.getElementById("streams-strip");
+export const streamsTotalCaption = document.getElementById("streams-total-caption");
 export const vkEnabled = document.getElementById("vk-enabled");
 export const vkChannel = document.getElementById("vk-channel");
 if (!vkEnabled || !vkChannel) {
