@@ -27,7 +27,7 @@ import {
   updateYouTubeConnectionModeUI,
   startYouTubeOAuth,
 } from "./js/settings.js";
-import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
+import { initOverlayAppearance } from "./js/overlay-appearance.js";
 
 initI18n();
 
@@ -77,6 +77,7 @@ dom.refreshMessages.addEventListener("click", function () {
 handleOAuthQuery();
 initSidebarToggle();
 initOverlayPreview();
+initOverlayAppearance();
 initOBSSetup();
 initConnectionsTabs();
 initSettingsDialogs();

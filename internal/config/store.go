@@ -28,6 +28,11 @@ func NewStore(path string, cfg *Config) (*Store, error) {
 	}, nil
 }
 
+// Path returns the config file path used by the store.
+func (s *Store) Path() string {
+	return s.path
+}
+
 // Snapshot returns a copy of the current settings.
 func (s *Store) Snapshot() Config {
 	s.mu.RLock()

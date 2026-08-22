@@ -17,6 +17,7 @@ import {
   OVERLAY_PREVIEW_HEIGHT_MAX,
   OVERLAY_PREVIEW_SIZES,
 } from './constants.js';
+import { readStyleFromForm, selectedOverlayPresetID } from './overlay-appearance.js';
 import { t } from './i18n-ui.js';
 
 export function overlayDisplaySettingsChanged(payload) {
@@ -225,6 +226,26 @@ export function buildOverlayPreviewURL(previewMode) {
       "theme",
       normalizeOverlayTheme(dom.overlayTheme && dom.overlayTheme.value)
     );
+    url.searchParams.set("preset", selectedOverlayPresetID());
+    const style = readStyleFromForm();
+    url.searchParams.set("style_font_family", style.font_family);
+    url.searchParams.set("style_line_height", String(style.line_height));
+    url.searchParams.set("style_message_gap_px", String(style.message_gap_px));
+    url.searchParams.set("style_text_effect", style.text_effect);
+    url.searchParams.set("style_text_effect_strength", String(style.text_effect_strength));
+    url.searchParams.set("style_platform_marker", style.platform_marker);
+    url.searchParams.set("style_message_bg_color", style.message_bg_color);
+    url.searchParams.set("style_message_bg_opacity", String(style.message_bg_opacity));
+    url.searchParams.set("style_panel_bg_color", style.panel_bg_color);
+    url.searchParams.set("style_panel_bg_opacity", String(style.panel_bg_opacity));
+    if (style.panel_bg_image) {
+      url.searchParams.set("style_panel_bg_image", style.panel_bg_image);
+    }
+    url.searchParams.set("style_message_border_color", style.message_border_color);
+    url.searchParams.set("style_message_border_width_px", String(style.message_border_width_px));
+    url.searchParams.set("style_message_border_radius_px", String(style.message_border_radius_px));
+    url.searchParams.set("style_panel_border_color", style.panel_border_color);
+    url.searchParams.set("style_panel_border_width_px", String(style.panel_border_width_px));
     return url;
   }
 

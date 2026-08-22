@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -13,10 +14,11 @@ import (
 
 type configHandler struct {
 	store *config.Store
+	hub   *Hub
 }
 
-func newConfigHandler(store *config.Store) *configHandler {
-	return &configHandler{store: store}
+func newConfigHandler(store *config.Store, hub *Hub) *configHandler {
+	return &configHandler{store: store, hub: hub}
 }
 
 func (h *configHandler) handleGet(w http.ResponseWriter, r *http.Request) {
@@ -58,5 +60,19 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.broadcastOverlaySettings(ctx)
 	writeJSON(w, http.StatusOK, h.store.Snapshot().Public())
+}
+
+func (h *configHandler) broadcastOverlaySettings(ctx context.Context) {
+	if h.hub == nil {
+		return
+	}
+	snapshot := h.store.Snapshot()
+	payload, err := overlaySettingsWirePayload(snapshot.Overlay)
+	if err != nil {
+		clog.Errorf(ctx, "overlay settings wire payload: %w", err)
+		return
+	}
+	h.hub.broadcast(payload)
 }

@@ -60,13 +60,17 @@ const (
 
 // OverlayConfig controls OBS overlay appearance and message retention.
 type OverlayConfig struct {
-	MaxMessages       int                 `json:"max_messages"`
-	MessageTTLSeconds int                 `json:"message_ttl_seconds"`
-	FontSizePx        int                 `json:"font_size_px"`
-	DisplayMode       string              `json:"display_mode"`
-	Theme             string              `json:"theme"`
-	Emotes            EmotesConfig        `json:"emotes"`
-	ImagePreviews     ImagePreviewsConfig `json:"image_previews"`
+	MaxMessages       int                     `json:"max_messages"`
+	MessageTTLSeconds int                     `json:"message_ttl_seconds"`
+	FontSizePx        int                     `json:"font_size_px"`
+	DisplayMode       string                  `json:"display_mode"`
+	Theme             string                  `json:"theme"`
+	Emotes            EmotesConfig            `json:"emotes"`
+	ImagePreviews     ImagePreviewsConfig     `json:"image_previews"`
+	ActivePresetID    string                  `json:"active_preset_id"`
+	Presets           []OverlayPreset         `json:"presets"`
+	Highlights        OverlayHighlightsConfig `json:"highlights"`
+	UserIcons         []OverlayUserIcon       `json:"user_icons"`
 }
 
 // Default returns safe prototype defaults.
@@ -94,6 +98,10 @@ func Default() *Config {
 			Theme:             OverlayThemeDefault,
 			Emotes:            defaultEmotes(),
 			ImagePreviews:     defaultImagePreviews(),
+			ActivePresetID:    OverlayDefaultPresetID,
+			Presets:           []OverlayPreset{defaultOverlayPreset()},
+			Highlights:        defaultOverlayHighlights(),
+			UserIcons:         nil,
 		},
 		Admin: AdminConfig{
 			MessageSound: defaultMessageSound(),
@@ -117,6 +125,15 @@ func (c *Config) ApplyDefaults() {
 	}
 	c.Overlay.Emotes.applyDefaults()
 	c.Overlay.ImagePreviews.applyDefaults()
+	c.Overlay.Highlights.applyDefaults()
+	c.Overlay.EnsurePresets()
+	for i := range c.Overlay.Presets {
+		c.Overlay.Presets[i].applyDefaults()
+	}
+	if c.Overlay.UserIcons == nil {
+		c.Overlay.UserIcons = []OverlayUserIcon{}
+	}
+	c.Overlay.syncLegacyFieldsFromActive()
 	c.Admin.applyDefaults()
 	c.Logging.applyDefaults()
 	c.YouTube.ApplyYouTubeDefaults()
@@ -151,16 +168,33 @@ func Load(path string) (*Config, error) {
 		return nil, errors.Errorf("parse config: %w", err, errors.String("path", path))
 	}
 
-	cfg.ApplyDefaults()
 	if !overlayEmotesPresent(data) {
 		cfg.Overlay.Emotes = defaultEmotes()
 	}
+	if !overlayPresetsPresent(data) {
+		cfg.Overlay.Presets = nil
+		cfg.Overlay.ActivePresetID = ""
+	}
+
+	cfg.ApplyDefaults()
 
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
+}
+
+func overlayPresetsPresent(data []byte) bool {
+	var doc struct {
+		Overlay *struct {
+			Presets *json.RawMessage `json:"presets"`
+		} `json:"overlay"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.Overlay != nil && doc.Overlay.Presets != nil
 }
 
 func overlayEmotesPresent(data []byte) bool {

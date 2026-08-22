@@ -23,6 +23,10 @@ import {
   overlayDisplaySettingsChanged,
 } from './overlay-preview.js';
 import {
+  applyOverlayAppearanceFromConfig,
+  buildOverlayPayloadFromForm,
+} from './overlay-appearance.js';
+import {
   applyMessageSoundFromConfig,
   getMessageSoundSettings,
 } from './sound.js';
@@ -218,6 +222,7 @@ export function applyConfig(config) {
       overlay.display_mode === "compact" ? "compact" : "normal";
     dom.overlayTheme.value = normalizeOverlayTheme(overlay.theme);
     applyRichChatFromConfig(overlay);
+    applyOverlayAppearanceFromConfig(config);
 
     if (config.youtube) {
       dom.youtubeEnabled.checked = Boolean(config.youtube.enabled);
@@ -302,15 +307,7 @@ export function buildPayload() {
       vk: Object.assign(readVkSettings(), {
         use_proxy: dom.vkUseProxy ? dom.vkUseProxy.checked : false,
       }),
-      overlay: {
-        max_messages: Number.parseInt(dom.overlayMaxMessages.value, 10),
-        message_ttl_seconds: Number.parseInt(dom.overlayMessageTTL.value, 10),
-        font_size_px: Number.parseInt(dom.overlayFontSize.value, 10),
-        display_mode: dom.overlayDisplayMode.value,
-        theme: dom.overlayTheme.value,
-        emotes: richChat.emotes,
-        image_previews: richChat.image_previews,
-      },
+      overlay: buildOverlayPayloadFromForm(richChat),
       admin: {
         time_locale: dom.timeLocaleInput && dom.timeLocaleInput.value === "en-GB"
           ? "en-GB"

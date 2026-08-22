@@ -1,12 +1,24 @@
 import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.js?v=12";
+import {
+  OVERLAY_FONT_SIZE_MIN,
+  OVERLAY_FONT_SIZE_MAX,
+  applyMessageHighlight,
+  applyOverlayStyleTokens,
+  findHighlightRule,
+  findUserIcon,
+  frameUsername,
+  normalizeHighlights,
+  normalizeOverlayStyle,
+  normalizeUserIcons,
+  overlayAssetURL,
+  resolveOverlayPreset,
+} from "/overlay/overlay-settings.js?v=14";
 
 "use strict";
 
   const DEFAULT_MAX_MESSAGES = 30;
   const DEFAULT_MESSAGE_TTL_SECONDS = 20;
   const DEFAULT_FONT_SIZE_PX = 18;
-  const OVERLAY_FONT_SIZE_MIN = 12;
-  const OVERLAY_FONT_SIZE_MAX = 48;
   const DEFAULT_DISPLAY_MODE = "normal";
   const DEFAULT_THEME = "default";
   const DISPLAY_MODES = new Set(["normal", "compact"]);
@@ -85,7 +97,13 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
   const DEFAULT_IMAGE_PREVIEW_MAX_WIDTH = 320;
   const DEFAULT_IMAGE_PREVIEW_MAX_HEIGHT = 180;
 
+  const boundPresetID = (function () {
+    const raw = params.get("preset");
+    return raw !== null && raw.trim() !== "" ? raw.trim() : "";
+  })();
+
   let config = {
+    presetID: boundPresetID,
     maxMessages: readPositiveInt("max_messages", DEFAULT_MAX_MESSAGES),
     messageTTLSeconds: readNonNegativeInt(
       "message_ttl_seconds",
@@ -94,6 +112,9 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     fontSizePx: readFontSizePx(DEFAULT_FONT_SIZE_PX),
     displayMode: readDisplayMode(DEFAULT_DISPLAY_MODE),
     theme: readTheme(DEFAULT_THEME),
+    style: normalizeOverlayStyle(null),
+    highlights: normalizeHighlights(null),
+    userIcons: normalizeUserIcons(null),
     imagePreviews: {
       enabled: false,
       allowedHosts: [],
@@ -102,44 +123,36 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     },
   };
 
+  function applyResolvedPreset(preset) {
+    if (!preset) {
+      return;
+    }
+    if (!params.has("max_messages")) {
+      config.maxMessages = preset.max_messages;
+    }
+    if (!params.has("message_ttl_seconds")) {
+      config.messageTTLSeconds = preset.message_ttl_seconds;
+    }
+    if (!params.has("font_size_px")) {
+      config.fontSizePx = preset.font_size_px;
+    }
+    if (!params.has("display_mode")) {
+      config.displayMode = preset.display_mode;
+    }
+    if (!params.has("theme")) {
+      config.theme = preset.theme;
+    }
+    config.style = normalizeOverlayStyle(preset.style);
+  }
+
   function applyServerOverlayConfig(serverOverlay) {
     if (!serverOverlay || typeof serverOverlay !== "object") {
       return;
     }
-    if (
-      !params.has("max_messages") &&
-      typeof serverOverlay.max_messages === "number" &&
-      serverOverlay.max_messages >= 1
-    ) {
-      config.maxMessages = serverOverlay.max_messages;
-    }
-    if (
-      !params.has("message_ttl_seconds") &&
-      typeof serverOverlay.message_ttl_seconds === "number" &&
-      serverOverlay.message_ttl_seconds >= 0
-    ) {
-      config.messageTTLSeconds = serverOverlay.message_ttl_seconds;
-    }
-    if (
-      !params.has("font_size_px") &&
-      typeof serverOverlay.font_size_px === "number" &&
-      serverOverlay.font_size_px >= OVERLAY_FONT_SIZE_MIN &&
-      serverOverlay.font_size_px <= OVERLAY_FONT_SIZE_MAX
-    ) {
-      config.fontSizePx = serverOverlay.font_size_px;
-    }
-    if (!params.has("display_mode") && typeof serverOverlay.display_mode === "string") {
-      const mode = serverOverlay.display_mode.trim().toLowerCase();
-      if (DISPLAY_MODES.has(mode)) {
-        config.displayMode = mode;
-      }
-    }
-    if (!params.has("theme") && typeof serverOverlay.theme === "string") {
-      const theme = serverOverlay.theme.trim().toLowerCase();
-      if (THEMES.has(theme)) {
-        config.theme = theme;
-      }
-    }
+    const preset = resolveOverlayPreset(serverOverlay, boundPresetID);
+    applyResolvedPreset(preset);
+    config.highlights = normalizeHighlights(serverOverlay.highlights);
+    config.userIcons = normalizeUserIcons(serverOverlay.user_icons);
     if (
       serverOverlay.image_previews &&
       typeof serverOverlay.image_previews === "object"
@@ -232,6 +245,10 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
       "--overlay-image-preview-max-height",
       String(config.imagePreviews.maxHeightPx) + "px"
     );
+    applyOverlayStyleTokens(config.style);
+    document.body.style.fontFamily = getComputedStyle(document.documentElement)
+      .getPropertyValue("--overlay-font-family")
+      .trim();
     document.body.classList.remove("overlay--normal", "overlay--compact");
     document.body.classList.add(
       config.displayMode === "compact" ? "overlay--compact" : "overlay--normal"
@@ -261,6 +278,45 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     }
   }
 
+  function applyQueryStyleOverrides() {
+    if (!params.has("style_font_family")) {
+      return;
+    }
+    const style = {
+      font_family: params.get("style_font_family"),
+      line_height: Number.parseFloat(params.get("style_line_height") || "1.35"),
+      message_gap_px: Number.parseInt(params.get("style_message_gap_px") || "6", 10),
+      text_effect: params.get("style_text_effect"),
+      text_effect_strength: Number.parseInt(
+        params.get("style_text_effect_strength") || "2",
+        10
+      ),
+      platform_marker: params.get("style_platform_marker"),
+      message_bg_color: params.get("style_message_bg_color"),
+      message_bg_opacity: Number.parseFloat(
+        params.get("style_message_bg_opacity") || "0.58"
+      ),
+      panel_bg_color: params.get("style_panel_bg_color"),
+      panel_bg_opacity: Number.parseFloat(params.get("style_panel_bg_opacity") || "0"),
+      panel_bg_image: params.get("style_panel_bg_image") || "",
+      message_border_color: params.get("style_message_border_color"),
+      message_border_width_px: Number.parseInt(
+        params.get("style_message_border_width_px") || "0",
+        10
+      ),
+      message_border_radius_px: Number.parseInt(
+        params.get("style_message_border_radius_px") || "8",
+        10
+      ),
+      panel_border_color: params.get("style_panel_border_color"),
+      panel_border_width_px: Number.parseInt(
+        params.get("style_panel_border_width_px") || "0",
+        10
+      ),
+    };
+    config.style = normalizeOverlayStyle(style);
+  }
+
   async function loadServerConfig() {
     try {
       const response = await fetch("/api/config");
@@ -272,6 +328,7 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     } catch {
       /* keep URL/default config */
     }
+    applyQueryStyleOverrides();
     applyAppearance();
   }
 
@@ -285,7 +342,7 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
   function initOverlay(listEl) {
   applyAppearance();
 
-  /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, messageKey: string }>} */
+  /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, messageKey: string, frame: object | null }>} */
   const entries = [];
   const renderedMessageIDs = new Set();
   let reconnectDelayMs = INITIAL_RECONNECT_MS;
@@ -418,6 +475,56 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     }
 
     return Math.max(0, ttlMs - (Date.now() - publishedAt));
+  }
+
+  function refreshMessageDecorations(entry) {
+    if (!entry || !entry.el) {
+      return;
+    }
+    const frame = entry.frame;
+    const text = frame && typeof frame.message === "string" ? frame.message : "";
+    applyMessageHighlight(
+      entry.el,
+      findHighlightRule(config.highlights, text)
+    );
+    const existingIcon = entry.el.querySelector(".message__user-icon");
+    if (existingIcon) {
+      existingIcon.remove();
+    }
+    if (!frame) {
+      return;
+    }
+    const iconFile = findUserIcon(
+      config.userIcons,
+      frame.platform,
+      frameUsername(frame)
+    );
+    if (!iconFile) {
+      return;
+    }
+    const iconURL = overlayAssetURL(iconFile);
+    if (iconURL === "") {
+      return;
+    }
+    const iconEl = document.createElement("img");
+    iconEl.className = "message__user-icon";
+    iconEl.src = iconURL;
+    iconEl.alt = "";
+    iconEl.referrerPolicy = "no-referrer";
+    const platformEl = entry.el.querySelector(".message__platform");
+    const insertBefore = platformEl ? platformEl.nextSibling : entry.el.firstChild;
+    entry.el.insertBefore(iconEl, insertBefore);
+  }
+
+  function refreshAllMessageDecorations() {
+    entries.forEach(refreshMessageDecorations);
+  }
+
+  function applyOverlaySettingsFromServer(serverOverlay) {
+    applyServerOverlayConfig(serverOverlay);
+    applyQueryStyleOverrides();
+    applyAppearance();
+    refreshAllMessageDecorations();
   }
 
   function scrollToBottom() {
@@ -582,15 +689,24 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     row.appendChild(textEl);
     listEl.appendChild(row);
 
+    const entry = {
+      el: row,
+      ttlTimer: null,
+      messageKey: messageKey(frame),
+      frame: frame,
+    };
+    refreshMessageDecorations(entry);
+
     let ttlTimer = null;
     if (ttlMs !== null && ttlMs > 0) {
       ttlTimer = window.setTimeout(function () {
         removeEntryElement(row, true);
       }, ttlMs);
     }
+    entry.ttlTimer = ttlTimer;
 
     rememberRenderedMessage(frame);
-    entries.push({ el: row, ttlTimer: ttlTimer, messageKey: messageKey(frame) });
+    entries.push(entry);
     trimToLimit();
     scrollToBottom();
   }
@@ -603,6 +719,10 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
       return;
     }
     if (!frame || typeof frame !== "object") {
+      return;
+    }
+    if (frame.type === "overlay_settings") {
+      applyOverlaySettingsFromServer(frame.overlay);
       return;
     }
     if (frame.type === "message_deleted") {

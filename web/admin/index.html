@@ -467,7 +467,143 @@
                   <p class="field-hint" data-i18n="obs.themeHint">Cockpit themes use HUD-style panels for streams over gameplay.</p>
                   <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
                 </div>
+
+                <div class="form__field form__field--full">
+                  <label for="overlay-preset-select" data-i18n="obs.preset">Scene preset</label>
+                  <select id="overlay-preset-select" name="overlay_preset_select"></select>
+                  <input id="overlay-preset-name" name="overlay_preset_name" type="text" hidden>
+                  <div class="overlay-preset-actions">
+                    <button id="overlay-preset-add" class="btn-physical btn-small" type="button" data-i18n="obs.presetAdd">New preset</button>
+                    <button id="overlay-preset-duplicate" class="btn-physical btn-small" type="button" data-i18n="obs.presetDuplicate">Duplicate</button>
+                    <button id="overlay-preset-delete" class="btn-physical btn-small" type="button" data-i18n="obs.presetDelete">Delete</button>
+                    <button id="overlay-copy-scene-url" class="button-secondary button-secondary--small" type="button" data-i18n="obs.copySceneUrl">Copy scene URL</button>
+                  </div>
+                  <p class="field-hint" data-i18n="obs.presetHint">Use ?preset=id in OBS Browser Source for per-scene looks.</p>
+                </div>
+
+                <div class="form__field">
+                  <label for="overlay-active-preset" data-i18n="obs.activePreset">Active preset (no URL param)</label>
+                  <select id="overlay-active-preset" name="overlay_active_preset_id"></select>
+                </div>
               </div>
+            </div>
+          </section>
+
+          <section class="panel overlay-settings-panel" aria-labelledby="overlay-style-heading">
+            <div class="panel__header">
+              <h3 id="overlay-style-heading" data-i18n="obs.style">Style tokens</h3>
+            </div>
+            <div class="panel__body">
+              <div class="form form--compact form--overlay-style">
+                <div class="form__field">
+                  <label for="overlay-style-font-family" data-i18n="obs.fontFamily">Font family</label>
+                  <select id="overlay-style-font-family">
+                    <option value="system" data-i18n="obs.fontSystem">System</option>
+                    <option value="segoe" data-i18n="obs.fontSegoe">Segoe UI</option>
+                    <option value="condensed_hud" data-i18n="obs.fontCondensed">Condensed HUD</option>
+                  </select>
+                </div>
+                <div class="form__field">
+                  <label for="overlay-style-line-height" data-i18n="obs.lineHeight">Line height</label>
+                  <input id="overlay-style-line-height" type="number" min="1" max="2" step="0.05" value="1.35">
+                </div>
+                <div class="form__field">
+                  <label for="overlay-style-message-gap" data-i18n="obs.messageGap">Message gap (px)</label>
+                  <input id="overlay-style-message-gap" type="number" min="0" max="24" step="1" value="6">
+                </div>
+                <div class="form__field">
+                  <label for="overlay-style-text-effect" data-i18n="obs.textEffect">Text readability</label>
+                  <select id="overlay-style-text-effect">
+                    <option value="shadow" data-i18n="obs.textShadow">Shadow</option>
+                    <option value="outline" data-i18n="obs.textOutline">Outline</option>
+                    <option value="none" data-i18n="obs.textNone">None</option>
+                  </select>
+                </div>
+                <div class="form__field">
+                  <label for="overlay-style-text-effect-strength" data-i18n="obs.textEffectStrength">Shadow strength</label>
+                  <input id="overlay-style-text-effect-strength" type="number" min="1" max="3" step="1" value="2">
+                </div>
+                <div class="form__field">
+                  <label for="overlay-style-platform-marker" data-i18n="obs.platformMarker">Platform marker</label>
+                  <select id="overlay-style-platform-marker">
+                    <option value="stripe" data-i18n="obs.markerStripe">Color stripe</option>
+                    <option value="icon" data-i18n="obs.markerIcon">Icon</option>
+                    <option value="both" data-i18n="obs.markerBoth">Stripe + icon</option>
+                    <option value="none" data-i18n="obs.markerNone">None</option>
+                  </select>
+                </div>
+                <div class="form__field">
+                  <label for="overlay-style-message-bg-color" data-i18n="obs.messageBgColor">Message background</label>
+                  <input id="overlay-style-message-bg-color" type="color" value="#000000">
+                  <label for="overlay-style-message-bg-opacity" data-i18n="obs.messageBgOpacity">Opacity</label>
+                  <input id="overlay-style-message-bg-opacity" type="number" min="0" max="1" step="0.05" value="0.58">
+                </div>
+                <div class="form__field">
+                  <label for="overlay-style-panel-bg-color" data-i18n="obs.panelBgColor">Panel background</label>
+                  <input id="overlay-style-panel-bg-color" type="color" value="#000000">
+                  <label for="overlay-style-panel-bg-opacity" data-i18n="obs.panelBgOpacity">Opacity</label>
+                  <input id="overlay-style-panel-bg-opacity" type="number" min="0" max="1" step="0.05" value="0">
+                  <input id="overlay-style-panel-bg-image" type="text" placeholder="background.png">
+                  <input id="overlay-panel-bg-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml">
+                </div>
+                <div class="form__field">
+                  <label for="overlay-style-message-border-color" data-i18n="obs.messageBorderColor">Message border</label>
+                  <input id="overlay-style-message-border-color" type="color" value="#000000">
+                  <input id="overlay-style-message-border-width" type="number" min="0" max="8" step="1" value="0">
+                  <input id="overlay-style-message-border-radius" type="number" min="0" max="24" step="1" value="8">
+                </div>
+                <div class="form__field">
+                  <label for="overlay-style-panel-border-color" data-i18n="obs.panelBorderColor">Panel border</label>
+                  <input id="overlay-style-panel-border-color" type="color" value="#000000">
+                  <input id="overlay-style-panel-border-width" type="number" min="0" max="8" step="1" value="0">
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel overlay-settings-panel" aria-labelledby="overlay-highlights-heading">
+            <div class="panel__header">
+              <h3 id="overlay-highlights-heading" data-i18n="obs.highlights">Highlight words</h3>
+            </div>
+            <div class="panel__body">
+              <div class="form form--compact">
+                <div class="form__field form__field--full">
+                  <label><input id="overlay-highlights-enabled" type="checkbox"> <span data-i18n="obs.highlightsEnabled">Highlight matching messages</span></label>
+                </div>
+                <div class="form__field form__field--full">
+                  <label for="overlay-highlight-words" data-i18n="obs.highlightWords">Words (one per line)</label>
+                  <textarea id="overlay-highlight-words" rows="4" placeholder="Вася, Васёк"></textarea>
+                </div>
+                <div class="form__field">
+                  <label for="overlay-highlight-border-color" data-i18n="obs.highlightBorder">Border color</label>
+                  <input id="overlay-highlight-border-color" type="color" value="#f5c518">
+                </div>
+                <div class="form__field">
+                  <label for="overlay-highlight-text-color" data-i18n="obs.highlightText">Text color</label>
+                  <input id="overlay-highlight-text-color" type="color" value="#fff3b0">
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel overlay-settings-panel" aria-labelledby="overlay-user-icons-heading">
+            <div class="panel__header">
+              <h3 id="overlay-user-icons-heading" data-i18n="obs.userIcons">User icons</h3>
+            </div>
+            <div class="panel__body">
+              <table class="overlay-user-icons-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="obs.userIconPlatform">Platform</th>
+                    <th data-i18n="obs.userIconUsername">Username</th>
+                    <th data-i18n="obs.userIconFile">Icon file</th>
+                    <th></th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="overlay-user-icons-body"></tbody>
+              </table>
+              <button id="overlay-user-icon-add" class="btn-physical btn-small" type="button" data-i18n="obs.userIconAdd">Add user icon</button>
             </div>
           </section>
 

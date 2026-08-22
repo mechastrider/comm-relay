@@ -55,6 +55,9 @@ func (c *Config) validateFields() error {
 		fields["overlay_theme"] = "Choose a supported overlay theme."
 	}
 
+	mergeFieldErrors(fields, c.Overlay.validatePresetFields())
+	mergeFieldErrors(fields, c.Overlay.Highlights.validateFields())
+	mergeFieldErrors(fields, c.Overlay.validateUserIconFields())
 	mergeFieldErrors(fields, c.Overlay.ImagePreviews.validateFields())
 	mergeFieldErrors(fields, c.Admin.validateFields())
 
