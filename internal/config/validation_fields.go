@@ -54,8 +54,14 @@ func (c *Config) validateFields() error {
 	default:
 		fields["overlay_theme"] = "Choose a supported overlay theme."
 	}
+	if c.Overlay.PageOpacity != nil {
+		fields["overlay_page_opacity"] = "Overlay page background must stay transparent."
+	}
 
 	mergeFieldErrors(fields, c.Overlay.ImagePreviews.validateFields())
+	mergeFieldErrors(fields, c.Overlay.validatePresetFields())
+	mergeFieldErrors(fields, c.Overlay.Highlights.validateFields())
+	mergeFieldErrors(fields, c.Overlay.validatePeopleFields())
 	mergeFieldErrors(fields, c.Admin.validateFields())
 
 	if c.Twitch.Enabled && c.Twitch.Channel == "" {

@@ -60,18 +60,24 @@ const (
 
 // OverlayConfig controls OBS overlay appearance and message retention.
 type OverlayConfig struct {
-	MaxMessages       int                 `json:"max_messages"`
-	MessageTTLSeconds int                 `json:"message_ttl_seconds"`
-	FontSizePx        int                 `json:"font_size_px"`
-	DisplayMode       string              `json:"display_mode"`
-	Theme             string              `json:"theme"`
-	Emotes            EmotesConfig        `json:"emotes"`
-	ImagePreviews     ImagePreviewsConfig `json:"image_previews"`
+	MaxMessages       int                     `json:"max_messages"`
+	MessageTTLSeconds int                     `json:"message_ttl_seconds"`
+	FontSizePx        int                     `json:"font_size_px"`
+	DisplayMode       string                  `json:"display_mode"`
+	Theme             string                  `json:"theme"`
+	Emotes            EmotesConfig            `json:"emotes"`
+	ImagePreviews     ImagePreviewsConfig     `json:"image_previews"`
+	Presets           []OverlayPreset         `json:"presets"`
+	ActivePresetID    string                  `json:"active_preset_id"`
+	Highlights        OverlayHighlightsConfig `json:"highlights"`
+	People            []OverlayPerson         `json:"people"`
+	// PageOpacity is rejected when present so the overlay page stays transparent for OBS.
+	PageOpacity *float64 `json:"page_opacity,omitempty"`
 }
 
 // Default returns safe prototype defaults.
 func Default() *Config {
-	return &Config{
+	cfg := &Config{
 		ServerPort: 17877,
 		Twitch: TwitchConfig{
 			Enabled: false,
@@ -94,6 +100,7 @@ func Default() *Config {
 			Theme:             OverlayThemeDefault,
 			Emotes:            defaultEmotes(),
 			ImagePreviews:     defaultImagePreviews(),
+			Highlights:        defaultOverlayHighlights(),
 		},
 		Admin: AdminConfig{
 			MessageSound: defaultMessageSound(),
@@ -101,6 +108,8 @@ func Default() *Config {
 		},
 		Logging: defaultLogging(),
 	}
+	cfg.Overlay.EnsurePresets()
+	return cfg
 }
 
 // ApplyDefaults fills in settings omitted from older config.json files.
@@ -117,6 +126,7 @@ func (c *Config) ApplyDefaults() {
 	}
 	c.Overlay.Emotes.applyDefaults()
 	c.Overlay.ImagePreviews.applyDefaults()
+	c.Overlay.EnsurePresets()
 	c.Admin.applyDefaults()
 	c.Logging.applyDefaults()
 	c.YouTube.ApplyYouTubeDefaults()
@@ -151,6 +161,11 @@ func Load(path string) (*Config, error) {
 		return nil, errors.Errorf("parse config: %w", err, errors.String("path", path))
 	}
 
+	if !overlayPresetsPresent(data) {
+		cfg.Overlay.Presets = nil
+		cfg.Overlay.ActivePresetID = ""
+	}
+
 	cfg.ApplyDefaults()
 	if !overlayEmotesPresent(data) {
 		cfg.Overlay.Emotes = defaultEmotes()
@@ -173,6 +188,18 @@ func overlayEmotesPresent(data []byte) bool {
 		return false
 	}
 	return doc.Overlay != nil && doc.Overlay.Emotes != nil
+}
+
+func overlayPresetsPresent(data []byte) bool {
+	var doc struct {
+		Overlay *struct {
+			Presets *json.RawMessage `json:"presets"`
+		} `json:"overlay"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.Overlay != nil && doc.Overlay.Presets != nil
 }
 
 // Save writes config to path using a temp file and atomic rename.
