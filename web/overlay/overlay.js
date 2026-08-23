@@ -1,4 +1,13 @@
 import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.js?v=12";
+import {
+  findPerson,
+  fontStack,
+  hexToRgba,
+  messageHasHighlight,
+  overlayAssetURL,
+  overlayViewFromConfig,
+  splitHighlightedText
+} from "/overlay/overlay-settings.js?v=2";
 
 "use strict";
 
@@ -101,44 +110,34 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
       maxHeightPx: DEFAULT_IMAGE_PREVIEW_MAX_HEIGHT,
     },
   };
+  let overlayView = overlayViewFromConfig({ overlay: null }, params);
+  let overlayAssetsRevision = Date.now();
+  let restyleRenderedMessages = function () {};
 
   function applyServerOverlayConfig(serverOverlay) {
     if (!serverOverlay || typeof serverOverlay !== "object") {
       return;
     }
-    if (
-      !params.has("max_messages") &&
-      typeof serverOverlay.max_messages === "number" &&
-      serverOverlay.max_messages >= 1
-    ) {
-      config.maxMessages = serverOverlay.max_messages;
+    overlayAssetsRevision = Date.now();
+    overlayView = overlayViewFromConfig({ overlay: serverOverlay }, params);
+    if (!params.has("max_messages") && overlayView.max_messages >= 1) {
+      config.maxMessages = overlayView.max_messages;
     }
-    if (
-      !params.has("message_ttl_seconds") &&
-      typeof serverOverlay.message_ttl_seconds === "number" &&
-      serverOverlay.message_ttl_seconds >= 0
-    ) {
-      config.messageTTLSeconds = serverOverlay.message_ttl_seconds;
+    if (!params.has("message_ttl_seconds") && overlayView.message_ttl_seconds >= 0) {
+      config.messageTTLSeconds = overlayView.message_ttl_seconds;
     }
     if (
       !params.has("font_size_px") &&
-      typeof serverOverlay.font_size_px === "number" &&
-      serverOverlay.font_size_px >= OVERLAY_FONT_SIZE_MIN &&
-      serverOverlay.font_size_px <= OVERLAY_FONT_SIZE_MAX
+      overlayView.font_size_px >= OVERLAY_FONT_SIZE_MIN &&
+      overlayView.font_size_px <= OVERLAY_FONT_SIZE_MAX
     ) {
-      config.fontSizePx = serverOverlay.font_size_px;
+      config.fontSizePx = overlayView.font_size_px;
     }
-    if (!params.has("display_mode") && typeof serverOverlay.display_mode === "string") {
-      const mode = serverOverlay.display_mode.trim().toLowerCase();
-      if (DISPLAY_MODES.has(mode)) {
-        config.displayMode = mode;
-      }
+    if (!params.has("display_mode") && DISPLAY_MODES.has(overlayView.display_mode)) {
+      config.displayMode = overlayView.display_mode;
     }
-    if (!params.has("theme") && typeof serverOverlay.theme === "string") {
-      const theme = serverOverlay.theme.trim().toLowerCase();
-      if (THEMES.has(theme)) {
-        config.theme = theme;
-      }
+    if (!params.has("theme") && THEMES.has(overlayView.theme)) {
+      config.theme = overlayView.theme;
     }
     if (
       serverOverlay.image_previews &&
@@ -220,9 +219,52 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
   }
 
   function applyAppearance() {
+    const style = overlayView.style || {};
     document.documentElement.style.setProperty(
       "--overlay-font-size",
       String(config.fontSizePx) + "px"
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-line-height",
+      String(style.line_height || 1.35)
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-font-family",
+      fontStack(style.font_family)
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-text-edge-strength",
+      String(style.text_edge_strength || 0)
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-panel-bg",
+      hexToRgba(style.panel_color, style.panel_opacity)
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-panel-image",
+      style.panel_image
+        ? "url(\"" + overlayAssetURL(style.panel_image, overlayAssetsRevision) + "\")"
+        : "none"
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-border-width",
+      String(style.border_width || 0) + "px"
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-border-color",
+      style.border_color || "#ffffff"
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-border-radius",
+      String(style.border_radius || 0) + "px"
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-highlight-border",
+      style.highlight_border_color || "#f5c542"
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-highlight-text",
+      style.highlight_text_color || "#ffffff"
     );
     document.documentElement.style.setProperty(
       "--overlay-image-preview-max-width",
@@ -232,6 +274,7 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
       "--overlay-image-preview-max-height",
       String(config.imagePreviews.maxHeightPx) + "px"
     );
+    document.body.style.fontFamily = fontStack(style.font_family);
     document.body.classList.remove("overlay--normal", "overlay--compact");
     document.body.classList.add(
       config.displayMode === "compact" ? "overlay--compact" : "overlay--normal"
@@ -244,6 +287,33 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
       "overlay-theme--g-rebels-popups"
     );
     document.body.classList.add("overlay-theme--" + config.theme.replace(/_/g, "-"));
+    document.body.classList.remove(
+      "overlay-platform-marker--stripe",
+      "overlay-platform-marker--icon",
+      "overlay-platform-marker--both",
+      "overlay-platform-marker--none"
+    );
+    const marker =
+      style.platform_marker === "icon" ||
+      style.platform_marker === "both" ||
+      style.platform_marker === "none"
+        ? style.platform_marker
+        : "stripe";
+    document.body.classList.add("overlay-platform-marker--" + marker);
+    document.body.classList.remove(
+      "overlay-text-edge--none",
+      "overlay-text-edge--shadow",
+      "overlay-text-edge--outline"
+    );
+    const edge =
+      style.text_edge === "none" || style.text_edge === "outline" ? style.text_edge : "shadow";
+    document.body.classList.add("overlay-text-edge--" + edge);
+    document.body.classList.toggle(
+      "overlay-has-panel",
+      (typeof style.panel_opacity === "number" && style.panel_opacity > 0) ||
+        Boolean(style.panel_image) ||
+        (typeof style.border_width === "number" && style.border_width > 0)
+    );
     document.body.classList.remove(
       "overlay-preview--busy",
       "overlay-preview--checker",
@@ -259,6 +329,45 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
         )
       );
     }
+  }
+
+  function wrapHighlightedText(root, words) {
+    const highlights = overlayView.highlights || {};
+    if (!highlights.enabled || !Array.isArray(words) || words.length === 0) {
+      return;
+    }
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    let node = walker.nextNode();
+    while (node) {
+      nodes.push(node);
+      node = walker.nextNode();
+    }
+    nodes.forEach(function (textNode) {
+      if (!textNode.parentNode || textNode.parentNode.closest(".message__highlight")) {
+        return;
+      }
+      const parts = splitHighlightedText(textNode.nodeValue, words);
+      if (
+        !parts.some(function (part) {
+          return part.hit;
+        })
+      ) {
+        return;
+      }
+      const fragment = document.createDocumentFragment();
+      parts.forEach(function (part) {
+        if (part.hit) {
+          const mark = document.createElement("span");
+          mark.className = "message__highlight";
+          appendText(mark, part.text);
+          fragment.appendChild(mark);
+        } else {
+          fragment.appendChild(document.createTextNode(part.text));
+        }
+      });
+      textNode.parentNode.replaceChild(fragment, textNode);
+    });
   }
 
   async function loadServerConfig() {
@@ -527,6 +636,81 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     el.appendChild(svg);
   }
 
+  function fillMessageRow(row, frame) {
+    const user = messageDisplayName(frame);
+    const text = typeof frame.message === "string" ? frame.message : "";
+    const highlights = overlayView.highlights || {};
+    const words = Array.isArray(highlights.words) ? highlights.words : [];
+    const person = findPerson(
+      overlayView.people,
+      frame.platform,
+      frame.username,
+      frame.user || frame.display_name
+    );
+
+    row.className = "message";
+    row.classList.toggle(
+      "message--highlight",
+      messageHasHighlight(text, words, highlights.enabled === true)
+    );
+    if (typeof frame.platform === "string" && frame.platform !== "") {
+      row.dataset.platform = frame.platform;
+    } else {
+      delete row.dataset.platform;
+    }
+    row.style.setProperty("--message-accent", userAccent(frame));
+    row.replaceChildren();
+
+    const platformEl = document.createElement("span");
+    platformEl.className = "message__platform";
+    appendPlatformIcon(platformEl, frame.platform);
+
+    const avatarEl = cockpitThemeEnabled()
+      ? buildAvatarImage(frame)
+      : buildHiddenAvatarPlaceholder();
+
+    const accentEl = document.createElement("span");
+    accentEl.className = "message__accent";
+    accentEl.setAttribute("aria-hidden", "true");
+
+    const identityEl = document.createElement("span");
+    identityEl.className = "message__identity";
+    if (person && person.icon) {
+      const icon = document.createElement("img");
+      icon.className = "message__person";
+      icon.alt = "";
+      icon.referrerPolicy = "no-referrer";
+      icon.src = overlayAssetURL(person.icon, overlayAssetsRevision);
+      identityEl.appendChild(icon);
+    }
+    const userEl = document.createElement("span");
+    userEl.className = "message__user";
+    appendText(userEl, user);
+    identityEl.appendChild(userEl);
+
+    const textEl = document.createElement("span");
+    textEl.className = "message__text";
+    appendMessageContent(textEl, frame, text);
+    wrapHighlightedText(textEl, words);
+
+    row.appendChild(platformEl);
+    row.appendChild(avatarEl);
+    row.appendChild(accentEl);
+    row.appendChild(identityEl);
+    row.appendChild(textEl);
+  }
+
+  function restyleVisibleMessages() {
+    entries.forEach(function (entry) {
+      if (entry.frame) {
+        fillMessageRow(entry.el, entry.frame);
+      }
+    });
+    trimToLimit();
+  }
+
+  restyleRenderedMessages = restyleVisibleMessages;
+
   function renderMessage(frame, options) {
     if (frame.type !== "message") {
       return;
@@ -549,37 +733,7 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     }
 
     const row = document.createElement("div");
-    row.className = "message";
-    if (typeof frame.platform === "string" && frame.platform !== "") {
-      row.dataset.platform = frame.platform;
-    }
-    row.style.setProperty("--message-accent", userAccent(frame));
-
-    const platformEl = document.createElement("span");
-    platformEl.className = "message__platform";
-    appendPlatformIcon(platformEl, frame.platform);
-
-    const avatarEl = cockpitThemeEnabled()
-      ? buildAvatarImage(frame)
-      : buildHiddenAvatarPlaceholder();
-
-    const accentEl = document.createElement("span");
-    accentEl.className = "message__accent";
-    accentEl.setAttribute("aria-hidden", "true");
-
-    const userEl = document.createElement("span");
-    userEl.className = "message__user";
-    appendText(userEl, user);
-
-    const textEl = document.createElement("span");
-    textEl.className = "message__text";
-    appendMessageContent(textEl, frame, text);
-
-    row.appendChild(platformEl);
-    row.appendChild(avatarEl);
-    row.appendChild(accentEl);
-    row.appendChild(userEl);
-    row.appendChild(textEl);
+    fillMessageRow(row, frame);
     listEl.appendChild(row);
 
     let ttlTimer = null;
@@ -590,7 +744,12 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     }
 
     rememberRenderedMessage(frame);
-    entries.push({ el: row, ttlTimer: ttlTimer, messageKey: messageKey(frame) });
+    entries.push({
+      el: row,
+      ttlTimer: ttlTimer,
+      messageKey: messageKey(frame),
+      frame: frame,
+    });
     trimToLimit();
     scrollToBottom();
   }
@@ -605,6 +764,12 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     if (!frame || typeof frame !== "object") {
       return;
     }
+    if (frame.type === "overlay_settings") {
+      applyServerOverlayConfig(frame.overlay);
+      applyAppearance();
+      restyleRenderedMessages();
+      return;
+    }
     if (frame.type === "message_deleted") {
       removeMessage(frame);
       return;
@@ -616,13 +781,16 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
     if (!msg || typeof msg !== "object") {
       return null;
     }
+    const username = typeof msg.username === "string" ? msg.username : "";
+    const displayName = typeof msg.display_name === "string" ? msg.display_name : "";
     return {
       type: "message",
       id: typeof msg.id === "string" ? msg.id : "",
       platform: typeof msg.platform === "string" ? msg.platform : "",
-      user: typeof msg.username === "string" ? msg.username : "",
+      user: displayName || username,
+      username: username,
       message: typeof msg.message === "string" ? msg.message : "",
-      display_name: typeof msg.display_name === "string" ? msg.display_name : "",
+      display_name: displayName,
       avatar_url: typeof msg.avatar_url === "string" ? msg.avatar_url : "",
       fragments: Array.isArray(msg.fragments) ? msg.fragments : [],
       timestamp: typeof msg.timestamp === "string" ? msg.timestamp : "",
@@ -685,6 +853,35 @@ import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.
         message: "Sample preview uses the same renderer as the OBS Browser Source.",
       },
     ];
+    const highlights = overlayView.highlights || {};
+    const words = Array.isArray(highlights.words) ? highlights.words : [];
+    const highlightWord = words[0] || "raid";
+    const people = Array.isArray(overlayView.people) ? overlayView.people : [];
+    const person = people[0] || null;
+    const twitchIdentity =
+      person && Array.isArray(person.identities)
+        ? person.identities.find(function (identity) {
+            return identity.platform === "twitch";
+          })
+        : null;
+    messages.push({
+      type: "message",
+      id: "preview-highlight",
+      platform: "twitch",
+      user: "raid_captain",
+      username: "raid_captain",
+      display_name: "Raid Captain",
+      message: "Tonight we " + highlightWord + " together.",
+    });
+    messages.push({
+      type: "message",
+      id: "preview-person",
+      platform: "twitch",
+      user: (twitchIdentity && twitchIdentity.username) || "vasya_ttv",
+      username: (twitchIdentity && twitchIdentity.username) || "vasya_ttv",
+      display_name: (person && person.label) || "Vasya",
+      message: "Свой человек на связи.",
+    });
 
     messages.forEach(function (frame, index) {
       window.setTimeout(function () {

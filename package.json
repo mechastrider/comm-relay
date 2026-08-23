@@ -5,6 +5,7 @@
   "description": "Dev tooling for CommRelay static web assets (admin, overlay, dock)",
   "scripts": {
     "lint": "eslint web/",
+    "test": "node --test web/overlay/overlay-settings.test.js web/shared/i18n-parity.test.js",
     "test:i18n": "node --test web/shared/i18n-parity.test.js"
   },
   "devDependencies": {

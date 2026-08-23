@@ -25,4 +25,12 @@ export default [
       ],
     },
   },
+  {
+    files: ["web/**/*.test.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
 ];
