@@ -12,6 +12,8 @@ import {
 } from "./js/ui-shell.js";
 import { initOverlayPreview, updateOverlayPreviewScale } from "./js/overlay-preview.js";
 import { initOBSSetup } from "./js/obs-setup.js";
+import { initOverlayAppearance } from "./js/overlay-appearance.js";
+import { initOverlayHighlights } from "./js/overlay-highlights.js";
 import { initConnectionsTabs } from "./js/connections.js";
 import { initSettingsDialogs } from "./js/dialogs.js";
 import { initAboutDialog } from "./js/about.js";
@@ -78,6 +80,8 @@ handleOAuthQuery();
 initSidebarToggle();
 initOverlayPreview();
 initOBSSetup();
+initOverlayAppearance();
+initOverlayHighlights();
 initConnectionsTabs();
 initSettingsDialogs();
 initAboutDialog();

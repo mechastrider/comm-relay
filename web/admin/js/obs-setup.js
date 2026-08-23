@@ -2,14 +2,23 @@ import * as dom from './dom.js';
 import { state } from './state.js';
 import { apiURL } from './api.js';
 import { mountOverlayPreview, unmountOverlayPreview } from './overlay-preview.js';
+import { getActivePresetID } from './overlay-appearance.js';
 import { t } from './i18n-ui.js';
 
 export function updateOBSSetupURLs() {
     document.querySelectorAll("[data-obs-url-path]").forEach(function (input) {
-      input.value = apiURL(input.dataset.obsUrlPath || "/");
+      let value = apiURL(input.dataset.obsUrlPath || "/");
+      if ((input.dataset.obsUrlPath || "") === "/overlay") {
+        const preset = getActivePresetID();
+        if (preset) {
+          value += (value.indexOf("?") === -1 ? "?" : "&") + "preset=" + encodeURIComponent(preset);
+        }
+      }
+      input.value = value;
     });
     if (dom.obsOverlayOpen) {
-      dom.obsOverlayOpen.href = apiURL("/overlay");
+      const preset = getActivePresetID();
+      dom.obsOverlayOpen.href = apiURL("/overlay") + (preset ? "?preset=" + encodeURIComponent(preset) : "");
     }
     if (dom.obsDockOpen) {
       dom.obsDockOpen.href = apiURL("/dock/messages");
@@ -70,22 +79,30 @@ export async function copyOBSURL(input) {
   }
 
 export function setOBSSection(section, options) {
-    if (!dom.obsSetupTab || !dom.obsAppearanceTab || !dom.obsSetupPanel || !dom.obsAppearancePanel) {
+    const tabs = [
+      { id: "setup", tab: dom.obsSetupTab, panel: dom.obsSetupPanel },
+      { id: "appearance", tab: dom.obsAppearanceTab, panel: dom.obsAppearancePanel },
+      { id: "highlights", tab: dom.obsHighlightsTab, panel: dom.obsHighlightsPanel },
+    ];
+    if (!tabs[0].tab || !tabs[1].tab || !tabs[0].panel || !tabs[1].panel) {
       return;
     }
-    const showAppearance = section === "appearance";
-    dom.obsSetupTab.setAttribute("aria-selected", showAppearance ? "false" : "true");
-    dom.obsSetupTab.tabIndex = showAppearance ? -1 : 0;
-    dom.obsAppearanceTab.setAttribute("aria-selected", showAppearance ? "true" : "false");
-    dom.obsAppearanceTab.tabIndex = showAppearance ? 0 : -1;
-    dom.obsSetupPanel.hidden = showAppearance;
-    dom.obsAppearancePanel.hidden = !showAppearance;
+    const current = section === "highlights" || section === "appearance" ? section : "setup";
+    tabs.forEach(function (item) {
+      if (!item.tab || !item.panel) {
+        return;
+      }
+      const selected = item.id === current;
+      item.tab.setAttribute("aria-selected", selected ? "true" : "false");
+      item.tab.tabIndex = selected ? 0 : -1;
+      item.panel.hidden = !selected;
+    });
     document.querySelectorAll("[data-obs-appearance-only]").forEach(function (element) {
-      element.hidden = !showAppearance;
+      element.hidden = current === "setup";
     });
 
     if (dom.overlayDialog && dom.overlayDialog.open) {
-      if (showAppearance) {
+      if (current === "appearance") {
         mountOverlayPreview();
       } else {
         unmountOverlayPreview();
@@ -93,7 +110,12 @@ export function setOBSSection(section, options) {
     }
 
     if (options && options.focusTab) {
-      (showAppearance ? dom.obsAppearanceTab : dom.obsSetupTab).focus();
+      const focused = tabs.find(function (item) {
+        return item.id === current;
+      });
+      if (focused && focused.tab) {
+        focused.tab.focus();
+      }
     }
   }
 
@@ -103,6 +125,7 @@ export function initOBSSetup() {
     }
 
     updateOBSSetupURLs();
+    document.addEventListener("overlay-preview-refresh", updateOBSSetupURLs);
     setOBSSection("setup");
 
     dom.overlayDialog.querySelectorAll("[data-obs-section]").forEach(function (button) {
@@ -113,14 +136,26 @@ export function initOBSSetup() {
       });
     });
 
-    [dom.obsSetupTab, dom.obsAppearanceTab].forEach(function (tab) {
+    const tabs = [dom.obsSetupTab, dom.obsAppearanceTab, dom.obsHighlightsTab].filter(Boolean);
+    tabs.forEach(function (tab) {
       tab.addEventListener("keydown", function (event) {
         if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(event.key) === -1) {
           return;
         }
         event.preventDefault();
-        const showAppearance = event.key === "ArrowRight" || event.key === "End";
-        setOBSSection(showAppearance ? "appearance" : "setup", { focusTab: true });
+        const ids = ["setup", "appearance", "highlights"];
+        const currentIndex = Math.max(0, ids.indexOf(tab.getAttribute("data-obs-section")));
+        let nextIndex = currentIndex;
+        if (event.key === "Home") {
+          nextIndex = 0;
+        } else if (event.key === "End") {
+          nextIndex = ids.length - 1;
+        } else if (event.key === "ArrowRight") {
+          nextIndex = (currentIndex + 1) % ids.length;
+        } else {
+          nextIndex = (currentIndex - 1 + ids.length) % ids.length;
+        }
+        setOBSSection(ids[nextIndex], { focusTab: true });
       });
     });
 

@@ -203,3 +203,84 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
+
+.preset-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.preset-bar__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.overlay-group {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: #111;
+}
+
+.overlay-group summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.chip-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chip {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: #1a1a1a;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.people-list {
+  display: grid;
+  gap: 10px;
+}
+
+.people-row {
+  display: grid;
+  grid-template-columns: 24px minmax(90px, 0.8fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(90px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.people-row__icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #222;
+}
+
+.people-row__file {
+  max-width: 110px;
+}
+
+@media (max-width: 900px) {
+  .people-row {
+    grid-template-columns: 24px 1fr;
+  }
+}

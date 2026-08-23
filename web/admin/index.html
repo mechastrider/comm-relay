@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
   <script>
     (function () {
       try {
@@ -340,6 +340,7 @@
           <div class="dialog-tabs" role="tablist" data-i18n-aria-label="dialog.obsSections" aria-label="OBS sections">
             <button id="obs-setup-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="obs-setup-panel" data-obs-section="setup" data-i18n="obs.setup">Setup</button>
             <button id="obs-appearance-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-appearance-panel" tabindex="-1" data-obs-section="appearance" data-i18n="obs.appearance">Appearance</button>
+            <button id="obs-highlights-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-highlights-panel" tabindex="-1" data-obs-section="highlights" data-i18n="obs.highlights">Highlights</button>
           </div>
 
           <section id="obs-setup-panel" class="dialog-tab-panel obs-setup" role="tabpanel" aria-labelledby="obs-setup-tab">
@@ -366,6 +367,7 @@
                     <input id="obs-overlay-url" type="text" readonly value="/overlay" data-obs-url-path="/overlay">
                     <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-overlay-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
                   </div>
+                  <p class="field-hint" data-i18n="obs.overlayPresetHint">Each OBS scene can use its own Browser Source with ?preset= in the URL.</p>
                 </div>
 
                 <ol class="obs-setup-steps">
@@ -424,6 +426,21 @@
             <div class="panel__body">
               <p class="panel-intro" data-i18n="obs.displayIntro">Appearance settings for the OBS Browser Source overlay. The preview reflects unsaved display changes.</p>
 
+              <div class="preset-bar">
+                <div class="form__field">
+                  <label for="overlay-preset-select" data-i18n="obs.preset">Preset</label>
+                  <select id="overlay-preset-select"></select>
+                </div>
+                <div class="form__field">
+                  <label for="overlay-preset-name" data-i18n="obs.presetName">Preset name</label>
+                  <input id="overlay-preset-name" type="text" maxlength="64" autocomplete="off">
+                </div>
+                <div class="preset-bar__actions">
+                  <button id="overlay-preset-save-as" class="btn-physical btn-small" type="button" data-i18n="obs.presetSaveAs">Save as</button>
+                  <button id="overlay-preset-delete" class="btn-physical btn-small" type="button" data-i18n="obs.presetDelete">Delete</button>
+                </div>
+              </div>
+
               <div class="form form--compact form--overlay-display">
                 <div class="form__field">
                   <label for="overlay-max-messages" data-i18n="obs.maxMessages">Max messages</label>
@@ -467,7 +484,92 @@
                   <p class="field-hint" data-i18n="obs.themeHint">Cockpit themes use HUD-style panels for streams over gameplay.</p>
                   <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
                 </div>
+
+                <div class="form__field">
+                  <label for="overlay-text-edge" data-i18n="obs.textEdge">Text edge</label>
+                  <select id="overlay-text-edge">
+                    <option value="none" data-i18n="obs.textEdgeNone">None</option>
+                    <option value="shadow" data-i18n="obs.textEdgeShadow">Shadow</option>
+                    <option value="outline" data-i18n="obs.textEdgeOutline">Outline</option>
+                  </select>
+                </div>
+
+                <div class="form__field">
+                  <label for="overlay-text-edge-strength" data-i18n="obs.textEdgeStrength">Edge strength</label>
+                  <input id="overlay-text-edge-strength" type="number" min="0" max="8" step="1" inputmode="numeric">
+                </div>
+
+                <div class="form__field form__field--full">
+                  <label for="overlay-platform-marker" data-i18n="obs.platformMarker">Platform marker</label>
+                  <select id="overlay-platform-marker">
+                    <option value="stripe" data-i18n="obs.markerStripe">Stripe</option>
+                    <option value="icon" data-i18n="obs.markerIcon">Icon</option>
+                    <option value="both" data-i18n="obs.markerBoth">Stripe and icon</option>
+                    <option value="none" data-i18n="obs.markerNone">None</option>
+                  </select>
+                  <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="basics" data-i18n="obs.resetGroup">Reset group to theme</button>
+                </div>
               </div>
+
+              <details class="overlay-group">
+                <summary data-i18n="obs.textGroup">Text</summary>
+                <div class="form form--compact">
+                  <div class="form__field">
+                    <label for="overlay-font-family" data-i18n="obs.fontFamily">Font</label>
+                    <select id="overlay-font-family">
+                      <option value="system" data-i18n="obs.fontSystem">System</option>
+                      <option value="segoe" data-i18n="obs.fontSegoe">Segoe UI</option>
+                      <option value="georgia" data-i18n="obs.fontGeorgia">Georgia</option>
+                      <option value="trebuchet" data-i18n="obs.fontTrebuchet">Trebuchet</option>
+                      <option value="mono" data-i18n="obs.fontMono">Monospace</option>
+                    </select>
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-line-height" data-i18n="obs.lineHeight">Line height</label>
+                    <input id="overlay-line-height" type="number" min="1" max="2" step="0.05" inputmode="decimal">
+                  </div>
+                  <div class="form__field form__field--full">
+                    <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="text" data-i18n="obs.resetGroup">Reset group to theme</button>
+                  </div>
+                </div>
+              </details>
+
+              <details class="overlay-group">
+                <summary data-i18n="obs.surfaceGroup">Surface</summary>
+                <p class="field-hint" data-i18n="obs.surfaceHint">Only the message block can be opaque. Cockpit themes still draw their own HUD frame.</p>
+                <div class="form form--compact">
+                  <div class="form__field">
+                    <label for="overlay-panel-color" data-i18n="obs.panelColor">Panel color</label>
+                    <input id="overlay-panel-color" type="color" value="#000000">
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-panel-opacity" data-i18n="obs.panelOpacity">Panel opacity</label>
+                    <input id="overlay-panel-opacity" type="number" min="0" max="1" step="0.05" inputmode="decimal">
+                  </div>
+                  <div class="form__field form__field--full">
+                    <label for="overlay-panel-image-file" data-i18n="obs.panelImage">Panel image</label>
+                    <input id="overlay-panel-image" type="hidden" value="">
+                    <input id="overlay-panel-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml">
+                    <img id="overlay-panel-image-preview" class="panel-image-preview" alt="" hidden width="72" height="40">
+                    <button id="overlay-panel-image-clear" class="button-secondary button-secondary--small" type="button" data-i18n="obs.clearImage">Clear image</button>
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-border-width" data-i18n="obs.borderWidth">Border width</label>
+                    <input id="overlay-border-width" type="number" min="0" max="8" step="1" inputmode="numeric">
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-border-color" data-i18n="obs.borderColor">Border color</label>
+                    <input id="overlay-border-color" type="color" value="#ffffff">
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-border-radius" data-i18n="obs.borderRadius">Corner radius</label>
+                    <input id="overlay-border-radius" type="number" min="0" max="24" step="1" inputmode="numeric">
+                  </div>
+                  <div class="form__field form__field--full">
+                    <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="surface" data-i18n="obs.resetGroup">Reset group to theme</button>
+                  </div>
+                </div>
+              </details>
             </div>
           </section>
 
@@ -531,6 +633,52 @@
             <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite" data-i18n="obs.previewNoteSample">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
           </section>
         </div>
+          </section>
+
+          <section id="obs-highlights-panel" class="dialog-tab-panel" role="tabpanel" aria-labelledby="obs-highlights-tab" hidden>
+            <section class="panel" aria-labelledby="overlay-highlights-heading">
+              <div class="panel__header">
+                <h3 id="overlay-highlights-heading" data-i18n="obs.highlights">Highlights</h3>
+              </div>
+              <div class="panel__body">
+                <p class="panel-intro" data-i18n="obs.highlightsIntro">Words are global. Colors come from the current preset.</p>
+                <div class="form form--compact">
+                  <div class="form__field form__field--full">
+                    <label class="checkbox" for="overlay-highlights-enabled">
+                      <input id="overlay-highlights-enabled" type="checkbox">
+                      <span data-i18n="obs.highlightsEnabled">Highlight matching words</span>
+                    </label>
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-highlight-border-color" data-i18n="obs.highlightBorder">Highlight border</label>
+                    <input id="overlay-highlight-border-color" type="color" value="#f5c542">
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-highlight-text-color" data-i18n="obs.highlightText">Highlight text</label>
+                    <input id="overlay-highlight-text-color" type="color" value="#ffffff">
+                  </div>
+                  <div class="form__field form__field--full">
+                    <label for="overlay-highlight-word-input" data-i18n="obs.highlightWords">Words</label>
+                    <div class="chip-input-row">
+                      <input id="overlay-highlight-word-input" type="text" maxlength="64" autocomplete="off">
+                      <button id="overlay-highlight-word-add" class="btn-physical btn-small" type="button" data-i18n="obs.addWord">Add</button>
+                    </div>
+                    <div id="overlay-highlight-words" class="chip-list"></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel" aria-labelledby="overlay-people-heading">
+              <div class="panel__header">
+                <h3 id="overlay-people-heading" data-i18n="obs.people">People</h3>
+                <button id="overlay-people-add" class="btn-physical btn-small" type="button" data-i18n="obs.addPerson">Add person</button>
+              </div>
+              <div class="panel__body">
+                <p class="field-hint" data-i18n="obs.peopleHint">One row per person, with a shared icon and optional Twitch, YouTube, and VK usernames.</p>
+                <div id="overlay-people-list" class="people-list"></div>
+              </div>
+            </section>
           </section>
         </div>
 
@@ -787,6 +935,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=16"></script>
+  <script type="module" src="app.js?v=17"></script>
 </body>
 </html>
