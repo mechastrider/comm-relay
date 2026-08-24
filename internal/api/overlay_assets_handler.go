@@ -51,12 +51,15 @@ func (h *overlayAssetsHandler) handleUpload(w http.ResponseWriter, r *http.Reque
 
 	name, err := overlayassets.Save(h.dir, data)
 	if err != nil {
-		if errors.Is(err, overlayassets.ErrUnsupportedType) || errors.Is(err, overlayassets.ErrUnsafeSVG) {
+		switch {
+		case errors.Is(err, overlayassets.ErrUnsupportedType), errors.Is(err, overlayassets.ErrUnsafeSVG):
 			writeError(w, http.StatusBadRequest, "file type is not allowed")
-			return
+		case errors.Is(err, overlayassets.ErrModernImageFormat):
+			writeError(w, http.StatusBadRequest, "HEIC and AVIF are not supported; use PNG or JPEG")
+		default:
+			clog.Errorf(ctx, "save overlay asset: %w", err)
+			writeError(w, http.StatusBadRequest, "could not store file")
 		}
-		clog.Errorf(ctx, "save overlay asset: %w", err)
-		writeError(w, http.StatusBadRequest, "could not store file")
 		return
 	}
 

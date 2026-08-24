@@ -25,8 +25,10 @@ var (
 	// ErrUnsupportedType is returned when the bytes are not a supported image.
 	ErrUnsupportedType = errors.New("unsupported overlay asset type")
 	// ErrUnsafeSVG is returned when an SVG contains executable content.
-	ErrUnsafeSVG  = errors.New("svg asset contains unsafe content")
-	errEmptyAsset = errors.New("overlay asset is empty")
+	ErrUnsafeSVG = errors.New("svg asset contains unsafe content")
+	// ErrModernImageFormat is returned for HEIC/AVIF uploads that need conversion first.
+	ErrModernImageFormat = errors.New("HEIC and AVIF are not supported; use PNG or JPEG")
+	errEmptyAsset        = errors.New("overlay asset is empty")
 )
 
 // DirForConfig returns the overlay-assets directory next to config.json.
@@ -91,8 +93,11 @@ func detectExt(data []byte) (string, error) {
 	if len(data) >= 12 && bytes.Equal(data[:4], []byte("RIFF")) && bytes.Equal(data[8:12], []byte("WEBP")) {
 		return ".webp", nil
 	}
+	if err := detectModernImageFormat(data); err != nil {
+		return "", err
+	}
 
-	trimmed := bytes.TrimSpace(data)
+	trimmed := trimAssetPrefix(data)
 	if isSVG(trimmed) {
 		if svgUnsafe(trimmed) {
 			return "", ErrUnsafeSVG
@@ -102,11 +107,36 @@ func detectExt(data []byte) (string, error) {
 	return "", ErrUnsupportedType
 }
 
+func trimAssetPrefix(data []byte) []byte {
+	data = bytes.TrimSpace(data)
+	return bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
+}
+
+func detectModernImageFormat(data []byte) error {
+	if len(data) < 12 || !bytes.Equal(data[4:8], []byte("ftyp")) {
+		return nil
+	}
+	brand := strings.ToLower(string(data[8:12]))
+	switch brand {
+	case "heic", "heix", "hevc", "hevx", "heif", "mif1", "msf1", "avif", "avis":
+		return ErrModernImageFormat
+	default:
+		return nil
+	}
+}
+
 func isSVG(data []byte) bool {
-	if bytes.HasPrefix(data, []byte("<svg")) {
+	if len(data) == 0 {
+		return false
+	}
+	lower := bytes.ToLower(data)
+	if bytes.HasPrefix(lower, []byte("<svg")) {
 		return true
 	}
-	return bytes.HasPrefix(data, []byte("<?xml")) && bytes.Contains(data, []byte("<svg"))
+	if bytes.HasPrefix(lower, []byte("<?xml")) || bytes.HasPrefix(lower, []byte("<!doctype svg")) {
+		return bytes.Contains(lower, []byte("<svg"))
+	}
+	return false
 }
 
 func svgUnsafe(data []byte) bool {

@@ -90,6 +90,30 @@ func TestValidate_WhenStyleFontInvalid_ExpectInvalidConfig(t *testing.T) {
 	require.Contains(t, ValidationFields(err), "overlay_preset_0_style_font_family")
 }
 
+func TestValidate_WhenPanelImageFitInvalid_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].Style.PanelImageFit = "stretch"
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+	require.Contains(t, ValidationFields(err), "overlay_preset_0_style_panel_image_fit")
+}
+
+func TestValidate_WhenPanelImageScopeInvalid_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].Style.PanelImageScope = "viewport"
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+	require.Contains(t, ValidationFields(err), "overlay_preset_0_style_panel_image_scope")
+}
+
 func TestLoad_WhenLegacyOverlayJSON_ExpectMigratedPreset(t *testing.T) {
 	t.Parallel()
 

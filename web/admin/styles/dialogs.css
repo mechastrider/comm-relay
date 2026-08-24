@@ -3,8 +3,10 @@
 }
 
 .settings-dialog {
+  --dialog-max-height: min(760px, calc(100vh - 36px));
+  --dialog-max-height: min(760px, calc(100dvh - 36px));
   width: min(940px, calc(100vw - 36px));
-  max-height: min(760px, calc(100vh - 36px));
+  max-height: var(--dialog-max-height);
   padding: 0;
   overflow: hidden;
   border: 2px solid var(--border);
@@ -14,17 +16,19 @@
   box-shadow: var(--shadow);
 }
 
+.settings-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 #overlay-dialog {
   width: min(1240px, calc(100vw - 36px));
-  max-height: min(860px, calc(100vh - 36px));
+  --dialog-max-height: min(860px, calc(100vh - 36px));
+  --dialog-max-height: min(860px, calc(100dvh - 36px));
 }
 
 #connections-dialog {
   width: min(640px, calc(100vw - 36px));
-}
-
-#overlay-dialog .dialog-frame {
-  max-height: min(860px, calc(100vh - 36px));
 }
 
 .dialog-tab-body {
@@ -70,6 +74,9 @@
 
 .dialog-tab-panel {
   min-height: 0;
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .connections-tab-panel {
@@ -82,7 +89,17 @@
 }
 
 .obs-tab-panel--appearance {
+  display: grid;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
+}
+
+#obs-highlights-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 12px;
 }
 
 .obs-setup {

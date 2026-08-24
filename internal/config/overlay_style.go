@@ -30,6 +30,20 @@ const (
 	OverlayPlatformMarkerNone   = "none"
 )
 
+// Overlay panel-image fit modes.
+const (
+	OverlayPanelImageFitCover   = "cover"
+	OverlayPanelImageFitContain = "contain"
+	OverlayPanelImageFitFill    = "fill"
+	OverlayPanelImageFitTile    = "tile"
+)
+
+// Overlay panel-image scope modes.
+const (
+	OverlayPanelImageScopeMessage = "message"
+	OverlayPanelImageScopeColumn  = "column"
+)
+
 const (
 	overlayLineHeightMin       = 1.0
 	overlayLineHeightMax       = 2.0
@@ -53,6 +67,8 @@ type OverlayStyleConfig struct {
 	PanelColor           string  `json:"panel_color"`
 	PanelOpacity         float64 `json:"panel_opacity"`
 	PanelImage           string  `json:"panel_image,omitempty"`
+	PanelImageFit        string  `json:"panel_image_fit,omitempty"`
+	PanelImageScope      string  `json:"panel_image_scope,omitempty"`
 	BorderWidth          int     `json:"border_width"`
 	BorderColor          string  `json:"border_color"`
 	BorderRadius         int     `json:"border_radius"`
@@ -119,6 +135,12 @@ func (s *OverlayStyleConfig) applyDefaults(theme string) {
 	if s.HighlightTextColor == "" {
 		s.HighlightTextColor = def.HighlightTextColor
 	}
+	if s.PanelImageFit == "" {
+		s.PanelImageFit = OverlayPanelImageFitCover
+	}
+	if s.PanelImageScope == "" {
+		s.PanelImageScope = OverlayPanelImageScopeMessage
+	}
 }
 
 func (s OverlayStyleConfig) validateFields(prefix string) FieldErrors {
@@ -167,6 +189,16 @@ func (s OverlayStyleConfig) validateFields(prefix string) FieldErrors {
 	}
 	if s.PanelImage != "" && !validOverlayAssetName(s.PanelImage) {
 		fields[key("panel_image")] = "Panel image must be a stored overlay asset filename."
+	}
+	switch s.PanelImageFit {
+	case OverlayPanelImageFitCover, OverlayPanelImageFitContain, OverlayPanelImageFitFill, OverlayPanelImageFitTile:
+	default:
+		fields[key("panel_image_fit")] = "Choose cover, contain, fill, or tile."
+	}
+	switch s.PanelImageScope {
+	case OverlayPanelImageScopeMessage, OverlayPanelImageScopeColumn:
+	default:
+		fields[key("panel_image_scope")] = "Choose message or column."
 	}
 	if s.BorderWidth < 0 || s.BorderWidth > overlayBorderWidthMax {
 		fields[key("border_width")] = fmt.Sprintf("Border width must be between 0 and %d px.", overlayBorderWidthMax)

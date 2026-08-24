@@ -1,10 +1,13 @@
 import { t } from "./i18n-ui.js";
-import { apiURL } from "./api.js";
 import { defaultStyleForTheme, mergeStyle } from "../../overlay/overlay-settings.js";
+import { uploadOverlayAsset } from "./overlay-asset-upload.js";
+import { showBanner } from "./ui-shell.js";
 
 let presets = [];
 let activePresetId = "default";
 let bound = false;
+
+const PANEL_IMAGE_FIT_VALUES = ["cover", "contain", "fill", "tile"];
 
 function newID(prefix) {
   const bytes = new Uint8Array(8);
@@ -50,6 +53,8 @@ function collectStyleFromForm() {
     panel_color: fieldValue("overlay-panel-color", "#000000"),
     panel_opacity: Number.parseFloat(fieldValue("overlay-panel-opacity", "0.58")),
     panel_image: fieldValue("overlay-panel-image", ""),
+    panel_image_fit: fieldValue("overlay-panel-image-fit", "cover"),
+    panel_image_scope: fieldValue("overlay-panel-image-scope", "message"),
     border_width: Number.parseInt(fieldValue("overlay-border-width", "0"), 10),
     border_color: fieldValue("overlay-border-color", "#ffffff"),
     border_radius: Number.parseInt(fieldValue("overlay-border-radius", "8"), 10),
@@ -97,6 +102,83 @@ function updatePanelImagePreview(filename) {
     preview.hidden = true;
     preview.removeAttribute("src");
   }
+  updatePanelImageOptionsVisibility();
+}
+
+function updatePanelImageOptionsVisibility() {
+  const options = document.getElementById("overlay-panel-image-options");
+  if (!options) {
+    return;
+  }
+  options.hidden = !fieldValue("overlay-panel-image", "");
+}
+
+function resetPanelImageFileInput() {
+  const upload = document.getElementById("overlay-panel-image-file");
+  if (upload) {
+    upload.value = "";
+  }
+}
+
+function setPanelImageError(message) {
+  const el = document.getElementById("overlay-panel-image-error");
+  if (!el) {
+    return;
+  }
+  if (message) {
+    el.hidden = false;
+    el.textContent = message;
+  } else {
+    el.hidden = true;
+    el.textContent = "";
+  }
+}
+
+function setPanelImageFit(value) {
+  const fit = PANEL_IMAGE_FIT_VALUES.includes(value) ? value : "cover";
+  setFieldValue("overlay-panel-image-fit", fit);
+  document.querySelectorAll("[data-panel-image-fit]").forEach(function (button) {
+    const active = button.dataset.panelImageFit === fit;
+    button.setAttribute("aria-checked", active ? "true" : "false");
+    button.classList.toggle("icon-choice--active", active);
+  });
+}
+
+function initPanelImageFitIcons() {
+  const group = document.querySelector(".icon-choice-group[aria-labelledby='overlay-panel-image-fit-label']");
+  if (!group) {
+    return;
+  }
+  group.querySelectorAll("[data-panel-image-fit]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      setPanelImageFit(button.dataset.panelImageFit);
+      requestPreviewRefresh();
+    });
+    button.addEventListener("keydown", function (event) {
+      const buttons = Array.from(group.querySelectorAll("[data-panel-image-fit]"));
+      const index = buttons.indexOf(button);
+      if (index === -1) {
+        return;
+      }
+      let next = -1;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+        next = (index + 1) % buttons.length;
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        next = (index - 1 + buttons.length) % buttons.length;
+      } else if (event.key === " " || event.key === "Enter") {
+        event.preventDefault();
+        setPanelImageFit(button.dataset.panelImageFit);
+        requestPreviewRefresh();
+        return;
+      }
+      if (next !== -1) {
+        event.preventDefault();
+        buttons[next].focus();
+        setPanelImageFit(buttons[next].dataset.panelImageFit);
+        requestPreviewRefresh();
+      }
+    });
+  });
 }
 
 function writeFormFromPreset(preset) {
@@ -118,6 +200,8 @@ function writeFormFromPreset(preset) {
   setFieldValue("overlay-panel-color", style.panel_color);
   setFieldValue("overlay-panel-opacity", String(style.panel_opacity));
   setFieldValue("overlay-panel-image", style.panel_image || "");
+  setPanelImageFit(style.panel_image_fit || "cover");
+  setFieldValue("overlay-panel-image-scope", style.panel_image_scope || "message");
   setFieldValue("overlay-border-width", String(style.border_width));
   setFieldValue("overlay-border-color", style.border_color);
   setFieldValue("overlay-border-radius", String(style.border_radius));
@@ -190,6 +274,8 @@ export function collectAppearanceQuery() {
   };
   if (style.panel_image) {
     query.panel_image = style.panel_image;
+    query.panel_image_fit = style.panel_image_fit;
+    query.panel_image_scope = style.panel_image_scope;
   }
   return query;
 }
@@ -297,10 +383,13 @@ function resetGroup(group) {
     setFieldValue("overlay-panel-color", defaults.panel_color);
     setFieldValue("overlay-panel-opacity", String(defaults.panel_opacity));
     setFieldValue("overlay-panel-image", "");
+    setPanelImageFit(defaults.panel_image_fit);
+    setFieldValue("overlay-panel-image-scope", defaults.panel_image_scope);
     setFieldValue("overlay-border-width", String(defaults.border_width));
     setFieldValue("overlay-border-color", defaults.border_color);
     setFieldValue("overlay-border-radius", String(defaults.border_radius));
     updatePanelImagePreview("");
+    resetPanelImageFileInput();
   } else {
     setFieldValue("overlay-text-edge", defaults.text_edge);
     setFieldValue("overlay-text-edge-strength", String(defaults.text_edge_strength));
@@ -310,20 +399,10 @@ function resetGroup(group) {
 }
 
 async function uploadPanelImage(file) {
-  const body = new FormData();
-  body.append("file", file);
-  const response = await fetch(apiURL("/api/overlay/assets/upload"), {
-    method: "POST",
-    body: body,
-  });
-  const payload = await response.json().catch(function () {
-    return null;
-  });
-  if (!response.ok || !payload || !payload.filename) {
-    throw new Error("upload failed");
-  }
-  setFieldValue("overlay-panel-image", payload.filename);
-  updatePanelImagePreview(payload.filename);
+  setPanelImageError("");
+  const filename = await uploadOverlayAsset(file);
+  setFieldValue("overlay-panel-image", filename);
+  updatePanelImagePreview(filename);
   requestPreviewRefresh();
 }
 
@@ -332,6 +411,7 @@ export function initOverlayAppearance() {
     return;
   }
   bound = true;
+  initPanelImageFitIcons();
   const select = document.getElementById("overlay-preset-select");
   if (select) {
     select.addEventListener("change", function () {
@@ -354,11 +434,20 @@ export function initOverlayAppearance() {
   const upload = document.getElementById("overlay-panel-image-file");
   if (upload) {
     upload.addEventListener("change", function () {
-      if (upload.files && upload.files[0]) {
-        uploadPanelImage(upload.files[0]).catch(function () {
-          /* keep previous image */
-        });
+      const file = upload.files && upload.files[0];
+      if (!file) {
+        return;
       }
+      uploadPanelImage(file)
+        .catch(function (err) {
+          const message =
+            err && err.message ? err.message : t("obs.assetUploadFailed");
+          setPanelImageError(message);
+          showBanner("error", message);
+        })
+        .finally(function () {
+          resetPanelImageFileInput();
+        });
     });
   }
   const clearImage = document.getElementById("overlay-panel-image-clear");
@@ -366,6 +455,8 @@ export function initOverlayAppearance() {
     clearImage.addEventListener("click", function () {
       setFieldValue("overlay-panel-image", "");
       updatePanelImagePreview("");
+      resetPanelImageFileInput();
+      setPanelImageError("");
       requestPreviewRefresh();
     });
   }
@@ -385,6 +476,7 @@ export function initOverlayAppearance() {
     "overlay-line-height",
     "overlay-panel-color",
     "overlay-panel-opacity",
+    "overlay-panel-image-scope",
     "overlay-border-width",
     "overlay-border-color",
     "overlay-border-radius",

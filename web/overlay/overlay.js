@@ -4,6 +4,8 @@ import {
   fontStack,
   hexToRgba,
   messageHasHighlight,
+  normalizePanelImageFit,
+  normalizePanelImageScope,
   overlayAssetURL,
   overlayViewFromConfig,
   splitHighlightedText
@@ -314,6 +316,20 @@ import {
         Boolean(style.panel_image) ||
         (typeof style.border_width === "number" && style.border_width > 0)
     );
+    const panelImageFit = normalizePanelImageFit(style.panel_image_fit);
+    const panelImageScope = normalizePanelImageScope(style.panel_image_scope, config.theme);
+    document.body.classList.remove(
+      "overlay-panel-image-fit--cover",
+      "overlay-panel-image-fit--contain",
+      "overlay-panel-image-fit--fill",
+      "overlay-panel-image-fit--tile"
+    );
+    document.body.classList.add("overlay-panel-image-fit--" + panelImageFit);
+    document.body.classList.remove(
+      "overlay-panel-image-scope--message",
+      "overlay-panel-image-scope--column"
+    );
+    document.body.classList.add("overlay-panel-image-scope--" + panelImageScope);
     document.body.classList.remove(
       "overlay-preview--busy",
       "overlay-preview--checker",

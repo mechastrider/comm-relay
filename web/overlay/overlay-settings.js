@@ -1,5 +1,3 @@
-export const DEFAULT_PRESET_ID = "default";
-
 export const FONT_STACKS = {
   system:
     'system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif',
@@ -17,9 +15,25 @@ const THEMES = new Set([
   "g_rebels_popups",
 ]);
 
+const PANEL_IMAGE_FITS = new Set(["cover", "contain", "fill", "tile"]);
+const PANEL_IMAGE_SCOPES = new Set(["message", "column"]);
+
 export function normalizeTheme(theme) {
   const value = String(theme || "").trim().toLowerCase();
   return THEMES.has(value) ? value : "default";
+}
+
+export function normalizePanelImageFit(value) {
+  const fit = String(value || "").trim().toLowerCase();
+  return PANEL_IMAGE_FITS.has(fit) ? fit : "cover";
+}
+
+export function normalizePanelImageScope(value, theme) {
+  const scope = String(value || "").trim().toLowerCase();
+  if (scope === "column" && normalizeTheme(theme) === "default") {
+    return "column";
+  }
+  return "message";
 }
 
 export function defaultStyleForTheme(theme) {
@@ -32,6 +46,8 @@ export function defaultStyleForTheme(theme) {
     panel_color: "#000000",
     panel_opacity: 0.58,
     panel_image: "",
+    panel_image_fit: "cover",
+    panel_image_scope: "message",
     border_width: 0,
     border_color: "#ffffff",
     border_radius: 8,
@@ -77,6 +93,9 @@ export function mergeStyle(theme, style) {
     panel_opacity:
       typeof incoming.panel_opacity === "number" ? incoming.panel_opacity : defaults.panel_opacity,
     panel_image: typeof incoming.panel_image === "string" ? incoming.panel_image : defaults.panel_image,
+    panel_image_fit: normalizePanelImageFit(incoming.panel_image_fit || defaults.panel_image_fit),
+    panel_image_scope:
+      incoming.panel_image_scope === "column" ? "column" : defaults.panel_image_scope,
     border_width:
       typeof incoming.border_width === "number" ? incoming.border_width : defaults.border_width,
     border_color: incoming.border_color || defaults.border_color,
@@ -240,6 +259,12 @@ export function applyQueryStyleOverrides(style, params) {
   }
   if (has("panel_image")) {
     next.panel_image = get("panel_image") || "";
+  }
+  if (has("panel_image_fit") && PANEL_IMAGE_FITS.has(get("panel_image_fit"))) {
+    next.panel_image_fit = get("panel_image_fit");
+  }
+  if (has("panel_image_scope") && PANEL_IMAGE_SCOPES.has(get("panel_image_scope"))) {
+    next.panel_image_scope = get("panel_image_scope");
   }
   if (has("border_width")) {
     const value = Number.parseInt(get("border_width"), 10);

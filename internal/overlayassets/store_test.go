@@ -43,6 +43,30 @@ func TestSave_WhenUnsafeSVG_ExpectError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestSave_WhenDOCTYPESVG_ExpectStoredFilename(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	svg := []byte(`<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>`)
+
+	name, err := Save(dir, svg)
+	require.NoError(t, err)
+	require.True(t, strings.HasSuffix(name, ".svg"))
+}
+
+func TestSave_WhenHEIC_ExpectModernFormatError(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	heic := []byte{
+		0x00, 0x00, 0x00, 0x18, 'f', 't', 'y', 'p', 'h', 'e', 'i', 'c',
+	}
+
+	_, err := Save(dir, heic)
+	require.ErrorIs(t, err, ErrModernImageFormat)
+}
+
 func TestDirForConfig_WhenPath_ExpectSiblingDirectory(t *testing.T) {
 	t.Parallel()
 

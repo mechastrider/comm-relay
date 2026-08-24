@@ -7,6 +7,8 @@ import {
   findPerson,
   hexToRgba,
   messageHasHighlight,
+  normalizePanelImageFit,
+  normalizePanelImageScope,
   overlayViewFromConfig,
   resolvePreset,
   splitHighlightedText,
@@ -68,6 +70,32 @@ test("applyQueryStyleOverrides replaces unsaved tokens", function () {
   );
   assert.equal(style.text_edge, "outline");
   assert.equal(style.platform_marker, "none");
+});
+
+test("applyQueryStyleOverrides applies panel image fit and scope", function () {
+  const style = applyQueryStyleOverrides(
+    defaultStyleForTheme("default"),
+    new URLSearchParams("panel_image_fit=contain&panel_image_scope=column")
+  );
+  assert.equal(style.panel_image_fit, "contain");
+  assert.equal(style.panel_image_scope, "column");
+});
+
+test("normalizePanelImageFit defaults invalid values to cover", function () {
+  assert.equal(normalizePanelImageFit("tile"), "tile");
+  assert.equal(normalizePanelImageFit("stretch"), "cover");
+});
+
+test("normalizePanelImageScope uses column only on default theme", function () {
+  assert.equal(normalizePanelImageScope("column", "default"), "column");
+  assert.equal(normalizePanelImageScope("column", "dashboard"), "message");
+  assert.equal(normalizePanelImageScope("message", "default"), "message");
+});
+
+test("defaultStyleForTheme includes panel image defaults", function () {
+  const style = defaultStyleForTheme("default");
+  assert.equal(style.panel_image_fit, "cover");
+  assert.equal(style.panel_image_scope, "message");
 });
 
 test("hexToRgba converts 3 and 6 digit colors", function () {

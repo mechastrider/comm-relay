@@ -1,5 +1,6 @@
 import { t } from "./i18n-ui.js";
-import { apiURL } from "./api.js";
+import { uploadOverlayAsset } from "./overlay-asset-upload.js";
+import { showBanner } from "./ui-shell.js";
 
 let words = [];
 let highlightsEnabled = false;
@@ -99,11 +100,19 @@ function renderPeople() {
     iconInput.className = "people-row__file";
     iconInput.setAttribute("aria-label", t("obs.personIcon"));
     iconInput.addEventListener("change", function () {
-      if (iconInput.files && iconInput.files[0]) {
-        uploadPersonIcon(index, iconInput.files[0]).catch(function () {
-          /* keep previous icon */
-        });
+      const file = iconInput.files && iconInput.files[0];
+      if (!file) {
+        return;
       }
+      uploadPersonIcon(index, file)
+        .catch(function (err) {
+          const message =
+            err && err.message ? err.message : t("obs.assetUploadFailed");
+          showBanner("error", message);
+        })
+        .finally(function () {
+          iconInput.value = "";
+        });
     });
 
     const label = document.createElement("input");
@@ -164,19 +173,8 @@ function renderPeople() {
 }
 
 async function uploadPersonIcon(index, file) {
-  const body = new FormData();
-  body.append("file", file);
-  const response = await fetch(apiURL("/api/overlay/assets/upload"), {
-    method: "POST",
-    body: body,
-  });
-  const payload = await response.json().catch(function () {
-    return null;
-  });
-  if (!response.ok || !payload || !payload.filename) {
-    throw new Error("upload failed");
-  }
-  people[index].icon = payload.filename;
+  const filename = await uploadOverlayAsset(file);
+  people[index].icon = filename;
   renderPeople();
   requestPreviewRefresh();
 }

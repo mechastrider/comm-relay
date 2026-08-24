@@ -42,17 +42,13 @@ Admin or operator UI served as static HTML:
 - Show connection state (connected / reconnecting / error) for each integration.
 - Link to OAuth or setup URLs when the backend exposes them.
 - Keep layout usable at desktop widths (~1280px); avoid marketing chrome.
+- Height-capped dialogs, drawers, and split panes: follow [web-constrained-layout](../web-constrained-layout/SKILL.md). Do not clip overflowing chrome with `overflow: hidden` unless a descendant can scroll.
 
 ## JavaScript style
 
 - Prefer small functions; avoid global pollution except one `init()` entry.
 - `async/await` for API calls; handle `response.ok` and parse `{"error":"..."}`.
 - No build step required for MVP (optional minify later).
-
-## Internationalization
-
-- User-visible strings in `web/admin` and `web/dock` go through `web/shared/i18n.js` (`t()`, `data-i18n` on static HTML).
-- Add keys to both `web/shared/locales/en.js` and `web/shared/locales/ru.js`; run `npm run test:i18n` for parity.
 
 ## Security
 
@@ -62,6 +58,7 @@ Admin or operator UI served as static HTML:
 ## Related
 
 - Forms: [ux-form-practices](../../ux/ux-form-practices/SKILL.md)
+- Capped overlays and split panes: [web-constrained-layout](../web-constrained-layout/SKILL.md)
 - API shape: [api-conventions](../../../backend/go/api-conventions/SKILL.md)
 
 ## Checklist
@@ -71,3 +68,4 @@ Admin or operator UI served as static HTML:
 - [ ] Message limit and TTL behavior documented
 - [ ] XSS-safe text rendering
 - [ ] API field names snake_case
+- [ ] Capped overlays follow `web-constrained-layout` (scroll the body, do not clip)
