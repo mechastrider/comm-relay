@@ -82,12 +82,11 @@ export function setOBSSection(section, options) {
     const tabs = [
       { id: "setup", tab: dom.obsSetupTab, panel: dom.obsSetupPanel },
       { id: "appearance", tab: dom.obsAppearanceTab, panel: dom.obsAppearancePanel },
-      { id: "highlights", tab: dom.obsHighlightsTab, panel: dom.obsHighlightsPanel },
     ];
     if (!tabs[0].tab || !tabs[1].tab || !tabs[0].panel || !tabs[1].panel) {
       return;
     }
-    const current = section === "highlights" || section === "appearance" ? section : "setup";
+    const current = section === "appearance" ? section : "setup";
     tabs.forEach(function (item) {
       if (!item.tab || !item.panel) {
         return;
@@ -136,14 +135,14 @@ export function initOBSSetup() {
       });
     });
 
-    const tabs = [dom.obsSetupTab, dom.obsAppearanceTab, dom.obsHighlightsTab].filter(Boolean);
+    const tabs = [dom.obsSetupTab, dom.obsAppearanceTab].filter(Boolean);
     tabs.forEach(function (tab) {
       tab.addEventListener("keydown", function (event) {
         if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(event.key) === -1) {
           return;
         }
         event.preventDefault();
-        const ids = ["setup", "appearance", "highlights"];
+        const ids = ["setup", "appearance"];
         const currentIndex = Math.max(0, ids.indexOf(tab.getAttribute("data-obs-section")));
         let nextIndex = currentIndex;
         if (event.key === "Home") {

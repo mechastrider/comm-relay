@@ -60,17 +60,15 @@ const (
 
 // OverlayConfig controls OBS overlay appearance and message retention.
 type OverlayConfig struct {
-	MaxMessages       int                     `json:"max_messages"`
-	MessageTTLSeconds int                     `json:"message_ttl_seconds"`
-	FontSizePx        int                     `json:"font_size_px"`
-	DisplayMode       string                  `json:"display_mode"`
-	Theme             string                  `json:"theme"`
-	Emotes            EmotesConfig            `json:"emotes"`
-	ImagePreviews     ImagePreviewsConfig     `json:"image_previews"`
-	Presets           []OverlayPreset         `json:"presets"`
-	ActivePresetID    string                  `json:"active_preset_id"`
-	Highlights        OverlayHighlightsConfig `json:"highlights"`
-	People            []OverlayPerson         `json:"people"`
+	MaxMessages       int                 `json:"max_messages"`
+	MessageTTLSeconds int                 `json:"message_ttl_seconds"`
+	FontSizePx        int                 `json:"font_size_px"`
+	DisplayMode       string              `json:"display_mode"`
+	Theme             string              `json:"theme"`
+	Emotes            EmotesConfig        `json:"emotes"`
+	ImagePreviews     ImagePreviewsConfig `json:"image_previews"`
+	Presets           []OverlayPreset     `json:"presets"`
+	ActivePresetID    string              `json:"active_preset_id"`
 	// PageOpacity is rejected when present so the overlay page stays transparent for OBS.
 	PageOpacity *float64 `json:"page_opacity,omitempty"`
 }
@@ -100,7 +98,6 @@ func Default() *Config {
 			Theme:             OverlayThemeDefault,
 			Emotes:            defaultEmotes(),
 			ImagePreviews:     defaultImagePreviews(),
-			Highlights:        defaultOverlayHighlights(),
 		},
 		Admin: AdminConfig{
 			MessageSound: defaultMessageSound(),

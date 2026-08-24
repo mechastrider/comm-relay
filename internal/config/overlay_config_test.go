@@ -35,34 +35,6 @@ func TestEnsurePresets_WhenLegacyFlatOverlay_ExpectDefaultPresetAndMirroredField
 	require.InDelta(t, 0.0, preset.Style.PanelOpacity, 0.001)
 	require.Equal(t, 12, overlay.MaxMessages)
 	require.Equal(t, OverlayThemeDashboard, overlay.Theme)
-	require.Empty(t, overlay.People)
-}
-
-func TestValidate_WhenDuplicatePersonIdentity_ExpectInvalidConfig(t *testing.T) {
-	t.Parallel()
-
-	cfg := Default()
-	cfg.Overlay.People = []OverlayPerson{
-		{
-			ID:    "person_a",
-			Label: "A",
-			Identities: []OverlayPersonIdentity{
-				{Platform: "twitch", Username: "same_user"},
-			},
-		},
-		{
-			ID:    "person_b",
-			Label: "B",
-			Identities: []OverlayPersonIdentity{
-				{Platform: "twitch", Username: "Same_User"},
-			},
-		},
-	}
-
-	err := cfg.Validate()
-	require.Error(t, err)
-	require.True(t, errors.Is(err, ErrInvalidConfig))
-	require.Contains(t, ValidationFields(err), "overlay_person_1_identity_0_username")
 }
 
 func TestValidate_WhenPageOpacitySet_ExpectInvalidConfig(t *testing.T) {

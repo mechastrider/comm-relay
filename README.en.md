@@ -109,7 +109,6 @@ Open **OBS → Appearance** in the CommRelay control panel.
 | **Spacing** | **Comfortable** — normal padding. **Compact** — denser when many lines are on screen. |
 | **Theme** | **Default** — cards with a semi-transparent background. **Text only** — text only, no background. **Cockpit panel** — shared HUD panel. **Cockpit popups** — separate MW5 HUD pop-up messages. **G-Rebels Cockpit popups** — pop-up messages in a gold aviation HUD style. |
 | **Presets** | A named look for a scene or game: theme, limit, TTL, density, text edge, platform marker, panel. An older `config.json` without presets becomes the **Default** preset. |
-| **Highlights** | A global word list and people with a shared icon. Border and text colors come from the **current preset**. |
 | **URL `?preset=`** | Each OBS scene can have its own Browser Source: copy the URL on the **Setup** tab — it already includes the active preset. |
 
 After any change:

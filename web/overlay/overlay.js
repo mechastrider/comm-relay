@@ -1,14 +1,11 @@
 import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.js?v=12";
 import {
-  findPerson,
   fontStack,
   hexToRgba,
-  messageHasHighlight,
   normalizePanelImageFit,
   normalizePanelImageScope,
   overlayAssetURL,
-  overlayViewFromConfig,
-  splitHighlightedText
+  overlayViewFromConfig
 } from "/overlay/overlay-settings.js?v=2";
 
 "use strict";
@@ -261,14 +258,6 @@ import {
       String(style.border_radius || 0) + "px"
     );
     document.documentElement.style.setProperty(
-      "--overlay-highlight-border",
-      style.highlight_border_color || "#f5c542"
-    );
-    document.documentElement.style.setProperty(
-      "--overlay-highlight-text",
-      style.highlight_text_color || "#ffffff"
-    );
-    document.documentElement.style.setProperty(
       "--overlay-image-preview-max-width",
       String(config.imagePreviews.maxWidthPx) + "px"
     );
@@ -345,45 +334,6 @@ import {
         )
       );
     }
-  }
-
-  function wrapHighlightedText(root, words) {
-    const highlights = overlayView.highlights || {};
-    if (!highlights.enabled || !Array.isArray(words) || words.length === 0) {
-      return;
-    }
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    let node = walker.nextNode();
-    while (node) {
-      nodes.push(node);
-      node = walker.nextNode();
-    }
-    nodes.forEach(function (textNode) {
-      if (!textNode.parentNode || textNode.parentNode.closest(".message__highlight")) {
-        return;
-      }
-      const parts = splitHighlightedText(textNode.nodeValue, words);
-      if (
-        !parts.some(function (part) {
-          return part.hit;
-        })
-      ) {
-        return;
-      }
-      const fragment = document.createDocumentFragment();
-      parts.forEach(function (part) {
-        if (part.hit) {
-          const mark = document.createElement("span");
-          mark.className = "message__highlight";
-          appendText(mark, part.text);
-          fragment.appendChild(mark);
-        } else {
-          fragment.appendChild(document.createTextNode(part.text));
-        }
-      });
-      textNode.parentNode.replaceChild(fragment, textNode);
-    });
   }
 
   async function loadServerConfig() {
@@ -655,20 +605,8 @@ import {
   function fillMessageRow(row, frame) {
     const user = messageDisplayName(frame);
     const text = typeof frame.message === "string" ? frame.message : "";
-    const highlights = overlayView.highlights || {};
-    const words = Array.isArray(highlights.words) ? highlights.words : [];
-    const person = findPerson(
-      overlayView.people,
-      frame.platform,
-      frame.username,
-      frame.user || frame.display_name
-    );
 
     row.className = "message";
-    row.classList.toggle(
-      "message--highlight",
-      messageHasHighlight(text, words, highlights.enabled === true)
-    );
     if (typeof frame.platform === "string" && frame.platform !== "") {
       row.dataset.platform = frame.platform;
     } else {
@@ -691,14 +629,6 @@ import {
 
     const identityEl = document.createElement("span");
     identityEl.className = "message__identity";
-    if (person && person.icon) {
-      const icon = document.createElement("img");
-      icon.className = "message__person";
-      icon.alt = "";
-      icon.referrerPolicy = "no-referrer";
-      icon.src = overlayAssetURL(person.icon, overlayAssetsRevision);
-      identityEl.appendChild(icon);
-    }
     const userEl = document.createElement("span");
     userEl.className = "message__user";
     appendText(userEl, user);
@@ -707,7 +637,6 @@ import {
     const textEl = document.createElement("span");
     textEl.className = "message__text";
     appendMessageContent(textEl, frame, text);
-    wrapHighlightedText(textEl, words);
 
     row.appendChild(platformEl);
     row.appendChild(avatarEl);
@@ -869,35 +798,6 @@ import {
         message: "Sample preview uses the same renderer as the OBS Browser Source.",
       },
     ];
-    const highlights = overlayView.highlights || {};
-    const words = Array.isArray(highlights.words) ? highlights.words : [];
-    const highlightWord = words[0] || "raid";
-    const people = Array.isArray(overlayView.people) ? overlayView.people : [];
-    const person = people[0] || null;
-    const twitchIdentity =
-      person && Array.isArray(person.identities)
-        ? person.identities.find(function (identity) {
-            return identity.platform === "twitch";
-          })
-        : null;
-    messages.push({
-      type: "message",
-      id: "preview-highlight",
-      platform: "twitch",
-      user: "raid_captain",
-      username: "raid_captain",
-      display_name: "Raid Captain",
-      message: "Tonight we " + highlightWord + " together.",
-    });
-    messages.push({
-      type: "message",
-      id: "preview-person",
-      platform: "twitch",
-      user: (twitchIdentity && twitchIdentity.username) || "vasya_ttv",
-      username: (twitchIdentity && twitchIdentity.username) || "vasya_ttv",
-      display_name: (person && person.label) || "Vasya",
-      message: "Свой человек на связи.",
-    });
 
     messages.forEach(function (frame, index) {
       window.setTimeout(function () {

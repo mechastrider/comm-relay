@@ -95,13 +95,6 @@
   overflow: hidden;
 }
 
-#obs-highlights-panel {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  padding: 12px;
-}
-
 .obs-setup {
   overflow: auto;
   padding: 14px;

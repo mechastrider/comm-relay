@@ -30,10 +30,6 @@ import {
   collectOverlayAppearance,
 } from './overlay-appearance.js';
 import {
-  applyOverlayHighlights,
-  collectOverlayHighlights,
-} from './overlay-highlights.js';
-import {
   renderRecentMessages,
   maybePlayMessageSound,
   trackMessages,
@@ -213,7 +209,6 @@ export function applyConfig(config) {
 
     const overlay = config.overlay || {};
     applyOverlayAppearance(overlay);
-    applyOverlayHighlights(overlay);
     applyRichChatFromConfig(overlay);
 
     if (config.youtube) {
@@ -270,7 +265,6 @@ export function applyConfig(config) {
 export function buildPayload() {
     const richChat = getRichChatSettings();
     const appearance = collectOverlayAppearance();
-    const highlights = collectOverlayHighlights();
     return {
       server_port: state.currentConfig ? state.currentConfig.server_port : 17877,
       network: {
@@ -301,7 +295,7 @@ export function buildPayload() {
       vk: Object.assign(readVkSettings(), {
         use_proxy: dom.vkUseProxy ? dom.vkUseProxy.checked : false,
       }),
-      overlay: Object.assign({}, appearance, highlights, {
+      overlay: Object.assign({}, appearance, {
         emotes: richChat.emotes,
         image_previews: richChat.image_previews,
       }),

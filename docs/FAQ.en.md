@@ -64,7 +64,9 @@ To pin a look to an OBS scene, use a preset URL (copied on the **OBS → Setup**
 http://127.0.0.1:17877/overlay?preset=default
 ```
 
-Highlight words and people icons are shared across presets. Highlight colors are edited on the **Highlights** tab but stored on the active preset. The overlay page background stays transparent: only the message card may be opaque.
+The overlay page background stays transparent: only the message card may be opaque.
+
+You should see sample messages.
 
 Sample messages should appear. The same mode exists in the admin panel: **OBS → Appearance → Preview**.
 

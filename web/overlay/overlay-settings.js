@@ -51,8 +51,6 @@ export function defaultStyleForTheme(theme) {
     border_width: 0,
     border_color: "#ffffff",
     border_radius: 8,
-    highlight_border_color: "#f5c542",
-    highlight_text_color: "#ffffff",
   };
   switch (normalizeTheme(theme)) {
     case "dashboard":
@@ -101,8 +99,6 @@ export function mergeStyle(theme, style) {
     border_color: incoming.border_color || defaults.border_color,
     border_radius:
       typeof incoming.border_radius === "number" ? incoming.border_radius : defaults.border_radius,
-    highlight_border_color: incoming.highlight_border_color || defaults.highlight_border_color,
-    highlight_text_color: incoming.highlight_text_color || defaults.highlight_text_color,
   };
 }
 
@@ -119,87 +115,6 @@ export function resolvePreset(overlay, queryPreset) {
     }
   }
   return presets[0] || null;
-}
-
-export function findPerson(people, platform, username, displayName) {
-  const plat = String(platform || "").trim().toLowerCase();
-  const names = [username, displayName]
-    .map(function (value) {
-      return String(value || "").trim().toLowerCase();
-    })
-    .filter(function (value) {
-      return value !== "";
-    });
-  if (plat === "" || names.length === 0 || !Array.isArray(people)) {
-    return null;
-  }
-  for (let i = 0; i < people.length; i += 1) {
-    const person = people[i];
-    const identities = person && Array.isArray(person.identities) ? person.identities : [];
-    for (let j = 0; j < identities.length; j += 1) {
-      const identity = identities[j];
-      if (!identity || String(identity.platform || "").trim().toLowerCase() !== plat) {
-        continue;
-      }
-      const login = String(identity.username || "").trim().toLowerCase();
-      if (login !== "" && names.indexOf(login) !== -1) {
-        return person;
-      }
-    }
-  }
-  return null;
-}
-
-export function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-export function splitHighlightedText(text, words) {
-  const source = String(text || "");
-  const list = Array.isArray(words)
-    ? words
-        .map(function (word) {
-          return String(word || "").trim();
-        })
-        .filter(function (word) {
-          return word !== "";
-        })
-    : [];
-  if (source === "" || list.length === 0) {
-    return [{ text: source, hit: false }];
-  }
-  const pattern = list
-    .slice()
-    .sort(function (a, b) {
-      return b.length - a.length;
-    })
-    .map(escapeRegExp)
-    .join("|");
-  const re = new RegExp("(?<![\\p{L}\\p{N}_])(" + pattern + ")(?![\\p{L}\\p{N}_])", "giu");
-  const parts = [];
-  let last = 0;
-  let match = re.exec(source);
-  while (match) {
-    if (match.index > last) {
-      parts.push({ text: source.slice(last, match.index), hit: false });
-    }
-    parts.push({ text: match[0], hit: true });
-    last = match.index + match[0].length;
-    match = re.exec(source);
-  }
-  if (last < source.length) {
-    parts.push({ text: source.slice(last), hit: false });
-  }
-  return parts.length > 0 ? parts : [{ text: source, hit: false }];
-}
-
-export function messageHasHighlight(text, words, enabled) {
-  if (!enabled) {
-    return false;
-  }
-  return splitHighlightedText(text, words).some(function (part) {
-    return part.hit;
-  });
 }
 
 export function hexToRgba(hex, opacity) {
@@ -281,17 +196,11 @@ export function applyQueryStyleOverrides(style, params) {
       next.border_radius = value;
     }
   }
-  if (has("highlight_border_color") && /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(get("highlight_border_color"))) {
-    next.highlight_border_color = get("highlight_border_color");
-  }
-  if (has("highlight_text_color") && /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(get("highlight_text_color"))) {
-    next.highlight_text_color = get("highlight_text_color");
-  }
   return next;
 }
 
 /**
- * Resolved overlay view for rendering: preset display + style, plus global highlights/people.
+ * Resolved overlay view for rendering.
  *
  * @param {unknown} config
  * @param {URLSearchParams|string} [params]
@@ -314,11 +223,6 @@ export function overlayViewFromConfig(config, params) {
     display_mode: resolved && resolved.display_mode === "compact" ? "compact" : "normal",
     theme: theme,
     style: style,
-    highlights:
-      overlay && overlay.highlights && typeof overlay.highlights === "object"
-        ? overlay.highlights
-        : { enabled: false, words: [] },
-    people: overlay && Array.isArray(overlay.people) ? overlay.people : [],
   };
 }
 

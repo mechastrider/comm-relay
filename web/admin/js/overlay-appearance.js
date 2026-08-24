@@ -58,8 +58,6 @@ function collectStyleFromForm() {
     border_width: Number.parseInt(fieldValue("overlay-border-width", "0"), 10),
     border_color: fieldValue("overlay-border-color", "#ffffff"),
     border_radius: Number.parseInt(fieldValue("overlay-border-radius", "8"), 10),
-    highlight_border_color: fieldValue("overlay-highlight-border-color", "#f5c542"),
-    highlight_text_color: fieldValue("overlay-highlight-text-color", "#ffffff"),
   };
 }
 
@@ -205,8 +203,6 @@ function writeFormFromPreset(preset) {
   setFieldValue("overlay-border-width", String(style.border_width));
   setFieldValue("overlay-border-color", style.border_color);
   setFieldValue("overlay-border-radius", String(style.border_radius));
-  setFieldValue("overlay-highlight-border-color", style.highlight_border_color);
-  setFieldValue("overlay-highlight-text-color", style.highlight_text_color);
   updatePanelImagePreview(style.panel_image);
 }
 
@@ -269,8 +265,6 @@ export function collectAppearanceQuery() {
     border_width: String(style.border_width),
     border_color: style.border_color,
     border_radius: String(style.border_radius),
-    highlight_border_color: style.highlight_border_color,
-    highlight_text_color: style.highlight_text_color,
   };
   if (style.panel_image) {
     query.panel_image = style.panel_image;
@@ -480,8 +474,6 @@ export function initOverlayAppearance() {
     "overlay-border-width",
     "overlay-border-color",
     "overlay-border-radius",
-    "overlay-highlight-border-color",
-    "overlay-highlight-text-color",
   ].forEach(function (id) {
     const el = document.getElementById(id);
     if (el) {

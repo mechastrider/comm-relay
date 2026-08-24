@@ -340,7 +340,6 @@
           <div class="dialog-tabs" role="tablist" data-i18n-aria-label="dialog.obsSections" aria-label="OBS sections">
             <button id="obs-setup-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="obs-setup-panel" data-obs-section="setup" data-i18n="obs.setup">Setup</button>
             <button id="obs-appearance-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-appearance-panel" tabindex="-1" data-obs-section="appearance" data-i18n="obs.appearance">Appearance</button>
-            <button id="obs-highlights-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-highlights-panel" tabindex="-1" data-obs-section="highlights" data-i18n="obs.highlights">Highlights</button>
           </div>
 
           <section id="obs-setup-panel" class="dialog-tab-panel obs-setup" role="tabpanel" aria-labelledby="obs-setup-tab">
@@ -713,52 +712,6 @@
             <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite" data-i18n="obs.previewNoteSample">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
           </section>
         </div>
-          </section>
-
-          <section id="obs-highlights-panel" class="dialog-tab-panel" role="tabpanel" aria-labelledby="obs-highlights-tab" hidden>
-            <section class="panel" aria-labelledby="overlay-highlights-heading">
-              <div class="panel__header">
-                <h3 id="overlay-highlights-heading" data-i18n="obs.highlights">Highlights</h3>
-              </div>
-              <div class="panel__body">
-                <p class="panel-intro" data-i18n="obs.highlightsIntro">Words are global. Colors come from the current preset.</p>
-                <div class="form form--compact">
-                  <div class="form__field form__field--full">
-                    <label class="checkbox" for="overlay-highlights-enabled">
-                      <input id="overlay-highlights-enabled" type="checkbox">
-                      <span data-i18n="obs.highlightsEnabled">Highlight matching words</span>
-                    </label>
-                  </div>
-                  <div class="form__field">
-                    <label for="overlay-highlight-border-color" data-i18n="obs.highlightBorder">Highlight border</label>
-                    <input id="overlay-highlight-border-color" type="color" value="#f5c542">
-                  </div>
-                  <div class="form__field">
-                    <label for="overlay-highlight-text-color" data-i18n="obs.highlightText">Highlight text</label>
-                    <input id="overlay-highlight-text-color" type="color" value="#ffffff">
-                  </div>
-                  <div class="form__field form__field--full">
-                    <label for="overlay-highlight-word-input" data-i18n="obs.highlightWords">Words</label>
-                    <div class="chip-input-row">
-                      <input id="overlay-highlight-word-input" type="text" maxlength="64" autocomplete="off">
-                      <button id="overlay-highlight-word-add" class="btn-physical btn-small" type="button" data-i18n="obs.addWord">Add</button>
-                    </div>
-                    <div id="overlay-highlight-words" class="chip-list"></div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="panel" aria-labelledby="overlay-people-heading">
-              <div class="panel__header">
-                <h3 id="overlay-people-heading" data-i18n="obs.people">People</h3>
-                <button id="overlay-people-add" class="btn-physical btn-small" type="button" data-i18n="obs.addPerson">Add person</button>
-              </div>
-              <div class="panel__body">
-                <p class="field-hint" data-i18n="obs.peopleHint">One row per person, with a shared icon and optional Twitch, YouTube, and VK usernames.</p>
-                <div id="overlay-people-list" class="people-list"></div>
-              </div>
-            </section>
           </section>
         </div>
 

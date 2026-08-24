@@ -12,8 +12,6 @@
   --overlay-border-width: 0px;
   --overlay-border-color: #ffffff;
   --overlay-border-radius: 8px;
-  --overlay-highlight-border: #f5c542;
-  --overlay-highlight-text: #ffffff;
   --overlay-text: #f4f4f5;
   --overlay-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   --overlay-stroke-shadow:
@@ -858,21 +856,4 @@ body.overlay-theme--cockpit-panel .message__identity,
 body.overlay-theme--cockpit-popups .message__identity,
 body.overlay-theme--g-rebels-popups .message__identity {
   grid-area: user;
-}
-
-.message__person {
-  width: 1.15em;
-  height: 1.15em;
-  border-radius: 50%;
-  object-fit: cover;
-  flex: 0 0 auto;
-}
-
-.message--highlight {
-  box-shadow: inset 0 0 0 2px var(--overlay-highlight-border);
-}
-
-.message__highlight {
-  color: var(--overlay-highlight-text);
-  font-weight: 800;
 }

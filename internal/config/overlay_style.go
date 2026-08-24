@@ -59,37 +59,33 @@ var overlayHexColorRe = regexp.MustCompile(`(?i)^#(?:[0-9a-f]{3}|[0-9a-f]{6})$`)
 
 // OverlayStyleConfig holds per-preset visual tokens applied via CSS variables.
 type OverlayStyleConfig struct {
-	FontFamily           string  `json:"font_family"`
-	LineHeight           float64 `json:"line_height"`
-	TextEdge             string  `json:"text_edge"`
-	TextEdgeStrength     int     `json:"text_edge_strength"`
-	PlatformMarker       string  `json:"platform_marker"`
-	PanelColor           string  `json:"panel_color"`
-	PanelOpacity         float64 `json:"panel_opacity"`
-	PanelImage           string  `json:"panel_image,omitempty"`
-	PanelImageFit        string  `json:"panel_image_fit,omitempty"`
-	PanelImageScope      string  `json:"panel_image_scope,omitempty"`
-	BorderWidth          int     `json:"border_width"`
-	BorderColor          string  `json:"border_color"`
-	BorderRadius         int     `json:"border_radius"`
-	HighlightBorderColor string  `json:"highlight_border_color"`
-	HighlightTextColor   string  `json:"highlight_text_color"`
+	FontFamily       string  `json:"font_family"`
+	LineHeight       float64 `json:"line_height"`
+	TextEdge         string  `json:"text_edge"`
+	TextEdgeStrength int     `json:"text_edge_strength"`
+	PlatformMarker   string  `json:"platform_marker"`
+	PanelColor       string  `json:"panel_color"`
+	PanelOpacity     float64 `json:"panel_opacity"`
+	PanelImage       string  `json:"panel_image,omitempty"`
+	PanelImageFit    string  `json:"panel_image_fit,omitempty"`
+	PanelImageScope  string  `json:"panel_image_scope,omitempty"`
+	BorderWidth      int     `json:"border_width"`
+	BorderColor      string  `json:"border_color"`
+	BorderRadius     int     `json:"border_radius"`
 }
 
 func defaultOverlayStyleForTheme(theme string) OverlayStyleConfig {
 	style := OverlayStyleConfig{
-		FontFamily:           OverlayFontSystem,
-		LineHeight:           1.35,
-		TextEdge:             OverlayTextEdgeShadow,
-		TextEdgeStrength:     2,
-		PlatformMarker:       OverlayPlatformMarkerStripe,
-		PanelColor:           "#000000",
-		PanelOpacity:         0.58,
-		BorderWidth:          0,
-		BorderColor:          "#ffffff",
-		BorderRadius:         8,
-		HighlightBorderColor: "#f5c542",
-		HighlightTextColor:   "#ffffff",
+		FontFamily:       OverlayFontSystem,
+		LineHeight:       1.35,
+		TextEdge:         OverlayTextEdgeShadow,
+		TextEdgeStrength: 2,
+		PlatformMarker:   OverlayPlatformMarkerStripe,
+		PanelColor:       "#000000",
+		PanelOpacity:     0.58,
+		BorderWidth:      0,
+		BorderColor:      "#ffffff",
+		BorderRadius:     8,
 	}
 	switch theme {
 	case OverlayThemeDashboard:
@@ -128,12 +124,6 @@ func (s *OverlayStyleConfig) applyDefaults(theme string) {
 	}
 	if s.BorderColor == "" {
 		s.BorderColor = def.BorderColor
-	}
-	if s.HighlightBorderColor == "" {
-		s.HighlightBorderColor = def.HighlightBorderColor
-	}
-	if s.HighlightTextColor == "" {
-		s.HighlightTextColor = def.HighlightTextColor
 	}
 	if s.PanelImageFit == "" {
 		s.PanelImageFit = OverlayPanelImageFitCover
@@ -208,12 +198,6 @@ func (s OverlayStyleConfig) validateFields(prefix string) FieldErrors {
 	}
 	if s.BorderRadius < 0 || s.BorderRadius > overlayBorderRadiusMax {
 		fields[key("border_radius")] = fmt.Sprintf("Border radius must be between 0 and %d px.", overlayBorderRadiusMax)
-	}
-	if !validOverlayHexColor(s.HighlightBorderColor) {
-		fields[key("highlight_border_color")] = "Enter a hex color such as #f5c542."
-	}
-	if !validOverlayHexColor(s.HighlightTextColor) {
-		fields[key("highlight_text_color")] = "Enter a hex color such as #ffffff."
 	}
 	return fields
 }

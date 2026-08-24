@@ -36,9 +36,7 @@ export function overlayDisplaySettingsChanged(payload) {
       next.display_mode !== (prev.display_mode === "compact" ? "compact" : "normal") ||
       next.theme !== normalizeOverlayTheme(prev.theme) ||
       JSON.stringify(next.presets || []) !== JSON.stringify(prev.presets || []) ||
-      next.active_preset_id !== (prev.active_preset_id || "") ||
-      JSON.stringify(next.highlights || {}) !== JSON.stringify(prev.highlights || {}) ||
-      JSON.stringify(next.people || []) !== JSON.stringify(prev.people || [])
+      next.active_preset_id !== (prev.active_preset_id || "")
     );
   }
 
@@ -428,7 +426,7 @@ export function initOverlayPreview() {
         if (
           event.target &&
           event.target.closest &&
-          (event.target.closest("#obs-appearance-panel") || event.target.closest("#obs-highlights-panel"))
+          event.target.closest("#obs-appearance-panel")
         ) {
           scheduleOverlayPreviewRefresh();
         }

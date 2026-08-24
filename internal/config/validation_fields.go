@@ -60,8 +60,6 @@ func (c *Config) validateFields() error {
 
 	mergeFieldErrors(fields, c.Overlay.ImagePreviews.validateFields())
 	mergeFieldErrors(fields, c.Overlay.validatePresetFields())
-	mergeFieldErrors(fields, c.Overlay.Highlights.validateFields())
-	mergeFieldErrors(fields, c.Overlay.validatePeopleFields())
 	mergeFieldErrors(fields, c.Admin.validateFields())
 
 	if c.Twitch.Enabled && c.Twitch.Channel == "" {

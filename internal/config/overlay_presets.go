@@ -129,13 +129,6 @@ func (o *OverlayConfig) EnsurePresets() {
 	}
 	o.normalizeActivePreset()
 	o.syncLegacyFieldsFromActive()
-	o.Highlights.applyDefaults()
-	if o.People == nil {
-		o.People = []OverlayPerson{}
-	}
-	for i := range o.People {
-		o.People[i].applyDefaults()
-	}
 }
 
 func (o *OverlayConfig) normalizeActivePreset() {

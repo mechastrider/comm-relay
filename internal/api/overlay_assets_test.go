@@ -67,7 +67,7 @@ func TestOverlayAssets_WhenFileTooLarge_ExpectBadRequest(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestConfig_WhenUpdateWithPresetsAndPeople_ExpectSaved(t *testing.T) {
+func TestConfig_WhenUpdateWithPresets_ExpectSaved(t *testing.T) {
 	t.Parallel()
 
 	handler := testHandler(t)
@@ -102,21 +102,8 @@ func TestConfig_WhenUpdateWithPresetsAndPeople_ExpectSaved(t *testing.T) {
           "panel_opacity": 0,
           "border_width": 0,
           "border_color": "#ffffff",
-          "border_radius": 8,
-          "highlight_border_color": "#ffcc00",
-          "highlight_text_color": "#ffffff"
+          "border_radius": 8
         }
-      }
-    ],
-    "highlights": { "enabled": true, "words": ["raid"] },
-    "people": [
-      {
-        "id": "person_a",
-        "label": "Vasya",
-        "identities": [
-          { "platform": "twitch", "username": "vasya_ttv" },
-          { "platform": "youtube", "username": "VasyaPlays" }
-        ]
       }
     ]
   }
@@ -128,8 +115,7 @@ func TestConfig_WhenUpdateWithPresetsAndPeople_ExpectSaved(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, rec.Code)
 	require.Contains(t, rec.Body.String(), `"active_preset_id":"raid"`)
-	require.Contains(t, rec.Body.String(), `"vasya_ttv"`)
-	require.Contains(t, rec.Body.String(), `"raid"`)
+	require.Contains(t, rec.Body.String(), `"display_mode":"compact"`)
 }
 
 func TestConfig_WhenPageOpacitySet_ExpectFieldError(t *testing.T) {
