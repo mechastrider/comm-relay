@@ -338,7 +338,7 @@
 
         <div class="dialog-tab-body">
           <div class="dialog-tabs" role="tablist" data-i18n-aria-label="dialog.obsSections" aria-label="OBS sections">
-            <button id="obs-setup-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="obs-setup-panel" data-obs-section="setup" data-i18n="obs.setup">Setup</button>
+            <button id="obs-setup-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="obs-setup-panel" data-obs-section="setup" data-i18n="obs.connect">Connection</button>
             <button id="obs-appearance-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="obs-appearance-panel" tabindex="-1" data-obs-section="appearance" data-i18n="obs.appearance">Appearance</button>
           </div>
 
@@ -359,14 +359,19 @@
                   <span class="obs-audience-badge obs-audience-badge--live" data-i18n="obs.visibleToViewers">Visible to viewers</span>
                 </div>
                 <p class="obs-integration-card__summary" data-i18n="obs.overlaySummary">Adds chat messages to the scene output seen by your audience.</p>
+                <p class="field-hint" data-i18n="obs.overlayPresetHint">Each OBS scene can use its own Browser Source with ?preset= in the URL.</p>
+
+                <div class="obs-url-field">
+                  <label for="obs-overlay-preset-select" data-i18n="obs.preset">Preset</label>
+                  <select id="obs-overlay-preset-select"></select>
+                </div>
 
                 <div class="obs-url-field">
                   <label for="obs-overlay-url" data-i18n="obs.overlayUrl">Overlay URL</label>
                   <div class="obs-url-row">
-                    <input id="obs-overlay-url" type="text" readonly value="/overlay" data-obs-url-path="/overlay">
+                    <input id="obs-overlay-url" type="text" readonly value="/overlay">
                     <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-overlay-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
                   </div>
-                  <p class="field-hint" data-i18n="obs.overlayPresetHint">Each OBS scene can use its own Browser Source with ?preset= in the URL.</p>
                 </div>
 
                 <ol class="obs-setup-steps">
@@ -417,44 +422,75 @@
 
           <section id="obs-appearance-panel" class="dialog-tab-panel obs-tab-panel--appearance" role="tabpanel" aria-labelledby="obs-appearance-tab" hidden>
             <div class="overlay-editor">
-          <section class="panel overlay-settings-panel" aria-labelledby="overlay-display-heading">
-            <div class="panel__header">
-              <h3 id="overlay-display-heading" data-i18n="obs.display">Display</h3>
-            </div>
-
-            <div class="panel__body">
-              <p class="panel-intro" data-i18n="obs.displayIntro">Appearance settings for the OBS Browser Source overlay. The preview reflects unsaved display changes.</p>
-
-              <div class="preset-bar">
-                <div class="form__field">
-                  <label for="overlay-preset-select" data-i18n="obs.preset">Preset</label>
-                  <select id="overlay-preset-select"></select>
+              <div id="preset-island" class="preset-island" data-i18n-aria-label="obs.presetIntro">
+                <div class="preset-island__row preset-island__row--controls">
+                  <div class="preset-island__field preset-island__field--select">
+                    <label class="preset-island__label preset-island__label--visible" for="overlay-preset-select" data-i18n="obs.preset">Preset</label>
+                    <div class="preset-island__select-wrap">
+                      <select id="overlay-preset-select"></select>
+                      <span id="preset-island-count" class="preset-island__count" aria-live="polite">1/32</span>
+                    </div>
+                  </div>
+                  <div class="preset-island__icon-actions" role="group" data-i18n-aria-label="obs.presetActions">
+                    <button id="overlay-preset-add" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetAdd">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M12 5v14M5 12h14" stroke-linecap="round"></path>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetAdd">New preset</span>
+                    </button>
+                    <button id="overlay-preset-rename" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetRename">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M4 20h4L19 9l-4-4L4 16v4z" stroke-linejoin="round"></path>
+                        <path d="M13 7l4 4" stroke-linecap="round"></path>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetRename">Rename</span>
+                    </button>
+                    <button id="overlay-preset-duplicate" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetDuplicate">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <rect x="8" y="8" width="12" height="12" rx="1.5"></rect>
+                        <path d="M4 16V6a2 2 0 0 1 2-2h10" stroke-linecap="round"></path>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetDuplicate">Duplicate</span>
+                    </button>
+                    <button id="overlay-preset-delete" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetDelete">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M4 7h16M9 7V5h6v2M10 11v6M14 11v6M6 7l1 13h10l1-13" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetDelete">Delete</span>
+                    </button>
+                  </div>
                 </div>
-                <div class="form__field">
-                  <label for="overlay-preset-name" data-i18n="obs.presetName">Preset name</label>
-                  <input id="overlay-preset-name" type="text" maxlength="64" autocomplete="off">
-                </div>
-                <div class="preset-bar__actions">
-                  <button id="overlay-preset-save-as" class="btn-physical btn-small" type="button" data-i18n="obs.presetSaveAs">Save as</button>
-                  <button id="overlay-preset-delete" class="btn-physical btn-small" type="button" data-i18n="obs.presetDelete">Delete</button>
+
+                <div class="obs-url-field preset-island__url">
+                  <label for="preset-island-url" data-i18n="obs.overlayUrl">Overlay URL</label>
+                  <div class="obs-url-row">
+                    <input id="preset-island-url" type="text" readonly value="/overlay">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="preset-island-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                  <span id="preset-url-status" class="preset-island__status" role="status" aria-live="polite"></span>
                 </div>
               </div>
 
-              <div class="form form--compact form--overlay-display">
-                <div class="form__field">
-                  <label for="overlay-max-messages" data-i18n="obs.maxMessages">Max messages</label>
-                  <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
-                  <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
-                </div>
+              <div class="overlay-settings-column">
+                <section class="panel overlay-appearance-panel">
+                  <div class="panel__body">
+                    <p class="panel-intro" data-i18n="obs.displayIntro">Appearance settings for the OBS Browser Source overlay. The preview reflects unsaved display changes.</p>
 
-                <div class="form__field">
-                  <label for="overlay-message-ttl" data-i18n="obs.messageTtl">Message TTL (seconds)</label>
-                  <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
-                  <p class="field-hint" data-i18n="obs.ttlHint">0 keeps messages until they scroll off (max messages limit).</p>
-                  <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
-                </div>
+                    <div class="form form--compact form--overlay-display">
+                      <div class="form__field form__field--full">
+                        <label for="overlay-theme" data-i18n="obs.theme">Theme</label>
+                        <select id="overlay-theme" name="overlay_theme">
+                          <option value="default" data-i18n="obs.themeDefault">Default</option>
+                          <option value="dashboard" data-i18n="obs.themeTextOnly">Text only (no background)</option>
+                          <option value="cockpit_panel" data-i18n="obs.themeCockpitPanel">MW5 Mercs Cockpit panel</option>
+                          <option value="cockpit_popups" data-i18n="obs.themeCockpitPopups">MW5 Mercs Cockpit popups</option>
+                          <option value="g_rebels_popups" data-i18n="obs.themeGRebels">G-Rebels Cockpit popups</option>
+                        </select>
+                        <p class="field-hint" data-i18n="obs.themeHint">Cockpit themes use HUD-style panels for streams over gameplay.</p>
+                        <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
+                      </div>
 
-                <div class="form__field">
+                      <div class="form__field">
                   <label for="overlay-font-size" data-i18n="obs.fontSize">Font size (px)</label>
                   <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="48" step="1">
                   <p class="field-hint" data-i18n="obs.fontSizeHint">12–48 px. After saving, refresh the Browser Source in OBS.</p>
@@ -469,19 +505,6 @@
                   </select>
                   <p class="field-hint" data-i18n="obs.spacingHint">Compact reduces gaps between lines — useful with a busy chat.</p>
                   <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
-                </div>
-
-                <div class="form__field form__field--full">
-                  <label for="overlay-theme" data-i18n="obs.theme">Theme</label>
-                  <select id="overlay-theme" name="overlay_theme">
-                    <option value="default" data-i18n="obs.themeDefault">Default</option>
-                    <option value="dashboard" data-i18n="obs.themeTextOnly">Text only (no background)</option>
-                    <option value="cockpit_panel" data-i18n="obs.themeCockpitPanel">MW5 Mercs Cockpit panel</option>
-                    <option value="cockpit_popups" data-i18n="obs.themeCockpitPopups">MW5 Mercs Cockpit popups</option>
-                    <option value="g_rebels_popups" data-i18n="obs.themeGRebels">G-Rebels Cockpit popups</option>
-                  </select>
-                  <p class="field-hint" data-i18n="obs.themeHint">Cockpit themes use HUD-style panels for streams over gameplay.</p>
-                  <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
                 </div>
 
                 <div class="form__field">
@@ -649,8 +672,26 @@
                   </div>
                 </div>
               </details>
-            </div>
-          </section>
+                    <div class="overlay-queue-group">
+                      <h3 class="overlay-queue-group__title" data-i18n="obs.queueGroup">Queue</h3>
+                      <div class="form form--compact">
+                        <div class="form__field">
+                          <label for="overlay-max-messages" data-i18n="obs.maxMessages">Max messages</label>
+                          <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
+                          <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
+                        </div>
+
+                        <div class="form__field">
+                          <label for="overlay-message-ttl" data-i18n="obs.messageTtl">Message TTL (seconds)</label>
+                          <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
+                          <p class="field-hint" data-i18n="obs.ttlHint">0 keeps messages until they scroll off (max messages limit).</p>
+                          <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
 
           <section class="panel overlay-preview-panel" aria-labelledby="overlay-preview-heading" data-preview-only>
             <div class="panel__header overlay-preview-header">
@@ -718,6 +759,22 @@
         <div class="dialog-actions">
           <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
           <button class="btn-physical btn-start" type="submit" data-save-button data-obs-appearance-only disabled hidden data-i18n="dialog.saveSettings">Save settings</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="overlay-preset-prompt" class="prompt-dialog" aria-labelledby="overlay-preset-prompt-title">
+      <div class="prompt-dialog__frame">
+        <h3 id="overlay-preset-prompt-title"></h3>
+        <p id="overlay-preset-prompt-message" class="prompt-dialog__message" hidden></p>
+        <div id="overlay-preset-prompt-field" class="form__field">
+          <label for="overlay-preset-prompt-name" data-i18n="obs.presetName">Preset name</label>
+          <input id="overlay-preset-prompt-name" type="text" maxlength="64" autocomplete="off">
+          <p id="overlay-preset-prompt-error" class="field-error" role="alert" hidden></p>
+        </div>
+        <div class="prompt-dialog__actions">
+          <button id="overlay-preset-prompt-cancel" class="btn-physical" type="button" data-i18n="dialog.cancel">Cancel</button>
+          <button id="overlay-preset-prompt-confirm" class="btn-physical btn-start" type="button"></button>
         </div>
       </div>
     </dialog>

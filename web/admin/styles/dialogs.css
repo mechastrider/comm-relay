@@ -251,3 +251,15 @@
 .obs-copy-status--error {
   color: #ffb8bd;
 }
+
+.obs-url-field select {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: #0f0f12;
+  color: var(--text);
+  font-size: 12px;
+  box-sizing: border-box;
+}

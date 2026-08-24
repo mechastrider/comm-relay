@@ -27,7 +27,9 @@ func TestNewHandlerRoutes(t *testing.T) {
 		require.Contains(t, rec.Body.String(), "/favicon.svg")
 		require.Contains(t, rec.Body.String(), "app.js")
 		require.Contains(t, rec.Body.String(), `id="obs-setup-panel"`)
-		require.Contains(t, rec.Body.String(), `data-copy-obs-url="obs-overlay-url"`)
+		require.Contains(t, rec.Body.String(), `id="obs-overlay-url"`)
+		require.Contains(t, rec.Body.String(), `id="preset-island-url"`)
+		require.Contains(t, rec.Body.String(), `id="overlay-preset-prompt"`)
 		require.Contains(t, rec.Body.String(), `/dock/messages`)
 
 		jsRec := httptest.NewRecorder()

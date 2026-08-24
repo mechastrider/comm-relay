@@ -12,7 +12,7 @@ import {
 } from "./js/ui-shell.js";
 import { initOverlayPreview, updateOverlayPreviewScale } from "./js/overlay-preview.js";
 import { initOBSSetup } from "./js/obs-setup.js";
-import { initOverlayAppearance } from "./js/overlay-appearance.js";
+import { initOverlayAppearance, updatePresetIsland } from "./js/overlay-appearance.js";
 import { initConnectionsTabs } from "./js/connections.js";
 import { initSettingsDialogs } from "./js/dialogs.js";
 import { initAboutDialog } from "./js/about.js";
@@ -62,11 +62,17 @@ dom.form.addEventListener("submit", saveSettings);
 dom.form.addEventListener("input", function (event) {
   if (!(event.target instanceof Element) || !event.target.closest("[data-preview-only]")) {
     markSettingsDirty();
+    if (event.target.closest("#obs-appearance-panel")) {
+      updatePresetIsland();
+    }
   }
 });
 dom.form.addEventListener("change", function (event) {
   if (!(event.target instanceof Element) || !event.target.closest("[data-preview-only]")) {
     markSettingsDirty();
+    if (event.target.closest("#obs-appearance-panel")) {
+      updatePresetIsland();
+    }
   }
 });
 dom.refreshMessages.addEventListener("click", function () {

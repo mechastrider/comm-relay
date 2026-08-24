@@ -1,13 +1,30 @@
 import { t } from "./i18n-ui.js";
+import { state } from "./state.js";
 import { defaultStyleForTheme, mergeStyle } from "../../overlay/overlay-settings.js";
 import { uploadOverlayAsset } from "./overlay-asset-upload.js";
-import { showBanner } from "./ui-shell.js";
+import { showBanner, markSettingsDirty } from "./ui-shell.js";
+import { buildObsOverlayURL } from "./overlay-url.js";
+import * as dom from "./dom.js";
 
 let presets = [];
 let activePresetId = "default";
 let bound = false;
 
 const PANEL_IMAGE_FIT_VALUES = ["cover", "contain", "fill", "tile"];
+const PRESET_LIMIT = 32;
+
+const THEME_LABEL_KEYS = {
+  default: "obs.themeDefault",
+  dashboard: "obs.themeTextOnly",
+  cockpit_panel: "obs.themeCockpitPanel",
+  cockpit_popups: "obs.themeCockpitPopups",
+  g_rebels_popups: "obs.themeGRebels",
+};
+
+function themeLabel(theme) {
+  const key = THEME_LABEL_KEYS[theme] || THEME_LABEL_KEYS.default;
+  return t(key);
+}
 
 function newID(prefix) {
   const bytes = new Uint8Array(8);
@@ -24,6 +41,7 @@ function newID(prefix) {
 }
 
 function requestPreviewRefresh() {
+  updatePresetIsland();
   document.dispatchEvent(new Event("overlay-preview-refresh"));
 }
 
@@ -64,7 +82,7 @@ function collectStyleFromForm() {
 function collectPresetFromForm(base) {
   return {
     id: base.id,
-    name: String(fieldValue("overlay-preset-name", base.name || "Default") || "Default"),
+    name: String((base && base.name) || "Default"),
     max_messages: Number.parseInt(fieldValue("overlay-max-messages", "30"), 10),
     message_ttl_seconds: Number.parseInt(fieldValue("overlay-message-ttl", "20"), 10),
     font_size_px: Number.parseInt(fieldValue("overlay-font-size", "18"), 10),
@@ -184,7 +202,6 @@ function writeFormFromPreset(preset) {
     return;
   }
   const style = mergeStyle(preset.theme, preset.style);
-  setFieldValue("overlay-preset-name", preset.name || "Default");
   setFieldValue("overlay-max-messages", String(preset.max_messages || 30));
   setFieldValue("overlay-message-ttl", String(preset.message_ttl_seconds || 0));
   setFieldValue("overlay-font-size", String(preset.font_size_px || 18));
@@ -227,8 +244,7 @@ function writeFormIntoActive() {
   }
 }
 
-function renderPresetSelect() {
-  const select = document.getElementById("overlay-preset-select");
+function fillPresetSelect(select) {
   if (!select) {
     return;
   }
@@ -240,10 +256,99 @@ function renderPresetSelect() {
     select.appendChild(option);
   });
   select.value = activePresetId;
+}
+
+function updatePresetActionButtons() {
+  const atLimit = presets.length >= PRESET_LIMIT;
+  const onlyOne = presets.length < 2;
+  const add = document.getElementById("overlay-preset-add");
+  const duplicate = document.getElementById("overlay-preset-duplicate");
   const remove = document.getElementById("overlay-preset-delete");
-  if (remove) {
-    remove.disabled = presets.length < 2;
+  if (add) {
+    add.disabled = atLimit;
   }
+  if (duplicate) {
+    duplicate.disabled = atLimit;
+  }
+  if (remove) {
+    remove.disabled = onlyOne;
+  }
+}
+
+function renderPresetSelect() {
+  fillPresetSelect(document.getElementById("overlay-preset-select"));
+  fillPresetSelect(document.getElementById("obs-overlay-preset-select"));
+  updatePresetActionButtons();
+}
+
+function getSavedPreset(presetId) {
+  const overlay = state.currentConfig && state.currentConfig.overlay;
+  if (!overlay || !Array.isArray(overlay.presets)) {
+    return null;
+  }
+  return (
+    overlay.presets.find(function (preset) {
+      return preset.id === presetId;
+    }) || null
+  );
+}
+
+function presetSnapshotEqual(left, right) {
+  return JSON.stringify(normalizePreset(left)) === JSON.stringify(normalizePreset(right));
+}
+
+export function isCurrentPresetDirty() {
+  writeFormIntoActive();
+  const current = presets.find(function (preset) {
+    return preset.id === activePresetId;
+  });
+  if (!current) {
+    return false;
+  }
+  const saved = getSavedPreset(activePresetId);
+  if (!saved) {
+    return true;
+  }
+  return !presetSnapshotEqual(saved, current);
+}
+
+export function getPresets() {
+  return presets.slice();
+}
+
+export function updatePresetIsland() {
+  if (dom.presetIslandCount) {
+    dom.presetIslandCount.textContent = t("obs.presetCountCompact", {
+      count: String(presets.length),
+      limit: String(PRESET_LIMIT),
+    });
+  }
+  const overlayUrl = buildObsOverlayURL(activePresetId);
+  if (dom.presetIslandUrl) {
+    dom.presetIslandUrl.value = overlayUrl;
+  }
+  const connectionUrl = dom.obsOverlayUrl;
+  if (connectionUrl) {
+    connectionUrl.value = overlayUrl;
+  }
+  if (dom.obsOverlayOpen) {
+    dom.obsOverlayOpen.href = overlayUrl;
+  }
+  if (dom.presetUrlStatus) {
+    const dirty = isCurrentPresetDirty();
+    dom.presetUrlStatus.textContent = dirty ? t("obs.presetUrlDirtyShort") : t("obs.presetUrlSavedShort");
+    dom.presetUrlStatus.title = dirty ? t("obs.presetUrlDirty") : t("obs.presetUrlSaved");
+    dom.presetUrlStatus.classList.toggle("preset-island__status--dirty", dirty);
+  }
+}
+
+export function renderPresetIsland() {
+  renderPresetSelect();
+  updatePresetIsland();
+}
+
+export function overlayThemeLabel(theme) {
+  return themeLabel(theme);
 }
 
 export function getActivePresetID() {
@@ -299,7 +404,7 @@ export function applyOverlayAppearance(overlay) {
     })
       ? incoming.active_preset_id
       : presets[0].id;
-  renderPresetSelect();
+  renderPresetIsland();
   writeFormFromPreset(currentPreset());
 }
 
@@ -327,31 +432,162 @@ function switchPreset(nextId) {
     return;
   }
   activePresetId = nextId;
-  renderPresetSelect();
+  renderPresetIsland();
   writeFormFromPreset(currentPreset());
   requestPreviewRefresh();
 }
 
-function saveAsPreset() {
-  writeFormIntoActive();
-  if (presets.length >= 32) {
+let promptMode = "";
+
+function promptElements() {
+  return {
+    dialog: document.getElementById("overlay-preset-prompt"),
+    title: document.getElementById("overlay-preset-prompt-title"),
+    message: document.getElementById("overlay-preset-prompt-message"),
+    field: document.getElementById("overlay-preset-prompt-field"),
+    input: document.getElementById("overlay-preset-prompt-name"),
+    error: document.getElementById("overlay-preset-prompt-error"),
+    confirm: document.getElementById("overlay-preset-prompt-confirm"),
+  };
+}
+
+function closePresetPrompt() {
+  const els = promptElements();
+  if (els.dialog && els.dialog.open) {
+    els.dialog.close();
+  }
+}
+
+function setPromptError(message) {
+  const els = promptElements();
+  if (!els.error) {
     return;
   }
-  const source = currentPreset();
-  const typed = String(fieldValue("overlay-preset-name", "") || "").trim();
-  const name =
-    typed && source && typed !== source.name
-      ? typed
-      : source
-        ? source.name + " " + t("obs.presetCopy")
-        : t("obs.presetCopy");
+  if (message) {
+    els.error.hidden = false;
+    els.error.textContent = message;
+  } else {
+    els.error.hidden = true;
+    els.error.textContent = "";
+  }
+}
+
+function openPresetPrompt(mode) {
+  const els = promptElements();
+  if (!els.dialog) {
+    return;
+  }
+  promptMode = mode;
+  setPromptError("");
+  const current = currentPreset();
+  const currentName = current && current.name ? current.name : "";
+  if (mode === "delete") {
+    els.title.textContent = t("obs.presetDeleteTitle");
+    els.message.hidden = false;
+    els.message.textContent = t("obs.presetDeleteConfirm", { name: currentName });
+    els.field.hidden = true;
+    els.confirm.textContent = t("obs.presetDelete");
+  } else {
+    els.message.hidden = true;
+    els.field.hidden = false;
+    if (mode === "create") {
+      els.title.textContent = t("obs.presetAddTitle");
+      els.input.value = "";
+      els.confirm.textContent = t("obs.presetCreate");
+    } else if (mode === "rename") {
+      els.title.textContent = t("obs.presetRenameTitle");
+      els.input.value = currentName;
+      els.confirm.textContent = t("obs.presetRenameAction");
+    } else {
+      els.title.textContent = t("obs.presetDuplicateTitle");
+      els.input.value = currentName ? currentName + " " + t("obs.presetCopy") : t("obs.presetCopy");
+      els.confirm.textContent = t("obs.presetDuplicateAction");
+    }
+  }
+  if (typeof els.dialog.showModal === "function") {
+    els.dialog.showModal();
+  }
+  if (mode !== "delete" && els.input) {
+    els.input.focus();
+    els.input.select();
+  }
+}
+
+function createPreset(name) {
+  writeFormIntoActive();
+  if (presets.length >= PRESET_LIMIT) {
+    return;
+  }
+  const theme = fieldValue("overlay-theme", "default");
+  const preset = normalizePreset({
+    id: newID("preset"),
+    name: name,
+    theme: theme,
+    max_messages: 30,
+    message_ttl_seconds: 20,
+    font_size_px: 18,
+    display_mode: "normal",
+    style: defaultStyleForTheme(theme),
+  });
+  presets.push(preset);
+  activePresetId = preset.id;
+  renderPresetIsland();
+  writeFormFromPreset(preset);
+  markSettingsDirty();
+  requestPreviewRefresh();
+}
+
+function renamePreset(name) {
+  writeFormIntoActive();
+  const preset = currentPreset();
+  if (!preset) {
+    return;
+  }
+  preset.name = name;
+  renderPresetIsland();
+  markSettingsDirty();
+  requestPreviewRefresh();
+}
+
+function duplicatePreset(name) {
+  writeFormIntoActive();
+  if (presets.length >= PRESET_LIMIT) {
+    return;
+  }
   const copy = collectPresetFromForm({ id: newID("preset"), name: name });
   copy.name = name;
   presets.push(copy);
   activePresetId = copy.id;
-  renderPresetSelect();
+  renderPresetIsland();
   writeFormFromPreset(copy);
+  markSettingsDirty();
   requestPreviewRefresh();
+}
+
+function confirmPresetPrompt() {
+  const els = promptElements();
+  if (promptMode === "delete") {
+    closePresetPrompt();
+    deletePreset();
+    markSettingsDirty();
+    return;
+  }
+  const name = els.input ? String(els.input.value || "").trim() : "";
+  if (!name) {
+    setPromptError(t("obs.presetNameRequired"));
+    if (els.input) {
+      els.input.focus();
+    }
+    return;
+  }
+  closePresetPrompt();
+  if (promptMode === "create") {
+    createPreset(name);
+  } else if (promptMode === "rename") {
+    renamePreset(name);
+  } else if (promptMode === "duplicate") {
+    duplicatePreset(name);
+  }
 }
 
 function deletePreset() {
@@ -362,7 +598,7 @@ function deletePreset() {
     return preset.id !== activePresetId;
   });
   activePresetId = presets[0].id;
-  renderPresetSelect();
+  renderPresetIsland();
   writeFormFromPreset(currentPreset());
   requestPreviewRefresh();
 }
@@ -406,19 +642,61 @@ export function initOverlayAppearance() {
   }
   bound = true;
   initPanelImageFitIcons();
-  const select = document.getElementById("overlay-preset-select");
-  if (select) {
-    select.addEventListener("change", function () {
-      switchPreset(select.value);
+  const appearanceSelect = document.getElementById("overlay-preset-select");
+  if (appearanceSelect) {
+    appearanceSelect.addEventListener("change", function () {
+      switchPreset(appearanceSelect.value);
     });
   }
-  const saveAs = document.getElementById("overlay-preset-save-as");
-  if (saveAs) {
-    saveAs.addEventListener("click", saveAsPreset);
+  const connectionSelect = document.getElementById("obs-overlay-preset-select");
+  if (connectionSelect) {
+    connectionSelect.addEventListener("change", function () {
+      switchPreset(connectionSelect.value);
+    });
+  }
+  const add = document.getElementById("overlay-preset-add");
+  if (add) {
+    add.addEventListener("click", function () {
+      openPresetPrompt("create");
+    });
+  }
+  const rename = document.getElementById("overlay-preset-rename");
+  if (rename) {
+    rename.addEventListener("click", function () {
+      openPresetPrompt("rename");
+    });
+  }
+  const duplicate = document.getElementById("overlay-preset-duplicate");
+  if (duplicate) {
+    duplicate.addEventListener("click", function () {
+      openPresetPrompt("duplicate");
+    });
   }
   const remove = document.getElementById("overlay-preset-delete");
   if (remove) {
-    remove.addEventListener("click", deletePreset);
+    remove.addEventListener("click", function () {
+      openPresetPrompt("delete");
+    });
+  }
+  const promptCancel = document.getElementById("overlay-preset-prompt-cancel");
+  if (promptCancel) {
+    promptCancel.addEventListener("click", closePresetPrompt);
+  }
+  const promptConfirm = document.getElementById("overlay-preset-prompt-confirm");
+  if (promptConfirm) {
+    promptConfirm.addEventListener("click", confirmPresetPrompt);
+  }
+  const promptInput = document.getElementById("overlay-preset-prompt-name");
+  if (promptInput) {
+    promptInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        confirmPresetPrompt();
+      }
+    });
+  }
+  if (dom.overlayDialog) {
+    dom.overlayDialog.addEventListener("close", closePresetPrompt);
   }
   document.querySelectorAll("[data-overlay-reset-group]").forEach(function (button) {
     button.addEventListener("click", function () {
