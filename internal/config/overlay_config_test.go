@@ -106,6 +106,14 @@ func TestLoad_WhenLegacyOverlayJSON_ExpectMigratedPreset(t *testing.T) {
 	require.Equal(t, OverlayPlatformMarkerIcon, cfg.Overlay.Presets[0].Style.PlatformMarker)
 }
 
+func TestDefaultOverlayStyleForTheme_WhenGRebelsPopups_ExpectBothPlatformMarker(t *testing.T) {
+	t.Parallel()
+
+	style := defaultOverlayStyleForTheme(OverlayThemeGRebelsPopups)
+	require.Equal(t, OverlayPlatformMarkerBoth, style.PlatformMarker)
+	require.InDelta(t, 0.0, style.PanelOpacity, 0.001)
+}
+
 func TestDefault_WhenCalled_ExpectPresetMirrorsFlatFields(t *testing.T) {
 	t.Parallel()
 

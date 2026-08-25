@@ -4,9 +4,10 @@ import {
   hexToRgba,
   normalizePanelImageFit,
   normalizePanelImageScope,
+  normalizePreviewBackground,
   overlayAssetURL,
   overlayViewFromConfig
-} from "/overlay/overlay-settings.js?v=2";
+} from "/overlay/overlay-settings.js?v=3";
 
 "use strict";
 
@@ -28,7 +29,6 @@ import {
   const params = new URLSearchParams(window.location.search);
   const samplePreviewEnabled = params.get("preview") === "sample";
   const previewEnabled = params.has("preview");
-  const PREVIEW_BACKGROUNDS = new Set(["busy", "checker", "dark"]);
 
   function readPositiveInt(name, fallback) {
     const raw = params.get(name);
@@ -319,20 +319,22 @@ import {
       "overlay-panel-image-scope--column"
     );
     document.body.classList.add("overlay-panel-image-scope--" + panelImageScope);
-    document.body.classList.remove(
-      "overlay-preview--busy",
+    const previewBackgroundClasses = [
+      "overlay-preview--white",
       "overlay-preview--checker",
-      "overlay-preview--dark"
-    );
+      "overlay-preview--scene",
+      "overlay-preview--dark",
+      "overlay-preview--busy"
+    ];
+    previewBackgroundClasses.forEach(function (cls) {
+      document.documentElement.classList.remove(cls);
+      document.body.classList.remove(cls);
+    });
     if (previewEnabled) {
-      const previewBackground = params.get("preview_background");
-      document.body.classList.add(
-        "overlay-preview--" + (
-          PREVIEW_BACKGROUNDS.has(previewBackground)
-            ? previewBackground
-            : "busy"
-        )
-      );
+      const previewClass =
+        "overlay-preview--" + normalizePreviewBackground(params.get("preview_background"));
+      document.documentElement.classList.add(previewClass);
+      document.body.classList.add(previewClass);
     }
   }
 
@@ -632,13 +634,13 @@ import {
     const userEl = document.createElement("span");
     userEl.className = "message__user";
     appendText(userEl, user);
+    identityEl.appendChild(platformEl);
     identityEl.appendChild(userEl);
 
     const textEl = document.createElement("span");
     textEl.className = "message__text";
     appendMessageContent(textEl, frame, text);
 
-    row.appendChild(platformEl);
     row.appendChild(avatarEl);
     row.appendChild(accentEl);
     row.appendChild(identityEl);

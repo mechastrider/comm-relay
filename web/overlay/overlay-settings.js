@@ -36,6 +36,20 @@ export function normalizePanelImageScope(value, theme) {
   return "message";
 }
 
+const PREVIEW_BACKGROUNDS = new Set(["white", "checker", "scene", "dark"]);
+const PREVIEW_BACKGROUND_ALIASES = {
+  busy: "scene",
+  black: "dark",
+};
+
+export const DEFAULT_PREVIEW_BACKGROUND = "scene";
+
+export function normalizePreviewBackground(raw) {
+  const value = String(raw || "").trim().toLowerCase();
+  const mapped = PREVIEW_BACKGROUND_ALIASES[value] || value;
+  return PREVIEW_BACKGROUNDS.has(mapped) ? mapped : DEFAULT_PREVIEW_BACKGROUND;
+}
+
 export function defaultStyleForTheme(theme) {
   const style = {
     font_family: "system",
@@ -59,10 +73,10 @@ export function defaultStyleForTheme(theme) {
       style.text_edge = "outline";
       break;
     case "cockpit_panel":
-    case "g_rebels_popups":
       style.panel_opacity = 0;
       break;
     case "cockpit_popups":
+    case "g_rebels_popups":
       style.platform_marker = "both";
       style.panel_opacity = 0;
       break;

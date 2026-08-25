@@ -19,6 +19,10 @@ import {
 } from './constants.js';
 import { t } from './i18n-ui.js';
 import { collectAppearanceQuery } from './overlay-appearance.js';
+import {
+  DEFAULT_PREVIEW_BACKGROUND,
+  normalizePreviewBackground,
+} from '../../overlay/overlay-settings.js';
 
 export function overlayDisplaySettingsChanged(payload) {
     if (!state.currentConfig) {
@@ -148,10 +152,7 @@ export function applyOverlayPreviewBackground() {
     if (!dom.overlayPreviewBackground) {
       return;
     }
-    const backgrounds = ["busy", "checker", "dark"];
-    const background = backgrounds.indexOf(dom.overlayPreviewBackground.value) !== -1
-      ? dom.overlayPreviewBackground.value
-      : "busy";
+    const background = normalizePreviewBackground(dom.overlayPreviewBackground.value);
     dom.overlayPreviewBackground.value = background;
   }
 
@@ -172,11 +173,7 @@ export function buildOverlayPreviewURL(previewMode) {
       url.searchParams.set("preview", previewMode);
       url.searchParams.set(
         "preview_background",
-        dom.overlayPreviewBackground && ["busy", "checker", "dark"].indexOf(
-          dom.overlayPreviewBackground.value
-        ) !== -1
-          ? dom.overlayPreviewBackground.value
-          : "busy"
+        normalizePreviewBackground(dom.overlayPreviewBackground && dom.overlayPreviewBackground.value)
       );
     }
     url.searchParams.set(
@@ -332,13 +329,9 @@ export function initOverlayPreview() {
 
     const storedBackground = readOverlayPreviewPreference(
       OVERLAY_PREVIEW_BACKGROUND_KEY,
-      "busy"
+      DEFAULT_PREVIEW_BACKGROUND
     );
-    dom.overlayPreviewBackground.value = ["busy", "checker", "dark"].indexOf(
-      storedBackground
-    ) !== -1
-      ? storedBackground
-      : "busy";
+    dom.overlayPreviewBackground.value = normalizePreviewBackground(storedBackground);
 
     dom.overlayPreviewWidth.value = String(
       clampOverlayPreviewDimension(

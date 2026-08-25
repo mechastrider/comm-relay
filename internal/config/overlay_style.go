@@ -92,9 +92,9 @@ func defaultOverlayStyleForTheme(theme string) OverlayStyleConfig {
 		style.PlatformMarker = OverlayPlatformMarkerIcon
 		style.PanelOpacity = 0
 		style.TextEdge = OverlayTextEdgeOutline
-	case OverlayThemeCockpitPanel, OverlayThemeGRebelsPopups:
+	case OverlayThemeCockpitPanel:
 		style.PanelOpacity = 0
-	case OverlayThemeCockpitPopups:
+	case OverlayThemeCockpitPopups, OverlayThemeGRebelsPopups:
 		style.PlatformMarker = OverlayPlatformMarkerBoth
 		style.PanelOpacity = 0
 	}

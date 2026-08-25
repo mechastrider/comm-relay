@@ -40,7 +40,28 @@ body {
   color: var(--overlay-text);
 }
 
-body.overlay-preview--busy {
+html.overlay-preview--white,
+html.overlay-preview--checker,
+html.overlay-preview--scene,
+html.overlay-preview--busy,
+html.overlay-preview--dark,
+body.overlay-preview--white,
+body.overlay-preview--checker,
+body.overlay-preview--scene,
+body.overlay-preview--busy,
+body.overlay-preview--dark {
+  min-height: 100%;
+}
+
+html.overlay-preview--white,
+body.overlay-preview--white {
+  background: #ffffff;
+}
+
+html.overlay-preview--busy,
+html.overlay-preview--scene,
+body.overlay-preview--busy,
+body.overlay-preview--scene {
   background:
     radial-gradient(circle at 72% 28%, rgba(244, 188, 58, 0.52), transparent 4%),
     linear-gradient(118deg, transparent 0 52%, rgba(20, 27, 32, 0.8) 52% 58%, transparent 58%),
@@ -49,6 +70,7 @@ body.overlay-preview--busy {
     linear-gradient(145deg, #23313b 0 34%, #6b5540 34% 48%, #182227 48% 100%);
 }
 
+html.overlay-preview--checker,
 body.overlay-preview--checker {
   background-color: #303030;
   background-image:
@@ -60,6 +82,7 @@ body.overlay-preview--checker {
   background-size: 20px 20px;
 }
 
+html.overlay-preview--dark,
 body.overlay-preview--dark {
   background: #080a0c;
 }
@@ -148,7 +171,6 @@ body.overlay--compact {
   width: 1.15em;
   height: 1.15em;
   color: var(--message-platform-color);
-  transform: translateY(0.12em);
 }
 
 .message__platform svg {
@@ -398,7 +420,8 @@ body.overlay-theme--g-rebels-popups .message--leaving {
 body.overlay-theme--cockpit-panel .message__platform,
 body.overlay-theme--cockpit-popups .message__platform,
 body.overlay-theme--g-rebels-popups .message__platform {
-  display: none;
+  width: 0.95em;
+  height: 0.95em;
 }
 
 body.overlay-theme--cockpit-panel .message__avatar,
@@ -564,14 +587,6 @@ body.overlay-theme--cockpit-popups .message::after {
   border-right: 2px solid var(--hud-cyan);
   border-bottom: 2px solid var(--hud-cyan);
   opacity: 0.7;
-}
-
-body.overlay-theme--cockpit-popups .message__platform {
-  display: none;
-}
-
-body.overlay-theme--cockpit-popups .message__platform svg {
-  display: none;
 }
 
 body.overlay-theme--cockpit-popups .message__user {
@@ -771,15 +786,6 @@ body.overlay-theme--default.overlay-platform-marker--none .message {
   padding-left: var(--overlay-message-padding-x);
 }
 
-body.overlay-theme--cockpit-panel.overlay-platform-marker--icon .message__platform,
-body.overlay-theme--cockpit-popups.overlay-platform-marker--icon .message__platform,
-body.overlay-theme--g-rebels-popups.overlay-platform-marker--icon .message__platform,
-body.overlay-theme--cockpit-panel.overlay-platform-marker--both .message__platform,
-body.overlay-theme--cockpit-popups.overlay-platform-marker--both .message__platform,
-body.overlay-theme--g-rebels-popups.overlay-platform-marker--both .message__platform {
-  display: flex;
-}
-
 body.overlay-text-edge--none .message__user,
 body.overlay-text-edge--none .message__text {
   text-shadow: none;
@@ -852,8 +858,13 @@ body.overlay-theme--default.overlay-panel-image-fit--tile.overlay-panel-image-sc
   min-width: 0;
 }
 
+.message__identity .message__user {
+  min-width: 0;
+}
+
 body.overlay-theme--cockpit-panel .message__identity,
 body.overlay-theme--cockpit-popups .message__identity,
 body.overlay-theme--g-rebels-popups .message__identity {
   grid-area: user;
+  overflow: hidden;
 }
