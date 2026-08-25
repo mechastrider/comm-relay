@@ -37,3 +37,17 @@ func TestLoad_WhenLegacyOverlayWithoutEmotes_ExpectDefaultsEnabled(t *testing.T)
 	require.NoError(t, err)
 	require.Equal(t, defaultEmotes(), loaded.Overlay.Emotes)
 }
+
+func TestValidateFields_WhenDayResetHourInvalid_ExpectFieldError(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.DayResetHour = 24
+
+	err := cfg.Validate()
+	require.Error(t, err)
+
+	fields := ValidationFields(err)
+	require.Contains(t, fields, "day_reset_hour")
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+}

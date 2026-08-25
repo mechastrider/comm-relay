@@ -17,6 +17,8 @@ import (
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
+var gooseInit sync.Once
+
 // Store is the local SQLite viewer stats database.
 type Store struct {
 	mu            sync.Mutex
@@ -52,13 +54,17 @@ func Open(path string) (*Store, error) {
 	}
 	db.SetMaxOpenConns(1)
 
-	goose.SetBaseFS(embedMigrations)
-	if err := goose.SetDialect("sqlite3"); err != nil {
+	var gooseDialectErr error
+	gooseInit.Do(func() {
+		goose.SetBaseFS(embedMigrations)
+		gooseDialectErr = goose.SetDialect("sqlite3")
+	})
+	if gooseDialectErr != nil {
 		closeErr := db.Close()
 		if closeErr != nil {
-			return nil, errors.Errorf("set goose dialect: %w (close database: %w)", err, closeErr)
+			return nil, errors.Errorf("set goose dialect: %w (close database: %w)", gooseDialectErr, closeErr)
 		}
-		return nil, errors.Errorf("set goose dialect: %w", err)
+		return nil, errors.Errorf("set goose dialect: %w", gooseDialectErr)
 	}
 
 	if err := goose.Up(db, "migrations"); err != nil {

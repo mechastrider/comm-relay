@@ -3,10 +3,10 @@
 - [x] 1.1 Add `modernc.org/sqlite` and `pressly/goose/v3`; embed Goose SQL under `internal/store/migrations` with the 6a schema (viewers, identities, sessions, session/day stats, merge audit)
 - [x] 1.2 Open `comm-relay.db` beside `config.json` with WAL, foreign keys, busy timeout; run Goose `Up` on start; fail bootstrap if migrate fails; cover open/migrate with temp-dir tests
 - [x] 1.3 Implement store mutex APIs: upsert identity + increment counters (skip empty `user_id`), day-key helper for `day_reset_hour`, ensure open session, merge (reject self-merge), list/search/get, display-name update, hide merged sources
-- [ ] 1.4 Add `points_per_message` (default 1) and `day_reset_hour` (default 6, range 0–23) to config load/validate/public JSON; additive defaults for legacy files
-- [ ] 1.5 Register a bus runnable that applies counted chat lines and coalesces leaderboard snapshots (`session`, `day`, `all`, top 20) onto the WebSocket hub
-- [ ] 1.6 Wire POST `/api/viewers/merge`, `/api/viewers/update`, `/api/sessions/start` and GET `/api/viewers`, `/api/viewers/get`, `/api/leaderboard`; keep POST-action rules; extend router guard tests
-- [ ] 1.7 Serve `web/leaderboard/` at `/overlay/leaderboard` (with and without trailing slash) registered before `/overlay/`; handler tests for chat overlay vs leaderboard URLs
+- [x] 1.4 Add `points_per_message` (default 1) and `day_reset_hour` (default 6, range 0–23) to config load/validate/public JSON; additive defaults for legacy files
+- [x] 1.5 Register a bus runnable that applies counted chat lines and coalesces leaderboard snapshots (`session`, `day`, `all`, top 20) onto the WebSocket hub
+- [x] 1.6 Wire POST `/api/viewers/merge`, `/api/viewers/update`, `/api/sessions/start` and GET `/api/viewers`, `/api/viewers/get`, `/api/leaderboard`; keep POST-action rules; extend router guard tests
+- [x] 1.7 Serve `web/leaderboard/` at `/overlay/leaderboard` (with and without trailing slash) registered before `/overlay/`; handler tests for chat overlay vs leaderboard URLs
 
 ## 2. Frontend
 

@@ -9,18 +9,21 @@ import (
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/runtime"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 // Options configures the HTTP handler.
 type Options struct {
 	// WebRoot overrides embedded static assets with files from disk (for local UI dev).
-	WebRoot    string
-	Hub        *Hub
-	Store      *config.Store
-	History    *MessageHistory
-	Registry   *status.Registry
-	Runtime    *runtime.Info
-	EmoteCache *emote.Cache
+	WebRoot              string
+	Hub                  *Hub
+	Store                *config.Store
+	ViewerStore          *store.Store
+	LeaderboardPublisher *LeaderboardPublisher
+	History              *MessageHistory
+	Registry             *status.Registry
+	Runtime              *runtime.Info
+	EmoteCache           *emote.Cache
 }
 
 // NewHandler returns the root HTTP handler for CommRelay.
@@ -58,6 +61,11 @@ func NewHandler(opts Options) (http.Handler, error) {
 	oauthState := newOAuthStateStore()
 	youtubeOAuth := newYouTubeOAuthHandler(opts.Store, oauthState)
 	supportOpen := newSupportOpenHandler()
+	leaderboardPublisher := opts.LeaderboardPublisher
+	if leaderboardPublisher == nil && opts.ViewerStore != nil {
+		leaderboardPublisher = newLeaderboardPublisher(opts.Hub, opts.ViewerStore, opts.Store)
+	}
+	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", handleHealth)
@@ -73,11 +81,21 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /oauth/youtube/callback", youtubeOAuth.handleCallback)
 	mux.HandleFunc("GET /api/messages/recent", messagesHandler.handleRecent)
 	mux.HandleFunc("POST /api/messages/delete", messagesHandler.handleDelete)
+	mux.HandleFunc("GET /api/viewers", viewersHandler.handleList)
+	mux.HandleFunc("GET /api/viewers/get", viewersHandler.handleGet)
+	mux.HandleFunc("POST /api/viewers/merge", viewersHandler.handleMerge)
+	mux.HandleFunc("POST /api/viewers/update", viewersHandler.handleUpdate)
+	mux.HandleFunc("POST /api/sessions/start", viewersHandler.handleStartSession)
+	mux.HandleFunc("GET /api/leaderboard", viewersHandler.handleLeaderboard)
 	mux.Handle("GET /dock/messages/", http.StripPrefix("/dock/messages/", http.FileServer(http.FS(static.dock))))
 	mux.HandleFunc("GET /dock/messages", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.dock, "index.html")
 	})
 	mux.HandleFunc("GET /overlay/assets/{filename}", overlayAssets.handleGet)
+	mux.Handle("GET /overlay/leaderboard/", http.StripPrefix("/overlay/leaderboard/", http.FileServer(http.FS(static.leaderboard))))
+	mux.HandleFunc("GET /overlay/leaderboard", func(w http.ResponseWriter, r *http.Request) {
+		serveFSFile(w, r, static.leaderboard, "index.html")
+	})
 	mux.Handle("GET /overlay/", http.StripPrefix("/overlay/", http.FileServer(http.FS(static.overlay))))
 	mux.HandleFunc("GET /overlay", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.overlay, "index.html")

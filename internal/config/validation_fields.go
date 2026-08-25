@@ -31,6 +31,12 @@ func (c *Config) validateFields() error {
 	if c.ServerPort < 1 || c.ServerPort > 65535 {
 		fields["server_port"] = "Port must be between 1 and 65535."
 	}
+	if c.PointsPerMessage < 0 {
+		fields["points_per_message"] = "Points per message must be 0 or greater."
+	}
+	if c.DayResetHour < 0 || c.DayResetHour > 23 {
+		fields["day_reset_hour"] = "Day reset hour must be between 0 and 23."
+	}
 	if c.Overlay.MaxMessages < 1 {
 		fields["overlay_max_messages"] = "Enter at least 1 message."
 	}

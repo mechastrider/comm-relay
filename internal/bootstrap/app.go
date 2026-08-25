@@ -99,14 +99,19 @@ func New(opts Options) (*App, error) {
 	youtubeEmojiCatalog := ytemoji.NewCatalog()
 	youtubeEmojiRefresher := ytemoji.NewRefresher(youtubeEmojiCatalog, emoteHTTP)
 
+	leaderboardPublisher := api.NewLeaderboardPublisher(hub, viewerStore, cfgStore)
+	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher)
+
 	handler, err := api.NewHandler(api.Options{
-		WebRoot:    webRoot,
-		Hub:        hub,
-		Store:      cfgStore,
-		History:    history,
-		Registry:   statusRegistry,
-		Runtime:    runtimeInfo,
-		EmoteCache: emoteCache,
+		WebRoot:              webRoot,
+		Hub:                  hub,
+		Store:                cfgStore,
+		ViewerStore:          viewerStore,
+		LeaderboardPublisher: leaderboardPublisher,
+		History:              history,
+		Registry:             statusRegistry,
+		Runtime:              runtimeInfo,
+		EmoteCache:           emoteCache,
 	})
 	if err != nil {
 		return nil, errors.Errorf("create handler: %w", err)
@@ -128,6 +133,11 @@ func New(opts Options) (*App, error) {
 			history.Run(ctx, eventBus)
 			return nil
 		}).Name("message-history"),
+		runnable.Func(func(ctx context.Context) error {
+			defer leaderboardPublisher.Stop()
+			viewerIngest.Run(ctx, eventBus)
+			return nil
+		}).Name("viewer-ingest"),
 		runnable.Func(func(ctx context.Context) error {
 			statusRegistry.RunMessageCounter(ctx, eventBus)
 			return nil
