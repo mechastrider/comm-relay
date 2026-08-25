@@ -2,12 +2,13 @@ version: 3
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 3335dae04f91efedf4efacc46fb1572a1b7a2534
+    commit: bd513c82f072a21f754d5bf9f5e83d92c0d9fbc8
 preset: desktop-app
 include:
     - theme: backend/go
     - id: web-static-frontend
     - id: ux-form-practices
+    - id: web-constrained-layout
 exclude:
     - id: api-conventions
     - id: backend-structure
@@ -28,52 +29,58 @@ selected_paths:
     - improve
     - mcp-tool-input-schema
     - runnable-background-processes
+    - skill-authoring
     - slides
     - task-delegation
     - ui-styling
     - ui-ux-pro-max
     - ux-form-practices
+    - web-constrained-layout
     - web-static-frontend
 skills:
     agent-memory-usage:
-        upstream_hash: sha256:05e727fa5b0d456b5d44ab28fd9d8424d7fdc82fa5fab0b36346d3aff5210661
+        upstream_hash: sha256:369671e70498ddc195c03f87780273d6215442bd485ff5b01f3344e273513b7a
     agentmem-onboarding:
-        upstream_hash: sha256:54d2e1681d8b076b308c7f3651cfda4d3eae1ba2e8e11b0c3fd21957b5864940
+        upstream_hash: sha256:ef825b85a8726149754593b2a17ee35f5ba8c9b0c14b67240f50e4e48e092980
     banner-design:
-        upstream_hash: sha256:1177010a0d04ccc290b7edd6af1f2d50e935fb0446dcac7b4755fbe1f6057fa4
+        upstream_hash: sha256:d90e5a2128af0f81701c031926b2dc9fb8a95640b0b9a3a29a3523a5212dbccb
     brand:
-        upstream_hash: sha256:2306f9b0c0998b0fe8852f1a0e5c95cf862e118bedb7ded02d13d08116872ee0
+        upstream_hash: sha256:91fbb349ce58477920645faf85976fcf3540d0713e18006321a2d47749b888b7
     closeout:
-        upstream_hash: sha256:6457b351aa4e6d3a922bd2d6cf66fa4cec35fa72124bb4963802316aa31ee180
+        upstream_hash: sha256:f8897644c14c1f7e8dada2d524b91c26b2f636ccbdc037cbc458ab2a2a9a6983
     database-migrations:
-        upstream_hash: sha256:118ce23f4e0e7ccea54c898798d1678dc05e2b9127ad3b44a863be9a59f8bd57
+        upstream_hash: sha256:a37a776f3cfa7010afbb268a79c067e214984eb2a841c6ffb3be49732ccdb86d
     design:
-        upstream_hash: sha256:a297d99f681ecda7194135b109e81ebd4ed1edf5fd31439511f2c0743fa7e00a
+        upstream_hash: sha256:f893018dcfb5c6660f447e84560a8b9fa7788d0fbad9097491c7a26504edae25
     design-system:
-        upstream_hash: sha256:0e932aef72b09d7bbff9868dbd81828cb34746e57181a48c986b9be9e7041742
+        upstream_hash: sha256:17e13070626441dbd2bd4c6b6e897c97110a56f07ca9364a846af1d62cc56db4
     golang-errors:
-        upstream_hash: sha256:edfadb39be2294f33b43200e73498828a8ca763f89370edb0e223e2fea60bb96
+        upstream_hash: sha256:307ff15d85a0e5062ed4f83e1e782db3ec14a889be410fdae72a24b7280f9f75
     golang-logging:
-        upstream_hash: sha256:783a784cbb4b0e3463466a21f811f677e5e7bd9df6a022656f25fdc13e243605
+        upstream_hash: sha256:6d14a9d026e4075bd969d0a6fd05bdc35f1b14196aae0273d7c806af1bb57652
     golang-tests:
-        upstream_hash: sha256:1d9becc1ebbdfe00832119dfa5da30467e6c2597676b061350f1f257a384ea96
+        upstream_hash: sha256:8957aebe03db8b34b02e36ee6ef9ce33583ab45c17d7f796b17bc969afb0acf9
     golang-validation:
-        upstream_hash: sha256:376162500fef4d60e8726cf6cc34c38e61b32c7cc8aacc2105a4ae1d738da17d
+        upstream_hash: sha256:6bd8b0103efbbba3779754fc05ddf5fc76cf7dbd3f83a221e2071ea234a60136
     improve:
-        upstream_hash: sha256:1a40d27e3ae48041a701c198234c5e60a6586a0992693d737f161af982f1b0cd
+        upstream_hash: sha256:455f588a7798e28ba60742c1c6b5d97305e56ff33db3a58612d84d1118a159aa
     mcp-tool-input-schema:
-        upstream_hash: sha256:313b1ce465ff6894ac82292d194155846c27b4fadab89e1b71899acdb65ad452
+        upstream_hash: sha256:2520fba3c1164601d4a0e7744385128baee89443bb217d8bb57f472ab501e15f
     runnable-background-processes:
-        upstream_hash: sha256:4dc5a488f4ce172607270d1130651ce75df2704fe9738757ddc5e214e7abf672
+        upstream_hash: sha256:f006efd794b2a9484a2328033062041174df9844b07bde55557aa14b1f4e02e1
+    skill-authoring:
+        upstream_hash: sha256:ce43a3cbc21f9a2d3c76660d059c676557e43b133aaf3e13352f5c7b2d02b847
     slides:
-        upstream_hash: sha256:c8476d4e9f23cb39a87a053ecfc4cb62aaa7697d366a438107686ba467ad2e65
+        upstream_hash: sha256:cb29561868fb45149d5acf4ce455151710be3955316017a00cb902176bf3d212
     task-delegation:
-        upstream_hash: sha256:fc4c50e96a3ae50fd6a78b0ce68e18b3d2067aee7c3b7a99e0d2e709d46a2fde
+        upstream_hash: sha256:c8c230c3017e9c6d98afed26ab108d7a330c24c2200b8a4600e4e6652d56cfb3
     ui-styling:
-        upstream_hash: sha256:d17d754f5f37144d1a78096bb389f09d0aefdd7b202823746f6a25433548d5dc
+        upstream_hash: sha256:21b1be5f8a6a71564acb54a393a468a30810c0b7698a20fc43bf0706aa5879ab
     ui-ux-pro-max:
-        upstream_hash: sha256:d793d7740063f535595e2bc4b4b26fe7cd5ed6543982ce8a8be8a7ae5af3b724
+        upstream_hash: sha256:5ad4d7bd2376554545aa15396476ad418dcc474968fa31b4198102e149ea6cc8
     ux-form-practices:
-        upstream_hash: sha256:98f9e73be244c07963c1b0c6d6e4b39ffe6b3366410a0cfaf593e5542935f209
+        upstream_hash: sha256:50c2055b608b812376ccdaeed6c5c32044bdf21eb786b3340cc857576f45764b
+    web-constrained-layout:
+        upstream_hash: sha256:f2229e91724ab160be53fa439af429e1026641047345899c7d81f1ad396b50eb
     web-static-frontend:
-        upstream_hash: sha256:87f308edc1270d25cf4ee0621e055f1c1f983609f019a8e9ee1af7fd5500bb56
+        upstream_hash: sha256:920dd38ebcb34b1cc2e7ecb2d51f35e98080ab2e00bef301420fa4a8179b91ee

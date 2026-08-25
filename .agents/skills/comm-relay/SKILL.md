@@ -78,6 +78,13 @@ Extend with `display_name`, `avatar_url`, `badges` when available — keep backw
 - Cap visible messages; smooth appear; configurable TTL.
 - Auto-scroll; tolerate WebSocket reconnect (client-side backoff).
 
+## Admin / dock static UI (CommRelay)
+
+Hub skills state generic rules; this repo documents concrete paths:
+
+- **i18n:** `web/shared/i18n.js` (`t()`, `data-i18n`, `data-i18n-aria-label`, `data-i18n-title`); catalogs in `web/shared/locales/en.js` and `ru.js`; run `npm run test:i18n` for parity.
+- **Icon tooltips:** wrap icon-only controls in `has-tooltip`, child `<span class="ui-tooltip" role="tooltip" data-i18n="…">`; styles in `web/shared/tooltip.css` (import from admin `styles.css`). Required by [ux-form-practices](../ux-form-practices/SKILL.md).
+
 ## Reliability
 
 - Graceful shutdown: cancel context, drain WebSocket broadcast, stop connectors.

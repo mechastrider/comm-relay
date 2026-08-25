@@ -51,11 +51,32 @@ Backend returns `{"error":"..."}` (snake_case body fields on success payloads). 
 - `aria-invalid` and `aria-describedby` when showing errors
 - `role="alert"` or `aria-live="polite"` for dynamic error banners
 
+## Icon-only controls
+
+Every icon-only button or control **must** show a hover/focus tooltip with a short
+label.
+
+- Pair tooltip text with an accessible name (`aria-label` or visible text) for
+  screen readers.
+- Localize tooltip copy when the app supports i18n.
+- Show tooltips on pointer hover and keyboard focus (`:focus-visible`).
+- Implement markup and styles in the **consumer repository** — hub skills state
+  the requirement, not CSS class names or file paths.
+
+See [skill-authoring](../../../devtools/skill-authoring/SKILL.md) for what belongs
+in hub skills vs project docs.
+
 ## Numeric fields
 
 - `inputMode="decimal"` is only a hint — validate in code
 - Normalize `,` → `.` for locales
 - Keep editing state as string; send parsed number to API
+
+## Forms inside overlays
+
+If the form sits in a height-capped dialog, modal, or drawer, the **fields** must live in a scrollable pane. Sticky Save / Cancel stay in the overlay footer, outside that pane. Do not assume the overlay is tall enough after adding hints or `<details>`.
+
+Layout rules (height chain, `min-height: 0`, visible scrollbar): [web-constrained-layout](../../web/web-constrained-layout/SKILL.md).
 
 ## Checklist
 
@@ -63,4 +84,6 @@ Backend returns `{"error":"..."}` (snake_case body fields on success payloads). 
 - [ ] Submit disabled during in-flight request
 - [ ] Errors visible and associated with fields
 - [ ] API errors mapped to friendly text
+- [ ] Icon-only controls have hover/focus tooltips
 - [ ] Mobile: readable layout without horizontal scroll on primary actions
+- [ ] Overlay forms: last fields reachable by scrolling; footer not covering inputs

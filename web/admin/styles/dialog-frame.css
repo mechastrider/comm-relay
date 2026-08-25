@@ -2,10 +2,18 @@
   background: rgba(0, 0, 0, 0.62);
 }
 
+/*
+  Height-capped dialog shell (skill web-constrained-layout): pin header/footer,
+  give the middle row a definite height so descendants can scroll.
+*/
 .dialog-frame {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  max-height: min(760px, calc(100vh - 36px));
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-height: var(--dialog-max-height, min(760px, calc(100dvh - 36px)));
+  overflow: hidden;
   border: 1px solid #111;
 }
 
@@ -27,6 +35,7 @@
 
 .panel {
   min-width: 0;
+  min-height: 0;
 }
 
 #sound-dialog .panel {
@@ -37,10 +46,161 @@
 .overlay-editor {
   display: grid;
   grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px;
+}
+
+.preset-island {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background:
+    linear-gradient(135deg, rgba(212, 160, 23, 0.05), transparent 48%),
+    var(--surface-raised);
+}
+
+.preset-island__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.preset-island__group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.preset-island__group--preset {
+  flex: 0 1 auto;
+}
+
+.preset-island__group--preset select {
+  width: 132px;
+  min-width: 96px;
+  max-width: 160px;
+  min-height: 30px;
+  max-height: 30px;
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: #111;
+  color: var(--text);
+  font-size: 11px;
+  box-sizing: border-box;
+}
+
+.preset-island__group--url {
+  flex: 1 1 0;
+  justify-content: flex-end;
+}
+
+.preset-island__inline-label {
+  flex: 0 0 auto;
+  color: var(--subtle);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.preset-island__count {
+  flex: 0 0 auto;
+  color: var(--subtle);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.preset-island__icon-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.preset-island__divider {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 1px;
+  min-height: 24px;
+  margin: 3px 0;
+  background: var(--border);
+}
+
+.preset-island__url-input {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 72px;
+  max-width: 220px;
+  min-height: 30px;
+  max-height: 30px;
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: #0f0f12;
+  color: #bcd9c7;
+  font-size: 11px;
+  box-sizing: border-box;
+  text-overflow: ellipsis;
+}
+
+.preset-island__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  max-width: 88px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(51, 204, 102, 0.08);
+  color: #8ce5ad;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preset-island__status::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.preset-island__status--dirty {
+  border-color: #7c5a18;
+  background: rgba(212, 160, 23, 0.1);
+  color: var(--amber);
+}
+
+.overlay-settings-column {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   min-height: 0;
-  overflow: auto;
-  padding: 12px;
+  overflow: hidden;
+}
+
+.overlay-editor > .overlay-preview-panel {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .overlay-editor > .panel {
@@ -48,14 +208,87 @@
   margin: 0;
 }
 
+.overlay-appearance-panel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.overlay-queue-group {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.overlay-queue-group__title {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.overlay-appearance-panel .panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--amber-dim) var(--surface-dark);
+}
+
+.overlay-appearance-panel .panel__body::-webkit-scrollbar {
+  width: 12px;
+}
+
+.overlay-appearance-panel .panel__body::-webkit-scrollbar-track {
+  background: var(--surface-darker);
+}
+
+.overlay-appearance-panel .panel__body::-webkit-scrollbar-thumb {
+  background: var(--amber);
+  border: 2px solid var(--surface-darker);
+}
+
 .overlay-settings-panel {
-  align-self: start;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.overlay-settings-panel .panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--amber-dim) var(--surface-dark);
+}
+
+.overlay-settings-panel .panel__body::-webkit-scrollbar {
+  width: 12px;
+}
+
+.overlay-settings-panel .panel__body::-webkit-scrollbar-track {
+  background: var(--surface-darker);
+}
+
+.overlay-settings-panel .panel__body::-webkit-scrollbar-thumb {
+  background: var(--amber);
+  border: 2px solid var(--surface-darker);
 }
 
 .overlay-preview-panel {
   display: grid;
-  grid-template-rows: auto auto minmax(300px, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -124,7 +357,7 @@
 
 .overlay-preview-stage {
   position: relative;
-  min-height: 300px;
+  min-height: 0;
   overflow: hidden;
   background: #111;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -165,4 +398,40 @@
   border: 1px solid var(--border);
   border-radius: 3px;
   background: var(--surface-raised);
+}
+
+.prompt-dialog {
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.prompt-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.prompt-dialog__frame {
+  display: grid;
+  gap: 12px;
+  min-width: min(360px, 86vw);
+  padding: 14px;
+}
+
+.prompt-dialog__frame h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.prompt-dialog__message {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.prompt-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }

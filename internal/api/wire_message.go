@@ -7,11 +7,13 @@ import (
 	"github.com/muonsoft/errors"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/config"
 )
 
 const (
-	wireMessageType        = "message"
-	wireMessageDeletedType = "message_deleted"
+	wireMessageType         = "message"
+	wireMessageDeletedType  = "message_deleted"
+	wireOverlaySettingsType = "overlay_settings"
 )
 
 // wireChatMessage is the JSON payload sent to overlay WebSocket clients.
@@ -20,12 +22,18 @@ type wireChatMessage struct {
 	ID          string                `json:"id,omitempty"`
 	Platform    string                `json:"platform"`
 	User        string                `json:"user"`
+	Username    string                `json:"username,omitempty"`
 	Message     string                `json:"message"`
 	Fragments   []bus.MessageFragment `json:"fragments,omitempty"`
 	DisplayName string                `json:"display_name,omitempty"`
 	AvatarURL   string                `json:"avatar_url,omitempty"`
 	Badges      []string              `json:"badges,omitempty"`
 	Timestamp   string                `json:"timestamp,omitempty"`
+}
+
+type wireOverlaySettings struct {
+	Type    string               `json:"type"`
+	Overlay config.OverlayConfig `json:"overlay"`
 }
 
 type wireMessageDeleted struct {
@@ -45,6 +53,7 @@ func chatMessageWirePayload(msg bus.ChatMessage) ([]byte, error) {
 		ID:          msg.ID,
 		Platform:    msg.Platform,
 		User:        user,
+		Username:    msg.Username,
 		Message:     msg.Message,
 		Fragments:   msg.Fragments,
 		DisplayName: msg.DisplayName,
@@ -60,6 +69,17 @@ func chatMessageWirePayload(msg bus.ChatMessage) ([]byte, error) {
 		return nil, errors.Errorf("marshal chat wire message: %w", err)
 	}
 
+	return data, nil
+}
+
+func overlaySettingsWirePayload(overlay config.OverlayConfig) ([]byte, error) {
+	data, err := json.Marshal(wireOverlaySettings{
+		Type:    wireOverlaySettingsType,
+		Overlay: overlay,
+	})
+	if err != nil {
+		return nil, errors.Errorf("marshal overlay settings wire event: %w", err)
+	}
 	return data, nil
 }
 

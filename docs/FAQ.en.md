@@ -58,6 +58,16 @@ Quick renderer check without live chat:
 http://127.0.0.1:17877/overlay?preview=sample&preview_background=checker
 ```
 
+To pin a look to an OBS scene, use a preset URL (copied on the **OBS → Setup** tab):
+
+```
+http://127.0.0.1:17877/overlay?preset=default
+```
+
+The overlay page background stays transparent: only the message card may be opaque.
+
+You should see sample messages.
+
 Sample messages should appear. The same mode exists in the admin panel: **OBS → Appearance → Preview**.
 
 ### Messages in admin but not in overlay (browser and OBS)

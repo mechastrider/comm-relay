@@ -13,10 +13,11 @@ import (
 
 type configHandler struct {
 	store *config.Store
+	hub   *Hub
 }
 
-func newConfigHandler(store *config.Store) *configHandler {
-	return &configHandler{store: store}
+func newConfigHandler(store *config.Store, hub *Hub) *configHandler {
+	return &configHandler{store: store, hub: hub}
 }
 
 func (h *configHandler) handleGet(w http.ResponseWriter, r *http.Request) {
@@ -58,5 +59,15 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, h.store.Snapshot().Public())
+	saved := h.store.Snapshot()
+	if h.hub != nil {
+		payload, err := overlaySettingsWirePayload(saved.Overlay)
+		if err != nil {
+			clog.Errorf(ctx, "overlay settings wire payload: %w", err)
+		} else {
+			h.hub.broadcast(payload)
+		}
+	}
+
+	writeJSON(w, http.StatusOK, saved.Public())
 }

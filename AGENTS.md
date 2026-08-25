@@ -75,6 +75,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 | Skill | Use when |
 |-------|----------|
 | `web-static-frontend` | Admin panel and OBS overlay under `web/` |
+| `web-constrained-layout` | Height-capped admin dialogs and split panes (scroll the body; do not clip). Shared web layout skill — not desktop windowing. |
 | `ux-form-practices` | Connect forms, settings, accessibility |
 
 ### Release and docs
@@ -83,6 +84,13 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 |-------|----------|
 | `changelog` | Preparing releases, editing `CHANGELOG.md`, or writing user-facing release notes |
 | `release-announce` | Short Russian social posts (Telegram/VK/Twitter) for a version — `CHANGELOG.md` as source, streamer wording |
+
+### Hub / devtools
+
+| Skill | Use when |
+|-------|----------|
+| `skill-authoring` | Editing or publishing skills in `muonsoft/skills` — hub vs consumer boundaries, `catalog.yaml`, `lint-hub` |
+| `task-delegation` | Delegating bounded coding slices; hub skill push/pull workflow |
 
 ## Backend Guidelines
 

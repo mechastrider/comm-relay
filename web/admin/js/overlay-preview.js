@@ -18,6 +18,7 @@ import {
   OVERLAY_PREVIEW_SIZES,
 } from './constants.js';
 import { t } from './i18n-ui.js';
+import { collectAppearanceQuery } from './overlay-appearance.js';
 
 export function overlayDisplaySettingsChanged(payload) {
     if (!state.currentConfig) {
@@ -33,7 +34,9 @@ export function overlayDisplaySettingsChanged(payload) {
       next.font_size_px !==
         (typeof prev.font_size_px === "number" ? prev.font_size_px : 18) ||
       next.display_mode !== (prev.display_mode === "compact" ? "compact" : "normal") ||
-      next.theme !== normalizeOverlayTheme(prev.theme)
+      next.theme !== normalizeOverlayTheme(prev.theme) ||
+      JSON.stringify(next.presets || []) !== JSON.stringify(prev.presets || []) ||
+      next.active_preset_id !== (prev.active_preset_id || "")
     );
   }
 
@@ -225,6 +228,12 @@ export function buildOverlayPreviewURL(previewMode) {
       "theme",
       normalizeOverlayTheme(dom.overlayTheme && dom.overlayTheme.value)
     );
+    const extra = collectAppearanceQuery();
+    Object.keys(extra).forEach(function (key) {
+      if (extra[key] !== "" && extra[key] != null) {
+        url.searchParams.set(key, String(extra[key]));
+      }
+    });
     return url;
   }
 
@@ -410,6 +419,19 @@ export function initOverlayPreview() {
       input.addEventListener("input", scheduleOverlayPreviewRefresh);
       input.addEventListener("change", scheduleOverlayPreviewRefresh);
     });
+
+    document.addEventListener("overlay-preview-refresh", scheduleOverlayPreviewRefresh);
+    if (dom.overlayDialog) {
+      dom.overlayDialog.addEventListener("input", function (event) {
+        if (
+          event.target &&
+          event.target.closest &&
+          event.target.closest("#obs-appearance-panel")
+        ) {
+          scheduleOverlayPreviewRefresh();
+        }
+      });
+    }
 
     if (dom.overlayPreviewReplay) {
       dom.overlayPreviewReplay.addEventListener("click", function () {

@@ -50,7 +50,8 @@ func NewHandler(opts Options) (http.Handler, error) {
 		rt = runtime.NewInfo()
 	}
 
-	configHandler := newConfigHandler(opts.Store)
+	configHandler := newConfigHandler(opts.Store, opts.Hub)
+	overlayAssets := newOverlayAssetsHandler(opts.Store.Path())
 	statusHandler := newStatusHandler(opts.Store, registry)
 	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt, opts.EmoteCache)
 	messagesHandler := newMessagesHandler(opts.History, opts.Hub)
@@ -63,6 +64,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /ws", opts.Hub.serveWS)
 	mux.HandleFunc("GET /api/config", configHandler.handleGet)
 	mux.HandleFunc("POST /api/config/update", configHandler.handleUpdate)
+	mux.HandleFunc("POST /api/overlay/assets/upload", overlayAssets.handleUpload)
 	mux.HandleFunc("GET /api/status", statusHandler.handleGet)
 	mux.HandleFunc("GET /api/diagnostics", diagnosticsHandler.handleGet)
 	mux.HandleFunc("POST /api/youtube/oauth/start", youtubeOAuth.handleStartAPI)
@@ -75,6 +77,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /dock/messages", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.dock, "index.html")
 	})
+	mux.HandleFunc("GET /overlay/assets/{filename}", overlayAssets.handleGet)
 	mux.Handle("GET /overlay/", http.StripPrefix("/overlay/", http.FileServer(http.FS(static.overlay))))
 	mux.HandleFunc("GET /overlay", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.overlay, "index.html")

@@ -1,0 +1,35 @@
+.has-tooltip {
+  position: relative;
+}
+
+.has-tooltip > .ui-tooltip {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  max-width: min(240px, 70vw);
+  padding: 4px 8px;
+  border: 1px solid var(--border-strong, #666);
+  border-radius: 4px;
+  background: var(--surface-raised, #2e2e34);
+  color: var(--text, #d9d9dd);
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    visibility 120ms ease;
+}
+
+.has-tooltip:hover > .ui-tooltip,
+.has-tooltip:focus-visible > .ui-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}

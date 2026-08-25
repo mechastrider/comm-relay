@@ -75,6 +75,59 @@
 
   .overlay-editor {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(240px, 1fr);
+    overflow: auto;
+    align-items: start;
+  }
+
+  .preset-island {
+    position: static;
+  }
+
+  .preset-island__toolbar {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .preset-island__group--url {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  .preset-island__url-input {
+    max-width: none;
+  }
+
+  .preset-island__divider {
+    display: none;
+  }
+
+  .preset-island__status {
+    max-width: none;
+  }
+
+  .overlay-settings-column {
+    grid-column: 1;
+    grid-row: auto;
+    overflow: visible;
+  }
+
+  .overlay-editor > .overlay-preview-panel {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .overlay-appearance-panel,
+  .overlay-settings-panel,
+  .overlay-preview-panel {
+    overflow: visible;
+    min-height: auto;
+  }
+
+  .overlay-appearance-panel .panel__body,
+  .overlay-settings-panel .panel__body {
+    overflow: visible;
+    flex: none;
   }
 
   .obs-integration-grid {
@@ -82,7 +135,7 @@
   }
 
   .overlay-preview-panel {
-    grid-template-rows: auto auto 360px auto;
+    grid-template-rows: auto auto minmax(240px, 45vh) auto;
   }
 
   .status-bar {

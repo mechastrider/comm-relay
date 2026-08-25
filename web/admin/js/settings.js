@@ -19,13 +19,16 @@ import {
 } from './ui-shell.js';
 import {
   scheduleOverlayPreviewRefresh,
-  normalizeOverlayTheme,
   overlayDisplaySettingsChanged,
 } from './overlay-preview.js';
 import {
   applyMessageSoundFromConfig,
   getMessageSoundSettings,
 } from './sound.js';
+import {
+  applyOverlayAppearance,
+  collectOverlayAppearance,
+} from './overlay-appearance.js';
 import {
   renderRecentMessages,
   maybePlayMessageSound,
@@ -205,18 +208,7 @@ export function applyConfig(config) {
     }
 
     const overlay = config.overlay || {};
-    dom.overlayMaxMessages.value = String(
-      typeof overlay.max_messages === "number" ? overlay.max_messages : 30
-    );
-    dom.overlayMessageTTL.value = String(
-      typeof overlay.message_ttl_seconds === "number" ? overlay.message_ttl_seconds : 20
-    );
-    dom.overlayFontSize.value = String(
-      typeof overlay.font_size_px === "number" ? overlay.font_size_px : 18
-    );
-    dom.overlayDisplayMode.value =
-      overlay.display_mode === "compact" ? "compact" : "normal";
-    dom.overlayTheme.value = normalizeOverlayTheme(overlay.theme);
+    applyOverlayAppearance(overlay);
     applyRichChatFromConfig(overlay);
 
     if (config.youtube) {
@@ -272,6 +264,7 @@ export function applyConfig(config) {
 
 export function buildPayload() {
     const richChat = getRichChatSettings();
+    const appearance = collectOverlayAppearance();
     return {
       server_port: state.currentConfig ? state.currentConfig.server_port : 17877,
       network: {
@@ -302,15 +295,10 @@ export function buildPayload() {
       vk: Object.assign(readVkSettings(), {
         use_proxy: dom.vkUseProxy ? dom.vkUseProxy.checked : false,
       }),
-      overlay: {
-        max_messages: Number.parseInt(dom.overlayMaxMessages.value, 10),
-        message_ttl_seconds: Number.parseInt(dom.overlayMessageTTL.value, 10),
-        font_size_px: Number.parseInt(dom.overlayFontSize.value, 10),
-        display_mode: dom.overlayDisplayMode.value,
-        theme: dom.overlayTheme.value,
+      overlay: Object.assign({}, appearance, {
         emotes: richChat.emotes,
         image_previews: richChat.image_previews,
-      },
+      }),
       admin: {
         time_locale: dom.timeLocaleInput && dom.timeLocaleInput.value === "en-GB"
           ? "en-GB"

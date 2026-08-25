@@ -6,6 +6,12 @@
   --overlay-message-padding-x: 10px;
   --overlay-message-radius: 8px;
   --overlay-panel-bg: rgba(0, 0, 0, 0.58);
+  --overlay-font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --overlay-text-edge-strength: 2;
+  --overlay-panel-image: none;
+  --overlay-border-width: 0px;
+  --overlay-border-color: #ffffff;
+  --overlay-border-radius: 8px;
   --overlay-text: #f4f4f5;
   --overlay-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   --overlay-stroke-shadow:
@@ -28,7 +34,7 @@ body {
   padding: 0;
   background: transparent;
   overflow: hidden;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--overlay-font-family);
   font-size: var(--overlay-font-size);
   line-height: var(--overlay-line-height);
   color: var(--overlay-text);
@@ -745,4 +751,109 @@ body.overlay-theme--g-rebels-popups .message__text {
     opacity: 0;
     filter: blur(2px);
   }
+}
+
+body.overlay-platform-marker--none .message__platform,
+body.overlay-platform-marker--none .message__accent,
+body.overlay-platform-marker--icon .message__accent,
+body.overlay-platform-marker--stripe .message__platform {
+  display: none !important;
+}
+
+body.overlay-platform-marker--icon .message__platform,
+body.overlay-platform-marker--both .message__platform {
+  display: inline-flex;
+}
+
+body.overlay-theme--default.overlay-platform-marker--icon .message,
+body.overlay-theme--default.overlay-platform-marker--none .message {
+  border-left-width: 0;
+  padding-left: var(--overlay-message-padding-x);
+}
+
+body.overlay-theme--cockpit-panel.overlay-platform-marker--icon .message__platform,
+body.overlay-theme--cockpit-popups.overlay-platform-marker--icon .message__platform,
+body.overlay-theme--g-rebels-popups.overlay-platform-marker--icon .message__platform,
+body.overlay-theme--cockpit-panel.overlay-platform-marker--both .message__platform,
+body.overlay-theme--cockpit-popups.overlay-platform-marker--both .message__platform,
+body.overlay-theme--g-rebels-popups.overlay-platform-marker--both .message__platform {
+  display: flex;
+}
+
+body.overlay-text-edge--none .message__user,
+body.overlay-text-edge--none .message__text {
+  text-shadow: none;
+}
+
+body.overlay-text-edge--shadow .message__user,
+body.overlay-text-edge--shadow .message__text {
+  text-shadow:
+    0 0 calc(var(--overlay-text-edge-strength) * 1px) rgba(0, 0, 0, 0.9),
+    0 calc(var(--overlay-text-edge-strength) * 0.5px) calc(var(--overlay-text-edge-strength) * 1px) rgba(0, 0, 0, 0.85);
+}
+
+body.overlay-text-edge--outline .message__user,
+body.overlay-text-edge--outline .message__text {
+  text-shadow:
+    calc(var(--overlay-text-edge-strength) * 0.35px) 0 0 #000,
+    calc(var(--overlay-text-edge-strength) * -0.35px) 0 0 #000,
+    0 calc(var(--overlay-text-edge-strength) * 0.35px) 0 #000,
+    0 calc(var(--overlay-text-edge-strength) * -0.35px) 0 #000,
+    var(--overlay-stroke-shadow);
+}
+
+body.overlay-has-panel .message {
+  background-color: var(--overlay-panel-bg);
+  border: var(--overlay-border-width) solid var(--overlay-border-color);
+  border-radius: var(--overlay-border-radius);
+}
+
+body.overlay-panel-image-scope--message.overlay-has-panel .message {
+  background-image: var(--overlay-panel-image);
+}
+
+body.overlay-theme--default.overlay-panel-image-scope--column.overlay-has-panel .messages {
+  background-image: var(--overlay-panel-image);
+  background-position: center;
+}
+
+body.overlay-theme--default.overlay-panel-image-scope--column.overlay-has-panel .message {
+  background-image: none;
+}
+
+body.overlay-panel-image-fit--cover.overlay-panel-image-scope--message.overlay-has-panel .message,
+body.overlay-theme--default.overlay-panel-image-fit--cover.overlay-panel-image-scope--column.overlay-has-panel .messages {
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+body.overlay-panel-image-fit--contain.overlay-panel-image-scope--message.overlay-has-panel .message,
+body.overlay-theme--default.overlay-panel-image-fit--contain.overlay-panel-image-scope--column.overlay-has-panel .messages {
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+body.overlay-panel-image-fit--fill.overlay-panel-image-scope--message.overlay-has-panel .message,
+body.overlay-theme--default.overlay-panel-image-fit--fill.overlay-panel-image-scope--column.overlay-has-panel .messages {
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+body.overlay-panel-image-fit--tile.overlay-panel-image-scope--message.overlay-has-panel .message,
+body.overlay-theme--default.overlay-panel-image-fit--tile.overlay-panel-image-scope--column.overlay-has-panel .messages {
+  background-size: auto;
+  background-repeat: repeat;
+}
+
+.message__identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+body.overlay-theme--cockpit-panel .message__identity,
+body.overlay-theme--cockpit-popups .message__identity,
+body.overlay-theme--g-rebels-popups .message__identity {
+  grid-area: user;
 }
