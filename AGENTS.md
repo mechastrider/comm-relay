@@ -83,7 +83,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 | Skill | Use when |
 |-------|----------|
 | `changelog` | Preparing releases, editing `CHANGELOG.md`, or writing user-facing release notes |
-| `release-announce` | Short Russian social posts (Telegram/VK/Twitter) for a version — `CHANGELOG.md` as source, streamer wording |
+| `release-announce` | Short Russian social posts (Telegram/VK/Twitter) for a version — `CHANGELOG.md` as source, friendly meaning-first streamer wording |
 
 ### Hub / devtools
 
