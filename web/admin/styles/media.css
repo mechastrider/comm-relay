@@ -84,6 +84,24 @@
     position: static;
   }
 
+  .preset-island__toolbar {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .preset-island__group--url {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  .preset-island__url-input {
+    max-width: none;
+  }
+
+  .preset-island__divider {
+    display: none;
+  }
+
   .preset-island__status {
     max-width: none;
   }

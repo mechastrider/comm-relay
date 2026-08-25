@@ -326,6 +326,7 @@ export function updatePresetIsland() {
   const overlayUrl = buildObsOverlayURL(activePresetId);
   if (dom.presetIslandUrl) {
     dom.presetIslandUrl.value = overlayUrl;
+    dom.presetIslandUrl.title = overlayUrl;
   }
   const connectionUrl = dom.obsOverlayUrl;
   if (connectionUrl) {

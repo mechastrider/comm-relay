@@ -423,13 +423,11 @@
           <section id="obs-appearance-panel" class="dialog-tab-panel obs-tab-panel--appearance" role="tabpanel" aria-labelledby="obs-appearance-tab" hidden>
             <div class="overlay-editor">
               <div id="preset-island" class="preset-island" data-i18n-aria-label="obs.presetIntro">
-                <div class="preset-island__row preset-island__row--controls">
-                  <div class="preset-island__field preset-island__field--select">
-                    <label class="preset-island__label preset-island__label--visible" for="overlay-preset-select" data-i18n="obs.preset">Preset</label>
-                    <div class="preset-island__select-wrap">
-                      <select id="overlay-preset-select"></select>
-                      <span id="preset-island-count" class="preset-island__count" aria-live="polite">1/32</span>
-                    </div>
+                <div class="preset-island__toolbar">
+                  <div class="preset-island__group preset-island__group--preset">
+                    <label class="preset-island__inline-label" for="overlay-preset-select" data-i18n="obs.preset">Preset</label>
+                    <select id="overlay-preset-select"></select>
+                    <span id="preset-island-count" class="preset-island__count" aria-live="polite">1/32</span>
                   </div>
                   <div class="preset-island__icon-actions" role="group" data-i18n-aria-label="obs.presetActions">
                     <button id="overlay-preset-add" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetAdd">
@@ -459,15 +457,19 @@
                       <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetDelete">Delete</span>
                     </button>
                   </div>
-                </div>
-
-                <div class="obs-url-field preset-island__url">
-                  <label for="preset-island-url" data-i18n="obs.overlayUrl">Overlay URL</label>
-                  <div class="obs-url-row">
-                    <input id="preset-island-url" type="text" readonly value="/overlay">
-                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="preset-island-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  <div class="preset-island__divider" aria-hidden="true"></div>
+                  <div class="preset-island__group preset-island__group--url">
+                    <label class="preset-island__inline-label" for="preset-island-url" data-i18n="obs.presetUrl">URL</label>
+                    <input id="preset-island-url" class="preset-island__url-input" type="text" readonly value="/overlay">
+                    <button class="icon-btn has-tooltip" type="button" data-copy-obs-url="preset-island-url" data-copy-label="Overlay URL" data-i18n-aria-label="obs.copyUrl">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <rect x="9" y="9" width="13" height="13" rx="1.5"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-linecap="round"></path>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.copyUrl">Copy URL</span>
+                    </button>
+                    <span id="preset-url-status" class="preset-island__status" role="status" aria-live="polite"></span>
                   </div>
-                  <span id="preset-url-status" class="preset-island__status" role="status" aria-live="polite"></span>
                 </div>
               </div>
 
