@@ -35,6 +35,7 @@ import {
   trackMessages,
 } from './messages.js';
 import { renderDiagnostics } from './status.js';
+import { renderStreamStatus } from './streams.js';
 import { applyAdminLocale, localeFromConfig, t } from './i18n-ui.js';
 
 export function normalizeVkChannel(raw) {
@@ -483,6 +484,16 @@ export async function loadStatus() {
       throw new Error(mapHTTPError(response.status, payload && payload.error));
     }
     renderDiagnostics(payload);
+
+    try {
+      const streamsResponse = await fetch(apiURL("/api/streams/status"));
+      const streamsPayload = await readJSON(streamsResponse);
+      if (streamsResponse.ok) {
+        renderStreamStatus(streamsPayload);
+      }
+    } catch {
+      /* keep last known stream strip */
+    }
   }
 
 const YOUTUBE_OAUTH_WAIT_MS = 5 * 60 * 1000;

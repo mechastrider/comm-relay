@@ -13,11 +13,13 @@ import * as dom from "./dom.js";
 import { state } from "./state.js";
 import { renderAboutVersion } from "./about.js";
 import { renderDiagnostics } from "./status.js";
+import { renderStreamStatus } from "./streams.js";
 import { renderRecentMessages } from "./messages.js";
 import { renderSettingsState } from "./ui-shell.js";
 import { updateOverlayPreviewNote } from "./overlay-preview.js";
 
 let lastDiagnosticsPayload = null;
+let lastStreamsPayload = null;
 
 export function initI18n() {
   const cached = readCachedLocale();
@@ -42,10 +44,17 @@ export function applyAdminLocale(locale) {
   if (lastDiagnosticsPayload) {
     renderDiagnostics(lastDiagnosticsPayload);
   }
+  if (lastStreamsPayload) {
+    renderStreamStatus(lastStreamsPayload);
+  }
 }
 
 export function rememberDiagnosticsPayload(payload) {
   lastDiagnosticsPayload = payload;
+}
+
+export function rememberStreamsPayload(payload) {
+  lastStreamsPayload = payload;
 }
 
 export function localeFromConfig(config) {

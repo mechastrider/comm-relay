@@ -97,4 +97,11 @@ func TestNewHandlerRoutes(t *testing.T) {
 		require.Contains(t, jsRec.Body.String(), "/api/messages/recent")
 		require.Contains(t, jsRec.Body.String(), "/ws")
 	})
+
+	t.Run("streams status", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/streams/status", nil))
+		require.Equal(t, http.StatusOK, rec.Code)
+		require.Contains(t, rec.Body.String(), `"platforms"`)
+	})
 }

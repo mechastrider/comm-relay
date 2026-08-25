@@ -315,8 +315,23 @@ export default {
   "platform.connected": "connected",
   "platform.connecting": "connecting",
   "platform.disconnected": "disconnected",
+  "platform.disabled": "disabled",
+  "platform.reconnecting": "reconnecting",
   "platform.error": "error",
   "platform.unknown": "unknown",
+
+  "streams.heading": "Streams",
+  "streams.total": "TOTAL",
+  "streams.totalCaption": "Sum across platforms",
+  "streams.platform.twitch": "Twitch",
+  "streams.platform.youtube": "YouTube",
+  "streams.platform.vk": "VK",
+
+  "stream.unknown": "unknown",
+  "stream.offline": "offline",
+  "stream.upcoming": "upcoming",
+  "stream.live": "live",
+  "stream.degraded": "degraded",
 
   "field.admin_time_locale": "Choose a supported language.",
   "field.admin_message_sound_volume": "Volume must be between 0% and 100%.",

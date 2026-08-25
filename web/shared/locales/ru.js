@@ -315,8 +315,23 @@ export default {
   "platform.connected": "подключён",
   "platform.connecting": "подключение",
   "platform.disconnected": "отключён",
+  "platform.disabled": "выключен",
+  "platform.reconnecting": "переподключение",
   "platform.error": "ошибка",
   "platform.unknown": "неизвестно",
+
+  "streams.heading": "Эфиры",
+  "streams.total": "ИТОГО",
+  "streams.totalCaption": "Суммарно на платформах",
+  "streams.platform.twitch": "Twitch",
+  "streams.platform.youtube": "YouTube",
+  "streams.platform.vk": "VK",
+
+  "stream.unknown": "неизвестно",
+  "stream.offline": "не в сети",
+  "stream.upcoming": "скоро",
+  "stream.live": "в эфире",
+  "stream.degraded": "деградация",
 
   "field.admin_time_locale": "Выберите поддерживаемый язык.",
   "field.admin_message_sound_volume": "Громкость должна быть от 0% до 100%.",

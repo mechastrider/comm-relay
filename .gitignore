@@ -30,3 +30,6 @@ var/
 
 # JavaScript dev tooling (ESLint)
 node_modules/
+
+# Ephemeral orchestrator task packets (not product artifacts)
+.agent-orchestration/
