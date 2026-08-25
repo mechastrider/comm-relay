@@ -5,7 +5,7 @@ description: Product and domain rules for CommRelay (comm-relay). Use when imple
 
 # CommRelay — domain
 
-Canonical brief: [`docs/concept.md`](../../../docs/concept.md).
+Canonical brief: [`docs/concept.md`](../../../docs/concept.md). Next horizon: [`docs/roadmap.md`](../../../docs/roadmap.md).
 
 ## Product goals
 
@@ -66,11 +66,12 @@ Extend with `display_name`, `avatar_url`, `badges` when available — keep backw
 | Stage 2 | YouTube Live Chat API + OAuth |
 | Later | VK Live, Kick, Trovo |
 
-## Config
+## Config and data
 
-- File: `config.json` (path configurable; default beside executable or user data dir).
-- Persist OAuth tokens and channel settings securely on disk; never log secrets.
-- Example keys: `server_port`, `twitch.enabled`, `twitch.channel`, `youtube.enabled`.
+- Operator settings: `config.json` (path configurable; default beside executable or user data dir). Persist OAuth tokens and channel settings securely on disk; never log secrets.
+- Viewer identities, merges, and stats: planned local SQLite **beside** the config file. Do not migrate `config.json` into SQLite.
+- Example config keys: `server_port`, `twitch.enabled`, `twitch.channel`, `youtube.enabled`.
+- Chat commands are operator-defined in admin (phase 6b); there is no built-in command pack.
 
 ## OBS overlay requirements
 
@@ -102,10 +103,9 @@ Hub skills state generic rules; this repo documents concrete paths:
 When touching architecture, consider documenting decisions for:
 
 1. Twitch IRC vs EventSub.
-2. YouTube OAuth UX (minimal user steps).
-3. JSON vs SQLite for settings/tokens.
-4. Plugin boundary for new platforms.
-5. Emoji provider memory budget.
+2. Plugin boundary for new platforms.
+
+Settled: YouTube OAuth via admin Connect + system browser; VK via public live WebSocket; emoji via provider cache; JSON for operator settings and SQLite for viewers/stats (`docs/roadmap.md`).
 
 ## Related skills
 
