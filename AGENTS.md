@@ -2,13 +2,12 @@
 
 This guide is for AI agents working on **CommRelay** — a local Go application that aggregates streaming chat (Twitch, YouTube, …) and feeds an OBS Browser Source overlay.
 
-Source of product requirements: [`docs/concept.md`](docs/concept.md).
+Product brief: [`docs/concept.md`](docs/concept.md) (Russian). Canonical implemented behavior: [`openspec/specs/`](openspec/specs/).
 
 ## Project Overview
 
 - **Local-only**: no cloud relay; one binary, HTTP + WebSocket on localhost.
-- **MVP**: Twitch IRC, WebSocket to overlay, admin UI and OBS overlay as plain HTML/CSS/JS.
-- **Later**: YouTube Live Chat (OAuth), more platforms, emoji providers (BTTV/FFZ/7TV).
+- **Current product**: Twitch IRC, YouTube Live (page or OAuth), VK Live, WebSocket overlay, admin UI, OBS dock, emotes, and overlay presets as plain HTML/CSS/JS.
 
 ## Architecture (target)
 
@@ -23,7 +22,8 @@ comm-relay/
 │   ├── connector/        # platform connectors (twitch, youtube, …)
 │   ├── api/              # HTTP routes, WebSocket /ws, static admin/overlay
 │   └── overlay/          # embedded or served static assets (optional split)
-├── web/                  # static admin + overlay (HTML/CSS/JS, no React on MVP)
+├── web/                  # static admin + overlay + dock (HTML/CSS/JS, no React)
+├── openspec/             # spec-driven planning (config, specs, changes)
 ├── docs/
 │   └── concept.md
 └── .agents/skills/
@@ -35,13 +35,13 @@ comm-relay/
 2. **Resilience**: auto-reconnect per connector; one connector failing must not crash the process.
 3. **Simple deployment**: single executable, Windows-friendly, minimal memory.
 4. **Logging**: `github.com/muonsoft/clog` (on `log/slog`) — Debug/Info/Warn/Error — see skill `golang-logging`.
-5. **Small, explicit changes**: match existing package layout; update `docs/concept.md` only when the product contract changes.
+5. **Small, explicit changes**: match existing package layout; plan behavior changes as OpenSpec deltas; update `docs/concept.md` only when the product contract changes.
 6. **Changelog for user-visible work**: when a task changes **behavior** the user can notice — config, API contract, admin/overlay/dock UX, connectors as experienced in the UI, or user-facing docs (README) — append concise Russian bullets to `CHANGELOG.md` under `## [Unreleased]` (skill `changelog`). Skip when there is no user-visible impact: refactors, file/module splits, tests-only, lint, or internal agent/tooling — even if `web/admin` or `web/overlay` files changed. Never erase or rewrite existing `## [X.Y.Z]` sections while editing Unreleased.
 
 ## Language Conventions
 
 - Code identifiers and Go comments: English.
-- Agent skills (`SKILL.md`) and `AGENTS.md`: English.
+- Agent skills (`SKILL.md`), `AGENTS.md`, and OpenSpec artifacts: English.
 - `docs/concept.md` may stay in Russian as the product brief.
 
 ## Agent Skills
@@ -91,6 +91,43 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 |-------|----------|
 | `skill-authoring` | Editing or publishing skills in `muonsoft/skills` — hub vs consumer boundaries, `catalog.yaml`, `lint-hub` |
 | `task-delegation` | Delegating bounded coding slices; hub skill push/pull workflow |
+| `openspec-propose` | Create a change and generate all planning artifacts in one step |
+| `openspec-explore` | Think through ideas, problems, and requirements before or during a change |
+| `openspec-apply-change` | Implement tasks from an existing change |
+| `openspec-update-change` | Revise a change's planning artifacts and keep them coherent |
+| `openspec-sync-specs` | Sync canonical specs from a change without archiving |
+| `openspec-archive-change` | Archive a completed change |
+
+## OpenSpec workflow
+
+Changes that alter observable behavior are planned using **OpenSpec** (CLI `openspec` 1.8+). Specs describe shipping behavior captured from code; future work is a delta against `openspec/specs/`.
+
+**Key paths**
+
+| Path | Purpose |
+|------|---------|
+| `openspec/config.yaml` | Project context + per-artifact rules used by the CLI |
+| `openspec/specs/<slug>/spec.md` | Canonical specs (living documents, updated in-place) |
+| `openspec/changes/<date>-<name>/` | In-progress change proposal |
+| `openspec/changes/archive/` | Completed changes (decision record) |
+
+**Artifact sequence per change**
+
+1. `proposal.md` — Why (problem/opportunity, affected capabilities)
+2. `specs/<capability>/spec.md` — What (WHEN/THEN/AND requirements per capability)
+3. `design.md` — How (decisions, tradeoffs, non-goals)
+4. `tasks.md` — Implementation checklist (grouped by area, each item ≤ 2 h)
+
+**CLI** (`openspec` must be installed)
+
+```bash
+openspec new change "<name>"                         # scaffold a new change
+openspec status --change "<name>" --json            # check artifact status + next steps
+openspec instructions <artifact> --change "<name>"  # get template for next artifact
+openspec archive "<name>"                            # archive a completed change
+```
+
+Use **skills-only** OpenSpec delivery (`openspec config set delivery skills`). Host slash commands under `.cursor/commands/opsx/` are not installed.
 
 ## Backend Guidelines
 
@@ -111,6 +148,7 @@ Before reporting a task as done:
 - If the change is user-visible (see Core Principle 6): update `CHANGELOG.md` under `[Unreleased]` with skill `changelog` — do not wait for a release task. If the change is a no-behavior refactor of admin/overlay code, skip the changelog.
 - If preparing a release: move `[Unreleased]` into a versioned section, set the date, and keep README artifact names/install steps in sync.
 - If static UI changed: smoke-check overlay (transparent background, message limit) and admin forms.
+- If observable behavior changed: keep `openspec/specs/` in sync (change delta → archive or `openspec-sync-specs`).
 - State clearly if a check could not be run and why.
 
 ## Cursor Cloud specific instructions
@@ -135,14 +173,13 @@ Standard commands from the repo root (documented in **Completion Checklist** abo
 - Overrides: `-addr` (listen), `-config`, `-web`, `-debug` — see `cmd/comm-relay-server/main.go`.
 - For a long-lived background process in Cloud Agent VMs, use **tmux** (see system shell instructions), e.g. session `comm-relay-dev` with `go run ./cmd/comm-relay-server` or a built binary.
 
-### Smoke / hello world (current scaffold)
+### Smoke / hello world
 
 With the server running:
 
 1. `curl -s http://127.0.0.1:17877/health` → `{"status":"ok"}`
-2. Browser: `/` (admin placeholder), `/overlay` (transparent background for OBS)
-
-WebSocket (`/ws`) and Twitch ingest are **not implemented yet**; full chat E2E requires those tasks (see `docs/task-tracker.md`).
+2. Browser: `/` (admin), `/overlay` (transparent OBS Browser Source), `/dock/messages` (OBS dock)
+3. WebSocket: `GET /ws` for live `message`, `overlay_settings`, and `message_deleted` events
 
 ### Gotchas
 
