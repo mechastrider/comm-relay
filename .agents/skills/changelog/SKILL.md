@@ -41,7 +41,7 @@ Before adding or keeping any `[Unreleased]` bullet, answer:
 > Would a streamer or OBS operator notice this change without reading the code, PR, or commit message?
 
 - **Yes** → write a short Russian bullet about **behavior / impact** (what they see or must do).
-- **No** → **do not** add a changelog entry. Pure refactors, file splits, ES modules, package renames, extract helpers, lint/test-only, agent/tooling, and internal wiring belong in the commit/PR — not in `CHANGELOG.md`.
+- **No** → **do not** add a changelog entry. Pure refactors, file splits, ES modules, package renames, extract helpers, lint/test-only, agent/tooling, internal wiring, and **marketing/repo presentation** (README promo or hero images, banners, social graphics, screenshots with no new product behavior) belong in the commit/PR — not in `CHANGELOG.md`.
 
 Touching `web/admin`, `web/overlay`, or connectors is **not** enough by itself. Changelog only when the **product behavior** for the user changes (new control, visible layout/theme change, bug they could hit, config/API they use).
 
@@ -49,7 +49,7 @@ Touching `web/admin`, `web/overlay`, or connectors is **not** enough by itself. 
 
 Ban these from changelog bullets (including “без изменения поведения” apologies):
 
-- Repo or URL paths (`/shared/...`, `web/admin/js/...`, `internal/...`)
+- Repo or URL paths (`/shared/...`, `web/admin/js/...`, `internal/...`, `docs/images/poster.jpg`)
 - Package, module, or file names; “разложено на ES-модули”, “extract”, “refactor”, “god-module”
 - Architecture/CI/lint details, test names, skill/agent notes
 - Lists of internal helpers or package renames with no user-facing effect
