@@ -1,0 +1,49 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Go 1.26, net/http, gorilla/websocket, go-twitch-irc, Wails v2 desktop
+  Domain: local multi-platform streaming chat relay for OBS Browser Source (Twitch, YouTube Live, VK Live)
+  Deployment: single local process; no cloud relay; HTTP + WebSocket on localhost (default 127.0.0.1:17877)
+  API: POST-action (POST /api/<resource>/<action>), snake_case JSON; GET allowed for reads, static, health, WebSocket upgrade, and OAuth callbacks
+  Backend packages: cmd/comm-relay-server/, cmd/comm-relay-desktop/, internal/{bootstrap,config,bus,connector,api,emote,imagelink,desktopentry}/
+  Frontend: vanilla HTML/CSS/JS under web/{admin,overlay,dock,shared}/ — no React on current product
+  Persistence: config.json beside the executable (server) or in the user config dir (desktop)
+  Tests: go test ./...; golangci-lint run ./...; npm run lint for web/**/*.js
+  Product brief: docs/concept.md (Russian). Canonical implemented behavior: openspec/specs/
+  Principles: unified ChatMessage; overlay never branches on platform internals; one connector failing must not crash the process; changelog only for streamer-visible impact
+
+rules:
+  proposal:
+    - Keep under 400 words
+    - Write in English
+    - "Required sections: Why, What Changes, Capabilities, Impact"
+    - "Capabilities lists new/modified spec slugs (matching openspec/specs/<slug>/)"
+  specs:
+    - Write in English
+    - Use WHEN/THEN/AND scenario format for all testable requirements
+    - One spec file per capability slug at openspec/specs/<slug>/spec.md
+    - Mark delta requirements as ADDED / MODIFIED / REMOVED
+    - "Use SHALL or MUST in requirement text"
+    - "Describe observable behavior; do not name internal types except public JSON/API fields"
+  design:
+    - Write in English
+    - "Required sections: Context, Goals, Decisions"
+    - "Each decision states the choice made and the rationale"
+    - Include Non-Goals to make scope explicit
+  tasks:
+    - Write in English
+    - "Group by area: backend, frontend, docs, verification"
+    - Each checklist item should be completable in under 2 hours
+    - "Verification section must include exact test/lint commands to run"
+    - "Do not mandate CHANGELOG bullets unless the change is streamer-visible"
+
+operations:
+  apply:
+    guidance:
+      - Match existing package layout under cmd/ and internal/
+      - Mutations stay POST /api/<resource>/<action>; never add PUT/DELETE/PATCH or /api/{id} paths
+      - Do not log OAuth tokens, client secrets, or SOCKS passwords
+  archive:
+    guidance:
+      - Merge delta specs into openspec/specs/ before moving the change
+      - Leave docs/concept.md unchanged unless the product contract itself changed

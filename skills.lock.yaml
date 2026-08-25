@@ -2,13 +2,14 @@ version: 4
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 3261575c5b6926dc943625e6890749aa95f49ba3
+    commit: f5a564586bd9f86db9d6fb7bf11847018ced70dd
 preset: desktop-app
 include:
     - theme: backend/go
     - id: web-static-frontend
     - id: ux-form-practices
     - id: web-constrained-layout
+    - tag: openspec
 exclude:
     - id: api-conventions
     - id: backend-structure
@@ -31,6 +32,13 @@ selected_packages:
     - golang-validation
     - improve
     - mcp-tool-input-schema
+    - openspec-apply-change
+    - openspec-archive-change
+    - openspec-explore
+    - openspec-propose
+    - openspec-sync-specs
+    - openspec-update-change
+    - openspec-workflow
     - runnable-background-processes
     - skill-authoring
     - slides
@@ -181,6 +189,76 @@ packages:
               src: .
               dest: .agents/skills/mcp-tool-input-schema
               installed_hash: sha256:557f6ec7f118bd436d12a443bde3be17aa0201209ff1140630e53c4824d43c3f
+    openspec-apply-change:
+        hub_path: process/openspec-apply-change
+        upstream_hash: sha256:ced3fe15f17d7ea871932f031699bd34da209e8eaeabfb3a2a5192c8426fd3d2
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/openspec-apply-change
+              installed_hash: sha256:ced3fe15f17d7ea871932f031699bd34da209e8eaeabfb3a2a5192c8426fd3d2
+    openspec-archive-change:
+        hub_path: process/openspec-archive-change
+        upstream_hash: sha256:1262e80d26c2e79f55a8da1f4e7322324e77763c6da005354f0eb2d96ed2c573
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/openspec-archive-change
+              installed_hash: sha256:1262e80d26c2e79f55a8da1f4e7322324e77763c6da005354f0eb2d96ed2c573
+    openspec-explore:
+        hub_path: process/openspec-explore
+        upstream_hash: sha256:91c08d6757ba1351d99e5ee2c432e8a34ba275f83170e7a8e80689cddb52ce94
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/openspec-explore
+              installed_hash: sha256:91c08d6757ba1351d99e5ee2c432e8a34ba275f83170e7a8e80689cddb52ce94
+    openspec-propose:
+        hub_path: process/openspec-propose
+        upstream_hash: sha256:a0e9f68e87e577fe51c54c6ab6d2d5f96f1556e1984c2b0bfa46d3ed37e24571
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/openspec-propose
+              installed_hash: sha256:a0e9f68e87e577fe51c54c6ab6d2d5f96f1556e1984c2b0bfa46d3ed37e24571
+    openspec-sync-specs:
+        hub_path: process/openspec-sync-specs
+        upstream_hash: sha256:bba2fb69fe34e0148effa3720aa16020ee19ed327140aad7a3aa07d4a3af4822
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/openspec-sync-specs
+              installed_hash: sha256:bba2fb69fe34e0148effa3720aa16020ee19ed327140aad7a3aa07d4a3af4822
+    openspec-update-change:
+        hub_path: process/openspec-update-change
+        upstream_hash: sha256:070f8b09c3a88c4bf01c173f9c0d8ddd04a4f0d8e797b109f3068c0e32da7c29
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/openspec-update-change
+              installed_hash: sha256:070f8b09c3a88c4bf01c173f9c0d8ddd04a4f0d8e797b109f3068c0e32da7c29
+    openspec-workflow:
+        hub_path: process/openspec-workflow
+        upstream_hash: sha256:e751550c340eab6a21ebfcd705edb73bd60f46db411ab195f056b147dc74175e
+        artifacts:
+            - id: spec-driven-schema
+              kind: schema
+              mode: tree
+              src: schemas/spec-driven
+              dest: openspec/schemas/spec-driven
+              installed_hash: sha256:971031841260457c4fe01284ab9c81712ef729143960b824af9db138dd0de9bd
     runnable-background-processes:
         hub_path: backend/go/runnable-background-processes
         upstream_hash: sha256:53586052b6b8479a41fa372fbfc54ff155759895bc8871225b9786b95833fe2f
