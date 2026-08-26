@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="styles.css?v=20">
   <script>
     (function () {
       try {
@@ -43,7 +43,10 @@
       </div>
 
       <div class="top-actions">
-        <button id="new-stream-button" class="btn-physical" type="button" data-i18n="stream.newStream">New stream</button>
+        <button id="new-stream-button" class="btn-physical has-tooltip" type="button">
+          <span data-i18n="stream.newStream">New stream</span>
+          <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+        </button>
         <button id="save-button" class="btn-physical btn-start" type="submit" form="settings-form" data-save-button disabled data-i18n="shell.save">Save</button>
       </div>
     </header>
@@ -110,14 +113,30 @@
           </div>
 
           <div class="control-grid">
-            <button class="btn-physical" type="button" data-dialog-target="connections-dialog" data-i18n="shell.connections">Connections</button>
-            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog" data-i18n="shell.obs">OBS</button>
-            <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog" data-i18n="shell.richChat">Rich chat</button>
-            <button class="btn-physical" type="button" data-dialog-target="sound-dialog" data-i18n="shell.sound">Sound</button>
-            <button class="btn-physical" type="button" data-dialog-target="interface-dialog" data-i18n="shell.interface">Interface</button>
-            <button class="btn-physical control-grid-about about-btn" type="button" data-dialog-target="about-dialog">
+            <button class="btn-physical has-tooltip" type="button" data-dialog-target="connections-dialog">
+              <span data-i18n="shell.connections">Connections</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.connectionsHint">Twitch, YouTube, VK Live, and SOCKS5 proxy.</span>
+            </button>
+            <button class="btn-physical has-tooltip" type="button" data-dialog-target="overlay-dialog">
+              <span data-i18n="shell.obs">OBS</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.obsHint">Browser Source URLs, presets, and overlay appearance.</span>
+            </button>
+            <button class="btn-physical has-tooltip" type="button" data-dialog-target="rich-chat-dialog">
+              <span data-i18n="shell.richChat">Rich chat</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.richChatHint">Emotes and safe image-link previews in chat and overlay.</span>
+            </button>
+            <button class="btn-physical has-tooltip" type="button" data-dialog-target="sound-dialog">
+              <span data-i18n="shell.sound">Sound</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.soundHint">Alert sound when a new chat message arrives.</span>
+            </button>
+            <button class="btn-physical has-tooltip" type="button" data-dialog-target="interface-dialog">
+              <span data-i18n="shell.interface">Interface</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.interfaceHint">UI language and viewer scoring settings.</span>
+            </button>
+            <button class="btn-physical control-grid-about about-btn has-tooltip" type="button" data-dialog-target="about-dialog">
               <span data-i18n="shell.about">About</span>
               <small data-i18n="shell.aboutSubtitle">VERSION · SUPPORT</small>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.aboutHint">Version, privacy, and support links.</span>
             </button>
           </div>
 
@@ -531,20 +550,24 @@
                     </button>
                     <span id="preset-url-status" class="preset-island__status" role="status" aria-live="polite"></span>
                   </div>
-                  <div class="preset-island__divider" aria-hidden="true"></div>
-                  <div class="surface-pills" role="group" data-i18n-aria-label="obs.previewSurface">
-                    <button id="obs-surface-chat" class="surface-pill" type="button" data-obs-preview-surface="chat" aria-pressed="true" data-i18n="obs.surfaceChat">Chat</button>
-                    <button id="obs-surface-leaderboard" class="surface-pill" type="button" data-obs-preview-surface="leaderboard" aria-pressed="false" data-i18n="obs.surfaceLeaderboard">Leaderboard</button>
-                  </div>
+                </div>
+              </div>
+
+              <div class="surface-tabs" role="tablist" data-i18n-aria-label="obs.previewSurface">
+                <p class="surface-tabs__hint" data-i18n="obs.surfaceTabsHint">One scene look. Switch surface to edit its fields and preview.</p>
+                <div class="surface-tabs__list">
+                  <button id="obs-surface-chat" class="surface-tab" type="button" role="tab" data-obs-preview-surface="chat" aria-selected="true" aria-pressed="true" data-i18n="obs.surfaceChat">Chat</button>
+                  <button id="obs-surface-leaderboard" class="surface-tab" type="button" role="tab" data-obs-preview-surface="leaderboard" aria-selected="false" aria-pressed="false" data-i18n="obs.surfaceLeaderboard">Leaderboard</button>
                 </div>
               </div>
 
               <div class="overlay-settings-column">
                 <section class="panel overlay-appearance-panel">
                   <div class="panel__body">
-                    <p class="panel-intro" data-i18n="obs.displayIntro">Appearance settings for the OBS Browser Source overlay. The preview reflects unsaved display changes.</p>
+                    <p class="panel-intro" data-i18n="obs.displayIntro">Shared scene look for every Browser Source that uses this preset. The preview follows the surface tab above.</p>
 
                     <div class="form form--compact form--overlay-display">
+                      <h3 class="overlay-section-title form__field--full" data-i18n="obs.sceneLook">Scene look</h3>
                       <div class="form__field form__field--full">
                         <label for="overlay-theme" data-i18n="obs.theme">Theme</label>
                         <select id="overlay-theme" name="overlay_theme">
@@ -571,6 +594,8 @@
                         <label for="overlay-text-edge-strength" data-i18n="obs.textEdgeStrength">Edge strength</label>
                         <input id="overlay-text-edge-strength" type="number" min="0" max="8" step="1" inputmode="numeric">
                       </div>
+
+                      <h3 class="overlay-section-title form__field--full" data-i18n="obs.thisSurface">This surface</h3>
 
                       <div id="overlay-chat-fields" class="overlay-surface-fields">
                       <div class="form__field">
@@ -1151,6 +1176,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=19"></script>
+  <script type="module" src="app.js?v=21"></script>
 </body>
 </html>

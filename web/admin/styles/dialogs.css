@@ -226,27 +226,6 @@
   color: var(--text);
 }
 
-.surface-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-left: auto;
-}
-
-.surface-pill {
-  min-height: 32px;
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.surface-pill[aria-pressed="true"] {
-  border-color: var(--amber);
-  color: var(--text);
-}
-
 @media (max-width: 900px) {
   .obs-sources {
     grid-template-columns: 1fr;

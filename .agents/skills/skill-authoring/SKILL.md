@@ -35,6 +35,9 @@ a hub skill.
 ```markdown
 - Icon-only controls must show a hover/focus tooltip with a short localized label;
   also expose an accessible name (`aria-label` or visible text).
+- Controls whose visible label is jargon or incomplete for a new user must show a
+  short explanatory hover/focus tooltip (what the action does), without replacing
+  the short accessible name with a long `aria-label`.
 - Consumer repos implement markup and styles; document the concrete pattern in
   `AGENTS.md` or a local overlay skill that survives `agentmem skills pull`.
 ```

@@ -1,11 +1,11 @@
-@import url("../shared/tooltip.css");
+@import url("../shared/tooltip.css?v=20");
 @import url("./styles/tokens.css");
 @import url("./styles/shell.css");
 @import url("./styles/console.css");
 @import url("./styles/systems.css");
-@import url("./styles/dialogs.css");
-@import url("./styles/dialog-frame.css");
+@import url("./styles/dialogs.css?v=18");
+@import url("./styles/dialog-frame.css?v=19");
 @import url("./styles/forms.css?v=16");
 @import url("./styles/about.css");
 @import url("./styles/viewers.css");
-@import url("./styles/media.css");
+@import url("./styles/media.css?v=18");

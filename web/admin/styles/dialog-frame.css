@@ -46,7 +46,7 @@
 .overlay-editor {
   display: grid;
   grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 12px;
   height: 100%;
   min-height: 0;
@@ -139,8 +139,8 @@
 .preset-island__url-input {
   flex: 1 1 0;
   width: auto;
-  min-width: 72px;
-  max-width: 220px;
+  min-width: 160px;
+  max-width: none;
   min-height: 30px;
   max-height: 30px;
   padding: 4px 7px;
@@ -188,9 +188,79 @@
   color: var(--amber);
 }
 
+.surface-tabs {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-width: 0;
+  padding: 0 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.surface-tabs__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+  max-width: 42ch;
+}
+
+.surface-tabs__list {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0;
+  min-width: 0;
+}
+
+.surface-tab {
+  position: relative;
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.surface-tab:hover {
+  color: var(--text);
+}
+
+.surface-tab[aria-selected="true"],
+.surface-tab[aria-pressed="true"] {
+  color: var(--text);
+  border-bottom-color: var(--amber);
+}
+
+.overlay-section-title {
+  margin: 4px 0 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  color: var(--subtle);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.overlay-section-title:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .overlay-settings-column {
   grid-column: 1;
-  grid-row: 2;
+  grid-row: 3;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -200,7 +270,7 @@
 
 .overlay-editor > .overlay-preview-panel {
   grid-column: 2;
-  grid-row: 2;
+  grid-row: 3;
 }
 
 .overlay-editor > .panel {

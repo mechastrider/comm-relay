@@ -29,22 +29,42 @@ export function updateOBSSetupURLs() {
   }
 }
 
+function copyButtonLabel(button) {
+  const tooltip = button.querySelector(".ui-tooltip");
+  if (tooltip) {
+    return tooltip.textContent || "";
+  }
+  return button.textContent || "";
+}
+
+function setCopyButtonLabel(button, label) {
+  const tooltip = button.querySelector(".ui-tooltip");
+  if (tooltip) {
+    tooltip.textContent = label;
+    button.setAttribute("aria-label", label);
+    return;
+  }
+  button.textContent = label;
+}
+
 export function resetOBSCopyFeedback() {
   if (state.obsCopyFeedbackTimer !== null) {
     window.clearTimeout(state.obsCopyFeedbackTimer);
     state.obsCopyFeedbackTimer = null;
   }
   if (state.obsCopyFeedbackButton) {
-    state.obsCopyFeedbackButton.textContent =
-      state.obsCopyFeedbackButton.dataset.copyDefaultText || t("obs.copyUrl");
+    setCopyButtonLabel(
+      state.obsCopyFeedbackButton,
+      state.obsCopyFeedbackButton.dataset.copyDefaultText || t("obs.copyUrl")
+    );
     state.obsCopyFeedbackButton = null;
   }
 }
 
 export function showOBSCopyFeedback(button, message, copied) {
   resetOBSCopyFeedback();
-  button.dataset.copyDefaultText = button.dataset.copyDefaultText || button.textContent;
-  button.textContent = copied ? t("obs.copyCopied") : t("obs.copyFailed");
+  button.dataset.copyDefaultText = button.dataset.copyDefaultText || copyButtonLabel(button) || t("obs.copyUrl");
+  setCopyButtonLabel(button, copied ? t("obs.copyCopied") : t("obs.copyFailed"));
   state.obsCopyFeedbackButton = button;
   if (dom.obsCopyStatus) {
     dom.obsCopyStatus.textContent = message;

@@ -274,10 +274,11 @@ export function getPreviewSurface() {
 export function applyPreviewSurface(surface) {
     const current = surface === "leaderboard" ? "leaderboard" : "chat";
     document.querySelectorAll("[data-obs-preview-surface]").forEach(function (button) {
-      button.setAttribute(
-        "aria-pressed",
-        button.getAttribute("data-obs-preview-surface") === current ? "true" : "false"
-      );
+      const selected = button.getAttribute("data-obs-preview-surface") === current;
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      if (button.getAttribute("role") === "tab") {
+        button.setAttribute("aria-selected", selected ? "true" : "false");
+      }
     });
     if (dom.overlayChatFields) {
       dom.overlayChatFields.hidden = current === "leaderboard";
