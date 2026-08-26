@@ -55,6 +55,12 @@ export const overlayPreviewBackground = document.getElementById("overlay-preview
 export const overlayPreviewReplay = document.getElementById("overlay-preview-replay");
 export const overlayPreviewOpen = document.getElementById("overlay-preview-open");
 export const overlayPreviewNote = document.getElementById("overlay-preview-note");
+export const overlayChatFields = document.getElementById("overlay-chat-fields");
+export const overlayLeaderboardFields = document.getElementById("overlay-leaderboard-fields");
+export const overlayLeaderboardFontSize = document.getElementById("overlay-leaderboard-font-size");
+export const overlayLeaderboardLayout = document.getElementById("overlay-leaderboard-layout");
+export const overlayLeaderboardPeriod = document.getElementById("overlay-leaderboard-period");
+export const overlayPreviewModeControl = document.getElementById("overlay-preview-mode-control");
 export const obsSetupTab = document.getElementById("obs-setup-tab");
 export const obsAppearanceTab = document.getElementById("obs-appearance-tab");
 export const obsSetupPanel = document.getElementById("obs-setup-panel");
@@ -63,7 +69,9 @@ export const obsCopyStatus = document.getElementById("obs-copy-status");
 export const obsOverlayOpen = document.getElementById("obs-overlay-open");
 export const obsDockOpen = document.getElementById("obs-dock-open");
 export const obsOverlayUrl = document.getElementById("obs-overlay-url");
-export const obsOverlayPresetSelect = document.getElementById("obs-overlay-preset-select");
+export const obsLeaderboardUrl = document.getElementById("obs-leaderboard-url");
+export const obsLeaderboardPeriod = document.getElementById("obs-leaderboard-period");
+export const obsLeaderboardOpen = document.getElementById("obs-leaderboard-open");
 export const presetIslandUrl = document.getElementById("preset-island-url");
 export const presetUrlStatus = document.getElementById("preset-url-status");
 export const presetIslandCount = document.getElementById("preset-island-count");
@@ -100,9 +108,6 @@ export const newStreamPromptCancel = document.getElementById("new-stream-prompt-
 export const newStreamPromptConfirm = document.getElementById("new-stream-prompt-confirm");
 export const pointsPerMessageInput = document.getElementById("points-per-message");
 export const dayResetHourInput = document.getElementById("day-reset-hour");
-export const obsLeaderboardPeriod = document.getElementById("obs-leaderboard-period");
-export const obsLeaderboardUrl = document.getElementById("obs-leaderboard-url");
-export const obsLeaderboardOpen = document.getElementById("obs-leaderboard-open");
 export const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
 export const messageSoundVolumeInput = document.getElementById("message-sound-volume");
 export const messageSoundVolumeLabel = document.getElementById("message-sound-volume-label");
@@ -127,6 +132,7 @@ export const fieldErrors = {
     overlay_max_messages: document.getElementById("overlay-max-messages-error"),
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
     overlay_font_size_px: document.getElementById("overlay-font-size-error"),
+    overlay_leaderboard_font_size_px: document.getElementById("overlay-leaderboard-font-size-error"),
     overlay_display_mode: document.getElementById("overlay-display-mode-error"),
     overlay_theme: document.getElementById("overlay-theme-error"),
     overlay_image_previews_allowed_hosts: document.getElementById("image-previews-allowed-hosts-error"),
@@ -149,6 +155,7 @@ export const fieldInputs = {
     overlay_max_messages: overlayMaxMessages,
     overlay_message_ttl_seconds: overlayMessageTTL,
     overlay_font_size_px: overlayFontSize,
+    overlay_leaderboard_font_size_px: overlayLeaderboardFontSize,
     overlay_display_mode: overlayDisplayMode,
     overlay_theme: overlayTheme,
     overlay_image_previews_allowed_hosts: imagePreviewsAllowedHosts,

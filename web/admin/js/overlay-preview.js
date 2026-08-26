@@ -5,6 +5,7 @@ import {
   OVERLAY_FONT_SIZE_MAX,
   OVERLAY_THEMES,
   OVERLAY_PREVIEW_MODE_KEY,
+  OVERLAY_PREVIEW_SURFACE_KEY,
   OVERLAY_PREVIEW_BACKGROUND_KEY,
   OVERLAY_PREVIEW_WIDTH_KEY,
   OVERLAY_PREVIEW_HEIGHT_KEY,
@@ -18,11 +19,12 @@ import {
   OVERLAY_PREVIEW_SIZES,
 } from './constants.js';
 import { t } from './i18n-ui.js';
-import { collectAppearanceQuery } from './overlay-appearance.js';
+import { collectAppearanceQuery, updatePresetIsland } from './overlay-appearance.js';
 import {
   DEFAULT_PREVIEW_BACKGROUND,
   normalizePreviewBackground,
 } from '../../overlay/overlay-settings.js';
+import { normalizeLeaderboardLayout } from './leaderboard-url.js';
 
 export function overlayDisplaySettingsChanged(payload) {
     if (!state.currentConfig) {
@@ -168,59 +170,87 @@ export function buildOverlayPreviewURL(previewMode) {
     const persistedOverlay = state.currentConfig && state.currentConfig.overlay
       ? state.currentConfig.overlay
       : {};
-    const url = new URL("/overlay", window.location.origin);
-    if (previewMode) {
-      url.searchParams.set("preview", previewMode);
+    const surface = getPreviewSurface();
+    const url = new URL(
+      surface === "leaderboard" ? "/overlay/leaderboard" : "/overlay",
+      window.location.origin
+    );
+    const mode = surface === "leaderboard" ? "sample" : previewMode;
+    if (mode) {
+      url.searchParams.set("preview", mode);
       url.searchParams.set(
         "preview_background",
         normalizePreviewBackground(dom.overlayPreviewBackground && dom.overlayPreviewBackground.value)
       );
     }
-    url.searchParams.set(
-      "max_messages",
-      String(
-        overlayPreviewNumber(
-          dom.overlayMaxMessages,
-          1,
-          Number.MAX_SAFE_INTEGER,
-          typeof persistedOverlay.max_messages === "number"
-            ? persistedOverlay.max_messages
-            : 30
+    if (surface === "leaderboard") {
+      url.searchParams.set(
+        "period",
+        (dom.overlayLeaderboardPeriod && dom.overlayLeaderboardPeriod.value) ||
+          (dom.obsLeaderboardPeriod && dom.obsLeaderboardPeriod.value) ||
+          "session"
+      );
+      url.searchParams.set(
+        "layout",
+        normalizeLeaderboardLayout(dom.overlayLeaderboardLayout && dom.overlayLeaderboardLayout.value)
+      );
+      url.searchParams.set(
+        "font_size_px",
+        String(
+          overlayPreviewNumber(
+            dom.overlayLeaderboardFontSize,
+            OVERLAY_FONT_SIZE_MIN,
+            OVERLAY_FONT_SIZE_MAX,
+            overlayPreviewNumber(
+              dom.overlayFontSize,
+              OVERLAY_FONT_SIZE_MIN,
+              OVERLAY_FONT_SIZE_MAX,
+              typeof persistedOverlay.font_size_px === "number" ? persistedOverlay.font_size_px : 18
+            )
+          )
         )
-      )
-    );
-    url.searchParams.set(
-      "message_ttl_seconds",
-      String(
-        overlayPreviewNumber(
-          dom.overlayMessageTTL,
-          0,
-          Number.MAX_SAFE_INTEGER,
-          typeof persistedOverlay.message_ttl_seconds === "number"
-            ? persistedOverlay.message_ttl_seconds
-            : 20
+      );
+    } else {
+      url.searchParams.set(
+        "max_messages",
+        String(
+          overlayPreviewNumber(
+            dom.overlayMaxMessages,
+            1,
+            Number.MAX_SAFE_INTEGER,
+            typeof persistedOverlay.max_messages === "number" ? persistedOverlay.max_messages : 30
+          )
         )
-      )
-    );
-    url.searchParams.set(
-      "font_size_px",
-      String(
-        overlayPreviewNumber(
-          dom.overlayFontSize,
-          OVERLAY_FONT_SIZE_MIN,
-          OVERLAY_FONT_SIZE_MAX,
-          typeof persistedOverlay.font_size_px === "number"
-            ? persistedOverlay.font_size_px
-            : 18
+      );
+      url.searchParams.set(
+        "message_ttl_seconds",
+        String(
+          overlayPreviewNumber(
+            dom.overlayMessageTTL,
+            0,
+            Number.MAX_SAFE_INTEGER,
+            typeof persistedOverlay.message_ttl_seconds === "number"
+              ? persistedOverlay.message_ttl_seconds
+              : 20
+          )
         )
-      )
-    );
-    url.searchParams.set(
-      "display_mode",
-      dom.overlayDisplayMode && dom.overlayDisplayMode.value === "compact"
-        ? "compact"
-        : "normal"
-    );
+      );
+      url.searchParams.set(
+        "font_size_px",
+        String(
+          overlayPreviewNumber(
+            dom.overlayFontSize,
+            OVERLAY_FONT_SIZE_MIN,
+            OVERLAY_FONT_SIZE_MAX,
+            typeof persistedOverlay.font_size_px === "number" ? persistedOverlay.font_size_px : 18
+          )
+        )
+      );
+      url.searchParams.set(
+        "display_mode",
+        dom.overlayDisplayMode && dom.overlayDisplayMode.value === "compact" ? "compact" : "normal"
+      );
+    }
     url.searchParams.set(
       "theme",
       normalizeOverlayTheme(dom.overlayTheme && dom.overlayTheme.value)
@@ -234,6 +264,33 @@ export function buildOverlayPreviewURL(previewMode) {
     return url;
   }
 
+export function getPreviewSurface() {
+    const pressed = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
+    return pressed && pressed.getAttribute("data-obs-preview-surface") === "leaderboard"
+      ? "leaderboard"
+      : "chat";
+}
+
+export function applyPreviewSurface(surface) {
+    const current = surface === "leaderboard" ? "leaderboard" : "chat";
+    document.querySelectorAll("[data-obs-preview-surface]").forEach(function (button) {
+      button.setAttribute(
+        "aria-pressed",
+        button.getAttribute("data-obs-preview-surface") === current ? "true" : "false"
+      );
+    });
+    if (dom.overlayChatFields) {
+      dom.overlayChatFields.hidden = current === "leaderboard";
+    }
+    if (dom.overlayLeaderboardFields) {
+      dom.overlayLeaderboardFields.hidden = current !== "leaderboard";
+    }
+    document.querySelectorAll(".overlay-chat-only").forEach(function (element) {
+      element.hidden = current === "leaderboard";
+    });
+    writeOverlayPreviewPreference(OVERLAY_PREVIEW_SURFACE_KEY, current);
+}
+
 export function updateOverlayPreviewOpenLink() {
     if (dom.overlayPreviewOpen) {
       dom.overlayPreviewOpen.href = buildOverlayPreviewURL("").toString();
@@ -242,6 +299,10 @@ export function updateOverlayPreviewOpenLink() {
 
 export function updateOverlayPreviewNote() {
     if (!dom.overlayPreviewNote || !dom.overlayPreviewMode) {
+      return;
+    }
+    if (getPreviewSurface() === "leaderboard") {
+      dom.overlayPreviewNote.textContent = t("obs.previewNoteLeaderboard");
       return;
     }
     dom.overlayPreviewNote.textContent = dom.overlayPreviewMode.value === "live"
@@ -327,6 +388,20 @@ export function initOverlayPreview() {
     );
     dom.overlayPreviewMode.value = storedMode === "live" ? "live" : "sample";
 
+    applyPreviewSurface(
+      readOverlayPreviewPreference(OVERLAY_PREVIEW_SURFACE_KEY, "chat")
+    );
+
+    document.querySelectorAll("[data-obs-preview-surface]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        applyPreviewSurface(button.getAttribute("data-obs-preview-surface"));
+        updatePresetIsland();
+        updateOverlayPreviewNote();
+        document.dispatchEvent(new Event("overlay-preview-refresh"));
+        refreshOverlayPreview(true);
+      });
+    });
+
     const storedBackground = readOverlayPreviewPreference(
       OVERLAY_PREVIEW_BACKGROUND_KEY,
       DEFAULT_PREVIEW_BACKGROUND
@@ -360,6 +435,23 @@ export function initOverlayPreview() {
     applyOverlayPreviewBackground();
     updateOverlayPreviewNote();
     updateOverlayPreviewOpenLink();
+
+    function syncLeaderboardPeriod(source) {
+      const value = source && source.value ? source.value : "session";
+      [dom.obsLeaderboardPeriod, dom.overlayLeaderboardPeriod].forEach(function (input) {
+        if (input && input !== source) {
+          input.value = value;
+        }
+      });
+    }
+    if (dom.overlayLeaderboardPeriod && dom.obsLeaderboardPeriod) {
+      dom.overlayLeaderboardPeriod.value = dom.obsLeaderboardPeriod.value || "session";
+    }
+    [dom.obsLeaderboardPeriod, dom.overlayLeaderboardPeriod].filter(Boolean).forEach(function (input) {
+      input.addEventListener("change", function () {
+        syncLeaderboardPeriod(input);
+      });
+    });
 
     dom.overlayPreviewMode.addEventListener("change", function () {
       writeOverlayPreviewPreference(
@@ -408,7 +500,11 @@ export function initOverlayPreview() {
       dom.overlayFontSize,
       dom.overlayDisplayMode,
       dom.overlayTheme,
-    ].forEach(function (input) {
+      dom.overlayLeaderboardFontSize,
+      dom.overlayLeaderboardLayout,
+      dom.overlayLeaderboardPeriod,
+      dom.obsLeaderboardPeriod,
+    ].filter(Boolean).forEach(function (input) {
       input.addEventListener("input", scheduleOverlayPreviewRefresh);
       input.addEventListener("change", scheduleOverlayPreviewRefresh);
     });

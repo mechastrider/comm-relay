@@ -17,16 +17,34 @@ const (
 	overlayPresetNameMax = 64
 )
 
+// Leaderboard layout values for overlay.presets[].surfaces.leaderboard.layout.
+const (
+	OverlayLeaderboardLayoutPanel = "panel"
+	OverlayLeaderboardLayoutChips = "chips"
+)
+
 // OverlayPreset is a named overlay look for a scene or game.
 type OverlayPreset struct {
-	ID                string             `json:"id"`
-	Name              string             `json:"name"`
-	MaxMessages       int                `json:"max_messages"`
-	MessageTTLSeconds int                `json:"message_ttl_seconds"`
-	FontSizePx        int                `json:"font_size_px"`
-	DisplayMode       string             `json:"display_mode"`
-	Theme             string             `json:"theme"`
-	Style             OverlayStyleConfig `json:"style"`
+	ID                string                `json:"id"`
+	Name              string                `json:"name"`
+	MaxMessages       int                   `json:"max_messages"`
+	MessageTTLSeconds int                   `json:"message_ttl_seconds"`
+	FontSizePx        int                   `json:"font_size_px"`
+	DisplayMode       string                `json:"display_mode"`
+	Theme             string                `json:"theme"`
+	Style             OverlayStyleConfig    `json:"style"`
+	Surfaces          OverlayPresetSurfaces `json:"surfaces"`
+}
+
+// OverlayPresetSurfaces holds optional per-surface overrides on a preset.
+type OverlayPresetSurfaces struct {
+	Leaderboard OverlayLeaderboardSurface `json:"leaderboard"`
+}
+
+// OverlayLeaderboardSurface is the leaderboard look for one overlay preset.
+type OverlayLeaderboardSurface struct {
+	FontSizePx int    `json:"font_size_px,omitempty"`
+	Layout     string `json:"layout,omitempty"`
 }
 
 func (p *OverlayPreset) applyDefaults() {
@@ -49,6 +67,7 @@ func (p *OverlayPreset) applyDefaults() {
 		p.Theme = OverlayThemeDefault
 	}
 	p.Style.applyDefaults(p.Theme)
+	p.Surfaces.Leaderboard.applyDefaults()
 }
 
 func (p OverlayPreset) validateFields(prefix string) FieldErrors {
@@ -94,7 +113,53 @@ func (p OverlayPreset) validateFields(prefix string) FieldErrors {
 		fields[key("theme")] = "Choose a supported overlay theme."
 	}
 	mergeFieldErrors(fields, p.Style.validateFields(key("style")))
+	mergeFieldErrors(fields, p.Surfaces.Leaderboard.validateFields(key("surfaces_leaderboard")))
 	return fields
+}
+
+func (s *OverlayLeaderboardSurface) applyDefaults() {
+	if s.Layout == "" {
+		s.Layout = OverlayLeaderboardLayoutPanel
+	}
+}
+
+func (s OverlayLeaderboardSurface) validateFields(prefix string) FieldErrors {
+	fields := FieldErrors{}
+	key := func(name string) string {
+		if prefix == "" {
+			return name
+		}
+		return prefix + "_" + name
+	}
+	if s.FontSizePx != 0 && (s.FontSizePx < OverlayFontSizeMin || s.FontSizePx > OverlayFontSizeMax) {
+		fields[key("font_size_px")] = fmt.Sprintf(
+			"Font size must be between %d and %d px.",
+			OverlayFontSizeMin,
+			OverlayFontSizeMax,
+		)
+	}
+	switch s.Layout {
+	case "", OverlayLeaderboardLayoutPanel, OverlayLeaderboardLayoutChips:
+	default:
+		fields[key("layout")] = "Choose panel or chips layout."
+	}
+	return fields
+}
+
+// LeaderboardFontSizePx returns the leaderboard font, inheriting the preset font when unset.
+func (p OverlayPreset) LeaderboardFontSizePx() int {
+	if p.Surfaces.Leaderboard.FontSizePx >= OverlayFontSizeMin {
+		return p.Surfaces.Leaderboard.FontSizePx
+	}
+	return p.FontSizePx
+}
+
+// LeaderboardLayout returns panel unless chips is stored.
+func (p OverlayPreset) LeaderboardLayout() string {
+	if p.Surfaces.Leaderboard.Layout == OverlayLeaderboardLayoutChips {
+		return OverlayLeaderboardLayoutChips
+	}
+	return OverlayLeaderboardLayoutPanel
 }
 
 // EnsurePresets migrates legacy flat overlay fields into presets when presets are absent.

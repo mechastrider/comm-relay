@@ -78,6 +78,7 @@ Extend with `display_name`, `avatar_url`, `badges` when available — keep backw
 - Transparent background for Browser Source.
 - Cap visible messages; smooth appear; configurable TTL.
 - Auto-scroll; tolerate WebSocket reconnect (client-side backoff).
+- On-stream **themes** are a shared visual language for chat and leaderboard (see [obs-overlay-themes](../obs-overlay-themes/SKILL.md)). Dock stays operator-only and unthemed.
 
 ## Admin / dock static UI (CommRelay)
 

@@ -392,6 +392,24 @@ export function validateClient(payload) {
       firstInvalid = firstInvalid || dom.overlayFontSize;
     }
 
+    (payload.overlay.presets || []).some(function (preset) {
+      const surface = preset && preset.surfaces && preset.surfaces.leaderboard;
+      const font = surface && surface.font_size_px;
+      if (
+        font != null &&
+        font !== 0 &&
+        (!Number.isFinite(font) || font < OVERLAY_FONT_SIZE_MIN || font > OVERLAY_FONT_SIZE_MAX)
+      ) {
+        setFieldError(
+          "overlay_leaderboard_font_size_px",
+          "Font size must be between " + OVERLAY_FONT_SIZE_MIN + " and " + OVERLAY_FONT_SIZE_MAX + " px."
+        );
+        firstInvalid = firstInvalid || dom.overlayLeaderboardFontSize;
+        return true;
+      }
+      return false;
+    });
+
     if (
       payload.overlay.display_mode !== "normal" &&
       payload.overlay.display_mode !== "compact"

@@ -1,16 +1,17 @@
-html,
-body {
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  color: #f4f1e8;
-  font-family: "Segoe UI", system-ui, sans-serif;
-}
+@import url("../overlay.css");
 
 .leaderboard {
-  min-height: 100vh;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: auto;
+  height: auto;
+  min-height: 0;
   padding: 10px 12px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .leaderboard-list {
@@ -19,6 +20,7 @@ body {
   list-style: none;
   display: grid;
   gap: 6px;
+  min-height: 0;
 }
 
 .leaderboard-row {
@@ -26,17 +28,11 @@ body {
   grid-template-columns: 2.2em minmax(0, 1fr);
   gap: 10px;
   align-items: center;
-  padding: 8px 10px;
-  border: 1px solid rgba(212, 160, 23, 0.35);
-  border-left: 3px solid rgba(212, 160, 23, 0.75);
-  border-radius: 4px;
-  background: linear-gradient(135deg, rgba(18, 18, 22, 0.72), rgba(8, 8, 10, 0.55));
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  min-width: 0;
 }
 
 .leaderboard-rank {
-  color: #d4a017;
-  font-size: 18px;
+  font-size: calc(var(--overlay-font-size) * 1.1);
   font-weight: 800;
   text-align: center;
 }
@@ -64,14 +60,132 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 15px;
   font-weight: 700;
 }
 
 .leaderboard-stats {
   display: block;
   margin-top: 2px;
-  color: rgba(244, 241, 232, 0.72);
-  font-size: 12px;
+  font-size: 0.78em;
   letter-spacing: 0.3px;
+  opacity: 0.78;
+}
+
+body.overlay-text-edge--shadow .leaderboard {
+  text-shadow: var(--overlay-text-shadow);
+}
+
+body.overlay-text-edge--outline .leaderboard {
+  text-shadow: var(--overlay-stroke-shadow);
+}
+
+body.overlay-theme--default.leaderboard-layout--panel .leaderboard-row,
+body.overlay-theme--default.leaderboard-layout--chips .leaderboard-row {
+  padding: 8px 10px;
+  border: var(--overlay-border-width) solid var(--overlay-border-color);
+  border-radius: var(--overlay-border-radius);
+  background: var(--overlay-panel-bg);
+}
+
+body.overlay-theme--dashboard .leaderboard-row {
+  padding: 2px 0;
+  background: transparent;
+  border: 0;
+}
+
+body.overlay-theme--dashboard .leaderboard-rank {
+  color: var(--overlay-text);
+}
+
+body.overlay-theme--cockpit-panel.leaderboard-layout--panel .leaderboard,
+body.overlay-theme--cockpit-popups.leaderboard-layout--panel .leaderboard,
+body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard {
+  padding: clamp(46px, 16vh, 62px) clamp(14px, 3vw, 22px) clamp(14px, 6vh, 22px) 72px;
+  border: 1px solid rgba(83, 232, 226, 0.44);
+  background:
+    linear-gradient(var(--hud-cyan), var(--hud-cyan)) 14px 18px / 28px 3px no-repeat,
+    linear-gradient(90deg, rgba(51, 222, 204, 0.12) 0 46px, transparent 46px),
+    linear-gradient(90deg, rgba(53, 210, 208, 0.38) 0 1px, transparent 1px) 46px 0 / 1px 100% no-repeat,
+    var(--hud-glass);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5) inset,
+    0 0 28px rgba(16, 218, 216, 0.16);
+}
+
+body.overlay-theme--cockpit-panel.leaderboard-layout--panel .leaderboard::before,
+body.overlay-theme--cockpit-popups.leaderboard-layout--panel .leaderboard::before,
+body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard::before {
+  content: "COMMRELAY RANKING";
+  position: absolute;
+  left: 46px;
+  right: 14px;
+  top: 0;
+  z-index: 2;
+  padding: 14px 0 0 18px;
+  color: var(--hud-cyan);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard {
+  border-color: rgba(247, 227, 106, 0.42);
+  background:
+    linear-gradient(var(--rebels-gold), var(--rebels-gold)) 14px 18px / 28px 3px no-repeat,
+    linear-gradient(90deg, rgba(247, 227, 106, 0.12) 0 46px, transparent 46px),
+    linear-gradient(90deg, rgba(247, 227, 106, 0.38) 0 1px, transparent 1px) 46px 0 / 1px 100% no-repeat,
+    var(--rebels-glass);
+}
+
+body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard::before {
+  color: var(--rebels-gold);
+}
+
+body.overlay-theme--cockpit-panel.leaderboard-layout--panel .leaderboard-row,
+body.overlay-theme--cockpit-popups.leaderboard-layout--panel .leaderboard-row,
+body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard-row {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(53, 210, 208, 0.12);
+}
+
+body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard-row {
+  border-bottom-color: rgba(247, 227, 106, 0.14);
+}
+
+body.overlay-theme--cockpit-panel .leaderboard-rank,
+body.overlay-theme--cockpit-popups .leaderboard-rank {
+  color: var(--hud-amber);
+}
+
+body.overlay-theme--g-rebels-popups .leaderboard-rank {
+  color: var(--rebels-gold);
+}
+
+body.leaderboard-layout--chips .leaderboard-list {
+  gap: 8px;
+}
+
+body.overlay-theme--cockpit-panel.leaderboard-layout--chips .leaderboard-row,
+body.overlay-theme--cockpit-popups.leaderboard-layout--chips .leaderboard-row {
+  min-height: 52px;
+  padding: 10px 14px 12px 10px;
+  border: 1px solid rgba(53, 210, 208, 0.4);
+  background:
+    linear-gradient(90deg, rgba(53, 210, 208, 0.18), transparent 34%),
+    var(--hud-glass-strong);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 12px 100%, 0 calc(100% - 12px));
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.58) inset,
+    0 0 18px rgba(53, 210, 208, 0.14);
+}
+
+body.overlay-theme--g-rebels-popups.leaderboard-layout--chips .leaderboard-row {
+  min-height: 52px;
+  padding: 10px 14px 12px 10px;
+  border: 1px solid rgba(247, 227, 106, 0.38);
+  background:
+    linear-gradient(90deg, rgba(247, 227, 106, 0.16), transparent 34%),
+    var(--rebels-glass);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 12px 100%, 0 calc(100% - 12px));
 }

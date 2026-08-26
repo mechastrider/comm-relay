@@ -63,7 +63,11 @@ dom.form.addEventListener("submit", saveSettings);
 dom.form.addEventListener("input", function (event) {
   if (!(event.target instanceof Element) || !event.target.closest("[data-preview-only]")) {
     markSettingsDirty();
-    if (event.target.closest("#obs-appearance-panel")) {
+    if (
+      event.target.closest("#obs-appearance-panel") &&
+      event.target.id !== "overlay-preset-select" &&
+      event.target.id !== "obs-overlay-preset-select"
+    ) {
       updatePresetIsland();
     }
   }
@@ -71,7 +75,11 @@ dom.form.addEventListener("input", function (event) {
 dom.form.addEventListener("change", function (event) {
   if (!(event.target instanceof Element) || !event.target.closest("[data-preview-only]")) {
     markSettingsDirty();
-    if (event.target.closest("#obs-appearance-panel")) {
+    if (
+      event.target.closest("#obs-appearance-panel") &&
+      event.target.id !== "overlay-preset-select" &&
+      event.target.id !== "obs-overlay-preset-select"
+    ) {
       updatePresetIsland();
     }
   }

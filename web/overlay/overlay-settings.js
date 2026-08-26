@@ -240,6 +240,70 @@ export function overlayViewFromConfig(config, params) {
   };
 }
 
+const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
+const OVERLAY_FONT_SIZE_MIN = 12;
+const OVERLAY_FONT_SIZE_MAX = 48;
+
+export function normalizeLeaderboardLayout(raw) {
+  const value = String(raw || "").trim().toLowerCase();
+  return LEADERBOARD_LAYOUTS.has(value) ? value : "panel";
+}
+
+function queryIntInRange(params, key, min, max) {
+  if (!params || typeof params.get !== "function" || typeof params.has !== "function" || !params.has(key)) {
+    return null;
+  }
+  const value = Number.parseInt(params.get(key), 10);
+  if (!Number.isFinite(value) || value < min || value > max) {
+    return null;
+  }
+  return value;
+}
+
+export function leaderboardViewFromConfig(config, params) {
+  const overlay = config && typeof config === "object" ? config.overlay : null;
+  const query = params && typeof params.get === "function" ? params : undefined;
+  const queryPreset = query ? query.get("preset") : params;
+  const resolved = resolvePreset(overlay, queryPreset);
+  let theme = resolved && resolved.theme ? resolved.theme : "default";
+  if (query && typeof query.get === "function") {
+    const queriedTheme = normalizeTheme(query.get("theme"));
+    if (query.has("theme") && THEMES.has(String(query.get("theme") || "").trim().toLowerCase())) {
+      theme = queriedTheme;
+    }
+  }
+  const merged = mergeStyle(theme, resolved && resolved.style);
+  const style = applyQueryStyleOverrides(merged, query);
+  const surface =
+    resolved && resolved.surfaces && resolved.surfaces.leaderboard && typeof resolved.surfaces.leaderboard === "object"
+      ? resolved.surfaces.leaderboard
+      : {};
+  let fontSizePx =
+    typeof surface.font_size_px === "number" && surface.font_size_px >= OVERLAY_FONT_SIZE_MIN
+      ? surface.font_size_px
+      : resolved && typeof resolved.font_size_px === "number"
+        ? resolved.font_size_px
+        : 18;
+  const queriedFont = queryIntInRange(query, "font_size_px", OVERLAY_FONT_SIZE_MIN, OVERLAY_FONT_SIZE_MAX);
+  if (queriedFont !== null) {
+    fontSizePx = queriedFont;
+  }
+  let layout = normalizeLeaderboardLayout(surface.layout);
+  if (query && typeof query.has === "function" && query.has("layout")) {
+    const queriedLayout = String(query.get("layout") || "").trim().toLowerCase();
+    if (LEADERBOARD_LAYOUTS.has(queriedLayout)) {
+      layout = queriedLayout;
+    }
+  }
+
+  return {
+    font_size_px: fontSizePx,
+    theme: normalizeTheme(theme),
+    style: style,
+    layout: layout,
+  };
+}
+
 export function overlayAssetURL(filename, cacheBust) {
   const name = String(filename || "").trim();
   if (name === "") {

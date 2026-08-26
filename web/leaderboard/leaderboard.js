@@ -1,11 +1,47 @@
 "use strict";
 
+import {
+  fontStack,
+  hexToRgba,
+  leaderboardViewFromConfig,
+  normalizePanelImageFit,
+  normalizePanelImageScope,
+  normalizePreviewBackground,
+  overlayAssetURL,
+} from "../overlay-settings.js";
+
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;
 const LEADERBOARD_PERIODS = new Set(["session", "day", "all"]);
+const OVERLAY_FONT_SIZE_MIN = 12;
+const OVERLAY_FONT_SIZE_MAX = 48;
+const THEME_CLASSES = [
+  "overlay-theme--default",
+  "overlay-theme--dashboard",
+  "overlay-theme--cockpit-panel",
+  "overlay-theme--cockpit-popups",
+  "overlay-theme--g-rebels-popups",
+];
+const PREVIEW_BACKGROUND_CLASSES = [
+  "overlay-preview--white",
+  "overlay-preview--checker",
+  "overlay-preview--scene",
+  "overlay-preview--dark",
+  "overlay-preview--busy",
+];
+
+const SAMPLE_ENTRIES = [
+  { rank: 1, display_name: "Nova", score: 42, message_count: 18, avatar_url: "" },
+  { rank: 2, display_name: "Brick", score: 31, message_count: 14, avatar_url: "" },
+  { rank: 3, display_name: "Helix", score: 18, message_count: 9, avatar_url: "" },
+  { rank: 4, display_name: "Mira", score: 12, message_count: 6, avatar_url: "" },
+  { rank: 5, display_name: "Tor", score: 7, message_count: 4, avatar_url: "" },
+];
 
 const root = document.getElementById("leaderboard");
 const params = new URLSearchParams(window.location.search);
+const previewEnabled = params.has("preview");
+const samplePreviewEnabled = previewEnabled;
 
 function normalizePeriod(raw) {
   const value = String(raw || "").trim().toLowerCase();
@@ -14,6 +50,8 @@ function normalizePeriod(raw) {
 
 const period = normalizePeriod(params.get("period"));
 
+let overlayView = leaderboardViewFromConfig({ overlay: null }, params);
+let overlayAssetsRevision = Date.now();
 let socket = null;
 let reconnectTimer = null;
 let reconnectDelayMs = INITIAL_RECONNECT_MS;
@@ -26,6 +64,96 @@ function wsURL() {
 
 function escapeText(value) {
   return String(value == null ? "" : value);
+}
+
+function applyAppearance() {
+  const style = overlayView.style || {};
+  const fontSize = overlayView.font_size_px;
+  const size =
+    fontSize >= OVERLAY_FONT_SIZE_MIN && fontSize <= OVERLAY_FONT_SIZE_MAX ? fontSize : 18;
+  document.documentElement.style.setProperty("--overlay-font-size", String(size) + "px");
+  document.documentElement.style.setProperty(
+    "--overlay-line-height",
+    String(style.line_height || 1.35)
+  );
+  document.documentElement.style.setProperty("--overlay-font-family", fontStack(style.font_family));
+  document.documentElement.style.setProperty(
+    "--overlay-text-edge-strength",
+    String(style.text_edge_strength || 0)
+  );
+  document.documentElement.style.setProperty(
+    "--overlay-panel-bg",
+    hexToRgba(style.panel_color, style.panel_opacity)
+  );
+  document.documentElement.style.setProperty(
+    "--overlay-panel-image",
+    style.panel_image
+      ? "url(\"" + overlayAssetURL(style.panel_image, overlayAssetsRevision) + "\")"
+      : "none"
+  );
+  document.documentElement.style.setProperty(
+    "--overlay-border-width",
+    String(style.border_width || 0) + "px"
+  );
+  document.documentElement.style.setProperty("--overlay-border-color", style.border_color || "#ffffff");
+  document.documentElement.style.setProperty(
+    "--overlay-border-radius",
+    String(style.border_radius || 0) + "px"
+  );
+  document.body.style.fontFamily = fontStack(style.font_family);
+  THEME_CLASSES.forEach(function (cls) {
+    document.body.classList.remove(cls);
+  });
+  document.body.classList.add("overlay-theme--" + String(overlayView.theme || "default").replace(/_/g, "-"));
+  document.body.classList.remove("leaderboard-layout--panel", "leaderboard-layout--chips");
+  document.body.classList.add(
+    overlayView.layout === "chips" ? "leaderboard-layout--chips" : "leaderboard-layout--panel"
+  );
+  document.body.classList.remove(
+    "overlay-text-edge--none",
+    "overlay-text-edge--shadow",
+    "overlay-text-edge--outline"
+  );
+  const edge =
+    style.text_edge === "none" || style.text_edge === "outline" ? style.text_edge : "shadow";
+  document.body.classList.add("overlay-text-edge--" + edge);
+  document.body.classList.toggle(
+    "overlay-has-panel",
+    (typeof style.panel_opacity === "number" && style.panel_opacity > 0) ||
+      Boolean(style.panel_image) ||
+      (typeof style.border_width === "number" && style.border_width > 0)
+  );
+  const panelImageFit = normalizePanelImageFit(style.panel_image_fit);
+  const panelImageScope = normalizePanelImageScope(style.panel_image_scope, overlayView.theme);
+  document.body.classList.remove(
+    "overlay-panel-image-fit--cover",
+    "overlay-panel-image-fit--contain",
+    "overlay-panel-image-fit--fill",
+    "overlay-panel-image-fit--tile"
+  );
+  document.body.classList.add("overlay-panel-image-fit--" + panelImageFit);
+  document.body.classList.remove(
+    "overlay-panel-image-scope--message",
+    "overlay-panel-image-scope--column"
+  );
+  document.body.classList.add("overlay-panel-image-scope--" + panelImageScope);
+  PREVIEW_BACKGROUND_CLASSES.forEach(function (cls) {
+    document.documentElement.classList.remove(cls);
+    document.body.classList.remove(cls);
+  });
+  if (previewEnabled) {
+    const previewClass = "overlay-preview--" + normalizePreviewBackground(params.get("preview_background"));
+    document.documentElement.classList.add(previewClass);
+    document.body.classList.add(previewClass);
+  }
+}
+
+function applyServerOverlayConfig(serverOverlay) {
+  if (!serverOverlay || typeof serverOverlay !== "object") {
+    return;
+  }
+  overlayAssetsRevision = Date.now();
+  overlayView = leaderboardViewFromConfig({ overlay: serverOverlay }, params);
 }
 
 function renderEntries(entries) {
@@ -100,7 +228,18 @@ function handleSocketMessage(event) {
   } catch {
     return;
   }
-  if (!frame || frame.type !== "leaderboard" || frame.period !== period) {
+  if (!frame || typeof frame !== "object") {
+    return;
+  }
+  if (frame.type === "overlay_settings") {
+    applyServerOverlayConfig(frame.overlay);
+    applyAppearance();
+    return;
+  }
+  if (samplePreviewEnabled) {
+    return;
+  }
+  if (frame.type !== "leaderboard" || frame.period !== period) {
     return;
   }
   renderEntries(frame.entries);
@@ -137,9 +276,31 @@ function connect() {
   });
 }
 
-loadSnapshot().finally(function () {
+async function loadServerConfig() {
+  try {
+    const response = await fetch("/api/config");
+    if (!response.ok) {
+      return;
+    }
+    const payload = await response.json();
+    applyServerOverlayConfig(payload && payload.overlay);
+  } catch {
+    /* keep URL/default config */
+  }
+  applyAppearance();
+}
+
+async function start() {
+  await loadServerConfig();
+  if (samplePreviewEnabled) {
+    renderEntries(SAMPLE_ENTRIES);
+    return;
+  }
+  await loadSnapshot();
   connect();
-});
+}
+
+start();
 
 window.addEventListener("beforeunload", function () {
   shouldRun = false;
