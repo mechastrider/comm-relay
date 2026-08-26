@@ -4,6 +4,7 @@ import { apiURL } from "./api.js";
 import { mountOverlayPreview, unmountOverlayPreview } from "./overlay-preview.js";
 import { getActivePresetID } from "./overlay-appearance.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
+import { buildLeaderboardURL } from "./leaderboard-url.js";
 import { t } from "./i18n-ui.js";
 
 export function updateOBSSetupURLs() {
@@ -19,6 +20,14 @@ export function updateOBSSetupURLs() {
   }
   if (dom.obsDockOpen) {
     dom.obsDockOpen.href = apiURL("/dock/messages");
+  }
+  const leaderboardPeriod = dom.obsLeaderboardPeriod ? dom.obsLeaderboardPeriod.value : "session";
+  const leaderboardUrl = buildLeaderboardURL(leaderboardPeriod);
+  if (dom.obsLeaderboardUrl) {
+    dom.obsLeaderboardUrl.value = leaderboardUrl;
+  }
+  if (dom.obsLeaderboardOpen) {
+    dom.obsLeaderboardOpen.href = leaderboardUrl;
   }
 }
 
@@ -181,6 +190,10 @@ export function initOBSSetup() {
   });
 
   bindCopyButtons(dom.overlayDialog);
+
+  if (dom.obsLeaderboardPeriod) {
+    dom.obsLeaderboardPeriod.addEventListener("change", updateOBSSetupURLs);
+  }
 
   dom.overlayDialog.addEventListener("close", function () {
     resetOBSCopyFeedback();

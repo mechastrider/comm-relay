@@ -43,6 +43,7 @@
       </div>
 
       <div class="top-actions">
+        <button id="new-stream-button" class="btn-physical" type="button" data-i18n="stream.newStream">New stream</button>
         <button id="save-button" class="btn-physical btn-start" type="submit" form="settings-form" data-save-button disabled data-i18n="shell.save">Save</button>
       </div>
     </header>
@@ -50,22 +51,51 @@
     <main class="main-area">
       <div id="banner" class="banner" role="alert" aria-live="polite" hidden></div>
 
-      <section class="console-panel" aria-labelledby="messages-heading">
+      <section class="console-panel" aria-labelledby="canvas-heading">
         <div class="console-header">
-          <div>
-            <span class="console-label" data-i18n="shell.monitor">Monitor</span>
-            <h2 id="messages-heading" data-i18n="shell.liveMessages">Live messages</h2>
+          <div class="console-header__start">
+            <div class="console-tabs" role="tablist" data-i18n-aria-label="shell.canvasSections" aria-label="Main canvas sections">
+              <button id="canvas-monitor-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="monitor-canvas-panel" data-canvas-section="monitor" data-i18n="shell.monitor">Monitor</button>
+              <button id="canvas-viewers-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="viewers-canvas-panel" tabindex="-1" data-canvas-section="viewers" data-i18n="shell.viewers">Viewers</button>
+            </div>
+            <h2 id="canvas-heading" data-i18n="shell.liveMessages">Live messages</h2>
           </div>
           <div class="console-actions">
             <span id="settings-state" class="settings-state" aria-live="polite" data-i18n="shell.loadingSettings">Loading settings</span>
             <button id="refresh-messages" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
+            <button id="refresh-viewers" type="button" class="btn-physical btn-small" hidden data-i18n="shell.refresh">Refresh</button>
           </div>
         </div>
 
-        <div class="message-panel">
-          <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
-          <p id="recent-messages-empty" class="empty-state" data-i18n="shell.noMessagesYet">No messages yet.</p>
-        </div>
+        <section id="monitor-canvas-panel" class="canvas-panel" role="tabpanel" aria-labelledby="canvas-monitor-tab">
+          <div class="message-panel">
+            <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
+            <p id="recent-messages-empty" class="empty-state" data-i18n="shell.noMessagesYet">No messages yet.</p>
+          </div>
+        </section>
+
+        <section id="viewers-canvas-panel" class="canvas-panel viewers-canvas" role="tabpanel" aria-labelledby="canvas-viewers-tab" hidden>
+          <div class="viewers-workspace">
+            <aside class="viewers-list-pane" aria-labelledby="viewers-list-heading">
+              <h3 id="viewers-list-heading" class="viewers-pane-heading" data-i18n="viewers.listHeading">Viewer list</h3>
+              <div class="viewers-search">
+                <label class="visually-hidden" for="viewers-search" data-i18n="viewers.searchLabel">Search viewers</label>
+                <input id="viewers-search" type="search" autocomplete="off" data-i18n-placeholder="viewers.searchPlaceholder" placeholder="Search by name or platform">
+              </div>
+              <div class="viewers-pane-body">
+                <ul id="viewers-list" class="viewers-list" aria-live="polite"></ul>
+                <p id="viewers-list-empty" class="empty-state" hidden data-i18n="viewers.listEmpty">No viewers yet.</p>
+              </div>
+            </aside>
+            <div class="viewer-card-pane" aria-labelledby="viewer-card-heading">
+              <h3 id="viewer-card-heading" class="viewers-pane-heading" data-i18n="viewers.cardHeading">Selected viewer</h3>
+              <div class="viewers-pane-body">
+                <div id="viewer-card" class="viewer-card" hidden></div>
+                <p id="viewer-card-empty" class="empty-state" data-i18n="viewers.cardEmpty">Select a viewer from the list.</p>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
 
       <aside class="systems-panel" aria-labelledby="controls-heading">
@@ -413,6 +443,44 @@
 
                 <div class="obs-integration-actions">
                   <a id="obs-dock-open" class="button-secondary button-secondary--small" href="/dock/messages" target="_blank" rel="noopener" data-i18n="obs.openMessageDock">Open message dock</a>
+                </div>
+              </article>
+
+              <article class="obs-integration-card" aria-labelledby="obs-leaderboard-card-heading">
+                <div class="obs-integration-card__header">
+                  <div>
+                    <span class="obs-integration-card__eyebrow" data-i18n="obs.browserSource">Browser Source</span>
+                    <h3 id="obs-leaderboard-card-heading" data-i18n="obs.leaderboard">Leaderboard</h3>
+                  </div>
+                  <span class="obs-audience-badge obs-audience-badge--live" data-i18n="obs.visibleToViewers">Visible to viewers</span>
+                </div>
+                <p class="obs-integration-card__summary" data-i18n="obs.leaderboardSummary">Shows a transparent ranking overlay by score for the current session, stats day, or all-time.</p>
+
+                <div class="obs-url-field">
+                  <label for="obs-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
+                  <select id="obs-leaderboard-period">
+                    <option value="session" data-i18n="viewers.periodSession">Session</option>
+                    <option value="day" data-i18n="viewers.periodDay">Day</option>
+                    <option value="all" data-i18n="viewers.periodAll">All-time</option>
+                  </select>
+                </div>
+
+                <div class="obs-url-field">
+                  <label for="obs-leaderboard-url" data-i18n="obs.leaderboardUrl">Leaderboard URL</label>
+                  <div class="obs-url-row">
+                    <input id="obs-leaderboard-url" type="text" readonly value="/overlay/leaderboard">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-leaderboard-url" data-copy-label="Leaderboard URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </div>
+
+                <ol class="obs-setup-steps">
+                  <li data-i18n-html="obs.stepBrowser">In OBS Sources, add a <strong>Browser</strong> source.</li>
+                  <li data-i18n="obs.stepPaste">Paste the URL above into its URL field.</li>
+                  <li data-i18n="obs.stepLeaderboardSize">Size the source for your ranking layout.</li>
+                </ol>
+
+                <div class="obs-integration-actions">
+                  <a id="obs-leaderboard-open" class="button-secondary button-secondary--small" href="/overlay/leaderboard" target="_blank" rel="noopener" data-i18n="obs.openLeaderboard">Open leaderboard</a>
                 </div>
               </article>
             </div>
@@ -766,6 +834,17 @@
       </div>
     </dialog>
 
+    <dialog id="new-stream-prompt" class="prompt-dialog" aria-labelledby="new-stream-prompt-title">
+      <div class="prompt-dialog__frame">
+        <h3 id="new-stream-prompt-title" data-i18n="stream.newStreamTitle">Start a new stream?</h3>
+        <p class="prompt-dialog__message" data-i18n="stream.newStreamMessage">Session counters reset for viewers and the session leaderboard. Day and all-time stats stay.</p>
+        <div class="prompt-dialog__actions">
+          <button id="new-stream-prompt-cancel" class="btn-physical" type="button" data-i18n="dialog.cancel">Cancel</button>
+          <button id="new-stream-prompt-confirm" class="btn-physical btn-start" type="button" data-i18n="stream.newStreamConfirm">Start new stream</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="overlay-preset-prompt" class="prompt-dialog" aria-labelledby="overlay-preset-prompt-title">
       <div class="prompt-dialog__frame">
         <h3 id="overlay-preset-prompt-title"></h3>
@@ -914,6 +993,27 @@
               </select>
               <p class="field-hint" data-i18n="iface.languageHint">Controls admin and OBS dock labels and the 24-hour time format.</p>
               <p id="time-locale-error" class="field-error" role="alert" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="viewer-stats-heading">
+          <div class="panel__header">
+            <h3 id="viewer-stats-heading" data-i18n="iface.viewerStats">Viewer stats</h3>
+          </div>
+
+          <div class="form form--compact">
+            <div class="form__field">
+              <label for="points-per-message" data-i18n="iface.pointsPerMessage">Points per message</label>
+              <input id="points-per-message" name="points_per_message" type="number" min="0" step="1" inputmode="numeric">
+              <p class="field-hint" data-i18n="iface.pointsPerMessageHint">How many score points each counted chat line adds.</p>
+              <p id="points-per-message-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="day-reset-hour" data-i18n="iface.dayResetHour">Day reset hour</label>
+              <input id="day-reset-hour" name="day_reset_hour" type="number" min="0" max="23" step="1" inputmode="numeric">
+              <p class="field-hint" data-i18n="iface.dayResetHourHint">Local hour when the stats day rolls over (0–23).</p>
+              <p id="day-reset-hour-error" class="field-error" role="alert" hidden></p>
             </div>
           </div>
         </section>

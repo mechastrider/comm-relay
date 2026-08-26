@@ -23,7 +23,9 @@ You can see CommRelay in use on the author's streams:
 - Connects Twitch, YouTube Live Chat, and VK Live / VK Video.
 - Shows a unified transparent overlay for OBS: `http://127.0.0.1:17877/overlay`.
 - Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
-- Provides a local control panel with statuses, message monitor, overlay settings, and diagnostics.
+- Tracks viewer stats (score, messages, session/day/all-time) in a local `comm-relay.db` file next to `config.json` — no separate database server.
+- Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?period=session|day|all`.
+- Provides a local control panel with statuses, message monitor, viewers tab, overlay settings, and diagnostics.
 - Supports Twitch emotes, FrankerFaceZ, BetterTTV, 7TV, and safe image previews.
 - Automatically reconnects connectors and stores settings locally in `config.json`.
 
@@ -292,7 +294,8 @@ If `libwebkit2gtk-4.1-dev` is unavailable, install the **WebKitGTK 4.1** equival
 |-----|---------|
 | `http://127.0.0.1:17877/` | Admin panel |
 | `http://127.0.0.1:17877/dock/messages` | Message log in the OBS interface |
-| `http://127.0.0.1:17877/overlay` | OBS Browser Source |
+| `http://127.0.0.1:17877/overlay` | OBS Browser Source (chat) |
+| `http://127.0.0.1:17877/overlay/leaderboard` | OBS Browser Source (leaderboard) |
 | `http://127.0.0.1:17877/health` | Health check |
 | `ws://127.0.0.1:17877/ws` | WebSocket with messages |
 

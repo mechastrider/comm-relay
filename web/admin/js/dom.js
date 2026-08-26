@@ -83,6 +83,26 @@ export const emoteProviderList = document.getElementById("emote-provider-list");
 export const recentMessages = document.getElementById("recent-messages");
 export const recentMessagesEmpty = document.getElementById("recent-messages-empty");
 export const refreshMessages = document.getElementById("refresh-messages");
+export const refreshViewers = document.getElementById("refresh-viewers");
+export const canvasMonitorTab = document.getElementById("canvas-monitor-tab");
+export const canvasViewersTab = document.getElementById("canvas-viewers-tab");
+export const canvasHeading = document.getElementById("canvas-heading");
+export const monitorCanvasPanel = document.getElementById("monitor-canvas-panel");
+export const viewersCanvasPanel = document.getElementById("viewers-canvas-panel");
+export const viewersSearch = document.getElementById("viewers-search");
+export const viewersList = document.getElementById("viewers-list");
+export const viewersListEmpty = document.getElementById("viewers-list-empty");
+export const viewerCard = document.getElementById("viewer-card");
+export const viewerCardEmpty = document.getElementById("viewer-card-empty");
+export const newStreamButton = document.getElementById("new-stream-button");
+export const newStreamPrompt = document.getElementById("new-stream-prompt");
+export const newStreamPromptCancel = document.getElementById("new-stream-prompt-cancel");
+export const newStreamPromptConfirm = document.getElementById("new-stream-prompt-confirm");
+export const pointsPerMessageInput = document.getElementById("points-per-message");
+export const dayResetHourInput = document.getElementById("day-reset-hour");
+export const obsLeaderboardPeriod = document.getElementById("obs-leaderboard-period");
+export const obsLeaderboardUrl = document.getElementById("obs-leaderboard-url");
+export const obsLeaderboardOpen = document.getElementById("obs-leaderboard-open");
 export const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
 export const messageSoundVolumeInput = document.getElementById("message-sound-volume");
 export const messageSoundVolumeLabel = document.getElementById("message-sound-volume-label");
@@ -116,6 +136,8 @@ export const fieldErrors = {
     admin_message_sound_volume: document.getElementById("message-sound-volume-error"),
     admin_message_sound_sound: document.getElementById("message-sound-type-error"),
     admin_time_locale: document.getElementById("time-locale-error"),
+    points_per_message: document.getElementById("points-per-message-error"),
+    day_reset_hour: document.getElementById("day-reset-hour-error"),
   };
 
 export const fieldInputs = {
@@ -136,4 +158,6 @@ export const fieldInputs = {
     admin_message_sound_volume: messageSoundVolumeInput,
     admin_message_sound_sound: messageSoundTypeInput,
     admin_time_locale: timeLocaleInput,
+    points_per_message: pointsPerMessageInput,
+    day_reset_hour: dayResetHourInput,
   };

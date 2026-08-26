@@ -28,6 +28,7 @@ import {
   updateYouTubeConnectionModeUI,
   startYouTubeOAuth,
 } from "./js/settings.js";
+import { initCanvasTabs, initNewStreamControl } from "./js/viewers.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
 
 initI18n();
@@ -91,6 +92,8 @@ initSettingsDialogs();
 initAboutDialog();
 initMessageSoundControls();
 bindLocaleSelect();
+initCanvasTabs();
+initNewStreamControl();
 
 renderSettingsState();
 
