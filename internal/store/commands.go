@@ -146,6 +146,7 @@ func (s *Store) GetCommand(id string) (*Command, error) {
 	return &cmd, nil
 }
 
+// CreateCommandInput is the payload for CreateCommand.
 type CreateCommandInput struct {
 	ID              string
 	Trigger         string
@@ -207,6 +208,7 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 	return s.getCommandLocked(id)
 }
 
+// UpdateCommandInput is the payload for UpdateCommand.
 type UpdateCommandInput struct {
 	ID              string
 	Trigger         string

@@ -76,6 +76,7 @@ func scanAward(scanner interface {
 	return award, nil
 }
 
+// CreateAwardInput is the payload for CreateAward.
 type CreateAwardInput struct {
 	ID             string
 	Name           string
@@ -135,6 +136,7 @@ func (s *Store) CreateAward(input CreateAwardInput) (*AwardType, error) {
 	return s.getAwardLocked(id)
 }
 
+// UpdateAwardInput is the payload for UpdateAward.
 type UpdateAwardInput struct {
 	ID             string
 	Name           string
