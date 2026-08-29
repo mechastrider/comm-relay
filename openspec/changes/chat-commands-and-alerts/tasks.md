@@ -62,8 +62,8 @@
 > **Blocked**: achievements UI, GET events API unless needed by tests
 
 ### Backend
-- [ ] 4.1 Append events on fire/grant; omit chat body
-- [ ] 4.2 Merge transaction updates `interaction_events.viewer_id` from source to target
+- [x] 4.1 Append events on fire/grant; omit chat body
+- [x] 4.2 Merge transaction updates `interaction_events.viewer_id` from source to target
 
 ## Docs
 

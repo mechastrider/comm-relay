@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -49,20 +50,41 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 	viewerStore := testViewerStore(t)
 	matcher := command.NewMatcher(viewerStore)
 
-	hub, err := NewHub(b, matcher, cfgStore)
+	hub, err := NewHub(b, matcher, cfgStore, viewerStore)
 	require.NoError(t, err)
 
 	history := NewMessageHistory(0)
 	publisher := NewLeaderboardPublisher(hub, viewerStore, cfgStore)
 	ingest := NewViewerIngest(viewerStore, cfgStore, publisher, matcher)
 
-	go hub.Run(ctx)
-	go history.Run(ctx, b)
-	go ingest.Run(ctx, b)
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		hub.Run(ctx)
+	}()
+	go func() {
+		defer wg.Done()
+		history.Run(ctx, b)
+	}()
+	go func() {
+		defer wg.Done()
+		ingest.Run(ctx, b)
+	}()
 
 	t.Cleanup(func() {
 		cancel()
 		publisher.Stop()
+		done := make(chan struct{})
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+			t.Fatal("timed out waiting for api test runnables to stop")
+		}
 		require.NoError(t, viewerStore.Close())
 	})
 

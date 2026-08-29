@@ -268,7 +268,7 @@ func TestStatus_WhenRegistryConnected_ExpectLiveState(t *testing.T) {
 	t.Parallel()
 
 	b := bus.New(0)
-	hub, err := NewHub(b, nil, nil)
+	hub, err := NewHub(b, nil, nil, nil)
 	require.NoError(t, err)
 
 	registry := status.NewRegistry()

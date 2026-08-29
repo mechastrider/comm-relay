@@ -83,7 +83,7 @@ func New(opts Options) (*App, error) {
 	}
 
 	commandMatcher := command.NewMatcher(viewerStore)
-	hub, err := api.NewHub(eventBus, commandMatcher, cfgStore)
+	hub, err := api.NewHub(eventBus, commandMatcher, cfgStore, viewerStore)
 	if err != nil {
 		return nil, errors.Errorf("create websocket hub: %w", err)
 	}

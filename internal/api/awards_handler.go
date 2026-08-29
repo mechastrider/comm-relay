@@ -314,6 +314,21 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 		h.leaderboardPublisher.Schedule()
 	}
 
+	event := store.AppendInteractionEventInput{
+		Kind:     store.InteractionEventAward,
+		ViewerID: result.ViewerID,
+		AwardID:  award.ID,
+		Points:   award.Points,
+		Now:      now,
+	}
+	if messageID := strings.TrimSpace(request.MessageID); messageID != "" {
+		event.MessagePlatform = platform
+		event.MessageID = messageID
+	}
+	if err := h.viewerStore.AppendInteractionEvent(event); err != nil {
+		clog.Errorf(r.Context(), "append award interaction event: %w", err)
+	}
+
 	writeJSON(w, http.StatusOK, grantAwardResponse{
 		ViewerID: result.ViewerID,
 		Points:   award.Points,

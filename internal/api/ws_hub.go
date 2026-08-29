@@ -18,24 +18,26 @@ const ClientSendBuffer = 64
 
 // Hub broadcasts chat events to connected WebSocket clients.
 type Hub struct {
-	mu       sync.Mutex
-	clients  map[*wsClient]struct{}
-	bus      *bus.Bus
-	matcher  *command.Matcher
-	cfgStore *config.Store
+	mu          sync.Mutex
+	clients     map[*wsClient]struct{}
+	bus         *bus.Bus
+	matcher     *command.Matcher
+	cfgStore    *config.Store
+	viewerStore *store.Store
 }
 
 // NewHub creates a WebSocket hub bound to the shared event bus.
-func NewHub(b *bus.Bus, matcher *command.Matcher, cfgStore *config.Store) (*Hub, error) {
+func NewHub(b *bus.Bus, matcher *command.Matcher, cfgStore *config.Store, viewerStore *store.Store) (*Hub, error) {
 	if b == nil {
 		return nil, errors.New("event bus is required")
 	}
 
 	return &Hub{
-		clients:  make(map[*wsClient]struct{}),
-		bus:      b,
-		matcher:  matcher,
-		cfgStore: cfgStore,
+		clients:     make(map[*wsClient]struct{}),
+		bus:         b,
+		matcher:     matcher,
+		cfgStore:    cfgStore,
+		viewerStore: viewerStore,
 	}, nil
 }
 
@@ -95,6 +97,20 @@ func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
 	}
 
 	h.broadcast(alertPayload)
+
+	if h.viewerStore != nil {
+		event := store.AppendInteractionEventInput{
+			Kind:           store.InteractionEventCommand,
+			CommandTrigger: matchedCmd.Trigger,
+			Points:         0,
+		}
+		if viewerID, ok := h.viewerStore.ViewerIDForIdentity(msg.Platform, msg.UserID); ok {
+			event.ViewerID = viewerID
+		}
+		if err := h.viewerStore.AppendInteractionEvent(event); err != nil {
+			clog.Errorf(ctx, "append command interaction event: %w", err)
+		}
+	}
 }
 
 func (h *Hub) register(c *wsClient) {
