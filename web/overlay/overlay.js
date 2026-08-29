@@ -763,6 +763,7 @@ import {
       avatar_url: typeof msg.avatar_url === "string" ? msg.avatar_url : "",
       fragments: Array.isArray(msg.fragments) ? msg.fragments : [],
       timestamp: typeof msg.timestamp === "string" ? msg.timestamp : "",
+      is_command: msg.is_command === true,
     };
   }
 

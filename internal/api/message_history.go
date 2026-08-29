@@ -115,6 +115,7 @@ type adminMessage struct {
 	Fragments   []bus.MessageFragment `json:"fragments,omitempty"`
 	AvatarURL   string                `json:"avatar_url,omitempty"`
 	Timestamp   string                `json:"timestamp"`
+	IsCommand   bool                  `json:"is_command,omitempty"`
 }
 
 func adminMessageFromChat(msg bus.ChatMessage) adminMessage {
