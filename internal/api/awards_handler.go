@@ -301,6 +301,9 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name := command.DisplayName(result.Username, result.DisplayName)
+	if strings.TrimSpace(name) == "" {
+		name = userID
+	}
 	text := command.SubstituteTemplate(award.SplashTemplate, name, award.Points)
 	alertPayload, err := awardAlertWirePayload(award, name, result.AvatarURL, text, award.Points)
 	if err != nil {
