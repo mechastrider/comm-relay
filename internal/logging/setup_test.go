@@ -13,7 +13,9 @@ import (
 )
 
 func TestSetup_WhenEnabled_ExpectSessionFileAndStderrLogger(t *testing.T) {
-	t.Parallel()
+	// Setup mutates slog.Default; do not run beside other Setup tests.
+	prev := slog.Default()
+	t.Cleanup(func() { slog.SetDefault(prev) })
 
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.json")
@@ -34,7 +36,8 @@ func TestSetup_WhenEnabled_ExpectSessionFileAndStderrLogger(t *testing.T) {
 }
 
 func TestSetup_WhenDisabled_ExpectNoSessionFile(t *testing.T) {
-	t.Parallel()
+	prev := slog.Default()
+	t.Cleanup(func() { slog.SetDefault(prev) })
 
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.json")
@@ -80,7 +83,8 @@ func TestPruneSessions_WhenMoreThanRetain_ExpectOldestRemoved(t *testing.T) {
 }
 
 func TestSetup_WritesToBothHandlers(t *testing.T) {
-	t.Parallel()
+	prev := slog.Default()
+	t.Cleanup(func() { slog.SetDefault(prev) })
 
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.json")
