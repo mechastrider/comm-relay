@@ -13,6 +13,7 @@ import {
   applySectionToConfig,
 } from "./settings-helpers.js";
 import { parseWorkspaceHash } from "./workspace-router.js";
+import { partitionSettingsSectionsForConfigApply } from "./config-apply-restore.js";
 import {
   applyConfig,
   composeConfigUpdateFromServer,
@@ -39,6 +40,9 @@ import { focusConnectionsField, setConnectionsSection } from "./connections.js";
 
 /** @type {Map<string, Record<string, unknown>>} */
 const sectionBaselines = new Map();
+
+/** @type {Map<string, Record<string, unknown>>} */
+const sectionDrafts = new Map();
 
 /** @type {Set<string>} */
 const sectionSaveInFlight = new Set();
@@ -155,27 +159,45 @@ function collectSectionValuesFromDOM(sectionId) {
 function resetSectionBaseline(sectionId) {
   const config = state.currentConfig || {};
   sectionBaselines.set(sectionId, extractSectionValuesFromConfig(config, sectionId));
+  sectionDrafts.delete(sectionId);
   renderSectionChrome(sectionId);
 }
 
 export function resetAllSectionBaselines() {
+  sectionDrafts.clear();
   SETTINGS_EDITABLE_SECTIONS.forEach(resetSectionBaseline);
   state.settingsLoaded = true;
   state.settingsDirty = false;
   renderSettingsState();
 }
 
+function refreshSectionBaselinesAfterConfigApply() {
+  const plan = partitionSettingsSectionsForConfigApply(
+    SETTINGS_EDITABLE_SECTIONS,
+    sectionDrafts.keys()
+  );
+
+  plan.restoreSections.forEach(function (sectionId) {
+    const savedDraft = sectionDrafts.get(sectionId);
+    if (savedDraft) {
+      applySectionValuesToDOM(sectionId, savedDraft);
+    }
+    renderSectionChrome(sectionId);
+  });
+
+  plan.resetSections.forEach(resetSectionBaseline);
+
+  state.settingsLoaded = true;
+  state.settingsDirty = anySettingsSectionDirty();
+  renderSettingsState();
+}
+
 /**
  * @param {string} sectionId
+ * @param {Record<string, unknown>} values
  */
-function applySectionBaselineToDOM(sectionId) {
-  const baseline = sectionBaselines.get(sectionId);
-  if (!baseline) {
-    return;
-  }
-
+function applySectionValuesToDOM(sectionId, values) {
   if (sectionId === "platforms") {
-    const values = /** @type {Record<string, unknown>} */ (baseline);
     const twitch = /** @type {Record<string, unknown>} */ (values.twitch || {});
     const youtube = /** @type {Record<string, unknown>} */ (values.youtube || {});
     const oauth = /** @type {Record<string, unknown>} */ (
@@ -218,7 +240,6 @@ function applySectionBaselineToDOM(sectionId) {
   }
 
   if (sectionId === "network") {
-    const values = /** @type {Record<string, unknown>} */ (baseline);
     const network = /** @type {Record<string, unknown>} */ (values.network || {});
     const socks5 = /** @type {Record<string, unknown>} */ (network.socks5 || {});
     if (dom.serverPortInput) {
@@ -239,7 +260,6 @@ function applySectionBaselineToDOM(sectionId) {
   }
 
   if (sectionId === "data") {
-    const values = /** @type {Record<string, unknown>} */ (baseline);
     if (dom.pointsPerMessageInput) {
       dom.pointsPerMessageInput.value = String(values.points_per_message);
     }
@@ -250,7 +270,6 @@ function applySectionBaselineToDOM(sectionId) {
   }
 
   if (sectionId === "application") {
-    const values = /** @type {Record<string, unknown>} */ (baseline);
     const admin = /** @type {Record<string, unknown>} */ (values.admin || {});
     const richChat = /** @type {Record<string, unknown>} */ (values.rich_chat || {});
     const emotes = /** @type {Record<string, unknown>} */ (richChat.emotes || {});
@@ -300,6 +319,17 @@ function applySectionBaselineToDOM(sectionId) {
       typeof previews.max_per_message === "number" ? previews.max_per_message : 1
     );
   }
+}
+
+/**
+ * @param {string} sectionId
+ */
+function applySectionBaselineToDOM(sectionId) {
+  const baseline = sectionBaselines.get(sectionId);
+  if (!baseline) {
+    return;
+  }
+  applySectionValuesToDOM(sectionId, baseline);
 }
 
 /**
@@ -518,6 +548,11 @@ function renderAllSectionChrome() {
 function notifySectionInput(sectionId) {
   if (!sectionBaselines.has(sectionId)) {
     return;
+  }
+  if (isSectionDirty(sectionId)) {
+    sectionDrafts.set(sectionId, collectSectionValuesFromDOM(sectionId));
+  } else {
+    sectionDrafts.delete(sectionId);
   }
   renderSectionChrome(sectionId);
   state.settingsDirty = anySettingsSectionDirty();
@@ -972,7 +1007,7 @@ export function initSettingsWorkspace() {
   }
 
   document.addEventListener("admin-config-applied", function () {
-    resetAllSectionBaselines();
+    refreshSectionBaselinesAfterConfigApply();
   });
 
   document.addEventListener("workspace-settings-enter", function () {

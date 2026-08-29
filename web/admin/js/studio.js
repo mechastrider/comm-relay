@@ -6,6 +6,7 @@ import {
   cloneOverlayAppearanceDraft,
   overlayDraftIsDirty,
 } from "./studio-helpers.js";
+import { resolveStudioDraftAfterConfigApply } from "./config-apply-restore.js";
 import {
   applyOverlayAppearance,
   collectOverlayAppearance,
@@ -74,6 +75,21 @@ function renderStudioDirtyState() {
   dom.studioPublishButton.disabled = publishInFlight || !dirty;
   dom.studioPublishButton.setAttribute("aria-busy", publishInFlight ? "true" : "false");
   updatePresetIsland();
+}
+
+function restoreStudioDraftAfterConfigApply() {
+  const overlay = state.currentConfig && state.currentConfig.overlay ? state.currentConfig.overlay : {};
+  const resolved = resolveStudioDraftAfterConfigApply({
+    serverOverlay: overlay,
+    baseline,
+    draft,
+    isDirty: isStudioOverlayDirty(),
+  });
+  baseline = resolved.nextBaseline;
+  draft = resolved.nextDraft;
+  applyOverlayAppearance(resolved.overlayToApply);
+  renderStudioDirtyState();
+  scheduleOverlayPreviewRefresh();
 }
 
 function resetStudioDraftFromConfig() {
@@ -288,11 +304,11 @@ export function initStudio() {
   });
 
   document.addEventListener("admin-config-applied", function () {
-    if (!isStudioWorkspaceActive() || isStudioOverlayDirty()) {
+    if (!isStudioWorkspaceActive()) {
       renderActivePresetSelect(dom.studioActivePreset);
       return;
     }
-    resetStudioDraftFromConfig();
+    restoreStudioDraftAfterConfigApply();
     renderActivePresetSelect(dom.studioActivePreset);
   });
 
