@@ -2,7 +2,7 @@ version: 4
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 3c402b92a217f3e45af0a48b3f2c27461207190b
+    commit: ba7143b4fdea3170f20b48376abd32dc895f233f
 preset: desktop-app
 include:
     - theme: backend/go
@@ -13,6 +13,14 @@ include:
 exclude:
     - id: api-conventions
     - id: backend-structure
+    - id: openspec-workflow
+      artifacts:
+        - browser-report-template
+        - library-change-schema
+        - mobile-change-schema
+        - service-change-schema
+        - spec-driven-schema
+        - web-change-schema
 providers:
     - claude
     - codex
@@ -94,14 +102,14 @@ packages:
               installed_hash: sha256:c8147a97089bb75c27c31155ab38fe764f176d72ac7abd714626a99c13ee301e
     change-orchestration:
         hub_path: process/change-orchestration
-        upstream_hash: sha256:67491c119646c65b1bf88b8637e682004cff2e2fcf81b1efe01dd43a4ef6599f
+        upstream_hash: sha256:0b42821374702a0bd6b258bb1f5e71380d36fe02b6339cf19688bc7c30bb0ec3
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/change-orchestration
-              installed_hash: sha256:67491c119646c65b1bf88b8637e682004cff2e2fcf81b1efe01dd43a4ef6599f
+              installed_hash: sha256:0b42821374702a0bd6b258bb1f5e71380d36fe02b6339cf19688bc7c30bb0ec3
     closeout:
         hub_path: devtools/closeout
         upstream_hash: sha256:5a27c7df3ffe03131b5a986696d097a562dc54e2a16542dfe0139fcd18474a87
@@ -284,7 +292,7 @@ packages:
               installed_hash: sha256:070f8b09c3a88c4bf01c173f9c0d8ddd04a4f0d8e797b109f3068c0e32da7c29
     openspec-workflow:
         hub_path: process/openspec-workflow
-        upstream_hash: sha256:3f48a0e21959d05b52ec6363e31d66f440db76d5c1a8042170c6688e5a6f04cd
+        upstream_hash: sha256:5c0f1daa05673560d6c0ba9def24fce571e2780c21abc5b407273355171b5096
         artifacts:
             - id: desktop-change-schema
               kind: schema
@@ -292,42 +300,6 @@ packages:
               src: schemas/desktop-change
               dest: openspec/schemas/desktop-change
               installed_hash: sha256:750464eee09bb8df9379e622f163ff2e33de3f07ff2af131f13bc50209edf740
-            - id: library-change-schema
-              kind: schema
-              mode: tree
-              src: schemas/library-change
-              dest: openspec/schemas/library-change
-              installed_hash: sha256:20e95d6a6960de3a04030bcdd2b942a0bab08400dd304aa141b8bf78f35d7d75
-            - id: mobile-change-schema
-              kind: schema
-              mode: tree
-              src: schemas/mobile-change
-              dest: openspec/schemas/mobile-change
-              installed_hash: sha256:2f091a162d609302a8d732fae16678cd0ba4cf63d629382835aec4ec0049919c
-            - id: service-change-schema
-              kind: schema
-              mode: tree
-              src: schemas/service-change
-              dest: openspec/schemas/service-change
-              installed_hash: sha256:27e6fe632a131f37f1bc90b0777d27c03bbf48ed1f017b2fa2cfe6493ba06bf6
-            - id: spec-driven-schema
-              kind: schema
-              mode: tree
-              src: schemas/spec-driven
-              dest: openspec/schemas/spec-driven
-              installed_hash: sha256:971031841260457c4fe01284ab9c81712ef729143960b824af9db138dd0de9bd
-            - id: web-change-schema
-              kind: schema
-              mode: tree
-              src: schemas/web-change
-              dest: openspec/schemas/web-change
-              installed_hash: sha256:396050a9be3b02ab3bec82b9aa33c235f583b7b714ab646b3c13d944cae2dfbe
-            - id: browser-report-template
-              kind: template
-              mode: file
-              src: templates/browser-report.md
-              dest: openspec/templates/browser-report.md
-              installed_hash: sha256:437b29f9aedc1ac5bd89be3c23b12f9177f110a4ec0e069f0bd1d80a0932fc4c
             - id: qa-report-template
               kind: template
               mode: file
@@ -426,11 +398,11 @@ packages:
               installed_hash: sha256:442d2be25eede4bb75e16859818c39461665772559198cb814047b0fe80ccbe8
     work-intake:
         hub_path: process/work-intake
-        upstream_hash: sha256:1e658f390931bc4c44e29b7f8b5bcdf6796bc0ca1bdd31f9f615269033deb85f
+        upstream_hash: sha256:f9dafce169a4f770f14492579cda15505c8cb3a58a3b140601ac5e38bf984039
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/work-intake
-              installed_hash: sha256:1e658f390931bc4c44e29b7f8b5bcdf6796bc0ca1bdd31f9f615269033deb85f
+              installed_hash: sha256:f9dafce169a4f770f14492579cda15505c8cb3a58a3b140601ac5e38bf984039
