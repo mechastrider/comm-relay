@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -22,16 +23,18 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote/seventv"
 	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
 	"github.com/mechastrider/comm-relay/internal/runtime"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 // App runs CommRelay HTTP services and connectors until stopped.
 type App struct {
-	eventBus  *bus.Bus
-	runner    runnable.Runnable
-	cancel    context.CancelFunc
-	done      chan struct{}
-	adminURL  string
-	healthURL string
+	eventBus    *bus.Bus
+	runner      runnable.Runnable
+	viewerStore *store.Store
+	cancel      context.CancelFunc
+	done        chan struct{}
+	adminURL    string
+	healthURL   string
 }
 
 // New wires config, event bus, WebSocket hub, HTTP API, and connectors without starting them.
@@ -40,6 +43,24 @@ func New(opts Options) (*App, error) {
 	if err != nil {
 		return nil, errors.Errorf("load config: %w", err)
 	}
+
+	dbPath, err := store.DBPath(opts.ConfigPath)
+	if err != nil {
+		return nil, errors.Errorf("resolve viewer database path: %w", err)
+	}
+
+	viewerStore, err := store.Open(dbPath)
+	if err != nil {
+		return nil, errors.Errorf("open viewer store: %w", err)
+	}
+	closeViewerStore := true
+	defer func() {
+		if closeViewerStore {
+			if closeErr := viewerStore.Close(); closeErr != nil {
+				clog.Warn(context.Background(), "close viewer store after bootstrap failure", slog.Any("error", closeErr))
+			}
+		}
+	}()
 
 	addr := opts.Addr
 	if addr == "" {
@@ -59,7 +80,7 @@ func New(opts Options) (*App, error) {
 		return nil, errors.Errorf("create websocket hub: %w", err)
 	}
 
-	store, err := config.NewStore(opts.ConfigPath, cfg)
+	cfgStore, err := config.NewStore(opts.ConfigPath, cfg)
 	if err != nil {
 		return nil, errors.Errorf("create config store: %w", err)
 	}
@@ -74,18 +95,23 @@ func New(opts Options) (*App, error) {
 	emoteCache.RegisterFetcher(bttv.New(emoteHTTP, ffzFetcher))
 	emoteCache.RegisterFetcher(seventv.New(emoteHTTP, ffzFetcher))
 	emoteEnricher := emote.NewEnricher(emoteCache)
-	emoteRefresher := emote.NewRefresher(emoteCache, store)
+	emoteRefresher := emote.NewRefresher(emoteCache, cfgStore)
 	youtubeEmojiCatalog := ytemoji.NewCatalog()
 	youtubeEmojiRefresher := ytemoji.NewRefresher(youtubeEmojiCatalog, emoteHTTP)
 
+	leaderboardPublisher := api.NewLeaderboardPublisher(hub, viewerStore, cfgStore)
+	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher)
+
 	handler, err := api.NewHandler(api.Options{
-		WebRoot:    webRoot,
-		Hub:        hub,
-		Store:      store,
-		History:    history,
-		Registry:   statusRegistry,
-		Runtime:    runtimeInfo,
-		EmoteCache: emoteCache,
+		WebRoot:              webRoot,
+		Hub:                  hub,
+		Store:                cfgStore,
+		ViewerStore:          viewerStore,
+		LeaderboardPublisher: leaderboardPublisher,
+		History:              history,
+		Registry:             statusRegistry,
+		Runtime:              runtimeInfo,
+		EmoteCache:           emoteCache,
 	})
 	if err != nil {
 		return nil, errors.Errorf("create handler: %w", err)
@@ -107,6 +133,11 @@ func New(opts Options) (*App, error) {
 			history.Run(ctx, eventBus)
 			return nil
 		}).Name("message-history"),
+		runnable.Func(func(ctx context.Context) error {
+			defer leaderboardPublisher.Stop()
+			viewerIngest.Run(ctx, eventBus)
+			return nil
+		}).Name("viewer-ingest"),
 		runnable.Func(func(ctx context.Context) error {
 			statusRegistry.RunMessageCounter(ctx, eventBus)
 			return nil
@@ -131,22 +162,24 @@ func New(opts Options) (*App, error) {
 			Name("http"),
 	}
 
-	twitchConn := twitchconnector.New(eventBus, store, statusRegistry, emoteEnricher)
+	twitchConn := twitchconnector.New(eventBus, cfgStore, statusRegistry, emoteEnricher)
 	processes = append(processes, connectorRunnable("twitch", twitchConn.Run))
 
-	youtubeConn := youtubeconnector.New(eventBus, store, statusRegistry, youtubeEmojiCatalog, emoteHTTP, youtubeEmojiRefresher)
+	youtubeConn := youtubeconnector.New(eventBus, cfgStore, statusRegistry, youtubeEmojiCatalog, emoteHTTP, youtubeEmojiRefresher)
 	processes = append(processes, connectorRunnable("youtube", youtubeConn.Run))
 
-	vkConn := vkconnector.New(eventBus, store, statusRegistry)
+	vkConn := vkconnector.New(eventBus, cfgStore, statusRegistry)
 	processes = append(processes, connectorRunnable("vk", vkConn.Run))
 
 	mgr.Register(processes...)
 
+	closeViewerStore = false
 	return &App{
-		eventBus:  eventBus,
-		runner:    mgr,
-		adminURL:  config.AdminBaseURLForListenAddr(addr, cfg),
-		healthURL: config.HealthURLForListenAddr(addr, cfg),
+		eventBus:    eventBus,
+		runner:      mgr,
+		viewerStore: viewerStore,
+		adminURL:    config.AdminBaseURLForListenAddr(addr, cfg),
+		healthURL:   config.HealthURLForListenAddr(addr, cfg),
 	}, nil
 }
 
@@ -187,19 +220,25 @@ func (a *App) Start(ctx context.Context) error {
 
 // Stop cancels background workers and waits for shutdown.
 func (a *App) Stop(ctx context.Context) error {
-	if a.cancel == nil {
-		return nil
+	if a.cancel != nil {
+		a.cancel()
+
+		select {
+		case <-a.done:
+			a.cancel = nil
+		case <-ctx.Done():
+			return errors.Errorf("stop app: %w", ctx.Err())
+		}
 	}
 
-	a.cancel()
-
-	select {
-	case <-a.done:
-		a.cancel = nil
-		return nil
-	case <-ctx.Done():
-		return errors.Errorf("stop app: %w", ctx.Err())
+	if a.viewerStore != nil {
+		if err := a.viewerStore.Close(); err != nil {
+			return errors.Errorf("close viewer store: %w", err)
+		}
+		a.viewerStore = nil
 	}
+
+	return nil
 }
 
 // LogStartup logs listen address and connector list after Start succeeds.

@@ -4,11 +4,13 @@ import { defaultStyleForTheme, mergeStyle } from "../../overlay/overlay-settings
 import { uploadOverlayAsset } from "./overlay-asset-upload.js";
 import { showBanner, markSettingsDirty } from "./ui-shell.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
+import { buildLeaderboardURL } from "./leaderboard-url.js";
 import * as dom from "./dom.js";
 
 let presets = [];
 let activePresetId = "default";
 let bound = false;
+let switchingPreset = false;
 
 const PANEL_IMAGE_FIT_VALUES = ["cover", "contain", "fill", "tile"];
 const PRESET_LIMIT = 32;
@@ -62,21 +64,40 @@ function setFieldValue(id, value) {
 }
 
 function collectStyleFromForm() {
+  const lineHeight = Number.parseFloat(fieldValue("overlay-line-height", "1.35"));
+  const textEdgeStrength = Number.parseInt(fieldValue("overlay-text-edge-strength", "2"), 10);
+  const panelOpacity = Number.parseFloat(fieldValue("overlay-panel-opacity", "0.58"));
+  const borderWidth = Number.parseInt(fieldValue("overlay-border-width", "0"), 10);
+  const borderRadius = Number.parseInt(fieldValue("overlay-border-radius", "8"), 10);
   return {
     font_family: fieldValue("overlay-font-family", "system"),
-    line_height: Number.parseFloat(fieldValue("overlay-line-height", "1.35")),
+    line_height: Number.isFinite(lineHeight) ? lineHeight : 1.35,
     text_edge: fieldValue("overlay-text-edge", "shadow"),
-    text_edge_strength: Number.parseInt(fieldValue("overlay-text-edge-strength", "2"), 10),
+    text_edge_strength: Number.isFinite(textEdgeStrength) ? textEdgeStrength : 2,
     platform_marker: fieldValue("overlay-platform-marker", "stripe"),
     panel_color: fieldValue("overlay-panel-color", "#000000"),
-    panel_opacity: Number.parseFloat(fieldValue("overlay-panel-opacity", "0.58")),
+    panel_opacity: Number.isFinite(panelOpacity) ? panelOpacity : 0.58,
     panel_image: fieldValue("overlay-panel-image", ""),
     panel_image_fit: fieldValue("overlay-panel-image-fit", "cover"),
     panel_image_scope: fieldValue("overlay-panel-image-scope", "message"),
-    border_width: Number.parseInt(fieldValue("overlay-border-width", "0"), 10),
+    border_width: Number.isFinite(borderWidth) ? borderWidth : 0,
     border_color: fieldValue("overlay-border-color", "#ffffff"),
-    border_radius: Number.parseInt(fieldValue("overlay-border-radius", "8"), 10),
+    border_radius: Number.isFinite(borderRadius) ? borderRadius : 8,
   };
+}
+
+function collectLeaderboardSurface(base) {
+  const chatFont = Number.parseInt(fieldValue("overlay-font-size", String((base && base.font_size_px) || 18)), 10);
+  const rawFont = Number.parseInt(fieldValue("overlay-leaderboard-font-size", String(chatFont)), 10);
+  const layout = fieldValue("overlay-leaderboard-layout", "panel") === "chips" ? "chips" : "panel";
+  const leaderboard = {};
+  if (Number.isFinite(rawFont) && rawFont !== chatFont) {
+    leaderboard.font_size_px = rawFont;
+  }
+  if (layout === "chips") {
+    leaderboard.layout = layout;
+  }
+  return { leaderboard };
 }
 
 function collectPresetFromForm(base) {
@@ -89,20 +110,37 @@ function collectPresetFromForm(base) {
     display_mode: fieldValue("overlay-display-mode", "normal") === "compact" ? "compact" : "normal",
     theme: fieldValue("overlay-theme", "default"),
     style: collectStyleFromForm(),
+    surfaces: collectLeaderboardSurface(base),
+  };
+}
+
+function normalizeLeaderboardSurface(raw, fontSizePx) {
+  const incoming = raw && raw.leaderboard && typeof raw.leaderboard === "object" ? raw.leaderboard : {};
+  const font =
+    typeof incoming.font_size_px === "number" && incoming.font_size_px >= 12
+      ? incoming.font_size_px
+      : fontSizePx;
+  return {
+    leaderboard: {
+      font_size_px: font,
+      layout: incoming.layout === "chips" ? "chips" : "panel",
+    },
   };
 }
 
 function normalizePreset(raw) {
   const theme = raw && raw.theme ? raw.theme : "default";
+  const fontSizePx = typeof raw.font_size_px === "number" ? raw.font_size_px : 18;
   return {
     id: (raw && raw.id) || newID("preset"),
     name: (raw && raw.name) || "Default",
     max_messages: typeof raw.max_messages === "number" ? raw.max_messages : 30,
     message_ttl_seconds: typeof raw.message_ttl_seconds === "number" ? raw.message_ttl_seconds : 20,
-    font_size_px: typeof raw.font_size_px === "number" ? raw.font_size_px : 18,
+    font_size_px: fontSizePx,
     display_mode: raw && raw.display_mode === "compact" ? "compact" : "normal",
     theme: theme,
     style: mergeStyle(theme, raw && raw.style),
+    surfaces: normalizeLeaderboardSurface(raw && raw.surfaces, fontSizePx),
   };
 }
 
@@ -220,6 +258,9 @@ function writeFormFromPreset(preset) {
   setFieldValue("overlay-border-width", String(style.border_width));
   setFieldValue("overlay-border-color", style.border_color);
   setFieldValue("overlay-border-radius", String(style.border_radius));
+  const leaderboard = normalizeLeaderboardSurface(preset.surfaces, preset.font_size_px || 18).leaderboard;
+  setFieldValue("overlay-leaderboard-font-size", String(leaderboard.font_size_px));
+  setFieldValue("overlay-leaderboard-layout", leaderboard.layout);
   updatePanelImagePreview(style.panel_image);
 }
 
@@ -248,13 +289,21 @@ function fillPresetSelect(select) {
   if (!select) {
     return;
   }
-  select.innerHTML = "";
-  presets.forEach(function (preset) {
-    const option = document.createElement("option");
-    option.value = preset.id;
-    option.textContent = preset.name || preset.id;
-    select.appendChild(option);
-  });
+  const sameOptions =
+    select.options.length === presets.length &&
+    presets.every(function (preset, index) {
+      const option = select.options[index];
+      return option && option.value === preset.id && option.textContent === (preset.name || preset.id);
+    });
+  if (!sameOptions) {
+    select.innerHTML = "";
+    presets.forEach(function (preset) {
+      const option = document.createElement("option");
+      option.value = preset.id;
+      option.textContent = preset.name || preset.id;
+      select.appendChild(option);
+    });
+  }
   select.value = activePresetId;
 }
 
@@ -277,7 +326,6 @@ function updatePresetActionButtons() {
 
 function renderPresetSelect() {
   fillPresetSelect(document.getElementById("overlay-preset-select"));
-  fillPresetSelect(document.getElementById("obs-overlay-preset-select"));
   updatePresetActionButtons();
 }
 
@@ -298,13 +346,19 @@ function presetSnapshotEqual(left, right) {
 }
 
 export function isCurrentPresetDirty() {
-  writeFormIntoActive();
-  const current = presets.find(function (preset) {
-    return preset.id === activePresetId;
-  });
-  if (!current) {
+  if (switchingPreset) {
     return false;
   }
+  const base = presets.find(function (preset) {
+    return preset.id === activePresetId;
+  });
+  if (!base) {
+    return false;
+  }
+  // Compare a form snapshot without mutating in-memory presets. Calling
+  // writeFormIntoActive() here used to overwrite the active preset with HTML
+  // defaults before writeFormFromPreset ran on config load.
+  const current = collectPresetFromForm(base);
   const saved = getSavedPreset(activePresetId);
   if (!saved) {
     return true;
@@ -325,8 +379,16 @@ export function updatePresetIsland() {
   }
   const overlayUrl = buildObsOverlayURL(activePresetId);
   if (dom.presetIslandUrl) {
-    dom.presetIslandUrl.value = overlayUrl;
-    dom.presetIslandUrl.title = overlayUrl;
+    const surface = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
+    const previewSurface = surface ? surface.getAttribute("data-obs-preview-surface") : "chat";
+    if (previewSurface === "leaderboard") {
+      const leaderboardUrl = currentLeaderboardURL();
+      dom.presetIslandUrl.value = leaderboardUrl;
+      dom.presetIslandUrl.title = leaderboardUrl;
+    } else {
+      dom.presetIslandUrl.value = overlayUrl;
+      dom.presetIslandUrl.title = overlayUrl;
+    }
   }
   const connectionUrl = dom.obsOverlayUrl;
   if (connectionUrl) {
@@ -334,6 +396,13 @@ export function updatePresetIsland() {
   }
   if (dom.obsOverlayOpen) {
     dom.obsOverlayOpen.href = overlayUrl;
+  }
+  const leaderboardUrl = currentLeaderboardURL();
+  if (dom.obsLeaderboardUrl) {
+    dom.obsLeaderboardUrl.value = leaderboardUrl;
+  }
+  if (dom.obsLeaderboardOpen) {
+    dom.obsLeaderboardOpen.href = leaderboardUrl;
   }
   if (dom.presetUrlStatus) {
     const dirty = isCurrentPresetDirty();
@@ -354,6 +423,26 @@ export function overlayThemeLabel(theme) {
 
 export function getActivePresetID() {
   return activePresetId;
+}
+
+export function currentLeaderboardURL() {
+  writeFormIntoActive();
+  const preset = currentPreset();
+  const surface = preset && preset.surfaces && preset.surfaces.leaderboard ? preset.surfaces.leaderboard : {};
+  const chatFont = preset && typeof preset.font_size_px === "number" ? preset.font_size_px : 18;
+  const leaderboardFont =
+    typeof surface.font_size_px === "number" && surface.font_size_px !== chatFont
+      ? surface.font_size_px
+      : undefined;
+  return buildLeaderboardURL({
+    period:
+      (dom.overlayLeaderboardPeriod && dom.overlayLeaderboardPeriod.value) ||
+      (dom.obsLeaderboardPeriod && dom.obsLeaderboardPeriod.value) ||
+      "session",
+    preset: activePresetId,
+    layout: surface.layout,
+    fontSizePx: leaderboardFont,
+  });
 }
 
 export function collectAppearanceQuery() {
@@ -405,8 +494,10 @@ export function applyOverlayAppearance(overlay) {
     })
       ? incoming.active_preset_id
       : presets[0].id;
-  renderPresetIsland();
+  // Write fields before the preset island refresh so dirty-status reads the
+  // loaded preset instead of leftover HTML defaults.
   writeFormFromPreset(currentPreset());
+  renderPresetIsland();
 }
 
 export function collectOverlayAppearance() {
@@ -424,7 +515,9 @@ export function collectOverlayAppearance() {
 }
 
 function switchPreset(nextId) {
-  writeFormIntoActive();
+  if (switchingPreset || !nextId || nextId === activePresetId) {
+    return;
+  }
   if (
     !presets.some(function (preset) {
       return preset.id === nextId;
@@ -432,10 +525,16 @@ function switchPreset(nextId) {
   ) {
     return;
   }
-  activePresetId = nextId;
-  renderPresetIsland();
-  writeFormFromPreset(currentPreset());
-  requestPreviewRefresh();
+  switchingPreset = true;
+  try {
+    writeFormIntoActive();
+    activePresetId = nextId;
+    renderPresetSelect();
+    writeFormFromPreset(currentPreset());
+    requestPreviewRefresh();
+  } finally {
+    switchingPreset = false;
+  }
 }
 
 let promptMode = "";
@@ -753,6 +852,9 @@ export function initOverlayAppearance() {
     "overlay-border-width",
     "overlay-border-color",
     "overlay-border-radius",
+    "overlay-leaderboard-font-size",
+    "overlay-leaderboard-layout",
+    "overlay-leaderboard-period",
   ].forEach(function (id) {
     const el = document.getElementById(id);
     if (el) {

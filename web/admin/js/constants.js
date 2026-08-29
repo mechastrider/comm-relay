@@ -9,6 +9,7 @@ export const INITIAL_WS_RECONNECT_MS = 1000;
 export const MAX_WS_RECONNECT_MS = 30000;
 export const SIDEBAR_COLLAPSED_KEY = "commRelay.sidebarCollapsed";
 export const OVERLAY_PREVIEW_MODE_KEY = "commRelay.overlayPreview.mode";
+export const OVERLAY_PREVIEW_SURFACE_KEY = "commRelay.overlayPreview.surface";
 export const OVERLAY_PREVIEW_BACKGROUND_KEY = "commRelay.overlayPreview.background";
 export const OVERLAY_PREVIEW_WIDTH_KEY = "commRelay.overlayPreview.width";
 export const OVERLAY_PREVIEW_HEIGHT_KEY = "commRelay.overlayPreview.height";

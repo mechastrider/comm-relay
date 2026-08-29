@@ -14,14 +14,16 @@ var ErrInvalidConfig = errors.New("invalid config")
 
 // Config holds application settings persisted in config.json.
 type Config struct {
-	ServerPort int           `json:"server_port"`
-	Network    NetworkConfig `json:"network"`
-	Twitch     TwitchConfig  `json:"twitch"`
-	YouTube    YouTubeConfig `json:"youtube"`
-	VK         VKConfig      `json:"vk"`
-	Overlay    OverlayConfig `json:"overlay"`
-	Admin      AdminConfig   `json:"admin"`
-	Logging    LoggingConfig `json:"logging"`
+	ServerPort       int           `json:"server_port"`
+	PointsPerMessage int           `json:"points_per_message"`
+	DayResetHour     int           `json:"day_reset_hour"`
+	Network          NetworkConfig `json:"network"`
+	Twitch           TwitchConfig  `json:"twitch"`
+	YouTube          YouTubeConfig `json:"youtube"`
+	VK               VKConfig      `json:"vk"`
+	Overlay          OverlayConfig `json:"overlay"`
+	Admin            AdminConfig   `json:"admin"`
+	Logging          LoggingConfig `json:"logging"`
 }
 
 // TwitchConfig holds Twitch connector settings.
@@ -76,7 +78,9 @@ type OverlayConfig struct {
 // Default returns safe prototype defaults.
 func Default() *Config {
 	cfg := &Config{
-		ServerPort: 17877,
+		ServerPort:       17877,
+		PointsPerMessage: 1,
+		DayResetHour:     6,
 		Twitch: TwitchConfig{
 			Enabled: false,
 			Channel: "",

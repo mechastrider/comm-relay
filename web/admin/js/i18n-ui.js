@@ -33,6 +33,7 @@ export function applyAdminLocale(locale) {
   const next = setLocale(locale);
   writeCachedLocale(next);
   applyDomTranslations(document);
+  window.dispatchEvent(new CustomEvent("admin-locale-applied"));
   renderSettingsState();
   renderAboutVersion();
   updateOverlayPreviewNote();

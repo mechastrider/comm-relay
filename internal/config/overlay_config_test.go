@@ -123,8 +123,66 @@ func TestDefault_WhenCalled_ExpectPresetMirrorsFlatFields(t *testing.T) {
 	require.Equal(t, OverlayDefaultPresetID, cfg.Overlay.ActivePresetID)
 	require.Equal(t, cfg.Overlay.MaxMessages, cfg.Overlay.Presets[0].MaxMessages)
 	require.Equal(t, cfg.Overlay.Theme, cfg.Overlay.Presets[0].Theme)
+	require.Equal(t, OverlayLeaderboardLayoutPanel, cfg.Overlay.Presets[0].LeaderboardLayout())
+	require.Equal(t, cfg.Overlay.Presets[0].FontSizePx, cfg.Overlay.Presets[0].LeaderboardFontSizePx())
 
 	data, err := json.Marshal(cfg)
 	require.NoError(t, err)
 	require.NotContains(t, string(data), `"page_opacity"`)
+}
+
+func TestValidate_WhenLeaderboardLayoutInvalid_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.Layout = "grid"
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+	require.Contains(t, ValidationFields(err), "overlay_preset_0_surfaces_leaderboard_layout")
+}
+
+func TestValidate_WhenLeaderboardFontOutOfRange_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.FontSizePx = 8
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+	require.Contains(t, ValidationFields(err), "overlay_preset_0_surfaces_leaderboard_font_size_px")
+}
+
+func TestLeaderboardSurface_WhenFontOmitted_ExpectInheritsPresetFont(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].FontSizePx = 22
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.FontSizePx = 0
+	cfg.Overlay.EnsurePresets()
+
+	require.NoError(t, cfg.Validate())
+	require.Equal(t, 22, cfg.Overlay.Presets[0].LeaderboardFontSizePx())
+	require.Equal(t, OverlayLeaderboardLayoutPanel, cfg.Overlay.Presets[0].LeaderboardLayout())
+}
+
+func TestLeaderboardSurface_WhenStored_ExpectOverridesAndPublicJSON(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].FontSizePx = 18
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.FontSizePx = 14
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.Layout = OverlayLeaderboardLayoutChips
+	cfg.Overlay.EnsurePresets()
+
+	require.NoError(t, cfg.Validate())
+	require.Equal(t, 14, cfg.Overlay.Presets[0].LeaderboardFontSizePx())
+	require.Equal(t, OverlayLeaderboardLayoutChips, cfg.Overlay.Presets[0].LeaderboardLayout())
+
+	data, err := json.Marshal(cfg.Public())
+	require.NoError(t, err)
+	require.Contains(t, string(data), `"font_size_px":14`)
+	require.Contains(t, string(data), `"layout":"chips"`)
 }

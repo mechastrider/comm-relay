@@ -75,13 +75,26 @@
 
   .overlay-editor {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto minmax(240px, 1fr);
+    grid-template-rows: auto auto auto minmax(240px, 1fr);
     overflow: auto;
     align-items: start;
   }
 
   .preset-island {
     position: static;
+  }
+
+  .surface-tabs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .surface-tabs__list {
+    width: 100%;
+  }
+
+  .surface-tab {
+    flex: 1 1 0;
   }
 
   .preset-island__toolbar {

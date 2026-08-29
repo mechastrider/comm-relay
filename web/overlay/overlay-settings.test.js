@@ -5,6 +5,8 @@ import {
   applyQueryStyleOverrides,
   defaultStyleForTheme,
   hexToRgba,
+  leaderboardViewFromConfig,
+  normalizeLeaderboardLayout,
   normalizePanelImageFit,
   normalizePanelImageScope,
   normalizePreviewBackground,
@@ -106,4 +108,69 @@ test("overlayViewFromConfig uses query preset", function () {
   assert.equal(view.max_messages, 8);
   assert.equal(view.display_mode, "compact");
   assert.equal(view.style.platform_marker, "icon");
+});
+
+test("normalizeLeaderboardLayout defaults invalid values to panel", function () {
+  assert.equal(normalizeLeaderboardLayout("chips"), "chips");
+  assert.equal(normalizeLeaderboardLayout("panel"), "panel");
+  assert.equal(normalizeLeaderboardLayout("grid"), "panel");
+  assert.equal(normalizeLeaderboardLayout(""), "panel");
+});
+
+test("leaderboardViewFromConfig inherits font and defaults layout to panel", function () {
+  const view = leaderboardViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [{ id: "default", theme: "cockpit_popups", font_size_px: 18 }],
+      },
+    },
+    new URLSearchParams("")
+  );
+  assert.equal(view.theme, "cockpit_popups");
+  assert.equal(view.font_size_px, 18);
+  assert.equal(view.layout, "panel");
+});
+
+test("leaderboardViewFromConfig uses surface overrides and valid query", function () {
+  const view = leaderboardViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [
+          {
+            id: "raid",
+            theme: "default",
+            font_size_px: 18,
+            surfaces: { leaderboard: { font_size_px: 14, layout: "chips" } },
+          },
+        ],
+      },
+    },
+    new URLSearchParams("preset=raid&theme=cockpit_panel&font_size_px=16&layout=panel")
+  );
+  assert.equal(view.theme, "cockpit_panel");
+  assert.equal(view.font_size_px, 16);
+  assert.equal(view.layout, "panel");
+});
+
+test("leaderboardViewFromConfig ignores invalid theme and layout query", function () {
+  const view = leaderboardViewFromConfig(
+    {
+      overlay: {
+        presets: [
+          {
+            id: "default",
+            theme: "dashboard",
+            font_size_px: 20,
+            surfaces: { leaderboard: { layout: "chips" } },
+          },
+        ],
+      },
+    },
+    new URLSearchParams("theme=not-a-theme&layout=grid&font_size_px=8")
+  );
+  assert.equal(view.theme, "dashboard");
+  assert.equal(view.layout, "chips");
+  assert.equal(view.font_size_px, 20);
 });

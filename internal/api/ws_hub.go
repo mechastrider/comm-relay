@@ -94,3 +94,8 @@ func (h *Hub) broadcast(payload []byte) {
 		}
 	}
 }
+
+// Broadcast sends a JSON payload to all connected WebSocket clients.
+func (h *Hub) Broadcast(payload []byte) {
+	h.broadcast(payload)
+}

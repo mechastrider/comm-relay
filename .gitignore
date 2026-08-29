@@ -30,3 +30,8 @@ var/
 
 # JavaScript dev tooling (ESLint)
 node_modules/
+
+.agent-orchestration/
+comm-relay.db
+comm-relay.db-wal
+comm-relay.db-shm

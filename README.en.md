@@ -23,7 +23,9 @@ You can see CommRelay in use on the author's streams:
 - Connects Twitch, YouTube Live Chat, and VK Live / VK Video.
 - Shows a unified transparent overlay for OBS: `http://127.0.0.1:17877/overlay`.
 - Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
-- Provides a local control panel with statuses, message monitor, overlay settings, and diagnostics.
+- Tracks viewer stats (score, messages, session/day/all-time) in a local `comm-relay.db` file next to `config.json` — no separate database server.
+- Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?preset=…&period=session|day|all` (same theme as chat).
+- Provides a local control panel with statuses, message monitor, viewers tab, overlay settings, and diagnostics.
 - Supports Twitch emotes, FrankerFaceZ, BetterTTV, 7TV, and safe image previews.
 - Automatically reconnects connectors and stores settings locally in `config.json`.
 
@@ -76,10 +78,10 @@ By default CommRelay listens on `127.0.0.1:17877`. The admin panel is available 
 
 ## OBS Browser Source
 
-1. In CommRelay open **OBS → Setup** and click **Copy URL** on the **On-stream overlay** card.
-2. In OBS add a **Browser** source and paste the copied URL.
-3. Set the size for your scene layout, for example `800x600` or the full scene width.
-4. Do not add a background manually: the overlay is already transparent.
+1. In CommRelay open **OBS → Connection**: a source list on the left (chat, leaderboard, message dock; banners are not ready yet).
+2. Select the source, click **Copy URL**, and in OBS add a **Browser** source (chat and leaderboard) or a Custom Browser Dock (message dock).
+3. Chat and leaderboard URLs already include `?preset=` for the active preset; the leaderboard also includes `period` and, when needed, `layout` / `font_size_px`.
+4. Set the size for your scene layout. Do not add a background manually: on-stream sources are already transparent.
 5. Keep CommRelay running during the stream.
 
 If you changed the port in settings, update the URL in OBS.
@@ -88,7 +90,7 @@ If you changed the port in settings, update the URL in OBS.
 
 CommRelay can show a separate chat feed directly in the OBS interface. This panel is for the streamer: it does not appear on the scene and is not visible to viewers.
 
-1. In CommRelay open **OBS → Setup** and click **Copy URL** on the **Message dock** card.
+1. In CommRelay open **OBS → Connection**, select **Message dock**, and click **Copy URL**.
 2. In OBS open **View → Docks → Custom Browser Docks…** (**Вид → Док-панели → Пользовательские браузерные доки…**).
 3. Enter a name, for example `CommRelay Messages`, and paste the copied URL.
 4. Click **Apply**, then place the new panel in a convenient part of the OBS interface.
@@ -107,9 +109,10 @@ Open **OBS → Appearance** in the CommRelay control panel.
 | **Message TTL** | After how many seconds a message disappears (0 — do not remove by time). |
 | **Font size** | Text size in the overlay, from **12 to 48 px**. |
 | **Spacing** | **Comfortable** — normal padding. **Compact** — denser when many lines are on screen. |
-| **Theme** | **Default** — cards with a semi-transparent background. **Text only** — text only, no background. **Cockpit panel** — shared HUD panel. **Cockpit popups** — separate MW5 HUD pop-up messages. **G-Rebels Cockpit popups** — pop-up messages in a gold aviation HUD style. |
-| **Presets** | A named look for a scene or game: theme, limit, TTL, density, text edge, platform marker, panel. An older `config.json` without presets becomes the **Default** preset. |
-| **URL `?preset=`** | Each OBS scene can have its own Browser Source: copy the URL on the **Setup** tab — it already includes the active preset. |
+| **Theme** | **Default** — cards with a semi-transparent background. **Text only** — text only, no background. **Cockpit panel** — shared HUD panel. **Cockpit popups** — separate MW5 HUD pop-up messages. **G-Rebels Cockpit popups** — pop-up messages in a gold aviation HUD style. The same theme styles chat and the leaderboard. |
+| **Presets** | A named look for a scene or game: theme, limit, TTL, density, text edge, platform marker, panel, plus leaderboard font and layout (`panel` / `chips`). An older `config.json` without presets becomes the **Default** preset. |
+| **URL `?preset=`** | Each OBS scene can have its own Browser Source: copy the URL from the source list on the **Connection** tab — it already includes the active preset. |
+| **Preview** | **Chat / Leaderboard** switch: the leaderboard preview always shows a fictitious top-5, never live stats. |
 
 After any change:
 
@@ -292,7 +295,8 @@ If `libwebkit2gtk-4.1-dev` is unavailable, install the **WebKitGTK 4.1** equival
 |-----|---------|
 | `http://127.0.0.1:17877/` | Admin panel |
 | `http://127.0.0.1:17877/dock/messages` | Message log in the OBS interface |
-| `http://127.0.0.1:17877/overlay` | OBS Browser Source |
+| `http://127.0.0.1:17877/overlay` | OBS Browser Source (chat) |
+| `http://127.0.0.1:17877/overlay/leaderboard` | OBS Browser Source (leaderboard) |
 | `http://127.0.0.1:17877/health` | Health check |
 | `ws://127.0.0.1:17877/ws` | WebSocket with messages |
 

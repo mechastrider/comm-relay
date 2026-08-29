@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CommRelay — OBS studio concept</title>
+  <style>
+    :root {
+      --panel-bg: #171719;
+      --surface: #242428;
+      --surface-raised: #2e2e34;
+      --surface-dark: #0d0d10;
+      --border: #444;
+      --text: #d9d9dd;
+      --muted: #98989f;
+      --subtle: #727278;
+      --amber: #d4a017;
+      --amber-dim: #8a6a10;
+      --focus: #33cc66;
+      --hud-cyan: #35d2d0;
+      --hud-green: #8ed83f;
+      --hud-amber: #f0df58;
+      --hud-glass: rgba(8, 17, 22, 0.78);
+      --hud-glass-strong: rgba(4, 13, 17, 0.82);
+      --overlay-text: #f4f6f0;
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      background: #121214;
+      color: var(--text);
+    }
+
+    body {
+      padding: 24px 20px 64px;
+      line-height: 1.45;
+    }
+
+    h1, h2, h3 { margin: 0; }
+
+    .page-intro {
+      max-width: 1180px;
+      margin: 0 auto 28px;
+    }
+
+    .page-intro .kicker {
+      color: var(--amber);
+      font-size: 11px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+
+    .page-intro h1 {
+      margin: 6px 0 10px;
+      font-size: 28px;
+      letter-spacing: 0.4px;
+    }
+
+    .page-intro p {
+      max-width: 72ch;
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .page-intro .note {
+      color: var(--amber);
+      font-size: 12px;
+    }
+
+    .section {
+      max-width: 1180px;
+      margin: 0 auto 36px;
+    }
+
+    .section h2 {
+      margin-bottom: 8px;
+      color: var(--text);
+      font-size: 16px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .section > p {
+      max-width: 80ch;
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── Stream comparison ── */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .obs-rect {
+      min-height: 420px;
+      overflow: hidden;
+      border: 1px solid #666;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.42)),
+        radial-gradient(ellipse at 40% 30%, #3a4a38 0, #1a2218 42%, #0c100c 100%);
+    }
+
+    .obs-rect__label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.45);
+      color: #eee;
+      font-size: 11px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .obs-rect__label span {
+      color: #9ad;
+      font-size: 10px;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .obs-rect__stage {
+      position: relative;
+      height: 380px;
+      padding: 10px;
+    }
+
+    .hud-font {
+      color: var(--overlay-text);
+      font-family: "Roboto Condensed", "Arial Narrow", Bahnschrift, Arial, sans-serif;
+      text-shadow: 0 2px 3px #000, 0 0 9px rgba(255, 255, 255, 0.18);
+    }
+
+    .chat-stack,
+    .chip-stack {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .chip {
+      display: grid;
+      grid-template-columns: 36px 4px minmax(0, 1fr);
+      gap: 4px 10px;
+      min-height: 58px;
+      padding: 10px 14px 12px 10px;
+      border: 1px solid rgba(53, 210, 208, 0.4);
+      background:
+        linear-gradient(90deg, rgba(53, 210, 208, 0.18), transparent 34%),
+        var(--hud-glass-strong);
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 12px 100%, 0 calc(100% - 12px));
+    }
+
+    .chip--rank {
+      grid-template-columns: 2.2em 36px minmax(0, 1fr);
+      min-height: 52px;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #1b3a38;
+      box-shadow: 0 0 0 1px rgba(53, 210, 208, 0.45);
+    }
+
+    .accent { background: var(--hud-cyan); }
+
+    .who {
+      color: var(--hud-amber);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .msg, .stats {
+      color: var(--overlay-text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .stats {
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.8;
+    }
+
+    .rank-num {
+      color: var(--hud-amber);
+      font-size: 18px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .panel-frame {
+      position: absolute;
+      inset: 12px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      padding: 42px 16px 14px 58px;
+      border: 1px solid rgba(83, 232, 226, 0.44);
+      background:
+        linear-gradient(var(--hud-cyan), var(--hud-cyan)) 14px 18px / 28px 3px no-repeat,
+        linear-gradient(90deg, rgba(51, 222, 204, 0.12) 0 46px, transparent 46px),
+        linear-gradient(90deg, rgba(53, 210, 208, 0.38) 0 1px, transparent 1px) 46px 0 / 1px 100% no-repeat,
+        var(--hud-glass);
+      clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+      overflow: hidden;
+    }
+
+    .panel-frame::before {
+      content: "COMMRELAY RANKING";
+      position: absolute;
+      left: 46px;
+      right: 12px;
+      top: 0;
+      padding: 14px 0 0 18px;
+      color: var(--hud-cyan);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .panel-row {
+      display: grid;
+      grid-template-columns: 2em 28px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(53, 210, 208, 0.12);
+    }
+
+    .panel-row .msg { font-size: 14px; }
+    .panel-row .stats { font-size: 11px; }
+
+    .tiny-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #1b3a38;
+    }
+
+    .callout {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-left: 3px solid var(--amber-dim);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .callout strong { color: var(--text); }
+
+    /* ── Dialog mock ── */
+    .dialog {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-height: 720px;
+      max-height: 860px;
+      overflow: hidden;
+      border: 1px solid #111;
+      background: var(--panel-bg);
+      box-shadow: 0 22px 42px rgba(0, 0, 0, 0.36);
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--amber-dim);
+      background: var(--surface);
+    }
+
+    .dialog-kicker {
+      color: var(--subtle);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .dialog-header h2 { font-size: 20px; }
+
+    .btn {
+      min-height: 32px;
+      padding: 4px 10px;
+      border: 1px solid #555;
+      background: #2a2a30;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .btn:hover { border-color: var(--amber); }
+
+    .btn-primary {
+      border-color: #38614a;
+      background: #1c3328;
+      color: #8ce5ad;
+    }
+
+    .dialog-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-dark);
+    }
+
+    .dialog-tab {
+      padding: 10px 14px;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .dialog-tab[aria-selected="true"] {
+      border-bottom-color: var(--amber);
+      color: var(--text);
+    }
+
+    .dialog-body { min-height: 0; overflow: hidden; }
+    .tab-panel { height: 100%; min-height: 620px; }
+
+    .sources-layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      height: 100%;
+    }
+
+    .source-list {
+      padding: 14px;
+      border-right: 1px solid var(--border);
+      background: var(--surface-dark);
+    }
+
+    .source-group {
+      margin-bottom: 16px;
+    }
+
+    .source-group h3 {
+      margin-bottom: 8px;
+      color: var(--subtle);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .source-item {
+      display: grid;
+      width: 100%;
+      margin: 0 0 6px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-left: 3px solid transparent;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .source-item small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .source-item[aria-current="true"] {
+      border-color: var(--border);
+      border-left-color: var(--amber);
+      background: var(--surface-raised);
+    }
+
+    .source-item:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .source-detail { padding: 18px 20px; }
+
+    .source-detail h3 { margin-bottom: 6px; font-size: 18px; }
+
+    .badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 6px;
+      border: 1px solid #7c3e42;
+      background: rgba(255, 98, 104, 0.08);
+      color: #ffabb0;
+      font-size: 9px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+
+    .badge--you {
+      border-color: #38614a;
+      background: rgba(51, 204, 102, 0.08);
+      color: #8ce5ad;
+    }
+
+    .url-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .url-row input {
+      min-height: 34px;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      background: #0f0f12;
+      color: #bcd9c7;
+      font-size: 12px;
+    }
+
+    details.howto {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    details.howto summary { cursor: pointer; color: var(--text); }
+
+    .studio {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 12px;
+      height: 100%;
+      padding: 12px;
+    }
+
+    .preset-island {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .preset-island label {
+      color: var(--subtle);
+      font-size: 10px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    select, input[type="number"] {
+      min-height: 32px;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      background: #0f0f12;
+      color: var(--text);
+    }
+
+    .surface-pills { display: flex; gap: 6px; margin-left: auto; }
+
+    .pill {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .pill[aria-pressed="true"] {
+      border-color: var(--amber);
+      color: var(--text);
+    }
+
+    .pill:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .settings-col {
+      overflow: auto;
+      padding: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .settings-col label {
+      display: block;
+      margin: 10px 0 4px;
+      color: var(--subtle);
+      font-size: 10px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .hint {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .preview-col {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-height: 0;
+      border: 1px solid var(--border);
+      background: var(--surface-dark);
+    }
+
+    .preview-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: end;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .preview-stage {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.45)),
+        radial-gradient(ellipse at 45% 35%, #44553c 0, #1c2618 50%, #0a0e0a 100%);
+    }
+
+    .preview-viewport {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 420px;
+      height: 320px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      transform: translate(-50%, -50%);
+    }
+
+    .preview-note {
+      padding: 8px 10px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 980px) {
+      .compare-grid,
+      .sources-layout,
+      .studio {
+        grid-template-columns: 1fr;
+      }
+
+      .tab-panel { min-height: auto; }
+      .preview-viewport { width: 92%; height: 280px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-intro">
+    <div class="kicker">Мокап · не продукт</div>
+    <h1>Студия OBS и два лица лидерборда</h1>
+    <p>
+      Ниже сначала вопрос раскладки: один и тот же скин MW5 Cockpit, чат уже чипами.
+      Потом кликабельный каркас диалога — список источников вместо третьей/четвёртой плашки.
+    </p>
+    <p class="note">Ничего не сохраняется. Баннеры серые — их ещё нет.</p>
+  </header>
+
+  <section class="section">
+    <h2>1. Что значит «панель» и «чипы»</h2>
+    <p>
+      Тема <code>cockpit_popups</code> задаёт язык: циан, срезанный угол, стекло.
+      Для чата этот язык уже выбран как <strong>отдельная карточка на каждое сообщение</strong>.
+      Лидерборд должен говорить тем же языком, но у рейтинга другая работа — это таблица, не поток.
+    </p>
+
+    <div class="compare-grid">
+      <article class="obs-rect">
+        <div class="obs-rect__label">Чат · как сейчас <span>cockpit_popups</span></div>
+        <div class="obs-rect__stage hud-font">
+          <div class="chat-stack">
+            <div class="chip">
+              <div class="avatar"></div>
+              <div class="accent"></div>
+              <div>
+                <div class="who">Nova</div>
+                <div class="msg">gg wp</div>
+              </div>
+            </div>
+            <div class="chip">
+              <div class="avatar"></div>
+              <div class="accent"></div>
+              <div>
+                <div class="who">Brick</div>
+                <div class="msg">take the ridge</div>
+              </div>
+            </div>
+            <div class="chip">
+              <div class="avatar"></div>
+              <div class="accent"></div>
+              <div>
+                <div class="who">Helix</div>
+                <div class="msg">nice shot</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="obs-rect">
+        <div class="obs-rect__label">A · Панель того же скина <span>один HUD-прибор</span></div>
+        <div class="obs-rect__stage hud-font">
+          <div class="panel-frame">
+            <div class="panel-row">
+              <span class="rank-num">1</span>
+              <span class="tiny-avatar"></span>
+              <span class="msg">Nova</span>
+              <span class="stats">42</span>
+            </div>
+            <div class="panel-row">
+              <span class="rank-num">2</span>
+              <span class="tiny-avatar"></span>
+              <span class="msg">Brick</span>
+              <span class="stats">31</span>
+            </div>
+            <div class="panel-row">
+              <span class="rank-num">3</span>
+              <span class="tiny-avatar"></span>
+              <span class="msg">Helix</span>
+              <span class="stats">18</span>
+            </div>
+            <div class="panel-row">
+              <span class="rank-num">4</span>
+              <span class="tiny-avatar"></span>
+              <span class="msg">Mira</span>
+              <span class="stats">12</span>
+            </div>
+            <div class="panel-row">
+              <span class="rank-num">5</span>
+              <span class="tiny-avatar"></span>
+              <span class="msg">Tor</span>
+              <span class="stats">7</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="obs-rect">
+        <div class="obs-rect__label">B · Строки-чипы <span>каждый ранг как сообщение</span></div>
+        <div class="obs-rect__stage hud-font">
+          <div class="chip-stack">
+            <div class="chip chip--rank">
+              <span class="rank-num">1</span>
+              <span class="avatar"></span>
+              <div>
+                <div class="who">Nova</div>
+                <div class="stats">42 · 18 msg</div>
+              </div>
+            </div>
+            <div class="chip chip--rank">
+              <span class="rank-num">2</span>
+              <span class="avatar"></span>
+              <div>
+                <div class="who">Brick</div>
+                <div class="stats">31 · 14 msg</div>
+              </div>
+            </div>
+            <div class="chip chip--rank">
+              <span class="rank-num">3</span>
+              <span class="avatar"></span>
+              <div>
+                <div class="who">Helix</div>
+                <div class="stats">18 · 9 msg</div>
+              </div>
+            </div>
+            <div class="chip chip--rank">
+              <span class="rank-num">4</span>
+              <span class="avatar"></span>
+              <div>
+                <div class="who">Mira</div>
+                <div class="stats">12 · 6 msg</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <p class="callout">
+      <strong>A</strong> — на сцене два разных объекта: летающие сообщения и прибор «рейтинг».
+      Цвет и угол те же, читать легче: таблица не спорит с чатом.
+      <strong>B</strong> — чат и топ выглядят как один конструктор. Красиво, если лидерборд стоит отдельно;
+      рядом с чатом пять таких же чипов легко сливаются с сообщениями.
+      Поэтому «сложно сказать»: это не вкус рамки, а то, должны ли виджеты на стриме
+      <em>различаться формой</em> или <em>рифмоваться один в один</em>.
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>2. Диалог OBS — список источников + студия вида</h2>
+    <p>
+      Вкладка «Источники» заменяет сетку карточек. «Вид» — нынешний Appearance,
+      но с переключателем поверхности. Превью всегда с фиктивными данными, как sample у чата.
+      Кегль на поверхности свой — узкий топ-5 и колонка чата редко хотят один размер.
+    </p>
+
+    <div class="dialog" role="dialog" aria-labelledby="obs-heading">
+      <div class="dialog-header">
+        <div>
+          <div class="dialog-kicker">Интеграция со стримом</div>
+          <h2 id="obs-heading">OBS</h2>
+        </div>
+        <button class="btn" type="button" disabled>Закрыть</button>
+      </div>
+
+      <div class="dialog-tabs" role="tablist">
+        <button class="dialog-tab" type="button" role="tab" id="tab-sources" aria-selected="true" data-tab="sources">Источники</button>
+        <button class="dialog-tab" type="button" role="tab" id="tab-look" aria-selected="false" data-tab="look">Вид</button>
+      </div>
+
+      <div class="dialog-body">
+        <section id="panel-sources" class="tab-panel" role="tabpanel">
+          <div class="sources-layout">
+            <nav class="source-list" aria-label="OBS sources">
+              <div class="source-group">
+                <h3>На стрим · Browser Source</h3>
+                <button class="source-item" type="button" data-source="chat" aria-current="true">
+                  Чат
+                  <small>/overlay</small>
+                </button>
+                <button class="source-item" type="button" data-source="leaderboard">
+                  Лидерборд
+                  <small>/overlay/leaderboard</small>
+                </button>
+                <button class="source-item" type="button" data-source="alerts" disabled>
+                  Баннеры
+                  <small>позже · /overlay/alert</small>
+                </button>
+              </div>
+              <div class="source-group">
+                <h3>Только вам</h3>
+                <button class="source-item" type="button" data-source="dock">
+                  Журнал сообщений
+                  <small>Custom Browser Dock</small>
+                </button>
+              </div>
+            </nav>
+
+            <div class="source-detail">
+              <h3 id="source-title">Чат <span class="badge">видят зрители</span></h3>
+              <p id="source-summary" class="hint">Сообщения чата в прямоугольнике Browser Source.</p>
+
+              <div id="period-field" class="hidden">
+                <label for="period">Период рейтинга</label>
+                <select id="period">
+                  <option value="session">Сессия</option>
+                  <option value="day">Сутки</option>
+                  <option value="all">Всё время</option>
+                </select>
+              </div>
+
+              <label for="source-url">URL</label>
+              <div class="url-row">
+                <input id="source-url" type="text" readonly value="http://127.0.0.1:17877/overlay?preset=mw5">
+                <button class="btn" type="button" id="copy-url">Копировать</button>
+              </div>
+
+              <details class="howto">
+                <summary>Как добавить в OBS</summary>
+                <ol>
+                  <li>В источниках OBS добавьте <strong>Browser</strong>.</li>
+                  <li>Вставьте URL выше.</li>
+                  <li>Задайте ширину и высоту под сцену.</li>
+                  <li>Оставьте CommRelay запущенным на время эфира.</li>
+                </ol>
+                <p>Для журнала сообщений путь другой: View → Docks → Custom Browser Docks…</p>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-look" class="tab-panel hidden" role="tabpanel">
+          <div class="studio">
+            <div class="preset-island">
+              <label for="preset">Пресет</label>
+              <select id="preset">
+                <option>MW5 night</option>
+              </select>
+              <span style="color: var(--subtle); font-size: 11px;">1/32</span>
+              <div class="surface-pills" role="group" aria-label="Поверхность">
+                <button class="pill" type="button" data-surface="chat" aria-pressed="true">Чат</button>
+                <button class="pill" type="button" data-surface="leaderboard" aria-pressed="false">Лидерборд</button>
+                <button class="pill" type="button" disabled>Баннеры</button>
+              </div>
+            </div>
+
+            <div class="settings-col">
+              <label for="theme">Тема сцены</label>
+              <select id="theme">
+                <option>MW5 Mercs Cockpit popups</option>
+              </select>
+              <p class="hint">Язык для всех поверхностей. Раскладка чата — чипы; у лидерборда выбирается отдельно, пока не решим дефолт.</p>
+
+              <div id="chat-fields">
+                <label for="chat-font">Кегль чата (px)</label>
+                <input id="chat-font" type="number" value="18" min="12" max="48">
+                <label for="ttl">TTL сообщений</label>
+                <input id="ttl" type="number" value="20">
+              </div>
+
+              <div id="lb-fields" class="hidden">
+                <label for="lb-font">Кегль лидерборда (px)</label>
+                <input id="lb-font" type="number" value="14" min="12" max="48">
+                <p class="hint">Свой, потому что топ-5 обычно уже колонки чата.</p>
+                <label for="layout">Раскладка лидерборда</label>
+                <select id="layout">
+                  <option value="panel">Панель (A)</option>
+                  <option value="chips">Строки-чипы (B)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="preview-col">
+              <div class="preview-toolbar">
+                <span>Превью · всегда семпл</span>
+                <span style="color: var(--subtle);">420×320</span>
+                <span style="color: var(--subtle);">фон: игровой кадр</span>
+              </div>
+              <div class="preview-stage">
+                <div class="preview-viewport hud-font" id="preview">
+                  <div id="preview-chat" class="chat-stack" style="position: absolute; inset: 8px;">
+                    <div class="chip">
+                      <div class="avatar"></div>
+                      <div class="accent"></div>
+                      <div>
+                        <div class="who">Nova</div>
+                        <div class="msg">Sample preview</div>
+                      </div>
+                    </div>
+                    <div class="chip">
+                      <div class="avatar"></div>
+                      <div class="accent"></div>
+                      <div>
+                        <div class="who">Brick</div>
+                        <div class="msg">same renderer as OBS</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="preview-panel" class="panel-frame hidden" style="inset: 8px;">
+                    <div class="panel-row"><span class="rank-num">1</span><span class="tiny-avatar"></span><span class="msg">Nova</span><span class="stats">42</span></div>
+                    <div class="panel-row"><span class="rank-num">2</span><span class="tiny-avatar"></span><span class="msg">Brick</span><span class="stats">31</span></div>
+                    <div class="panel-row"><span class="rank-num">3</span><span class="tiny-avatar"></span><span class="msg">Helix</span><span class="stats">18</span></div>
+                    <div class="panel-row"><span class="rank-num">4</span><span class="tiny-avatar"></span><span class="msg">Mira</span><span class="stats">12</span></div>
+                    <div class="panel-row"><span class="rank-num">5</span><span class="tiny-avatar"></span><span class="msg">Tor</span><span class="stats">7</span></div>
+                  </div>
+                  <div id="preview-chips" class="chip-stack hidden" style="position: absolute; inset: 8px;">
+                    <div class="chip chip--rank"><span class="rank-num">1</span><span class="avatar"></span><div><div class="who">Nova</div><div class="stats">42 · 18 msg</div></div></div>
+                    <div class="chip chip--rank"><span class="rank-num">2</span><span class="avatar"></span><div><div class="who">Brick</div><div class="stats">31 · 14 msg</div></div></div>
+                    <div class="chip chip--rank"><span class="rank-num">3</span><span class="avatar"></span><div><div class="who">Helix</div><div class="stats">18 · 9 msg</div></div></div>
+                    <div class="chip chip--rank"><span class="rank-num">4</span><span class="avatar"></span><div><div class="who">Mira</div><div class="stats">12 · 6 msg</div></div></div>
+                  </div>
+                </div>
+              </div>
+              <p class="preview-note" id="preview-note">Семпл чата остаётся на экране, чтобы сравнить темы. Живой чат сюда не подмешиваем.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn" type="button" disabled>Закрыть</button>
+        <button class="btn btn-primary" type="button" disabled>Сохранить</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const urls = {
+      chat: "http://127.0.0.1:17877/overlay?preset=mw5",
+      leaderboard: "http://127.0.0.1:17877/overlay/leaderboard?preset=mw5&period=session",
+      dock: "http://127.0.0.1:17877/dock/messages"
+    };
+
+    const titles = {
+      chat: { title: "Чат", badge: "видят зрители", summary: "Сообщения чата в прямоугольнике Browser Source.", live: true },
+      leaderboard: { title: "Лидерборд", badge: "видят зрители", summary: "Рейтинг по баллам. Период попадает в URL, не в пресет вида.", live: true },
+      dock: { title: "Журнал сообщений", badge: "только вам", summary: "Журнал внутри OBS, не в сцене. Темы overlay сюда не применяются.", live: false }
+    };
+
+    const tabSources = document.getElementById("panel-sources");
+    const tabLook = document.getElementById("panel-look");
+    const sourceTitle = document.getElementById("source-title");
+    const sourceSummary = document.getElementById("source-summary");
+    const sourceUrl = document.getElementById("source-url");
+    const periodField = document.getElementById("period-field");
+    const period = document.getElementById("period");
+    const chatFields = document.getElementById("chat-fields");
+    const lbFields = document.getElementById("lb-fields");
+    const layout = document.getElementById("layout");
+    const previewNote = document.getElementById("preview-note");
+    const previewChat = document.getElementById("preview-chat");
+    const previewPanel = document.getElementById("preview-panel");
+    const previewChips = document.getElementById("preview-chips");
+    const lbFont = document.getElementById("lb-font");
+    const chatFont = document.getElementById("chat-font");
+
+    let surface = "chat";
+
+    document.querySelectorAll("[data-tab]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const name = btn.getAttribute("data-tab");
+        document.querySelectorAll("[data-tab]").forEach(function (el) {
+          el.setAttribute("aria-selected", el === btn ? "true" : "false");
+        });
+        tabSources.classList.toggle("hidden", name !== "sources");
+        tabLook.classList.toggle("hidden", name !== "look");
+      });
+    });
+
+    function setSource(name) {
+      document.querySelectorAll("[data-source]").forEach(function (el) {
+        if (!el.disabled) {
+          el.setAttribute("aria-current", el.getAttribute("data-source") === name ? "true" : "false");
+        }
+      });
+      const meta = titles[name];
+      const badgeClass = meta.live ? "badge" : "badge badge--you";
+      sourceTitle.innerHTML = meta.title + ' <span class="' + badgeClass + '">' + meta.badge + "</span>";
+      sourceSummary.textContent = meta.summary;
+      periodField.classList.toggle("hidden", name !== "leaderboard");
+      sourceUrl.value = urls[name];
+    }
+
+    document.querySelectorAll("[data-source]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        if (!btn.disabled) {
+          setSource(btn.getAttribute("data-source"));
+        }
+      });
+    });
+
+    period.addEventListener("change", function () {
+      urls.leaderboard =
+        "http://127.0.0.1:17877/overlay/leaderboard?preset=mw5&period=" + period.value;
+      if (document.querySelector('[data-source="leaderboard"]').getAttribute("aria-current") === "true") {
+        sourceUrl.value = urls.leaderboard;
+      }
+    });
+
+    document.getElementById("copy-url").addEventListener("click", function () {
+      navigator.clipboard.writeText(sourceUrl.value).catch(function () {});
+    });
+
+    function renderPreview() {
+      previewChat.classList.toggle("hidden", surface !== "chat");
+      const chips = surface === "leaderboard" && layout.value === "chips";
+      const panel = surface === "leaderboard" && layout.value === "panel";
+      previewChips.classList.toggle("hidden", !chips);
+      previewPanel.classList.toggle("hidden", !panel);
+      if (surface === "chat") {
+        previewNote.textContent = "Семпл чата. Живые сообщения сюда не подмешиваем — как сейчас у overlay preview.";
+        previewChat.style.fontSize = chatFont.value + "px";
+      } else {
+        previewNote.textContent = "Фиктивный топ-5. Живые зрители в превью не нужны: сравниваем тему и раскладку.";
+        const size = lbFont.value + "px";
+        previewPanel.style.fontSize = size;
+        previewChips.style.fontSize = size;
+      }
+    }
+
+    document.querySelectorAll("[data-surface]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        if (btn.disabled) {
+          return;
+        }
+        surface = btn.getAttribute("data-surface");
+        document.querySelectorAll("[data-surface]").forEach(function (el) {
+          if (!el.disabled) {
+            el.setAttribute("aria-pressed", el === btn ? "true" : "false");
+          }
+        });
+        chatFields.classList.toggle("hidden", surface !== "chat");
+        lbFields.classList.toggle("hidden", surface !== "leaderboard");
+        renderPreview();
+      });
+    });
+
+    layout.addEventListener("change", renderPreview);
+    lbFont.addEventListener("input", renderPreview);
+    chatFont.addEventListener("input", renderPreview);
+  </script>
+</body>
+</html>
