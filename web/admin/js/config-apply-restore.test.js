@@ -42,6 +42,29 @@ assert.notEqual(
   JSON.stringify(normalizeOverlayAppearanceDraft(serverOverlay))
 );
 
+const dirtyActivatedServer = cloneOverlayAppearanceDraft(serverOverlay);
+dirtyActivatedServer.active_preset_id = "preset-c";
+const dirtyActivated = resolveStudioDraftAfterConfigApply({
+  serverOverlay: dirtyActivatedServer,
+  baseline,
+  draft: dirtyDraft,
+  isDirty: true,
+});
+assert.equal(dirtyActivated.shouldResetFromServer, false);
+assert.equal(dirtyActivated.nextDraft.active_preset_id, "preset-c");
+assert.equal(dirtyActivated.nextBaseline.active_preset_id, "preset-c");
+assert.equal(dirtyActivated.nextDraft.max_messages, 12);
+assert.equal(dirtyActivated.overlayToApply.max_messages, 12);
+
+const dirtyActivatedNoChange = resolveStudioDraftAfterConfigApply({
+  serverOverlay,
+  baseline,
+  draft: dirtyDraft,
+  isDirty: true,
+});
+assert.equal(dirtyActivatedNoChange.nextDraft.active_preset_id, "preset-b");
+assert.equal(dirtyActivatedNoChange.nextDraft.max_messages, 12);
+
 const activatedServerOverlay = cloneOverlayAppearanceDraft(serverOverlay);
 activatedServerOverlay.active_preset_id = "preset-c";
 const cleanResolved = resolveStudioDraftAfterConfigApply({
