@@ -46,11 +46,11 @@
 > **Blocked**: forbidding double-reward, catalog in dock
 
 ### Backend
-- [ ] 3.1 Grant: resolve identity, add points to three periods, alert with `{name}`/`{points}`, 400 on empty user_id / unknown award
+- [x] 3.1 Grant: resolve identity, add points to three periods, alert with `{name}`/`{points}`, 400 on empty user_id / unknown award
 
 ### Frontend
-- [ ] 3.2 Reward control + picker (progress, empty catalog copy, Escape/focus); dock constrained layout
-- [ ] 3.3 Hide Reward when `user_id` missing; keep Delete rules unchanged
+- [x] 3.2 Reward control + picker (progress, empty catalog copy, Escape/focus); dock constrained layout
+- [x] 3.3 Hide Reward when `user_id` missing; keep Delete rules unchanged
 
 ## Slice: Interaction event log
 

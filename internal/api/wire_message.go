@@ -23,6 +23,7 @@ type wireChatMessage struct {
 	Type        string                `json:"type"`
 	ID          string                `json:"id,omitempty"`
 	Platform    string                `json:"platform"`
+	UserID      string                `json:"user_id,omitempty"`
 	User        string                `json:"user"`
 	Username    string                `json:"username,omitempty"`
 	Message     string                `json:"message"`
@@ -55,7 +56,8 @@ type wireAlert struct {
 	Sound      string `json:"sound"`
 	DurationMs int    `json:"duration_ms"`
 	Source     string `json:"source"`
-	Trigger    string `json:"trigger"`
+	Trigger    string `json:"trigger,omitempty"`
+	AwardID    string `json:"award_id,omitempty"`
 }
 
 func chatMessageWirePayload(msg bus.ChatMessage, isCommand bool) ([]byte, error) {
@@ -68,6 +70,7 @@ func chatMessageWirePayload(msg bus.ChatMessage, isCommand bool) ([]byte, error)
 		Type:        wireMessageType,
 		ID:          msg.ID,
 		Platform:    msg.Platform,
+		UserID:      msg.UserID,
 		User:        user,
 		Username:    msg.Username,
 		Message:     msg.Message,
@@ -133,6 +136,25 @@ func alertWirePayload(cmd *store.Command, msg bus.ChatMessage, text string, poin
 	})
 	if err != nil {
 		return nil, errors.Errorf("marshal alert wire event: %w", err)
+	}
+
+	return data, nil
+}
+
+func awardAlertWirePayload(award *store.AwardType, name, avatarURL, text string, points int) ([]byte, error) {
+	data, err := json.Marshal(wireAlert{
+		Type:       wireAlertType,
+		Name:       name,
+		AvatarURL:  avatarURL,
+		Text:       text,
+		Points:     points,
+		Sound:      award.Sound,
+		DurationMs: award.DurationMs,
+		Source:     "award",
+		AwardID:    award.ID,
+	})
+	if err != nil {
+		return nil, errors.Errorf("marshal award alert wire event: %w", err)
 	}
 
 	return data, nil

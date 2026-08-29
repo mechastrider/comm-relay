@@ -513,9 +513,16 @@ export default {
   "msg.deleteAria": "Удалить сообщение от {user}",
   "msg.couldNotDelete": "Не удалось удалить сообщение.",
 
+  "reward.action": "Награда",
+  "reward.actionAria": "Наградить {user}",
+  "reward.loading": "Загрузка наград…",
+  "reward.emptyCatalog": "Добавьте типы наград в Аудитория → Награды.",
+  "reward.grantFailed": "Не удалось выдать награду.",
+
   "dock.waiting": "Ожидание сообщений чата",
   "dock.delete": "Удалить",
   "dock.deleteAria": "Удалить сообщение от {user}",
+  "dock.deleteFailed": "Не удалось удалить сообщение",
 
   "banner.checkFields": "Проверьте выделенные поля.",
   "banner.settingsSaved": "Настройки сохранены.",

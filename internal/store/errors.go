@@ -17,4 +17,6 @@ var (
 	ErrInvalidTrigger = errors.New("invalid trigger")
 	// ErrInvalidPoints is returned when award points are below one.
 	ErrInvalidPoints = errors.New("invalid points")
+	// ErrInvalidIdentity is returned when platform or user_id is empty for award grants.
+	ErrInvalidIdentity = errors.New("invalid identity")
 )

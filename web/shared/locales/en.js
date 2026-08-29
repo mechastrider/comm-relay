@@ -513,9 +513,16 @@ export default {
   "msg.deleteAria": "Delete message from {user}",
   "msg.couldNotDelete": "Could not delete the message.",
 
+  "reward.action": "Reward",
+  "reward.actionAria": "Reward {user}",
+  "reward.loading": "Loading awards…",
+  "reward.emptyCatalog": "Add award types in Audience → Awards.",
+  "reward.grantFailed": "Could not grant the award.",
+
   "dock.waiting": "Waiting for chat messages",
   "dock.delete": "Delete",
   "dock.deleteAria": "Delete message from {user}",
+  "dock.deleteFailed": "Could not delete message",
 
   "banner.checkFields": "Check the highlighted fields.",
   "banner.settingsSaved": "Settings saved.",
