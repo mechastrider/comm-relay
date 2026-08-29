@@ -117,7 +117,7 @@ func TestStore_ActivatePreset_WhenUnknown_ExpectErrorAndUnchanged(t *testing.T) 
 func TestStore_ActivatePreset_WhenSecretBearing_ExpectSecretsPreserved(t *testing.T) {
 	t.Parallel()
 
-	store, before := testStoreWithSecondPreset(t)
+	store, _ := testStoreWithSecondPreset(t)
 
 	require.NoError(t, store.Mutate(func(current *Config) error {
 		current.YouTube.OAuth.ClientID = "client-id"
@@ -128,7 +128,7 @@ func TestStore_ActivatePreset_WhenSecretBearing_ExpectSecretsPreserved(t *testin
 		current.Network.SOCKS5.Password = "proxy-secret"
 		return nil
 	}))
-	before = store.Snapshot()
+	before := store.Snapshot()
 
 	require.NoError(t, store.ActivatePreset("stream-main"))
 
