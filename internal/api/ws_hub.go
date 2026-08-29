@@ -79,38 +79,6 @@ func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
 	}
 
 	h.broadcast(payload)
-
-	if matchedCmd == nil {
-		return
-	}
-
-	if !h.matcher.TryFire(msg.Platform, msg.UserID, matchedCmd) {
-		return
-	}
-
-	name := command.DisplayName(msg.Username, msg.DisplayName)
-	text := command.SubstituteTemplate(matchedCmd.SplashTemplate, name, 0)
-	alertPayload, err := alertWirePayload(matchedCmd, msg, text, 0)
-	if err != nil {
-		clog.Errorf(ctx, "alert wire payload: %w", err)
-		return
-	}
-
-	h.broadcast(alertPayload)
-
-	if h.viewerStore != nil {
-		event := store.AppendInteractionEventInput{
-			Kind:           store.InteractionEventCommand,
-			CommandTrigger: matchedCmd.Trigger,
-			Points:         0,
-		}
-		if viewerID, ok := h.viewerStore.ViewerIDForIdentity(msg.Platform, msg.UserID); ok {
-			event.ViewerID = viewerID
-		}
-		if err := h.viewerStore.AppendInteractionEvent(event); err != nil {
-			clog.Errorf(ctx, "append command interaction event: %w", err)
-		}
-	}
 }
 
 func (h *Hub) register(c *wsClient) {

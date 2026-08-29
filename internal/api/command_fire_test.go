@@ -259,3 +259,66 @@ func TestConfig_HideCommandMessagesDefault_ExpectFalse(t *testing.T) {
 	public := cfg.Public()
 	require.False(t, public.HideCommandMessages)
 }
+
+func TestRecentMessages_WhenHideCommandMessages_ExpectIsCommandOnRecent(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+
+	cfg := env.ConfigStore.Snapshot()
+	cfg.HideCommandMessages = true
+	require.NoError(t, env.ConfigStore.Replace(cfg))
+
+	time.Sleep(50 * time.Millisecond)
+
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		ID:       "msg-hello",
+		Platform: "twitch",
+		UserID:   "1",
+		Username: "alice",
+		Message:  "hello",
+	})))
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		ID:       "msg-gg",
+		Platform: "twitch",
+		UserID:   "2",
+		Username: "bob",
+		Message:  "!gg",
+	})))
+
+	require.Eventually(t, func() bool {
+		rec := httptest.NewRecorder()
+		env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=10", nil))
+		if rec.Code != http.StatusOK {
+			return false
+		}
+		var payload struct {
+			Messages []struct {
+				ID        string `json:"id"`
+				Message   string `json:"message"`
+				IsCommand bool   `json:"is_command"`
+			} `json:"messages"`
+		}
+		if json.Unmarshal(rec.Body.Bytes(), &payload) != nil {
+			return false
+		}
+		if len(payload.Messages) < 2 {
+			return false
+		}
+
+		var helloMsg, ggMsg *struct {
+			ID        string `json:"id"`
+			Message   string `json:"message"`
+			IsCommand bool   `json:"is_command"`
+		}
+		for i := range payload.Messages {
+			switch payload.Messages[i].ID {
+			case "msg-hello":
+				helloMsg = &payload.Messages[i]
+			case "msg-gg":
+				ggMsg = &payload.Messages[i]
+			}
+		}
+		return helloMsg != nil && ggMsg != nil &&
+			!helloMsg.IsCommand && ggMsg.IsCommand
+	}, 2*time.Second, 25*time.Millisecond)
+}

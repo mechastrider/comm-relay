@@ -103,7 +103,7 @@ func New(opts Options) (*App, error) {
 	youtubeEmojiRefresher := ytemoji.NewRefresher(youtubeEmojiCatalog, emoteHTTP)
 
 	leaderboardPublisher := api.NewLeaderboardPublisher(hub, viewerStore, cfgStore)
-	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher, commandMatcher)
+	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher, commandMatcher, hub)
 
 	handler, err := api.NewHandler(api.Options{
 		WebRoot:              webRoot,
