@@ -72,6 +72,10 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 		ingest.Run(ctx, b)
 	}()
 
+	require.Eventually(t, func() bool {
+		return b.SubscriberCount() >= 3
+	}, time.Second, 5*time.Millisecond)
+
 	t.Cleanup(func() {
 		cancel()
 		publisher.Stop()
