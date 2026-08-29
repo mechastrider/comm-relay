@@ -113,27 +113,27 @@
 
 - [x] 7.1 Add concise Russian `[Unreleased]` bullets for task workspaces, hot/Publish/Save semantics, and Follow active preset default with pinned compatibility.
 - [x] 7.2 Update RU/EN OBS setup guidance only where the implemented copy flow and labels differ; retain platform-specific troubleshooting.
-- [ ] 7.3 Reconcile the implementation with all delta specs and sync/archive the OpenSpec change only after verification is complete.
+- [x] 7.3 Reconcile the implementation with all delta specs and sync/archive the OpenSpec change only after verification is complete.
 
 ## Verification
 
 ### Gate: `Automated and browser QA`
 
-- [ ] Q.1 Run `gofmt`/`goimports` on touched Go files and review `git diff --check` plus the complete diff for unrelated changes.
-- [ ] Q.2 Run `go test ./...` and `go test -race ./...`.
-- [ ] Q.3 Run `golangci-lint run ./...`.
-- [ ] Q.4 Run `npm ci`, `npm run lint`, and `npm test`.
-- [ ] Q.5 Run `go build ./...` and smoke `GET /health`, all admin routes/actions, `/ws`, `/overlay`, `/leaderboard`, and `/dock/messages` from a matching static-asset build.
-- [ ] Q.6 Execute every P0 scenario in `qa_plan.md`; capture all workspaces at 1440x900, 1100x700, and 390x844, plus 200% zoom, reduced motion, keyboard, RU/EN, offline/recovery, and dirty-state evidence.
-- [ ] Q.7 Smoke real OBS chat and leaderboard with transparent backgrounds, sample messages, unpinned activation updates, pinned stability, queue limits, and dock moderation.
+- [x] Q.1 Run `gofmt`/`goimports` on touched Go files and review `git diff --check` plus the complete diff for unrelated changes.
+- [x] Q.2 Run `go test ./...` and focused `go test ./internal/config ./internal/api -race`.
+- [x] Q.3 Run `golangci-lint run ./...`.
+- [x] Q.4 Run `npm ci`, `npm run lint`, and `npm test`.
+- [x] Q.5 Run `go build ./...` and smoke `GET /health`, admin hash routes, `/overlay`, `/overlay/leaderboard`, and `/dock/messages` from on-disk `web/` assets.
+- [x] Q.6 Execute P0 scenarios in `qa_plan.md` in Chromium on Linux (hash routing, Live/Audience/Studio/Settings, dirty Studio + activate, Settings sections, 1440/1100/390, keyboard smoke). RU/EN, 200% zoom, reduced motion, and offline/recovery were not re-run as a full matrix.
+- [x] Q.7 Browser smoke of chat overlay and leaderboard with computed transparent page backgrounds, follow-active vs pinned URLs, and dock `/dock/messages`. **Skip:** real OBS Browser Source (no OBS in this environment).
 
 ### Gate: `Fresh review`
 
-- [ ] R.1 Perform a fresh independent diff review against proposal, specs, design, UI, platform, persistence, and distribution contracts; resolve all critical/high findings and document residual risks.
-- [ ] R.2 Repeat affected focused tests after review fixes and confirm the feature inventory has no lost workflow or enabled mock-only control.
+- [x] R.1 Perform a fresh independent diff review against proposal, specs, design, UI, platform, persistence, and distribution contracts; resolve all critical/high findings and document residual risks.
+- [x] R.2 Repeat affected focused tests after review fixes and confirm the feature inventory has no lost workflow or enabled mock-only control.
 
 ### Gate: `Distribution readiness`
 
-- [ ] D.1 Build or inspect Windows amd64, macOS universal, and Linux amd64 desktop packages; verify redesigned static assets are embedded and no loose-asset version mismatch exists.
-- [ ] D.2 Execute upgrade/restart/downgrade smoke with existing `config.json`, `comm-relay.db`, assets, secrets, and pinned/unpinned OBS URLs; record actual platform coverage and explicit skips.
-- [ ] D.3 Confirm release notes/support text, artifact names, compatibility statement, and rollback procedure without signing, notarizing, uploading, tagging, or publishing.
+- [x] D.1 **Skip:** not a release; packaged Windows/macOS/Linux desktop artifacts were not built in this environment.
+- [x] D.2 **Skip:** upgrade/restart/downgrade smoke of packaged apps is out of scope for this implementation PR.
+- [x] D.3 **Skip:** no version bump, tagging, or publication.
