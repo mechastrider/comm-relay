@@ -65,6 +65,12 @@ export default {
   "workspace.announce.studio": "Рабочая область «Студия»",
   "workspace.announce.settings": "Рабочая область «Настройки»",
 
+  "studio.publish": "Опубликовать",
+  "studio.published": "Опубликовано",
+  "studio.dirty": "Есть неопубликованные изменения",
+  "studio.discardConfirm": "Отменить неопубликованные изменения overlay?",
+  "studio.publishSuccess": "Настройки overlay опубликованы.",
+
   "live.statusStrip": "Операционный статус эфира",
   "live.workArea": "Рабочая область «Эфир»",
   "live.tabList": "Вкладки рабочей области «Эфир»",
@@ -164,6 +170,10 @@ export default {
   "obs.visibleToViewers": "Видно зрителям",
   "obs.overlaySummary": "Добавляет сообщения чата в вывод сцены для аудитории.",
   "obs.overlayUrl": "URL overlay",
+  "obs.followActivePreset": "Следовать активному пресету",
+  "obs.followActiveHint": "URL без preset обновляется при смене активного пресета в «Эфире» или «Студии».",
+  "obs.pinnedPresetAdvanced": "Закреплённый пресет (дополнительно)",
+  "obs.pinnedPresetNamed": "Закреплён за пресетом «{name}»",
   "obs.copyUrl": "Копировать URL",
   "obs.stepBrowser": "В OBS в Sources добавьте источник <strong>Browser</strong>.",
   "obs.stepPaste": "Вставьте URL выше в поле URL источника.",

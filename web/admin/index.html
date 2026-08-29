@@ -189,10 +189,10 @@
               <span data-i18n="shell.connections">Connections</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.connectionsHint">Twitch, YouTube, VK Live, and SOCKS5 proxy.</span>
             </button>
-            <button class="btn-physical has-tooltip" type="button" data-dialog-target="overlay-dialog">
+            <a class="btn-physical has-tooltip" href="#studio">
               <span data-i18n="shell.obs">OBS</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.obsHint">Browser Source URLs, presets, and overlay appearance.</span>
-            </button>
+            </a>
             <button class="btn-physical has-tooltip" type="button" data-dialog-target="rich-chat-dialog">
               <span data-i18n="shell.richChat">Rich chat</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.richChatHint">Emotes and safe image-link previews in chat and overlay.</span>
@@ -316,10 +316,22 @@
           </div>
         </section>
 
-        <section id="workspace-studio" class="workspace" data-workspace="studio" hidden aria-labelledby="workspace-studio-heading">
-          <div class="workspace-placeholder">
-            <h1 id="workspace-studio-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.studioHeading">Studio</h1>
-            <p class="workspace-placeholder__lead" data-i18n="workspace.studioPlaceholder">Overlay presets, preview, and OBS source setup will live here. Open OBS from Live controls until this workspace is populated.</p>
+        <section id="workspace-studio" class="workspace studio-workspace" data-workspace="studio" hidden aria-labelledby="workspace-studio-heading">
+          <header class="studio-toolbar">
+            <h1 id="workspace-studio-heading" class="studio-toolbar__title workspace-heading" tabindex="-1" data-i18n="workspace.studioHeading">Studio</h1>
+            <div class="studio-toolbar__actions">
+              <div class="studio-active-preset">
+                <label for="studio-active-preset" data-i18n="live.activePreset">Active preset</label>
+                <select id="studio-active-preset" class="live-active-preset"></select>
+              </div>
+              <span id="studio-dirty-status" class="studio-dirty-status" role="status" aria-live="polite" data-i18n="studio.published">Published</span>
+              <button id="studio-publish" class="btn-physical btn-start" type="button" data-i18n="studio.publish">Publish</button>
+            </div>
+          </header>
+          <div class="studio-layout">
+            <div id="studio-sources-mount" class="studio-column studio-sources-mount" data-studio-overlay></div>
+            <div id="studio-preview-mount" class="studio-column studio-column--preview studio-preview-mount" data-preview-only></div>
+            <div id="studio-inspector-mount" class="studio-column studio-column--inspector studio-inspector-mount" data-studio-overlay></div>
           </div>
         </section>
 
@@ -598,15 +610,23 @@
                   <span id="obs-source-badge" class="obs-audience-badge obs-audience-badge--live" data-i18n="obs.visibleToViewers">Visible to viewers</span>
                 </div>
                 <p id="obs-source-summary" class="obs-integration-card__summary" data-i18n="obs.overlaySummary">Adds chat messages to the scene output seen by your audience.</p>
-                <p class="field-hint" data-obs-source-pane="chat" data-i18n="obs.overlayPresetHint">Each OBS scene can use its own Browser Source with ?preset= in the URL.</p>
+                <p class="field-hint" data-obs-source-pane="chat" data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
 
-                <div class="obs-url-field" data-obs-source-pane="chat">
-                  <label for="obs-overlay-url" data-i18n="obs.overlayUrl">Overlay URL</label>
+                <div class="obs-url-field studio-url-primary" data-obs-source-pane="chat">
+                  <label for="obs-overlay-url" data-i18n="obs.followActivePreset">Follow active preset</label>
                   <div class="obs-url-row">
                     <input id="obs-overlay-url" type="text" readonly value="/overlay">
                     <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-overlay-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
                   </div>
                 </div>
+                <details class="studio-url-pinned" data-obs-source-pane="chat">
+                  <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+                  <p id="obs-overlay-pinned-label" class="field-hint"></p>
+                  <div class="obs-url-row">
+                    <input id="obs-overlay-url-pinned" type="text" readonly value="/overlay">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-overlay-url-pinned" data-copy-label="Pinned overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </details>
 
                 <div class="obs-url-field" data-obs-source-pane="leaderboard" hidden>
                   <label for="obs-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
@@ -617,13 +637,21 @@
                   </select>
                 </div>
 
-                <div class="obs-url-field" data-obs-source-pane="leaderboard" hidden>
-                  <label for="obs-leaderboard-url" data-i18n="obs.leaderboardUrl">Leaderboard URL</label>
+                <div class="obs-url-field studio-url-primary" data-obs-source-pane="leaderboard" hidden>
+                  <label for="obs-leaderboard-url" data-i18n="obs.followActivePreset">Follow active preset</label>
                   <div class="obs-url-row">
                     <input id="obs-leaderboard-url" type="text" readonly value="/overlay/leaderboard">
                     <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-leaderboard-url" data-copy-label="Leaderboard URL" data-i18n="obs.copyUrl">Copy URL</button>
                   </div>
                 </div>
+                <details class="studio-url-pinned" data-obs-source-pane="leaderboard" hidden>
+                  <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+                  <p id="obs-leaderboard-pinned-label" class="field-hint"></p>
+                  <div class="obs-url-row">
+                    <input id="obs-leaderboard-url-pinned" type="text" readonly value="/overlay/leaderboard">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-leaderboard-url-pinned" data-copy-label="Pinned leaderboard URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </details>
 
                 <div class="obs-url-field" data-obs-source-pane="dock" hidden>
                   <label for="obs-dock-url" data-i18n="obs.dockUrl">Message dock URL</label>

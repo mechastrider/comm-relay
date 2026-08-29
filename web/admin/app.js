@@ -35,6 +35,28 @@ import { initLiveTabs } from "./js/live-tabs.js";
 import { initLiveLeaderboard } from "./js/live-leaderboard.js";
 import { initLiveStatistics } from "./js/live-statistics.js";
 import { initLiveActivePreset, renderLiveActivePresetControl } from "./js/live-active-preset.js";
+import { initStudio } from "./js/studio.js";
+
+function isStudioOverlayField(target) {
+  return (
+    target.closest("[data-studio-overlay]") ||
+    target.closest("#workspace-studio") ||
+    target.closest("#obs-appearance-panel")
+  );
+}
+
+function shouldMarkSettingsDirty(event) {
+  if (!(event.target instanceof Element)) {
+    return true;
+  }
+  if (event.target.closest("[data-preview-only]")) {
+    return false;
+  }
+  if (isStudioOverlayField(event.target)) {
+    return false;
+  }
+  return true;
+}
 
 initI18n();
 initWorkspaceRouter(document, t);
@@ -67,27 +89,46 @@ if (dom.vkChannel) {
 
 dom.form.addEventListener("submit", saveSettings);
 dom.form.addEventListener("input", function (event) {
-  if (!(event.target instanceof Element) || !event.target.closest("[data-preview-only]")) {
-    markSettingsDirty();
+  if (!shouldMarkSettingsDirty(event)) {
     if (
+      event.target instanceof Element &&
       event.target.closest("#obs-appearance-panel") &&
       event.target.id !== "overlay-preset-select" &&
       event.target.id !== "obs-overlay-preset-select"
     ) {
       updatePresetIsland();
     }
+    return;
+  }
+  markSettingsDirty();
+  if (
+    event.target instanceof Element &&
+    event.target.closest("#obs-appearance-panel") &&
+    event.target.id !== "overlay-preset-select" &&
+    event.target.id !== "obs-overlay-preset-select"
+  ) {
+    updatePresetIsland();
   }
 });
 dom.form.addEventListener("change", function (event) {
-  if (!(event.target instanceof Element) || !event.target.closest("[data-preview-only]")) {
-    markSettingsDirty();
+  if (!shouldMarkSettingsDirty(event)) {
     if (
+      event.target instanceof Element &&
       event.target.closest("#obs-appearance-panel") &&
       event.target.id !== "overlay-preset-select" &&
       event.target.id !== "obs-overlay-preset-select"
     ) {
       updatePresetIsland();
     }
+    return;
+  }
+  markSettingsDirty();
+  if (
+    event.target instanceof Element &&
+    event.target.closest("#obs-appearance-panel") &&
+    event.target.id !== "obs-overlay-preset-select"
+  ) {
+    updatePresetIsland();
   }
 });
 dom.refreshMessages.addEventListener("click", function () {
@@ -113,6 +154,7 @@ initLiveLeaderboard(function () {
 });
 initLiveStatistics();
 initLiveActivePreset();
+initStudio();
 initNewStreamControl();
 
 if (dom.shellDiagnosticsButton && dom.shellStatusBar) {

@@ -11,18 +11,27 @@ export function normalizeLeaderboardLayout(layout) {
   return LEADERBOARD_LAYOUTS.has(value) ? value : "panel";
 }
 
+/**
+ * @param {string | Record<string, unknown> | null | undefined} options
+ * @returns {string}
+ */
 export function buildLeaderboardURL(options) {
   const opts = typeof options === "string" || options == null ? { period: options } : options;
-  const url = new URL("/overlay/leaderboard", window.location.origin);
+  const origin =
+    opts.origin ||
+    (typeof window !== "undefined" && window.location && window.location.origin
+      ? window.location.origin
+      : "http://127.0.0.1");
+  const url = new URL("/overlay/leaderboard", origin);
   url.searchParams.set("period", normalizeLeaderboardPeriod(opts.period));
-  if (opts.preset) {
+  if (!opts.followActive && opts.preset) {
     url.searchParams.set("preset", String(opts.preset));
   }
   const layout = normalizeLeaderboardLayout(opts.layout);
   if (layout === "chips") {
     url.searchParams.set("layout", layout);
   }
-  const fontSizePx = Number.parseInt(opts.fontSizePx, 10);
+  const fontSizePx = Number.parseInt(String(opts.fontSizePx), 10);
   if (Number.isFinite(fontSizePx) && fontSizePx >= 12 && fontSizePx <= 48) {
     url.searchParams.set("font_size_px", String(fontSizePx));
   }

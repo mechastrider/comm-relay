@@ -325,7 +325,58 @@ export function buildPayload() {
     };
   }
 
-export function validateClient(payload) {
+export async function fetchPublicConfig() {
+    const response = await fetch(apiURL("/api/config"));
+    const payload = await readJSON(response);
+    if (!response.ok) {
+      throw new Error(mapHTTPError(response.status, payload && payload.error));
+    }
+    return payload;
+  }
+
+export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
+    const latest = serverConfig || {};
+    const overlay = latest.overlay || {};
+    const youtube = latest.youtube || {};
+    const oauth = youtube.oauth || {};
+    const network = latest.network || {};
+    const socks5 = network.socks5 || {};
+    return {
+      server_port: latest.server_port,
+      points_per_message: latest.points_per_message,
+      day_reset_hour: latest.day_reset_hour,
+      network: {
+        socks5: {
+          address: socks5.address || "",
+          username: socks5.username || "",
+          password: "",
+        },
+      },
+      twitch: latest.twitch || { enabled: false, channel: "" },
+      youtube: {
+        enabled: Boolean(youtube.enabled),
+        connection_mode: youtube.connection_mode || "page",
+        video_input: youtube.video_input || "",
+        channel_handle: youtube.channel_handle || "",
+        chat_mode: youtube.chat_mode || "stream",
+        use_proxy: Boolean(youtube.use_proxy),
+        oauth: {
+          client_id: oauth.client_id || "",
+          client_secret: "",
+        },
+      },
+      vk: latest.vk || { enabled: false, channel: "", use_proxy: false },
+      overlay: Object.assign({}, overlayAppearance, {
+        active_preset_id:
+          overlay.active_preset_id || overlayAppearance.active_preset_id || "default",
+        emotes: overlay.emotes || {},
+        image_previews: overlay.image_previews || {},
+      }),
+      admin: latest.admin || {},
+    };
+  }
+
+export function validateClient(payload, options) {
     clearFieldErrors();
     let firstInvalid = null;
 
@@ -511,7 +562,9 @@ export function validateClient(payload) {
     }
 
     if (firstInvalid) {
-      openDialogForElement(firstInvalid);
+      if (!options || !options.focusStudio) {
+        openDialogForElement(firstInvalid);
+      }
       firstInvalid.focus();
       return false;
     }

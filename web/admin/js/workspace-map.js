@@ -24,9 +24,14 @@
  *   Period shared with Live leaderboard via live-leaderboard.js
  *   Locale: audience.*, viewers.*, stream.*
  *
- * STUDIO (later — #workspace-studio, hash #studio)
- *   Future: overlay dialog content, appearance draft/publish, preview, OBS URLs
- *   Now on Live: #overlay-dialog (setup + appearance), preset island, preview iframe
+ * STUDIO (#workspace-studio, hash #studio)
+ *   Three-column layout: OBS source setup | preview | preset inspector
+ *   Draft/baseline overlay config; Publish → POST /api/config/update (overlay only)
+ *   Hot active preset (#studio-active-preset → POST /api/overlay/activate)
+ *   Primary copy URLs omit ?preset= (follow active preset); pinned URLs in advanced section
+ *   Dock URL unchanged: /dock/messages
+ *   Modules: studio.js, studio-helpers.js, overlay-appearance.js, overlay-preview.js, obs-setup.js
+ *   Locale: studio.*, obs.followActive*, obs.pinned*
  *
  * SETTINGS (later — #workspace-settings, hash #settings)
  *   Future: Platforms, Network, Data, Application, Diagnostics, About sections

@@ -27,13 +27,15 @@ function activePresetId() {
   return options.length > 0 ? options[0].id : "";
 }
 
-export function renderLiveActivePresetControl() {
-  if (!dom.liveActivePreset) {
+/**
+ * @param {HTMLSelectElement | null} select
+ */
+export function renderActivePresetSelect(select) {
+  if (!select) {
     return;
   }
   const options = presetOptions();
   const current = activePresetId();
-  const select = dom.liveActivePreset;
   const previousValue = select.value;
 
   select.textContent = "";
@@ -65,6 +67,10 @@ export function renderLiveActivePresetControl() {
   }
 }
 
+export function renderLiveActivePresetControl() {
+  renderActivePresetSelect(dom.liveActivePreset);
+}
+
 async function activatePreset(requestedId) {
   const previousId = activePresetId();
   if (!requestedId) {
@@ -82,9 +88,12 @@ async function activatePreset(requestedId) {
   }
 
   activateInFlight = true;
-  if (dom.liveActivePreset) {
-    dom.liveActivePreset.disabled = true;
-  }
+    if (dom.liveActivePreset) {
+      dom.liveActivePreset.disabled = true;
+    }
+    if (dom.studioActivePreset) {
+      dom.studioActivePreset.disabled = true;
+    }
 
   try {
     const response = await fetch(apiURL("/api/overlay/activate"), {
@@ -99,6 +108,9 @@ async function activatePreset(requestedId) {
       if (dom.liveActivePreset) {
         dom.liveActivePreset.value = rollback.selectedId;
       }
+      if (dom.studioActivePreset) {
+        dom.studioActivePreset.value = rollback.selectedId;
+      }
       showBanner("error", message);
       return;
     }
@@ -108,7 +120,11 @@ async function activatePreset(requestedId) {
     if (dom.liveActivePreset) {
       dom.liveActivePreset.value = applied.selectedId;
     }
+    if (dom.studioActivePreset) {
+      dom.studioActivePreset.value = applied.selectedId;
+    }
     renderLiveActivePresetControl();
+    renderActivePresetSelect(dom.studioActivePreset);
     document.dispatchEvent(new CustomEvent("live-active-preset-changed", {
       detail: { presetId: applied.activeId },
     }));
@@ -117,11 +133,17 @@ async function activatePreset(requestedId) {
     if (dom.liveActivePreset) {
       dom.liveActivePreset.value = rollback.selectedId;
     }
+    if (dom.studioActivePreset) {
+      dom.studioActivePreset.value = rollback.selectedId;
+    }
     showBanner("error", t("banner.cannotReach"));
   } finally {
     activateInFlight = false;
     if (dom.liveActivePreset) {
       dom.liveActivePreset.disabled = presetOptions().length === 0;
+    }
+    if (dom.studioActivePreset) {
+      dom.studioActivePreset.disabled = presetOptions().length === 0;
     }
     const nextQueued = queuedPresetId;
     queuedPresetId = null;
@@ -133,21 +155,28 @@ async function activatePreset(requestedId) {
   }
 }
 
-export function initLiveActivePreset() {
-  if (!dom.liveActivePreset) {
+/**
+ * @param {HTMLSelectElement | null} select
+ */
+export function initActivePresetSelect(select) {
+  if (!select || select.dataset.activePresetBound === "true") {
     return;
   }
-
-  renderLiveActivePresetControl();
-
-  dom.liveActivePreset.addEventListener("change", function () {
-    const requestedId = dom.liveActivePreset.value;
+  select.dataset.activePresetBound = "true";
+  renderActivePresetSelect(select);
+  select.addEventListener("change", function () {
+    const requestedId = select.value;
     activatePreset(requestedId).catch(function () {
       showBanner("error", t("banner.cannotReach"));
     });
   });
+}
+
+export function initLiveActivePreset() {
+  initActivePresetSelect(dom.liveActivePreset);
 
   document.addEventListener("admin-config-applied", function () {
     renderLiveActivePresetControl();
+    renderActivePresetSelect(dom.studioActivePreset);
   });
 }

@@ -76,14 +76,14 @@
 > **Allowed fallout**: Pure draft/source URL modules and tests, preview plumbing, locale keys, admin-only CSS.
 > **Blocked**: New overlay themes, alert surface, OBS WebSocket, automatic OBS configuration.
 
-- [ ] 5.1 Build the Studio surface list, stable-aspect preview, and property inspector using existing chat/leaderboard preview and preset-management behavior.
-- [ ] 5.2 Introduce an isolated overlay draft and baseline with deterministic dirty comparison; make appearance edits update preview only until Publish.
-- [ ] 5.3 Implement Publish by refreshing public config, replacing only its overlay section with the draft, submitting the full validated update, and retaining draft/field errors on failure.
-- [ ] 5.4 Add navigation/reload/close protection for dirty Studio drafts with Cancel preserving the workspace and confirmed discard restoring the baseline.
-- [ ] 5.5 Preserve add, duplicate, rename, delete, style controls, asset upload/removal, theme defaults, and shared preview backdrop behavior in the new inspector.
-- [ ] 5.6 Make unpinned Follow active preset URLs the primary chat/leaderboard copy actions; expose clearly labeled pinned alternatives and keep the dock URL behavior intact.
-- [ ] 5.7 Ensure unpinned chat and leaderboard pages react to activation broadcasts while valid pinned URLs remain fixed; add pure URL and resolution regression tests.
-- [ ] 5.8 Verify clipboard denial fallback, preview failure, publish validation, concurrent cold-save composition, RU/EN copy, short-window scrolling, and real OBS transparency/output.
+- [x] 5.1 Build the Studio surface list, stable-aspect preview, and property inspector using existing chat/leaderboard preview and preset-management behavior.
+- [x] 5.2 Introduce an isolated overlay draft and baseline with deterministic dirty comparison; make appearance edits update preview only until Publish.
+- [x] 5.3 Implement Publish by refreshing public config, replacing only its overlay section with the draft, submitting the full validated update, and retaining draft/field errors on failure.
+- [x] 5.4 Add navigation/reload/close protection for dirty Studio drafts with Cancel preserving the workspace and confirmed discard restoring the baseline.
+- [x] 5.5 Preserve add, duplicate, rename, delete, style controls, asset upload/removal, theme defaults, and shared preview backdrop behavior in the new inspector.
+- [x] 5.6 Make unpinned Follow active preset URLs the primary chat/leaderboard copy actions; expose clearly labeled pinned alternatives and keep the dock URL behavior intact.
+- [x] 5.7 Ensure unpinned chat and leaderboard pages react to activation broadcasts while valid pinned URLs remain fixed; add pure URL and resolution regression tests.
+- [x] 5.8 Verify clipboard denial fallback, preview failure, publish validation, concurrent cold-save composition, RU/EN copy, short-window scrolling, and real OBS transparency/output.
 
 ### Slice: `Cold configuration moves to explicit Settings sections`
 

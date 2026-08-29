@@ -65,6 +65,12 @@ export default {
   "workspace.announce.studio": "Studio workspace",
   "workspace.announce.settings": "Settings workspace",
 
+  "studio.publish": "Publish",
+  "studio.published": "Published",
+  "studio.dirty": "Unpublished changes",
+  "studio.discardConfirm": "Discard unpublished overlay changes?",
+  "studio.publishSuccess": "Overlay settings published.",
+
   "live.statusStrip": "Live operational status",
   "live.workArea": "Live workspace",
   "live.tabList": "Live workspace tabs",
@@ -164,6 +170,10 @@ export default {
   "obs.visibleToViewers": "Visible to viewers",
   "obs.overlaySummary": "Adds chat messages to the scene output seen by your audience.",
   "obs.overlayUrl": "Overlay URL",
+  "obs.followActivePreset": "Follow active preset",
+  "obs.followActiveHint": "Follow active preset URLs update when you change the active preset in Live or Studio.",
+  "obs.pinnedPresetAdvanced": "Pinned preset (advanced)",
+  "obs.pinnedPresetNamed": "Pinned to preset “{name}”",
   "obs.copyUrl": "Copy URL",
   "obs.stepBrowser": "In OBS Sources, add a <strong>Browser</strong> source.",
   "obs.stepPaste": "Paste the URL above into its URL field.",
