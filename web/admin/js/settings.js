@@ -270,6 +270,7 @@ export function applyConfig(config) {
     applyAdminLocale(nextLocale);
     markSettingsClean();
     scheduleOverlayPreviewRefresh();
+    document.dispatchEvent(new CustomEvent("admin-config-applied", { detail: { config: config } }));
   }
 
 export function buildPayload() {

@@ -2,8 +2,7 @@ import * as dom from "./dom.js";
 import { apiURL, readJSON, mapHTTPError } from "./api.js";
 import { showBanner } from "./ui-shell.js";
 import { t } from "./i18n-ui.js";
-
-export const CANVAS_SECTIONS = ["monitor", "viewers"];
+import { parseWorkspaceHash } from "./workspace-router.js";
 
 const VIEWERS_FETCH_TIMEOUT_MS = 15000;
 
@@ -13,7 +12,7 @@ let searchDebounceTimer = null;
 let mergeInFlight = false;
 let sessionInFlight = false;
 let listLoadInFlight = null;
-let currentCanvasSection = "monitor";
+let audienceInitialized = false;
 
 function escapeText(value) {
   return String(value == null ? "" : value);
@@ -25,16 +24,8 @@ function formatPlatformLabel(platform) {
   return translated === key ? escapeText(platform) : translated;
 }
 
-function canvasHeadingKey(section) {
-  return section === "viewers" ? "shell.viewersHeading" : "shell.liveMessages";
-}
-
-export function refreshCanvasHeading() {
-  if (!dom.canvasHeading) {
-    return;
-  }
-  dom.canvasHeading.textContent = t(canvasHeadingKey(currentCanvasSection));
-  dom.canvasHeading.dataset.i18n = canvasHeadingKey(currentCanvasSection);
+function isAudienceVisible() {
+  return parseWorkspaceHash(window.location.hash) === "audience";
 }
 
 function updateListSelection(id) {
@@ -320,7 +311,7 @@ export async function startNewStream() {
   try {
     await fetchJSON("/api/sessions/start", { method: "POST" });
     showBanner("success", t("stream.newStreamDone"));
-    if (dom.viewersCanvasPanel && !dom.viewersCanvasPanel.hidden) {
+    if (isAudienceVisible()) {
       await loadViewersList(dom.viewersSearch ? dom.viewersSearch.value : "");
       if (selectedViewerId) {
         await selectViewer(selectedViewerId);
@@ -333,47 +324,15 @@ export async function startNewStream() {
   }
 }
 
-export function setCanvasSection(section, options) {
-  const current = CANVAS_SECTIONS.indexOf(section) === -1 ? "monitor" : section;
-  const previous = currentCanvasSection;
-  currentCanvasSection = current;
-  const tabs = [
-    { id: "monitor", tab: dom.canvasMonitorTab, panel: dom.monitorCanvasPanel },
-    { id: "viewers", tab: dom.canvasViewersTab, panel: dom.viewersCanvasPanel },
-  ];
-
-  tabs.forEach(function (item) {
-    if (!item.tab || !item.panel) {
-      return;
-    }
-    const selected = item.id === current;
-    item.tab.setAttribute("aria-selected", selected ? "true" : "false");
-    item.tab.tabIndex = selected ? 0 : -1;
-    item.panel.hidden = !selected;
-  });
-
-  refreshCanvasHeading();
-
-  if (dom.refreshMessages) {
-    dom.refreshMessages.hidden = current !== "monitor";
+function ensureAudienceLoaded() {
+  if (!isAudienceVisible()) {
+    return;
   }
-  if (dom.refreshViewers) {
-    dom.refreshViewers.hidden = current !== "viewers";
-  }
-
-  if (current === "viewers" && previous !== "viewers") {
+  if (!audienceInitialized) {
+    audienceInitialized = true;
     loadViewersList(dom.viewersSearch ? dom.viewersSearch.value : "").catch(function () {
       showBanner("error", t("banner.cannotReach"));
     });
-  }
-
-  if (options && options.focusTab) {
-    const focused = tabs.find(function (item) {
-      return item.id === current;
-    });
-    if (focused && focused.tab) {
-      focused.tab.focus();
-    }
   }
 }
 
@@ -390,38 +349,7 @@ function closeNewStreamPrompt() {
   }
 }
 
-export function initCanvasTabs() {
-  if (!dom.canvasMonitorTab || !dom.canvasViewersTab) {
-    return;
-  }
-
-  setCanvasSection("monitor");
-
-  [dom.canvasMonitorTab, dom.canvasViewersTab].forEach(function (tab) {
-    tab.addEventListener("click", function () {
-      setCanvasSection(tab.dataset.canvasSection, { focusTab: false });
-    });
-    tab.addEventListener("keydown", function (event) {
-      if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(event.key) === -1) {
-        return;
-      }
-      event.preventDefault();
-      const ids = CANVAS_SECTIONS.slice();
-      const currentIndex = Math.max(0, ids.indexOf(tab.dataset.canvasSection));
-      let nextIndex = currentIndex;
-      if (event.key === "Home") {
-        nextIndex = 0;
-      } else if (event.key === "End") {
-        nextIndex = ids.length - 1;
-      } else if (event.key === "ArrowRight") {
-        nextIndex = (currentIndex + 1) % ids.length;
-      } else {
-        nextIndex = (currentIndex - 1 + ids.length) % ids.length;
-      }
-      setCanvasSection(ids[nextIndex], { focusTab: true });
-    });
-  });
-
+export function initAudienceViewers() {
   if (dom.refreshViewers) {
     dom.refreshViewers.addEventListener("click", function () {
       loadViewersList(dom.viewersSearch ? dom.viewersSearch.value : "").catch(function () {
@@ -443,15 +371,17 @@ export function initCanvasTabs() {
     });
   }
 
-  window.addEventListener("admin-locale-applied", function () {
-    refreshCanvasHeading();
-  });
+  window.addEventListener("hashchange", ensureAudienceLoaded);
+  ensureAudienceLoaded();
 }
 
 export function initNewStreamControl() {
-  if (dom.newStreamButton) {
-    dom.newStreamButton.addEventListener("click", openNewStreamPrompt);
-  }
+  [dom.newStreamButton, dom.audienceNewStreamButton].forEach(function (button) {
+    if (!button) {
+      return;
+    }
+    button.addEventListener("click", openNewStreamPrompt);
+  });
   if (dom.newStreamPromptCancel) {
     dom.newStreamPromptCancel.addEventListener("click", closeNewStreamPrompt);
   }

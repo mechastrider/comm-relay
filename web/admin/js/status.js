@@ -7,6 +7,7 @@ import { createErrorDetailTrigger, hideErrorPopover } from './ui-error-popover.j
 import { showBanner } from './ui-shell.js';
 import { renderAboutVersion } from './about.js';
 import { t, rememberDiagnosticsPayload } from './i18n-ui.js';
+import { renderLiveDiagnostics } from './live-status.js';
 
 export function renderPlatformStatus(el, platform) {
     const platformState = typeof platform.state === "string" ? platform.state : "unknown";
@@ -254,6 +255,7 @@ export function renderDiagnostics(payload) {
     if (payload.connectors) {
       renderStatus(payload.connectors);
     }
+    renderLiveDiagnostics(payload);
     renderEmoteDiagnostics(payload.emote_cache);
   }
 

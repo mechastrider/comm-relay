@@ -28,9 +28,13 @@ import {
   updateYouTubeConnectionModeUI,
   startYouTubeOAuth,
 } from "./js/settings.js";
-import { initCanvasTabs, initNewStreamControl } from "./js/viewers.js";
+import { initAudienceViewers, initNewStreamControl } from "./js/viewers.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
 import { initWorkspaceRouter } from "./js/workspace-router.js";
+import { initLiveTabs } from "./js/live-tabs.js";
+import { initLiveLeaderboard } from "./js/live-leaderboard.js";
+import { initLiveStatistics } from "./js/live-statistics.js";
+import { initLiveActivePreset, renderLiveActivePresetControl } from "./js/live-active-preset.js";
 
 initI18n();
 initWorkspaceRouter(document, t);
@@ -102,7 +106,13 @@ initSettingsDialogs();
 initAboutDialog();
 initMessageSoundControls();
 bindLocaleSelect();
-initCanvasTabs();
+initAudienceViewers();
+initLiveTabs();
+initLiveLeaderboard(function () {
+  /* period change handled in leaderboard module */
+});
+initLiveStatistics();
+initLiveActivePreset();
 initNewStreamControl();
 
 if (dom.shellDiagnosticsButton && dom.shellStatusBar) {
@@ -124,6 +134,7 @@ refreshAll()
   })
   .finally(function () {
     state.soundReady = true;
+    renderLiveActivePresetControl();
     connectMessageWebSocket();
   });
 

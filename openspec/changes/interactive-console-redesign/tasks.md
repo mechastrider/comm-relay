@@ -45,12 +45,12 @@
 > **Allowed fallout**: Pure aggregate selectors, fixtures, locale keys, scoped CSS.
 > **Blocked**: Historical time series, clear-queue action, OBS scene visibility, commands or splash controls.
 
-- [ ] 3.1 Move current status and message monitoring into Live while preserving recent history, manual-scroll behavior, optional sound, stable-ID deletion, and reconnect semantics.
-- [ ] 3.2 Add accessible Messages, Leaderboard, and Statistics tabs with a stable content region and independently recoverable loads.
-- [ ] 3.3 Render leaderboard and current aggregate statistics from existing session/day/all viewer data; cover zero, populated, tied, and partial-data fixtures without synthetic history.
-- [ ] 3.4 Wire active-preset selection to the targeted activation action with serialized progress, optimistic-selection rollback, shared-state update, and feedback.
-- [ ] 3.5 Present connector health and WebSocket browser-client counts with truthful labels; retain diagnostics access without claiming OBS scene visibility.
-- [ ] 3.6 Verify RU/EN copy, keyboard tab behavior, message moderation, live updates, region-level failures, and compact layouts.
+- [x] 3.1 Move current status and message monitoring into Live while preserving recent history, manual-scroll behavior, optional sound, stable-ID deletion, and reconnect semantics.
+- [x] 3.2 Add accessible Messages, Leaderboard, and Statistics tabs with a stable content region and independently recoverable loads.
+- [x] 3.3 Render leaderboard and current aggregate statistics from existing session/day/all viewer data; cover zero, populated, tied, and partial-data fixtures without synthetic history.
+- [x] 3.4 Wire active-preset selection to the targeted activation action with serialized progress, optimistic-selection rollback, shared-state update, and feedback.
+- [x] 3.5 Present connector health and WebSocket browser-client counts with truthful labels; retain diagnostics access without claiming OBS scene visibility.
+- [x] 3.6 Verify RU/EN copy, keyboard tab behavior, message moderation, live updates, region-level failures, and compact layouts.
 
 ### Slice: `Audience workspace preserves viewer management`
 
