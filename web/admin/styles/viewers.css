@@ -308,3 +308,128 @@
     align-items: stretch;
   }
 }
+
+.audience-toolbar--primary {
+  align-items: flex-start;
+}
+
+.audience-tabs {
+  flex: 1 1 100%;
+}
+
+.audience-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: var(--primitive-space-3);
+}
+
+.audience-catalog-panel {
+  min-height: 0;
+}
+
+.audience-catalog-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: var(--primitive-space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.audience-catalog-list {
+  display: flex;
+  flex: 1 1 40%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.audience-catalog-list__header,
+.audience-catalog-editor__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--primitive-space-2);
+  padding: var(--primitive-space-3);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.audience-catalog-list__title,
+.audience-catalog-editor__title {
+  margin: 0;
+  font-size: var(--primitive-font-size-sm);
+  font-weight: 600;
+}
+
+.audience-catalog-list__body,
+.audience-catalog-editor__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--primitive-space-3);
+}
+
+.audience-catalog-editor {
+  display: flex;
+  flex: 1 1 60%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+}
+
+.audience-catalog-editor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--primitive-space-2);
+}
+
+.audience-catalog-editor__empty {
+  padding: var(--primitive-space-4);
+}
+
+.audience-catalog-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.audience-catalog-items__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--primitive-space-2);
+  padding: var(--primitive-space-2) var(--primitive-space-3);
+  border-radius: var(--primitive-radius-sm);
+  cursor: pointer;
+}
+
+.audience-catalog-items__item:hover,
+.audience-catalog-items__item--selected {
+  background: var(--surface-elevated, var(--surface));
+}
+
+.audience-catalog-items__primary {
+  font-weight: 500;
+}
+
+.audience-catalog-items__meta {
+  font-size: var(--primitive-font-size-xs);
+  color: var(--text-muted);
+}
+
+@media (max-width: 1023px) {
+  .audience-catalog-layout {
+    flex-direction: column;
+  }
+
+  .audience-catalog-editor {
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+}

@@ -4,6 +4,8 @@ import {
   formatPlatformSummary,
   formatViewerPlatforms,
   validateDisplayName,
+  validateCommandTrigger,
+  validateAwardPoints,
   viewerPeriodMetrics,
 } from "./audience-helpers.js";
 
@@ -63,5 +65,14 @@ assert.equal(validateDisplayName("Alpha"), null);
 assert.equal(validateDisplayName("  Beta  "), null);
 assert.equal(validateDisplayName(""), "viewers.nameRequired");
 assert.equal(validateDisplayName("   "), "viewers.nameRequired");
+
+assert.equal(validateCommandTrigger("lurk"), null);
+assert.equal(validateCommandTrigger(""), "commands.triggerRequired");
+assert.equal(validateCommandTrigger("!gg"), "commands.triggerInvalid");
+assert.equal(validateCommandTrigger("bad slug"), "commands.triggerInvalid");
+
+assert.equal(validateAwardPoints(10), null);
+assert.equal(validateAwardPoints(0), "awards.pointsInvalid");
+assert.equal(validateAwardPoints("x"), "awards.pointsInvalid");
 
 console.log("audience-helpers OK");

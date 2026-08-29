@@ -10,13 +10,13 @@
 > **Blocked**: matcher, overlay, grants, signing
 
 ### Backend
-- [ ] 1.1 Goose migration: `commands`, `award_types`, nullable media columns, seed four rows
-- [ ] 1.2 Store CRUD with unique trigger, points ≥ 1, cooldown ≥ 0; delete does not resurrect on reopen
-- [ ] 1.3 HTTP `GET /api/commands`, `GET /api/awards`, POST create/update/delete; router guard
+- [x] 1.1 Goose migration: `commands`, `award_types`, nullable media columns, seed four rows
+- [x] 1.2 Store CRUD with unique trigger, points ≥ 1, cooldown ≥ 0; delete does not resurrect on reopen
+- [x] 1.3 HTTP `GET /api/commands`, `GET /api/awards`, POST create/update/delete; router guard
 
 ### Frontend
-- [ ] 1.4 Audience Commands and Awards editors (list + form, confirm delete, empty state)
-- [ ] 1.5 RU/EN strings; `npm run test:i18n`
+- [x] 1.4 Audience Commands and Awards editors (list + form, confirm delete, empty state)
+- [x] 1.5 RU/EN strings; `npm run test:i18n`
 
 ## Slice: Commands fire queued alerts
 
