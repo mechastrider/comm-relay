@@ -73,13 +73,13 @@
 - [x] 5.4 Extend `obs-overlay-themes` skill: alert is an on-stream surface
 
 ## Gate: qa
-- [ ] Q.1 Execute `qa_plan.md` automated commands and P0 manual smokes
+- [x] Q.1 Execute `qa_plan.md` automated commands and P0 manual smokes
 
 ## Gate: review
 - [ ] R.1 Fresh diff review; CRITICAL=0; affected checks green
 
 ## Gate: distribution-readiness
-- [ ] D.1 `go build ./...`; note OBS source + audio; no signing/publish
+- [x] D.1 `go build ./...`; note OBS source + audio; no signing/publish
 
 ## Verification
 
