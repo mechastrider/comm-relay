@@ -13,6 +13,14 @@ include:
 exclude:
     - id: api-conventions
     - id: backend-structure
+    - id: openspec-workflow
+      artifacts:
+        - browser-report-template
+        - library-change-schema
+        - mobile-change-schema
+        - service-change-schema
+        - spec-driven-schema
+        - web-change-schema
 providers:
     - claude
     - codex
@@ -292,42 +300,6 @@ packages:
               src: schemas/desktop-change
               dest: openspec/schemas/desktop-change
               installed_hash: sha256:750464eee09bb8df9379e622f163ff2e33de3f07ff2af131f13bc50209edf740
-            - id: library-change-schema
-              kind: schema
-              mode: tree
-              src: schemas/library-change
-              dest: openspec/schemas/library-change
-              installed_hash: sha256:20e95d6a6960de3a04030bcdd2b942a0bab08400dd304aa141b8bf78f35d7d75
-            - id: mobile-change-schema
-              kind: schema
-              mode: tree
-              src: schemas/mobile-change
-              dest: openspec/schemas/mobile-change
-              installed_hash: sha256:2f091a162d609302a8d732fae16678cd0ba4cf63d629382835aec4ec0049919c
-            - id: service-change-schema
-              kind: schema
-              mode: tree
-              src: schemas/service-change
-              dest: openspec/schemas/service-change
-              installed_hash: sha256:27e6fe632a131f37f1bc90b0777d27c03bbf48ed1f017b2fa2cfe6493ba06bf6
-            - id: spec-driven-schema
-              kind: schema
-              mode: tree
-              src: schemas/spec-driven
-              dest: openspec/schemas/spec-driven
-              installed_hash: sha256:971031841260457c4fe01284ab9c81712ef729143960b824af9db138dd0de9bd
-            - id: web-change-schema
-              kind: schema
-              mode: tree
-              src: schemas/web-change
-              dest: openspec/schemas/web-change
-              installed_hash: sha256:396050a9be3b02ab3bec82b9aa33c235f583b7b714ab646b3c13d944cae2dfbe
-            - id: browser-report-template
-              kind: template
-              mode: file
-              src: templates/browser-report.md
-              dest: openspec/templates/browser-report.md
-              installed_hash: sha256:437b29f9aedc1ac5bd89be3c23b12f9177f110a4ec0e069f0bd1d80a0932fc4c
             - id: qa-report-template
               kind: template
               mode: file
