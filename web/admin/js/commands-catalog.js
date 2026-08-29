@@ -228,6 +228,18 @@ async function fetchCommandsList() {
     listHasLoaded = true;
     listLoadError = false;
     hideListError();
+    if (!creatingNew) {
+      const stillSelected = Boolean(selectedCommandId) && commandsCache.some(function (item) {
+        return String(item.id) === selectedCommandId;
+      });
+      if (!stillSelected && commandsCache.length > 0) {
+        selectedCommandId = String(commandsCache[0].id || "");
+      }
+      if (selectedCommandId) {
+        selectCommand(selectedCommandId, false);
+        return;
+      }
+    }
     renderCommandsList();
     syncEditorVisibility();
   } finally {

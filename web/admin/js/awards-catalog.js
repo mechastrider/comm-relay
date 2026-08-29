@@ -222,6 +222,18 @@ async function fetchAwardsList() {
     listHasLoaded = true;
     listLoadError = false;
     hideListError();
+    if (!creatingNew) {
+      const stillSelected = Boolean(selectedAwardId) && awardsCache.some(function (item) {
+        return String(item.id) === selectedAwardId;
+      });
+      if (!stillSelected && awardsCache.length > 0) {
+        selectedAwardId = String(awardsCache[0].id || "");
+      }
+      if (selectedAwardId) {
+        selectAward(selectedAwardId, false);
+        return;
+      }
+    }
     renderAwardsList();
     syncEditorVisibility();
   } finally {
