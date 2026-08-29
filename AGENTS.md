@@ -37,7 +37,7 @@ comm-relay/
 3. **Simple deployment**: single executable, Windows-friendly, minimal memory.
 4. **Logging**: `github.com/muonsoft/clog` (on `log/slog`) — Debug/Info/Warn/Error — see skill `golang-logging`.
 5. **Small, explicit changes**: match existing package layout; plan behavior changes as OpenSpec deltas; update `docs/concept.md` / `docs/roadmap.md` only when the product contract or horizon changes.
-6. **Changelog for user-visible work**: when a task changes **behavior** the user can notice — config, API contract, admin/overlay/dock UX, connectors as experienced in the UI, or user-facing docs (README) — append concise Russian bullets to `CHANGELOG.md` under `## [Unreleased]` (skill `changelog`). Skip when there is no user-visible impact: refactors, file/module splits, tests-only, lint, or internal agent/tooling — even if `web/admin` or `web/overlay` files changed. Never erase or rewrite existing `## [X.Y.Z]` sections while editing Unreleased.
+6. **Changelog for user-visible work**: when a task changes **product behavior** a streamer or OBS operator would notice — config, API contract, admin/overlay/dock UX, connectors as experienced in the UI, or README/FAQ text that changes install, setup, or how to use the app — append concise Russian bullets to `CHANGELOG.md` under `## [Unreleased]` (skill `changelog`). **Skip** marketing and repo-only edits: promo/hero images, banners, screenshots, typos in README that do not change instructions, refactors, file/module splits, tests-only, lint, or internal agent/tooling — even if `web/admin`, `web/overlay`, or README files changed. Never erase or rewrite existing `## [X.Y.Z]` sections while editing Unreleased.
 
 ## Language Conventions
 
@@ -84,7 +84,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 | Skill | Use when |
 |-------|----------|
 | `changelog` | Preparing releases, editing `CHANGELOG.md`, or writing user-facing release notes |
-| `release-announce` | Short Russian social posts (Telegram/VK/Twitter) for a version — `CHANGELOG.md` as source, streamer wording |
+| `release-announce` | Short Russian social posts (Telegram/VK/Twitter) for a version — `CHANGELOG.md` as source, friendly meaning-first streamer wording |
 
 ### Hub / devtools
 
@@ -146,7 +146,7 @@ Before reporting a task as done:
 - `go test ./...` (or targeted packages); `-race` when changing concurrency.
 - `golangci-lint run ./...` (config: `.golangci.yml`, v2).
 - If you changed `web/**/*.js`: `npm ci` (once) and `npm run lint`.
-- If the change is user-visible (see Core Principle 6): update `CHANGELOG.md` under `[Unreleased]` with skill `changelog` — do not wait for a release task. If the change is a no-behavior refactor of admin/overlay code, skip the changelog.
+- If the change is user-visible product behavior (see Core Principle 6 and skill `changelog`): update `CHANGELOG.md` under `[Unreleased]`. Skip changelog for marketing assets, README promo images, and no-behavior refactors of admin/overlay code.
 - If preparing a release: move `[Unreleased]` into a versioned section, set the date, and keep README artifact names/install steps in sync.
 - If static UI changed: smoke-check overlay (transparent background, message limit) and admin forms.
 - If observable behavior changed: keep `openspec/specs/` in sync (change delta → archive or `openspec-sync-specs`).
