@@ -67,10 +67,10 @@
 
 ## Docs
 
-- [ ] 5.1 CHANGELOG `[Unreleased]` Russian streamer bullets (commands, banners, Reward, hide, seeds)
-- [ ] 5.2 README RU/EN: `/overlay/alert`, OBS audio, dock Reward, hide setting
-- [ ] 5.3 `docs/roadmap.md` / `docs/concept.md`: 6b mechanism (two catalogs, alerts, awards, event log); keep achievements later
-- [ ] 5.4 Extend `obs-overlay-themes` skill: alert is an on-stream surface
+- [x] 5.1 CHANGELOG `[Unreleased]` Russian streamer bullets (commands, banners, Reward, hide, seeds)
+- [x] 5.2 README RU/EN: `/overlay/alert`, OBS audio, dock Reward, hide setting
+- [x] 5.3 `docs/roadmap.md` / `docs/concept.md`: 6b mechanism (two catalogs, alerts, awards, event log); keep achievements later
+- [x] 5.4 Extend `obs-overlay-themes` skill: alert is an on-stream surface
 
 ## Gate: qa
 - [ ] Q.1 Execute `qa_plan.md` automated commands and P0 manual smokes
