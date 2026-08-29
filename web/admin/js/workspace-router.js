@@ -1,3 +1,5 @@
+import { isSettingsWorkspaceHash } from "./settings-helpers.js";
+
 /** @typedef {"live"|"audience"|"studio"|"settings"} WorkspaceId */
 
 /** @type {readonly WorkspaceId[]} */
@@ -12,9 +14,12 @@ export function parseWorkspaceHash(hash) {
     return "live";
   }
   const raw = hash.charAt(0) === "#" ? hash.slice(1) : hash;
-  const id = raw.toLowerCase();
+  const id = raw.toLowerCase().split("/")[0];
   if (WORKSPACES.includes(/** @type {WorkspaceId} */ (id))) {
     return /** @type {WorkspaceId} */ (id);
+  }
+  if (isSettingsWorkspaceHash(hash)) {
+    return "settings";
   }
   return "live";
 }
@@ -111,11 +116,25 @@ export function applyWorkspace(doc, workspaceId, options) {
 /**
  * @param {Document} doc
  * @param {(key: string) => string} translate
+ * @param {{ onWorkspaceChange?: (workspaceId: WorkspaceId) => void }} [routerOptions]
  * @returns {() => void}
  */
-export function initWorkspaceRouter(doc, translate) {
+export function initWorkspaceRouter(doc, translate, routerOptions) {
+  let lastWorkspace = parseWorkspaceHash(doc.location.hash);
+
+  function notifyWorkspaceChange(workspaceId) {
+    if (routerOptions && typeof routerOptions.onWorkspaceChange === "function") {
+      routerOptions.onWorkspaceChange(workspaceId);
+    }
+  }
+
   function syncFromLocation() {
-    applyWorkspace(doc, parseWorkspaceHash(doc.location.hash), { translate });
+    const workspaceId = parseWorkspaceHash(doc.location.hash);
+    applyWorkspace(doc, workspaceId, { translate });
+    if (workspaceId !== lastWorkspace) {
+      notifyWorkspaceChange(workspaceId);
+      lastWorkspace = workspaceId;
+    }
   }
 
   doc.defaultView.addEventListener("hashchange", syncFromLocation);
@@ -133,6 +152,7 @@ export function initWorkspaceRouter(doc, translate) {
   }
 
   syncFromLocation();
+  notifyWorkspaceChange(lastWorkspace);
 
   return function disposeWorkspaceRouter() {
     doc.defaultView.removeEventListener("hashchange", syncFromLocation);

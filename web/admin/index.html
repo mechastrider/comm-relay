@@ -181,35 +181,34 @@
         <div id="systems-content" class="systems-panel__content">
           <div class="panel-heading panel-heading--actions">
             <h2 id="controls-heading" data-i18n="shell.controls">Controls</h2>
-            <button id="save-button" class="btn-physical btn-start btn-small" type="submit" form="settings-form" data-save-button disabled data-i18n="shell.save">Save</button>
           </div>
 
           <div class="control-grid">
-            <button class="btn-physical has-tooltip" type="button" data-dialog-target="connections-dialog">
+            <a class="btn-physical has-tooltip" href="#settings/platforms">
               <span data-i18n="shell.connections">Connections</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.connectionsHint">Twitch, YouTube, VK Live, and SOCKS5 proxy.</span>
-            </button>
+            </a>
             <a class="btn-physical has-tooltip" href="#studio">
               <span data-i18n="shell.obs">OBS</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.obsHint">Browser Source URLs, presets, and overlay appearance.</span>
             </a>
-            <button class="btn-physical has-tooltip" type="button" data-dialog-target="rich-chat-dialog">
+            <a class="btn-physical has-tooltip" href="#settings/application">
               <span data-i18n="shell.richChat">Rich chat</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.richChatHint">Emotes and safe image-link previews in chat and overlay.</span>
-            </button>
-            <button class="btn-physical has-tooltip" type="button" data-dialog-target="sound-dialog">
+            </a>
+            <a class="btn-physical has-tooltip" href="#settings/application">
               <span data-i18n="shell.sound">Sound</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.soundHint">Alert sound when a new chat message arrives.</span>
-            </button>
-            <button class="btn-physical has-tooltip" type="button" data-dialog-target="interface-dialog">
+            </a>
+            <a class="btn-physical has-tooltip" href="#settings/application">
               <span data-i18n="shell.interface">Interface</span>
-              <span class="ui-tooltip" role="tooltip" data-i18n="shell.interfaceHint">UI language and viewer scoring settings.</span>
-            </button>
-            <button class="btn-physical control-grid-about about-btn has-tooltip" type="button" data-dialog-target="about-dialog">
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.interfaceSettingsHint">UI language, message sound, and rich chat options.</span>
+            </a>
+            <a class="btn-physical control-grid-about about-btn has-tooltip" href="#settings/about">
               <span data-i18n="shell.about">About</span>
               <small data-i18n="shell.aboutSubtitle">VERSION · SUPPORT</small>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.aboutHint">Version, privacy, and support links.</span>
-            </button>
+            </a>
           </div>
 
           <div class="panel-heading panel-heading--spaced">
@@ -335,10 +334,59 @@
           </div>
         </section>
 
-        <section id="workspace-settings" class="workspace" data-workspace="settings" hidden aria-labelledby="workspace-settings-heading">
-          <div class="workspace-placeholder">
-            <h1 id="workspace-settings-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.settingsHeading">Settings</h1>
-            <p class="workspace-placeholder__lead" data-i18n="workspace.settingsPlaceholder">Platform, network, and application settings will be organized here. Connections and related dialogs on Live remain available for now.</p>
+        <section id="workspace-settings" class="workspace settings-workspace" data-workspace="settings" hidden aria-labelledby="workspace-settings-heading">
+          <div class="settings-workspace__layout">
+            <header class="settings-workspace__header">
+              <h1 id="workspace-settings-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.settingsHeading">Settings</h1>
+              <nav class="settings-nav" role="tablist" data-i18n-aria-label="settings.navLabel" aria-label="Settings sections">
+                <a class="settings-nav__link" href="#settings/platforms" role="tab" data-settings-nav="platforms" data-i18n="settings.section.platforms">Platforms</a>
+                <a class="settings-nav__link" href="#settings/network" role="tab" data-settings-nav="network" data-i18n="settings.section.network">Network</a>
+                <a class="settings-nav__link" href="#settings/data" role="tab" data-settings-nav="data" data-i18n="settings.section.data">Data</a>
+                <a class="settings-nav__link" href="#settings/application" role="tab" data-settings-nav="application" data-i18n="settings.section.application">Application</a>
+                <a class="settings-nav__link" href="#settings/diagnostics" role="tab" data-settings-nav="diagnostics" data-i18n="settings.section.diagnostics">Diagnostics</a>
+                <a class="settings-nav__link" href="#settings/about" role="tab" data-settings-nav="about" data-i18n="settings.section.about">About</a>
+              </nav>
+            </header>
+            <div id="settings-sections-mount" class="settings-workspace__content"></div>
+            <div id="settings-diagnostics-body" class="settings-diagnostics">
+              <p class="field-hint" data-i18n="settings.diagnosticsHint">Runtime uptime, WebSocket browser clients, connector details, and emote cache status.</p>
+              <div class="settings-diagnostics__toolbar">
+                <button id="settings-diagnostics-refresh" class="btn-physical btn-small" type="button" data-i18n="shell.refresh">Refresh</button>
+              </div>
+              <dl class="overview-list settings-diagnostics__summary">
+                <div class="overview-list__row">
+                  <dt data-i18n="shell.uptime">Uptime:</dt>
+                  <dd id="settings-diag-uptime" class="overview-list__value">-</dd>
+                </div>
+                <div class="overview-list__row">
+                  <dt data-i18n="shell.ws">WS:</dt>
+                  <dd id="settings-diag-ws-clients" class="overview-list__value">-</dd>
+                </div>
+                <div class="overview-list__row">
+                  <dt data-i18n="shell.messages">Messages:</dt>
+                  <dd id="settings-diag-message-counts" class="overview-list__value">-</dd>
+                </div>
+              </dl>
+              <div class="panel-heading panel-heading--spaced">
+                <h3 data-i18n="shell.youtubeOAuth">YouTube OAuth</h3>
+              </div>
+              <p id="settings-youtube-oauth-label" class="settings-diagnostics__oauth">-</p>
+              <div class="detail-stack" data-i18n-aria-label="shell.connectorDetails">
+                <p id="settings-twitch-detail" class="status-detail" hidden></p>
+                <p id="settings-youtube-detail" class="status-detail" hidden></p>
+                <p id="settings-vk-detail" class="status-detail" hidden></p>
+              </div>
+              <div class="panel-heading panel-heading--spaced">
+                <h3 data-i18n="shell.richChat">Rich chat</h3>
+              </div>
+              <dl class="overview-list emote-diagnostics" data-i18n-aria-label="shell.emoteProviderCache">
+                <div class="overview-list__row">
+                  <dt data-i18n="shell.cacheEntries">Cache entries</dt>
+                  <dd id="settings-emote-cache-entries" class="overview-list__value">-</dd>
+                </div>
+              </dl>
+              <ul id="settings-emote-provider-list" class="provider-list" data-i18n-aria-label="shell.emoteProviderStatus"></ul>
+            </div>
           </div>
         </section>
       </main>
@@ -520,6 +568,20 @@
           </section>
 
           <section id="connections-network-panel" class="dialog-tab-panel connections-tab-panel" role="tabpanel" aria-labelledby="connections-network-tab" data-connections-panel="network" hidden>
+            <section class="panel" aria-labelledby="network-server-heading">
+              <div class="panel__header">
+                <h3 id="network-server-heading" data-i18n="settings.serverHeading">HTTP server</h3>
+              </div>
+              <div class="form">
+                <div class="form__field">
+                  <label for="server-port" data-i18n="settings.serverPort">Server port</label>
+                  <input id="server-port" name="server_port" type="number" min="1" max="65535" step="1" inputmode="numeric">
+                  <p class="field-hint" data-i18n="settings.serverPortHint">Local port for the admin panel, API, and WebSocket. Restart CommRelay after changing.</p>
+                  <p id="server-port-error" class="field-error" role="alert" hidden></p>
+                </div>
+              </div>
+            </section>
+
             <section class="panel" aria-labelledby="network-proxy-heading">
               <div class="panel__header">
                 <h3 id="network-proxy-heading" data-i18n="conn.socks5Proxy">SOCKS5 proxy</h3>
@@ -551,12 +613,11 @@
 
         <div class="dialog-actions">
           <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
         </div>
       </div>
     </dialog>
 
-    <dialog id="overlay-dialog" class="settings-dialog" aria-labelledby="overlay-heading">
+    <dialog id="connections-dialog" class="settings-dialog" aria-labelledby="overlay-heading">
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>
@@ -1130,16 +1191,8 @@
       </div>
     </dialog>
 
-    <dialog id="rich-chat-dialog" class="settings-dialog" aria-labelledby="rich-chat-heading">
-      <div class="dialog-frame">
-        <div class="dialog-header">
-          <div>
-            <span class="dialog-kicker" data-i18n="dialog.configuration">Configuration</span>
-            <h2 id="rich-chat-heading" data-i18n="shell.richChat">Rich chat</h2>
-          </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeRichChat" aria-label="Close rich chat settings">Close</button>
-        </div>
-
+    <dialog id="rich-chat-dialog" class="settings-dialog" aria-labelledby="rich-chat-heading" hidden>
+      <div id="rich-chat-settings-mount" class="rich-chat-settings-mount">
         <section class="panel" aria-labelledby="emote-providers-heading">
           <div class="panel__header">
             <h3 id="emote-providers-heading" data-i18n="rich.emoteProviders">Emote providers</h3>
@@ -1230,25 +1283,12 @@
             </div>
           </div>
         </section>
-
-        <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
-        </div>
       </div>
     </dialog>
 
-    <dialog id="interface-dialog" class="settings-dialog" aria-labelledby="interface-heading">
+    <dialog id="interface-dialog" class="settings-dialog" aria-labelledby="interface-heading" hidden>
       <div class="dialog-frame">
-        <div class="dialog-header">
-          <div>
-            <span class="dialog-kicker" data-i18n="dialog.configuration">Configuration</span>
-            <h2 id="interface-heading" data-i18n="shell.interface">Interface</h2>
-          </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeInterface" aria-label="Close interface settings">Close</button>
-        </div>
-
-        <section class="panel" aria-labelledby="time-display-heading">
+        <section id="interface-language-panel" class="panel" aria-labelledby="time-display-heading">
           <div class="panel__header">
             <h3 id="time-display-heading" data-i18n="iface.language">Language</h3>
           </div>
@@ -1266,7 +1306,7 @@
           </div>
         </section>
 
-        <section class="panel" aria-labelledby="viewer-stats-heading">
+        <section id="viewer-stats-panel" class="panel" aria-labelledby="viewer-stats-heading">
           <div class="panel__header">
             <h3 id="viewer-stats-heading" data-i18n="iface.viewerStats">Viewer stats</h3>
           </div>
@@ -1286,25 +1326,12 @@
             </div>
           </div>
         </section>
-
-        <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
-        </div>
       </div>
     </dialog>
 
-    <dialog id="sound-dialog" class="settings-dialog" aria-labelledby="message-sound-heading">
+    <dialog id="sound-dialog" class="settings-dialog" aria-labelledby="message-sound-heading" hidden>
       <div class="dialog-frame">
-        <div class="dialog-header">
-          <div>
-            <span class="dialog-kicker" data-i18n="dialog.configuration">Configuration</span>
-            <h2 id="message-sound-heading">Message sound</h2>
-          </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeSound" aria-label="Close sound settings">Close</button>
-        </div>
-
-        <section class="panel" aria-labelledby="message-sound-panel-heading">
+        <section id="message-sound-panel" class="panel" aria-labelledby="message-sound-panel-heading">
           <div class="panel__header">
             <h3 id="message-sound-panel-heading" data-i18n="sound.alertTone">Alert tone</h3>
             <button id="test-message-sound" type="button" class="button-secondary" data-i18n="sound.test">Test</button>
@@ -1339,15 +1366,10 @@
             </div>
           </div>
         </section>
-
-        <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
-        </div>
       </div>
     </dialog>
 
-    <dialog id="about-dialog" class="settings-dialog about-dialog" aria-labelledby="about-heading">
+    <dialog id="about-dialog" class="settings-dialog about-dialog" aria-labelledby="about-heading" hidden>
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>

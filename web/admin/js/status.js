@@ -252,11 +252,57 @@ export function renderDiagnostics(payload) {
     if (dom.diagMessageCounts) {
       dom.diagMessageCounts.textContent = formatMessageCounts(payload.message_counts);
     }
+    mirrorSettingsDiagnosticsSummary();
     if (payload.connectors) {
       renderStatus(payload.connectors);
+      mirrorSettingsConnectorDiagnostics();
     }
     renderLiveDiagnostics(payload);
     renderEmoteDiagnostics(payload.emote_cache);
+    mirrorSettingsEmoteDiagnostics();
+  }
+
+function mirrorTextContent(sourceId, targetId) {
+    const source = document.getElementById(sourceId);
+    const target = document.getElementById(targetId);
+    if (source && target) {
+      target.textContent = source.textContent;
+    }
+  }
+
+function mirrorSettingsDiagnosticsSummary() {
+    mirrorTextContent("diag-uptime", "settings-diag-uptime");
+    mirrorTextContent("diag-ws-clients", "settings-diag-ws-clients");
+    mirrorTextContent("diag-message-counts", "settings-diag-message-counts");
+  }
+
+function mirrorSettingsConnectorDiagnostics() {
+    mirrorTextContent("youtube-oauth-label", "settings-youtube-oauth-label");
+    ["twitch", "youtube", "vk"].forEach(function (platform) {
+      const source = document.getElementById(platform + "-detail");
+      const target = document.getElementById("settings-" + platform + "-detail");
+      if (!source || !target) {
+        return;
+      }
+      target.replaceChildren(...Array.from(source.childNodes).map(function (node) {
+        return node.cloneNode(true);
+      }));
+      target.hidden = source.hidden;
+      target.className = source.className;
+    });
+  }
+
+function mirrorSettingsEmoteDiagnostics() {
+    mirrorTextContent("emote-cache-entries", "settings-emote-cache-entries");
+    const sourceList = dom.emoteProviderList;
+    const targetList = document.getElementById("settings-emote-provider-list");
+    if (!sourceList || !targetList) {
+      return;
+    }
+    targetList.replaceChildren(...Array.from(sourceList.childNodes).map(function (node) {
+      return node.cloneNode(true);
+    }));
+    targetList.dataset.renderKey = sourceList.dataset.renderKey || "";
   }
 
 export function handleOAuthQuery() {
@@ -284,5 +330,6 @@ export function handleOAuthQuery() {
       const query = params.toString();
       const next = window.location.pathname + (query ? "?" + query : "");
       window.history.replaceState({}, "", next);
+      window.location.hash = "#settings/platforms";
     }
   }

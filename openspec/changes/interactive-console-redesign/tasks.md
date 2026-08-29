@@ -94,11 +94,11 @@
 > **Allowed fallout**: Settings controller extraction, form-state helpers/tests, locale keys, admin CSS.
 > **Blocked**: New connector modes, credential storage changes, auto-save, one global Save.
 
-- [ ] 6.1 Move Twitch, YouTube, VK, proxy, interface, sound, data, diagnostics, and about controls into labeled Settings sections while preserving every existing conditional field and action.
-- [ ] 6.2 Give each editable section its own baseline, dirty state, reset/leave confirmation, and Save action; refresh public config and compose only the owned section before submit.
-- [ ] 6.3 Preserve OAuth starts/callback status, blank-secret semantics, connector restart behavior, validation field mapping, first-error focus, and entered values after failure.
-- [ ] 6.4 Keep diagnostics/about read-only actions distinct from forms and provide scoped refresh/copy failure states.
-- [ ] 6.5 Verify concurrent section saves, server reconnect, compact conditional forms, keyboard/screen-reader labeling, RU/EN catalogs, and the full feature-inventory mapping.
+- [x] 6.1 Move Twitch, YouTube, VK, proxy, interface, sound, data, diagnostics, and about controls into labeled Settings sections while preserving every existing conditional field and action.
+- [x] 6.2 Give each editable section its own baseline, dirty state, reset/leave confirmation, and Save action; refresh public config and compose only the owned section before submit.
+- [x] 6.3 Preserve OAuth starts/callback status, blank-secret semantics, connector restart behavior, validation field mapping, first-error focus, and entered values after failure.
+- [x] 6.4 Keep diagnostics/about read-only actions distinct from forms and provide scoped refresh/copy failure states.
+- [x] 6.5 Verify concurrent section saves, server reconnect, compact conditional forms, keyboard/screen-reader labeling, RU/EN catalogs, and the full feature-inventory mapping.
 
 ## Docs
 

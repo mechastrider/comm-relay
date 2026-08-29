@@ -6,7 +6,6 @@ import { handleOAuthQuery } from "./js/status.js";
 import {
   initSidebarToggle,
   renderSettingsState,
-  markSettingsDirty,
   markSettingsUnavailable,
   showBanner,
 } from "./js/ui-shell.js";
@@ -21,13 +20,13 @@ import { initI18n, bindLocaleSelect, t } from "./js/i18n-ui.js";
 import {
   bindFieldClear,
   refreshAll,
-  saveSettings,
   loadStatus,
   loadRecentMessages,
   normalizeVkChannel,
   updateYouTubeConnectionModeUI,
   startYouTubeOAuth,
 } from "./js/settings.js";
+import { initStudio } from "./js/studio.js";
 import { initAudienceViewers, initNewStreamControl } from "./js/viewers.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
 import { initWorkspaceRouter } from "./js/workspace-router.js";
@@ -35,7 +34,10 @@ import { initLiveTabs } from "./js/live-tabs.js";
 import { initLiveLeaderboard } from "./js/live-leaderboard.js";
 import { initLiveStatistics } from "./js/live-statistics.js";
 import { initLiveActivePreset, renderLiveActivePresetControl } from "./js/live-active-preset.js";
-import { initStudio } from "./js/studio.js";
+import {
+  initSettingsWorkspace,
+  handleSettingsWorkspaceChange,
+} from "./js/settings-workspace.js";
 
 function isStudioOverlayField(target) {
   return (
@@ -45,28 +47,19 @@ function isStudioOverlayField(target) {
   );
 }
 
-function shouldMarkSettingsDirty(event) {
+function shouldHandleStudioOverlayInput(event) {
   if (!(event.target instanceof Element)) {
-    return true;
+    return false;
   }
   if (event.target.closest("[data-preview-only]")) {
     return false;
   }
-  if (isStudioOverlayField(event.target)) {
-    return false;
-  }
-  return true;
+  return isStudioOverlayField(event.target);
 }
-
-initI18n();
-initWorkspaceRouter(document, t);
-
-Object.keys(dom.fieldInputs).forEach(bindFieldClear);
 
 if (dom.youtubeConnectionMode) {
   dom.youtubeConnectionMode.addEventListener("change", function () {
     updateYouTubeConnectionModeUI();
-    markSettingsDirty();
   });
 }
 
@@ -78,6 +71,13 @@ if (dom.youtubeConnect) {
   });
 }
 
+initI18n();
+initWorkspaceRouter(document, t, {
+  onWorkspaceChange: handleSettingsWorkspaceChange,
+});
+
+Object.keys(dom.fieldInputs).forEach(bindFieldClear);
+
 if (dom.vkChannel) {
   dom.vkChannel.addEventListener("blur", function () {
     const normalized = normalizeVkChannel(dom.vkChannel.value);
@@ -87,23 +87,15 @@ if (dom.vkChannel) {
   });
 }
 
-dom.form.addEventListener("submit", saveSettings);
+dom.form.addEventListener("submit", function (event) {
+  event.preventDefault();
+});
 dom.form.addEventListener("input", function (event) {
-  if (!shouldMarkSettingsDirty(event)) {
-    if (
-      event.target instanceof Element &&
-      event.target.closest("#obs-appearance-panel") &&
-      event.target.id !== "overlay-preset-select" &&
-      event.target.id !== "obs-overlay-preset-select"
-    ) {
-      updatePresetIsland();
-    }
+  if (!shouldHandleStudioOverlayInput(event)) {
     return;
   }
-  markSettingsDirty();
   if (
     event.target instanceof Element &&
-    event.target.closest("#obs-appearance-panel") &&
     event.target.id !== "overlay-preset-select" &&
     event.target.id !== "obs-overlay-preset-select"
   ) {
@@ -111,21 +103,11 @@ dom.form.addEventListener("input", function (event) {
   }
 });
 dom.form.addEventListener("change", function (event) {
-  if (!shouldMarkSettingsDirty(event)) {
-    if (
-      event.target instanceof Element &&
-      event.target.closest("#obs-appearance-panel") &&
-      event.target.id !== "overlay-preset-select" &&
-      event.target.id !== "obs-overlay-preset-select"
-    ) {
-      updatePresetIsland();
-    }
+  if (!shouldHandleStudioOverlayInput(event)) {
     return;
   }
-  markSettingsDirty();
   if (
     event.target instanceof Element &&
-    event.target.closest("#obs-appearance-panel") &&
     event.target.id !== "obs-overlay-preset-select"
   ) {
     updatePresetIsland();
@@ -155,13 +137,12 @@ initLiveLeaderboard(function () {
 initLiveStatistics();
 initLiveActivePreset();
 initStudio();
+initSettingsWorkspace();
 initNewStreamControl();
 
-if (dom.shellDiagnosticsButton && dom.shellStatusBar) {
+if (dom.shellDiagnosticsButton) {
   dom.shellDiagnosticsButton.addEventListener("click", function () {
-    dom.shellStatusBar.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    dom.shellStatusBar.setAttribute("tabindex", "-1");
-    dom.shellStatusBar.focus({ preventScroll: true });
+    window.location.hash = "#settings/diagnostics";
   });
 }
 

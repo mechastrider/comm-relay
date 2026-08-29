@@ -206,6 +206,11 @@ export function applyConfig(config) {
     if (dom.networkSocks5Password) {
       dom.networkSocks5Password.value = "";
     }
+    if (dom.serverPortInput) {
+      dom.serverPortInput.value = String(
+        typeof config.server_port === "number" ? config.server_port : 17877
+      );
+    }
 
     const overlay = config.overlay || {};
     applyOverlayAppearance(overlay);
@@ -277,7 +282,11 @@ export function buildPayload() {
     const richChat = getRichChatSettings();
     const appearance = collectOverlayAppearance();
     return {
-      server_port: state.currentConfig ? state.currentConfig.server_port : 17877,
+      server_port: dom.serverPortInput
+        ? Number.parseInt(dom.serverPortInput.value, 10)
+        : state.currentConfig
+          ? state.currentConfig.server_port
+          : 17877,
       points_per_message: dom.pointsPerMessageInput
         ? Number.parseInt(dom.pointsPerMessageInput.value, 10)
         : 1,
@@ -388,6 +397,15 @@ export function validateClient(payload, options) {
         );
         firstInvalid = dom.networkSocks5Address;
       }
+    }
+
+    if (
+      !Number.isFinite(payload.server_port) ||
+      payload.server_port < 1 ||
+      payload.server_port > 65535
+    ) {
+      setFieldError("server_port", "Port must be between 1 and 65535.");
+      firstInvalid = firstInvalid || dom.serverPortInput;
     }
 
     if (payload.twitch.enabled && payload.twitch.channel === "") {
