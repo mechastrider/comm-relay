@@ -141,6 +141,9 @@ function collectSectionValuesFromDOM(sectionId) {
       day_reset_hour: dom.dayResetHourInput
         ? Number.parseInt(dom.dayResetHourInput.value, 10)
         : 6,
+      hide_command_messages: dom.hideCommandMessagesInput
+        ? dom.hideCommandMessagesInput.checked
+        : false,
     };
   }
 
@@ -270,6 +273,9 @@ function applySectionValuesToDOM(sectionId, values) {
     }
     if (dom.dayResetHourInput) {
       dom.dayResetHourInput.value = String(values.day_reset_hour);
+    }
+    if (dom.hideCommandMessagesInput) {
+      dom.hideCommandMessagesInput.checked = Boolean(values.hide_command_messages);
     }
     return;
   }

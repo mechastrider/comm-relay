@@ -131,6 +131,7 @@ export function extractSectionValuesFromConfig(config, sectionId) {
       return {
         points_per_message: typeof cfg.points_per_message === "number" ? cfg.points_per_message : 1,
         day_reset_hour: typeof cfg.day_reset_hour === "number" ? cfg.day_reset_hour : 6,
+        hide_command_messages: Boolean(cfg.hide_command_messages),
       };
     case "application": {
       const messageSound = asObject(admin.message_sound);
@@ -231,6 +232,7 @@ export function normalizeSectionValues(sectionId, values) {
     return {
       points_per_message: Number.parseInt(String(raw.points_per_message), 10),
       day_reset_hour: Number.parseInt(String(raw.day_reset_hour), 10),
+      hide_command_messages: Boolean(raw.hide_command_messages),
     };
   }
 
@@ -323,6 +325,7 @@ export function applySectionToConfig(basePayload, sectionId, sectionValues) {
     const data = /** @type {ReturnType<typeof normalizeSectionValues>} */ (values);
     next.points_per_message = data.points_per_message;
     next.day_reset_hour = data.day_reset_hour;
+    next.hide_command_messages = data.hide_command_messages;
     return next;
   }
 

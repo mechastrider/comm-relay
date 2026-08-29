@@ -789,9 +789,9 @@
                   <span data-i18n="obs.leaderboard">Leaderboard</span>
                   <small>/overlay/leaderboard</small>
                 </button>
-                <button class="obs-source-item" type="button" data-obs-source="alerts" disabled>
+                <button class="obs-source-item" type="button" data-obs-source="alerts">
                   <span data-i18n="obs.alerts">Banners</span>
-                  <small data-i18n="obs.alertsSoon">Later · /overlay/alert</small>
+                  <small>/overlay/alert</small>
                 </button>
                 <p class="obs-source-group-label" data-i18n="obs.sourcesOperator">Only visible to you</p>
                 <button class="obs-source-item" type="button" data-obs-source="dock">
@@ -852,6 +852,24 @@
                   </div>
                 </details>
 
+                <p class="field-hint" data-obs-source-pane="alerts" hidden data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
+
+                <div class="obs-url-field studio-url-primary" data-obs-source-pane="alerts" hidden>
+                  <label for="obs-alert-url" data-i18n="obs.followActivePreset">Follow active preset</label>
+                  <div class="obs-url-row">
+                    <input id="obs-alert-url" type="text" readonly value="/overlay/alert">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-alert-url" data-copy-label="Alert URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </div>
+                <details class="studio-url-pinned" data-obs-source-pane="alerts" hidden>
+                  <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+                  <p id="obs-alert-pinned-label" class="field-hint"></p>
+                  <div class="obs-url-row">
+                    <input id="obs-alert-url-pinned" type="text" readonly value="/overlay/alert">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-alert-url-pinned" data-copy-label="Pinned alert URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </details>
+
                 <div class="obs-url-field" data-obs-source-pane="dock" hidden>
                   <label for="obs-dock-url" data-i18n="obs.dockUrl">Message dock URL</label>
                   <div class="obs-url-row">
@@ -885,6 +903,10 @@
                 </div>
                 <div class="obs-integration-actions" data-obs-source-pane="leaderboard" hidden>
                   <a id="obs-leaderboard-open" class="button-secondary button-secondary--small" href="/overlay/leaderboard" target="_blank" rel="noopener" data-i18n="obs.openLeaderboard">Open leaderboard</a>
+                  <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance" data-i18n="obs.customizeAppearance">Customize appearance</button>
+                </div>
+                <div class="obs-integration-actions" data-obs-source-pane="alerts" hidden>
+                  <a id="obs-alert-open" class="button-secondary button-secondary--small" href="/overlay/alert?preview=sample" target="_blank" rel="noopener" data-i18n="obs.openAlerts">Open alerts</a>
                   <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance" data-i18n="obs.customizeAppearance">Customize appearance</button>
                 </div>
                 <div class="obs-integration-actions" data-obs-source-pane="dock" hidden>
@@ -954,6 +976,7 @@
                 <div class="surface-tabs__list">
                   <button id="obs-surface-chat" class="surface-tab" type="button" role="tab" data-obs-preview-surface="chat" aria-selected="true" aria-pressed="true" data-i18n="obs.surfaceChat">Chat</button>
                   <button id="obs-surface-leaderboard" class="surface-tab" type="button" role="tab" data-obs-preview-surface="leaderboard" aria-selected="false" aria-pressed="false" data-i18n="obs.surfaceLeaderboard">Leaderboard</button>
+                  <button id="obs-surface-alerts" class="surface-tab" type="button" role="tab" data-obs-preview-surface="alerts" aria-selected="false" aria-pressed="false" data-i18n="obs.surfaceAlerts">Alerts</button>
                 </div>
               </div>
 
@@ -1472,6 +1495,13 @@
               <input id="day-reset-hour" name="day_reset_hour" type="number" min="0" max="23" step="1" inputmode="numeric">
               <p class="field-hint" data-i18n="iface.dayResetHourHint">Local hour when the stats day rolls over (0–23).</p>
               <p id="day-reset-hour-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label class="checkbox" for="hide-command-messages">
+                <input id="hide-command-messages" name="hide_command_messages" type="checkbox">
+                <span data-i18n="iface.hideCommandMessages">Hide command lines in chat overlay</span>
+              </label>
+              <p class="field-hint" data-i18n="iface.hideCommandMessagesHint">When enabled, !commands still appear in admin and the dock, but not on /overlay.</p>
             </div>
           </div>
         </section>

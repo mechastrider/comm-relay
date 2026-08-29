@@ -28,13 +28,13 @@
 > **Blocked**: awards, achievements, media upload
 
 ### Backend
-- [ ] 2.1 Config `hide_command_messages` default false; public config + overlay_settings
-- [ ] 2.2 Matcher + in-memory cooldown; tag `is_command`; never adjust score; enqueue alert; skip unknown/`gg` without bang
-- [ ] 2.3 Serve `/overlay/alert` before `/overlay/`; handler tests
+- [x] 2.1 Config `hide_command_messages` default false; public config + overlay_settings
+- [x] 2.2 Matcher + in-memory cooldown; tag `is_command`; never adjust score; enqueue alert; skip unknown/`gg` without bang
+- [x] 2.3 Serve `/overlay/alert` before `/overlay/`; handler tests
 
 ### Frontend
-- [ ] 2.4 Alert page: FIFO queue cap 20, avatar + text node + built-in tones, reconnect, no replay, all themes, sample preview
-- [ ] 2.5 Chat overlay skips `is_command` when hide is on; Settings checkbox; Studio enables Alerts URL (follow + pinned)
+- [x] 2.4 Alert page: FIFO queue cap 20, avatar + text node + built-in tones, reconnect, no replay, all themes, sample preview
+- [x] 2.5 Chat overlay skips `is_command` when hide is on; Settings checkbox; Studio enables Alerts URL (follow + pinned)
 
 ## Slice: Operator rewards from messages
 

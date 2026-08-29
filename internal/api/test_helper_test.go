@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
@@ -21,6 +22,7 @@ type testEnv struct {
 	Bus         *bus.Bus
 	ViewerStore *store.Store
 	ConfigStore *config.Store
+	Matcher     *command.Matcher
 }
 
 func testViewerStore(t *testing.T) *store.Store {
@@ -41,16 +43,18 @@ func testHandler(t *testing.T) http.Handler {
 func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 	t.Helper()
 
-	hub, err := NewHub(b)
-	require.NoError(t, err)
-
 	ctx, cancel := context.WithCancel(context.Background())
 
 	cfgStore := testConfigStore(t)
 	viewerStore := testViewerStore(t)
+	matcher := command.NewMatcher(viewerStore)
+
+	hub, err := NewHub(b, matcher, cfgStore)
+	require.NoError(t, err)
+
 	history := NewMessageHistory(0)
 	publisher := NewLeaderboardPublisher(hub, viewerStore, cfgStore)
-	ingest := NewViewerIngest(viewerStore, cfgStore, publisher)
+	ingest := NewViewerIngest(viewerStore, cfgStore, publisher, matcher)
 
 	go hub.Run(ctx)
 	go history.Run(ctx, b)
@@ -76,6 +80,7 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 		Bus:         b,
 		ViewerStore: viewerStore,
 		ConfigStore: cfgStore,
+		Matcher:     matcher,
 	}
 }
 

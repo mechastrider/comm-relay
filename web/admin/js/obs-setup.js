@@ -187,7 +187,7 @@ export function initOBSSetup() {
       button.addEventListener("click", function () {
         const sourceButton = button.closest("[data-obs-source-pane]");
         const pane = sourceButton && sourceButton.getAttribute("data-obs-source-pane");
-        if (button.dataset.obsSection === "appearance" && (pane === "leaderboard" || pane === "chat")) {
+        if (button.dataset.obsSection === "appearance" && (pane === "leaderboard" || pane === "chat" || pane === "alerts")) {
           applyPreviewSurface(pane);
           updatePresetIsland();
         }
@@ -227,7 +227,8 @@ export function initOBSSetup() {
   bindCopyButtons(dom.overlayDialog);
 
   function setOBSSource(name) {
-    const source = name === "leaderboard" || name === "dock" ? name : "chat";
+    const source =
+      name === "leaderboard" || name === "dock" || name === "alerts" ? name : "chat";
     document.querySelectorAll("[data-obs-source]").forEach(function (button) {
       if (button.disabled) {
         return;
@@ -256,6 +257,20 @@ export function initOBSSetup() {
       }
       if (summary) {
         summary.textContent = t("obs.leaderboardSummary");
+      }
+      if (eyebrow) {
+        eyebrow.textContent = t("obs.browserSource");
+      }
+      if (badge) {
+        badge.textContent = t("obs.visibleToViewers");
+        badge.classList.add("obs-audience-badge--live");
+      }
+    } else if (source === "alerts") {
+      if (title) {
+        title.textContent = t("obs.alerts");
+      }
+      if (summary) {
+        summary.textContent = t("obs.alertsSummary");
       }
       if (eyebrow) {
         eyebrow.textContent = t("obs.browserSource");

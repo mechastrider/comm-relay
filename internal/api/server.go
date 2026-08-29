@@ -107,6 +107,10 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /overlay/leaderboard", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.leaderboard, "index.html")
 	})
+	mux.Handle("GET /overlay/alert/", http.StripPrefix("/overlay/alert/", http.FileServer(http.FS(static.alert))))
+	mux.HandleFunc("GET /overlay/alert", func(w http.ResponseWriter, r *http.Request) {
+		serveFSFile(w, r, static.alert, "index.html")
+	})
 	mux.Handle("GET /overlay/", http.StripPrefix("/overlay/", http.FileServer(http.FS(static.overlay))))
 	mux.HandleFunc("GET /overlay", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.overlay, "index.html")

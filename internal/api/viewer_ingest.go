@@ -8,6 +8,7 @@ import (
 	"github.com/muonsoft/clog"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
@@ -17,13 +18,20 @@ type ViewerIngest struct {
 	viewerStore *store.Store
 	cfgStore    *config.Store
 	publisher   *LeaderboardPublisher
+	matcher     *command.Matcher
 }
 
-func newViewerIngest(viewerStore *store.Store, cfgStore *config.Store, publisher *LeaderboardPublisher) *ViewerIngest {
+func newViewerIngest(
+	viewerStore *store.Store,
+	cfgStore *config.Store,
+	publisher *LeaderboardPublisher,
+	matcher *command.Matcher,
+) *ViewerIngest {
 	return &ViewerIngest{
 		viewerStore: viewerStore,
 		cfgStore:    cfgStore,
 		publisher:   publisher,
+		matcher:     matcher,
 	}
 }
 
@@ -58,6 +66,13 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	}
 
 	cfg := v.cfgStore.Snapshot()
+	points := cfg.PointsPerMessage
+	if v.matcher != nil {
+		if _, ok := v.matcher.Lookup(msg.Message); ok {
+			points = 0
+		}
+	}
+
 	now := msg.Timestamp
 	if now.IsZero() {
 		now = time.Now()
@@ -69,7 +84,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		Username:    msg.Username,
 		DisplayName: msg.DisplayName,
 		AvatarURL:   msg.AvatarURL,
-	}, cfg.PointsPerMessage, cfg.DayResetHour, now)
+	}, points, cfg.DayResetHour, now)
 	if err != nil {
 		clog.Errorf(ctx, "apply chat to viewer store: %w", err)
 		return

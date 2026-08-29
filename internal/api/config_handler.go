@@ -61,7 +61,7 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 
 	saved := h.store.Snapshot()
 	if h.hub != nil {
-		payload, err := overlaySettingsWirePayload(saved.Overlay)
+		payload, err := overlaySettingsWirePayload(saved)
 		if err != nil {
 			clog.Errorf(ctx, "overlay settings wire payload: %w", err)
 		} else {

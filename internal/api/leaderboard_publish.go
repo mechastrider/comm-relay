@@ -9,6 +9,7 @@ import (
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 
+	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
@@ -82,8 +83,13 @@ func NewLeaderboardPublisher(hub *Hub, viewerStore *store.Store, cfgStore *confi
 }
 
 // NewViewerIngest creates the chat-to-viewer-store ingest worker.
-func NewViewerIngest(viewerStore *store.Store, cfgStore *config.Store, publisher *LeaderboardPublisher) *ViewerIngest {
-	return newViewerIngest(viewerStore, cfgStore, publisher)
+func NewViewerIngest(
+	viewerStore *store.Store,
+	cfgStore *config.Store,
+	publisher *LeaderboardPublisher,
+	matcher *command.Matcher,
+) *ViewerIngest {
+	return newViewerIngest(viewerStore, cfgStore, publisher, matcher)
 }
 
 // Schedule debounces leaderboard broadcasts.

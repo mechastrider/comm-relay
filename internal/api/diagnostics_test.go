@@ -19,7 +19,7 @@ func TestDiagnostics_WhenGet_ExpectRuntimeFields(t *testing.T) {
 	t.Parallel()
 
 	b := bus.New(0)
-	hub, err := NewHub(b)
+	hub, err := NewHub(b, nil, nil)
 	require.NoError(t, err)
 
 	store := testConfigStore(t)
