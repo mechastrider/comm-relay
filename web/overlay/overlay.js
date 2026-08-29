@@ -721,6 +721,9 @@ import {
       removeMessage(frame);
       return;
     }
+    if (frame.type !== "message") {
+      return;
+    }
     renderMessage(frame);
   }
 

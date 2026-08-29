@@ -56,6 +56,14 @@
   padding: 0;
 }
 
+/* Text/Surface/Queue sit inside the 2-col display form — span full width
+   so they do not share a row as two half-width columns. */
+.form--overlay-display > .overlay-group,
+.form--overlay-display > .overlay-queue-group {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
 #overlay-dialog .panel__body .panel-intro {
   margin: 0 0 12px;
 }

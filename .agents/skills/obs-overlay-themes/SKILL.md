@@ -1,45 +1,61 @@
 ---
 name: obs-overlay-themes
-description: Design and implement CommRelay OBS overlay themes for chat display. Use when creating, refining, or debugging overlay themes, HUD panels, popup message styles, Browser Source rectangle behavior, message queue layout, clipping, fading, animation, and stream-readability issues in web/overlay.
+description: Design and implement CommRelay OBS overlay themes for on-stream surfaces (chat and leaderboard). Use when creating, refining, or debugging overlay themes, HUD panels, popup message styles, Browser Source rectangle behavior, message queue layout, leaderboard panel/chips layouts, clipping, fading, animation, and stream-readability issues in web/overlay and web/leaderboard.
 ---
 
 # OBS Overlay Themes
 
 Use this together with `web-static-frontend` for static files and `comm-relay` for product behavior. This skill captures the practical rules learned while building cockpit-style stream themes.
 
+## Surfaces
+
+A **theme** is the on-stream visual language (tokens, chrome, body classes `overlay-theme--*`). It is not limited to chat.
+
+- Chat (`/overlay`) and leaderboard (`/overlay/leaderboard`) share the same theme id and style tokens.
+- A **new theme** must cover every on-stream surface that uses themes (today: chat + leaderboard).
+- A **new surface** must implement every existing theme (same body classes; surface-specific CSS selectors).
+- Do not theme `/dock/messages` — that is operator chrome, not an on-stream surface.
+- Leaderboard layout (`panel` | `chips`) is a surface override, not a new theme id. Popup chat themes do not force chips on the ranking.
+
+## Preview sample rules
+
+- Admin Appearance preview for leaderboard uses `preview=sample` with a built-in fictitious top-5.
+- Sample mode must not fetch live `/api/leaderboard` or paint live `leaderboard` WebSocket frames.
+- Shared `preview_background` values match chat (`white`, `checker`, `scene`, `dark`; legacy `busy` → `scene`).
+- Outside preview, `html`/`body` stay transparent for OBS.
+
 ## Workflow
 
 1. Inspect the current overlay structure before editing:
-   - `web/overlay/index.html`
-   - `web/overlay/overlay.js`
-   - `web/overlay/overlay.css`
+   - `web/overlay/index.html`, `web/overlay/overlay.js`, `web/overlay/overlay.css`
+   - `web/leaderboard/` when the change affects ranking
    - admin/config files if the theme must be selectable
 2. Decide whether the request is:
    - a mockup only, usually under `docs/mockups/`;
-   - a real selectable theme, requiring config validation, admin options, JS theme mapping, CSS, README/changelog updates;
+   - a real selectable theme, requiring config validation, admin options, JS theme mapping, CSS for **all** themed surfaces, README/changelog updates;
    - a refinement of an existing theme, usually CSS-only unless behavior changes.
 3. Treat the OBS Browser Source as the frame. Theme containers should usually fill `position: fixed; inset: 0; width: auto; height: auto;` so users can place and resize the source rectangle in OBS.
 4. Verify the stream-state cases:
-   - no messages;
+   - no messages / empty ranking;
    - one short message;
    - many rapid messages;
    - long multi-line messages;
    - messages leaving by TTL;
-   - overlay reload with recent-message restore, when relevant.
+   - overlay reload with recent-message restore, when relevant;
+   - leaderboard `panel` and `chips` for each theme when touching ranking CSS.
 
 ## Theme Registration
 
 For a new selectable theme, update all theme surfaces consistently:
 
-- `internal/config/config.go`: add the theme constant.
-- `internal/config/validation_fields.go`: allow the value.
-- `internal/config/config_test.go`: cover known theme validation.
-- `web/admin/index.html`: add the select option.
-- `web/admin/app.js`: add the theme label/value mapping.
-- `web/overlay/overlay.js`: add the body class mapping.
-- `web/overlay/overlay.css`: implement the visual style.
-- `README.md`: mention user-facing behavior and OBS sizing expectations.
-- `CHANGELOG.md`: add or refine Russian `[Unreleased]` notes for user-visible overlay behavior.
+- `internal/config`: add the theme constant and validation.
+- Config tests: cover known theme validation.
+- `web/admin/index.html`: add the select option and theme label mapping in appearance JS.
+- `web/overlay/overlay.js` and `web/leaderboard/leaderboard.js`: body class mapping (`overlay-theme--*`).
+- `web/overlay/overlay.css`: chat visual style and shared HUD tokens.
+- `web/leaderboard/leaderboard.css`: panel and chips rules for the new theme.
+- `README.md` / `README.en.md`: user-facing behavior and OBS sizing expectations.
+- `CHANGELOG.md`: Russian `[Unreleased]` notes for streamer-visible overlay behavior.
 
 Prefer snake_case config values and kebab-case CSS classes, for example `cockpit_panel` -> `overlay-theme--cockpit-panel`.
 

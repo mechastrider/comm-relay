@@ -49,6 +49,9 @@ func validateWebRoot(root string) error {
 	if !fileExists(filepath.Join(root, "overlay", "index.html")) {
 		return os.ErrNotExist
 	}
+	if !fileExists(filepath.Join(root, "leaderboard", "index.html")) {
+		return os.ErrNotExist
+	}
 
 	return nil
 }

@@ -61,7 +61,8 @@ description: Backend layout for comm-relay (cmd/, internal/). Use when adding HT
 
 ## Storage
 
-- **MVP**: JSON config file only (no SQLite unless a change explicitly adopts it).
+- Operator settings: `config.json` only. Do not move overlay presets or OAuth secrets into SQLite.
+- Viewer stats / identities: local SQLite is the planned store (see `docs/roadmap.md`); adopt it only via an OpenSpec change.
 - OAuth refresh tokens live in config or a sidecar file excluded from logs and VCS (document in README).
 
 ## When adding a feature

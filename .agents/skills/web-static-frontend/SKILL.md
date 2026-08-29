@@ -43,6 +43,7 @@ Admin or operator UI served as static HTML:
 - Link to OAuth or setup URLs when the backend exposes them.
 - Keep layout usable at desktop widths (~1280px); avoid marketing chrome.
 - Height-capped dialogs, drawers, and split panes: follow [web-constrained-layout](../web-constrained-layout/SKILL.md). Do not clip overflowing chrome with `overflow: hidden` unless a descendant can scroll.
+- Icon-only and jargon / non-obvious actions need hover/focus tooltips — [ux-form-practices](../ux-form-practices/SKILL.md).
 
 ## JavaScript style
 
@@ -69,3 +70,4 @@ Admin or operator UI served as static HTML:
 - [ ] XSS-safe text rendering
 - [ ] API field names snake_case
 - [ ] Capped overlays follow `web-constrained-layout` (scroll the body, do not clip)
+- [ ] Non-obvious / jargon actions have explanatory tooltips

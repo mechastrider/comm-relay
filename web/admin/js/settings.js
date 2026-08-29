@@ -253,6 +253,16 @@ export function applyConfig(config) {
     if (dom.timeLocaleInput) {
       dom.timeLocaleInput.value = localeFromConfig(config);
     }
+    if (dom.pointsPerMessageInput) {
+      dom.pointsPerMessageInput.value = String(
+        typeof config.points_per_message === "number" ? config.points_per_message : 1
+      );
+    }
+    if (dom.dayResetHourInput) {
+      dom.dayResetHourInput.value = String(
+        typeof config.day_reset_hour === "number" ? config.day_reset_hour : 6
+      );
+    }
     const nextLocale = localeFromConfig(config);
     if (previousLocale !== nextLocale && state.recentMessageCache.length > 0) {
       renderRecentMessages(state.recentMessageCache, { force: true });
@@ -267,6 +277,12 @@ export function buildPayload() {
     const appearance = collectOverlayAppearance();
     return {
       server_port: state.currentConfig ? state.currentConfig.server_port : 17877,
+      points_per_message: dom.pointsPerMessageInput
+        ? Number.parseInt(dom.pointsPerMessageInput.value, 10)
+        : 1,
+      day_reset_hour: dom.dayResetHourInput
+        ? Number.parseInt(dom.dayResetHourInput.value, 10)
+        : 6,
       network: {
         socks5: {
           address: dom.networkSocks5Address ? dom.networkSocks5Address.value.trim() : "",
@@ -376,6 +392,24 @@ export function validateClient(payload) {
       firstInvalid = firstInvalid || dom.overlayFontSize;
     }
 
+    (payload.overlay.presets || []).some(function (preset) {
+      const surface = preset && preset.surfaces && preset.surfaces.leaderboard;
+      const font = surface && surface.font_size_px;
+      if (
+        font != null &&
+        font !== 0 &&
+        (!Number.isFinite(font) || font < OVERLAY_FONT_SIZE_MIN || font > OVERLAY_FONT_SIZE_MAX)
+      ) {
+        setFieldError(
+          "overlay_leaderboard_font_size_px",
+          "Font size must be between " + OVERLAY_FONT_SIZE_MIN + " and " + OVERLAY_FONT_SIZE_MAX + " px."
+        );
+        firstInvalid = firstInvalid || dom.overlayLeaderboardFontSize;
+        return true;
+      }
+      return false;
+    });
+
     if (
       payload.overlay.display_mode !== "normal" &&
       payload.overlay.display_mode !== "compact"
@@ -456,6 +490,23 @@ export function validateClient(payload) {
     if (!sound || MESSAGE_SOUND_TYPES.indexOf(sound.sound) === -1) {
       setFieldError("admin_message_sound_sound", "Choose a sound type.");
       firstInvalid = firstInvalid || dom.messageSoundTypeInput;
+    }
+
+    if (
+      !Number.isFinite(payload.points_per_message) ||
+      payload.points_per_message < 0
+    ) {
+      setFieldError("points_per_message", "Points per message must be 0 or greater.");
+      firstInvalid = firstInvalid || dom.pointsPerMessageInput;
+    }
+
+    if (
+      !Number.isFinite(payload.day_reset_hour) ||
+      payload.day_reset_hour < 0 ||
+      payload.day_reset_hour > 23
+    ) {
+      setFieldError("day_reset_hour", "Day reset hour must be between 0 and 23.");
+      firstInvalid = firstInvalid || dom.dayResetHourInput;
     }
 
     if (firstInvalid) {

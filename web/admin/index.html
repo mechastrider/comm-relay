@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=15">
+  <link rel="stylesheet" href="styles.css?v=20">
   <script>
     (function () {
       try {
@@ -43,6 +43,10 @@
       </div>
 
       <div class="top-actions">
+        <button id="new-stream-button" class="btn-physical has-tooltip" type="button">
+          <span data-i18n="stream.newStream">New stream</span>
+          <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+        </button>
         <button id="save-button" class="btn-physical btn-start" type="submit" form="settings-form" data-save-button disabled data-i18n="shell.save">Save</button>
       </div>
     </header>
@@ -50,22 +54,51 @@
     <main class="main-area">
       <div id="banner" class="banner" role="alert" aria-live="polite" hidden></div>
 
-      <section class="console-panel" aria-labelledby="messages-heading">
+      <section class="console-panel" aria-labelledby="canvas-heading">
         <div class="console-header">
-          <div>
-            <span class="console-label" data-i18n="shell.monitor">Monitor</span>
-            <h2 id="messages-heading" data-i18n="shell.liveMessages">Live messages</h2>
+          <div class="console-header__start">
+            <div class="console-tabs" role="tablist" data-i18n-aria-label="shell.canvasSections" aria-label="Main canvas sections">
+              <button id="canvas-monitor-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="monitor-canvas-panel" data-canvas-section="monitor" data-i18n="shell.monitor">Monitor</button>
+              <button id="canvas-viewers-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="viewers-canvas-panel" tabindex="-1" data-canvas-section="viewers" data-i18n="shell.viewers">Viewers</button>
+            </div>
+            <h2 id="canvas-heading" data-i18n="shell.liveMessages">Live messages</h2>
           </div>
           <div class="console-actions">
             <span id="settings-state" class="settings-state" aria-live="polite" data-i18n="shell.loadingSettings">Loading settings</span>
             <button id="refresh-messages" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
+            <button id="refresh-viewers" type="button" class="btn-physical btn-small" hidden data-i18n="shell.refresh">Refresh</button>
           </div>
         </div>
 
-        <div class="message-panel">
-          <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
-          <p id="recent-messages-empty" class="empty-state" data-i18n="shell.noMessagesYet">No messages yet.</p>
-        </div>
+        <section id="monitor-canvas-panel" class="canvas-panel" role="tabpanel" aria-labelledby="canvas-monitor-tab">
+          <div class="message-panel">
+            <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
+            <p id="recent-messages-empty" class="empty-state" data-i18n="shell.noMessagesYet">No messages yet.</p>
+          </div>
+        </section>
+
+        <section id="viewers-canvas-panel" class="canvas-panel viewers-canvas" role="tabpanel" aria-labelledby="canvas-viewers-tab" hidden>
+          <div class="viewers-workspace">
+            <aside class="viewers-list-pane" aria-labelledby="viewers-list-heading">
+              <h3 id="viewers-list-heading" class="viewers-pane-heading" data-i18n="viewers.listHeading">Viewer list</h3>
+              <div class="viewers-search">
+                <label class="visually-hidden" for="viewers-search" data-i18n="viewers.searchLabel">Search viewers</label>
+                <input id="viewers-search" type="search" autocomplete="off" data-i18n-placeholder="viewers.searchPlaceholder" placeholder="Search by name or platform">
+              </div>
+              <div class="viewers-pane-body">
+                <ul id="viewers-list" class="viewers-list" aria-live="polite"></ul>
+                <p id="viewers-list-empty" class="empty-state" hidden data-i18n="viewers.listEmpty">No viewers yet.</p>
+              </div>
+            </aside>
+            <div class="viewer-card-pane" aria-labelledby="viewer-card-heading">
+              <h3 id="viewer-card-heading" class="viewers-pane-heading" data-i18n="viewers.cardHeading">Selected viewer</h3>
+              <div class="viewers-pane-body">
+                <div id="viewer-card" class="viewer-card" hidden></div>
+                <p id="viewer-card-empty" class="empty-state" data-i18n="viewers.cardEmpty">Select a viewer from the list.</p>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
 
       <aside class="systems-panel" aria-labelledby="controls-heading">
@@ -80,14 +113,30 @@
           </div>
 
           <div class="control-grid">
-            <button class="btn-physical" type="button" data-dialog-target="connections-dialog" data-i18n="shell.connections">Connections</button>
-            <button class="btn-physical" type="button" data-dialog-target="overlay-dialog" data-i18n="shell.obs">OBS</button>
-            <button class="btn-physical" type="button" data-dialog-target="rich-chat-dialog" data-i18n="shell.richChat">Rich chat</button>
-            <button class="btn-physical" type="button" data-dialog-target="sound-dialog" data-i18n="shell.sound">Sound</button>
-            <button class="btn-physical" type="button" data-dialog-target="interface-dialog" data-i18n="shell.interface">Interface</button>
-            <button class="btn-physical control-grid-about about-btn" type="button" data-dialog-target="about-dialog">
+            <button class="btn-physical has-tooltip" type="button" data-dialog-target="connections-dialog">
+              <span data-i18n="shell.connections">Connections</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.connectionsHint">Twitch, YouTube, VK Live, and SOCKS5 proxy.</span>
+            </button>
+            <button class="btn-physical has-tooltip" type="button" data-dialog-target="overlay-dialog">
+              <span data-i18n="shell.obs">OBS</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.obsHint">Browser Source URLs, presets, and overlay appearance.</span>
+            </button>
+            <button class="btn-physical has-tooltip" type="button" data-dialog-target="rich-chat-dialog">
+              <span data-i18n="shell.richChat">Rich chat</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.richChatHint">Emotes and safe image-link previews in chat and overlay.</span>
+            </button>
+            <button class="btn-physical has-tooltip" type="button" data-dialog-target="sound-dialog">
+              <span data-i18n="shell.sound">Sound</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.soundHint">Alert sound when a new chat message arrives.</span>
+            </button>
+            <button class="btn-physical has-tooltip" type="button" data-dialog-target="interface-dialog">
+              <span data-i18n="shell.interface">Interface</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.interfaceHint">UI language and viewer scoring settings.</span>
+            </button>
+            <button class="btn-physical control-grid-about about-btn has-tooltip" type="button" data-dialog-target="about-dialog">
               <span data-i18n="shell.about">About</span>
               <small data-i18n="shell.aboutSubtitle">VERSION · SUPPORT</small>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.aboutHint">Version, privacy, and support links.</span>
             </button>
           </div>
 
@@ -349,24 +398,40 @@
               <p data-i18n="obs.connectIntro">Choose where messages should appear. URLs use the address currently serving CommRelay, so custom ports are included automatically.</p>
             </div>
 
-            <div class="obs-integration-grid">
-              <article class="obs-integration-card" aria-labelledby="obs-overlay-card-heading">
-                <div class="obs-integration-card__header">
+            <div class="obs-sources">
+              <nav class="obs-source-list" data-i18n-aria-label="obs.sourcesList" aria-label="OBS sources">
+                <p class="obs-source-group-label" data-i18n="obs.sourcesOnStream">On stream · Browser Source</p>
+                <button class="obs-source-item" type="button" data-obs-source="chat" aria-current="true">
+                  <span data-i18n="obs.onStreamOverlay">On-stream overlay</span>
+                  <small>/overlay</small>
+                </button>
+                <button class="obs-source-item" type="button" data-obs-source="leaderboard">
+                  <span data-i18n="obs.leaderboard">Leaderboard</span>
+                  <small>/overlay/leaderboard</small>
+                </button>
+                <button class="obs-source-item" type="button" data-obs-source="alerts" disabled>
+                  <span data-i18n="obs.alerts">Banners</span>
+                  <small data-i18n="obs.alertsSoon">Later · /overlay/alert</small>
+                </button>
+                <p class="obs-source-group-label" data-i18n="obs.sourcesOperator">Only visible to you</p>
+                <button class="obs-source-item" type="button" data-obs-source="dock">
+                  <span data-i18n="obs.messageDock">Message dock</span>
+                  <small>/dock/messages</small>
+                </button>
+              </nav>
+
+              <div class="obs-source-detail">
+                <div class="obs-source-detail__header">
                   <div>
-                    <span class="obs-integration-card__eyebrow" data-i18n="obs.browserSource">Browser Source</span>
-                    <h3 id="obs-overlay-card-heading" data-i18n="obs.onStreamOverlay">On-stream overlay</h3>
+                    <span id="obs-source-eyebrow" class="obs-integration-card__eyebrow" data-i18n="obs.browserSource">Browser Source</span>
+                    <h3 id="obs-source-title" data-i18n="obs.onStreamOverlay">On-stream overlay</h3>
                   </div>
-                  <span class="obs-audience-badge obs-audience-badge--live" data-i18n="obs.visibleToViewers">Visible to viewers</span>
+                  <span id="obs-source-badge" class="obs-audience-badge obs-audience-badge--live" data-i18n="obs.visibleToViewers">Visible to viewers</span>
                 </div>
-                <p class="obs-integration-card__summary" data-i18n="obs.overlaySummary">Adds chat messages to the scene output seen by your audience.</p>
-                <p class="field-hint" data-i18n="obs.overlayPresetHint">Each OBS scene can use its own Browser Source with ?preset= in the URL.</p>
+                <p id="obs-source-summary" class="obs-integration-card__summary" data-i18n="obs.overlaySummary">Adds chat messages to the scene output seen by your audience.</p>
+                <p class="field-hint" data-obs-source-pane="chat" data-i18n="obs.overlayPresetHint">Each OBS scene can use its own Browser Source with ?preset= in the URL.</p>
 
-                <div class="obs-url-field">
-                  <label for="obs-overlay-preset-select" data-i18n="obs.preset">Preset</label>
-                  <select id="obs-overlay-preset-select"></select>
-                </div>
-
-                <div class="obs-url-field">
+                <div class="obs-url-field" data-obs-source-pane="chat">
                   <label for="obs-overlay-url" data-i18n="obs.overlayUrl">Overlay URL</label>
                   <div class="obs-url-row">
                     <input id="obs-overlay-url" type="text" readonly value="/overlay">
@@ -374,30 +439,24 @@
                   </div>
                 </div>
 
-                <ol class="obs-setup-steps">
-                  <li data-i18n-html="obs.stepBrowser">In OBS Sources, add a <strong>Browser</strong> source.</li>
-                  <li data-i18n="obs.stepPaste">Paste the URL above into its URL field.</li>
-                  <li data-i18n="obs.stepSize">Set the source width and height for your scene.</li>
-                  <li data-i18n="obs.stepRunning">Keep CommRelay running while you stream.</li>
-                </ol>
-
-                <div class="obs-integration-actions">
-                  <a id="obs-overlay-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener" data-i18n="obs.openOverlay">Open overlay</a>
-                  <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance" data-i18n="obs.customizeAppearance">Customize appearance</button>
+                <div class="obs-url-field" data-obs-source-pane="leaderboard" hidden>
+                  <label for="obs-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
+                  <select id="obs-leaderboard-period">
+                    <option value="session" data-i18n="viewers.periodSession">Session</option>
+                    <option value="day" data-i18n="viewers.periodDay">Day</option>
+                    <option value="all" data-i18n="viewers.periodAll">All-time</option>
+                  </select>
                 </div>
-              </article>
 
-              <article class="obs-integration-card" aria-labelledby="obs-dock-card-heading">
-                <div class="obs-integration-card__header">
-                  <div>
-                    <span class="obs-integration-card__eyebrow" data-i18n="obs.customDock">Custom Browser Dock</span>
-                    <h3 id="obs-dock-card-heading" data-i18n="obs.messageDock">Message dock</h3>
+                <div class="obs-url-field" data-obs-source-pane="leaderboard" hidden>
+                  <label for="obs-leaderboard-url" data-i18n="obs.leaderboardUrl">Leaderboard URL</label>
+                  <div class="obs-url-row">
+                    <input id="obs-leaderboard-url" type="text" readonly value="/overlay/leaderboard">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-leaderboard-url" data-copy-label="Leaderboard URL" data-i18n="obs.copyUrl">Copy URL</button>
                   </div>
-                  <span class="obs-audience-badge" data-i18n="obs.onlyVisibleToYou">Only visible to you</span>
                 </div>
-                <p class="obs-integration-card__summary" data-i18n="obs.dockSummary">Keeps a compact message journal inside the OBS interface without adding it to the scene.</p>
 
-                <div class="obs-url-field">
+                <div class="obs-url-field" data-obs-source-pane="dock" hidden>
                   <label for="obs-dock-url" data-i18n="obs.dockUrl">Message dock URL</label>
                   <div class="obs-url-row">
                     <input id="obs-dock-url" type="text" readonly value="/dock/messages" data-obs-url-path="/dock/messages">
@@ -405,16 +464,37 @@
                   </div>
                 </div>
 
-                <ol class="obs-setup-steps">
-                  <li data-i18n-html="obs.stepDocks">Open <strong>View → Docks → Custom Browser Docks…</strong> in OBS.</li>
-                  <li data-i18n="obs.stepDockName">Enter a dock name and paste the URL above.</li>
-                  <li data-i18n="obs.stepDockPlace">Apply the change and place the dock where it is convenient.</li>
-                </ol>
+                <details class="obs-howto" data-obs-source-pane="browser">
+                  <summary data-i18n="obs.howToBrowser">How to add a Browser Source</summary>
+                  <ol class="obs-setup-steps">
+                    <li data-i18n-html="obs.stepBrowser">In OBS Sources, add a <strong>Browser</strong> source.</li>
+                    <li data-i18n="obs.stepPaste">Paste the URL above into its URL field.</li>
+                    <li data-i18n="obs.stepSize">Set the source width and height for your scene.</li>
+                    <li data-i18n="obs.stepRunning">Keep CommRelay running while you stream.</li>
+                  </ol>
+                </details>
 
-                <div class="obs-integration-actions">
+                <details class="obs-howto" data-obs-source-pane="dock" hidden>
+                  <summary data-i18n="obs.howToDock">How to add a Custom Browser Dock</summary>
+                  <ol class="obs-setup-steps">
+                    <li data-i18n-html="obs.stepDocks">Open <strong>View → Docks → Custom Browser Docks…</strong> in OBS.</li>
+                    <li data-i18n="obs.stepDockName">Enter a dock name and paste the URL above.</li>
+                    <li data-i18n="obs.stepDockPlace">Apply the change and place the dock where it is convenient.</li>
+                  </ol>
+                </details>
+
+                <div class="obs-integration-actions" data-obs-source-pane="chat">
+                  <a id="obs-overlay-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener" data-i18n="obs.openOverlay">Open overlay</a>
+                  <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance" data-i18n="obs.customizeAppearance">Customize appearance</button>
+                </div>
+                <div class="obs-integration-actions" data-obs-source-pane="leaderboard" hidden>
+                  <a id="obs-leaderboard-open" class="button-secondary button-secondary--small" href="/overlay/leaderboard" target="_blank" rel="noopener" data-i18n="obs.openLeaderboard">Open leaderboard</a>
+                  <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance" data-i18n="obs.customizeAppearance">Customize appearance</button>
+                </div>
+                <div class="obs-integration-actions" data-obs-source-pane="dock" hidden>
                   <a id="obs-dock-open" class="button-secondary button-secondary--small" href="/dock/messages" target="_blank" rel="noopener" data-i18n="obs.openMessageDock">Open message dock</a>
                 </div>
-              </article>
+              </div>
             </div>
 
             <p id="obs-copy-status" class="obs-copy-status" role="status" aria-live="polite"></p>
@@ -473,12 +553,21 @@
                 </div>
               </div>
 
+              <div class="surface-tabs" role="tablist" data-i18n-aria-label="obs.previewSurface">
+                <p class="surface-tabs__hint" data-i18n="obs.surfaceTabsHint">One scene look. Switch surface to edit its fields and preview.</p>
+                <div class="surface-tabs__list">
+                  <button id="obs-surface-chat" class="surface-tab" type="button" role="tab" data-obs-preview-surface="chat" aria-selected="true" aria-pressed="true" data-i18n="obs.surfaceChat">Chat</button>
+                  <button id="obs-surface-leaderboard" class="surface-tab" type="button" role="tab" data-obs-preview-surface="leaderboard" aria-selected="false" aria-pressed="false" data-i18n="obs.surfaceLeaderboard">Leaderboard</button>
+                </div>
+              </div>
+
               <div class="overlay-settings-column">
                 <section class="panel overlay-appearance-panel">
                   <div class="panel__body">
-                    <p class="panel-intro" data-i18n="obs.displayIntro">Appearance settings for the OBS Browser Source overlay. The preview reflects unsaved display changes.</p>
+                    <p class="panel-intro" data-i18n="obs.displayIntro">Shared scene look for every Browser Source that uses this preset. The preview follows the surface tab above.</p>
 
                     <div class="form form--compact form--overlay-display">
+                      <h3 class="overlay-section-title form__field--full" data-i18n="obs.sceneLook">Scene look</h3>
                       <div class="form__field form__field--full">
                         <label for="overlay-theme" data-i18n="obs.theme">Theme</label>
                         <select id="overlay-theme" name="overlay_theme">
@@ -488,10 +577,27 @@
                           <option value="cockpit_popups" data-i18n="obs.themeCockpitPopups">MW5 Mercs Cockpit popups</option>
                           <option value="g_rebels_popups" data-i18n="obs.themeGRebels">G-Rebels Cockpit popups</option>
                         </select>
-                        <p class="field-hint" data-i18n="obs.themeHint">Cockpit themes use HUD-style panels for streams over gameplay.</p>
+                        <p class="field-hint" data-i18n="obs.themeHint">Cockpit themes use HUD-style panels for streams over gameplay. The same theme styles chat and the leaderboard.</p>
                         <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
                       </div>
 
+                      <div class="form__field">
+                        <label for="overlay-text-edge" data-i18n="obs.textEdge">Text edge</label>
+                        <select id="overlay-text-edge">
+                          <option value="none" data-i18n="obs.textEdgeNone">None</option>
+                          <option value="shadow" data-i18n="obs.textEdgeShadow">Shadow</option>
+                          <option value="outline" data-i18n="obs.textEdgeOutline">Outline</option>
+                        </select>
+                      </div>
+
+                      <div class="form__field">
+                        <label for="overlay-text-edge-strength" data-i18n="obs.textEdgeStrength">Edge strength</label>
+                        <input id="overlay-text-edge-strength" type="number" min="0" max="8" step="1" inputmode="numeric">
+                      </div>
+
+                      <h3 class="overlay-section-title form__field--full" data-i18n="obs.thisSurface">This surface</h3>
+
+                      <div id="overlay-chat-fields" class="overlay-surface-fields">
                       <div class="form__field">
                   <label for="overlay-font-size" data-i18n="obs.fontSize">Font size (px)</label>
                   <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="48" step="1">
@@ -509,20 +615,6 @@
                   <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
                 </div>
 
-                <div class="form__field">
-                  <label for="overlay-text-edge" data-i18n="obs.textEdge">Text edge</label>
-                  <select id="overlay-text-edge">
-                    <option value="none" data-i18n="obs.textEdgeNone">None</option>
-                    <option value="shadow" data-i18n="obs.textEdgeShadow">Shadow</option>
-                    <option value="outline" data-i18n="obs.textEdgeOutline">Outline</option>
-                  </select>
-                </div>
-
-                <div class="form__field">
-                  <label for="overlay-text-edge-strength" data-i18n="obs.textEdgeStrength">Edge strength</label>
-                  <input id="overlay-text-edge-strength" type="number" min="0" max="8" step="1" inputmode="numeric">
-                </div>
-
                 <div class="form__field form__field--full">
                   <label for="overlay-platform-marker" data-i18n="obs.platformMarker">Platform marker</label>
                   <select id="overlay-platform-marker">
@@ -533,7 +625,32 @@
                   </select>
                   <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="basics" data-i18n="obs.resetGroup">Reset group to theme</button>
                 </div>
-              </div>
+                      </div>
+
+                      <div id="overlay-leaderboard-fields" class="overlay-surface-fields" hidden>
+                        <div class="form__field">
+                          <label for="overlay-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
+                          <select id="overlay-leaderboard-period">
+                            <option value="session" data-i18n="viewers.periodSession">Session</option>
+                            <option value="day" data-i18n="viewers.periodDay">Day</option>
+                            <option value="all" data-i18n="viewers.periodAll">All-time</option>
+                          </select>
+                        </div>
+                        <div class="form__field">
+                          <label for="overlay-leaderboard-font-size" data-i18n="obs.leaderboardFontSize">Leaderboard font size (px)</label>
+                          <input id="overlay-leaderboard-font-size" name="overlay_leaderboard_font_size_px" type="number" min="12" max="48" step="1">
+                          <p class="field-hint" data-i18n="obs.leaderboardFontSizeHint">12–48 px. Independent from chat so a narrow ranking can stay smaller.</p>
+                          <p id="overlay-leaderboard-font-size-error" class="field-error" role="alert" hidden></p>
+                        </div>
+                        <div class="form__field">
+                          <label for="overlay-leaderboard-layout" data-i18n="obs.leaderboardLayout">Leaderboard layout</label>
+                          <select id="overlay-leaderboard-layout">
+                            <option value="panel" data-i18n="obs.leaderboardLayoutPanel">Panel</option>
+                            <option value="chips" data-i18n="obs.leaderboardLayoutChips">Chips</option>
+                          </select>
+                          <p class="field-hint" data-i18n="obs.leaderboardLayoutHint">Panel is one HUD frame. Chips make each rank a separate card in the same theme.</p>
+                        </div>
+                      </div>
 
               <details class="overlay-group">
                 <summary data-i18n="obs.textGroup">Text</summary>
@@ -674,7 +791,7 @@
                   </div>
                 </div>
               </details>
-                    <div class="overlay-queue-group">
+                    <div class="overlay-queue-group overlay-chat-only">
                       <h3 class="overlay-queue-group__title" data-i18n="obs.queueGroup">Queue</h3>
                       <div class="form form--compact">
                         <div class="form__field">
@@ -705,8 +822,7 @@
             </div>
 
             <div class="overlay-preview-controls">
-              <div class="preview-control">
-                <label for="overlay-preview-mode" data-i18n="obs.previewMessages">Messages</label>
+              <div class="preview-control overlay-chat-only" id="overlay-preview-mode-control">
                 <select id="overlay-preview-mode">
                   <option value="sample" data-i18n="obs.sample">Sample</option>
                   <option value="live" data-i18n="obs.liveChat">Live chat</option>
@@ -762,6 +878,17 @@
         <div class="dialog-actions">
           <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
           <button class="btn-physical btn-start" type="submit" data-save-button data-obs-appearance-only disabled hidden data-i18n="dialog.saveSettings">Save settings</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="new-stream-prompt" class="prompt-dialog" aria-labelledby="new-stream-prompt-title">
+      <div class="prompt-dialog__frame">
+        <h3 id="new-stream-prompt-title" data-i18n="stream.newStreamTitle">Start a new stream?</h3>
+        <p class="prompt-dialog__message" data-i18n="stream.newStreamMessage">Session counters reset for viewers and the session leaderboard. Day and all-time stats stay.</p>
+        <div class="prompt-dialog__actions">
+          <button id="new-stream-prompt-cancel" class="btn-physical" type="button" data-i18n="dialog.cancel">Cancel</button>
+          <button id="new-stream-prompt-confirm" class="btn-physical btn-start" type="button" data-i18n="stream.newStreamConfirm">Start new stream</button>
         </div>
       </div>
     </dialog>
@@ -918,6 +1045,27 @@
           </div>
         </section>
 
+        <section class="panel" aria-labelledby="viewer-stats-heading">
+          <div class="panel__header">
+            <h3 id="viewer-stats-heading" data-i18n="iface.viewerStats">Viewer stats</h3>
+          </div>
+
+          <div class="form form--compact">
+            <div class="form__field">
+              <label for="points-per-message" data-i18n="iface.pointsPerMessage">Points per message</label>
+              <input id="points-per-message" name="points_per_message" type="number" min="0" step="1" inputmode="numeric">
+              <p class="field-hint" data-i18n="iface.pointsPerMessageHint">How many score points each counted chat line adds.</p>
+              <p id="points-per-message-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="day-reset-hour" data-i18n="iface.dayResetHour">Day reset hour</label>
+              <input id="day-reset-hour" name="day_reset_hour" type="number" min="0" max="23" step="1" inputmode="numeric">
+              <p class="field-hint" data-i18n="iface.dayResetHourHint">Local hour when the stats day rolls over (0–23).</p>
+              <p id="day-reset-hour-error" class="field-error" role="alert" hidden></p>
+            </div>
+          </div>
+        </section>
+
         <div class="dialog-actions">
           <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
           <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
@@ -1028,6 +1176,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=17"></script>
+  <script type="module" src="app.js?v=21"></script>
 </body>
 </html>

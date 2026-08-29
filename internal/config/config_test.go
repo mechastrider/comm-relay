@@ -195,3 +195,57 @@ func TestValidate_WhenOverlayThemeInvalid_ExpectInvalidConfig(t *testing.T) {
 	require.Error(t, err)
 	require.True(t, errors.Is(err, ErrInvalidConfig))
 }
+
+func TestLoad_WhenLegacyWithoutStatsFields_ExpectDefaults(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	require.NoError(t, os.WriteFile(path, []byte(`{
+  "server_port": 19000,
+  "twitch": { "enabled": true, "channel": "streamer" },
+  "overlay": { "max_messages": 10, "message_ttl_seconds": 5 }
+}`), 0o644))
+
+	cfg, err := Load(path)
+	require.NoError(t, err)
+	require.Equal(t, 19000, cfg.ServerPort)
+	require.Equal(t, 1, cfg.PointsPerMessage)
+	require.Equal(t, 6, cfg.DayResetHour)
+	require.True(t, cfg.Twitch.Enabled)
+	require.Equal(t, "streamer", cfg.Twitch.Channel)
+	require.Equal(t, 10, cfg.Overlay.MaxMessages)
+}
+
+func TestValidate_WhenDayResetHourOutOfRange_ExpectFieldError(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.DayResetHour = 24
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	fields := ValidationFields(err)
+	require.Contains(t, fields, "day_reset_hour")
+}
+
+func TestValidate_WhenNegativePointsPerMessage_ExpectFieldError(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.PointsPerMessage = -1
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	fields := ValidationFields(err)
+	require.Contains(t, fields, "points_per_message")
+}
+
+func TestValidate_WhenDayResetHourZero_ExpectValid(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.DayResetHour = 0
+
+	require.NoError(t, cfg.Validate())
+}

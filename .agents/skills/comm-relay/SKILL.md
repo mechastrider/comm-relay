@@ -5,7 +5,7 @@ description: Product and domain rules for CommRelay (comm-relay). Use when imple
 
 # CommRelay — domain
 
-Canonical brief: [`docs/concept.md`](../../../docs/concept.md).
+Canonical brief: [`docs/concept.md`](../../../docs/concept.md). Next horizon: [`docs/roadmap.md`](../../../docs/roadmap.md).
 
 ## Product goals
 
@@ -66,24 +66,26 @@ Extend with `display_name`, `avatar_url`, `badges` when available — keep backw
 | Stage 2 | YouTube Live Chat API + OAuth |
 | Later | VK Live, Kick, Trovo |
 
-## Config
+## Config and data
 
-- File: `config.json` (path configurable; default beside executable or user data dir).
-- Persist OAuth tokens and channel settings securely on disk; never log secrets.
-- Example keys: `server_port`, `twitch.enabled`, `twitch.channel`, `youtube.enabled`.
+- Operator settings: `config.json` (path configurable; default beside executable or user data dir). Persist OAuth tokens and channel settings securely on disk; never log secrets.
+- Viewer identities, merges, and stats: planned local SQLite **beside** the config file. Do not migrate `config.json` into SQLite.
+- Example config keys: `server_port`, `twitch.enabled`, `twitch.channel`, `youtube.enabled`.
+- Chat commands are operator-defined in admin (phase 6b); there is no built-in command pack.
 
 ## OBS overlay requirements
 
 - Transparent background for Browser Source.
 - Cap visible messages; smooth appear; configurable TTL.
 - Auto-scroll; tolerate WebSocket reconnect (client-side backoff).
+- On-stream **themes** are a shared visual language for chat and leaderboard (see [obs-overlay-themes](../obs-overlay-themes/SKILL.md)). Dock stays operator-only and unthemed.
 
 ## Admin / dock static UI (CommRelay)
 
 Hub skills state generic rules; this repo documents concrete paths:
 
 - **i18n:** `web/shared/i18n.js` (`t()`, `data-i18n`, `data-i18n-aria-label`, `data-i18n-title`); catalogs in `web/shared/locales/en.js` and `ru.js`; run `npm run test:i18n` for parity.
-- **Icon tooltips:** wrap icon-only controls in `has-tooltip`, child `<span class="ui-tooltip" role="tooltip" data-i18n="…">`; styles in `web/shared/tooltip.css` (import from admin `styles.css`). Required by [ux-form-practices](../ux-form-practices/SKILL.md).
+- **Tooltips:** wrap the control in `has-tooltip`, child `<span class="ui-tooltip" role="tooltip" data-i18n="…">`; styles in `web/shared/tooltip.css` (import from admin `styles.css`). Required for icon-only controls **and** jargon / non-obvious labeled actions (e.g. **New stream**, **Rich chat**). Put the visible label in its own `<span data-i18n>` so locale apply does not wipe the tooltip. Required by [ux-form-practices](../ux-form-practices/SKILL.md).
 
 ## Reliability
 
@@ -102,10 +104,9 @@ Hub skills state generic rules; this repo documents concrete paths:
 When touching architecture, consider documenting decisions for:
 
 1. Twitch IRC vs EventSub.
-2. YouTube OAuth UX (minimal user steps).
-3. JSON vs SQLite for settings/tokens.
-4. Plugin boundary for new platforms.
-5. Emoji provider memory budget.
+2. Plugin boundary for new platforms.
+
+Settled: YouTube OAuth via admin Connect + system browser; VK via public live WebSocket; emoji via provider cache; JSON for operator settings and SQLite for viewers/stats (`docs/roadmap.md`).
 
 ## Related skills
 

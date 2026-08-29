@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -19,6 +20,9 @@ func TestApp_StartStop_WhenDefaultConfig_ExpectHealthReady(t *testing.T) {
 		ConfigPath: configPath,
 		Addr:       randomListenAddr(t),
 	})
+	require.NoError(t, err)
+
+	_, err = os.Stat(filepath.Join(dir, "comm-relay.db"))
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -50,6 +54,25 @@ func TestApp_Start_WhenAlreadyStarted_ExpectError(t *testing.T) {
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer shutdownCancel()
+	require.NoError(t, app.Stop(shutdownCtx))
+}
+
+func TestApp_Stop_WhenNeverStarted_ExpectViewerStoreClosed(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.json")
+
+	app, err := New(Options{
+		ConfigPath: configPath,
+		Addr:       randomListenAddr(t),
+	})
+	require.NoError(t, err)
+
+	_, err = os.Stat(filepath.Join(dir, "comm-relay.db"))
+	require.NoError(t, err)
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
 	require.NoError(t, app.Stop(shutdownCtx))
 }
 

@@ -7,9 +7,9 @@ context: |
   API: POST-action (POST /api/<resource>/<action>), snake_case JSON; GET allowed for reads, static, health, WebSocket upgrade, and OAuth callbacks
   Backend packages: cmd/comm-relay-server/, cmd/comm-relay-desktop/, internal/{bootstrap,config,bus,connector,api,emote,imagelink,desktopentry}/
   Frontend: vanilla HTML/CSS/JS under web/{admin,overlay,dock,shared}/ — no React on current product
-  Persistence: config.json beside the executable (server) or in the user config dir (desktop)
+  Persistence: config.json for operator settings (beside the executable or user config dir); planned local SQLite beside it for viewers/stats — do not migrate config into SQLite
   Tests: go test ./...; golangci-lint run ./...; npm run lint for web/**/*.js
-  Product brief: docs/concept.md (Russian). Canonical implemented behavior: openspec/specs/
+  Product brief: docs/concept.md (Russian). Next horizon: docs/roadmap.md. Canonical implemented behavior: openspec/specs/
   Principles: unified ChatMessage; overlay never branches on platform internals; one connector failing must not crash the process; changelog only for streamer-visible impact
 
 rules:

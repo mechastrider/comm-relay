@@ -1,8 +1,8 @@
 import * as dom from "./dom.js";
 import { state } from "./state.js";
 import { apiURL } from "./api.js";
-import { mountOverlayPreview, unmountOverlayPreview } from "./overlay-preview.js";
-import { getActivePresetID } from "./overlay-appearance.js";
+import { mountOverlayPreview, unmountOverlayPreview, applyPreviewSurface } from "./overlay-preview.js";
+import { getActivePresetID, currentLeaderboardURL, updatePresetIsland } from "./overlay-appearance.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { t } from "./i18n-ui.js";
 
@@ -20,6 +20,31 @@ export function updateOBSSetupURLs() {
   if (dom.obsDockOpen) {
     dom.obsDockOpen.href = apiURL("/dock/messages");
   }
+  const leaderboardUrl = currentLeaderboardURL();
+  if (dom.obsLeaderboardUrl) {
+    dom.obsLeaderboardUrl.value = leaderboardUrl;
+  }
+  if (dom.obsLeaderboardOpen) {
+    dom.obsLeaderboardOpen.href = leaderboardUrl;
+  }
+}
+
+function copyButtonLabel(button) {
+  const tooltip = button.querySelector(".ui-tooltip");
+  if (tooltip) {
+    return tooltip.textContent || "";
+  }
+  return button.textContent || "";
+}
+
+function setCopyButtonLabel(button, label) {
+  const tooltip = button.querySelector(".ui-tooltip");
+  if (tooltip) {
+    tooltip.textContent = label;
+    button.setAttribute("aria-label", label);
+    return;
+  }
+  button.textContent = label;
 }
 
 export function resetOBSCopyFeedback() {
@@ -28,16 +53,18 @@ export function resetOBSCopyFeedback() {
     state.obsCopyFeedbackTimer = null;
   }
   if (state.obsCopyFeedbackButton) {
-    state.obsCopyFeedbackButton.textContent =
-      state.obsCopyFeedbackButton.dataset.copyDefaultText || t("obs.copyUrl");
+    setCopyButtonLabel(
+      state.obsCopyFeedbackButton,
+      state.obsCopyFeedbackButton.dataset.copyDefaultText || t("obs.copyUrl")
+    );
     state.obsCopyFeedbackButton = null;
   }
 }
 
 export function showOBSCopyFeedback(button, message, copied) {
   resetOBSCopyFeedback();
-  button.dataset.copyDefaultText = button.dataset.copyDefaultText || button.textContent;
-  button.textContent = copied ? t("obs.copyCopied") : t("obs.copyFailed");
+  button.dataset.copyDefaultText = button.dataset.copyDefaultText || copyButtonLabel(button) || t("obs.copyUrl");
+  setCopyButtonLabel(button, copied ? t("obs.copyCopied") : t("obs.copyFailed"));
   state.obsCopyFeedbackButton = button;
   if (dom.obsCopyStatus) {
     dom.obsCopyStatus.textContent = message;
@@ -151,6 +178,12 @@ export function initOBSSetup() {
 
   dom.overlayDialog.querySelectorAll("[data-obs-section]").forEach(function (button) {
     button.addEventListener("click", function () {
+      const sourceButton = button.closest("[data-obs-source-pane]");
+      const pane = sourceButton && sourceButton.getAttribute("data-obs-source-pane");
+      if (button.dataset.obsSection === "appearance" && (pane === "leaderboard" || pane === "chat")) {
+        applyPreviewSurface(pane);
+        updatePresetIsland();
+      }
       setOBSSection(button.dataset.obsSection, {
         focusTab: button.getAttribute("role") !== "tab",
       });
@@ -181,6 +214,92 @@ export function initOBSSetup() {
   });
 
   bindCopyButtons(dom.overlayDialog);
+
+  function setOBSSource(name) {
+    const source = name === "leaderboard" || name === "dock" ? name : "chat";
+    document.querySelectorAll("[data-obs-source]").forEach(function (button) {
+      if (button.disabled) {
+        return;
+      }
+      if (button.getAttribute("data-obs-source") === source) {
+        button.setAttribute("aria-current", "true");
+      } else {
+        button.removeAttribute("aria-current");
+      }
+    });
+    document.querySelectorAll("[data-obs-source-pane]").forEach(function (element) {
+      const pane = element.getAttribute("data-obs-source-pane");
+      if (pane === "browser") {
+        element.hidden = source === "dock";
+        return;
+      }
+      element.hidden = pane !== source;
+    });
+    const title = document.getElementById("obs-source-title");
+    const summary = document.getElementById("obs-source-summary");
+    const badge = document.getElementById("obs-source-badge");
+    const eyebrow = document.getElementById("obs-source-eyebrow");
+    if (source === "leaderboard") {
+      if (title) {
+        title.textContent = t("obs.leaderboard");
+      }
+      if (summary) {
+        summary.textContent = t("obs.leaderboardSummary");
+      }
+      if (eyebrow) {
+        eyebrow.textContent = t("obs.browserSource");
+      }
+      if (badge) {
+        badge.textContent = t("obs.visibleToViewers");
+        badge.classList.add("obs-audience-badge--live");
+      }
+    } else if (source === "dock") {
+      if (title) {
+        title.textContent = t("obs.messageDock");
+      }
+      if (summary) {
+        summary.textContent = t("obs.dockSummary");
+      }
+      if (eyebrow) {
+        eyebrow.textContent = t("obs.customDock");
+      }
+      if (badge) {
+        badge.textContent = t("obs.onlyVisibleToYou");
+        badge.classList.remove("obs-audience-badge--live");
+      }
+    } else {
+      if (title) {
+        title.textContent = t("obs.onStreamOverlay");
+      }
+      if (summary) {
+        summary.textContent = t("obs.overlaySummary");
+      }
+      if (eyebrow) {
+        eyebrow.textContent = t("obs.browserSource");
+      }
+      if (badge) {
+        badge.textContent = t("obs.visibleToViewers");
+        badge.classList.add("obs-audience-badge--live");
+      }
+    }
+  }
+
+  document.querySelectorAll("[data-obs-source]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      if (button.disabled) {
+        return;
+      }
+      setOBSSource(button.getAttribute("data-obs-source"));
+    });
+  });
+  setOBSSource("chat");
+
+  if (dom.obsLeaderboardPeriod) {
+    dom.obsLeaderboardPeriod.addEventListener("change", updateOBSSetupURLs);
+  }
+  if (dom.overlayLeaderboardPeriod) {
+    dom.overlayLeaderboardPeriod.addEventListener("change", updateOBSSetupURLs);
+  }
 
   dom.overlayDialog.addEventListener("close", function () {
     resetOBSCopyFeedback();
