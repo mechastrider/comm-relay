@@ -1,7 +1,7 @@
 import * as dom from "./dom.js";
 import { state } from "./state.js";
 import { apiURL, readJSON, mapHTTPError } from "./api.js";
-import { t } from "./i18n-ui.js";
+import { applyAdminLocale, t } from "./i18n-ui.js";
 import {
   SETTINGS_EDITABLE_SECTIONS,
   SETTINGS_SECTIONS,
@@ -36,7 +36,12 @@ import {
 } from "./ui-shell.js";
 import { renderAboutVersion } from "./about.js";
 import { MESSAGE_SOUND_TYPES } from "./constants.js";
-import { focusConnectionsField, setConnectionsSection } from "./connections.js";
+import {
+  focusConnectionsField,
+  hideOrphanNetworkTab,
+  setConnectionsSection,
+  showNetworkPanel,
+} from "./connections.js";
 
 /** @type {Map<string, Record<string, unknown>>} */
 const sectionBaselines = new Map();
@@ -330,6 +335,9 @@ function applySectionBaselineToDOM(sectionId) {
     return;
   }
   applySectionValuesToDOM(sectionId, baseline);
+  if (sectionId === "application" && dom.timeLocaleInput) {
+    applyAdminLocale(dom.timeLocaleInput.value);
+  }
 }
 
 /**
@@ -624,6 +632,10 @@ export function selectSettingsSection(sectionId, options) {
     panel.classList.toggle("settings-section--active", visible);
   });
 
+  if (nextSection === "network") {
+    showNetworkPanel();
+  }
+
   if (nextSection === "about") {
     renderAboutVersion();
   }
@@ -697,10 +709,10 @@ function createSectionToolbar(sectionId) {
   toolbar.innerHTML =
     '<span class="settings-section__dirty" data-section-dirty hidden role="status" aria-live="polite"></span>' +
     '<div class="settings-section__actions">' +
-    '<button class="btn-physical btn-small" type="button" data-section-reset>' +
+    '<button class="btn-physical btn-small" type="button" data-section-reset data-i18n="settings.resetSection">' +
     t("settings.resetSection") +
     "</button>" +
-    '<button class="btn-physical btn-start btn-small" type="button" data-section-save>' +
+    '<button class="btn-physical btn-start btn-small" type="button" data-section-save data-i18n="settings.saveSection">' +
     t("settings.saveSection") +
     "</button>" +
     "</div>";
@@ -730,6 +742,7 @@ function mountEditableSection(sectionId, bodyMount, contentNodes) {
   const heading = document.createElement("h2");
   heading.id = "settings-section-" + sectionId + "-heading";
   heading.className = "settings-section__heading";
+  heading.setAttribute("data-i18n", "settings.section." + sectionId);
   heading.textContent = t("settings.section." + sectionId);
 
   const form = document.createElement("div");
@@ -829,6 +842,7 @@ function mountDiagnosticsSection(mount) {
   const heading = document.createElement("h2");
   heading.id = "settings-section-diagnostics-heading";
   heading.className = "settings-section__heading";
+  heading.setAttribute("data-i18n", "settings.section.diagnostics");
   heading.textContent = t("settings.section.diagnostics");
 
   const body = document.getElementById("settings-diagnostics-body");
@@ -853,6 +867,7 @@ function mountAboutSection(mount) {
   const heading = document.createElement("h2");
   heading.id = "settings-section-about-heading";
   heading.className = "settings-section__heading";
+  heading.setAttribute("data-i18n", "settings.section.about");
   heading.textContent = t("settings.section.about");
 
   const actions = document.createElement("div");
@@ -885,6 +900,7 @@ function mountSettingsWorkspace() {
   mountApplicationSection(mount);
   mountDiagnosticsSection(mount);
   mountAboutSection(mount);
+  hideOrphanNetworkTab();
 
   if (dom.connectionsDialog) {
     dom.connectionsDialog.hidden = true;
@@ -1008,6 +1024,10 @@ export function initSettingsWorkspace() {
 
   document.addEventListener("admin-config-applied", function () {
     refreshSectionBaselinesAfterConfigApply();
+  });
+
+  window.addEventListener("admin-locale-applied", function () {
+    renderAllSectionChrome();
   });
 
   document.addEventListener("workspace-settings-enter", function () {
