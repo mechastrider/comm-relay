@@ -2,7 +2,7 @@ version: 4
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 3c402b92a217f3e45af0a48b3f2c27461207190b
+    commit: ba7143b4fdea3170f20b48376abd32dc895f233f
 preset: desktop-app
 include:
     - theme: backend/go
@@ -102,14 +102,14 @@ packages:
               installed_hash: sha256:c8147a97089bb75c27c31155ab38fe764f176d72ac7abd714626a99c13ee301e
     change-orchestration:
         hub_path: process/change-orchestration
-        upstream_hash: sha256:67491c119646c65b1bf88b8637e682004cff2e2fcf81b1efe01dd43a4ef6599f
+        upstream_hash: sha256:0b42821374702a0bd6b258bb1f5e71380d36fe02b6339cf19688bc7c30bb0ec3
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/change-orchestration
-              installed_hash: sha256:67491c119646c65b1bf88b8637e682004cff2e2fcf81b1efe01dd43a4ef6599f
+              installed_hash: sha256:0b42821374702a0bd6b258bb1f5e71380d36fe02b6339cf19688bc7c30bb0ec3
     closeout:
         hub_path: devtools/closeout
         upstream_hash: sha256:5a27c7df3ffe03131b5a986696d097a562dc54e2a16542dfe0139fcd18474a87
@@ -292,7 +292,7 @@ packages:
               installed_hash: sha256:070f8b09c3a88c4bf01c173f9c0d8ddd04a4f0d8e797b109f3068c0e32da7c29
     openspec-workflow:
         hub_path: process/openspec-workflow
-        upstream_hash: sha256:3f48a0e21959d05b52ec6363e31d66f440db76d5c1a8042170c6688e5a6f04cd
+        upstream_hash: sha256:5c0f1daa05673560d6c0ba9def24fce571e2780c21abc5b407273355171b5096
         artifacts:
             - id: desktop-change-schema
               kind: schema
@@ -398,11 +398,11 @@ packages:
               installed_hash: sha256:442d2be25eede4bb75e16859818c39461665772559198cb814047b0fe80ccbe8
     work-intake:
         hub_path: process/work-intake
-        upstream_hash: sha256:1e658f390931bc4c44e29b7f8b5bcdf6796bc0ca1bdd31f9f615269033deb85f
+        upstream_hash: sha256:f9dafce169a4f770f14492579cda15505c8cb3a58a3b140601ac5e38bf984039
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/work-intake
-              installed_hash: sha256:1e658f390931bc4c44e29b7f8b5bcdf6796bc0ca1bdd31f9f615269033deb85f
+              installed_hash: sha256:f9dafce169a4f770f14492579cda15505c8cb3a58a3b140601ac5e38bf984039

@@ -163,8 +163,10 @@ reclassify instead of stretching the smaller route.
 
 ## Step 7 — Select the planning schema
 
-Use the repository's configured default unless the brief justifies a profile
-schema. Recommended routes:
+Use the repository's configured default unless the brief justifies another
+installed profile. Resolve the authoritative OpenSpec root, run `openspec
+schemas --json`, and do not assume every hub profile is vendored. Recommended
+routes when available:
 
 | Change | Schema |
 |--------|--------|
@@ -179,6 +181,11 @@ Profile schemas are deliberately comprehensive. Use them for Tier 2.5–3 work;
 do not make every small change produce full profile artifacts. When a selected
 profile artifact does not apply, write its explicit `Not applicable` section as
 the schema instructs so the decision persists across sessions.
+
+If the best-matching profile is not installed, use the configured primary
+schema when it can represent the change, or the built-in `spec-driven` fallback
+for bounded work. Report the missing profile as a project-configuration option;
+intake does not vendor schemas or edit the skills lock as a side effect.
 
 Schema selection is part of the handoff, not hidden executor policy. When the
 intake runs inside an explicitly invoked outer orchestrator, that orchestrator
