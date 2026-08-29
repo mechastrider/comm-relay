@@ -8,7 +8,7 @@ import { getLeaderboardPeriod, setLeaderboardPeriod } from "./live-leaderboard.j
 import { setLiveTab } from "./live-tabs.js";
 import {
   audienceEmptyKind,
-  formatViewerPlatforms,
+  formatPlatformSummary,
   validateDisplayName,
   viewerPeriodMetrics,
 } from "./audience-helpers.js";
@@ -167,7 +167,7 @@ function renderViewersTable(viewers) {
   viewers.forEach(function (viewer) {
     const metrics = viewerPeriodMetrics(viewer, currentPeriod);
     const displayName = viewer.display_name || t("viewers.unnamed");
-    const platforms = formatViewerPlatforms(viewer, formatPlatformLabel);
+    const platforms = formatPlatformSummary(viewer.identities, formatPlatformLabel);
     const platformText = platforms || t("viewers.noIdentities");
 
     const row = document.createElement("tr");
@@ -832,9 +832,7 @@ export function initAudienceViewers() {
   wideLayoutQuery.addEventListener("change", function () {
     syncInspectorVisibility();
     if (selectedViewerId) {
-      openViewerDetail(selectedViewerId, focusReturnElement).catch(function () {
-        showBanner("error", t("banner.cannotReach"));
-      });
+      openDetailShell();
     } else {
       closeViewerDetail({ restoreFocus: false });
     }

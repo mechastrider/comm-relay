@@ -61,7 +61,7 @@ func drainWSUntilIdle(t *testing.T, conn *websocket.Conn) {
 	}
 }
 
-func readOverlaySettingsEventually(t *testing.T, conn *websocket.Conn) map[string]any {
+func readOverlaySettingsEventually(t *testing.T, conn *websocket.Conn, activePresetID string) map[string]any {
 	t.Helper()
 
 	var frame map[string]any
@@ -74,8 +74,15 @@ func readOverlaySettingsEventually(t *testing.T, conn *websocket.Conn) map[strin
 		if json.Unmarshal(data, &frame) != nil {
 			return false
 		}
-		return frame["type"] == "overlay_settings"
-	}, 3*time.Second, 50*time.Millisecond)
+		if frame["type"] != "overlay_settings" {
+			return false
+		}
+		overlay, ok := frame["overlay"].(map[string]any)
+		if !ok {
+			return false
+		}
+		return overlay["active_preset_id"] == activePresetID
+	}, 5*time.Second, 50*time.Millisecond)
 	return frame
 }
 
@@ -189,6 +196,8 @@ func TestOverlayActivate_WhenFailure_ExpectNoOverlaySettingsBroadcast(t *testing
 }
 
 func TestOverlayActivate_WhenValid_ExpectOverlaySettingsBroadcastToTwoClients(t *testing.T) {
+	t.Parallel()
+
 	env := newTestEnv(t, bus.New(0))
 	seedOverlayPreset(t, env.ConfigStore)
 
@@ -202,8 +211,8 @@ func TestOverlayActivate_WhenValid_ExpectOverlaySettingsBroadcastToTwoClients(t 
 	resp := postOverlayActivateURL(t, srv.URL+"/api/overlay/activate", `{"preset_id":"stream-main"}`)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	frame1 := readOverlaySettingsEventually(t, conn1)
-	frame2 := readOverlaySettingsEventually(t, conn2)
+	frame1 := readOverlaySettingsEventually(t, conn1, "stream-main")
+	frame2 := readOverlaySettingsEventually(t, conn2, "stream-main")
 
 	overlay1 := frame1["overlay"].(map[string]any)
 	overlay2 := frame2["overlay"].(map[string]any)

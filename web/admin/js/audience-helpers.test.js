@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import {
   audienceEmptyKind,
   formatPlatformSummary,
-  formatViewerPlatforms,
   validateDisplayName,
   viewerPeriodMetrics,
 } from "./audience-helpers.js";
@@ -39,25 +38,6 @@ const platforms = formatPlatformSummary(
 );
 assert.equal(platforms, "TWITCH, YOUTUBE");
 assert.equal(formatPlatformSummary([], function (p) { return p; }), "");
-
-assert.equal(
-  formatViewerPlatforms(
-    { identities: [{ platform: "twitch" }], last_seen: { platform: "youtube" } },
-    function (platform) { return platform.toUpperCase(); }
-  ),
-  "TWITCH"
-);
-assert.equal(
-  formatViewerPlatforms(
-    { last_seen: { platform: "youtube" } },
-    function (platform) { return platform.toUpperCase(); }
-  ),
-  "YOUTUBE"
-);
-assert.equal(
-  formatViewerPlatforms({}, function (platform) { return platform; }),
-  ""
-);
 
 assert.equal(validateDisplayName("Alpha"), null);
 assert.equal(validateDisplayName("  Beta  "), null);

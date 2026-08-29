@@ -43,7 +43,6 @@ let navigationGuardBound = false;
 /** @type {import("./workspace-router.js").WorkspaceId} */
 let lastWorkspace = "live";
 let suppressNavigationGuard = false;
-let skipStudioReenter = false;
 
 /**
  * @returns {boolean}
@@ -201,10 +200,6 @@ function interceptHashNavigation() {
     if (suppressNavigationGuard) {
       suppressNavigationGuard = false;
       lastWorkspace = parseWorkspaceHash(window.location.hash);
-      if (skipStudioReenter && lastWorkspace === "studio") {
-        skipStudioReenter = false;
-        return;
-      }
       handleWorkspaceChange();
       return;
     }
@@ -212,14 +207,12 @@ function interceptHashNavigation() {
     const nextWorkspace = parseWorkspaceHash(window.location.hash);
     if (lastWorkspace === "studio" && nextWorkspace !== "studio" && isStudioOverlayDirty()) {
       const targetHash = window.location.hash;
-      skipStudioReenter = true;
       suppressNavigationGuard = true;
       window.location.hash = workspaceHash("studio");
       if (!confirmDiscardStudioDraft()) {
         lastWorkspace = "studio";
         return;
       }
-      skipStudioReenter = false;
       restoreStudioBaseline();
       suppressNavigationGuard = true;
       window.location.hash = targetHash;
@@ -323,13 +316,7 @@ export function initStudio() {
     updatePresetIsland();
   });
 
-  window.addEventListener("admin-locale-applied", function () {
-    renderStudioDirtyState();
-  });
-
   if (isStudioWorkspaceActive()) {
     onStudioEnter();
-  } else {
-    renderStudioDirtyState();
   }
 }

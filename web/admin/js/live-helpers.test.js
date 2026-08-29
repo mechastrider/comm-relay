@@ -98,34 +98,7 @@ const partialDay = summarizeLiveStatistics(
 assert.equal(partialDay.leaderboardFailed, true);
 assert.equal(partialDay.partialData, true);
 assert.equal(partialDay.topScore, 0);
-assert.equal(partialDay.uniqueViewers, 0);
-assert.equal(partialDay.hasViewers, false);
-
-const staleSession = summarizeLiveStatistics(
-  {
-    viewers: [
-      {
-        id: "v1",
-        display_name: "Old",
-        session_message_count: 0,
-        session_score: 0,
-        message_count: 20,
-        score: 100,
-      },
-    ],
-  },
-  { period: "session", entries: [] }
-);
-assert.equal(staleSession.uniqueViewers, 0);
-assert.equal(staleSession.hasViewers, false);
-assert.equal(staleSession.totalMessages, 0);
-
-const dayActive = summarizeLiveStatistics(
-  populatedViewers,
-  { period: "day", entries: [] },
-  { period: "day" }
-);
-assert.equal(dayActive.uniqueViewers, 2);
+assert.equal(partialDay.uniqueViewers, 1);
 
 const viewersOnly = summarizeLiveStatistics(populatedViewers, null, { leaderboardFailed: true });
 assert.equal(viewersOnly.topScore, 40);

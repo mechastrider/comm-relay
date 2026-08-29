@@ -17,12 +17,24 @@ API mutations SHALL use `POST /api/<resource>/<action>` with identifiers in the 
 - **WHEN** the operator deletes a chat line
 - **THEN** the client calls `POST /api/messages/delete` with `platform` and `id` in the JSON body
 
+#### Scenario: Viewer merge
+- **WHEN** the operator merges two viewers
+- **THEN** the client calls `POST /api/viewers/merge` with `from_id` and `into_id` in the JSON body
+
+#### Scenario: New stream session
+- **WHEN** the operator starts a new stream
+- **THEN** the client calls `POST /api/sessions/start`
+
 ### Requirement: Reads, health, static, WebSocket, and OAuth callbacks may use GET
-The following GET routes SHALL remain available: `/`, `/overlay`, `/dock/messages`, `/shared/`, `/health`, `/ws`, `/api/config`, `/api/status`, `/api/diagnostics`, `/api/messages/recent`, `/overlay/assets/{filename}`, `/oauth/youtube/start`, and `/oauth/youtube/callback`.
+The following GET routes SHALL remain available: `/`, `/overlay`, `/overlay/leaderboard`, `/dock/messages`, `/shared/`, `/health`, `/ws`, `/api/config`, `/api/status`, `/api/diagnostics`, `/api/messages/recent`, `/api/viewers`, `/api/viewers/get`, `/api/leaderboard`, `/overlay/assets/{filename}`, `/oauth/youtube/start`, and `/oauth/youtube/callback`.
 
 #### Scenario: Status poll
 - **WHEN** the admin polls connector state
 - **THEN** it uses `GET /api/status`
+
+#### Scenario: Leaderboard snapshot
+- **WHEN** the leaderboard page loads
+- **THEN** it uses `GET /api/leaderboard` with a `period` query
 
 ### Requirement: JSON uses snake_case
 Request and response objects SHALL use snake_case field names (`server_port`, `display_name`, `avatar_url`, `max_messages`).

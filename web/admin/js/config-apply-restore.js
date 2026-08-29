@@ -23,16 +23,6 @@ export function resolveStudioDraftAfterConfigApply(options) {
     const nextBaseline = baseline
       ? cloneOverlayAppearanceDraft(baseline)
       : cloneOverlayAppearanceDraft(nextDraft);
-    const server =
-      serverOverlay && typeof serverOverlay === "object"
-        ? /** @type {Record<string, unknown>} */ (serverOverlay)
-        : {};
-    const serverPresetId =
-      typeof server.active_preset_id === "string" ? server.active_preset_id : "";
-    if (serverPresetId && serverPresetId !== nextDraft.active_preset_id) {
-      nextDraft.active_preset_id = serverPresetId;
-      nextBaseline.active_preset_id = serverPresetId;
-    }
     return {
       shouldResetFromServer: false,
       overlayToApply: nextDraft,

@@ -68,32 +68,6 @@ export function formatPlatformSummary(identities, formatPlatformLabel) {
 }
 
 /**
- * @param {Record<string, unknown> | null | undefined} viewer
- * @param {(platform: string) => string} formatPlatformLabel
- * @returns {string}
- */
-export function formatViewerPlatforms(viewer, formatPlatformLabel) {
-  const fromIdentities = formatPlatformSummary(
-    /** @type {Array<{ platform?: string }> | null | undefined} */ (
-      viewer && viewer.identities
-    ),
-    formatPlatformLabel
-  );
-  if (fromIdentities) {
-    return fromIdentities;
-  }
-  const lastSeen = viewer && viewer.last_seen;
-  const platform =
-    lastSeen && typeof lastSeen === "object"
-      ? /** @type {Record<string, unknown>} */ (lastSeen).platform
-      : "";
-  if (typeof platform === "string" && platform) {
-    return formatPlatformLabel(platform);
-  }
-  return "";
-}
-
-/**
  * @param {string} displayName
  * @returns {string | null} validation message key or null when valid
  */

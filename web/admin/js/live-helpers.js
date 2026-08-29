@@ -41,21 +41,6 @@ export function nextActivePresetSelection(previousId, requestedId, ok) {
  */
 
 /**
- * @param {ViewerRow} viewer
- * @param {string} period
- * @returns {boolean}
- */
-function viewerHasPeriodActivity(viewer, period) {
-  if (period === "day") {
-    return typeof viewer.day_message_count === "number" && viewer.day_message_count > 0;
-  }
-  if (period === "all") {
-    return typeof viewer.message_count === "number" && viewer.message_count > 0;
-  }
-  return typeof viewer.session_message_count === "number" && viewer.session_message_count > 0;
-}
-
-/**
  * @typedef {object} LeaderboardEntry
  * @property {number} [rank]
  * @property {string} [display_name]
@@ -75,9 +60,7 @@ export function summarizeLiveStatistics(viewersPayload, leaderboardPayload, opti
   const entries = (leaderboardPayload && leaderboardPayload.entries) || [];
   const leaderboardFailed = Boolean(opts.leaderboardFailed);
 
-  const uniqueViewers = viewers.filter(function (viewer) {
-    return viewerHasPeriodActivity(viewer, period);
-  }).length;
+  const uniqueViewers = viewers.length;
   let totalMessages = 0;
   let totalScore = 0;
   let hasDayFields = false;

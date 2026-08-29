@@ -7,11 +7,11 @@ Persists operator settings in `config.json`, applies safe defaults, validates up
 ## Requirements
 
 ### Requirement: Missing config file is created with defaults
-When the configured path does not exist, the system SHALL write a default `config.json` and start with those defaults. Defaults SHALL include `server_port` 17877, all platforms disabled, overlay `max_messages` 30, `message_ttl_seconds` 20, font size 18 px, theme `default`, native and third-party emotes enabled, and image previews disabled.
+When the configured path does not exist, the system SHALL write a default `config.json` and start with those defaults. Defaults SHALL include `server_port` 17877, all platforms disabled, overlay `max_messages` 30, `message_ttl_seconds` 20, font size 18 px, theme `default`, native and third-party emotes enabled, image previews disabled, `points_per_message` 1, and `day_reset_hour` 6.
 
 #### Scenario: First launch
 - **WHEN** CommRelay starts and `config.json` is absent
-- **THEN** the file is created with prototype defaults and the process continues
+- **THEN** the file is created with prototype defaults including `points_per_message` 1 and `day_reset_hour` 6 and the process continues
 
 ### Requirement: Older files receive additive defaults
 On load, omitted newer fields SHALL be filled with current defaults without discarding operator values that are already present.
@@ -24,8 +24,12 @@ On load, omitted newer fields SHALL be filled with current defaults without disc
 - **WHEN** a config file omits `overlay.emotes`
 - **THEN** Twitch, YouTube, VK, FFZ, BTTV, and 7TV emotes default to enabled
 
+#### Scenario: Legacy file without stats fields
+- **WHEN** a config file omits `points_per_message` or `day_reset_hour`
+- **THEN** those fields default to 1 and 6 respectively without discarding other operator values
+
 ### Requirement: Invalid settings are rejected with field errors
-The system SHALL reject invalid settings before persisting them. Validation SHALL cover port range 1–65535, overlay message count ≥ 1, TTL ≥ 0, font size 12–48 px, known display modes and themes, required channel values when a platform is enabled, YouTube connection/chat modes, and image-preview bounds. Presence of `overlay.page_opacity` SHALL be rejected so the overlay page stays transparent for OBS.
+The system SHALL reject invalid settings before persisting them. Validation SHALL cover port range 1–65535, overlay message count ≥ 1, TTL ≥ 0, font size 12–48 px, known display modes and themes, required channel values when a platform is enabled, YouTube connection/chat modes, image-preview bounds, `points_per_message` as an integer ≥ 0, and `day_reset_hour` as an integer 0–23. Presence of `overlay.page_opacity` SHALL be rejected so the overlay page stays transparent for OBS.
 
 #### Scenario: Enabled Twitch without channel
 - **WHEN** an update enables Twitch with an empty channel
@@ -34,6 +38,10 @@ The system SHALL reject invalid settings before persisting them. Validation SHAL
 #### Scenario: Page opacity is set
 - **WHEN** an update includes `overlay.page_opacity`
 - **THEN** the save is rejected with field `overlay_page_opacity`
+
+#### Scenario: Day reset hour out of range
+- **WHEN** an update sets `day_reset_hour` to 24
+- **THEN** the save is rejected and the `day_reset_hour` field error is returned
 
 ### Requirement: Admin reads omit secrets
 `GET /api/config` and successful config updates SHALL return a public view. OAuth access/refresh tokens, the Google client secret, and the SOCKS5 password MUST NOT appear in that JSON. The public view MAY report `has_client_secret`, `connected`, and `has_password` booleans.
@@ -63,3 +71,22 @@ The config store SHALL validate and persist a requested `overlay.active_preset_i
 #### Scenario: Unknown preset
 - **WHEN** activation requests an identifier not present in `overlay.presets`
 - **THEN** the mutation is rejected and the stored config remains unchanged
+
+### Requirement: Overlay presets may store per-surface overrides
+Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_size_px` SHALL be an integer 12–48 when present. `surfaces.leaderboard.layout` SHALL be `panel` or `chips` when present. Omitted leaderboard font SHALL inherit the preset `font_size_px`. Omitted leaderboard layout SHALL default to `panel`. Unknown surface keys MAY be ignored. Chat fields on the preset (`max_messages`, `message_ttl_seconds`, `font_size_px`, theme, style) SHALL remain the chat defaults.
+
+#### Scenario: Inherit font
+- **WHEN** a saved preset has `font_size_px` 18 and no `surfaces.leaderboard.font_size_px`
+- **THEN** the leaderboard uses 18 px until the operator stores an override
+
+#### Scenario: Stored leaderboard font
+- **WHEN** a preset stores `surfaces.leaderboard.font_size_px` 14
+- **THEN** chat overlay keeps the preset `font_size_px` and the leaderboard uses 14 px
+
+#### Scenario: Invalid layout rejected
+- **WHEN** an update sets `surfaces.leaderboard.layout` to a value other than `panel` or `chips`
+- **THEN** the save is rejected with a field error on that layout field
+
+#### Scenario: Invalid leaderboard font rejected
+- **WHEN** an update sets `surfaces.leaderboard.font_size_px` to 8
+- **THEN** the save is rejected with a field error on that font field
