@@ -68,6 +68,51 @@ The Studio preview SHALL let the operator choose a backdrop from white, checkerb
 - **WHEN** a previously stored preview background value is `busy`
 - **THEN** the control shows game footage and the iframe uses `preview_background=scene`
 
+#### Scenario: Leaderboard uses the same backdrops
+- **WHEN** the operator switches the Studio preview to Leaderboard and chooses checkerboard
+- **THEN** the preview iframe loads the leaderboard page with `preview_background=checker`
+
+### Requirement: OBS setup lists sources instead of a card grid
+Studio source setup SHALL list on-stream Browser Sources and operator-only docks as a selectable list, not a growing grid of full setup cards. Selecting a source SHALL show that source's URL, copy control, and source-specific options. Browser Source install steps SHALL appear once as shared help, not repeated per source. `/overlay/alert` MAY appear as a disabled placeholder and MUST NOT be offered as a working URL.
+
+#### Scenario: Select leaderboard
+- **WHEN** the operator selects Leaderboard in the source list
+- **THEN** the detail pane shows the leaderboard URL, a period control, and copy, without a third full-width how-to card
+
+#### Scenario: Banners are not ready
+- **WHEN** the operator views the source list
+- **THEN** a banners or alerts row is visible and disabled, with no copyable `/overlay/alert` URL
+
+#### Scenario: Dock stays operator-only
+- **WHEN** the operator selects the message dock
+- **THEN** the UI shows the dock URL and Custom Browser Dock help, and MUST NOT apply overlay theme controls to that URL
+
+### Requirement: Appearance studio previews the selected on-stream surface
+The Studio preview SHALL keep one preset island (theme and shared style) and SHALL switch the preview between Chat and Leaderboard. Changing the surface MUST retarget the preview iframe and MUST show only settings that apply to that surface (chat queue/TTL/platform marker versus leaderboard period, font override, and layout). Preview messages and ranking rows MUST be fictitious samples, not live chat or live viewer stats. A Replay control SHALL reload the sample for the selected surface.
+
+#### Scenario: Switch to leaderboard preview
+- **WHEN** the operator selects Leaderboard in the appearance studio
+- **THEN** the preview iframe loads `/overlay/leaderboard` with `preview=sample` and the current unsaved appearance query, showing a fictitious top-5
+
+#### Scenario: Chat preview unchanged in kind
+- **WHEN** the operator selects Chat in the appearance studio
+- **THEN** the preview iframe loads `/overlay` with `preview=sample` (or live chat if that existing mode is chosen) and does not embed the leaderboard
+
+#### Scenario: Per-surface font
+- **WHEN** the operator sets a leaderboard font size different from the preset chat font size and the preview is on Leaderboard
+- **THEN** the preview reflects the leaderboard font size without changing the chat font shown when switching back to Chat
+
+### Requirement: New stream requires confirmation
+The admin chrome SHALL offer a New stream action. The system MUST NOT start a new session until the operator confirms. After success, session counters on the Audience view and session leaderboard SHALL reset while day and all-time counters remain.
+
+#### Scenario: Accidental click
+- **WHEN** the operator activates New stream and dismisses the confirmation
+- **THEN** the current session stays open and session counters are unchanged
+
+#### Scenario: Confirmed new stream
+- **WHEN** the operator confirms New stream
+- **THEN** the client calls `POST /api/sessions/start` and session totals on the Audience view are empty
+
 ### Requirement: Admin actions expose their persistence timing
 The admin SHALL distinguish hot actions that apply immediately, Studio fields that remain local until Publish, and Settings forms that remain local until Save. The UI MUST NOT present one global Save action for unrelated workspaces.
 
