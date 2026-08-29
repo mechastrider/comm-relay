@@ -245,6 +245,10 @@ function showSplash(alert) {
       ? alert.duration_ms
       : DEFAULT_DURATION_MS;
 
+  if (samplePreviewEnabled) {
+    return;
+  }
+
   hideTimer = window.setTimeout(function () {
     clearSplash();
     if (queue.length > 0) {
