@@ -28,13 +28,13 @@
 > **Allowed fallout**: Extraction of existing styles and pure UI helpers, locale keys, static-serving tests.
 > **Blocked**: React/framework adoption, remote assets, overlay theme redesign, enabled Interactions destination.
 
-- [ ] 2.1 Inventory every current admin entry point, control, dialog, locale key, and API call; map each to Live, Audience, Studio, Settings, or retained dock before moving markup.
-- [ ] 2.2 Establish primitive, semantic, and component tokens, then migrate buttons, icon buttons, fields, tabs, tables, badges, notices, dialogs, toasts, focus, and reduced-motion states to shared CSS.
-- [ ] 2.3 Build the semantic shell landmarks and hash router for `#live`, `#audience`, `#studio`, and `#settings`, including unknown-route fallback, active navigation, history restoration, and heading focus.
-- [ ] 2.4 Implement persistent desktop navigation, compact stacked layout, narrow bottom navigation, content offsets, constrained panel scrolling, and stable preview/table/control dimensions.
-- [ ] 2.5 Add shared loading, stale, empty, scoped error/retry, busy, dirty, success, and failure patterns with accessible live announcements.
-- [ ] 2.6 Update Russian/English shell and component catalogs and add locale-parity plus route/helper unit tests.
-- [ ] 2.7 Smoke keyboard, 200% zoom, long labels, reduced motion, short viewport, and icon accessible names before migrating domain workspaces.
+- [x] 2.1 Inventory every current admin entry point, control, dialog, locale key, and API call; map each to Live, Audience, Studio, Settings, or retained dock before moving markup.
+- [x] 2.2 Establish primitive, semantic, and component tokens, then migrate buttons, icon buttons, fields, tabs, tables, badges, notices, dialogs, toasts, focus, and reduced-motion states to shared CSS.
+- [x] 2.3 Build the semantic shell landmarks and hash router for `#live`, `#audience`, `#studio`, and `#settings`, including unknown-route fallback, active navigation, history restoration, and heading focus.
+- [x] 2.4 Implement persistent desktop navigation, compact stacked layout, narrow bottom navigation, content offsets, constrained panel scrolling, and stable preview/table/control dimensions.
+- [x] 2.5 Add shared loading, stale, empty, scoped error/retry, busy, dirty, success, and failure patterns with accessible live announcements.
+- [x] 2.6 Update Russian/English shell and component catalogs and add locale-parity plus route/helper unit tests.
+- [x] 2.7 Smoke keyboard, 200% zoom, long labels, reduced motion, short viewport, and icon accessible names before migrating domain workspaces.
 
 ### Slice: `Live operations replace the chat cockpit`
 

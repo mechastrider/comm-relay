@@ -30,8 +30,10 @@ import {
 } from "./js/settings.js";
 import { initCanvasTabs, initNewStreamControl } from "./js/viewers.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
+import { initWorkspaceRouter } from "./js/workspace-router.js";
 
 initI18n();
+initWorkspaceRouter(document, t);
 
 Object.keys(dom.fieldInputs).forEach(bindFieldClear);
 
@@ -102,6 +104,14 @@ initMessageSoundControls();
 bindLocaleSelect();
 initCanvasTabs();
 initNewStreamControl();
+
+if (dom.shellDiagnosticsButton && dom.shellStatusBar) {
+  dom.shellDiagnosticsButton.addEventListener("click", function () {
+    dom.shellStatusBar.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    dom.shellStatusBar.setAttribute("tabindex", "-1");
+    dom.shellStatusBar.focus({ preventScroll: true });
+  });
+}
 
 renderSettingsState();
 

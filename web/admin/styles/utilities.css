@@ -1,0 +1,49 @@
+.visually-hidden,
+.skip-link:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: var(--primitive-space-3);
+  left: var(--primitive-space-3);
+  z-index: 1000;
+  min-height: var(--touch-target-min);
+  padding: var(--primitive-space-3) var(--primitive-space-5);
+  border: 2px solid var(--color-border-accent);
+  border-radius: var(--primitive-radius-md);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-accent);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.skip-link:focus {
+  width: auto;
+  height: auto;
+  margin: 0;
+  clip: auto;
+  overflow: visible;
+  white-space: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

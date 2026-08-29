@@ -1,5 +1,10 @@
 export const form = document.getElementById("settings-form");
-export const cockpitShell = document.querySelector(".cockpit-shell");
+export const appShell = document.getElementById("app-shell");
+export const cockpitShell = document.getElementById("live-cockpit") || document.querySelector(".cockpit-shell");
+export const workspaceMain = document.getElementById("workspace-main");
+export const shellAnnouncements = document.getElementById("shell-announcements");
+export const shellDiagnosticsButton = document.getElementById("shell-diagnostics-button");
+export const shellStatusBar = document.getElementById("shell-status-bar");
 export const sidebarToggle = document.getElementById("sidebar-toggle");
 export const saveButtons = Array.from(document.querySelectorAll("[data-save-button]"));
 export const settingsState = document.getElementById("settings-state");

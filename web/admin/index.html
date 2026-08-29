@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20">
+  <link rel="stylesheet" href="styles.css?v=21">
   <script>
     (function () {
       try {
@@ -20,11 +20,13 @@
   </script>
 </head>
 <body>
-  <div class="cockpit-shell">
-    <header class="top-bar" data-i18n-aria-label="shell.systemStatus">
+  <a class="skip-link" href="#workspace-main" data-i18n="shell.skipToContent">Skip to content</a>
+
+  <div class="app-shell" id="app-shell">
+    <header class="shell-header" data-i18n-aria-label="shell.systemStatus">
       <div class="brand-stack">
         <span class="brand-kicker" data-i18n="shell.brandKicker">LOCAL OBS COMM RELAY</span>
-        <h1>CommRelay</h1>
+        <p class="brand-title">CommRelay</p>
       </div>
 
       <div class="connector-rack" data-i18n-aria-label="shell.connectorStates">
@@ -42,16 +44,39 @@
         </div>
       </div>
 
-      <div class="top-actions">
-        <button id="new-stream-button" class="btn-physical has-tooltip" type="button">
-          <span data-i18n="stream.newStream">New stream</span>
-          <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+      <div class="shell-header__actions">
+        <button id="shell-diagnostics-button" class="btn-physical btn-small has-tooltip" type="button" aria-controls="shell-status-bar" data-i18n="shell.diagnostics" data-i18n-aria-label="shell.diagnostics">
+          Diagnostics
+          <span class="ui-tooltip" role="tooltip" data-i18n="shell.diagnosticsHint">Jump to runtime uptime, WebSocket clients, and message counts.</span>
         </button>
-        <button id="save-button" class="btn-physical btn-start" type="submit" form="settings-form" data-save-button disabled data-i18n="shell.save">Save</button>
       </div>
     </header>
 
-    <main class="main-area">
+    <div class="shell-body">
+      <nav class="shell-nav shell-nav--side" data-i18n-aria-label="shell.primaryNav" aria-label="Primary navigation">
+        <ul class="shell-nav__list">
+          <li><a class="shell-nav__link" href="#live" data-workspace-nav="live" data-i18n="nav.live">Live</a></li>
+          <li><a class="shell-nav__link" href="#audience" data-workspace-nav="audience" data-i18n="nav.audience">Audience</a></li>
+          <li><a class="shell-nav__link" href="#studio" data-workspace-nav="studio" data-i18n="nav.studio">Studio</a></li>
+          <li><a class="shell-nav__link" href="#settings" data-workspace-nav="settings" data-i18n="nav.settings">Settings</a></li>
+        </ul>
+      </nav>
+
+      <main id="workspace-main" class="workspace-host" tabindex="-1">
+        <div id="shell-announcements" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
+        <section id="workspace-live" class="workspace workspace--active" data-workspace="live" aria-labelledby="workspace-live-heading">
+          <h1 id="workspace-live-heading" class="workspace-heading visually-hidden" tabindex="-1" data-i18n="workspace.liveHeading">Live</h1>
+
+          <div class="live-cockpit cockpit-shell" id="live-cockpit">
+            <div class="live-actions">
+              <button id="new-stream-button" class="btn-physical has-tooltip" type="button">
+                <span data-i18n="stream.newStream">New stream</span>
+                <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+              </button>
+            </div>
+
+            <div class="main-area">
       <div id="banner" class="banner" role="alert" aria-live="polite" hidden></div>
 
       <section class="console-panel" aria-labelledby="canvas-heading">
@@ -108,8 +133,9 @@
         </button>
 
         <div id="systems-content" class="systems-panel__content">
-          <div class="panel-heading">
+          <div class="panel-heading panel-heading--actions">
             <h2 id="controls-heading" data-i18n="shell.controls">Controls</h2>
+            <button id="save-button" class="btn-physical btn-start btn-small" type="submit" form="settings-form" data-save-button disabled data-i18n="shell.save">Save</button>
           </div>
 
           <div class="control-grid">
@@ -170,9 +196,43 @@
           <ul id="emote-provider-list" class="provider-list" data-i18n-aria-label="shell.emoteProviderStatus"></ul>
         </div>
       </aside>
-    </main>
+            </div>
+          </div>
+        </section>
 
-    <footer class="status-bar" data-i18n-aria-label="shell.runtimeDiagnostics">
+        <section id="workspace-audience" class="workspace" data-workspace="audience" hidden aria-labelledby="workspace-audience-heading">
+          <div class="workspace-placeholder">
+            <h1 id="workspace-audience-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.audienceHeading">Audience</h1>
+            <p class="workspace-placeholder__lead" data-i18n="workspace.audiencePlaceholder">Viewer search, detail, and merge tools will be grouped here. The viewer list on Live still provides full access for this build.</p>
+          </div>
+        </section>
+
+        <section id="workspace-studio" class="workspace" data-workspace="studio" hidden aria-labelledby="workspace-studio-heading">
+          <div class="workspace-placeholder">
+            <h1 id="workspace-studio-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.studioHeading">Studio</h1>
+            <p class="workspace-placeholder__lead" data-i18n="workspace.studioPlaceholder">Overlay presets, preview, and OBS source setup will live here. Open OBS from Live controls until this workspace is populated.</p>
+          </div>
+        </section>
+
+        <section id="workspace-settings" class="workspace" data-workspace="settings" hidden aria-labelledby="workspace-settings-heading">
+          <div class="workspace-placeholder">
+            <h1 id="workspace-settings-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.settingsHeading">Settings</h1>
+            <p class="workspace-placeholder__lead" data-i18n="workspace.settingsPlaceholder">Platform, network, and application settings will be organized here. Connections and related dialogs on Live remain available for now.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <nav class="shell-nav shell-nav--bottom" data-i18n-aria-label="shell.primaryNav" aria-label="Primary navigation">
+      <ul class="shell-nav__list">
+        <li><a class="shell-nav__link" href="#live" data-workspace-nav="live" data-i18n="nav.live">Live</a></li>
+        <li><a class="shell-nav__link" href="#audience" data-workspace-nav="audience" data-i18n="nav.audience">Audience</a></li>
+        <li><a class="shell-nav__link" href="#studio" data-workspace-nav="studio" data-i18n="nav.studio">Studio</a></li>
+        <li><a class="shell-nav__link" href="#settings" data-workspace-nav="settings" data-i18n="nav.settings">Settings</a></li>
+      </ul>
+    </nav>
+
+    <footer id="shell-status-bar" class="status-bar" data-i18n-aria-label="shell.runtimeDiagnostics">
       <span class="tag">ADMIN</span>
       <span><span data-i18n="shell.uptime">Uptime:</span> <strong id="diag-uptime">-</strong></span>
       <span><span data-i18n="shell.ws">WS:</span> <strong id="diag-ws-clients">-</strong></span>
@@ -180,7 +240,7 @@
       <span class="status-bar__spacer"></span>
       <span><span data-i18n="shell.state">State:</span> <strong id="footer-settings-state" data-i18n="shell.loadingSettings">Loading settings</strong></span>
     </footer>
-  </div>
+  </div><!-- .app-shell -->
 
   <form id="settings-form" class="settings-form" novalidate>
     <dialog id="connections-dialog" class="settings-dialog" aria-labelledby="connections-heading">

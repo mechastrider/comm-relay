@@ -1,5 +1,5 @@
 @media (max-width: 760px) {
-  .top-bar {
+  .shell-header {
     align-items: stretch;
     flex-wrap: wrap;
   }
@@ -13,7 +13,7 @@
     flex-basis: 100%;
   }
 
-  .top-actions {
+  .shell-header__actions {
     margin-left: auto;
   }
 }
@@ -23,18 +23,21 @@
     overflow: auto;
   }
 
-  .cockpit-shell {
+  .app-shell {
     position: static;
     min-height: 100vh;
+    min-height: 100dvh;
     margin: 6px;
   }
 
-  .main-area {
+  .live-cockpit .main-area,
+  .cockpit-shell .main-area {
     grid-template-columns: 1fr;
     overflow: visible;
   }
 
-  .banner {
+  .live-cockpit .banner,
+  .cockpit-shell .banner {
     position: static;
     margin: 10px;
   }
@@ -50,7 +53,8 @@
     max-height: none;
   }
 
-  .cockpit-shell.sidebar-collapsed .systems-panel {
+  .cockpit-shell.sidebar-collapsed .systems-panel,
+  .live-cockpit.sidebar-collapsed .systems-panel {
     grid-template-columns: 1fr;
   }
 
@@ -158,7 +162,7 @@
 }
 
 @media (max-width: 620px) {
-  .top-bar,
+  .shell-header,
   .console-header,
   .dialog-header,
   .dialog-actions {
@@ -167,7 +171,7 @@
   }
 
   .connector-rack,
-  .top-actions,
+  .shell-header__actions,
   .console-actions,
   .dialog-actions {
     width: 100%;
@@ -220,7 +224,7 @@
   }
 
   .connector-rack,
-  .top-actions,
+  .shell-header__actions,
   .console-actions {
     display: grid;
     grid-template-columns: 1fr;
