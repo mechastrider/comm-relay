@@ -24,7 +24,6 @@ import {
   proxyRequired,
   loadStatus,
 } from "./settings.js";
-import { collectOverlayAppearance } from "./overlay-appearance.js";
 import { getMessageSoundSettings } from "./sound.js";
 import {
   applyServerFieldErrors,
@@ -615,8 +614,7 @@ async function saveSettingsSection(sectionId) {
   try {
     const latest = await fetchPublicConfig();
     const sectionValues = collectSectionValuesFromDOM(sectionId);
-    const overlayAppearance = collectOverlayAppearance();
-    const basePayload = composeConfigUpdateFromServer(latest, overlayAppearance);
+    const basePayload = composeConfigUpdateFromServer(latest, latest.overlay || {});
     const payload = applySectionToConfig(basePayload, sectionId, sectionValues);
 
     if (validateSettingsSection(sectionId, payload) !== null) {
