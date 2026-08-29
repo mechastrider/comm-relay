@@ -111,8 +111,8 @@
 > **Allowed fallout**: Updated screenshots if maintained by the release process.
 > **Blocked**: Release publication, version bump, marketing promises for commands/splash/OBS control.
 
-- [ ] 7.1 Add concise Russian `[Unreleased]` bullets for task workspaces, hot/Publish/Save semantics, and Follow active preset default with pinned compatibility.
-- [ ] 7.2 Update RU/EN OBS setup guidance only where the implemented copy flow and labels differ; retain platform-specific troubleshooting.
+- [x] 7.1 Add concise Russian `[Unreleased]` bullets for task workspaces, hot/Publish/Save semantics, and Follow active preset default with pinned compatibility.
+- [x] 7.2 Update RU/EN OBS setup guidance only where the implemented copy flow and labels differ; retain platform-specific troubleshooting.
 - [ ] 7.3 Reconcile the implementation with all delta specs and sync/archive the OpenSpec change only after verification is complete.
 
 ## Verification
