@@ -14,10 +14,10 @@ Do **not** implement from this index alone — use the numbered plan files.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |------|-------|----------|--------|------------|--------|
-| 001 | Map Settings/Studio CSS to real design tokens | P1 | S | — | TODO |
-| 002 | Stop platform tabs from blanking Settings → Network | P1 | S | 001 | TODO |
-| 003 | Preserve Studio draft and merge hot preset id | P1 | M | — | TODO |
-| 004 | Audience platforms, period unique viewers, locale discard | P2 | M | — | TODO |
+| 001 | Map Settings/Studio CSS to real design tokens | P1 | S | — | DONE |
+| 002 | Stop platform tabs from blanking Settings → Network | P1 | S | 001 | DONE |
+| 003 | Preserve Studio draft and merge hot preset id | P1 | M | — | DONE |
+| 004 | Audience platforms, period unique viewers, locale discard | P2 | M | — | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED | REJECTED
 

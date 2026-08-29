@@ -1,7 +1,7 @@
 .settings-workspace__layout {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--primitive-space-4);
   min-height: 0;
   height: 100%;
 }
@@ -9,14 +9,14 @@
 .settings-workspace__header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--primitive-space-3);
   flex-shrink: 0;
 }
 
 .settings-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--primitive-space-2);
 }
 
 .settings-nav__link {
@@ -24,19 +24,19 @@
   align-items: center;
   justify-content: center;
   min-height: 2.5rem;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--primitive-space-2) var(--primitive-space-3);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-raised);
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface-raised);
   color: var(--color-text-primary);
   text-decoration: none;
-  font-size: var(--font-size-sm);
+  font-size: var(--primitive-font-size-sm);
 }
 
 .settings-nav__link--active,
 .settings-nav__link[aria-current="location"] {
-  border-color: var(--color-accent);
-  background: var(--color-accent-subtle);
+  border-color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 18%, var(--surface-raised));
 }
 
 .settings-workspace__content {
@@ -48,31 +48,31 @@
 .settings-section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--primitive-space-3);
   min-height: 0;
 }
 
 .settings-section__heading {
   margin: 0;
-  font-size: var(--font-size-lg);
+  font-size: var(--primitive-font-size-lg);
 }
 
 .settings-section__toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--primitive-space-3);
   flex-shrink: 0;
 }
 
 .settings-section__dirty {
   color: var(--color-status-warning);
-  font-size: var(--font-size-sm);
+  font-size: var(--primitive-font-size-sm);
 }
 
 .settings-section__actions {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--primitive-space-2);
   margin-left: auto;
 }
 
@@ -86,7 +86,7 @@
 .settings-section__body {
   overflow: auto;
   min-height: 0;
-  padding-right: var(--space-1);
+  padding-right: var(--primitive-space-1);
 }
 
 .settings-platform-panels {
@@ -96,27 +96,27 @@
 .settings-application-body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--primitive-space-4);
 }
 
 .settings-diagnostics__toolbar {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--primitive-space-3);
 }
 
 .settings-diagnostics__summary {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--primitive-space-4);
 }
 
 .settings-diagnostics__oauth {
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--primitive-space-3);
 }
 
 .settings-about-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
+  gap: var(--primitive-space-3);
+  margin-top: var(--primitive-space-3);
 }
 
 .settings-section--readonly .settings-section__body,
@@ -127,7 +127,7 @@
 .youtube-page-fields {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--primitive-space-3);
 }
 
 @media (max-width: 720px) {
