@@ -518,8 +518,9 @@ export function initOverlayPreview() {
     });
 
     document.addEventListener("overlay-preview-refresh", scheduleOverlayPreviewRefresh);
-    if (dom.overlayDialog) {
-      dom.overlayDialog.addEventListener("input", function (event) {
+    const overlayPreviewHost = document.getElementById("workspace-studio") || dom.overlayDialog;
+    if (overlayPreviewHost) {
+      overlayPreviewHost.addEventListener("input", function (event) {
         if (
           event.target &&
           event.target.closest &&
@@ -536,7 +537,9 @@ export function initOverlayPreview() {
       });
     }
 
-    dom.overlayDialog.addEventListener("close", unmountOverlayPreview);
+    if (dom.overlayDialog) {
+      dom.overlayDialog.addEventListener("close", unmountOverlayPreview);
+    }
     if (typeof ResizeObserver === "function" && dom.overlayPreviewStage) {
       state.overlayPreviewResizeObserver = new ResizeObserver(updateOverlayPreviewScale);
       state.overlayPreviewResizeObserver.observe(dom.overlayPreviewStage);
