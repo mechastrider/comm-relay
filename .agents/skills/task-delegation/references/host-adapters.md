@@ -1,11 +1,37 @@
 # Host adapters
 
-Host adapters are thin wrappers that locate the vendored executor and invoke it.
-They do **not** own a separate process runner and do **not** expose `--model`.
+Host adapters deliver the same task-packet contract through Herdr, a native
+Cursor worker, or the vendored script executor. Only one writer transport may
+be active in a repository at a time.
+
+## Herdr
+
+When an explicitly invoked outer workflow selects Herdr:
+
+- read the installed **herdr** skill and verify `HERDR_ENV=1`;
+- inspect the installed command groups and agent kinds rather than assuming
+  syntax or identifiers;
+- keep the parent pane focused, use a sibling pane with the same cwd, and use a
+  unique agent name;
+- select Composer 2.5 using the project-documented Cursor agent arguments;
+- submit only the task-packet pointer, wait for a settled state, then inspect
+  the diff and acceptance independently;
+- on persistent control/read failure, stop prompting, inspect the diff, and
+  follow `change-orchestration` transport recovery before using scripts.
+
+Herdr is a transport, not a second orchestrator. The parent still owns packets,
+review, and acceptance.
+
+## Shared script executor
+
+The script adapter is both a normal non-Herdr transport and the recovery path
+after a partial Herdr run. It does **not** expose `--model`.
 
 ## Shared executor
 
-All non-Cursor hosts invoke the project-local script:
+Non-Cursor hosts invoke the project-local script when the outer workflow did
+not select healthy Herdr, or when Herdr recovery produced a new remaining-work
+packet:
 
 ```
 <project>/.agents/skills/task-delegation/scripts/cursor-executor.mjs

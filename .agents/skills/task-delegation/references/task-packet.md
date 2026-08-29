@@ -34,18 +34,25 @@ Use these headings in order:
 1–2 sentences: the outcome, not the steps.
 
 ## Repo context
-- Point at AGENTS.md and any skill(s) to read.
-- Name exact files/functions and their current behavior.
-- State what prior slices already landed.
+- Point at AGENTS.md, durable planning artifacts, and relevant skills.
+- Name the important entry points and current behavior without prescribing every
+  file the worker must choose.
+- State what prior slices already landed and the repository's dirty baseline.
 
 ## Acceptance criteria
-Numbered, testable, specific; no more than five. State the important cross-layer
-and async invariants up front rather than discovering them only during review.
-When the slice fulfills planning/checklist items, name all of them here; do not
-create a separate packet merely because they have separate checkbox numbers.
+Numbered, testable, specific. Cover the complete semantic outcome, including
+cross-layer, compatibility, async, migration, and failure invariants. Prefer a
+small readable set, but do not omit necessary acceptance merely to hit a quota.
+When the slice fulfills several planning/checklist items, name all of them here;
+do not create separate packets merely because they have separate checkbox
+numbers.
 
-## Files / areas to touch
-Explicit list — bounds blast radius.
+## Areas and autonomy
+- **Primary areas**: modules/components expected to change.
+- **Allowed fallout**: tests, fixtures, call sites, generated artifacts, and
+  adjacent refactors required to keep the outcome coherent.
+- The worker chooses exact files and local implementation details inside these
+  bounds, following repository conventions.
 
 ## How to verify
 Exact focused commands that prove this slice (copy-pasteable). Reserve broad
@@ -53,8 +60,8 @@ repository suites for orchestrator-owned milestone/final verification unless the
 slice changes the test or build harness.
 
 ## Guardrails
-- What NOT to touch; invariants to preserve.
-- One slice only; no unrelated refactors.
+- What NOT to touch; product and compatibility invariants to preserve.
+- One semantic outcome only; no unrelated features or opportunistic refactors.
 - Do not edit OpenSpec checkboxes, verification ledgers, or other orchestrator-owned
   process artifacts; report evidence for the orchestrator to record.
 
@@ -76,7 +83,8 @@ Read <path-to-packet> fully and execute it exactly
   before writing the first packet. Treat planning tasks as coverage requirements,
   not mandatory job boundaries.
 - Write the packet before delegating.
-- Keep acceptance criteria, file bounds, and verify commands specific.
+- Keep acceptance, areas/autonomy, guardrails, and verify commands specific
+  without turning the packet into a line-by-line implementation recipe.
 - Combine adjacent micro-slices when they carry one contract and remain green;
   split cross-product matrices into independently rerunnable packets.
 - After the executor finishes, **read the diff yourself** and **run verify commands

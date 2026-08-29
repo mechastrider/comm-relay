@@ -1,4 +1,4 @@
-schema: spec-driven
+schema: desktop-change
 
 context: |
   Tech stack: Go 1.26, net/http, gorilla/websocket, go-twitch-irc, Wails v2 desktop
