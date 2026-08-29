@@ -45,10 +45,19 @@ When the user is ready to implement, they must start the apply workflow explicit
 
 2. **Determine the workflow schema**
 
-   Use the configured default schema unless the user explicitly requests a different workflow.
+   Use the configured default schema unless the user explicitly requests a
+   different workflow **or** an immediately preceding `work-intake` / explicitly
+   invoked outer orchestration handoff selected a profile schema from repository
+   evidence, affected facets, and Tier.
 
-   **Use a different schema only if the user:**
-   - Explicitly requests a specific schema by name → use `--schema <schema-name>`
+   **Use a different schema only if:**
+   - The user explicitly requests a specific schema by name → use `--schema <schema-name>`
+   - `work-intake` produced a current change brief with one of
+     `library-change`, `service-change`, `web-change`, `desktop-change`, or
+     `mobile-change`, and the user asked the intake/orchestrator to continue →
+     use that schema and announce it before creation. This is not permission to
+     infer a profile from repository type alone; the handoff must name affected
+     facets and Tier.
    - Asks to "show workflows" or asks "what workflows" exist → resolve the authoritative root by running `openspec context --json` from the current working directory. If the user explicitly selected a registered store, use `openspec context --json --store "<store-id>"`. Then run `openspec schemas --json` with its working directory set to the returned `root.path` and let them choose. This preserves roots selected by a local `store:` pointer or the global `defaultStore`; when a registered store was explicitly selected, append `--store "<store-id>"` to `openspec schemas --json` as well. If context reports only `no_openspec_root`, run `openspec schemas --json` from the current working directory instead. Do not use this fallback for invalid or unavailable stores.
 
    Otherwise, omit `--schema` to preserve the configured default.

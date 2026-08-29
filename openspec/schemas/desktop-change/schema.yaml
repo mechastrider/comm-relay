@@ -1,0 +1,99 @@
+name: desktop-change
+version: 1
+description: Desktop application workflow - behavior, UI, platform integration, persistence, distribution, QA, and tasks
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Why the desktop change is needed and which users/platforms it affects
+    template: proposal.md
+    instruction: |
+      Explain user problem, capabilities, scope/non-goals, affected supported
+      platforms, compatibility, security/privacy, and distribution impact.
+    requires: []
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Observable desktop behavior contracts
+    template: spec.md
+    instruction: |
+      Specify user-visible and system-boundary behavior with SHALL/MUST
+      scenarios, including errors, cancellation/recovery, accessibility, and
+      supported-platform differences when normative.
+    requires: [proposal]
+  - id: design
+    generates: design.md
+    description: Architecture, process, IPC, lifecycle, and rollout decisions
+    template: design.md
+    instruction: |
+      Explain component/process boundaries, state flow, threading/async work,
+      security boundary, alternatives, risks, migration, rollback, and blocking
+      questions. Exact UI and platform contracts live in their artifacts.
+    requires: [proposal]
+  - id: ui_contract
+    generates: ui_contract.md
+    description: Windows, navigation, commands, states, shortcuts, accessibility, and responsive layout
+    template: ui_contract.md
+    instruction: |
+      Capture windows/views, navigation, menus/tray, commands/shortcuts, data,
+      forms, loading/empty/error/offline/recovery states, focus/keyboard/screen
+      reader, scaling/themes/localization, and design-system components. If UI
+      does not change, record Not applicable.
+    requires: [proposal, specs, design]
+  - id: platform_contract
+    generates: platform_contract.md
+    description: OS APIs, filesystem, IPC, protocols, permissions, and lifecycle integration
+    template: platform_contract.md
+    instruction: |
+      Define supported OS differences and contracts for filesystem, dialogs,
+      clipboard, notifications, tray/menu, protocol/file associations, single
+      instance, IPC, processes, permissions/sandbox, power/sleep, crash recovery,
+      and privacy as relevant. Record explicit N/A areas.
+    requires: [proposal, specs, design]
+  - id: persistence_schema
+    generates: persistence_schema.md
+    description: Local database, files, preferences, secrets, cache, and migration contract
+    template: persistence_schema.md
+    instruction: |
+      Describe local state stores and ownership, schema/format, paths/portability,
+      atomicity/concurrency, encryption/secrets, migrations, backup/export,
+      corruption recovery, cleanup, downgrade behavior, and verification. If
+      persistence does not change, record Not applicable.
+    requires: [proposal, specs, design, platform_contract]
+  - id: distribution_plan
+    generates: distribution_plan.md
+    description: Build, packaging, signing, update, compatibility, and rollback plan
+    template: distribution_plan.md
+    instruction: |
+      Plan artifacts per OS/architecture, build reproducibility, signing/notary,
+      installer/portable behavior, upgrade/downgrade, auto-update channels,
+      minimum OS, data compatibility, release notes, rollback, and smoke checks.
+      Planning does not authorize signing or publishing. Record Not applicable
+      for an unreleased/internal tool.
+    requires: [design, platform_contract, persistence_schema]
+  - id: qa_plan
+    generates: qa_plan.md
+    description: Desktop platform, packaged-app, UI, persistence, and upgrade QA matrix
+    template: qa_plan.md
+    instruction: |
+      Map specs and contracts to unit/integration/UI/system tests and manual
+      checks. Cover supported OS/architecture, scaling/theme/input,
+      install/upgrade/downgrade, permissions, files/IPC, offline/recovery,
+      persistence migration/corruption, packaged-app smoke, fixtures, priority,
+      commands and evidence. Use explicit skips where risk does not apply.
+    requires: [specs, ui_contract, platform_contract, persistence_schema, distribution_plan]
+  - id: tasks
+    generates: tasks.md
+    description: Broad semantic desktop slices plus QA/review/distribution-readiness gates
+    template: tasks.md
+    instruction: |
+      Group UI, core logic, IPC/platform adapters, state migration, tests and
+      packaging fallout by coherent user outcome. Do not split jobs per layer or
+      per OS unless the platform work has independent acceptance. Include QA,
+      fresh review, and distribution-readiness without publishing.
+    requires: [specs, design, ui_contract, platform_contract, persistence_schema, distribution_plan, qa_plan]
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Implement semantic slices, execute qa_plan on the supported matrix, obtain a
+    fresh review, and verify distribution readiness without signing/publishing.
+    Pause on platform, migration, security, or compatibility ambiguity.

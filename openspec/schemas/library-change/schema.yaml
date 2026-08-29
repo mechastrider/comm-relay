@@ -1,0 +1,93 @@
+name: library-change
+version: 1
+description: Public library workflow - behavior specs, API surface, compatibility, test matrix, release plan, and tasks
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Why the library change is needed and who consumes it
+    template: proposal.md
+    instruction: |
+      Explain motivation, consumer problem, scope/non-goals, capabilities, and
+      impact. Identify affected packages, consumers, supported environments,
+      and whether the change is breaking. Research existing main specs and
+      public documentation first.
+    requires: []
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Observable library behavior contracts
+    template: spec.md
+    instruction: |
+      Specify consumer-observable behavior, inputs/outputs/errors, stability,
+      and supported-environment constraints with SHALL/MUST and testable
+      scenarios. Preserve complete MODIFIED requirements.
+    requires: [proposal]
+  - id: design
+    generates: design.md
+    description: Internal design and dependency decisions
+    template: design.md
+    instruction: |
+      Explain implementation approach, alternatives, dependency choices,
+      performance/concurrency/resource ownership, risks, migration, and blocking
+      questions. Public signatures belong in public_api.md.
+    requires: [proposal]
+  - id: public_api
+    generates: public_api.md
+    description: Public symbols, signatures, semantics, examples, and documentation impact
+    template: public_api.md
+    instruction: |
+      Inventory every added, changed, deprecated, moved, or removed public
+      symbol and externally consumed file/format. Include signatures, semantics,
+      errors, lifecycle/thread-safety, examples, and documentation. Follow the
+      language's public API conventions. If public API does not change, write
+      the explicit Not applicable section.
+    requires: [proposal, specs]
+  - id: compatibility
+    generates: compatibility.md
+    description: Source, binary, behavioral, serialization, and dependency compatibility
+    template: compatibility.md
+    instruction: |
+      Analyze compatibility against supported released versions and consumers.
+      Cover source/binary/ABI as applicable, behavioral and serialization
+      compatibility, deprecation window, dependency/runtime constraints,
+      migration path, and versioning impact. If no compatibility surface
+      changes, record the explicit rationale.
+    requires: [proposal, specs, design, public_api]
+  - id: qa_plan
+    generates: qa_plan.md
+    description: Library verification and supported-environment matrix
+    template: qa_plan.md
+    instruction: |
+      Map specs, public API, and compatibility claims to unit, integration,
+      example/doctest, property/fuzz, performance, packaging, and downstream
+      consumer checks as applicable. List supported runtime/compiler/platform
+      matrix, fixtures, commands, priority, and evidence. Do not demand every
+      test type when risk does not justify it; state explicit skips.
+    requires: [specs, design, public_api, compatibility]
+  - id: release_plan
+    generates: release_plan.md
+    description: Version, documentation, migration, packaging, and rollback plan
+    template: release_plan.md
+    instruction: |
+      Plan versioning, changelog/release notes, migration guide, generated docs,
+      package build/dry run, downstream coordination, staged release, and
+      rollback/yank policy. This artifact plans publishing; it never authorizes
+      an actual release. If the change is unreleased/internal, record that.
+    requires: [proposal, public_api, compatibility, qa_plan]
+  - id: tasks
+    generates: tasks.md
+    description: Broad semantic implementation slices and quality/release gates
+    template: tasks.md
+    instruction: |
+      Group work by coherent consumer-visible outcome. Include implementation,
+      tests, examples, docs, compatibility fallout, and packaging changes in the
+      same slice when they prove one contract. Do not split by source/test/docs
+      layer or map checkboxes to worker jobs. Add QA, review, and release-readiness
+      gates; actual publishing requires separate user authority.
+    requires: [specs, design, public_api, compatibility, qa_plan, release_plan]
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Implement broad semantic slices, run focused acceptance, execute qa_plan,
+    obtain a fresh review, then verify release readiness without publishing.
+    Pause on compatibility ambiguity, blocking questions, or unapproved scope.

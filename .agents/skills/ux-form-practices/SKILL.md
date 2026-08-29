@@ -51,24 +51,15 @@ Backend returns `{"error":"..."}` (snake_case body fields on success payloads). 
 - `aria-invalid` and `aria-describedby` when showing errors
 - `role="alert"` or `aria-live="polite"` for dynamic error banners
 
-## Icon-only and non-obvious controls
+## Icon-only controls
 
-Every **icon-only** button or control **must** show a hover/focus tooltip with a short
+Every icon-only button or control **must** show a hover/focus tooltip with a short
 label.
 
-Controls whose **visible label is jargon or incomplete** for a new operator
-(product terms, abbreviations, destructive/reset actions) **must** also show a
-hover/focus tooltip that explains what the control does — one short sentence,
-not a paragraph. Examples: “New stream”, “Rich chat”, “OBS” when the label alone
-does not say which settings open.
-
 - Pair tooltip text with an accessible name (`aria-label` or visible text) for
-  screen readers. Do **not** replace a clear visible label with a long
-  `aria-label`; keep the short name and put the explanation in the tooltip.
+  screen readers.
 - Localize tooltip copy when the app supports i18n.
 - Show tooltips on pointer hover and keyboard focus (`:focus-visible`).
-- Prefer a child text node/`<span>` for the visible label when the control also
-  hosts a tooltip node, so i18n `textContent` updates do not wipe the tooltip.
 - Implement markup and styles in the **consumer repository** — hub skills state
   the requirement, not CSS class names or file paths.
 
@@ -94,6 +85,5 @@ Layout rules (height chain, `min-height: 0`, visible scrollbar): [web-constraine
 - [ ] Errors visible and associated with fields
 - [ ] API errors mapped to friendly text
 - [ ] Icon-only controls have hover/focus tooltips
-- [ ] Jargon / non-obvious labeled actions (e.g. “New stream”) have explanatory tooltips
 - [ ] Mobile: readable layout without horizontal scroll on primary actions
 - [ ] Overlay forms: last fields reachable by scrolling; footer not covering inputs

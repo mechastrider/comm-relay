@@ -1,0 +1,123 @@
+name: web-change
+version: 1
+description: Full web feature workflow - proposal, behavior specs, design, API drafts, UI contract, QA plan, structure, database schema, and typed tasks
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Why the web change is needed and which capabilities change
+    template: proposal.md
+    instruction: |
+      Create proposal.md. Explain Why, What Changes, Capabilities, and Impact.
+      Mark breaking changes. Research existing main specs before naming
+      capabilities. Keep implementation details in design and contracts.
+    requires: []
+
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Observable behavior contracts
+    template: spec.md
+    instruction: |
+      Create one delta spec per capability from proposal.md. Requirements use
+      SHALL/MUST and every requirement has at least one #### Scenario with
+      WHEN/THEN. Preserve complete existing requirement blocks under MODIFIED.
+      Use skip_specs metadata only when externally observable behavior does not
+      change.
+    requires: [proposal]
+
+  - id: design
+    generates: design.md
+    description: Cross-cutting technical and rollout decisions
+    template: design.md
+    instruction: |
+      Explain HOW: context, goals/non-goals, decisions and alternatives,
+      risks/trade-offs, migration/rollout, and open questions. Do not duplicate
+      exact API examples or database column tables; those belong in their
+      contracts. Blocking questions must remain explicit and stop apply.
+    requires: [proposal]
+
+  - id: api_drafts
+    generates: api_drafts.md
+    description: Draft HTTP, RPC, event, or realtime contracts
+    template: api_drafts.md
+    instruction: |
+      Describe every new or changed application boundary with request, response,
+      errors, authorization, compatibility, idempotency, pagination/streaming,
+      and examples as applicable. Follow the project's API convention skill and
+      existing contracts; do not impose REST/RPC style or JSON casing from this
+      template. If no application interface changes, write the explicit Not
+      applicable section and reason.
+    requires: [proposal, specs]
+
+  - id: ui_contract
+    generates: ui_contract.md
+    description: Browser UI surface and interaction contract
+    template: ui_contract.md
+    instruction: |
+      Capture changed routes/pages, navigation, layout, data mapping, actions,
+      filters/sorting, loading/empty/error/forbidden/validation states,
+      accessibility, responsive behavior, design-system components, forms,
+      related-entity display, and non-goals. Use this repository's design
+      system. If UI does not change, write the explicit Not applicable section.
+    requires: [proposal, specs, design]
+
+  - id: qa_plan
+    generates: qa_plan.md
+    description: Risk-based automated, browser, and manual QA plan written at design time
+    template: qa_plan.md
+    instruction: |
+      Map normative spec and UI scenarios to executable checks. Identify P0/P1,
+      roles, fixtures, environment, browser/viewports, accessibility, network
+      failure, and evidence. Sign-in and stack commands come from project
+      instructions. If no browser surface changes, keep the browser section as
+      an explicit Skip but still plan relevant API/integration/regression checks.
+      The QA gate executes this plan and does not invent scenarios later.
+    requires: [specs, api_drafts, ui_contract]
+
+  - id: structure
+    generates: structure.md
+    description: Proposed deployable-root-relative file and component layout
+    template: structure.md
+    instruction: |
+      Describe added/moved modules and route/interface-to-implementation mapping.
+      Use paths relative to the deployable root declared by project context.
+      Follow repository architecture; do not impose Go/React directories. If
+      structure does not change, write the explicit Not applicable section.
+    requires: [proposal, specs, design, api_drafts, ui_contract]
+
+  - id: db_schema
+    generates: db_schema.md
+    description: Persistent database model, constraints, indexes, and migration
+    template: db_schema.md
+    instruction: |
+      Describe changed tables/collections, fields, types, constraints, keys,
+      indexes, ownership/isolation, migration/backfill, compatibility, and
+      rollback. Follow the actual database and migration conventions; never
+      assume PostgreSQL. Reconcile against current migrations/schema. If no
+      database schema changes, write the explicit Not applicable section.
+    requires: [proposal, specs, design]
+
+  - id: tasks
+    generates: tasks.md
+    description: Typed implementation slices plus QA and review gates
+    template: tasks.md
+    instruction: |
+      Instantiate only slices the change needs. Cursor-native web orchestration
+      recognizes domain-api, infra, webapp, and tests plus browser and review
+      gates.
+      Each slice states Outcome, Acceptance, Skills, Scope, Allowed fallout, and
+      Blocked areas. Checkboxes are coverage requirements, not mandatory worker
+      job boundaries: a host-neutral orchestrator may combine adjacent slices
+      into one broad semantic packet. Empty slices are forbidden; list explicit
+      skips. Paths and commands are relative to the deployable root.
+    requires: [specs, design, api_drafts, ui_contract, qa_plan, structure, db_schema]
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Read every context file. Implement slices in document order or combine them
+    into broader semantic packets when the active outer orchestrator owns that
+    policy. Run each slice's Acceptance, then execute qa_plan.md, then a fresh
+    review gate. Browser P0/critical QA blocks review. Pause on blocking Open
+    Questions, contract conflicts, or unapproved scope expansion. The schema
+    does not select models or delegation transports.

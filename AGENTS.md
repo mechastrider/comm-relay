@@ -92,6 +92,8 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 |-------|----------|
 | `skill-authoring` | Editing or publishing skills in `muonsoft/skills` — hub vs consumer boundaries, `catalog.yaml`, `lint-hub` |
 | `task-delegation` | Delegating bounded coding slices; hub skill push/pull workflow |
+| `work-intake` | Default research-first entry point for an idea, symptom, question, or underspecified request; investigate the repo before asking and select the appropriate OpenSpec profile/tier |
+| `change-orchestration` | Opt-in Codex/Claude + Cursor workflow for a substantial change: parent-owned design, broad Composer slices, profile QA, fresh review, and closeout |
 | `openspec-propose` | Create a change and generate all planning artifacts in one step |
 | `openspec-explore` | Think through ideas, problems, and requirements before or during a change |
 | `openspec-apply-change` | Implement tasks from an existing change |
@@ -99,9 +101,14 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 | `openspec-sync-specs` | Sync canonical specs from a change without archiving |
 | `openspec-archive-change` | Archive a completed change |
 
+Cursor also installs the opt-in `/cursor-orchestration` command and its
+provider-specific skill under `.cursor/`. Use it only when the user explicitly
+requests the Cursor-native Grok + Composer workflow; ordinary task language
+starts with `work-intake`.
+
 ## OpenSpec workflow
 
-Changes that alter observable behavior are planned using **OpenSpec** (CLI `openspec` 1.8+). Specs describe shipping behavior captured from code; future work is a delta against `openspec/specs/`.
+Changes that alter observable behavior are planned using **OpenSpec** (CLI `openspec` 1.8+). Specs describe shipping behavior captured from code; future work is a delta against `openspec/specs/`. For an idea, symptom, or request without a detailed task, start with `work-intake`; it researches the repository and selects the smallest adequate schema before proposal work.
 
 **Key paths**
 
@@ -112,7 +119,19 @@ Changes that alter observable behavior are planned using **OpenSpec** (CLI `open
 | `openspec/changes/<date>-<name>/` | In-progress change proposal |
 | `openspec/changes/archive/` | Completed changes (decision record) |
 
-**Artifact sequence per change**
+**Schema selection**
+
+| Schema | Use in CommRelay |
+|--------|------------------|
+| `spec-driven` | Bounded changes that need only proposal/specs/design/tasks |
+| `web-change` | Admin, overlay, dock, HTTP/WebSocket, persistence, or cross-layer web work that benefits from API drafts, DB schema, UI contract, and browser QA |
+| `service-change` | Connectors, background processing, external integrations, reliability, migrations, or operational behavior |
+| `desktop-change` | Wails shell, Windows/platform integration, filesystem/IPC, install/upgrade, or packaged desktop behavior |
+| `library-change` | Reusable package/public API work with compatibility and release concerns |
+| `mobile-change` | Only for a future mobile deliverable; do not select it for the responsive web admin UI |
+
+The active schema determines the artifact graph. The lightweight
+`spec-driven` sequence is:
 
 1. `proposal.md` — Why (problem/opportunity, affected capabilities)
 2. `specs/<capability>/spec.md` — What (WHEN/THEN/AND requirements per capability)
@@ -123,12 +142,16 @@ Changes that alter observable behavior are planned using **OpenSpec** (CLI `open
 
 ```bash
 openspec new change "<name>"                         # scaffold a new change
+openspec new change "<name>" --schema "<schema>"     # select a full profile explicitly
+openspec schemas --json                             # list available profiles
 openspec status --change "<name>" --json            # check artifact status + next steps
 openspec instructions <artifact> --change "<name>"  # get template for next artifact
 openspec archive "<name>"                            # archive a completed change
 ```
 
-Use **skills-only** OpenSpec delivery (`openspec config set delivery skills`). Host slash commands under `.cursor/commands/opsx/` are not installed.
+Use the universal **skills-only** OpenSpec delivery from `.agents`
+(`openspec config set delivery skills`). OpenSpec behavior comes from those
+skills and the CLI; do not add a second provider-specific OpenSpec workflow.
 
 ## Backend Guidelines
 

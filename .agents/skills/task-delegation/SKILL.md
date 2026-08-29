@@ -1,13 +1,13 @@
 ---
 name: task-delegation
-description: Host-neutral orchestration policy for coding work — parent models resolve uncertainty, slice along semantic seams, write task packets, and independently review/verify; Composer 2.5 is the only Cursor CLI code writer. Use when delegating bounded coding slices from Codex, Claude Code, or any orchestrator-executor workflow.
+description: Host-neutral delegation policy for coding work — strong parents hand broad semantic outcomes to Cursor Composer 2.5 through Herdr or the durable script executor, then inspect the diff and verify independently. Use from Codex, Claude Code, Cursor, or an outer orchestrator such as change-orchestration.
 ---
 
 # Task Delegation
 
-Run coding work as an **orchestrator-executor loop**. The **orchestrator** (parent
-model) explores, plans, slices, routes, and **reviews**. Executors write code.
-The orchestrator does not hand-write product code beyond trivial fixes.
+Run coding work as an **orchestrator-executor loop**. The parent explores,
+plans, chooses broad semantic seams, routes, reviews, and accepts. Cursor
+Composer 2.5 writes code. The parent does not hand-write non-trivial product code.
 
 > Executors have **no conversation context**. Every delegation must be
 > self-contained via a task packet.
@@ -17,28 +17,31 @@ The orchestrator does not hand-write product code beyond trivial fixes.
 | Role | Owner | Responsibility |
 |---|---|---|
 | **Orchestrator** | Parent model (any host) | Uncertainty reduction, slicing, routing, diff review, verify runs, acceptance |
-| **Cursor CLI executor** | `cursor-agent` via vendored script | All non-trivial coding slices after decomposition |
+| **Cursor worker** | Composer 2.5 through Herdr, Cursor-native worker, or vendored script | All non-trivial coding slices after decomposition |
 | **Opus / strong parent** | Dedicated high-reasoning agent | Research, design, decomposition, review — **not** product coding |
 | **Inline** | Orchestrator | Truly trivial mechanical edits where a round-trip would only slow down |
 
-Never delegate **review** or **routing decisions**. Never let a review command
-apply its own findings.
+Never let the implementation worker review or accept its own work. An outer
+orchestrator may ask a **fresh strong reviewer** for a read-only defect pass;
+the parent still adjudicates findings and owns routing and acceptance. Never let
+a review command apply its own findings.
 
 ## Routing
 
 | Work type | Examples | Executor |
 |---|---|---|
 | **Uncertainty / research / design / decompose / review** | thorny spec, architecture choices, deep research, acceptance review | **Opus or strong parent model** |
-| **Non-trivial coding** | scoped features, refactors, tests, migrations, multi-file fixes | **Cursor CLI** (`composer-2.5` only) |
+| **Non-trivial coding** | scoped features, refactors, tests, migrations, multi-file fixes | **Cursor Composer 2.5** through an approved transport |
 | **Trivial / mechanical** | typo, one-line rename, obvious import fix | **orchestrator, inline** |
 
-**Composer 2.5 is the only CLI code-writing model.** No `-fast` variant, no auto
-selection, no Opus coding route, no escalation on failure — sharpen the task
-packet and re-delegate.
+**Composer 2.5 is the only delegated code-writing model.** No `-fast` variant,
+no auto selection, no strong-parent coding route, and no model escalation on
+failure. Improve the packet, reduce uncertainty, or stop with evidence.
 
-If the executor, `cursor-agent`, or authentication is unavailable, **stop and
-report explicitly** — do not silently fall back to another executor or write the
-code yourself.
+Use the transport selected by the outer workflow. `change-orchestration`
+prefers Herdr when explicitly invoked inside a healthy Herdr session and uses
+the script executor as fallback/recovery. If neither can provide Composer 2.5,
+**stop and report explicitly**; do not switch models or write the code yourself.
 
 ## The loop
 
@@ -46,7 +49,8 @@ code yourself.
    map of semantic milestones, projected primary slices, and broad verification
    boundaries. OpenSpec/checklist items are inputs to this map, not slice boundaries.
 2. **Packet** — write the full slice into a task file ([format](references/task-packet.md)).
-3. **Delegate** — one-line pointer only; use the project-local executor ([hosts](references/host-adapters.md)).
+3. **Delegate** — one-line pointer only; use the selected Herdr/native/script
+   adapter ([hosts](references/host-adapters.md)).
 4. **Review** — read the whole slice diff and focused evidence before sending any
    correction. Collect related findings into one review packet.
 5. **Iterate** — resume once with the related review findings; use another narrow
@@ -85,8 +89,16 @@ For hub-owned skills, `skills push` compares local content to hub HEAD, not lock
   one slice may satisfy several tasks, and one matrix-heavy task may require several slices.
 - **Green-at-every-commit** — if a slice cannot be green alone, merge seams.
 - **Include fallout** — contract changes carry call-site and fixture updates in the same slice.
-- **Target** one independently reviewable outcome, ≤5 acceptance bullets,
-  roughly 5–10 files, and ≤2 layers once the semantic seam is right.
+- **Prefer a whole coherent outcome.** A slice may span domain, persistence,
+  API/IPC, UI, tests, fixtures, and call-site fallout when they implement one
+  contract and can be accepted together. File count and layer count are warning
+  signals, not primary boundaries.
+- For an ordinary feature, aim for one broad slice or a few meaningful slices.
+  Do not pre-split work merely to keep a packet small or a worker busy.
+- Give the worker freedom inside named areas: choose exact files, follow local
+  patterns, add required tests/fixtures, and make small adjacent refactors that
+  keep the outcome coherent. Product decisions and unrelated improvements stay
+  outside the packet.
 - **Combine undersized primary slices** when they merely pass the same contract
   across adjacent files/layers, repeat most of the same packet context, and the
   combined result can still be reviewed and verified as one green unit.
@@ -97,14 +109,15 @@ For hub-owned skills, `skills push` compares local content to hub HEAD, not lock
   finding is healthy, but finish reviewing the primary diff first and batch related
   findings into one resume. Do not combine unrelated findings just to make the job larger.
 
-Before the first delegation, estimate the number of primary slices. When the map
-exceeds roughly 12 primary slices or spans more than two independently verifiable
-milestones, split the work into milestone sessions. Prefer separate PRs when the
-milestones are independently shippable; otherwise keep one branch/PR but start a
-fresh parent session from durable artifacts at each green milestone.
+Before the first delegation, estimate the primary slices and challenge every
+boundary. If an ordinary feature produces many jobs, assume over-fragmentation
+until a real compatibility, deployment, risk, or independently shippable seam
+proves otherwise. Split long work into milestone sessions when the milestones
+have independent acceptance; otherwise preserve the end-to-end contract in one
+slice and checkpoint after it is green.
 
-Reassess the map after each milestone or about six primary jobs. The following are
-anti-fragmentation signals, not quotas:
+Reassess after each accepted slice. The following are anti-fragmentation
+signals, not quotas:
 
 - more review/fix jobs than accepted primary jobs;
 - repeated primary jobs finishing in 1–2 minutes;
@@ -115,10 +128,10 @@ When these signals appear, stop creating packets mechanically. Merge the next
 adjacent slices, batch the current review findings, and move broad verification to
 the milestone boundary.
 
-Use elapsed time only as retrospective evidence, not as the primary boundary:
-repeated 1–2 minute primary jobs suggest over-fragmentation; jobs approaching
-20–30 minutes, timing out, or needing several independent verification phases
-suggest an oversized slice.
+Use elapsed time only as retrospective evidence. Repeated very short jobs
+usually indicate micro-slicing. A long job is not automatically oversized when
+it still represents one contract; timeouts, an unreadable diff, or several
+independent verification phases are stronger split signals.
 
 ## Verification budget
 
@@ -155,8 +168,9 @@ orchestrator convention, not a CLI restriction.
 
 ## Host adapters
 
-Codex, Claude Code, and Cursor each invoke or bypass the CLI executor per host
-boundaries — see [references/host-adapters.md](references/host-adapters.md).
+Codex, Claude Code, and Cursor use Herdr, native workers, or the script executor
+according to the outer workflow and host boundaries — see
+[references/host-adapters.md](references/host-adapters.md).
 
 ## Reliability
 
@@ -172,14 +186,17 @@ redacted logs, and stream-json tolerance — see
 - Sending one correction at a time before completing review of the primary diff.
 - Running broad repository suites in every executor packet and then repeating them
   immediately in the orchestrator.
-- One E2E job spanning an independently rerunnable cross-product matrix.
+- One QA job spanning an independently rerunnable cross-product matrix.
 - Carrying dozens of accepted slices in one uncheckpointed dirty tree or parent session.
 - Fencing out mechanical fallout into a follow-up slice.
 - Trusting the executor summary without diff + verify.
 - Escalating the model on failure.
 - Routing non-trivial coding to Opus or inline.
-- Silent fallback when Cursor is unavailable.
-- Delegating design or review.
+- Running Herdr and the script executor as concurrent writers.
+- Replaying the original packet after a partial Herdr run without inspecting
+  the current diff and writing a remaining-work packet.
+- Silent model fallback when Cursor/Composer is unavailable.
+- Delegating design to the code writer or letting that writer self-review.
 
 ## Per-project configuration
 
