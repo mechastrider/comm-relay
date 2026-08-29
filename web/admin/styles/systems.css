@@ -9,7 +9,8 @@
   transition: grid-template-columns 160ms ease;
 }
 
-.cockpit-shell.sidebar-collapsed .systems-panel {
+.cockpit-shell.sidebar-collapsed .systems-panel,
+.live-cockpit.sidebar-collapsed .systems-panel {
   grid-template-columns: 34px 0;
 }
 
@@ -55,10 +56,22 @@
   transition: opacity 120ms ease, visibility 120ms ease;
 }
 
-.cockpit-shell.sidebar-collapsed .systems-panel__content {
+.cockpit-shell.sidebar-collapsed .systems-panel__content,
+.live-cockpit.sidebar-collapsed .systems-panel__content {
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
+}
+
+.panel-heading--actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--primitive-space-3);
+}
+
+.panel-heading--actions h2 {
+  margin: 0;
 }
 
 .panel-heading {
