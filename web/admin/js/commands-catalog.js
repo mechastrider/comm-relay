@@ -24,25 +24,34 @@ function isCommandsVisible() {
     parseAudienceHash(window.location.hash) === "commands";
 }
 
-function setFieldError(element, message) {
-  if (!element) {
+function setFieldError(input, element, message) {
+  if (!input || !element) {
     return;
   }
   element.textContent = message || "";
   element.hidden = !message;
+  if (message) {
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-describedby", element.id);
+  } else {
+    input.removeAttribute("aria-invalid");
+    input.removeAttribute("aria-describedby");
+  }
 }
 
 function clearFieldErrors() {
-  setFieldError(dom.commandTriggerError, "");
-  setFieldError(dom.awardPointsError, "");
+  setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
+  setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
 }
 
 function setButtonsDisabled(disabled) {
   if (dom.commandsSaveButton) {
     dom.commandsSaveButton.disabled = disabled;
+    dom.commandsSaveButton.setAttribute("aria-busy", saveInFlight ? "true" : "false");
   }
   if (dom.commandsDeleteButton) {
     dom.commandsDeleteButton.disabled = disabled || creatingNew || !selectedCommandId;
+    dom.commandsDeleteButton.setAttribute("aria-busy", deleteInFlight ? "true" : "false");
   }
   if (dom.commandsCreateButton) {
     dom.commandsCreateButton.disabled = disabled && !listHasLoaded;
@@ -101,6 +110,7 @@ function renderCommandsList() {
     } else {
       item.setAttribute("aria-selected", "false");
     }
+    item.tabIndex = item.dataset.commandId === selectedCommandId ? 0 : -1;
 
     const trigger = document.createElement("span");
     trigger.className = "audience-catalog-items__primary";
@@ -113,6 +123,30 @@ function renderCommandsList() {
     item.append(trigger, meta);
     item.addEventListener("click", function () {
       selectCommand(String(cmd.id || ""), false);
+      focusCommandItem(String(cmd.id || ""));
+    });
+    item.addEventListener("keydown", function (event) {
+      if (["ArrowUp", "ArrowDown", "Home", "End", "Enter", " "].indexOf(event.key) === -1) {
+        return;
+      }
+      event.preventDefault();
+      const currentIndex = commandsCache.indexOf(cmd);
+      let nextIndex = currentIndex;
+      if (event.key === "Home") {
+        nextIndex = 0;
+      } else if (event.key === "End") {
+        nextIndex = commandsCache.length - 1;
+      } else if (event.key === "ArrowDown") {
+        nextIndex = Math.min(commandsCache.length - 1, currentIndex + 1);
+      } else if (event.key === "ArrowUp") {
+        nextIndex = Math.max(0, currentIndex - 1);
+      }
+      const next = commandsCache[nextIndex];
+      if (next) {
+        const nextId = String(next.id || "");
+        selectCommand(nextId, false);
+        focusCommandItem(nextId);
+      }
     });
     dom.commandsList.append(item);
   });
@@ -130,6 +164,15 @@ function renderCommandsList() {
   } else if (!listLoadError && commandsCache.length > 0) {
     setRegionState(dom.commandsListRegion, null);
   }
+}
+
+function focusCommandItem(id) {
+  window.requestAnimationFrame(function () {
+    const item = dom.commandsList?.querySelector('[data-command-id="' + CSS.escape(id) + '"]');
+    if (item instanceof HTMLElement) {
+      item.focus();
+    }
+  });
 }
 
 function fillEditorFromCommand(cmd) {
@@ -203,7 +246,10 @@ function applyFieldErrors(fields) {
     return;
   }
   if (fields.trigger && dom.commandTriggerError) {
-    setFieldError(dom.commandTriggerError, fields.trigger);
+    setFieldError(dom.commandTriggerInput, dom.commandTriggerError, fields.trigger);
+  }
+  if (fields.splash_template && dom.commandSplashError) {
+    setFieldError(dom.commandSplashInput, dom.commandSplashError, fields.splash_template);
   }
 }
 
@@ -278,10 +324,16 @@ async function saveCommand() {
   const payload = readEditorPayload();
   const triggerErrorKey = validateCommandTrigger(payload.trigger);
   if (triggerErrorKey) {
-    setFieldError(dom.commandTriggerError, t(triggerErrorKey));
+    setFieldError(dom.commandTriggerInput, dom.commandTriggerError, t(triggerErrorKey));
+    dom.commandTriggerInput?.focus();
     return;
   }
   if (String(payload.splash_template || "").trim() === "") {
+    setFieldError(dom.commandSplashInput, dom.commandSplashError, t("catalog.splashRequired"));
+    dom.commandSplashInput?.focus();
+    return;
+  }
+  if (dom.commandsEditorForm && !dom.commandsEditorForm.reportValidity()) {
     return;
   }
 
@@ -384,20 +436,41 @@ export function initCommandsCatalog() {
   if (dom.commandsCreateButton) {
     dom.commandsCreateButton.addEventListener("click", function () {
       selectCommand("", true);
+      dom.commandTriggerInput?.focus();
     });
   }
   if (dom.commandsEmptyCreate) {
     dom.commandsEmptyCreate.addEventListener("click", function () {
       selectCommand("", true);
+      dom.commandTriggerInput?.focus();
     });
   }
-  if (dom.commandsSaveButton) {
-    dom.commandsSaveButton.addEventListener("click", function () {
+  if (dom.commandsEditorForm) {
+    dom.commandsEditorForm.addEventListener("submit", function (event) {
+      event.preventDefault();
       saveCommand().catch(function () {
         /* handled */
       });
     });
+    dom.commandsEditorForm.addEventListener("keydown", function (event) {
+      if (
+        event.key !== "Enter" ||
+        event.isComposing ||
+        !(event.target instanceof HTMLInputElement) ||
+        ["checkbox", "radio", "file"].includes(event.target.type)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      dom.commandsEditorForm.requestSubmit();
+    });
   }
+  dom.commandTriggerInput?.addEventListener("input", function () {
+    setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
+  });
+  dom.commandSplashInput?.addEventListener("input", function () {
+    setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
+  });
   if (dom.commandsDeleteButton) {
     dom.commandsDeleteButton.addEventListener("click", function () {
       if (!selectedCommandId) {

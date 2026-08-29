@@ -61,7 +61,7 @@ function announceWorkspace(doc, workspaceId, translate) {
 /**
  * @param {Document} doc
  * @param {WorkspaceId} workspaceId
- * @param {{ announce?: boolean, translate?: (key: string) => string }} [options]
+ * @param {{ announce?: boolean, focusHeading?: boolean, translate?: (key: string) => string }} [options]
  */
 export function applyWorkspace(doc, workspaceId, options) {
   const shouldAnnounce = !options || options.announce !== false;
@@ -91,11 +91,13 @@ export function applyWorkspace(doc, workspaceId, options) {
     }
   });
 
-  const heading = doc.querySelector(
-    "#" + workspaceSectionId(workspaceId) + " .workspace-heading"
-  );
-  if (heading instanceof HTMLElement) {
-    heading.focus({ preventScroll: false });
+  if (!options || options.focusHeading !== false) {
+    const heading = doc.querySelector(
+      "#" + workspaceSectionId(workspaceId) + " .workspace-heading"
+    );
+    if (heading instanceof HTMLElement) {
+      heading.focus({ preventScroll: false });
+    }
   }
 
   const titleBase = "CommRelay";
@@ -121,6 +123,7 @@ export function applyWorkspace(doc, workspaceId, options) {
  */
 export function initWorkspaceRouter(doc, translate, routerOptions) {
   let lastWorkspace = parseWorkspaceHash(doc.location.hash);
+  let initialized = false;
 
   function notifyWorkspaceChange(workspaceId) {
     if (routerOptions && typeof routerOptions.onWorkspaceChange === "function") {
@@ -130,8 +133,13 @@ export function initWorkspaceRouter(doc, translate, routerOptions) {
 
   function syncFromLocation() {
     const workspaceId = parseWorkspaceHash(doc.location.hash);
-    applyWorkspace(doc, workspaceId, { translate });
-    if (workspaceId !== lastWorkspace) {
+    const workspaceChanged = workspaceId !== lastWorkspace;
+    applyWorkspace(doc, workspaceId, {
+      focusHeading: !initialized || workspaceChanged,
+      translate,
+    });
+    initialized = true;
+    if (workspaceChanged) {
       notifyWorkspaceChange(workspaceId);
       lastWorkspace = workspaceId;
     }

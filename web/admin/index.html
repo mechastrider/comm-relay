@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=22">
+  <link rel="stylesheet" href="styles.css?v=23">
   <script>
     (function () {
       try {
@@ -346,8 +346,8 @@
                   <header class="audience-catalog-editor__header">
                     <h2 id="commands-editor-heading" class="audience-catalog-editor__title" data-i18n="commands.editorHeading">Edit command</h2>
                     <div class="audience-catalog-editor__actions">
-                      <button id="commands-save-button" class="btn-physical btn-small" type="button" data-i18n="catalog.save">Save</button>
-                      <button id="commands-delete-button" class="btn-physical btn-small" type="button" data-i18n="catalog.delete">Delete</button>
+                      <button id="commands-save-button" class="btn-physical btn-small" type="submit" form="commands-editor-form" data-i18n="catalog.save">Save</button>
+                      <button id="commands-delete-button" class="btn-physical btn-danger btn-small" type="button" data-i18n="catalog.delete">Delete</button>
                     </div>
                   </header>
                   <form id="commands-editor-form" class="audience-catalog-editor__body" hidden>
@@ -364,11 +364,12 @@
                     </div>
                     <div class="form__field">
                       <label for="command-cooldown-input" data-i18n="commands.cooldownLabel">Cooldown (seconds)</label>
-                      <input id="command-cooldown-input" type="number" min="0" step="1" value="30">
+                      <input id="command-cooldown-input" type="number" min="0" step="1" value="30" required>
                     </div>
                     <div class="form__field">
                       <label for="command-splash-input" data-i18n="catalog.splashTemplate">Splash template</label>
                       <input id="command-splash-input" type="text" autocomplete="off" required>
+                      <p id="command-splash-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
                       <label for="command-sound-input" data-i18n="catalog.soundLabel">Sound</label>
@@ -382,7 +383,7 @@
                     </div>
                     <div class="form__field">
                       <label for="command-duration-input" data-i18n="catalog.durationLabel">Duration (ms)</label>
-                      <input id="command-duration-input" type="number" min="1" step="1" value="5000">
+                      <input id="command-duration-input" type="number" min="1" step="1" value="5000" required>
                     </div>
                   </form>
                   <p id="commands-editor-empty" class="empty-state audience-catalog-editor__empty" data-i18n="commands.selectOrCreate">Select a command or create one.</p>
@@ -413,14 +414,15 @@
                   <header class="audience-catalog-editor__header">
                     <h2 id="awards-editor-heading" class="audience-catalog-editor__title" data-i18n="awards.editorHeading">Edit award</h2>
                     <div class="audience-catalog-editor__actions">
-                      <button id="awards-save-button" class="btn-physical btn-small" type="button" data-i18n="catalog.save">Save</button>
-                      <button id="awards-delete-button" class="btn-physical btn-small" type="button" data-i18n="catalog.delete">Delete</button>
+                      <button id="awards-save-button" class="btn-physical btn-small" type="submit" form="awards-editor-form" data-i18n="catalog.save">Save</button>
+                      <button id="awards-delete-button" class="btn-physical btn-danger btn-small" type="button" data-i18n="catalog.delete">Delete</button>
                     </div>
                   </header>
                   <form id="awards-editor-form" class="audience-catalog-editor__body" hidden>
                     <div class="form__field">
                       <label for="award-name-input" data-i18n="awards.nameLabel">Name</label>
                       <input id="award-name-input" type="text" autocomplete="off" required>
+                      <p id="award-name-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
                       <label for="award-points-input" data-i18n="awards.pointsLabel">Points</label>
@@ -430,6 +432,7 @@
                     <div class="form__field">
                       <label for="award-splash-input" data-i18n="catalog.splashTemplate">Splash template</label>
                       <input id="award-splash-input" type="text" autocomplete="off" required>
+                      <p id="award-splash-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
                       <label for="award-sound-input" data-i18n="catalog.soundLabel">Sound</label>
@@ -443,7 +446,7 @@
                     </div>
                     <div class="form__field">
                       <label for="award-duration-input" data-i18n="catalog.durationLabel">Duration (ms)</label>
-                      <input id="award-duration-input" type="number" min="1" step="1" value="5000">
+                      <input id="award-duration-input" type="number" min="1" step="1" value="5000" required>
                     </div>
                   </form>
                   <p id="awards-editor-empty" class="empty-state audience-catalog-editor__empty" data-i18n="awards.selectOrCreate">Select an award or create one.</p>
@@ -477,12 +480,12 @@
             <header class="settings-workspace__header">
               <h1 id="workspace-settings-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.settingsHeading">Settings</h1>
               <nav class="settings-nav" role="tablist" data-i18n-aria-label="settings.navLabel" aria-label="Settings sections">
-                <a class="settings-nav__link" href="#settings/platforms" role="tab" data-settings-nav="platforms" data-i18n="settings.section.platforms">Platforms</a>
-                <a class="settings-nav__link" href="#settings/network" role="tab" data-settings-nav="network" data-i18n="settings.section.network">Network</a>
-                <a class="settings-nav__link" href="#settings/data" role="tab" data-settings-nav="data" data-i18n="settings.section.data">Data</a>
-                <a class="settings-nav__link" href="#settings/application" role="tab" data-settings-nav="application" data-i18n="settings.section.application">Application</a>
-                <a class="settings-nav__link" href="#settings/diagnostics" role="tab" data-settings-nav="diagnostics" data-i18n="settings.section.diagnostics">Diagnostics</a>
-                <a class="settings-nav__link" href="#settings/about" role="tab" data-settings-nav="about" data-i18n="settings.section.about">About</a>
+                <a id="settings-platforms-tab" class="settings-nav__link" href="#settings/platforms" role="tab" aria-controls="settings-platforms-panel" data-settings-nav="platforms" data-i18n="settings.section.platforms">Platforms</a>
+                <a id="settings-network-tab" class="settings-nav__link" href="#settings/network" role="tab" aria-controls="settings-network-panel" data-settings-nav="network" data-i18n="settings.section.network">Network</a>
+                <a id="settings-data-tab" class="settings-nav__link" href="#settings/data" role="tab" aria-controls="settings-data-panel" data-settings-nav="data" data-i18n="settings.section.data">Data</a>
+                <a id="settings-application-tab" class="settings-nav__link" href="#settings/application" role="tab" aria-controls="settings-application-panel" data-settings-nav="application" data-i18n="settings.section.application">Application</a>
+                <a id="settings-diagnostics-tab" class="settings-nav__link" href="#settings/diagnostics" role="tab" aria-controls="settings-diagnostics-panel" data-settings-nav="diagnostics" data-i18n="settings.section.diagnostics">Diagnostics</a>
+                <a id="settings-about-tab" class="settings-nav__link" href="#settings/about" role="tab" aria-controls="settings-about-panel" data-settings-nav="about" data-i18n="settings.section.about">About</a>
               </nav>
             </header>
             <div id="settings-sections-mount" class="settings-workspace__content"></div>
@@ -1242,6 +1245,7 @@
 
             <div class="overlay-preview-controls">
               <div class="preview-control overlay-chat-only" id="overlay-preview-mode-control">
+                <label for="overlay-preview-mode" data-i18n="obs.previewMode">Preview mode</label>
                 <select id="overlay-preview-mode">
                   <option value="sample" data-i18n="obs.sample">Sample</option>
                   <option value="live" data-i18n="obs.liveChat">Live chat</option>
@@ -1329,7 +1333,7 @@
         <p id="catalog-delete-prompt-message" class="prompt-dialog__message"></p>
         <div class="prompt-dialog__actions">
           <button id="catalog-delete-prompt-cancel" class="btn-physical" type="button" data-i18n="dialog.cancel">Cancel</button>
-          <button id="catalog-delete-prompt-confirm" class="btn-physical btn-start" type="button" data-i18n="catalog.deleteConfirm">Delete</button>
+          <button id="catalog-delete-prompt-confirm" class="btn-physical btn-danger" type="button" data-i18n="catalog.deleteConfirm">Delete</button>
         </div>
       </div>
     </dialog>
@@ -1598,6 +1602,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=22"></script>
+  <script type="module" src="app.js?v=23"></script>
 </body>
 </html>

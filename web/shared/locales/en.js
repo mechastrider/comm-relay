@@ -258,6 +258,7 @@ export default {
   "obs.themeGRebels": "G-Rebels Cockpit popups",
   "obs.themeHint": "Cockpit themes use HUD-style panels for streams over gameplay. The same theme styles chat and the leaderboard.",
   "obs.preview": "Preview",
+  "obs.previewMode": "Preview mode",
   "obs.replay": "Replay",
   "obs.previewMessages": "Messages",
   "obs.sample": "Sample",
@@ -440,6 +441,7 @@ export default {
   "catalog.saveFailed": "Could not save.",
   "catalog.deleteFailed": "Could not delete.",
   "catalog.splashTemplate": "Splash template",
+  "catalog.splashRequired": "Splash template is required.",
   "catalog.soundLabel": "Sound",
   "catalog.durationLabel": "Duration (ms)",
 
@@ -462,6 +464,7 @@ export default {
   "awards.selectOrCreate": "Select an award or create one.",
   "awards.loadFailed": "Could not load awards.",
   "awards.nameLabel": "Name",
+  "awards.nameRequired": "Name is required.",
   "awards.pointsLabel": "Points",
   "awards.pointsInvalid": "Points must be at least 1.",
   "awards.pointsShort": "{points} pts",

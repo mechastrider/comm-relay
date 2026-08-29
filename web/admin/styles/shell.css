@@ -289,9 +289,7 @@
   .shell-body {
     flex-direction: column;
   }
-}
 
-@media (max-width: 767px) {
   .shell-nav--bottom {
     display: block;
     flex-shrink: 0;

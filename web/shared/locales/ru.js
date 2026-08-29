@@ -258,6 +258,7 @@ export default {
   "obs.themeGRebels": "G-Rebels Cockpit popups",
   "obs.themeHint": "Cockpit-темы рассчитаны на вывод поверх игрового кадра. Та же тема оформляет чат и лидерборд.",
   "obs.preview": "Превью",
+  "obs.previewMode": "Режим превью",
   "obs.replay": "Повтор",
   "obs.previewMessages": "Сообщения",
   "obs.sample": "Пример",
@@ -440,6 +441,7 @@ export default {
   "catalog.saveFailed": "Не удалось сохранить.",
   "catalog.deleteFailed": "Не удалось удалить.",
   "catalog.splashTemplate": "Шаблон баннера",
+  "catalog.splashRequired": "Укажите шаблон баннера.",
   "catalog.soundLabel": "Звук",
   "catalog.durationLabel": "Длительность (мс)",
 
@@ -462,6 +464,7 @@ export default {
   "awards.selectOrCreate": "Выберите награду или создайте новую.",
   "awards.loadFailed": "Не удалось загрузить награды.",
   "awards.nameLabel": "Название",
+  "awards.nameRequired": "Укажите название.",
   "awards.pointsLabel": "Очки",
   "awards.pointsInvalid": "Очки должны быть не меньше 1.",
   "awards.pointsShort": "{points} очк.",

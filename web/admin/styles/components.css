@@ -53,6 +53,19 @@
   text-shadow: 0 0 5px rgba(51, 204, 102, 0.38);
 }
 
+.btn-danger,
+.btn-physical.btn-danger {
+  border-color: var(--color-border-danger);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--danger) 12%, var(--primitive-gray-400)), var(--primitive-gray-550));
+  color: #ffd2d5;
+}
+
+.btn-danger:hover:not(:disabled),
+.btn-physical.btn-danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: #fff;
+}
+
 .btn-small,
 .button-secondary--small {
   min-height: var(--control-min-height-compact);
