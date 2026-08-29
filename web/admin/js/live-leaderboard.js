@@ -68,6 +68,25 @@ export function getLeaderboardPeriod() {
   return currentPeriod;
 }
 
+/**
+ * @param {"session"|"day"|"all"} period
+ * @param {{ reload?: boolean }} [options]
+ */
+export function setLeaderboardPeriod(period, options) {
+  const next = period === "day" || period === "all" ? period : "session";
+  currentPeriod = next;
+  if (dom.liveLeaderboardPeriod && dom.liveLeaderboardPeriod.value !== next) {
+    dom.liveLeaderboardPeriod.value = next;
+  }
+  if (dom.audiencePeriod && dom.audiencePeriod.value !== next) {
+    dom.audiencePeriod.value = next;
+  }
+  if (options && options.reload) {
+    return loadLiveLeaderboard({ period: next });
+  }
+  return Promise.resolve(null);
+}
+
 export async function loadLiveLeaderboard(options) {
   const opts = options || {};
   const period = opts.period || currentPeriod;
@@ -143,8 +162,7 @@ export function abortLiveLeaderboard() {
 export function initLiveLeaderboard(onPeriodChange) {
   if (dom.liveLeaderboardPeriod) {
     dom.liveLeaderboardPeriod.addEventListener("change", function () {
-      currentPeriod = dom.liveLeaderboardPeriod.value || "session";
-      loadLiveLeaderboard({ period: currentPeriod }).catch(function () {
+      setLeaderboardPeriod(dom.liveLeaderboardPeriod.value || "session", { reload: true }).catch(function () {
         /* handled inline */
       });
       if (typeof onPeriodChange === "function") {

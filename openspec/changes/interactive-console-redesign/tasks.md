@@ -61,11 +61,11 @@
 > **Allowed fallout**: Viewer module extraction, search helper tests, locale keys and responsive styles.
 > **Blocked**: New viewer metrics, schema changes, bulk moderation, data export.
 
-- [ ] 4.1 Move the existing viewer list, filters, period selection, leaderboard access, and New stream action into Audience without duplicating state or requests.
-- [ ] 4.2 Rebuild viewer detail as a wide side inspector and compact in-flow sheet/dialog with correct loading, focus restoration, scroll containment, and close behavior.
-- [ ] 4.3 Preserve edit and merge validation, confirmations, mutation progress, error retention, and refresh of the affected list/detail/leaderboard state.
-- [ ] 4.4 Distinguish no viewers, no search matches, loading, stale, failure, and recovered states while retaining the operator's search/filter context.
-- [ ] 4.5 Verify keyboard table navigation/actions, 200% zoom, long platform identities, RU/EN copy, and current viewer API regression coverage.
+- [x] 4.1 Move the existing viewer list, filters, period selection, leaderboard access, and New stream action into Audience without duplicating state or requests.
+- [x] 4.2 Rebuild viewer detail as a wide side inspector and compact in-flow sheet/dialog with correct loading, focus restoration, scroll containment, and close behavior.
+- [x] 4.3 Preserve edit and merge validation, confirmations, mutation progress, error retention, and refresh of the affected list/detail/leaderboard state.
+- [x] 4.4 Distinguish no viewers, no search matches, loading, stale, failure, and recovered states while retaining the operator's search/filter context.
+- [x] 4.5 Verify keyboard table navigation/actions, 200% zoom, long platform identities, RU/EN copy, and current viewer API regression coverage.
 
 ### Slice: `Studio makes preparation explicit`
 

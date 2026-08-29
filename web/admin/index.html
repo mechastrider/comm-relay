@@ -248,36 +248,71 @@
 
         <section id="workspace-audience" class="workspace" data-workspace="audience" hidden aria-labelledby="workspace-audience-heading">
           <div class="audience-workspace">
-            <div class="audience-toolbar">
+            <header class="audience-toolbar">
               <h1 id="workspace-audience-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.audienceHeading">Audience</h1>
-              <button id="audience-new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
-                <span data-i18n="stream.newStream">New stream</span>
-                <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
-              </button>
-            </div>
-            <section id="viewers-canvas-panel" class="viewers-canvas audience-viewers" aria-labelledby="viewers-list-heading">
-              <div class="viewers-workspace">
-                <aside class="viewers-list-pane" aria-labelledby="viewers-list-heading">
-                  <h2 id="viewers-list-heading" class="viewers-pane-heading" data-i18n="viewers.listHeading">Viewer list</h2>
-                  <div class="viewers-search">
-                    <label class="visually-hidden" for="viewers-search" data-i18n="viewers.searchLabel">Search viewers</label>
-                    <input id="viewers-search" type="search" autocomplete="off" data-i18n-placeholder="viewers.searchPlaceholder" placeholder="Search by name or platform">
+              <div class="audience-toolbar__controls">
+                <div class="audience-toolbar__search form__field">
+                  <label for="viewers-search" data-i18n="viewers.searchLabel">Search viewers</label>
+                  <input id="viewers-search" type="search" autocomplete="off" data-i18n-placeholder="viewers.searchPlaceholder" placeholder="Search by name or platform">
+                </div>
+                <div class="audience-toolbar__filters">
+                  <label for="audience-period" data-i18n="audience.periodLabel">Activity period</label>
+                  <select id="audience-period" aria-describedby="audience-period-hint">
+                    <option value="session" data-i18n="viewers.periodSession">Session</option>
+                    <option value="day" data-i18n="viewers.periodDay">Day</option>
+                    <option value="all" data-i18n="viewers.periodAll">All-time</option>
+                  </select>
+                  <button id="audience-open-leaderboard" class="btn-physical btn-small" type="button" data-i18n="audience.openLeaderboard">Open leaderboard</button>
+                  <button id="refresh-viewers" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
+                </div>
+                <button id="audience-new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
+                  <span data-i18n="stream.newStream">New stream</span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+                </button>
+              </div>
+              <p id="audience-period-hint" class="field-hint audience-toolbar__hint" data-i18n="audience.periodHint">Score and message columns follow the selected period.</p>
+            </header>
+
+            <div id="audience-layout" class="audience-layout">
+              <section id="audience-table-region" class="audience-table-region" aria-labelledby="audience-table-heading">
+                <h2 id="audience-table-heading" class="visually-hidden" data-i18n="audience.tableHeading">Viewer directory</h2>
+                <div class="audience-table-body">
+                  <table id="audience-viewers-table" class="data-table audience-viewers-table" data-i18n-aria-label="audience.tableCaption">
+                    <caption class="visually-hidden" data-i18n="audience.tableCaption">Viewer directory</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col" data-i18n="audience.colViewer">Viewer</th>
+                        <th scope="col" data-i18n="audience.colPlatforms">Platforms</th>
+                        <th scope="col" class="data-table__numeric" data-i18n="audience.colScore">Score</th>
+                        <th scope="col" class="data-table__numeric" data-i18n="audience.colMessages">Messages</th>
+                        <th scope="col" data-i18n="audience.colActions">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="audience-viewers-table-body"></tbody>
+                  </table>
+                  <div id="audience-table-empty" class="empty-state audience-region-empty" hidden>
+                    <p id="audience-table-empty-message" class="audience-region-empty__message"></p>
+                    <button id="audience-clear-search" type="button" class="btn-physical btn-small" hidden data-i18n="audience.clearSearch">Clear search</button>
                   </div>
-                  <div class="viewers-pane-body">
-                    <button id="refresh-viewers" type="button" class="btn-physical btn-small audience-refresh-viewers" data-i18n="shell.refresh">Refresh</button>
-                    <ul id="viewers-list" class="viewers-list" aria-live="polite"></ul>
-                    <p id="viewers-list-empty" class="empty-state" hidden data-i18n="viewers.listEmpty">No viewers yet.</p>
-                  </div>
-                </aside>
-                <div class="viewer-card-pane" aria-labelledby="viewer-card-heading">
-                  <h2 id="viewer-card-heading" class="viewers-pane-heading" data-i18n="viewers.cardHeading">Selected viewer</h2>
-                  <div class="viewers-pane-body">
-                    <div id="viewer-card" class="viewer-card" hidden></div>
-                    <p id="viewer-card-empty" class="empty-state" data-i18n="viewers.cardEmpty">Select a viewer from the list.</p>
+                  <div id="audience-table-error" class="notice notice--error audience-region-error" hidden>
+                    <p class="notice__body"></p>
+                    <button type="button" class="state-retry btn-physical btn-small" data-i18n="state.retry">Retry</button>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
+
+              <aside id="audience-inspector" class="audience-inspector" hidden aria-labelledby="audience-inspector-heading" aria-modal="false">
+                <header class="audience-inspector__header">
+                  <h2 id="audience-inspector-heading" class="audience-inspector__title" data-i18n="audience.detailHeading">Viewer detail</h2>
+                  <button id="audience-inspector-close" class="btn-icon audience-inspector__close" type="button" data-i18n-aria-label="audience.closeDetail" aria-label="Close viewer detail">
+                    <span aria-hidden="true">×</span>
+                  </button>
+                </header>
+                <div id="audience-inspector-body" class="audience-inspector__body" tabindex="-1"></div>
+                <p id="audience-inspector-empty" class="empty-state audience-inspector__empty" data-i18n="audience.selectViewer">Select a viewer from the table.</p>
+                <p id="audience-inspector-loading" class="audience-inspector__loading" hidden data-i18n="state.loading">Loading</p>
+              </aside>
+            </div>
           </div>
         </section>
 
@@ -1024,6 +1059,30 @@
           <button id="new-stream-prompt-cancel" class="btn-physical" type="button" data-i18n="dialog.cancel">Cancel</button>
           <button id="new-stream-prompt-confirm" class="btn-physical btn-start" type="button" data-i18n="stream.newStreamConfirm">Start new stream</button>
         </div>
+      </div>
+    </dialog>
+
+    <dialog id="viewer-merge-prompt" class="prompt-dialog" aria-labelledby="viewer-merge-prompt-title">
+      <div class="prompt-dialog__frame">
+        <h3 id="viewer-merge-prompt-title" data-i18n="audience.mergeTitle">Merge viewers?</h3>
+        <p id="viewer-merge-prompt-message" class="prompt-dialog__message"></p>
+        <div class="prompt-dialog__actions">
+          <button id="viewer-merge-prompt-cancel" class="btn-physical" type="button" data-i18n="dialog.cancel">Cancel</button>
+          <button id="viewer-merge-prompt-confirm" class="btn-physical btn-start" type="button" data-i18n="viewers.mergeConfirm">Merge</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="audience-detail-sheet" class="audience-detail-sheet" aria-labelledby="audience-sheet-heading">
+      <div class="audience-detail-sheet__frame">
+        <header class="audience-detail-sheet__header">
+          <h2 id="audience-sheet-heading" class="audience-detail-sheet__title" data-i18n="audience.detailHeading">Viewer detail</h2>
+          <button id="audience-sheet-close" class="btn-icon audience-detail-sheet__close" type="button" data-i18n-aria-label="audience.closeDetail" aria-label="Close viewer detail">
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+        <div id="audience-sheet-body" class="audience-detail-sheet__body" tabindex="-1"></div>
+        <p id="audience-sheet-loading" class="audience-detail-sheet__loading" hidden data-i18n="state.loading">Loading</p>
       </div>
     </dialog>
 

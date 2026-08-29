@@ -15,9 +15,14 @@
  *   Locale: live.*, shell.*, stream.*, banner.*, status.*
  *
  * AUDIENCE (#workspace-audience, hash #audience)
- *   #viewers-canvas-panel (list, search, card, merge), #refresh-viewers,
- *   #audience-new-stream-button, viewers APIs
- *   Future slice 4: wide inspector / compact sheet detail rebuild
+ *   Toolbar: labeled search, period select, Open leaderboard, Refresh, New stream
+ *   Dense viewer table with score/messages for selected period
+ *   Wide: side inspector; compact: in-flow detail sheet dialog
+ *   Edit display name, merge with confirmation, APIs:
+ *     GET /api/viewers, GET /api/viewers/get, POST /api/viewers/update,
+ *     POST /api/viewers/merge, POST /api/sessions/start
+ *   Period shared with Live leaderboard via live-leaderboard.js
+ *   Locale: audience.*, viewers.*, stream.*
  *
  * STUDIO (later — #workspace-studio, hash #studio)
  *   Future: overlay dialog content, appearance draft/publish, preview, OBS URLs
