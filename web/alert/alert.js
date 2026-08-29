@@ -331,13 +331,14 @@ async function loadServerConfig() {
 }
 
 applyAppearance();
-loadServerConfig().then(function () {
-  if (samplePreviewEnabled) {
+if (samplePreviewEnabled) {
+  loadServerConfig().then(function () {
     showSplash(SAMPLE_ALERT);
-    return;
-  }
+  });
+} else {
+  loadServerConfig();
   connect();
-});
+}
 
 window.addEventListener("beforeunload", function () {
   shouldRun = false;
