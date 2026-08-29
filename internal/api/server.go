@@ -72,6 +72,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /ws", opts.Hub.serveWS)
 	mux.HandleFunc("GET /api/config", configHandler.handleGet)
 	mux.HandleFunc("POST /api/config/update", configHandler.handleUpdate)
+	mux.HandleFunc("POST /api/overlay/activate", configHandler.handleOverlayActivate)
 	mux.HandleFunc("POST /api/overlay/assets/upload", overlayAssets.handleUpload)
 	mux.HandleFunc("GET /api/status", statusHandler.handleGet)
 	mux.HandleFunc("GET /api/diagnostics", diagnosticsHandler.handleGet)

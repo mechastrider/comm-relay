@@ -11,11 +11,11 @@
 > **Allowed fallout**: Focused DTO/error helpers, handler/config tests, API fixtures.
 > **Blocked**: General PATCH semantics, config revisions, connector changes, database migrations.
 
-- [ ] 1.1 Add a config-store operation that validates a preset ID and atomically changes only `overlay.active_preset_id` through the existing locked persistence path.
-- [ ] 1.2 Cover valid, blank, unknown, secret-bearing, and forced-write-failure mutations; deep-compare all unrelated config fields.
-- [ ] 1.3 Add `POST /api/overlay/activate` with snake_case request parsing, UI-safe 400/500 errors, and the public config response.
-- [ ] 1.4 Broadcast the existing `overlay_settings` event after successful persistence and add handler tests for success, validation, malformed JSON, secret omission, and no broadcast on failure.
-- [ ] 1.5 Extend router/API guard coverage and smoke the action with two concurrent admin/WebSocket clients.
+- [x] 1.1 Add a config-store operation that validates a preset ID and atomically changes only `overlay.active_preset_id` through the existing locked persistence path.
+- [x] 1.2 Cover valid, blank, unknown, secret-bearing, and forced-write-failure mutations; deep-compare all unrelated config fields.
+- [x] 1.3 Add `POST /api/overlay/activate` with snake_case request parsing, UI-safe 400/500 errors, and the public config response.
+- [x] 1.4 Broadcast the existing `overlay_settings` event after successful persistence and add handler tests for success, validation, malformed JSON, secret omission, and no broadcast on failure.
+- [x] 1.5 Extend router/API guard coverage and smoke the action with two concurrent admin/WebSocket clients.
 
 ## Frontend
 
