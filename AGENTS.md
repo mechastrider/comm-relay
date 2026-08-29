@@ -123,12 +123,14 @@ Changes that alter observable behavior are planned using **OpenSpec** (CLI `open
 
 | Schema | Use in CommRelay |
 |--------|------------------|
-| `spec-driven` | Explicit lightweight override for bounded changes that need only proposal/specs/design/tasks |
-| `web-change` | Admin, overlay, dock, HTTP/WebSocket, persistence, or cross-layer web work that benefits from API drafts, DB schema, UI contract, and browser QA |
-| `service-change` | Connectors, background processing, external integrations, reliability, migrations, or operational behavior |
+| `spec-driven` | Built-in lightweight override for bounded changes that need only proposal/specs/design/tasks |
 | `desktop-change` | **Project default.** General CommRelay product work plus Wails shell, Windows/platform integration, filesystem/IPC, install/upgrade, or packaged desktop behavior |
-| `library-change` | Reusable package/public API work with compatibility and release concerns |
-| `mobile-change` | Only for a future mobile deliverable; do not select it for the responsive web admin UI |
+
+Only the primary project profile is vendored. Represent cross-layer admin,
+overlay, HTTP/WebSocket, persistence, connector, and distribution work with
+`desktop-change`; mark irrelevant profile artifacts `Not applicable` as their
+templates instruct. Installing another full profile is an explicit project
+configuration change, not a side effect of task intake.
 
 The active schema determines the artifact graph. The lightweight
 `spec-driven` sequence is shown below. Omitting `--schema` uses the configured

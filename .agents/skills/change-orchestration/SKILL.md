@@ -91,9 +91,11 @@ parent does not silently absorb non-trivial product coding.
 
 Tier 1 may skip durable planning. For Tier ≥ 2:
 
-1. Select `spec-driven` for bounded work or the profile schema recommended by
-   work-intake (`library-change`, `service-change`, `web-change`,
-   `desktop-change`, or `mobile-change`).
+1. Use the schema selected by work-intake only when `openspec schemas --json`
+   confirms it is installed. Otherwise use the project's configured primary
+   schema when it represents the change, or the built-in `spec-driven` fallback
+   for bounded work. Schema installation is a separate project-configuration
+   change, not an orchestration side effect.
 2. The **parent** creates or updates proposal, specs, design, contracts,
    `qa_plan.md`, and `tasks.md` using the installed OpenSpec workflow.
 3. Cursor workers may gather repository facts, reproduce behavior, or compare
