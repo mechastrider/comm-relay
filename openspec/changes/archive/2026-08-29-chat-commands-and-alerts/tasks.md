@@ -10,13 +10,13 @@
 > **Blocked**: matcher, overlay, grants, signing
 
 ### Backend
-- [ ] 1.1 Goose migration: `commands`, `award_types`, nullable media columns, seed four rows
-- [ ] 1.2 Store CRUD with unique trigger, points ≥ 1, cooldown ≥ 0; delete does not resurrect on reopen
-- [ ] 1.3 HTTP `GET /api/commands`, `GET /api/awards`, POST create/update/delete; router guard
+- [x] 1.1 Goose migration: `commands`, `award_types`, nullable media columns, seed four rows
+- [x] 1.2 Store CRUD with unique trigger, points ≥ 1, cooldown ≥ 0; delete does not resurrect on reopen
+- [x] 1.3 HTTP `GET /api/commands`, `GET /api/awards`, POST create/update/delete; router guard
 
 ### Frontend
-- [ ] 1.4 Audience Commands and Awards editors (list + form, confirm delete, empty state)
-- [ ] 1.5 RU/EN strings; `npm run test:i18n`
+- [x] 1.4 Audience Commands and Awards editors (list + form, confirm delete, empty state)
+- [x] 1.5 RU/EN strings; `npm run test:i18n`
 
 ## Slice: Commands fire queued alerts
 
@@ -28,13 +28,13 @@
 > **Blocked**: awards, achievements, media upload
 
 ### Backend
-- [ ] 2.1 Config `hide_command_messages` default false; public config + overlay_settings
-- [ ] 2.2 Matcher + in-memory cooldown; tag `is_command`; never adjust score; enqueue alert; skip unknown/`gg` without bang
-- [ ] 2.3 Serve `/overlay/alert` before `/overlay/`; handler tests
+- [x] 2.1 Config `hide_command_messages` default false; public config + overlay_settings
+- [x] 2.2 Matcher + in-memory cooldown; tag `is_command`; never adjust score; enqueue alert; skip unknown/`gg` without bang
+- [x] 2.3 Serve `/overlay/alert` before `/overlay/`; handler tests
 
 ### Frontend
-- [ ] 2.4 Alert page: FIFO queue cap 20, avatar + text node + built-in tones, reconnect, no replay, all themes, sample preview
-- [ ] 2.5 Chat overlay skips `is_command` when hide is on; Settings checkbox; Studio enables Alerts URL (follow + pinned)
+- [x] 2.4 Alert page: FIFO queue cap 20, avatar + text node + built-in tones, reconnect, no replay, all themes, sample preview
+- [x] 2.5 Chat overlay skips `is_command` when hide is on; Settings checkbox; Studio enables Alerts URL (follow + pinned)
 
 ## Slice: Operator rewards from messages
 
@@ -46,11 +46,11 @@
 > **Blocked**: forbidding double-reward, catalog in dock
 
 ### Backend
-- [ ] 3.1 Grant: resolve identity, add points to three periods, alert with `{name}`/`{points}`, 400 on empty user_id / unknown award
+- [x] 3.1 Grant: resolve identity, add points to three periods, alert with `{name}`/`{points}`, 400 on empty user_id / unknown award
 
 ### Frontend
-- [ ] 3.2 Reward control + picker (progress, empty catalog copy, Escape/focus); dock constrained layout
-- [ ] 3.3 Hide Reward when `user_id` missing; keep Delete rules unchanged
+- [x] 3.2 Reward control + picker (progress, empty catalog copy, Escape/focus); dock constrained layout
+- [x] 3.3 Hide Reward when `user_id` missing; keep Delete rules unchanged
 
 ## Slice: Interaction event log
 
@@ -62,24 +62,24 @@
 > **Blocked**: achievements UI, GET events API unless needed by tests
 
 ### Backend
-- [ ] 4.1 Append events on fire/grant; omit chat body
-- [ ] 4.2 Merge transaction updates `interaction_events.viewer_id` from source to target
+- [x] 4.1 Append events on fire/grant; omit chat body
+- [x] 4.2 Merge transaction updates `interaction_events.viewer_id` from source to target
 
 ## Docs
 
-- [ ] 5.1 CHANGELOG `[Unreleased]` Russian streamer bullets (commands, banners, Reward, hide, seeds)
-- [ ] 5.2 README RU/EN: `/overlay/alert`, OBS audio, dock Reward, hide setting
-- [ ] 5.3 `docs/roadmap.md` / `docs/concept.md`: 6b mechanism (two catalogs, alerts, awards, event log); keep achievements later
-- [ ] 5.4 Extend `obs-overlay-themes` skill: alert is an on-stream surface
+- [x] 5.1 CHANGELOG `[Unreleased]` Russian streamer bullets (commands, banners, Reward, hide, seeds)
+- [x] 5.2 README RU/EN: `/overlay/alert`, OBS audio, dock Reward, hide setting
+- [x] 5.3 `docs/roadmap.md` / `docs/concept.md`: 6b mechanism (two catalogs, alerts, awards, event log); keep achievements later
+- [x] 5.4 Extend `obs-overlay-themes` skill: alert is an on-stream surface
 
 ## Gate: qa
-- [ ] Q.1 Execute `qa_plan.md` automated commands and P0 manual smokes
+- [x] Q.1 Execute `qa_plan.md` automated commands and P0 manual smokes
 
 ## Gate: review
-- [ ] R.1 Fresh diff review; CRITICAL=0; affected checks green
+- [x] R.1 Fresh diff review; CRITICAL=0; affected checks green
 
 ## Gate: distribution-readiness
-- [ ] D.1 `go build ./...`; note OBS source + audio; no signing/publish
+- [x] D.1 `go build ./...`; note OBS source + audio; no signing/publish
 
 ## Verification
 

@@ -260,10 +260,7 @@ function syncInspectorVisibility() {
     return;
   }
   if (isWideLayout()) {
-    dom.audienceInspector.hidden = false;
-    if (!selectedViewerId && dom.audienceInspectorEmpty) {
-      dom.audienceInspectorEmpty.hidden = false;
-    }
+    dom.audienceInspector.hidden = !selectedViewerId;
   } else {
     dom.audienceInspector.hidden = true;
   }
@@ -279,7 +276,7 @@ function clearDetailContainer() {
     surface.empty.hidden = false;
   }
   if (surface.shell && surface.shell === dom.audienceInspector) {
-    dom.audienceInspector.hidden = false;
+    dom.audienceInspector.hidden = true;
   }
 }
 

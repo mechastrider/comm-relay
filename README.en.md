@@ -25,7 +25,10 @@ You can see CommRelay in use on the author's streams:
 - Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
 - Tracks viewer stats (score, messages, session/day/all-time) in a local `comm-relay.db` file next to `config.json` — no separate database server.
 - Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?period=session|day|all` (same theme as chat; without `preset` it follows the active preset).
-- Provides a local console with Live, Audience, Studio, and Settings workspaces: statuses, messages, viewers, overlay setup, and diagnostics.
+- Shows command banners on a separate OBS Browser Source: `http://127.0.0.1:17877/overlay/alert` (sound plays in that source; enable **Control audio via OBS** for stream audio).
+- Provides a local console with Live, Audience, Studio, and Settings workspaces: statuses, messages, viewers, command and award catalogs, overlay setup, and diagnostics.
+- Lets the operator grant awards (**Reward**) from Live and the OBS message dock; points update the leaderboard immediately.
+- In **Settings → Data** you can hide `!command` lines in the chat overlay only — they remain visible in Live and the dock.
 - Supports Twitch emotes, FrankerFaceZ, BetterTTV, 7TV, and safe image previews.
 - Automatically reconnects connectors and stores settings locally in `config.json`.
 
@@ -78,11 +81,12 @@ By default CommRelay listens on `127.0.0.1:17877`. The admin panel is available 
 
 ## OBS Browser Source
 
-1. In CommRelay open **Studio**: a source list on the left (chat, leaderboard, message dock; banners are not ready yet).
-2. Select the source, copy **Follow active preset**, and in OBS add a **Browser** source (chat and leaderboard) or a Custom Browser Dock (message dock).
-3. The primary chat and leaderboard URLs **omit** `?preset=` — the source follows the active preset. For a scene-specific look, copy the **Pinned preset** URL. The leaderboard also includes `period` and, when needed, `layout` / `font_size_px`.
-4. Set the size for your scene layout. Do not add a background manually: on-stream sources are already transparent.
-5. Keep CommRelay running during the stream.
+1. In CommRelay open **Studio**: a source list on the left (chat, leaderboard, alerts, message dock).
+2. Select the source, copy **Follow active preset**, and in OBS add a **Browser** source (chat, leaderboard, and alerts) or a Custom Browser Dock (message dock).
+3. The primary chat, leaderboard, and alert URLs **omit** `?preset=` — the source follows the active preset. For a scene-specific look, copy the **Pinned preset** URL. The leaderboard also includes `period` and, when needed, `layout` / `font_size_px`.
+4. For **Alerts** (`/overlay/alert`) add a separate Browser Source on the scene. Banner sound plays in that source — enable **Control audio via OBS** on the source to hear it in the recording and stream.
+5. Set the size for your scene layout. Do not add a background manually: on-stream sources are already transparent.
+6. Keep CommRelay running during the stream.
 
 If you changed the port in settings, update the URL in OBS.
 
@@ -95,7 +99,7 @@ CommRelay can show a separate chat feed directly in the OBS interface. This pane
 3. Enter a name, for example `CommRelay Messages`, and paste the copied URL.
 4. Click **Apply**, then place the new panel in a convenient part of the OBS interface.
 
-The panel shows messages only: on open it restores up to the last 100 entries, then receives new ones in real time. If you scrolled the log up, new messages do not reset the position; to restore auto-scroll, scroll the feed to the bottom. The **Delete** button removes an entry from local history, the admin panel, the dock, and the active overlay.
+The panel shows messages only: on open it restores up to the last 100 entries, then receives new ones in real time. If you scrolled the log up, new messages do not reset the position; to restore auto-scroll, scroll the feed to the bottom. The **Delete** button removes an entry from local history, the admin panel, the dock, and the active overlay. The **Reward** button grants an award from the **Audience** catalog — same as in Live.
 
 If the CommRelay port was changed, replace `17877` in the URL. The app must stay running during the stream. To show messages to viewers, continue using a separate **Browser** source with the `/overlay` URL.
 
@@ -297,6 +301,7 @@ If `libwebkit2gtk-4.1-dev` is unavailable, install the **WebKitGTK 4.1** equival
 | `http://127.0.0.1:17877/dock/messages` | Message log in the OBS interface |
 | `http://127.0.0.1:17877/overlay` | OBS Browser Source (chat) |
 | `http://127.0.0.1:17877/overlay/leaderboard` | OBS Browser Source (leaderboard) |
+| `http://127.0.0.1:17877/overlay/alert` | OBS Browser Source (command banner; sound via **Control audio via OBS**) |
 | `http://127.0.0.1:17877/health` | Health check |
 | `ws://127.0.0.1:17877/ws` | WebSocket with messages |
 

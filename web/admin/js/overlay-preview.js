@@ -179,11 +179,15 @@ export function buildOverlayPreviewURL(previewMode) {
       ? state.currentConfig.overlay
       : {};
     const surface = getPreviewSurface();
-    const url = new URL(
-      surface === "leaderboard" ? "/overlay/leaderboard" : "/overlay",
-      window.location.origin
-    );
-    const mode = surface === "leaderboard" ? "sample" : previewMode;
+    const pathname =
+      surface === "leaderboard"
+        ? "/overlay/leaderboard"
+        : surface === "alerts"
+          ? "/overlay/alert"
+          : "/overlay";
+    const url = new URL(pathname, window.location.origin);
+    const mode =
+      surface === "leaderboard" || surface === "alerts" ? "sample" : previewMode;
     if (mode) {
       url.searchParams.set("preview", mode);
       url.searchParams.set(
@@ -274,13 +278,16 @@ export function buildOverlayPreviewURL(previewMode) {
 
 export function getPreviewSurface() {
     const pressed = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
-    return pressed && pressed.getAttribute("data-obs-preview-surface") === "leaderboard"
-      ? "leaderboard"
-      : "chat";
+    const surface = pressed ? pressed.getAttribute("data-obs-preview-surface") : "chat";
+    if (surface === "leaderboard" || surface === "alerts") {
+      return surface;
+    }
+    return "chat";
 }
 
 export function applyPreviewSurface(surface) {
-    const current = surface === "leaderboard" ? "leaderboard" : "chat";
+    const current =
+      surface === "leaderboard" ? "leaderboard" : surface === "alerts" ? "alerts" : "chat";
     document.querySelectorAll("[data-obs-preview-surface]").forEach(function (button) {
       const selected = button.getAttribute("data-obs-preview-surface") === current;
       button.setAttribute("aria-pressed", selected ? "true" : "false");
@@ -289,13 +296,13 @@ export function applyPreviewSurface(surface) {
       }
     });
     if (dom.overlayChatFields) {
-      dom.overlayChatFields.hidden = current === "leaderboard";
+      dom.overlayChatFields.hidden = current !== "chat";
     }
     if (dom.overlayLeaderboardFields) {
       dom.overlayLeaderboardFields.hidden = current !== "leaderboard";
     }
     document.querySelectorAll(".overlay-chat-only").forEach(function (element) {
-      element.hidden = current === "leaderboard";
+      element.hidden = current !== "chat";
     });
     writeOverlayPreviewPreference(OVERLAY_PREVIEW_SURFACE_KEY, current);
 }
@@ -310,8 +317,13 @@ export function updateOverlayPreviewNote() {
     if (!dom.overlayPreviewNote || !dom.overlayPreviewMode) {
       return;
     }
-    if (getPreviewSurface() === "leaderboard") {
+    const surface = getPreviewSurface();
+    if (surface === "leaderboard") {
       dom.overlayPreviewNote.textContent = t("obs.previewNoteLeaderboard");
+      return;
+    }
+    if (surface === "alerts") {
+      dom.overlayPreviewNote.textContent = t("obs.previewNoteAlerts");
       return;
     }
     dom.overlayPreviewNote.textContent = dom.overlayPreviewMode.value === "live"

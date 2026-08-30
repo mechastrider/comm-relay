@@ -37,6 +37,10 @@
   white-space: normal;
 }
 
+.workspace-heading:focus {
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

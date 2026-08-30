@@ -19,6 +19,7 @@ func TestBus_WhenPublishChatMessage_ExpectSubscriberReceives(t *testing.T) {
 
 	events, unsub := b.Subscribe()
 	defer unsub()
+	require.Equal(t, 1, b.SubscriberCount())
 
 	msg := bus.ChatMessage{
 		ID:       "1",
