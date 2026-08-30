@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CommRelay — Studio surface-centric mockup</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel-bg: #171719;
+      --surface: #242428;
+      --surface-raised: #2e2e34;
+      --surface-dark: #0d0d10;
+      --border: #444448;
+      --border-strong: #66666c;
+      --border-dark: #101013;
+      --text: #d9d9dd;
+      --muted: #98989f;
+      --subtle: #8c8c93;
+      --amber: #d4a017;
+      --amber-dim: #8a6a10;
+      --focus: #33cc66;
+      --danger: #ff6268;
+      --warning: #ffcc00;
+      --mono: Consolas, "Courier New", monospace;
+      font-family: var(--mono);
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body { margin: 0; background: #121214; color: var(--text); }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    h1, h2, h3 { margin: 0; }
+
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px 20px 64px;
+    }
+
+    .intro .kicker {
+      color: var(--amber);
+      font-size: 11px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+    .intro h1 { margin: 6px 0 10px; font-size: 26px; letter-spacing: 0.4px; }
+    .intro p { max-width: 78ch; margin: 0 0 8px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+    .intro .note { color: var(--amber); font-size: 12px; }
+
+    .eval-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      align-items: center;
+      margin: 18px 0 22px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .eval-bar label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      min-height: 760px;
+      border: 2px solid var(--border);
+      background: var(--panel-bg);
+      box-shadow: inset 0 0 0 1px #101013;
+    }
+    .shell.is-narrow {
+      max-width: 420px;
+      grid-template-columns: 1fr;
+    }
+    .shell.is-narrow .nav { display: none; }
+    .shell.is-narrow .studio-layout {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto minmax(240px, 1fr);
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 10px 8px;
+      border-right: 2px solid var(--amber-dim);
+      background: var(--surface);
+    }
+    .nav a {
+      display: grid;
+      place-items: center;
+      height: 44px;
+      color: var(--muted);
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+    .nav a[aria-current="page"] {
+      color: var(--amber);
+      border-color: var(--amber-dim);
+      background: #2a2418;
+    }
+
+    .workspace { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .toolbar h1 {
+      font-size: 18px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+    .toolbar__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .look {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .status { font-size: 12px; color: var(--muted); }
+    .status.is-dirty { color: var(--warning); }
+
+    .btn, .btn-secondary, .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 6px 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--border-strong);
+      border-left-color: var(--border-strong);
+      background: linear-gradient(180deg, #3a3a3e 0%, #28282c 100%);
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .btn:hover, .btn-secondary:hover, .icon-btn:hover { color: var(--amber); border-color: var(--amber-dim); }
+    .btn-primary { color: #111; background: linear-gradient(180deg, #e0b84a, #b8860b); border-color: #8a6a10; }
+    .btn-primary:disabled { opacity: 0.45; color: #111; }
+    .btn-secondary { min-height: 30px; padding: 4px 10px; font-size: 11px; }
+    .icon-btn { min-width: 38px; padding: 0; }
+    .ghost { background: transparent; border: 1px solid var(--border); text-transform: none; font-weight: 400; letter-spacing: 0; }
+
+    .studio-layout {
+      display: grid;
+      grid-template-columns: 200px minmax(0, 1fr) 300px;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+      padding: 12px 16px 16px;
+    }
+
+    .surfaces, .inspector {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .col-h {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .surface {
+      display: flex;
+      width: 100%;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border: 0;
+      border-bottom: 1px solid #333;
+      background: transparent;
+      text-align: left;
+    }
+    .surface[aria-selected="true"] {
+      background: #2a2418;
+      box-shadow: inset 3px 0 0 var(--amber);
+    }
+    .surface strong { display: block; font-size: 13px; }
+    .surface span { color: var(--muted); font-size: 11px; }
+    .add-obs {
+      margin: auto 10px 10px;
+      width: calc(100% - 20px);
+    }
+
+    .preview {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+    }
+    .preview-chrome {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .preview-chrome .meta { margin-right: auto; color: var(--muted); font-size: 12px; }
+    .overflow { position: relative; }
+    .overflow-panel {
+      position: absolute;
+      right: 0;
+      top: 42px;
+      z-index: 4;
+      width: 260px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-raised);
+      box-shadow: 0 18px 36px rgba(0,0,0,.4);
+    }
+    .overflow-panel[hidden] { display: none !important; }
+    .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; font-size: 12px; }
+    .field label { color: var(--muted); }
+    .field input, .field select {
+      min-height: 34px;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-dark);
+    }
+
+    .stage {
+      position: relative;
+      flex: 1;
+      min-height: 280px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.2), rgba(0,0,0,.45)),
+        radial-gradient(ellipse at 40% 30%, #3a4a38 0, #1a2218 50%, #0c100c 100%);
+    }
+    .stage[data-bg="white"] { background: #f3f3f0; }
+    .stage[data-bg="checker"] {
+      background:
+        repeating-conic-gradient(#bbb 0% 25%, #eee 0% 50%) 0 0 / 24px 24px;
+    }
+    .stage[data-bg="dark"] { background: #111; }
+    .stage[data-bg="white"] .msg,
+    .stage[data-bg="checker"] .msg { text-shadow: none; }
+
+    .preview-stack {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .msg {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      max-width: 420px;
+      padding: 8px 10px;
+      color: #f4f6f0;
+      text-shadow: 0 2px 3px #000;
+    }
+    .theme-default .msg { background: rgba(0,0,0,.58); border-radius: 8px; }
+    .theme-dashboard .msg { background: transparent; padding-left: 0; }
+    .theme-cockpit_panel .preview-stack {
+      padding: 10px;
+      border: 1px solid #35d2d0;
+      background: rgba(8, 17, 22, .78);
+    }
+    .theme-cockpit_popups .msg,
+    .theme-g_rebels_popups .msg {
+      background: rgba(4, 13, 17, .82);
+      border: 1px solid #35d2d0;
+    }
+    .theme-g_rebels_popups .msg { border-color: #f0df58; color: #f7e7a1; }
+    .who { font-size: 11px; letter-spacing: .6px; text-transform: uppercase; opacity: .85; }
+    .body { font-size: 14px; }
+
+    .lb { display: flex; flex-direction: column; gap: 6px; }
+    .lb-row {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 8px;
+      padding: 6px 8px;
+      color: #f4f6f0;
+    }
+    .theme-default .lb-row { background: rgba(0,0,0,.58); }
+    .theme-cockpit_panel .lb, .theme-cockpit_popups .lb, .theme-g_rebels_popups .lb {
+      padding: 8px;
+      border: 1px solid #35d2d0;
+      background: rgba(8, 17, 22, .78);
+    }
+    .theme-g_rebels_popups .lb { border-color: #f0df58; }
+
+    .alert-card {
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      width: min(420px, 86%);
+      padding: 16px 18px;
+      transform: translate(-50%, -50%);
+      color: #f4f6f0;
+      background: rgba(8, 17, 22, .86);
+      border: 1px solid #35d2d0;
+    }
+    .theme-g_rebels_popups .alert-card { border-color: #f0df58; color: #f7e7a1; }
+    .alert-card small { display: block; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; opacity: .7; }
+
+    .inspector { overflow: auto; }
+    .inspector__body { padding: 10px; display: flex; flex-direction: column; gap: 12px; }
+    .themes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .theme {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 72px;
+      padding: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface-dark);
+      text-align: left;
+      text-transform: none;
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+    .theme[aria-pressed="true"] { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber-dim); }
+    .theme-thumb { height: 36px; border: 1px solid #333; }
+    .theme[data-theme="default"] .theme-thumb { background: linear-gradient(#222, #111); }
+    .theme[data-theme="dashboard"] .theme-thumb { background: #1a2218; }
+    .theme[data-theme="cockpit_panel"] .theme-thumb { background: linear-gradient(#0c2a2a, #081116); border-color: #35d2d0; }
+    .theme[data-theme="cockpit_popups"] .theme-thumb { background: repeating-linear-gradient(#081116, #081116 10px, #123 10px, #123 18px); border-color: #35d2d0; }
+    .theme[data-theme="g_rebels_popups"] .theme-thumb { background: #1a1608; border-color: #f0df58; }
+    .theme em { font-size: 10px; font-style: normal; color: var(--muted); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      min-height: 32px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-dark);
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 400;
+    }
+    .chip[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
+
+    .range { display: flex; align-items: center; gap: 8px; }
+    .range output { min-width: 3.5ch; color: var(--muted); font-size: 12px; }
+
+    details.advanced {
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+    details.advanced summary { cursor: pointer; color: var(--muted); }
+
+    .scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      background: rgba(0,0,0,.55);
+    }
+    .scrim[hidden] { display: none !important; }
+    .sheet {
+      display: flex;
+      flex-direction: column;
+      width: min(640px, calc(100vw - 32px));
+      max-height: min(640px, calc(100dvh - 48px));
+      border: 2px solid var(--border);
+      background: var(--panel-bg);
+    }
+    .sheet header, .sheet footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sheet footer { border-bottom: 0; border-top: 1px solid var(--border); }
+    .sheet h2 { font-size: 16px; }
+    .sheet__body { overflow: auto; padding: 14px; min-height: 0; }
+    .sheet-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .url-row { display: flex; gap: 8px; }
+    .url-row input { flex: 1; min-width: 0; }
+    .steps { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 20;
+      padding: 8px 12px;
+      border: 1px solid var(--focus);
+      background: var(--surface-raised);
+    }
+    .toast[hidden] { display: none !important; }
+
+    @media (max-width: 1100px) {
+      .studio-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="intro">
+      <div class="kicker">OpenSpec · studio-surface-centric-redesign</div>
+      <h1>Мокап Studio</h1>
+      <p>Оценка IA: одна выбранная поверхность, превью как герой, слои настроек, Add to OBS вместо постоянной колонки URL. Это не продукт — клики не ходят в API.</p>
+      <p class="note">Смотрите: смена Чат / Лидерборд / Баннеры меняет и превью, и инспектор, и копируемый URL. Dock только в Add to OBS.</p>
+    </header>
+
+    <div class="eval-bar" aria-label="Сценарии оценки">
+      <label><input id="eval-first" type="checkbox" checked> Первый визит (sheet открыт)</label>
+      <label><input id="eval-two-looks" type="checkbox"> Два look’а (Use on stream)</label>
+      <label><input id="eval-narrow" type="checkbox"> Узкое окно</label>
+    </div>
+
+    <div id="shell" class="shell">
+      <nav class="nav" aria-label="Разделы">
+        <a href="#live" title="Эфир">Live</a>
+        <a href="#audience" title="Аудитория">Aud</a>
+        <a href="#studio" aria-current="page" title="Студия">Stu</a>
+        <a href="#settings" title="Настройки">Set</a>
+      </nav>
+
+      <section class="workspace" aria-labelledby="studio-heading">
+        <header class="toolbar">
+          <h1 id="studio-heading">Студия</h1>
+          <div class="toolbar__actions">
+            <div class="look">
+              <label for="look-select">Look</label>
+              <select id="look-select">
+                <option value="default" selected>Default</option>
+                <option value="mw5">MW5 night</option>
+              </select>
+              <button class="icon-btn ghost" type="button" id="look-menu" title="Действия с look" aria-label="Действия с look">⋯</button>
+            </div>
+            <span id="dirty" class="status">Опубликовано</span>
+            <button id="use-on-stream" class="btn-secondary" type="button" hidden>Включить в эфире</button>
+            <button id="publish" class="btn btn-primary" type="button" disabled>Опубликовать</button>
+          </div>
+        </header>
+
+        <div class="studio-layout">
+          <aside class="surfaces">
+            <div class="col-h">На стриме</div>
+            <button class="surface" type="button" data-surface="chat" aria-selected="true">
+              <strong>Чат</strong>
+              <span>/overlay</span>
+            </button>
+            <button class="surface" type="button" data-surface="leaderboard" aria-selected="false">
+              <strong>Лидерборд</strong>
+              <span>/overlay/leaderboard</span>
+            </button>
+            <button class="surface" type="button" data-surface="alerts" aria-selected="false">
+              <strong>Баннеры</strong>
+              <span>/overlay/alert</span>
+            </button>
+            <button id="open-obs" class="btn-secondary add-obs" type="button">Добавить в OBS</button>
+          </aside>
+
+          <section class="preview">
+            <div class="preview-chrome">
+              <span class="meta" id="preview-meta">Чат · 640×360 · пример</span>
+              <button class="btn-secondary" type="button" id="replay">Повтор</button>
+              <button class="btn-secondary" type="button" id="copy-follow">Копировать URL</button>
+              <div class="overflow">
+                <button class="icon-btn" type="button" id="preview-more" aria-expanded="false" aria-controls="preview-overflow" title="Ещё параметры превью">⋯</button>
+                <div id="preview-overflow" class="overflow-panel" hidden>
+                  <div class="field">
+                    <label for="size">Размер источника</label>
+                    <select id="size">
+                      <option>640 × 360</option>
+                      <option>1280 × 720</option>
+                      <option>480 × 720</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="bg">Фон превью</label>
+                    <select id="bg">
+                      <option value="white">Белый</option>
+                      <option value="checker">Шахматка</option>
+                      <option value="scene" selected>Игровой кадр</option>
+                      <option value="dark">Чёрный</option>
+                    </select>
+                  </div>
+                  <div class="field" id="mode-field">
+                    <label for="mode">Режим</label>
+                    <select id="mode">
+                      <option value="sample" selected>Пример</option>
+                      <option value="live">Live chat</option>
+                    </select>
+                  </div>
+                  <button class="btn-secondary" type="button" id="copy-pinned">Копировать pinned URL</button>
+                </div>
+              </div>
+            </div>
+            <div id="stage" class="stage theme-default" data-bg="scene">
+              <div id="preview-chat" class="preview-stack">
+                <div class="msg"><div><div class="who">Nova · Twitch</div><div class="body">Engine online. Начинаем заход.</div></div></div>
+                <div class="msg"><div><div class="who">Akira · YouTube</div><div class="body">Этот заход был чистым.</div></div></div>
+                <div class="msg"><div><div class="who">Brick · VK</div><div class="body">gg</div></div></div>
+              </div>
+              <div id="preview-lb" class="preview-stack lb" hidden>
+                <div class="lb-row"><span>01</span><strong>Nova</strong><span>1420</span></div>
+                <div class="lb-row"><span>02</span><strong>Akira</strong><span>1180</span></div>
+                <div class="lb-row"><span>03</span><strong>Brick</strong><span>960</span></div>
+              </div>
+              <div id="preview-alert" class="alert-card" hidden>
+                <small>Команда · !gg</small>
+                <strong>Nova говорит: GG!</strong>
+              </div>
+            </div>
+          </section>
+
+          <aside class="inspector">
+            <div class="col-h">Вид</div>
+            <div class="inspector__body">
+              <div>
+                <div class="field"><span>Тема</span></div>
+                <div class="themes" role="group" aria-label="Тема">
+                  <button class="theme" type="button" data-theme="default" aria-pressed="true"><span class="theme-thumb"></span><em>Default</em></button>
+                  <button class="theme" type="button" data-theme="dashboard" aria-pressed="false"><span class="theme-thumb"></span><em>Text only</em></button>
+                  <button class="theme" type="button" data-theme="cockpit_panel" aria-pressed="false"><span class="theme-thumb"></span><em>Cockpit panel</em></button>
+                  <button class="theme" type="button" data-theme="cockpit_popups" aria-pressed="false"><span class="theme-thumb"></span><em>Cockpit popups</em></button>
+                  <button class="theme" type="button" data-theme="g_rebels_popups" aria-pressed="false"><span class="theme-thumb"></span><em>G-Rebels</em></button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="font">Размер шрифта</label>
+                <div class="range">
+                  <input id="font" type="range" min="12" max="48" value="18">
+                  <output for="font" id="font-out">18 px</output>
+                </div>
+              </div>
+
+              <div class="field" id="duration-field">
+                <span>Как долго висеть</span>
+                <div class="chips" role="group" aria-label="Длительность">
+                  <button class="chip" type="button" data-ttl="8" aria-pressed="false">8 с</button>
+                  <button class="chip" type="button" data-ttl="20" aria-pressed="true">20 с</button>
+                  <button class="chip" type="button" data-ttl="0" aria-pressed="false">Пока не вытеснят</button>
+                </div>
+              </div>
+
+              <div class="field" id="period-field" hidden>
+                <label for="period">Период рейтинга</label>
+                <select id="period">
+                  <option value="session">Сессия</option>
+                  <option value="day">День</option>
+                  <option value="all">Всё время</option>
+                </select>
+              </div>
+
+              <details class="advanced">
+                <summary>Ещё настройки</summary>
+                <p class="field" style="color:var(--muted);margin-top:8px">Те же поля, что сейчас в Studio: отступы, маркер платформы, край текста, панель, картинка, очередь, сброс к теме. Здесь — заглушки для оценки плотности.</p>
+                <div class="field"><label>Маркер платформы</label><select><option>Полоска</option><option>Иконка</option><option>Оба</option></select></div>
+                <div class="field"><label>Макс. сообщений</label><input type="number" value="30"></div>
+                <div class="field"><label>TTL (если не 8 / 20 / 0)</label><input type="number" value="20"></div>
+                <div class="field"><label>Картинка панели</label><input type="file"></div>
+              </details>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="scrim" class="scrim" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet">
+      <header>
+        <div>
+          <div class="kicker" style="color:var(--amber);font-size:10px;letter-spacing:1.2px;text-transform:uppercase">Первый шаг</div>
+          <h2 id="sheet-title">Добавить в OBS</h2>
+        </div>
+        <button class="icon-btn" type="button" data-close-sheet aria-label="Закрыть">×</button>
+      </header>
+      <div class="sheet__body">
+        <nav class="sheet-nav" aria-label="Источники OBS">
+          <button class="chip" type="button" data-obs="chat" aria-pressed="true">Чат</button>
+          <button class="chip" type="button" data-obs="leaderboard" aria-pressed="false">Лидерборд</button>
+          <button class="chip" type="button" data-obs="alerts" aria-pressed="false">Баннеры</button>
+          <button class="chip" type="button" data-obs="dock" aria-pressed="false">Журнал (только вам)</button>
+        </nav>
+        <p id="obs-summary">Прозрачный чат на сцене. URL следует за активным look в Эфире.</p>
+        <div class="field">
+          <label for="obs-url">Следовать активному пресету</label>
+          <div class="url-row">
+            <input id="obs-url" readonly value="http://127.0.0.1:17877/overlay">
+            <button class="btn-secondary" type="button" id="sheet-copy">Копировать</button>
+          </div>
+        </div>
+        <ol class="steps" id="obs-steps">
+          <li>В OBS Sources добавьте источник Browser.</li>
+          <li>Вставьте URL выше.</li>
+          <li>Задайте ширину и высоту под сцену.</li>
+          <li>Оставьте CommRelay запущенным.</li>
+        </ol>
+      </div>
+      <footer>
+        <button class="btn-secondary" type="button" data-close-sheet>Позже</button>
+        <button class="btn btn-primary" type="button" data-close-sheet>Готово, хочу настроить вид</button>
+      </footer>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden role="status">URL скопирован (мок)</div>
+
+  <script>
+    const state = {
+      surface: "chat",
+      theme: "default",
+      look: "default",
+      onAir: "default",
+      dirty: false,
+      twoLooks: false
+    };
+
+    const urls = {
+      chat: "http://127.0.0.1:17877/overlay",
+      leaderboard: "http://127.0.0.1:17877/overlay/leaderboard",
+      alerts: "http://127.0.0.1:17877/overlay/alert",
+      dock: "http://127.0.0.1:17877/dock/messages"
+    };
+
+    const obsCopy = {
+      chat: ["Прозрачный чат на сцене. URL следует за активным look в Эфире.", true],
+      leaderboard: ["Рейтинг зрителей. Период попадает в URL.", true],
+      alerts: ["Баннеры команд и наград. Отдельный Browser Source поверх сцены.", true],
+      dock: ["Журнал только в интерфейсе OBS. Тема overlay сюда не применяется.", false]
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function toast(text) {
+      const el = $("toast");
+      el.textContent = text;
+      el.hidden = false;
+      window.setTimeout(() => { el.hidden = true; }, 1800);
+    }
+
+    function markDirty() {
+      state.dirty = true;
+      $("dirty").textContent = "Есть неопубликованные изменения";
+      $("dirty").classList.add("is-dirty");
+      $("publish").disabled = false;
+    }
+
+    function renderLookChrome() {
+      const two = $("eval-two-looks").checked;
+      state.twoLooks = two;
+      $("look-select").querySelector('option[value="mw5"]').hidden = !two;
+      if (!two) {
+        $("look-select").value = "default";
+        state.look = "default";
+      }
+      const showUse = two && state.look !== state.onAir;
+      $("use-on-stream").hidden = !showUse;
+    }
+
+    function renderSurface() {
+      document.querySelectorAll(".surface").forEach((btn) => {
+        btn.setAttribute("aria-selected", btn.dataset.surface === state.surface ? "true" : "false");
+      });
+      $("preview-chat").hidden = state.surface !== "chat";
+      $("preview-lb").hidden = state.surface !== "leaderboard";
+      $("preview-alert").hidden = state.surface !== "alerts";
+      $("duration-field").hidden = state.surface !== "chat";
+      $("period-field").hidden = state.surface !== "leaderboard";
+      $("mode-field").hidden = state.surface !== "chat";
+      const names = { chat: "Чат", leaderboard: "Лидерборд", alerts: "Баннеры" };
+      $("preview-meta").textContent = names[state.surface] + " · 640×360 · пример";
+    }
+
+    function bind() {
+      document.querySelectorAll(".surface").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.surface = btn.dataset.surface;
+          renderSurface();
+        });
+      });
+
+      document.querySelectorAll(".theme").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.theme = btn.dataset.theme;
+          document.querySelectorAll(".theme").forEach((el) => {
+            el.setAttribute("aria-pressed", el === btn ? "true" : "false");
+          });
+          $("stage").className = "stage theme-" + state.theme;
+          $("stage").dataset.bg = $("bg").value;
+          markDirty();
+        });
+      });
+
+      document.querySelectorAll(".chip[data-ttl]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".chip[data-ttl]").forEach((el) => {
+            el.setAttribute("aria-pressed", el === btn ? "true" : "false");
+          });
+          markDirty();
+        });
+      });
+
+      $("font").addEventListener("input", () => {
+        $("font-out").textContent = $("font").value + " px";
+        markDirty();
+      });
+
+      $("copy-follow").addEventListener("click", () => toast("Follow-active: " + urls[state.surface]));
+      $("copy-pinned").addEventListener("click", () => toast("Pinned: " + urls[state.surface] + "?preset=" + state.look));
+      $("replay").addEventListener("click", () => toast("Пример перезапущен"));
+      $("publish").addEventListener("click", () => {
+        state.dirty = false;
+        $("dirty").textContent = "Опубликовано";
+        $("dirty").classList.remove("is-dirty");
+        $("publish").disabled = true;
+        toast("Черновик опубликован (мок)");
+      });
+      $("use-on-stream").addEventListener("click", () => {
+        state.onAir = state.look;
+        renderLookChrome();
+        toast("В эфире: " + state.look + " (мок activate)");
+      });
+      $("look-select").addEventListener("change", () => {
+        state.look = $("look-select").value;
+        renderLookChrome();
+      });
+
+      $("preview-more").addEventListener("click", () => {
+        const panel = $("preview-overflow");
+        panel.hidden = !panel.hidden;
+        $("preview-more").setAttribute("aria-expanded", panel.hidden ? "false" : "true");
+      });
+      $("bg").addEventListener("change", () => { $("stage").dataset.bg = $("bg").value; });
+
+      $("open-obs").addEventListener("click", () => { $("scrim").hidden = false; });
+      document.querySelectorAll("[data-close-sheet]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          $("scrim").hidden = true;
+          $("eval-first").checked = false;
+        });
+      });
+      document.querySelectorAll("[data-obs]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("[data-obs]").forEach((el) => {
+            el.setAttribute("aria-pressed", el === btn ? "true" : "false");
+          });
+          const key = btn.dataset.obs;
+          $("obs-summary").textContent = obsCopy[key][0];
+          $("obs-url").value = urls[key];
+          $("obs-steps").hidden = key === "dock" ? false : false;
+          $("obs-steps").innerHTML = key === "dock"
+            ? "<li>View → Docks → Custom Browser Docks…</li><li>Имя и URL выше.</li><li>Apply и разместите панель.</li>"
+            : "<li>В OBS Sources добавьте источник Browser.</li><li>Вставьте URL выше.</li><li>Задайте ширину и высоту под сцену.</li><li>Оставьте CommRelay запущенным.</li>";
+        });
+      });
+      $("sheet-copy").addEventListener("click", () => toast("Скопировано: " + $("obs-url").value));
+
+      $("eval-first").addEventListener("change", () => { $("scrim").hidden = !$("eval-first").checked; });
+      $("eval-two-looks").addEventListener("change", renderLookChrome);
+      $("eval-narrow").addEventListener("change", () => {
+        $("shell").classList.toggle("is-narrow", $("eval-narrow").checked);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !$("scrim").hidden) {
+          $("scrim").hidden = true;
+          $("eval-first").checked = false;
+        }
+      });
+    }
+
+    bind();
+    renderSurface();
+    renderLookChrome();
+  </script>
+</body>
+</html>
