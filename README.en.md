@@ -75,15 +75,15 @@ Do not move the `CommRelay` folder after installing the shortcut without running
 1. Launch the app. The CommRelay window opens and the local server starts inside it.
 2. Open **Settings → Platforms** and enable the platforms you need.
 3. Click **Save** on that section after changing settings.
-4. Open **Studio**: the source list walks you through connecting the overlay, leaderboard, and message log.
+4. Open **Studio**: on first visit **Add to OBS** opens with Browser Source steps and copyable URLs; then customize the on-stream surfaces (chat, leaderboard, alerts).
 
 By default CommRelay listens on `127.0.0.1:17877`. The admin panel is available at `http://127.0.0.1:17877/`, and the overlay at `http://127.0.0.1:17877/overlay`.
 
 ## OBS Browser Source
 
-1. In CommRelay open **Studio**: a source list on the left (chat, leaderboard, alerts, message dock).
-2. Select the source, copy **Follow active preset**, and in OBS add a **Browser** source (chat, leaderboard, and alerts) or a Custom Browser Dock (message dock).
-3. The primary chat, leaderboard, and alert URLs **omit** `?preset=` — the source follows the active preset. For a scene-specific look, copy the **Pinned preset** URL. The leaderboard also includes `period` and, when needed, `layout` / `font_size_px`.
+1. In CommRelay open **Studio**: on the left, the on-stream surface list (chat, leaderboard, alerts). **Add to OBS** opens Browser Source steps and all copyable URLs.
+2. Select a surface and copy **Follow active preset** from the preview — or open **Add to OBS** and copy the URL for the source you need. In OBS add a **Browser** source (chat, leaderboard, alerts) or a Custom Browser Dock (message log).
+3. The primary chat, leaderboard, and alert URLs **omit** `?preset=` — the source follows the active preset. For a scene-specific look, copy the **Pinned preset** URL in **Add to OBS** or from **Preview options** (⋯) on the preview. The leaderboard also includes `period` and, when needed, `layout` / `font_size_px`.
 4. For **Alerts** (`/overlay/alert`) add a separate Browser Source on the scene. Banner sound plays in that source — enable **Control audio via OBS** on the source to hear it in the recording and stream.
 5. Set the size for your scene layout. Do not add a background manually: on-stream sources are already transparent.
 6. Keep CommRelay running during the stream.
@@ -94,7 +94,7 @@ If you changed the port in settings, update the URL in OBS.
 
 CommRelay can show a separate chat feed directly in the OBS interface. This panel is for the streamer: it does not appear on the scene and is not visible to viewers.
 
-1. In CommRelay open **Studio**, select **Message dock**, and click **Copy URL**.
+1. In CommRelay open **Studio** → **Add to OBS**, choose **Message dock**, and click **Copy URL**.
 2. In OBS open **View → Docks → Custom Browser Docks…** (**Вид → Док-панели → Пользовательские браузерные доки…**).
 3. Enter a name, for example `CommRelay Messages`, and paste the copied URL.
 4. Click **Apply**, then place the new panel in a convenient part of the OBS interface.
@@ -110,13 +110,13 @@ Open **Studio** in the CommRelay control panel.
 | Setting | What it does |
 |---------|--------------|
 | **Max messages** | How many recent messages the overlay keeps on screen. |
-| **Message TTL** | After how many seconds a message disappears (0 — do not remove by time). |
+| **Message TTL** | How long a message stays on screen: chips **8 s**, **20 s**, or **Until replaced** (0 — do not remove by time). A custom value is in **Advanced**. |
 | **Font size** | Text size in the overlay, from **12 to 48 px**. |
 | **Spacing** | **Comfortable** — normal padding. **Compact** — denser when many lines are on screen. |
 | **Theme** | **Default** — cards with a semi-transparent background. **Text only** — text only, no background. **Cockpit panel** — shared HUD panel. **Cockpit popups** — separate MW5 HUD pop-up messages. **G-Rebels Cockpit popups** — pop-up messages in a gold aviation HUD style. The same theme styles chat and the leaderboard. |
 | **Presets** | A named look for a scene or game: theme, limit, TTL, density, text edge, platform marker, panel, plus leaderboard font and layout (`panel` / `chips`). An older `config.json` without presets becomes the **Default** preset. |
-| **Follow / Pinned URL** | The primary copy action is **Follow active preset** (no `?preset=`). A pinned URL with `?preset=` locks that preset for one scene. Existing sources that already include `preset` keep working. |
-| **Preview** | **Chat / Leaderboard** switch: the leaderboard preview always shows a fictitious top-5, never live stats. |
+| **Follow / Pinned URL** | On the selected surface — **Follow active preset** (no `?preset=`). A pinned URL with `?preset=` is in **Add to OBS** or **Preview options** (⋯). Existing sources that already include `preset` keep working. |
+| **Preview** | The surface list on the left switches the preview (**Chat / Leaderboard / Alerts**); the leaderboard preview always shows a fictitious top-5. Preview backdrop (white, checkerboard, game footage, black) is in **Preview options** (⋯). |
 
 After changing appearance in Studio:
 

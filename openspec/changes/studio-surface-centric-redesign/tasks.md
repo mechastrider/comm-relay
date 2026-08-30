@@ -67,15 +67,15 @@ No production Go, HTTP, or `config.json` schema work. Overlay activate/update co
 > **Allowed fallout**: Locale strings for Use on stream.
 > **Blocked**: Combining Publish and activate into one required action.
 
-- [ ] 5.1 Remove the Studio toolbar active-preset hot control; keep the Live control. Add Use on stream when the edited look is not active, with progress and error handling matching Live.
-- [ ] 5.2 Hide add/rename/duplicate/delete from primary chrome when only one look exists; keep them reachable from overflow or when multiple looks exist. Verify dirty navigation confirm still runs.
+- [x] 5.1 Remove the Studio toolbar active-preset hot control; keep the Live control. Add Use on stream when the edited look is not active, with progress and error handling matching Live.
+- [x] 5.2 Hide add/rename/duplicate/delete from primary chrome when only one look exists; keep them reachable from overflow or when multiple looks exist. Verify dirty navigation confirm still runs.
 
-- [ ] 5.3 Add RU/EN strings for new Studio chrome (Add to OBS, Use on stream, duration, overflow, Advanced) and run `npm run test:i18n`.
+- [x] 5.3 Add RU/EN strings for new Studio chrome (Add to OBS, Use on stream, duration, overflow, Advanced) and run `npm run test:i18n`.
 
 ## Docs
 
-- [ ] 6.1 Add concise Russian `[Unreleased]` bullets for the Studio IA (one surface list, Add to OBS, layered look, Live-only hot switch, Use on stream). Do not edit versioned changelog sections.
-- [ ] 6.2 Update README and FAQ Studio/OBS steps so copy, dock, pinned URLs, and Publish match the new places. Leave `docs/concept.md` unchanged unless the product contract itself changes (it should not).
+- [x] 6.1 Add concise Russian `[Unreleased]` bullets for the Studio IA (one surface list, Add to OBS, layered look, Live-only hot switch, Use on stream). Do not edit versioned changelog sections.
+- [x] 6.2 Update README and FAQ Studio/OBS steps so copy, dock, pinned URLs, and Publish match the new places. Leave `docs/concept.md` unchanged unless the product contract itself changes (it should not).
 
 ## Verification
 
