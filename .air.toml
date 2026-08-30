@@ -1,6 +1,6 @@
 # Live reload for comm-relay-server (backend + embedded API).
-# Static UI under web/ is served from disk via -web; refresh the browser after web edits.
 # Run: task web:dev
+# Open http://127.0.0.1:17878 for admin with CSS/JS/HTML live reload (proxies :17877).
 
 root = "."
 tmp_dir = "tmp"
