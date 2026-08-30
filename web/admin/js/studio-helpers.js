@@ -8,6 +8,41 @@ const STUDIO_SURFACES = new Set(["chat", "leaderboard", "alerts"]);
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
 const OVERLAY_DISPLAY_MODES = new Set(["normal", "compact"]);
 
+/** @type {readonly number[]} */
+export const MESSAGE_TTL_CHIP_VALUES = [8, 20, 0];
+
+/**
+ * Map a stored TTL to a chip value when it matches 8, 20, or 0.
+ *
+ * @param {unknown} ttlSeconds
+ * @returns {8 | 20 | 0 | null}
+ */
+export function messageTtlToChipValue(ttlSeconds) {
+  const parsed = Number.parseInt(String(ttlSeconds), 10);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+  return MESSAGE_TTL_CHIP_VALUES.includes(parsed) ? /** @type {8 | 20 | 0} */ (parsed) : null;
+}
+
+/**
+ * @param {unknown} chipValue
+ * @returns {boolean}
+ */
+export function isMessageTtlChipValue(chipValue) {
+  return messageTtlToChipValue(chipValue) !== null;
+}
+
+/**
+ * Coerce a chip selection to a persisted TTL, or null when invalid.
+ *
+ * @param {unknown} chipValue
+ * @returns {8 | 20 | 0 | null}
+ */
+export function chipValueToMessageTtl(chipValue) {
+  return messageTtlToChipValue(chipValue);
+}
+
 /**
  * @param {unknown} value
  * @returns {"panel"|"chips"}

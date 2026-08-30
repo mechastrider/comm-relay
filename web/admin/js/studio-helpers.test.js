@@ -9,6 +9,10 @@ import {
   normalizeOverlayAppearanceDraft,
   normalizeStudioSurface,
   buildFollowActiveURLForSurface,
+  messageTtlToChipValue,
+  isMessageTtlChipValue,
+  chipValueToMessageTtl,
+  MESSAGE_TTL_CHIP_VALUES,
 } from "./studio-helpers.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
@@ -105,5 +109,17 @@ assert.ok(sourceUrlOmitsPreset(ORIGIN, followAlerts));
 
 const invalidSurfaceUrl = buildFollowActiveURLForSurface("dock", { origin: ORIGIN });
 assert.equal(invalidSurfaceUrl, ORIGIN + "/overlay");
+
+assert.deepEqual(MESSAGE_TTL_CHIP_VALUES, [8, 20, 0]);
+assert.equal(messageTtlToChipValue(8), 8);
+assert.equal(messageTtlToChipValue(20), 20);
+assert.equal(messageTtlToChipValue(0), 0);
+assert.equal(messageTtlToChipValue(15), null);
+assert.equal(messageTtlToChipValue("20"), 20);
+assert.equal(isMessageTtlChipValue(20), true);
+assert.equal(isMessageTtlChipValue(15), false);
+assert.equal(chipValueToMessageTtl(8), 8);
+assert.equal(chipValueToMessageTtl(0), 0);
+assert.equal(chipValueToMessageTtl(15), null);
 
 console.log("studio-helpers OK");

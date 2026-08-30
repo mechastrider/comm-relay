@@ -94,6 +94,7 @@ export default {
   "studio.discardConfirm": "Отменить неопубликованные изменения overlay?",
   "studio.publishSuccess": "Настройки overlay опубликованы.",
   "studio.previewOverflow": "Параметры превью",
+  "studio.advanced": "Ещё настройки",
 
   "live.statusStrip": "Операционный статус эфира",
   "live.workArea": "Рабочая область «Эфир»",
@@ -248,6 +249,10 @@ export default {
   "obs.displayIntro": "Общий вид сцены для всех Browser Source с этим пресетом. Превью следует вкладке поверхности выше.",
   "obs.maxMessages": "Макс. сообщений",
   "obs.messageTtl": "TTL сообщения (секунды)",
+  "obs.messageDuration": "Как долго висеть",
+  "obs.duration8s": "8 с",
+  "obs.duration20s": "20 с",
+  "obs.durationUntilReplaced": "Пока не вытеснят",
   "obs.ttlHint": "0 — не удалять по времени (только лимит max messages).",
   "obs.fontSize": "Размер шрифта (px)",
   "obs.fontSizeHint": "12–48 px. После сохранения обновите Browser Source в OBS.",

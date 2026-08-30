@@ -616,96 +616,113 @@
               </div>
 
               
-<div class="overlay-settings-column">
+<div class="overlay-settings-column studio-inspector">
                 <section class="panel overlay-appearance-panel">
-                  <div class="panel__body">
+                  <div class="panel__body studio-inspector__body">
                     <p class="panel-intro" data-i18n="obs.displayIntro">Shared scene look for every Browser Source that uses this preset. The preview follows the surface tab above.</p>
 
-                    <div class="form form--compact form--overlay-display">
+                    <div class="studio-inspector-essential form form--compact">
                       <h3 class="overlay-section-title form__field--full" data-i18n="obs.sceneLook">Scene look</h3>
-                      <div class="form__field form__field--full">
-                        <label for="overlay-theme" data-i18n="obs.theme">Theme</label>
-                        <select id="overlay-theme" name="overlay_theme">
+
+                      <div class="form__field form__field--full studio-theme-field">
+                        <span id="overlay-theme-label" class="field-label" data-i18n="obs.theme">Theme</span>
+                        <select id="overlay-theme" name="overlay_theme" class="visually-hidden" tabindex="-1" aria-hidden="true">
                           <option value="default" data-i18n="obs.themeDefault">Default</option>
                           <option value="dashboard" data-i18n="obs.themeTextOnly">Text only (no background)</option>
                           <option value="cockpit_panel" data-i18n="obs.themeCockpitPanel">MW5 Mercs Cockpit panel</option>
                           <option value="cockpit_popups" data-i18n="obs.themeCockpitPopups">MW5 Mercs Cockpit popups</option>
                           <option value="g_rebels_popups" data-i18n="obs.themeGRebels">G-Rebels Cockpit popups</option>
                         </select>
+                        <div id="overlay-theme-picker" class="theme-picker" role="radiogroup" aria-labelledby="overlay-theme-label"></div>
                         <p class="field-hint" data-i18n="obs.themeHint">Cockpit themes use HUD-style panels for streams over gameplay. The same theme styles chat and the leaderboard.</p>
                         <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
                       </div>
 
-                      <div class="form__field">
-                        <label for="overlay-text-edge" data-i18n="obs.textEdge">Text edge</label>
-                        <select id="overlay-text-edge">
-                          <option value="none" data-i18n="obs.textEdgeNone">None</option>
-                          <option value="shadow" data-i18n="obs.textEdgeShadow">Shadow</option>
-                          <option value="outline" data-i18n="obs.textEdgeOutline">Outline</option>
+                      <div id="studio-essential-font-chat" class="form__field overlay-chat-only">
+                        <label for="overlay-font-size" data-i18n="obs.fontSize">Font size (px)</label>
+                        <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="48" step="1">
+                        <p class="field-hint" data-i18n="obs.fontSizeHint">12–48 px. After saving, refresh the Browser Source in OBS.</p>
+                        <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
+                      </div>
+
+                      <div id="studio-essential-font-leaderboard" class="form__field" hidden>
+                        <label for="overlay-leaderboard-font-size" data-i18n="obs.leaderboardFontSize">Leaderboard font size (px)</label>
+                        <input id="overlay-leaderboard-font-size" name="overlay_leaderboard_font_size_px" type="number" min="12" max="48" step="1">
+                        <p class="field-hint" data-i18n="obs.leaderboardFontSizeHint">12–48 px. Independent from chat so a narrow ranking can stay smaller.</p>
+                        <p id="overlay-leaderboard-font-size-error" class="field-error" role="alert" hidden></p>
+                      </div>
+
+                      <div id="studio-essential-duration" class="form__field form__field--full overlay-chat-only">
+                        <span id="overlay-duration-label" class="field-label" data-i18n="obs.messageDuration">How long messages stay</span>
+                        <div id="overlay-duration-chips" class="duration-chips" role="radiogroup" aria-labelledby="overlay-duration-label">
+                          <button class="duration-chip" type="button" data-ttl="8" aria-pressed="false" data-i18n="obs.duration8s">8 s</button>
+                          <button class="duration-chip" type="button" data-ttl="20" aria-pressed="false" data-i18n="obs.duration20s">20 s</button>
+                          <button class="duration-chip" type="button" data-ttl="0" aria-pressed="false" data-i18n="obs.durationUntilReplaced">Until replaced</button>
+                        </div>
+                      </div>
+
+                      <div id="studio-essential-period" class="form__field" hidden>
+                        <label for="overlay-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
+                        <select id="overlay-leaderboard-period">
+                          <option value="session" data-i18n="viewers.periodSession">Session</option>
+                          <option value="day" data-i18n="viewers.periodDay">Day</option>
+                          <option value="all" data-i18n="viewers.periodAll">All-time</option>
                         </select>
                       </div>
+                    </div>
 
-                      <div class="form__field">
-                        <label for="overlay-text-edge-strength" data-i18n="obs.textEdgeStrength">Edge strength</label>
-                        <input id="overlay-text-edge-strength" type="number" min="0" max="8" step="1" inputmode="numeric">
-                      </div>
-
-                      <h3 class="overlay-section-title form__field--full" data-i18n="obs.thisSurface">This surface</h3>
-
-                      <div id="overlay-chat-fields" class="overlay-surface-fields">
-                      <div class="form__field">
-                  <label for="overlay-font-size" data-i18n="obs.fontSize">Font size (px)</label>
-                  <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="48" step="1">
-                  <p class="field-hint" data-i18n="obs.fontSizeHint">12–48 px. After saving, refresh the Browser Source in OBS.</p>
-                  <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
-                </div>
-
-                <div class="form__field">
-                  <label for="overlay-display-mode" data-i18n="obs.spacing">Spacing</label>
-                  <select id="overlay-display-mode" name="overlay_display_mode">
-                    <option value="normal" data-i18n="obs.comfortable">Comfortable</option>
-                    <option value="compact" data-i18n="obs.compact">Compact</option>
-                  </select>
-                  <p class="field-hint" data-i18n="obs.spacingHint">Compact reduces gaps between lines — useful with a busy chat.</p>
-                  <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
-                </div>
-
-                <div class="form__field form__field--full">
-                  <label for="overlay-platform-marker" data-i18n="obs.platformMarker">Platform marker</label>
-                  <select id="overlay-platform-marker">
-                    <option value="stripe" data-i18n="obs.markerStripe">Stripe</option>
-                    <option value="icon" data-i18n="obs.markerIcon">Icon</option>
-                    <option value="both" data-i18n="obs.markerBoth">Stripe and icon</option>
-                    <option value="none" data-i18n="obs.markerNone">None</option>
-                  </select>
-                  <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="basics" data-i18n="obs.resetGroup">Reset group to theme</button>
-                </div>
-                      </div>
-
-                      <div id="overlay-leaderboard-fields" class="overlay-surface-fields" hidden>
+                    <details class="overlay-group studio-inspector-advanced" id="studio-inspector-advanced">
+                      <summary data-i18n="studio.advanced">Advanced</summary>
+                      <div class="form form--compact form--overlay-display">
                         <div class="form__field">
-                          <label for="overlay-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
-                          <select id="overlay-leaderboard-period">
-                            <option value="session" data-i18n="viewers.periodSession">Session</option>
-                            <option value="day" data-i18n="viewers.periodDay">Day</option>
-                            <option value="all" data-i18n="viewers.periodAll">All-time</option>
+                          <label for="overlay-text-edge" data-i18n="obs.textEdge">Text edge</label>
+                          <select id="overlay-text-edge">
+                            <option value="none" data-i18n="obs.textEdgeNone">None</option>
+                            <option value="shadow" data-i18n="obs.textEdgeShadow">Shadow</option>
+                            <option value="outline" data-i18n="obs.textEdgeOutline">Outline</option>
                           </select>
                         </div>
+
                         <div class="form__field">
-                          <label for="overlay-leaderboard-font-size" data-i18n="obs.leaderboardFontSize">Leaderboard font size (px)</label>
-                          <input id="overlay-leaderboard-font-size" name="overlay_leaderboard_font_size_px" type="number" min="12" max="48" step="1">
-                          <p class="field-hint" data-i18n="obs.leaderboardFontSizeHint">12–48 px. Independent from chat so a narrow ranking can stay smaller.</p>
-                          <p id="overlay-leaderboard-font-size-error" class="field-error" role="alert" hidden></p>
+                          <label for="overlay-text-edge-strength" data-i18n="obs.textEdgeStrength">Edge strength</label>
+                          <input id="overlay-text-edge-strength" type="number" min="0" max="8" step="1" inputmode="numeric">
                         </div>
-                        <div class="form__field">
-                          <label for="overlay-leaderboard-layout" data-i18n="obs.leaderboardLayout">Leaderboard layout</label>
-                          <select id="overlay-leaderboard-layout">
-                            <option value="panel" data-i18n="obs.leaderboardLayoutPanel">Panel</option>
-                            <option value="chips" data-i18n="obs.leaderboardLayoutChips">Chips</option>
-                          </select>
-                          <p class="field-hint" data-i18n="obs.leaderboardLayoutHint">Panel is one HUD frame. Chips make each rank a separate card in the same theme.</p>
+
+                        <h3 class="overlay-section-title form__field--full" data-i18n="obs.thisSurface">This surface</h3>
+
+                        <div id="overlay-chat-fields" class="overlay-surface-fields">
+                          <div class="form__field">
+                            <label for="overlay-display-mode" data-i18n="obs.spacing">Spacing</label>
+                            <select id="overlay-display-mode" name="overlay_display_mode">
+                              <option value="normal" data-i18n="obs.comfortable">Comfortable</option>
+                              <option value="compact" data-i18n="obs.compact">Compact</option>
+                            </select>
+                            <p class="field-hint" data-i18n="obs.spacingHint">Compact reduces gaps between lines — useful with a busy chat.</p>
+                            <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
+                          </div>
+
+                          <div class="form__field form__field--full">
+                            <label for="overlay-platform-marker" data-i18n="obs.platformMarker">Platform marker</label>
+                            <select id="overlay-platform-marker">
+                              <option value="stripe" data-i18n="obs.markerStripe">Stripe</option>
+                              <option value="icon" data-i18n="obs.markerIcon">Icon</option>
+                              <option value="both" data-i18n="obs.markerBoth">Stripe and icon</option>
+                              <option value="none" data-i18n="obs.markerNone">None</option>
+                            </select>
+                            <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="basics" data-i18n="obs.resetGroup">Reset group to theme</button>
+                          </div>
                         </div>
-                      </div>
+
+                        <div id="overlay-leaderboard-fields" class="overlay-surface-fields" hidden>
+                          <div class="form__field">
+                            <label for="overlay-leaderboard-layout" data-i18n="obs.leaderboardLayout">Leaderboard layout</label>
+                            <select id="overlay-leaderboard-layout">
+                              <option value="panel" data-i18n="obs.leaderboardLayoutPanel">Panel</option>
+                              <option value="chips" data-i18n="obs.leaderboardLayoutChips">Chips</option>
+                            </select>
+                            <p class="field-hint" data-i18n="obs.leaderboardLayoutHint">Panel is one HUD frame. Chips make each rank a separate card in the same theme.</p>
+                          </div>
+                        </div>
 
               <details class="overlay-group">
                 <summary data-i18n="obs.textGroup">Text</summary>
@@ -863,6 +880,8 @@
                         </div>
                       </div>
                     </div>
+                      </div>
+                    </details>
                   </div>
                 </section>
               </div>

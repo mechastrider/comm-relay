@@ -5,8 +5,9 @@ import { uploadOverlayAsset } from "./overlay-asset-upload.js";
 import { showBanner } from "./ui-shell.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildObsAlertURL } from "./alert-url.js";
-import { buildFollowActiveURLForSurface } from "./studio-helpers.js";
+import { buildFollowActiveURLForSurface, messageTtlToChipValue, chipValueToMessageTtl } from "./studio-helpers.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
+import { OVERLAY_THEMES } from "./constants.js";
 import * as dom from "./dom.js";
 
 let presets = [];
@@ -28,6 +29,131 @@ const THEME_LABEL_KEYS = {
 function themeLabel(theme) {
   const key = THEME_LABEL_KEYS[theme] || THEME_LABEL_KEYS.default;
   return t(key);
+}
+
+function syncThemeCards() {
+  const themeSelect = document.getElementById("overlay-theme");
+  const picker = dom.overlayThemePicker;
+  if (!themeSelect || !picker) {
+    return;
+  }
+  const current = themeSelect.value || "default";
+  picker.querySelectorAll(".theme-card").forEach(function (button) {
+    const selected = button.dataset.theme === current;
+    button.setAttribute("aria-pressed", selected ? "true" : "false");
+  });
+}
+
+function setThemeFromCard(themeId) {
+  const themeSelect = document.getElementById("overlay-theme");
+  if (!themeSelect || !OVERLAY_THEMES.includes(themeId)) {
+    return;
+  }
+  themeSelect.value = themeId;
+  syncThemeCards();
+  requestPreviewRefresh();
+}
+
+function syncDurationChips() {
+  const ttlInput = document.getElementById("overlay-message-ttl");
+  const chipsRoot = dom.overlayDurationChips;
+  if (!ttlInput || !chipsRoot) {
+    return;
+  }
+  const chipValue = messageTtlToChipValue(ttlInput.value);
+  chipsRoot.querySelectorAll(".duration-chip").forEach(function (button) {
+    const selected = chipValue !== null && Number.parseInt(button.dataset.ttl, 10) === chipValue;
+    button.setAttribute("aria-pressed", selected ? "true" : "false");
+  });
+}
+
+function setDurationFromChip(chipValue) {
+  const ttl = chipValueToMessageTtl(chipValue);
+  const ttlInput = document.getElementById("overlay-message-ttl");
+  if (ttl === null || !ttlInput) {
+    return;
+  }
+  ttlInput.value = String(ttl);
+  syncDurationChips();
+  requestPreviewRefresh();
+}
+
+function refreshThemeCardLabels() {
+  const picker = dom.overlayThemePicker;
+  if (!picker) {
+    return;
+  }
+  picker.querySelectorAll(".theme-card").forEach(function (button) {
+    const themeId = button.dataset.theme;
+    if (!themeId) {
+      return;
+    }
+    button.setAttribute("aria-label", themeLabel(themeId));
+    const label = button.querySelector(".theme-card__label");
+    if (label) {
+      label.textContent = themeLabel(themeId);
+    }
+  });
+}
+
+function initThemePicker() {
+  const picker = dom.overlayThemePicker;
+  const themeSelect = document.getElementById("overlay-theme");
+  if (!picker || !themeSelect) {
+    return;
+  }
+  if (picker.dataset.bound !== "true") {
+    picker.dataset.bound = "true";
+    picker.innerHTML = "";
+    OVERLAY_THEMES.forEach(function (themeId) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "theme-card";
+      button.dataset.theme = themeId;
+      button.setAttribute("role", "radio");
+      button.setAttribute("aria-pressed", "false");
+
+      const thumb = document.createElement("span");
+      thumb.className = "theme-card__thumb";
+      thumb.setAttribute("aria-hidden", "true");
+
+      const label = document.createElement("em");
+      label.className = "theme-card__label";
+
+      button.appendChild(thumb);
+      button.appendChild(label);
+      button.addEventListener("click", function () {
+        setThemeFromCard(themeId);
+      });
+      picker.appendChild(button);
+    });
+  }
+  refreshThemeCardLabels();
+  syncThemeCards();
+}
+
+function initDurationChips() {
+  const chipsRoot = dom.overlayDurationChips;
+  if (!chipsRoot || chipsRoot.dataset.bound === "true") {
+    return;
+  }
+  chipsRoot.dataset.bound = "true";
+  chipsRoot.querySelectorAll(".duration-chip").forEach(function (button) {
+    button.addEventListener("click", function () {
+      setDurationFromChip(button.dataset.ttl);
+    });
+  });
+  syncDurationChips();
+}
+
+export function syncStudioInspectorEssential(surface) {
+  const current = surface === "leaderboard" ? "leaderboard" : surface === "alerts" ? "alerts" : "chat";
+  if (dom.studioEssentialFontLeaderboard) {
+    dom.studioEssentialFontLeaderboard.hidden = current !== "leaderboard";
+  }
+  if (dom.studioEssentialPeriod) {
+    dom.studioEssentialPeriod.hidden = current !== "leaderboard";
+  }
 }
 
 function newID(prefix) {
@@ -269,6 +395,8 @@ function writeFormFromPreset(preset) {
   setFieldValue("overlay-leaderboard-font-size", String(leaderboard.font_size_px));
   setFieldValue("overlay-leaderboard-layout", leaderboard.layout);
   updatePanelImagePreview(style.panel_image);
+  syncThemeCards();
+  syncDurationChips();
 }
 
 function currentPreset() {
@@ -826,6 +954,8 @@ export function initOverlayAppearance() {
   }
   bound = true;
   initPanelImageFitIcons();
+  initThemePicker();
+  initDurationChips();
   const appearanceSelect = document.getElementById("overlay-preset-select");
   if (appearanceSelect) {
     appearanceSelect.addEventListener("change", function () {
@@ -918,11 +1048,24 @@ export function initOverlayAppearance() {
   }
   const theme = document.getElementById("overlay-theme");
   if (theme) {
-    theme.addEventListener("change", requestPreviewRefresh);
+    theme.addEventListener("change", function () {
+      syncThemeCards();
+      requestPreviewRefresh();
+    });
+  }
+  const ttlInput = document.getElementById("overlay-message-ttl");
+  if (ttlInput) {
+    ttlInput.addEventListener("input", function () {
+      syncDurationChips();
+      requestPreviewRefresh();
+    });
+    ttlInput.addEventListener("change", function () {
+      syncDurationChips();
+      requestPreviewRefresh();
+    });
   }
   [
     "overlay-max-messages",
-    "overlay-message-ttl",
     "overlay-font-size",
     "overlay-display-mode",
     "overlay-text-edge",
@@ -945,5 +1088,9 @@ export function initOverlayAppearance() {
       el.addEventListener("change", requestPreviewRefresh);
       el.addEventListener("input", requestPreviewRefresh);
     }
+  });
+
+  window.addEventListener("admin-locale-applied", function () {
+    refreshThemeCardLabels();
   });
 }

@@ -19,7 +19,7 @@ import {
   OVERLAY_PREVIEW_SIZES,
 } from './constants.js';
 import { t } from './i18n-ui.js';
-import { collectAppearanceQuery, updatePresetIsland } from './overlay-appearance.js';
+import { collectAppearanceQuery, updatePresetIsland, syncStudioInspectorEssential } from './overlay-appearance.js';
 import {
   DEFAULT_PREVIEW_BACKGROUND,
   normalizePreviewBackground,
@@ -301,6 +301,7 @@ export function applyPreviewSurface(surface) {
     document.querySelectorAll(".overlay-chat-only").forEach(function (element) {
       element.hidden = current !== "chat";
     });
+    syncStudioInspectorEssential(current);
     writeOverlayPreviewPreference(OVERLAY_PREVIEW_SURFACE_KEY, current);
     document.dispatchEvent(new Event("overlay-preview-surface-changed"));
 }

@@ -94,6 +94,7 @@ export default {
   "studio.discardConfirm": "Discard unpublished overlay changes?",
   "studio.publishSuccess": "Overlay settings published.",
   "studio.previewOverflow": "Preview options",
+  "studio.advanced": "Advanced",
 
   "live.statusStrip": "Live operational status",
   "live.workArea": "Live workspace",
@@ -248,6 +249,10 @@ export default {
   "obs.displayIntro": "Shared scene look for every Browser Source that uses this preset. The preview follows the surface tab above.",
   "obs.maxMessages": "Max messages",
   "obs.messageTtl": "Message TTL (seconds)",
+  "obs.messageDuration": "How long messages stay",
+  "obs.duration8s": "8 s",
+  "obs.duration20s": "20 s",
+  "obs.durationUntilReplaced": "Until replaced",
   "obs.ttlHint": "0 keeps messages until they scroll off (max messages limit).",
   "obs.fontSize": "Font size (px)",
   "obs.fontSizeHint": "12–48 px. After saving, refresh the Browser Source in OBS.",
