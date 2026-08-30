@@ -1,15 +1,23 @@
 package runtime
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 // Info holds process runtime facts for diagnostics.
 type Info struct {
-	StartedAt time.Time
+	StartedAt  time.Time
+	InstanceID string
 }
 
-// NewInfo records the process start time.
+// NewInfo records the process start time and a unique instance id for health checks.
 func NewInfo() *Info {
-	return &Info{StartedAt: time.Now()}
+	return &Info{
+		StartedAt:  time.Now(),
+		InstanceID: uuid.NewString(),
+	}
 }
 
 // Uptime returns elapsed time since start.

@@ -385,6 +385,10 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
       overlay: Object.assign({}, overlayAppearance, {
         active_preset_id:
           overlay.active_preset_id || overlayAppearance.active_preset_id || "default",
+        presets:
+          Array.isArray(overlayAppearance.presets) && overlayAppearance.presets.length > 0
+            ? overlayAppearance.presets
+            : overlay.presets || [],
         emotes: overlay.emotes || {},
         image_previews: overlay.image_previews || {},
       }),

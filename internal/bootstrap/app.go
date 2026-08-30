@@ -36,6 +36,7 @@ type App struct {
 	done        chan struct{}
 	adminURL    string
 	healthURL   string
+	instanceID  string
 }
 
 // New wires config, event bus, WebSocket hub, HTTP API, and connectors without starting them.
@@ -183,6 +184,7 @@ func New(opts Options) (*App, error) {
 		viewerStore: viewerStore,
 		adminURL:    config.AdminBaseURLForListenAddr(addr, cfg),
 		healthURL:   config.HealthURLForListenAddr(addr, cfg),
+		instanceID:  runtimeInfo.InstanceID,
 	}, nil
 }
 
@@ -218,7 +220,7 @@ func (a *App) Start(ctx context.Context) error {
 		a.eventBus.Close()
 	}()
 
-	return waitHTTPReady(runCtx, a.healthURL, 30*time.Second)
+	return waitHTTPReady(runCtx, a.healthURL, a.instanceID, 30*time.Second)
 }
 
 // Stop cancels background workers and waits for shutdown.
