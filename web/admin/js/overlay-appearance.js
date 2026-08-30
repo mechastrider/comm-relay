@@ -5,6 +5,7 @@ import { uploadOverlayAsset } from "./overlay-asset-upload.js";
 import { showBanner } from "./ui-shell.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildObsAlertURL } from "./alert-url.js";
+import { buildFollowActiveURLForSurface } from "./studio-helpers.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
 import * as dom from "./dom.js";
 
@@ -383,11 +384,11 @@ export function updatePresetIsland() {
       limit: String(PRESET_LIMIT),
     });
   }
+  const surface = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
+  const previewSurface = surface ? surface.getAttribute("data-obs-preview-surface") : "chat";
   const overlayUrl = buildObsOverlayURL({ presetId: activePresetId });
   const alertUrl = buildObsAlertURL({ presetId: activePresetId });
   if (dom.presetIslandUrl) {
-    const surface = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
-    const previewSurface = surface ? surface.getAttribute("data-obs-preview-surface") : "chat";
     if (previewSurface === "leaderboard") {
       const leaderboardUrl = currentLeaderboardURL({ pinned: true });
       dom.presetIslandUrl.value = leaderboardUrl;
@@ -451,6 +452,18 @@ export function updatePresetIsland() {
     if (dom.obsAlertPinnedLabel) {
       dom.obsAlertPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
     }
+  }
+  if (dom.studioFollowUrl) {
+    const period =
+      (dom.overlayLeaderboardPeriod && dom.overlayLeaderboardPeriod.value) ||
+      (dom.obsLeaderboardPeriod && dom.obsLeaderboardPeriod.value) ||
+      "session";
+    const followUrl = buildFollowActiveURLForSurface(previewSurface, {
+      origin: window.location.origin,
+      period: period,
+    });
+    dom.studioFollowUrl.value = followUrl;
+    dom.studioFollowUrl.title = followUrl;
   }
   if (dom.presetUrlStatus) {
     const studioActive =

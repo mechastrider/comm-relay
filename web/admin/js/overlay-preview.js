@@ -28,10 +28,7 @@ import { normalizeLeaderboardLayout } from './leaderboard-url.js';
 import { parseWorkspaceHash } from "./workspace-router.js";
 
 function isOverlayPreviewActive() {
-  return (
-    parseWorkspaceHash(window.location.hash) === "studio" ||
-    Boolean(dom.overlayDialog && dom.overlayDialog.open)
-  );
+  return parseWorkspaceHash(window.location.hash) === "studio";
 }
 
 export function overlayDisplaySettingsChanged(payload) {
@@ -305,6 +302,7 @@ export function applyPreviewSurface(surface) {
       element.hidden = current !== "chat";
     });
     writeOverlayPreviewPreference(OVERLAY_PREVIEW_SURFACE_KEY, current);
+    document.dispatchEvent(new Event("overlay-preview-surface-changed"));
 }
 
 export function updateOverlayPreviewOpenLink() {
@@ -530,13 +528,14 @@ export function initOverlayPreview() {
     });
 
     document.addEventListener("overlay-preview-refresh", scheduleOverlayPreviewRefresh);
-    const overlayPreviewHost = document.getElementById("workspace-studio") || dom.overlayDialog;
+    const overlayPreviewHost = document.getElementById("workspace-studio");
     if (overlayPreviewHost) {
       overlayPreviewHost.addEventListener("input", function (event) {
         if (
           event.target &&
           event.target.closest &&
-          event.target.closest("#obs-appearance-panel")
+          (event.target.closest("#studio-inspector-mount") ||
+            event.target.closest(".overlay-preview-controls"))
         ) {
           scheduleOverlayPreviewRefresh();
         }

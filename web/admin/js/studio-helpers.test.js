@@ -7,6 +7,8 @@ import {
   sourceUrlOmitsPreset,
   sourceUrlPinsPreset,
   normalizeOverlayAppearanceDraft,
+  normalizeStudioSurface,
+  buildFollowActiveURLForSurface,
 } from "./studio-helpers.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
@@ -77,5 +79,31 @@ const reorderedOther = cloneOverlayAppearanceDraft({
   ],
 });
 assert.equal(overlayDraftIsDirty(reordered, reorderedOther), false);
+
+assert.equal(normalizeStudioSurface("chat"), "chat");
+assert.equal(normalizeStudioSurface("leaderboard"), "leaderboard");
+assert.equal(normalizeStudioSurface("alerts"), "alerts");
+assert.equal(normalizeStudioSurface("dock"), "chat");
+assert.equal(normalizeStudioSurface(""), "chat");
+assert.equal(normalizeStudioSurface(null), "chat");
+
+const followChat = buildFollowActiveURLForSurface("chat", { origin: ORIGIN });
+assert.equal(followChat, ORIGIN + "/overlay");
+assert.ok(sourceUrlOmitsPreset(ORIGIN, followChat));
+
+const followLeaderboardSurface = buildFollowActiveURLForSurface("leaderboard", {
+  origin: ORIGIN,
+  period: "day",
+});
+assert.ok(sourceUrlOmitsPreset(ORIGIN, followLeaderboardSurface));
+assert.equal(new URL(followLeaderboardSurface).searchParams.get("period"), "day");
+assert.equal(new URL(followLeaderboardSurface).pathname, "/overlay/leaderboard");
+
+const followAlerts = buildFollowActiveURLForSurface("alerts", { origin: ORIGIN });
+assert.equal(followAlerts, ORIGIN + "/overlay/alert");
+assert.ok(sourceUrlOmitsPreset(ORIGIN, followAlerts));
+
+const invalidSurfaceUrl = buildFollowActiveURLForSurface("dock", { origin: ORIGIN });
+assert.equal(invalidSurfaceUrl, ORIGIN + "/overlay");
 
 console.log("studio-helpers OK");

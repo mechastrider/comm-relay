@@ -52,9 +52,13 @@ export function showOBSCopyFeedback(button, message, copied) {
   button.dataset.copyDefaultText = button.dataset.copyDefaultText || copyButtonLabel(button) || t("obs.copyUrl");
   setCopyButtonLabel(button, copied ? t("obs.copyCopied") : t("obs.copyFailed"));
   state.obsCopyFeedbackButton = button;
-  if (dom.obsCopyStatus) {
-    dom.obsCopyStatus.textContent = message;
-    dom.obsCopyStatus.classList.toggle("obs-copy-status--error", !copied);
+  const statusEl =
+    button.closest("#workspace-studio") && dom.studioCopyStatus
+      ? dom.studioCopyStatus
+      : dom.obsCopyStatus;
+  if (statusEl) {
+    statusEl.textContent = message;
+    statusEl.classList.toggle("obs-copy-status--error", !copied);
   }
   state.obsCopyFeedbackTimer = window.setTimeout(function () {
     resetOBSCopyFeedback();

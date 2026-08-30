@@ -4,7 +4,7 @@
 
 No production Go, HTTP, or `config.json` schema work. Overlay activate/update contracts stay as they are.
 
-- [ ] 0.1 Confirm implementation does not add routes or persist overlay drafts in `config.json`; keep existing `POST /api/config/update` and `POST /api/overlay/activate` callers only.
+- [x] 0.1 Confirm implementation does not add routes or persist overlay drafts in `config.json`; keep existing `POST /api/config/update` and `POST /api/overlay/activate` callers only.
 
 ## Frontend
 
@@ -17,9 +17,9 @@ No production Go, HTTP, or `config.json` schema work. Overlay activate/update co
 > **Allowed fallout**: Hide or stop depending on `#overlay-dialog` panel transplants; locale keys for the list.
 > **Blocked**: Overlay renderer changes, React, new APIs.
 
-- [ ] 1.1 Replace Studio mounts with owned markup: surface list (chat, leaderboard, alerts), preview stage, inspector. Stop `appendChild` from the OBS dialog. Verify `#studio` still clones a draft and Publish still works.
-- [ ] 1.2 Drive preview iframe, inspector field visibility, and primary Follow-active copy from one `selectedSurface`. Remove the independent appearance surface tabs. Verify dock is not in this list.
-- [ ] 1.3 Add or extend Node tests for surface selection and URL binding; include them in `npm test`.
+- [x] 1.1 Replace Studio mounts with owned markup: surface list (chat, leaderboard, alerts), preview stage, inspector. Stop `appendChild` from the OBS dialog. Verify `#studio` still clones a draft and Publish still works.
+- [x] 1.2 Drive preview iframe, inspector field visibility, and primary Follow-active copy from one `selectedSurface`. Remove the independent appearance surface tabs. Verify dock is not in this list.
+- [x] 1.3 Add or extend Node tests for surface selection and URL binding; include them in `npm test`.
 
 ### Slice: `Preview-first canvas chrome`
 

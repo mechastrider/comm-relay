@@ -2,6 +2,9 @@
  * Pure helpers for Studio draft comparison and OBS source URLs.
  */
 
+import { buildLeaderboardURL } from "./leaderboard-url.js";
+
+const STUDIO_SURFACES = new Set(["chat", "leaderboard", "alerts"]);
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
 const OVERLAY_DISPLAY_MODES = new Set(["normal", "compact"]);
 
@@ -134,4 +137,49 @@ export function sourceUrlOmitsPreset(origin, pathname) {
 export function sourceUrlPinsPreset(href, presetId) {
   const url = new URL(href);
   return url.searchParams.get("preset") === presetId;
+}
+
+/**
+ * @param {unknown} surface
+ * @returns {"chat"|"leaderboard"|"alerts"}
+ */
+export function normalizeStudioSurface(surface) {
+  const raw = String(surface || "").trim().toLowerCase();
+  return STUDIO_SURFACES.has(raw) ? /** @type {"chat"|"leaderboard"|"alerts"} */ (raw) : "chat";
+}
+
+/**
+ * Follow-active OBS URL for a Studio on-stream surface (no preset query).
+ *
+ * @param {unknown} surface
+ * @param {{ origin?: string, period?: string }} [options]
+ * @returns {string}
+ */
+export function buildFollowActiveURLForSurface(surface, options) {
+  const normalized = normalizeStudioSurface(surface);
+  const opts = options || {};
+  const origin =
+    opts.origin ||
+    (typeof window !== "undefined" && window.location && window.location.origin
+      ? window.location.origin
+      : "http://127.0.0.1");
+  if (normalized === "leaderboard") {
+    return buildLeaderboardURL({
+      origin: origin,
+      period: opts.period || "session",
+      followActive: true,
+    });
+  }
+  if (normalized === "alerts") {
+    return overlaySourceURL({
+      origin: origin,
+      pathname: "/overlay/alert",
+      followActive: true,
+    });
+  }
+  return overlaySourceURL({
+    origin: origin,
+    pathname: "/overlay",
+    followActive: true,
+  });
 }

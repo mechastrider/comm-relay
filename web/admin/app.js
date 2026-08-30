@@ -46,7 +46,7 @@ function isStudioOverlayField(target) {
   return (
     target.closest("[data-studio-overlay]") ||
     target.closest("#workspace-studio") ||
-    target.closest("#obs-appearance-panel")
+    target.closest("#studio-inspector-mount")
   );
 }
 
