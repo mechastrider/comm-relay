@@ -79,19 +79,19 @@ No production Go, HTTP, or `config.json` schema work. Overlay activate/update co
 
 ## Verification
 
-- [ ] 7.1 Run `npm ci` if needed, then `npm run lint && npm test && npm run test:i18n`.
-- [ ] 7.2 Run `go test ./...` and `golangci-lint run ./...` (and `go test ./... -race` when practical).
-- [ ] 7.3 Execute P0 rows in `qa_plan.md` in Chromium: single surface, Add to OBS first visit/dismiss, layers, duration/custom TTL, copy/pinned, Live activate, Use on stream, dirty draft, clipboard denial, 1440/1100/390 and short height.
-- [ ] 7.4 Smoke overlay/leaderboard/alert/dock URLs still transparent and following/pinned as before. RU/EN, 200% zoom, reduced motion as P1 if time.
+- [x] 7.1 Run `npm ci` if needed, then `npm run lint && npm test && npm run test:i18n`.
+- [x] 7.2 Run `go test ./...` and `golangci-lint run ./...` (and `go test ./... -race` when practical).
+- [x] 7.3 Execute P0 rows in `qa_plan.md` in Chromium: single surface, Add to OBS first visit/dismiss, layers, duration/custom TTL, copy/pinned, Live activate, Use on stream, dirty draft, clipboard denial, 1440/1100/390 and short height.
+- [x] 7.4 Smoke overlay/leaderboard/alert/dock URLs still transparent and following/pinned as before. RU/EN, 200% zoom, reduced motion as P1 if time.
 
 ## Gate: qa
 
-- [ ] Q.1 Record `qa_plan.md` matrix coverage and evidence (screenshots of Studio surfaces, Add to OBS, Advanced, short window).
+- [x] Q.1 Record `qa_plan.md` matrix coverage and evidence (screenshots of Studio surfaces, Add to OBS, Advanced, short window).
 
 ## Gate: review
 
-- [ ] R.1 Fresh diff review; no leftover dialog transplant; CRITICAL=0; lint/tests green.
+- [x] R.1 Fresh diff review; no leftover dialog transplant; CRITICAL=0; lint/tests green.
 
 ## Gate: distribution-readiness
 
-- [ ] D.1 Confirm packaged/embedded `web/` would include the new Studio assets; no signing or publish. `openspec validate studio-surface-centric-redesign --strict` succeeds.
+- [x] D.1 Confirm packaged/embedded `web/` would include the new Studio assets; no signing or publish. `openspec validate studio-surface-centric-redesign --strict` succeeds.
