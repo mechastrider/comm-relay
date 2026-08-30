@@ -34,6 +34,7 @@ import {
 import { parseWorkspaceHash, workspaceHash } from "./workspace-router.js";
 import { initActivePresetSelect, renderActivePresetSelect } from "./live-active-preset.js";
 import { bindCopyButtons } from "./obs-setup.js";
+import { initStudioAddToObs, maybeAutoOpenStudioAddToObs } from "./studio-add-to-obs.js";
 
 /** @type {Record<string, unknown> | null} */
 let baseline = null;
@@ -70,6 +71,7 @@ export function updateStudioFollowCopy() {
   const surface = getPreviewSurface();
   const period =
     (dom.overlayLeaderboardPeriod && dom.overlayLeaderboardPeriod.value) ||
+    (dom.studioAddToObsLeaderboardPeriod && dom.studioAddToObsLeaderboardPeriod.value) ||
     (dom.obsLeaderboardPeriod && dom.obsLeaderboardPeriod.value) ||
     "session";
   const href = buildFollowActiveURLForSurface(surface, {
@@ -153,6 +155,7 @@ function onStudioEnter() {
   renderActivePresetSelect(dom.studioActivePreset);
   updateStudioFollowCopy();
   mountOverlayPreview();
+  maybeAutoOpenStudioAddToObs();
 }
 
 function onStudioLeave() {
@@ -266,6 +269,7 @@ async function publishStudioDraft() {
 }
 
 export function initStudio() {
+  initStudioAddToObs();
   interceptHashNavigation();
 
   if (dom.studioPublishButton) {

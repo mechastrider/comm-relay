@@ -584,6 +584,7 @@ export function updatePresetIsland() {
   if (dom.studioFollowUrl) {
     const period =
       (dom.overlayLeaderboardPeriod && dom.overlayLeaderboardPeriod.value) ||
+      (dom.studioAddToObsLeaderboardPeriod && dom.studioAddToObsLeaderboardPeriod.value) ||
       (dom.obsLeaderboardPeriod && dom.obsLeaderboardPeriod.value) ||
       "session";
     const followUrl = buildFollowActiveURLForSurface(previewSurface, {
@@ -608,6 +609,53 @@ export function updatePresetIsland() {
     const pinnedLabel = preset ? preset.name || preset.id : activePresetId;
     if (dom.studioPinnedUrlLabel) {
       dom.studioPinnedUrlLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
+  const preset = currentPreset();
+  const pinnedLabel = preset ? preset.name || preset.id : activePresetId;
+  if (dom.studioAddToObsFollowUrl) {
+    dom.studioAddToObsFollowUrl.value = followOverlayUrl;
+    dom.studioAddToObsFollowUrl.title = followOverlayUrl;
+  }
+  if (dom.studioAddToObsOverlayOpen) {
+    dom.studioAddToObsOverlayOpen.href = followOverlayUrl;
+  }
+  if (dom.studioAddToObsPinnedUrl) {
+    dom.studioAddToObsPinnedUrl.value = overlayUrl;
+    dom.studioAddToObsPinnedUrl.title = overlayUrl;
+    if (dom.studioAddToObsPinnedLabel) {
+      dom.studioAddToObsPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
+  if (dom.studioAddToObsLeaderboardFollowUrl) {
+    dom.studioAddToObsLeaderboardFollowUrl.value = followLeaderboardUrl;
+    dom.studioAddToObsLeaderboardFollowUrl.title = followLeaderboardUrl;
+  }
+  if (dom.studioAddToObsLeaderboardOpen) {
+    dom.studioAddToObsLeaderboardOpen.href = followLeaderboardUrl;
+  }
+  if (dom.studioAddToObsLeaderboardPinnedUrl) {
+    const pinnedLeaderboardUrl = currentLeaderboardURL({ pinned: true });
+    dom.studioAddToObsLeaderboardPinnedUrl.value = pinnedLeaderboardUrl;
+    dom.studioAddToObsLeaderboardPinnedUrl.title = pinnedLeaderboardUrl;
+    if (dom.studioAddToObsLeaderboardPinnedLabel) {
+      dom.studioAddToObsLeaderboardPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
+  if (dom.studioAddToObsAlertFollowUrl) {
+    dom.studioAddToObsAlertFollowUrl.value = followAlertUrl;
+    dom.studioAddToObsAlertFollowUrl.title = followAlertUrl;
+  }
+  if (dom.studioAddToObsAlertOpen) {
+    const previewUrl = new URL(followAlertUrl);
+    previewUrl.searchParams.set("preview", "sample");
+    dom.studioAddToObsAlertOpen.href = previewUrl.toString();
+  }
+  if (dom.studioAddToObsAlertPinnedUrl) {
+    dom.studioAddToObsAlertPinnedUrl.value = alertUrl;
+    dom.studioAddToObsAlertPinnedUrl.title = alertUrl;
+    if (dom.studioAddToObsAlertPinnedLabel) {
+      dom.studioAddToObsAlertPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
     }
   }
   if (dom.presetUrlStatus) {
@@ -652,6 +700,7 @@ export function currentLeaderboardURL(options) {
   return buildLeaderboardURL({
     period:
       (dom.overlayLeaderboardPeriod && dom.overlayLeaderboardPeriod.value) ||
+      (dom.studioAddToObsLeaderboardPeriod && dom.studioAddToObsLeaderboardPeriod.value) ||
       (dom.obsLeaderboardPeriod && dom.obsLeaderboardPeriod.value) ||
       "session",
     followActive: followActive,

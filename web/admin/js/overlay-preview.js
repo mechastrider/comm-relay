@@ -509,18 +509,26 @@ export function initOverlayPreview() {
     updateOverlayPreviewNote();
     updateOverlayPreviewOpenLink();
 
+    function leaderboardPeriodInputs() {
+      return [
+        dom.overlayLeaderboardPeriod,
+        dom.studioAddToObsLeaderboardPeriod,
+        dom.obsLeaderboardPeriod,
+      ].filter(Boolean);
+    }
     function syncLeaderboardPeriod(source) {
       const value = source && source.value ? source.value : "session";
-      [dom.obsLeaderboardPeriod, dom.overlayLeaderboardPeriod].forEach(function (input) {
-        if (input && input !== source) {
+      leaderboardPeriodInputs().forEach(function (input) {
+        if (input !== source) {
           input.value = value;
         }
       });
     }
-    if (dom.overlayLeaderboardPeriod && dom.obsLeaderboardPeriod) {
-      dom.overlayLeaderboardPeriod.value = dom.obsLeaderboardPeriod.value || "session";
+    const canonicalPeriod = leaderboardPeriodInputs()[0];
+    if (canonicalPeriod) {
+      syncLeaderboardPeriod(canonicalPeriod);
     }
-    [dom.obsLeaderboardPeriod, dom.overlayLeaderboardPeriod].filter(Boolean).forEach(function (input) {
+    leaderboardPeriodInputs().forEach(function (input) {
       input.addEventListener("change", function () {
         syncLeaderboardPeriod(input);
       });
@@ -576,6 +584,7 @@ export function initOverlayPreview() {
       dom.overlayLeaderboardFontSize,
       dom.overlayLeaderboardLayout,
       dom.overlayLeaderboardPeriod,
+      dom.studioAddToObsLeaderboardPeriod,
       dom.obsLeaderboardPeriod,
     ].filter(Boolean).forEach(function (input) {
       input.addEventListener("input", scheduleOverlayPreviewRefresh);

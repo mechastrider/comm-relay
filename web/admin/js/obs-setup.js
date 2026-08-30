@@ -53,9 +53,11 @@ export function showOBSCopyFeedback(button, message, copied) {
   setCopyButtonLabel(button, copied ? t("obs.copyCopied") : t("obs.copyFailed"));
   state.obsCopyFeedbackButton = button;
   const statusEl =
-    button.closest("#workspace-studio") && dom.studioCopyStatus
-      ? dom.studioCopyStatus
-      : dom.obsCopyStatus;
+    button.closest("#studio-add-to-obs-dialog") && dom.studioAddToObsCopyStatus
+      ? dom.studioAddToObsCopyStatus
+      : button.closest("#workspace-studio") && dom.studioCopyStatus
+        ? dom.studioCopyStatus
+        : dom.obsCopyStatus;
   if (statusEl) {
     statusEl.textContent = message;
     statusEl.classList.toggle("obs-copy-status--error", !copied);

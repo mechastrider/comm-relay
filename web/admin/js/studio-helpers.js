@@ -2,7 +2,10 @@
  * Pure helpers for Studio draft comparison and OBS source URLs.
  */
 
+import { ADD_TO_OBS_DISMISSED_KEY } from "./constants.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
+
+const ADD_TO_OBS_DISMISSED_TRUTHY = new Set(["1", "true", "yes"]);
 
 const STUDIO_SURFACES = new Set(["chat", "leaderboard", "alerts"]);
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
@@ -181,6 +184,57 @@ export function sourceUrlPinsPreset(href, presetId) {
 export function normalizeStudioSurface(surface) {
   const raw = String(surface || "").trim().toLowerCase();
   return STUDIO_SURFACES.has(raw) ? /** @type {"chat"|"leaderboard"|"alerts"} */ (raw) : "chat";
+}
+
+/**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+export function parseAddToObsDismissedValue(value) {
+  if (value === null || value === undefined) {
+    return false;
+  }
+  const normalized = String(value).trim().toLowerCase();
+  if (normalized === "") {
+    return false;
+  }
+  return ADD_TO_OBS_DISMISSED_TRUTHY.has(normalized);
+}
+
+/**
+ * @param {Pick<Storage, "getItem"> | null | undefined} storage
+ * @returns {boolean}
+ */
+export function readAddToObsDismissedPreference(storage) {
+  if (!storage || typeof storage.getItem !== "function") {
+    return false;
+  }
+  try {
+    return parseAddToObsDismissedValue(storage.getItem(ADD_TO_OBS_DISMISSED_KEY));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @param {Pick<Storage, "setItem"|"removeItem"> | null | undefined} storage
+ * @param {boolean} dismissed
+ */
+export function writeAddToObsDismissedPreference(storage, dismissed) {
+  if (!storage) {
+    return;
+  }
+  try {
+    if (dismissed) {
+      storage.setItem(ADD_TO_OBS_DISMISSED_KEY, "1");
+      return;
+    }
+    if (typeof storage.removeItem === "function") {
+      storage.removeItem(ADD_TO_OBS_DISMISSED_KEY);
+    }
+  } catch {
+    /* localStorage can be unavailable in locked-down browser contexts. */
+  }
 }
 
 /**

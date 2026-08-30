@@ -12,6 +12,9 @@ import {
   messageTtlToChipValue,
   isMessageTtlChipValue,
   chipValueToMessageTtl,
+  parseAddToObsDismissedValue,
+  readAddToObsDismissedPreference,
+  writeAddToObsDismissedPreference,
   MESSAGE_TTL_CHIP_VALUES,
 } from "./studio-helpers.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
@@ -121,5 +124,41 @@ assert.equal(isMessageTtlChipValue(15), false);
 assert.equal(chipValueToMessageTtl(8), 8);
 assert.equal(chipValueToMessageTtl(0), 0);
 assert.equal(chipValueToMessageTtl(15), null);
+
+assert.equal(parseAddToObsDismissedValue(null), false);
+assert.equal(parseAddToObsDismissedValue(undefined), false);
+assert.equal(parseAddToObsDismissedValue(""), false);
+assert.equal(parseAddToObsDismissedValue("invalid"), false);
+assert.equal(parseAddToObsDismissedValue("0"), false);
+assert.equal(parseAddToObsDismissedValue("false"), false);
+assert.equal(parseAddToObsDismissedValue("true"), true);
+assert.equal(parseAddToObsDismissedValue("1"), true);
+assert.equal(parseAddToObsDismissedValue("yes"), true);
+assert.equal(parseAddToObsDismissedValue(" TRUE "), true);
+
+const missingStorage = {
+  getItem() {
+    return null;
+  },
+};
+assert.equal(readAddToObsDismissedPreference(missingStorage), false);
+
+const dismissedStorage = {
+  values: { "commRelay.studio.addToObsDismissed": "1" },
+  getItem(key) {
+    return Object.prototype.hasOwnProperty.call(this.values, key) ? this.values[key] : null;
+  },
+  setItem(key, value) {
+    this.values[key] = String(value);
+  },
+  removeItem(key) {
+    delete this.values[key];
+  },
+};
+assert.equal(readAddToObsDismissedPreference(dismissedStorage), true);
+writeAddToObsDismissedPreference(dismissedStorage, false);
+assert.equal(readAddToObsDismissedPreference(dismissedStorage), false);
+writeAddToObsDismissedPreference(dismissedStorage, true);
+assert.equal(readAddToObsDismissedPreference(dismissedStorage), true);
 
 console.log("studio-helpers OK");

@@ -95,6 +95,12 @@ export default {
   "studio.publishSuccess": "Overlay settings published.",
   "studio.previewOverflow": "Preview options",
   "studio.advanced": "Advanced",
+  "studio.addToObs": "Add to OBS",
+  "studio.addToObsKicker": "First step",
+  "studio.addToObsLater": "Later",
+  "studio.addToObsDone": "Done, customize look",
+  "studio.addToObsClose": "Close Add to OBS",
+  "studio.addToObsSources": "OBS sources",
 
   "live.statusStrip": "Live operational status",
   "live.workArea": "Live workspace",

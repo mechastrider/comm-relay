@@ -95,6 +95,12 @@ export default {
   "studio.publishSuccess": "Настройки overlay опубликованы.",
   "studio.previewOverflow": "Параметры превью",
   "studio.advanced": "Ещё настройки",
+  "studio.addToObs": "Добавить в OBS",
+  "studio.addToObsKicker": "Первый шаг",
+  "studio.addToObsLater": "Позже",
+  "studio.addToObsDone": "Готово, хочу настроить вид",
+  "studio.addToObsClose": "Закрыть «Добавить в OBS»",
+  "studio.addToObsSources": "Источники OBS",
 
   "live.statusStrip": "Операционный статус эфира",
   "live.workArea": "Рабочая область «Эфир»",

@@ -42,9 +42,9 @@ No production Go, HTTP, or `config.json` schema work. Overlay activate/update co
 > **Allowed fallout**: Helper tests for duration mapping.
 > **Blocked**: Removing style fields or changing theme ids.
 
-- [ ] 3.1 Present supported themes as labeled visual choices that write the existing theme field and refresh preview.
-- [ ] 3.2 Keep essential font size (per selected surface) and chat duration chips; map chips to `message_ttl_seconds` 8, 20, 0 without rewriting other stored TTL values.
-- [ ] 3.3 Move remaining current fields into Advanced (spacing, platform marker, text edge, font family, line height, panel, image/fit, borders, queue, reset-to-theme). Merge duplicate leaderboard period controls into one. Verify short windows scroll the inspector body with Publish pinned.
+- [x] 3.1 Present supported themes as labeled visual choices that write the existing theme field and refresh preview.
+- [x] 3.2 Keep essential font size (per selected surface) and chat duration chips; map chips to `message_ttl_seconds` 8, 20, 0 without rewriting other stored TTL values.
+- [x] 3.3 Move remaining current fields into Advanced (spacing, platform marker, text edge, font family, line height, panel, image/fit, borders, queue, reset-to-theme). Merge duplicate leaderboard period controls into one. Verify short windows scroll the inspector body with Publish pinned.
 
 ### Slice: `Add to OBS sheet`
 
@@ -55,8 +55,8 @@ No production Go, HTTP, or `config.json` schema work. Overlay activate/update co
 > **Allowed fallout**: Preference parse tests.
 > **Blocked**: Using WebSocket client count as OBS connected.
 
-- [ ] 4.1 Build the height-capped Add to OBS sheet with shared Browser Source steps, chat/leaderboard/alerts copy, pinned URLs, leaderboard period, dock URL and Custom Browser Dock steps.
-- [ ] 4.2 Auto-open on first visit, persist dismiss in local preference, keep a Studio control to reopen. Verify storage unavailability still allows copy.
+- [x] 4.1 Build the height-capped Add to OBS sheet with shared Browser Source steps, chat/leaderboard/alerts copy, pinned URLs, leaderboard period, dock URL and Custom Browser Dock steps.
+- [x] 4.2 Auto-open on first visit, persist dismiss in local preference, keep a Studio control to reopen. Verify storage unavailability still allows copy.
 
 ### Slice: `Look editing vs on-air switch`
 

@@ -12,6 +12,7 @@ export const OVERLAY_PREVIEW_SURFACE_KEY = "commRelay.overlayPreview.surface";
 export const OVERLAY_PREVIEW_BACKGROUND_KEY = "commRelay.overlayPreview.background";
 export const OVERLAY_PREVIEW_WIDTH_KEY = "commRelay.overlayPreview.width";
 export const OVERLAY_PREVIEW_HEIGHT_KEY = "commRelay.overlayPreview.height";
+export const ADD_TO_OBS_DISMISSED_KEY = "commRelay.studio.addToObsDismissed";
 export const OVERLAY_PREVIEW_REFRESH_MS = 120;
 export const OVERLAY_PREVIEW_DEFAULT_WIDTH = 640;
 export const OVERLAY_PREVIEW_DEFAULT_HEIGHT = 360;

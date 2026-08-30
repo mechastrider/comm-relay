@@ -463,6 +463,7 @@
                   <small>/overlay/alert</small>
                 </button>
               </nav>
+              <button id="studio-add-to-obs-open" class="btn-physical btn-secondary studio-add-to-obs-open" type="button" data-i18n="studio.addToObs">Add to OBS</button>
             </div>
             <div id="studio-preview-mount" class="studio-column studio-column--preview studio-preview-mount" data-preview-only>
               <section class="panel overlay-preview-panel" aria-labelledby="overlay-preview-heading" data-preview-only>
@@ -1388,6 +1389,156 @@
         <div class="dialog-actions">
           <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
           <button class="btn-physical btn-start" type="submit" data-save-button data-obs-appearance-only disabled hidden data-i18n="dialog.saveSettings">Save settings</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="studio-add-to-obs-dialog" class="settings-dialog studio-add-to-obs-dialog" aria-labelledby="studio-add-to-obs-heading">
+      <div class="dialog-frame">
+        <div class="dialog-header">
+          <div>
+            <span class="dialog-kicker" data-i18n="studio.addToObsKicker">First step</span>
+            <h2 id="studio-add-to-obs-heading" data-i18n="studio.addToObs">Add to OBS</h2>
+          </div>
+          <button class="btn-physical btn-small" type="button" data-studio-add-to-obs-dismiss data-i18n="dialog.close" data-i18n-aria-label="studio.addToObsClose" aria-label="Close Add to OBS">Close</button>
+        </div>
+
+        <div class="studio-add-to-obs-body">
+          <nav class="studio-add-to-obs-nav" role="tablist" data-i18n-aria-label="studio.addToObsSources" aria-label="OBS sources">
+            <button class="studio-add-to-obs-nav-item" type="button" role="tab" data-studio-add-to-obs-source="chat" aria-pressed="true" aria-current="true">
+              <span data-i18n="obs.surfaceChat">Chat</span>
+              <small>/overlay</small>
+            </button>
+            <button class="studio-add-to-obs-nav-item" type="button" role="tab" data-studio-add-to-obs-source="leaderboard" aria-pressed="false">
+              <span data-i18n="obs.surfaceLeaderboard">Leaderboard</span>
+              <small>/overlay/leaderboard</small>
+            </button>
+            <button class="studio-add-to-obs-nav-item" type="button" role="tab" data-studio-add-to-obs-source="alerts" aria-pressed="false">
+              <span data-i18n="obs.surfaceAlerts">Alerts</span>
+              <small>/overlay/alert</small>
+            </button>
+            <button class="studio-add-to-obs-nav-item" type="button" role="tab" data-studio-add-to-obs-source="dock" aria-pressed="false">
+              <span data-i18n="obs.messageDock">Message dock</span>
+              <small>/dock/messages</small>
+            </button>
+          </nav>
+
+          <div class="studio-add-to-obs-detail">
+            <div class="obs-source-detail__header">
+              <div>
+                <span id="studio-add-to-obs-source-eyebrow" class="obs-integration-card__eyebrow" data-i18n="obs.browserSource">Browser Source</span>
+                <h3 id="studio-add-to-obs-source-title" data-i18n="obs.onStreamOverlay">On-stream overlay</h3>
+              </div>
+              <span id="studio-add-to-obs-source-badge" class="obs-audience-badge obs-audience-badge--live" data-i18n="obs.visibleToViewers">Visible to viewers</span>
+            </div>
+            <p id="studio-add-to-obs-source-summary" class="obs-integration-card__summary" data-i18n="obs.overlaySummary">Adds chat messages to the scene output seen by your audience.</p>
+
+            <p class="field-hint" data-studio-add-to-obs-pane="chat" data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
+            <p class="field-hint" data-studio-add-to-obs-pane="alerts" hidden data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
+
+            <div class="obs-url-field studio-url-primary" data-studio-add-to-obs-pane="chat">
+              <label for="studio-add-to-obs-follow-url" data-i18n="obs.followActivePreset">Follow active preset</label>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-follow-url" type="text" readonly value="/overlay">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-follow-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </div>
+            <details class="studio-url-pinned" data-studio-add-to-obs-pane="chat">
+              <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+              <p id="studio-add-to-obs-pinned-label" class="field-hint"></p>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-pinned-url" type="text" readonly value="/overlay">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-pinned-url" data-copy-label="Pinned overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </details>
+
+            <div class="obs-url-field" data-studio-add-to-obs-pane="leaderboard" hidden>
+              <label for="studio-add-to-obs-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
+              <select id="studio-add-to-obs-leaderboard-period">
+                <option value="session" data-i18n="viewers.periodSession">Session</option>
+                <option value="day" data-i18n="viewers.periodDay">Day</option>
+                <option value="all" data-i18n="viewers.periodAll">All-time</option>
+              </select>
+            </div>
+            <div class="obs-url-field studio-url-primary" data-studio-add-to-obs-pane="leaderboard" hidden>
+              <label for="studio-add-to-obs-leaderboard-follow-url" data-i18n="obs.followActivePreset">Follow active preset</label>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-leaderboard-follow-url" type="text" readonly value="/overlay/leaderboard">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-leaderboard-follow-url" data-copy-label="Leaderboard URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </div>
+            <details class="studio-url-pinned" data-studio-add-to-obs-pane="leaderboard" hidden>
+              <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+              <p id="studio-add-to-obs-leaderboard-pinned-label" class="field-hint"></p>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-leaderboard-pinned-url" type="text" readonly value="/overlay/leaderboard">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-leaderboard-pinned-url" data-copy-label="Pinned leaderboard URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </details>
+
+            <div class="obs-url-field studio-url-primary" data-studio-add-to-obs-pane="alerts" hidden>
+              <label for="studio-add-to-obs-alert-follow-url" data-i18n="obs.followActivePreset">Follow active preset</label>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-alert-follow-url" type="text" readonly value="/overlay/alert">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-alert-follow-url" data-copy-label="Alert URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </div>
+            <details class="studio-url-pinned" data-studio-add-to-obs-pane="alerts" hidden>
+              <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+              <p id="studio-add-to-obs-alert-pinned-label" class="field-hint"></p>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-alert-pinned-url" type="text" readonly value="/overlay/alert">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-alert-pinned-url" data-copy-label="Pinned alert URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </details>
+
+            <div class="obs-url-field" data-studio-add-to-obs-pane="dock" hidden>
+              <label for="studio-add-to-obs-dock-url" data-i18n="obs.dockUrl">Message dock URL</label>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-dock-url" type="text" readonly value="/dock/messages">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-dock-url" data-copy-label="Message dock URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </div>
+
+            <details class="obs-howto" data-studio-add-to-obs-pane="browser">
+              <summary data-i18n="obs.howToBrowser">How to add a Browser Source</summary>
+              <ol class="obs-setup-steps">
+                <li data-i18n-html="obs.stepBrowser">In OBS Sources, add a <strong>Browser</strong> source.</li>
+                <li data-i18n="obs.stepPaste">Paste the URL above into its URL field.</li>
+                <li data-i18n="obs.stepSize">Set the source width and height for your scene.</li>
+                <li data-i18n="obs.stepRunning">Keep CommRelay running while you stream.</li>
+              </ol>
+            </details>
+
+            <details class="obs-howto" data-studio-add-to-obs-pane="dock" hidden>
+              <summary data-i18n="obs.howToDock">How to add a Custom Browser Dock</summary>
+              <ol class="obs-setup-steps">
+                <li data-i18n-html="obs.stepDocks">Open <strong>View → Docks → Custom Browser Docks…</strong> in OBS.</li>
+                <li data-i18n="obs.stepDockName">Enter a dock name and paste the URL above.</li>
+                <li data-i18n="obs.stepDockPlace">Apply the change and place the dock where it is convenient.</li>
+              </ol>
+            </details>
+
+            <div class="obs-integration-actions" data-studio-add-to-obs-pane="chat">
+              <a id="studio-add-to-obs-overlay-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener" data-i18n="obs.openOverlay">Open overlay</a>
+            </div>
+            <div class="obs-integration-actions" data-studio-add-to-obs-pane="leaderboard" hidden>
+              <a id="studio-add-to-obs-leaderboard-open" class="button-secondary button-secondary--small" href="/overlay/leaderboard" target="_blank" rel="noopener" data-i18n="obs.openLeaderboard">Open leaderboard</a>
+            </div>
+            <div class="obs-integration-actions" data-studio-add-to-obs-pane="alerts" hidden>
+              <a id="studio-add-to-obs-alert-open" class="button-secondary button-secondary--small" href="/overlay/alert?preview=sample" target="_blank" rel="noopener" data-i18n="obs.openAlerts">Open alerts</a>
+            </div>
+            <div class="obs-integration-actions" data-studio-add-to-obs-pane="dock" hidden>
+              <a id="studio-add-to-obs-dock-open" class="button-secondary button-secondary--small" href="/dock/messages" target="_blank" rel="noopener" data-i18n="obs.openMessageDock">Open message dock</a>
+            </div>
+
+            <p id="studio-add-to-obs-copy-status" class="obs-copy-status" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <div class="dialog-actions">
+          <button class="btn-physical" type="button" data-studio-add-to-obs-dismiss data-i18n="studio.addToObsLater">Later</button>
+          <button class="btn-physical btn-start" type="button" data-studio-add-to-obs-dismiss data-i18n="studio.addToObsDone">Done, customize look</button>
         </div>
       </div>
     </dialog>
