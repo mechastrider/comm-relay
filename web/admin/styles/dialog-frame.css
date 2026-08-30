@@ -57,6 +57,9 @@
 .preset-island {
   grid-column: 1 / -1;
   grid-row: 1;
+  container-type: inline-size;
+  container-name: preset-island;
+  min-width: 0;
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 3px;
@@ -70,6 +73,13 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
+}
+
+.preset-island .icon-btn {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
 }
 
 .preset-island__group {
@@ -99,8 +109,9 @@
 }
 
 .preset-island__group--url {
-  flex: 1 1 0;
+  flex: 1 1 12rem;
   justify-content: flex-end;
+  overflow: hidden;
 }
 
 .preset-island__inline-label {
@@ -139,7 +150,7 @@
 .preset-island__url-input {
   flex: 1 1 0;
   width: auto;
-  min-width: 160px;
+  min-width: 0;
   max-width: none;
   min-height: 30px;
   max-height: 30px;
@@ -151,6 +162,31 @@
   font-size: 11px;
   box-sizing: border-box;
   text-overflow: ellipsis;
+}
+
+@container preset-island (max-width: 40rem) {
+  .preset-island__toolbar {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .preset-island__group--preset,
+  .preset-island__icon-actions {
+    flex: 0 1 auto;
+  }
+
+  .preset-island__divider {
+    display: none;
+  }
+
+  .preset-island__group--url {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  .preset-island__status {
+    max-width: none;
+  }
 }
 
 .preset-island__status {
@@ -264,8 +300,18 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  container-type: inline-size;
+  container-name: overlay-settings;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
+}
+
+@container overlay-settings (max-width: 20rem) {
+  .form--compact,
+  .overlay-surface-fields {
+    grid-template-columns: 1fr;
+  }
 }
 
 .overlay-editor > .overlay-preview-panel {
@@ -357,6 +403,8 @@
 .overlay-preview-panel {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
+  container-type: inline-size;
+  container-name: overlay-preview;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -374,11 +422,21 @@
 
 .overlay-preview-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   gap: 8px;
+  min-width: 0;
   padding: 10px;
   border-bottom: 1px solid var(--border-dark);
   background: #151515;
+}
+
+@container overlay-preview (max-width: 36rem) {
+  .preview-control,
+  .preview-control--size,
+  .preview-control--dimension {
+    flex: 1 1 7.5rem;
+  }
 }
 
 .preview-control {

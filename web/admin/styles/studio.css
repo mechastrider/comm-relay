@@ -57,11 +57,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--primitive-space-3);
+  min-width: 0;
   min-height: 0;
 }
 
 .studio-column--preview {
-  min-width: 0;
+  overflow: hidden;
 }
 
 .studio-column--inspector {
@@ -77,11 +78,22 @@
   display: flex;
   flex-direction: column;
   gap: var(--primitive-space-3);
+  min-width: 0;
+}
+
+.studio-sources-mount .obs-source-detail__header {
+  flex-wrap: wrap;
+}
+
+.studio-sources-mount .obs-integration-actions {
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
 .studio-preview-mount .overlay-preview-panel {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   min-height: 0;
   height: 100%;
 }
@@ -94,6 +106,69 @@
 
 .studio-preview-mount .overlay-preview-controls {
   flex-shrink: 0;
+}
+
+.studio-inspector-mount .preset-island,
+.studio-inspector-mount .surface-tabs,
+.studio-inspector-mount .overlay-settings-column {
+  min-width: 0;
+}
+
+.studio-inspector-mount .preset-island__group--preset {
+  position: relative;
+}
+
+.studio-inspector-mount .preset-island__group--preset > .preset-island__inline-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.studio-inspector-mount .preset-island__toolbar {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.studio-inspector-mount .preset-island__divider {
+  display: none;
+}
+
+.studio-inspector-mount .preset-island__group--url {
+  flex: 1 1 100%;
+  justify-content: flex-start;
+}
+
+.studio-inspector-mount .preset-island__url-input {
+  min-width: 0;
+}
+
+.studio-inspector-mount .preset-island__status {
+  max-width: none;
+}
+
+.studio-inspector-mount .surface-tabs {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.studio-inspector-mount .surface-tabs__hint {
+  max-width: none;
+}
+
+.studio-inspector-mount .surface-tabs__list {
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.studio-inspector-mount .surface-tab {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .studio-inspector-mount .overlay-settings-column {
