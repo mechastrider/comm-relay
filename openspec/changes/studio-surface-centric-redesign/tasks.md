@@ -30,8 +30,8 @@ No production Go, HTTP, or `config.json` schema work. Overlay activate/update co
 > **Allowed fallout**: Tooltip/accessible names for overflow.
 > **Blocked**: Changing `preview_background` values or overlay transparency.
 
-- [ ] 2.1 Restyle Studio to preview-first columns; stack list → preview → inspector on the compact breakpoint. Verify no horizontal page scroll at 390px.
-- [ ] 2.2 Move source size, custom dimensions, backdrop, sample/live, and pinned copy into preview overflow. Keep Replay and Follow-active copy outside the iframe. Verify backdrop order and `busy` → game footage.
+- [x] 2.1 Restyle Studio to preview-first columns; stack list → preview → inspector on the compact breakpoint. Verify no horizontal page scroll at 390px.
+- [x] 2.2 Move source size, custom dimensions, backdrop, sample/live, and pinned copy into preview overflow. Keep Replay and Follow-active copy outside the iframe. Verify backdrop order and `busy` → game footage.
 
 ### Slice: `Layered appearance inspector`
 

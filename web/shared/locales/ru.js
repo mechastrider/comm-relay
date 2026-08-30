@@ -93,6 +93,7 @@ export default {
   "studio.dirty": "Есть неопубликованные изменения",
   "studio.discardConfirm": "Отменить неопубликованные изменения overlay?",
   "studio.publishSuccess": "Настройки overlay опубликованы.",
+  "studio.previewOverflow": "Параметры превью",
 
   "live.statusStrip": "Операционный статус эфира",
   "live.workArea": "Рабочая область «Эфир»",

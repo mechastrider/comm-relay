@@ -93,6 +93,7 @@ export default {
   "studio.dirty": "Unpublished changes",
   "studio.discardConfirm": "Discard unpublished overlay changes?",
   "studio.publishSuccess": "Overlay settings published.",
+  "studio.previewOverflow": "Preview options",
 
   "live.statusStrip": "Live operational status",
   "live.workArea": "Live workspace",

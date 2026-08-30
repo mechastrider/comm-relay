@@ -389,6 +389,60 @@ export function unmountOverlayPreview() {
     dom.overlayPreviewFrame.src = "about:blank";
   }
 
+function closePreviewOverflowPanel() {
+    if (!dom.overlayPreviewOverflowPanel || !dom.overlayPreviewOverflowToggle) {
+      return;
+    }
+    dom.overlayPreviewOverflowPanel.hidden = true;
+    dom.overlayPreviewOverflowToggle.setAttribute("aria-expanded", "false");
+  }
+
+function initPreviewOverflowPanel() {
+    if (!dom.overlayPreviewOverflowPanel || !dom.overlayPreviewOverflowToggle) {
+      return;
+    }
+
+    dom.overlayPreviewOverflowToggle.addEventListener("click", function (event) {
+      event.stopPropagation();
+      const panel = dom.overlayPreviewOverflowPanel;
+      if (!panel) {
+        return;
+      }
+      if (panel.hidden) {
+        panel.hidden = false;
+        dom.overlayPreviewOverflowToggle.setAttribute("aria-expanded", "true");
+        return;
+      }
+      closePreviewOverflowPanel();
+    });
+
+    document.addEventListener("click", function (event) {
+      const panel = dom.overlayPreviewOverflowPanel;
+      const toggle = dom.overlayPreviewOverflowToggle;
+      if (!panel || !toggle || panel.hidden) {
+        return;
+      }
+      const target = event.target;
+      if (target instanceof Node && (panel.contains(target) || toggle.contains(target))) {
+        return;
+      }
+      closePreviewOverflowPanel();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape") {
+        return;
+      }
+      const panel = dom.overlayPreviewOverflowPanel;
+      const toggle = dom.overlayPreviewOverflowToggle;
+      if (!panel || !toggle || panel.hidden) {
+        return;
+      }
+      closePreviewOverflowPanel();
+      toggle.focus();
+    });
+  }
+
 export function initOverlayPreview() {
     if (
       !dom.overlayPreviewFrame ||
@@ -535,12 +589,14 @@ export function initOverlayPreview() {
           event.target &&
           event.target.closest &&
           (event.target.closest("#studio-inspector-mount") ||
-            event.target.closest(".overlay-preview-controls"))
+            event.target.closest(".overlay-preview-overflow__panel"))
         ) {
           scheduleOverlayPreviewRefresh();
         }
       });
     }
+
+    initPreviewOverflowPanel();
 
     if (dom.overlayPreviewReplay) {
       dom.overlayPreviewReplay.addEventListener("click", function () {

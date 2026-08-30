@@ -465,6 +465,23 @@ export function updatePresetIsland() {
     dom.studioFollowUrl.value = followUrl;
     dom.studioFollowUrl.title = followUrl;
   }
+  if (dom.studioPinnedUrl) {
+    let pinnedUrl;
+    if (previewSurface === "leaderboard") {
+      pinnedUrl = currentLeaderboardURL({ pinned: true });
+    } else if (previewSurface === "alerts") {
+      pinnedUrl = alertUrl;
+    } else {
+      pinnedUrl = overlayUrl;
+    }
+    dom.studioPinnedUrl.value = pinnedUrl;
+    dom.studioPinnedUrl.title = pinnedUrl;
+    const preset = currentPreset();
+    const pinnedLabel = preset ? preset.name || preset.id : activePresetId;
+    if (dom.studioPinnedUrlLabel) {
+      dom.studioPinnedUrlLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
   if (dom.presetUrlStatus) {
     const studioActive =
       dom.studioWorkspace && dom.studioWorkspace.classList.contains("workspace--active");
