@@ -116,14 +116,32 @@ export function normalizeOverlayAppearanceDraft(overlay) {
 }
 
 /**
+ * Appearance fields compared for Studio dirty state (excludes edited-look id).
+ *
+ * @param {unknown} overlay
+ * @returns {Record<string, unknown>}
+ */
+function overlayAppearanceContentForDirtyCompare(overlay) {
+  const normalized = normalizeOverlayAppearanceDraft(overlay);
+  return {
+    max_messages: normalized.max_messages,
+    message_ttl_seconds: normalized.message_ttl_seconds,
+    font_size_px: normalized.font_size_px,
+    display_mode: normalized.display_mode,
+    theme: normalized.theme,
+    presets: normalized.presets,
+  };
+}
+
+/**
  * @param {unknown} baseline
  * @param {unknown} draft
  * @returns {boolean}
  */
 export function overlayDraftIsDirty(baseline, draft) {
   return (
-    JSON.stringify(normalizeOverlayAppearanceDraft(baseline)) !==
-    JSON.stringify(normalizeOverlayAppearanceDraft(draft))
+    JSON.stringify(overlayAppearanceContentForDirtyCompare(baseline)) !==
+    JSON.stringify(overlayAppearanceContentForDirtyCompare(draft))
   );
 }
 

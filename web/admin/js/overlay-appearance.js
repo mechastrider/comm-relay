@@ -40,7 +40,7 @@ function syncThemeCards() {
   const current = themeSelect.value || "default";
   picker.querySelectorAll(".theme-card").forEach(function (button) {
     const selected = button.dataset.theme === current;
-    button.setAttribute("aria-pressed", selected ? "true" : "false");
+    button.setAttribute("aria-checked", selected ? "true" : "false");
   });
 }
 
@@ -63,7 +63,7 @@ function syncDurationChips() {
   const chipValue = messageTtlToChipValue(ttlInput.value);
   chipsRoot.querySelectorAll(".duration-chip").forEach(function (button) {
     const selected = chipValue !== null && Number.parseInt(button.dataset.ttl, 10) === chipValue;
-    button.setAttribute("aria-pressed", selected ? "true" : "false");
+    button.setAttribute("aria-checked", selected ? "true" : "false");
   });
 }
 
@@ -111,7 +111,7 @@ function initThemePicker() {
       button.className = "theme-card";
       button.dataset.theme = themeId;
       button.setAttribute("role", "radio");
-      button.setAttribute("aria-pressed", "false");
+      button.setAttribute("aria-checked", "false");
 
       const thumb = document.createElement("span");
       thumb.className = "theme-card__thumb";

@@ -73,6 +73,16 @@ const dirtyDraft = cloneOverlayAppearanceDraft(baseline);
 dirtyDraft.max_messages = 25;
 assert.equal(overlayDraftIsDirty(baseline, dirtyDraft), true);
 
+const sameAppearanceOtherPreset = cloneOverlayAppearanceDraft(baseline);
+sameAppearanceOtherPreset.active_preset_id = "other-look";
+assert.equal(overlayDraftIsDirty(baseline, sameAppearanceOtherPreset), false);
+
+const presetThemeDirty = cloneOverlayAppearanceDraft(baseline);
+presetThemeDirty.presets = [
+  { id: "default", name: "Default", font_size_px: 18, theme: "dashboard" },
+];
+assert.equal(overlayDraftIsDirty(baseline, presetThemeDirty), true);
+
 const reordered = cloneOverlayAppearanceDraft({
   ...baseline,
   presets: [

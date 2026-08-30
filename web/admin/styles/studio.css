@@ -195,7 +195,7 @@
   outline-offset: 2px;
 }
 
-.theme-card[aria-pressed="true"] {
+.theme-card[aria-checked="true"] {
   border-color: var(--amber);
   box-shadow: inset 0 0 0 1px var(--amber-dim, rgba(240, 180, 41, 0.35));
 }
@@ -264,7 +264,7 @@
   outline-offset: 2px;
 }
 
-.duration-chip[aria-pressed="true"] {
+.duration-chip[aria-checked="true"] {
   border-color: var(--amber);
   background: var(--amber-dim, rgba(240, 180, 41, 0.12));
 }
@@ -520,8 +520,7 @@
 }
 
 .studio-inspector-mount .preset-island__group--url {
-  flex: 1 1 100%;
-  justify-content: flex-start;
+  display: none;
 }
 
 .studio-inspector-mount .preset-island__url-input {
