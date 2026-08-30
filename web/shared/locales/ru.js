@@ -53,6 +53,7 @@ export default {
   "nav.audience": "Аудитория",
   "nav.studio": "Студия",
   "nav.settings": "Настройки",
+  "nav.about": "О программе",
 
   "workspace.liveHeading": "Эфир",
   "workspace.audienceHeading": "Аудитория",
@@ -83,6 +84,7 @@ export default {
   "workspace.announce.audience": "Рабочая область «Аудитория»",
   "workspace.announce.studio": "Рабочая область «Студия»",
   "workspace.announce.settings": "Рабочая область «Настройки»",
+  "workspace.announce.about": "О программе",
 
   "studio.publish": "Опубликовать",
   "studio.published": "Опубликовано",

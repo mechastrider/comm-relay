@@ -59,6 +59,7 @@
           <li><a class="shell-nav__link" href="#audience" data-workspace-nav="audience" data-i18n="nav.audience">Audience</a></li>
           <li><a class="shell-nav__link" href="#studio" data-workspace-nav="studio" data-i18n="nav.studio">Studio</a></li>
           <li><a class="shell-nav__link" href="#settings" data-workspace-nav="settings" data-i18n="nav.settings">Settings</a></li>
+          <li><a class="shell-nav__link" href="#about" data-workspace-nav="about" data-i18n="nav.about">About</a></li>
         </ul>
       </nav>
 
@@ -70,20 +71,6 @@
 
           <div class="live-cockpit cockpit-shell" id="live-cockpit">
             <div class="live-status-strip" data-i18n-aria-label="live.statusStrip" aria-label="Live operational status">
-              <div class="live-status-strip__connectors connector-rack connector-rack--compact" data-i18n-aria-label="shell.connectorStates">
-                <div class="indicator">
-                  <span class="indicator__label">Twitch</span>
-                  <span id="live-twitch-status" class="status-pill">-</span>
-                </div>
-                <div class="indicator">
-                  <span class="indicator__label">YouTube</span>
-                  <span id="live-youtube-status" class="status-pill">-</span>
-                </div>
-                <div class="indicator">
-                  <span class="indicator__label">VK Live</span>
-                  <span id="live-vk-status" class="status-pill">-</span>
-                </div>
-              </div>
               <p id="live-browser-clients" class="live-status-strip__clients" data-i18n="live.browserClientsCount">Connected browser clients: —</p>
               <div class="live-status-strip__preset">
                 <label for="live-active-preset" data-i18n="live.activePreset">Active preset</label>
@@ -171,76 +158,6 @@
           </section>
         </div>
       </section>
-
-      <aside class="systems-panel" aria-labelledby="controls-heading">
-        <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="systems-content" aria-expanded="true" data-i18n-aria-label="shell.collapsePanel">
-          <span class="sidebar-toggle__chevron" aria-hidden="true">&gt;</span>
-          <span class="sidebar-toggle__label" aria-hidden="true" data-i18n="shell.controls">Controls</span>
-        </button>
-
-        <div id="systems-content" class="systems-panel__content">
-          <div class="panel-heading panel-heading--actions">
-            <h2 id="controls-heading" data-i18n="shell.controls">Controls</h2>
-          </div>
-
-          <div class="control-grid">
-            <a class="btn-physical has-tooltip" href="#settings/platforms">
-              <span data-i18n="shell.connections">Connections</span>
-              <span class="ui-tooltip" role="tooltip" data-i18n="shell.connectionsHint">Twitch, YouTube, VK Live, and SOCKS5 proxy.</span>
-            </a>
-            <a class="btn-physical has-tooltip" href="#studio">
-              <span data-i18n="shell.obs">OBS</span>
-              <span class="ui-tooltip" role="tooltip" data-i18n="shell.obsHint">Browser Source URLs, presets, and overlay appearance.</span>
-            </a>
-            <a class="btn-physical has-tooltip" href="#settings/application">
-              <span data-i18n="shell.richChat">Rich chat</span>
-              <span class="ui-tooltip" role="tooltip" data-i18n="shell.richChatHint">Emotes and safe image-link previews in chat and overlay.</span>
-            </a>
-            <a class="btn-physical has-tooltip" href="#settings/application">
-              <span data-i18n="shell.sound">Sound</span>
-              <span class="ui-tooltip" role="tooltip" data-i18n="shell.soundHint">Alert sound when a new chat message arrives.</span>
-            </a>
-            <a class="btn-physical has-tooltip" href="#settings/application">
-              <span data-i18n="shell.interface">Interface</span>
-              <span class="ui-tooltip" role="tooltip" data-i18n="shell.interfaceSettingsHint">UI language, message sound, and rich chat options.</span>
-            </a>
-            <a class="btn-physical control-grid-about about-btn has-tooltip" href="#settings/about">
-              <span data-i18n="shell.about">About</span>
-              <small data-i18n="shell.aboutSubtitle">VERSION · SUPPORT</small>
-              <span class="ui-tooltip" role="tooltip" data-i18n="shell.aboutHint">Version, privacy, and support links.</span>
-            </a>
-          </div>
-
-          <div class="panel-heading panel-heading--spaced">
-            <h2 id="systems-heading" data-i18n="shell.systems">Systems</h2>
-          </div>
-
-          <dl class="overview-list">
-            <div class="overview-list__row">
-              <dt data-i18n="shell.youtubeOAuth">YouTube OAuth</dt>
-              <dd id="youtube-oauth-label" class="overview-list__value">-</dd>
-            </div>
-          </dl>
-
-          <div class="detail-stack" data-i18n-aria-label="shell.connectorDetails">
-            <p id="twitch-detail" class="status-detail" hidden></p>
-            <p id="youtube-detail" class="status-detail" hidden></p>
-            <p id="vk-detail" class="status-detail" hidden></p>
-          </div>
-
-          <div class="panel-heading panel-heading--spaced">
-            <h2 data-i18n="shell.richChat">Rich chat</h2>
-          </div>
-
-          <dl id="emote-diagnostics" class="overview-list emote-diagnostics" data-i18n-aria-label="shell.emoteProviderCache">
-            <div class="overview-list__row">
-              <dt data-i18n="shell.cacheEntries">Cache entries</dt>
-              <dd id="emote-cache-entries" class="overview-list__value">-</dd>
-            </div>
-          </dl>
-          <ul id="emote-provider-list" class="provider-list" data-i18n-aria-label="shell.emoteProviderStatus"></ul>
-        </div>
-      </aside>
             </div>
           </div>
         </section>
@@ -485,7 +402,6 @@
                 <a id="settings-data-tab" class="settings-nav__link" href="#settings/data" role="tab" aria-controls="settings-data-panel" data-settings-nav="data" data-i18n="settings.section.data">Data</a>
                 <a id="settings-application-tab" class="settings-nav__link" href="#settings/application" role="tab" aria-controls="settings-application-panel" data-settings-nav="application" data-i18n="settings.section.application">Application</a>
                 <a id="settings-diagnostics-tab" class="settings-nav__link" href="#settings/diagnostics" role="tab" aria-controls="settings-diagnostics-panel" data-settings-nav="diagnostics" data-i18n="settings.section.diagnostics">Diagnostics</a>
-                <a id="settings-about-tab" class="settings-nav__link" href="#settings/about" role="tab" aria-controls="settings-about-panel" data-settings-nav="about" data-i18n="settings.section.about">About</a>
               </nav>
             </header>
             <div id="settings-sections-mount" class="settings-workspace__content"></div>
@@ -530,6 +446,46 @@
             </div>
           </div>
         </section>
+
+        <section id="workspace-about" class="workspace about-workspace" data-workspace="about" hidden aria-labelledby="workspace-about-heading">
+          <header class="about-workspace__header">
+            <h1 id="workspace-about-heading" class="workspace-heading" tabindex="-1" data-i18n="nav.about">About</h1>
+            <p class="about-workspace__lead field-hint" data-i18n="about.subtitle">Version, privacy, and how to reach support.</p>
+          </header>
+          <div class="about-workspace__body">
+            <section class="panel about-panel" data-i18n-aria-label="about.aboutCommRelay" aria-label="About CommRelay">
+              <div class="about-identity">
+                <div class="about-product">CommRelay</div>
+                <div id="about-version" class="about-version" aria-live="polite">Version —</div>
+                <p class="about-status" data-i18n="about.privacy">Local app · no telemetry · diagnostics stay on your machine.</p>
+              </div>
+
+              <section class="about-section" aria-labelledby="about-support-heading">
+                <h2 class="about-section-title" id="about-support-heading" data-i18n="about.support">Support</h2>
+                <p class="about-section-body" data-i18n="about.supportBody">
+                  Questions, bug reports, and feedback — Telegram chat is the fastest channel.
+                  Source and issues live on GitHub.
+                </p>
+                <div class="about-actions">
+                  <button id="about-telegram" class="btn-physical btn-start about-link-btn" type="button">
+                    <span data-i18n="about.telegram">Telegram chat</span>
+                    <small data-i18n="about.telegramSmall">SUPPORT</small>
+                  </button>
+                  <button id="about-github" class="btn-physical about-link-btn" type="button">
+                    <span data-i18n="about.github">GitHub</span>
+                    <small data-i18n="about.githubSmall">SOURCE · ISSUES</small>
+                  </button>
+                </div>
+              </section>
+
+              <p class="about-license" data-i18n="about.license">MIT License. Copyright (c) 2026 Igor Lazarev. Provided without warranty.</p>
+            </section>
+            <div class="about-workspace__actions">
+              <button id="about-copy-version" class="btn-physical" type="button" data-i18n="about.copyVersion">Copy version</button>
+              <span id="about-feedback" class="about-feedback" role="status" hidden></span>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -539,6 +495,7 @@
         <li><a class="shell-nav__link" href="#audience" data-workspace-nav="audience" data-i18n="nav.audience">Audience</a></li>
         <li><a class="shell-nav__link" href="#studio" data-workspace-nav="studio" data-i18n="nav.studio">Studio</a></li>
         <li><a class="shell-nav__link" href="#settings" data-workspace-nav="settings" data-i18n="nav.settings">Settings</a></li>
+        <li><a class="shell-nav__link" href="#about" data-workspace-nav="about" data-i18n="nav.about">About</a></li>
       </ul>
     </nav>
 
@@ -1549,53 +1506,6 @@
             </div>
           </div>
         </section>
-      </div>
-    </dialog>
-
-    <dialog id="about-dialog" class="settings-dialog about-dialog" aria-labelledby="about-heading" hidden>
-      <div class="dialog-frame">
-        <div class="dialog-header">
-          <div>
-            <span class="dialog-kicker">CommRelay</span>
-            <h2 id="about-heading" data-i18n="shell.about">About</h2>
-            <p class="dialog-subtitle" data-i18n="about.subtitle">Version, privacy, and how to reach support.</p>
-          </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeAbout" aria-label="Close about dialog">Close</button>
-        </div>
-
-        <section class="panel about-panel" data-i18n-aria-label="about.aboutCommRelay" aria-label="About CommRelay">
-          <div class="about-identity">
-            <div class="about-product">CommRelay</div>
-            <div id="about-version" class="about-version" aria-live="polite">Version —</div>
-            <p class="about-status" data-i18n="about.privacy">Local app · no telemetry · diagnostics stay on your machine.</p>
-          </div>
-
-          <section class="about-section" aria-labelledby="about-support-heading">
-            <h3 class="about-section-title" id="about-support-heading" data-i18n="about.support">Support</h3>
-            <p class="about-section-body" data-i18n="about.supportBody">
-              Questions, bug reports, and feedback — Telegram chat is the fastest channel.
-              Source and issues live on GitHub.
-            </p>
-            <div class="about-actions">
-              <button id="about-telegram" class="btn-physical btn-start about-link-btn" type="button">
-                <span data-i18n="about.telegram">Telegram chat</span>
-                <small data-i18n="about.telegramSmall">SUPPORT</small>
-              </button>
-              <button id="about-github" class="btn-physical about-link-btn" type="button">
-                <span data-i18n="about.github">GitHub</span>
-                <small data-i18n="about.githubSmall">SOURCE · ISSUES</small>
-              </button>
-            </div>
-          </section>
-
-          <p class="about-license" data-i18n="about.license">MIT License. Copyright (c) 2026 Igor Lazarev. Provided without warranty.</p>
-        </section>
-
-        <div class="dialog-actions">
-          <button id="about-copy-version" class="btn-physical" type="button" data-i18n="about.copyVersion">Copy version</button>
-          <span id="about-feedback" class="about-feedback" role="status" hidden></span>
-          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
-        </div>
       </div>
     </dialog>
   </form>

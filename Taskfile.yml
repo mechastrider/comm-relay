@@ -1,0 +1,28 @@
+version: "3"
+
+vars:
+  AIR_VERSION: v1.61.7
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  tools:install:
+    desc: Install dev tools (Air live reload)
+    cmds:
+      - go install github.com/air-verse/air@{{.AIR_VERSION}}
+
+  web:dev:
+    desc: Run comm-relay-server with Air (-web ./web -debug, reload on Go changes)
+    deps: [tools:ensure-air]
+    cmds:
+      - air -c .air.toml
+
+  tools:ensure-air:
+    internal: true
+    status:
+      - air -v
+    cmds:
+      - task: tools:install

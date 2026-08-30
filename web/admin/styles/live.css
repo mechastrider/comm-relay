@@ -11,20 +11,13 @@
   background: var(--surface);
 }
 
-.connector-rack--compact .indicator {
-  min-width: 0;
-}
-
-.connector-rack--compact .indicator__label {
-  font-size: var(--primitive-font-size-xs);
-}
-
 .live-status-strip__clients {
   margin: 0;
   color: var(--muted);
   font-size: var(--primitive-font-size-sm);
   font-weight: 700;
   letter-spacing: 0.5px;
+  flex: 1 1 auto;
 }
 
 .live-status-strip__preset {
@@ -56,7 +49,10 @@
 }
 
 .live-work-area {
+  display: flex;
+  flex: 1;
   min-height: 0;
+  flex-direction: column;
 }
 
 .live-tab-panels {
@@ -205,16 +201,6 @@
   .live-active-preset {
     flex: 1;
     max-width: none;
-  }
-}
-
-@media (max-width: 1199px) {
-  .live-status-strip__connectors {
-    display: none;
-  }
-
-  .live-status-strip__clients {
-    flex: 1 1 auto;
   }
 }
 

@@ -175,15 +175,19 @@
 
 .workspace-host {
   position: relative;
+  display: flex;
   flex: 1;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
 }
 
 .workspace {
-  min-height: 100%;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .workspace-placeholder {
@@ -206,35 +210,22 @@
   line-height: 1.55;
 }
 
-/* Live cockpit (transitional — full monitor + systems) */
+/* Live cockpit */
 .live-cockpit,
 .cockpit-shell {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  min-height: 100%;
-}
-
-.live-cockpit .live-actions {
-  flex-shrink: 0;
-  gap: var(--primitive-space-3);
-  padding: var(--primitive-space-3) var(--primitive-space-5);
-  border-bottom: 1px solid var(--border-dark);
-  background: var(--surface);
+  min-height: 0;
 }
 
 .live-cockpit .main-area {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 270px;
+  display: flex;
   flex: 1;
+  flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  transition: grid-template-columns var(--primitive-duration-normal) var(--primitive-ease-standard);
-}
-
-.live-cockpit.sidebar-collapsed .main-area,
-.cockpit-shell.sidebar-collapsed .main-area {
-  grid-template-columns: minmax(0, 1fr) 34px;
 }
 
 .live-cockpit .banner,
@@ -242,14 +233,8 @@
   position: absolute;
   top: 10px;
   left: 12px;
-  right: 284px;
+  right: 12px;
   z-index: 3;
-  transition: right var(--primitive-duration-normal) var(--primitive-ease-standard);
-}
-
-.live-cockpit.sidebar-collapsed .banner,
-.cockpit-shell.sidebar-collapsed .banner {
-  right: 48px;
 }
 
 .status-bar {

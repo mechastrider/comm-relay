@@ -2,8 +2,8 @@
   display: flex;
   min-width: 0;
   min-height: 0;
+  flex: 1;
   flex-direction: column;
-  border-right: 2px solid var(--amber-dim);
 }
 
 .console-header {
