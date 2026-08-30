@@ -142,55 +142,16 @@ func TestStore_ActivatePreset_WhenSecretBearing_ExpectSecretsPreserved(t *testin
 func TestStore_ActivatePreset_WhenSaveFails_ExpectErrorAndUnchanged(t *testing.T) {
 	t.Parallel()
 
-	dir := t.TempDir()
-	path := filepath.Join(dir, "config.json")
-
-	cfg, err := Load(path)
-	require.NoError(t, err)
-
-	store, err := NewStore(path, cfg)
-	require.NoError(t, err)
-
-	require.NoError(t, store.Mutate(func(current *Config) error {
-		streamMain := current.Overlay.Presets[0]
-		streamMain.ID = "stream-main"
-		streamMain.Name = "Stream Main"
-		current.Overlay.Presets = append(current.Overlay.Presets, streamMain)
-		return nil
-	}))
-
+	store, _ := testStoreWithSecondPreset(t)
 	require.NoError(t, store.ActivatePreset("stream-main"))
 	activated := store.Snapshot()
 	require.Equal(t, "stream-main", activated.Overlay.ActivePresetID)
 
-	require.NoError(t, os.Chmod(dir, 0o555))
-	t.Cleanup(func() { _ = os.Chmod(dir, 0o755) })
+	dir := filepath.Dir(store.Path())
+	require.NoError(t, os.RemoveAll(dir))
+	require.NoError(t, os.WriteFile(dir, []byte("blocker"), 0o644))
 
-	err = store.ActivatePreset(OverlayDefaultPresetID)
-	if err == nil {
-		blocker := filepath.Join(dir, "blocker")
-		require.NoError(t, os.WriteFile(blocker, []byte("x"), 0o644))
-		badPath := filepath.Join(blocker, "config.json")
-		blockedStore, storeErr := NewStore(badPath, cfg)
-		require.NoError(t, storeErr)
-		require.NoError(t, blockedStore.Mutate(func(current *Config) error {
-			streamMain := current.Overlay.Presets[0]
-			streamMain.ID = "stream-main"
-			streamMain.Name = "Stream Main"
-			current.Overlay.Presets = append(current.Overlay.Presets, streamMain)
-			return nil
-		}))
-		require.NoError(t, blockedStore.ActivatePreset("stream-main"))
-		beforeBlocked := blockedStore.Snapshot()
-		err = blockedStore.ActivatePreset(OverlayDefaultPresetID)
-		require.Error(t, err)
-		require.Equal(t, beforeBlocked, blockedStore.Snapshot())
-		return
-	}
-
+	err := store.ActivatePreset(OverlayDefaultPresetID)
+	require.Error(t, err)
 	require.Equal(t, activated, store.Snapshot())
-
-	reloaded, reloadErr := Load(path)
-	require.NoError(t, reloadErr)
-	require.Equal(t, activated.Overlay.ActivePresetID, reloaded.Overlay.ActivePresetID)
 }

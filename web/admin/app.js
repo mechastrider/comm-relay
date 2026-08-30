@@ -36,6 +36,7 @@ import { initLiveTabs } from "./js/live-tabs.js";
 import { initLiveLeaderboard } from "./js/live-leaderboard.js";
 import { initLiveStatistics } from "./js/live-statistics.js";
 import { initLiveActivePreset, renderLiveActivePresetControl } from "./js/live-active-preset.js";
+import { initSidebar } from "./js/sidebar.js?v=1";
 import {
   initSettingsWorkspace,
   handleSettingsWorkspaceChange,
@@ -74,6 +75,7 @@ if (dom.youtubeConnect) {
 }
 
 initI18n();
+initSidebar(document, t);
 initWorkspaceRouter(document, t, {
   onWorkspaceChange: handleSettingsWorkspaceChange,
 });

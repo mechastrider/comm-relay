@@ -138,6 +138,7 @@
 .shell-nav__link {
   display: flex;
   align-items: center;
+  gap: var(--primitive-space-5);
   min-height: var(--touch-target-min);
   padding: var(--primitive-space-3) var(--primitive-space-5);
   border: 1px solid transparent;
@@ -148,6 +149,13 @@
   letter-spacing: 1.2px;
   text-decoration: none;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.shell-nav__icon {
+  width: var(--sidebar-icon-size);
+  height: var(--sidebar-icon-size);
+  flex: 0 0 var(--sidebar-icon-size);
 }
 
 .shell-nav__link:hover {
@@ -164,9 +172,106 @@
 }
 
 .shell-nav--side {
-  width: 196px;
+  display: flex;
+  width: var(--sidebar-width-expanded);
+  flex-direction: column;
   border-right: 1px solid var(--border-dark);
   background: var(--surface);
+  transition: width var(--primitive-duration-normal) var(--primitive-ease-standard);
+}
+
+.shell-nav--side .shell-nav__list {
+  flex: 1;
+}
+
+.shell-nav--side .shell-nav__link {
+  min-height: var(--touch-target-narrow);
+}
+
+.shell-nav__footer {
+  padding: 0 var(--primitive-space-4) var(--primitive-space-4);
+}
+
+.shell-nav__toggle {
+  display: flex;
+  width: 100%;
+  min-width: var(--touch-target-narrow);
+  min-height: var(--touch-target-narrow);
+  align-items: center;
+  gap: var(--primitive-space-5);
+  padding: var(--primitive-space-3) var(--primitive-space-5);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface-raised);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: var(--primitive-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.shell-nav__toggle:hover {
+  border-color: var(--amber-dim);
+  color: var(--amber);
+}
+
+.shell-nav__toggle-icon {
+  transition: transform var(--primitive-duration-normal) var(--primitive-ease-standard);
+}
+
+.shell-nav--side .shell-nav__tooltip {
+  display: none;
+  top: 50%;
+  left: calc(100% + var(--primitive-space-3));
+  width: max-content;
+  max-width: 220px;
+  transform: translateX(-4px) translateY(-50%);
+  white-space: nowrap;
+}
+
+.shell-nav--side .has-tooltip:hover > .shell-nav__tooltip,
+.shell-nav--side .has-tooltip:focus-visible > .shell-nav__tooltip {
+  transform: translateX(0) translateY(-50%);
+}
+
+html[data-sidebar-state="collapsed"] .shell-nav--side {
+  width: var(--sidebar-width-collapsed);
+}
+
+html[data-sidebar-state="collapsed"] .shell-nav--side .shell-nav__list {
+  padding-inline: var(--primitive-space-4);
+}
+
+html[data-sidebar-state="collapsed"] .shell-nav--side .shell-nav__link,
+html[data-sidebar-state="collapsed"] .shell-nav--side .shell-nav__toggle {
+  min-width: var(--touch-target-narrow);
+  min-height: var(--touch-target-narrow);
+  justify-content: center;
+  gap: 0;
+  padding-inline: var(--primitive-space-3);
+}
+
+html[data-sidebar-state="collapsed"] .shell-nav--side .shell-nav__label,
+html[data-sidebar-state="collapsed"] .shell-nav--side .shell-nav__toggle-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  white-space: nowrap;
+}
+
+html[data-sidebar-state="collapsed"] .shell-nav--side .shell-nav__tooltip {
+  display: block;
+}
+
+html[data-sidebar-state="collapsed"] .shell-nav--side .shell-nav__toggle-icon {
+  transform: rotate(180deg);
 }
 
 .shell-nav--bottom {
@@ -262,7 +367,7 @@
 
 @media (min-width: 1024px) {
   .shell-nav--side {
-    display: block;
+    display: flex;
   }
 }
 

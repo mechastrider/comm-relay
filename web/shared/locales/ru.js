@@ -46,6 +46,8 @@ export default {
   "shell.settingsUnavailable": "Настройки недоступны",
   "shell.skipToContent": "Перейти к содержимому",
   "shell.primaryNav": "Основная навигация",
+  "shell.collapseSidebar": "Свернуть меню",
+  "shell.expandSidebar": "Развернуть меню",
   "shell.diagnostics": "Диагностика",
   "shell.diagnosticsHint": "Перейти к аптайму, клиентам WebSocket и счётчикам сообщений.",
 
