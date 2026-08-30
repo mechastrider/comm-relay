@@ -438,11 +438,8 @@
           <header class="studio-toolbar">
             <h1 id="workspace-studio-heading" class="studio-toolbar__title workspace-heading" tabindex="-1" data-i18n="workspace.studioHeading">Studio</h1>
             <div class="studio-toolbar__actions">
-              <div class="studio-active-preset">
-                <label for="studio-active-preset" data-i18n="live.activePreset">Active preset</label>
-                <select id="studio-active-preset" class="live-active-preset"></select>
-              </div>
               <span id="studio-dirty-status" class="studio-dirty-status" role="status" aria-live="polite">Published</span>
+              <button id="studio-use-on-stream" class="btn-physical btn-secondary studio-use-on-stream" type="button" hidden data-i18n="studio.useOnStream">Use on stream</button>
               <button id="studio-publish" class="btn-physical btn-start" type="button" data-i18n="studio.publish">Publish</button>
             </div>
           </header>
@@ -572,7 +569,30 @@
                     <select id="overlay-preset-select"></select>
                     <span id="preset-island-count" class="preset-island__count" aria-live="polite">1/32</span>
                   </div>
-                  <div class="preset-island__icon-actions" role="group" data-i18n-aria-label="obs.presetActions">
+                  <div class="preset-island__overflow preset-overflow" id="preset-island-overflow" hidden>
+                    <button
+                      id="preset-island-overflow-toggle"
+                      class="icon-btn has-tooltip preset-overflow__toggle"
+                      type="button"
+                      aria-expanded="false"
+                      aria-controls="preset-island-overflow-panel"
+                      data-i18n-aria-label="studio.presetOverflow"
+                    >
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                        <circle cx="5" cy="12" r="1.75"></circle>
+                        <circle cx="12" cy="12" r="1.75"></circle>
+                        <circle cx="19" cy="12" r="1.75"></circle>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="studio.presetOverflow">Look actions</span>
+                    </button>
+                    <div id="preset-island-overflow-panel" class="preset-overflow__panel" hidden>
+                      <button id="preset-overflow-add" class="preset-overflow__action" type="button" data-i18n="obs.presetAdd">New preset</button>
+                      <button id="preset-overflow-rename" class="preset-overflow__action" type="button" data-i18n="obs.presetRename">Rename</button>
+                      <button id="preset-overflow-duplicate" class="preset-overflow__action" type="button" data-i18n="obs.presetDuplicate">Duplicate</button>
+                      <button id="preset-overflow-delete" class="preset-overflow__action" type="button" data-i18n="obs.presetDelete">Delete</button>
+                    </div>
+                  </div>
+                  <div id="preset-island-icon-actions" class="preset-island__icon-actions" role="group" data-i18n-aria-label="obs.presetActions">
                     <button id="overlay-preset-add" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetAdd">
                       <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
                         <path d="M12 5v14M5 12h14" stroke-linecap="round"></path>

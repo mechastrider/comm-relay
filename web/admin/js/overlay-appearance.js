@@ -5,7 +5,7 @@ import { uploadOverlayAsset } from "./overlay-asset-upload.js";
 import { showBanner } from "./ui-shell.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildObsAlertURL } from "./alert-url.js";
-import { buildFollowActiveURLForSurface, messageTtlToChipValue, chipValueToMessageTtl } from "./studio-helpers.js";
+import { buildFollowActiveURLForSurface, messageTtlToChipValue, chipValueToMessageTtl, shouldShowPresetCrudInPrimary } from "./studio-helpers.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
 import { OVERLAY_THEMES } from "./constants.js";
 import * as dom from "./dom.js";
@@ -448,6 +448,7 @@ function updatePresetActionButtons() {
   const add = document.getElementById("overlay-preset-add");
   const duplicate = document.getElementById("overlay-preset-duplicate");
   const remove = document.getElementById("overlay-preset-delete");
+  const rename = document.getElementById("overlay-preset-rename");
   if (add) {
     add.disabled = atLimit;
   }
@@ -457,11 +458,97 @@ function updatePresetActionButtons() {
   if (remove) {
     remove.disabled = onlyOne;
   }
+  if (dom.presetOverflowAdd) {
+    dom.presetOverflowAdd.disabled = atLimit;
+  }
+  if (dom.presetOverflowDuplicate) {
+    dom.presetOverflowDuplicate.disabled = atLimit;
+  }
+  if (dom.presetOverflowDelete) {
+    dom.presetOverflowDelete.disabled = onlyOne;
+  }
+  if (rename && dom.presetOverflowRename) {
+    dom.presetOverflowRename.disabled = rename.disabled;
+  }
+}
+
+function updatePresetCrudVisibility() {
+  const showPrimary = shouldShowPresetCrudInPrimary(presets.length);
+  if (dom.presetIslandIconActions) {
+    dom.presetIslandIconActions.hidden = !showPrimary;
+  }
+  if (dom.presetIslandOverflow) {
+    dom.presetIslandOverflow.hidden = showPrimary;
+  }
+  if (!showPrimary) {
+    closePresetOverflowPanel();
+  }
+  updatePresetActionButtons();
+}
+
+function closePresetOverflowPanel() {
+  if (!dom.presetIslandOverflowPanel || !dom.presetIslandOverflowToggle) {
+    return;
+  }
+  dom.presetIslandOverflowPanel.hidden = true;
+  dom.presetIslandOverflowToggle.setAttribute("aria-expanded", "false");
+}
+
+function initPresetOverflowPanel() {
+  if (!dom.presetIslandOverflowPanel || !dom.presetIslandOverflowToggle) {
+    return;
+  }
+  if (dom.presetIslandOverflowToggle.dataset.presetOverflowBound === "true") {
+    return;
+  }
+  dom.presetIslandOverflowToggle.dataset.presetOverflowBound = "true";
+
+  dom.presetIslandOverflowToggle.addEventListener("click", function (event) {
+    event.stopPropagation();
+    const panel = dom.presetIslandOverflowPanel;
+    if (!panel) {
+      return;
+    }
+    if (panel.hidden) {
+      panel.hidden = false;
+      dom.presetIslandOverflowToggle.setAttribute("aria-expanded", "true");
+      return;
+    }
+    closePresetOverflowPanel();
+  });
+
+  document.addEventListener("click", function (event) {
+    const panel = dom.presetIslandOverflowPanel;
+    const toggle = dom.presetIslandOverflowToggle;
+    if (!panel || panel.hidden || !toggle) {
+      return;
+    }
+    if (
+      event.target === toggle ||
+      toggle.contains(/** @type {Node} */ (event.target)) ||
+      panel.contains(/** @type {Node} */ (event.target))
+    ) {
+      return;
+    }
+    closePresetOverflowPanel();
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") {
+      return;
+    }
+    const panel = dom.presetIslandOverflowPanel;
+    if (!panel || panel.hidden) {
+      return;
+    }
+    closePresetOverflowPanel();
+    dom.presetIslandOverflowToggle.focus();
+  });
 }
 
 function renderPresetSelect() {
   fillPresetSelect(document.getElementById("overlay-preset-select"));
-  updatePresetActionButtons();
+  updatePresetCrudVisibility();
 }
 
 function getSavedPreset(presetId) {
@@ -1041,6 +1128,31 @@ export function initOverlayAppearance() {
       openPresetPrompt("delete");
     });
   }
+  if (dom.presetOverflowAdd) {
+    dom.presetOverflowAdd.addEventListener("click", function () {
+      closePresetOverflowPanel();
+      openPresetPrompt("create");
+    });
+  }
+  if (dom.presetOverflowRename) {
+    dom.presetOverflowRename.addEventListener("click", function () {
+      closePresetOverflowPanel();
+      openPresetPrompt("rename");
+    });
+  }
+  if (dom.presetOverflowDuplicate) {
+    dom.presetOverflowDuplicate.addEventListener("click", function () {
+      closePresetOverflowPanel();
+      openPresetPrompt("duplicate");
+    });
+  }
+  if (dom.presetOverflowDelete) {
+    dom.presetOverflowDelete.addEventListener("click", function () {
+      closePresetOverflowPanel();
+      openPresetPrompt("delete");
+    });
+  }
+  initPresetOverflowPanel();
   const promptCancel = document.getElementById("overlay-preset-prompt-cancel");
   if (promptCancel) {
     promptCancel.addEventListener("click", closePresetPrompt);

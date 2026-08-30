@@ -136,6 +136,28 @@ export function cloneOverlayAppearanceDraft(overlay) {
 }
 
 /**
+ * @param {unknown} editedPresetId
+ * @param {unknown} onAirPresetId
+ * @returns {boolean}
+ */
+export function shouldShowUseOnStream(editedPresetId, onAirPresetId) {
+  const edited = typeof editedPresetId === "string" ? editedPresetId.trim() : "";
+  const onAir = typeof onAirPresetId === "string" ? onAirPresetId.trim() : "";
+  if (!edited || !onAir) {
+    return false;
+  }
+  return edited !== onAir;
+}
+
+/**
+ * @param {number} presetCount
+ * @returns {boolean}
+ */
+export function shouldShowPresetCrudInPrimary(presetCount) {
+  return Number.isFinite(presetCount) && presetCount > 1;
+}
+
+/**
  * @param {{ origin: string, pathname: string, presetId?: string, followActive?: boolean }} options
  * @returns {string}
  */

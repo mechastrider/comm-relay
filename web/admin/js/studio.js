@@ -6,12 +6,14 @@ import {
   cloneOverlayAppearanceDraft,
   overlayDraftIsDirty,
   buildFollowActiveURLForSurface,
+  shouldShowUseOnStream,
 } from "./studio-helpers.js";
 import { resolveStudioDraftAfterConfigApply } from "./config-apply-restore.js";
 import {
   applyOverlayAppearance,
   collectOverlayAppearance,
   updatePresetIsland,
+  getActivePresetID,
 } from "./overlay-appearance.js";
 import {
   getPreviewSurface,
@@ -32,7 +34,11 @@ import {
   hideBanner,
 } from "./ui-shell.js";
 import { parseWorkspaceHash, workspaceHash } from "./workspace-router.js";
-import { initActivePresetSelect, renderActivePresetSelect } from "./live-active-preset.js";
+import {
+  activateOverlayPreset,
+  getOnAirPresetId,
+  isOverlayActivateInFlight,
+} from "./live-active-preset.js";
 import { bindCopyButtons } from "./obs-setup.js";
 import { initStudioAddToObs, maybeAutoOpenStudioAddToObs } from "./studio-add-to-obs.js";
 
@@ -150,10 +156,23 @@ export function confirmDiscardStudioDraft() {
   return window.confirm(t("studio.discardConfirm"));
 }
 
+function updateStudioUseOnStream() {
+  if (!dom.studioUseOnStream) {
+    return;
+  }
+  const editedId = getActivePresetID();
+  const onAirId = getOnAirPresetId();
+  const show = shouldShowUseOnStream(editedId, onAirId);
+  const inFlight = isOverlayActivateInFlight();
+  dom.studioUseOnStream.hidden = !show;
+  dom.studioUseOnStream.disabled = !show || inFlight;
+  dom.studioUseOnStream.setAttribute("aria-busy", inFlight ? "true" : "false");
+}
+
 function onStudioEnter() {
   resetStudioDraftFromConfig();
-  renderActivePresetSelect(dom.studioActivePreset);
   updateStudioFollowCopy();
+  updateStudioUseOnStream();
   mountOverlayPreview();
   maybeAutoOpenStudioAddToObs();
 }
@@ -284,24 +303,37 @@ export function initStudio() {
     bindCopyButtons(dom.studioWorkspace);
   }
 
-  initActivePresetSelect(dom.studioActivePreset);
+  if (dom.studioUseOnStream) {
+    dom.studioUseOnStream.addEventListener("click", function () {
+      const editedId = getActivePresetID();
+      activateOverlayPreset(editedId).catch(function () {
+        showBanner("error", t("banner.cannotReach"));
+      });
+    });
+  }
 
   document.addEventListener("studio-overlay-changed", function () {
     notifyStudioOverlayChanged();
+    updateStudioUseOnStream();
   });
 
   document.addEventListener("admin-config-applied", function () {
     if (!isStudioWorkspaceActive()) {
-      renderActivePresetSelect(dom.studioActivePreset);
+      updateStudioUseOnStream();
       return;
     }
     restoreStudioDraftAfterConfigApply();
-    renderActivePresetSelect(dom.studioActivePreset);
+    updateStudioUseOnStream();
   });
 
   document.addEventListener("live-active-preset-changed", function () {
     updatePresetIsland();
     updateStudioFollowCopy();
+    updateStudioUseOnStream();
+  });
+
+  document.addEventListener("overlay-activate-state-changed", function () {
+    updateStudioUseOnStream();
   });
 
   document.addEventListener("overlay-preview-surface-changed", function () {
@@ -310,6 +342,7 @@ export function initStudio() {
 
   window.addEventListener("admin-locale-applied", function () {
     renderStudioDirtyState();
+    updateStudioUseOnStream();
   });
 
   if (isStudioWorkspaceActive()) {

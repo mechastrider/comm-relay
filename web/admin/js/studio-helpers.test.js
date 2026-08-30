@@ -16,6 +16,8 @@ import {
   readAddToObsDismissedPreference,
   writeAddToObsDismissedPreference,
   MESSAGE_TTL_CHIP_VALUES,
+  shouldShowUseOnStream,
+  shouldShowPresetCrudInPrimary,
 } from "./studio-helpers.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
@@ -160,5 +162,14 @@ writeAddToObsDismissedPreference(dismissedStorage, false);
 assert.equal(readAddToObsDismissedPreference(dismissedStorage), false);
 writeAddToObsDismissedPreference(dismissedStorage, true);
 assert.equal(readAddToObsDismissedPreference(dismissedStorage), true);
+
+assert.equal(shouldShowUseOnStream("look-a", "look-b"), true);
+assert.equal(shouldShowUseOnStream("look-a", "look-a"), false);
+assert.equal(shouldShowUseOnStream("", "look-a"), false);
+assert.equal(shouldShowUseOnStream("look-a", ""), false);
+
+assert.equal(shouldShowPresetCrudInPrimary(1), false);
+assert.equal(shouldShowPresetCrudInPrimary(2), true);
+assert.equal(shouldShowPresetCrudInPrimary(0), false);
 
 console.log("studio-helpers OK");

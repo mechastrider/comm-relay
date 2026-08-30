@@ -94,6 +94,8 @@ export default {
   "studio.discardConfirm": "Отменить неопубликованные изменения overlay?",
   "studio.publishSuccess": "Настройки overlay опубликованы.",
   "studio.previewOverflow": "Параметры превью",
+  "studio.presetOverflow": "Действия с look",
+  "studio.useOnStream": "Включить в эфире",
   "studio.advanced": "Ещё настройки",
   "studio.addToObs": "Добавить в OBS",
   "studio.addToObsKicker": "Первый шаг",

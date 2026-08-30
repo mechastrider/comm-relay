@@ -26,14 +26,8 @@
   gap: var(--primitive-space-3);
 }
 
-.studio-active-preset {
-  display: flex;
-  align-items: center;
-  gap: var(--primitive-space-2);
-}
-
-.studio-active-preset label {
-  white-space: nowrap;
+.studio-use-on-stream[hidden] {
+  display: none;
 }
 
 .studio-dirty-status {
@@ -78,6 +72,57 @@
 
 .studio-inspector-mount .preset-island {
   flex-shrink: 0;
+}
+
+.studio-inspector-mount .preset-overflow {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.studio-inspector-mount .preset-overflow__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-space-1);
+  min-width: 10rem;
+  padding: var(--primitive-space-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-raised, #141418);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.studio-inspector-mount .preset-overflow__panel[hidden] {
+  display: none;
+}
+
+.studio-inspector-mount .preset-overflow__action {
+  width: 100%;
+  padding: var(--primitive-space-2) var(--primitive-space-3);
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-inspector-mount .preset-overflow__action:hover {
+  background: var(--surface-hover, rgba(255, 255, 255, 0.06));
+}
+
+.studio-inspector-mount .preset-overflow__action:focus-visible {
+  outline: 2px solid var(--focus-ring, #6ea8fe);
+  outline-offset: 1px;
+}
+
+.studio-inspector-mount .preset-overflow__action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .studio-inspector-mount .studio-inspector {
@@ -533,8 +578,6 @@
   }
 
   .studio-toolbar__actions,
-  .studio-active-preset,
-  .studio-active-preset select,
   .studio-toolbar__actions .btn-physical {
     width: 100%;
   }
