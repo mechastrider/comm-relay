@@ -1,3 +1,7 @@
+.settings-workspace {
+  padding: var(--primitive-space-4) var(--primitive-space-5);
+}
+
 .settings-workspace__layout {
   display: flex;
   flex-direction: column;
@@ -23,20 +27,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.5rem;
-  padding: var(--primitive-space-2) var(--primitive-space-3);
-  border: 1px solid var(--color-border-subtle);
+  min-height: 36px;
+  padding: var(--primitive-space-2) var(--primitive-space-5);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--primitive-radius-md);
   background: var(--surface-raised);
   color: var(--color-text-primary);
   text-decoration: none;
   font-size: var(--primitive-font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
 .settings-nav__link--active,
 .settings-nav__link[aria-current="location"] {
   border-color: var(--amber);
   background: color-mix(in srgb, var(--amber) 18%, var(--surface-raised));
+  box-shadow: inset 0 -2px 0 var(--amber);
 }
 
 .settings-workspace__content {
@@ -52,6 +60,13 @@
   min-height: 0;
 }
 
+.settings-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--primitive-space-3);
+  min-width: 0;
+}
+
 .settings-section__heading {
   margin: 0;
   font-size: var(--primitive-font-size-lg);
@@ -63,6 +78,7 @@
   justify-content: space-between;
   gap: var(--primitive-space-3);
   flex-shrink: 0;
+  flex: 1;
 }
 
 .settings-section__dirty {
@@ -131,6 +147,7 @@
 }
 
 @media (max-width: 720px) {
+  .settings-section__header,
   .settings-section__toolbar {
     flex-direction: column;
     align-items: stretch;

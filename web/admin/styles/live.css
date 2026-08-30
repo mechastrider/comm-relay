@@ -208,17 +208,17 @@
   }
 }
 
-@media (max-width: 390px) {
+@media (max-width: 1199px) {
   .live-status-strip__connectors {
-    width: 100%;
+    display: none;
   }
 
-  .connector-rack--compact {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    width: 100%;
+  .live-status-strip__clients {
+    flex: 1 1 auto;
   }
+}
 
+@media (max-width: 390px) {
   .live-leaderboard-body {
     overflow-x: auto;
   }

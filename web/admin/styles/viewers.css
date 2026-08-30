@@ -119,9 +119,13 @@
 }
 
 .audience-region-empty {
+  position: static;
   display: grid;
+  flex: 1 1 auto;
   gap: var(--primitive-space-3);
   justify-items: center;
+  align-content: center;
+  min-height: 8rem;
   padding: var(--primitive-space-6) var(--primitive-space-3);
   text-align: center;
 }
@@ -300,12 +304,17 @@
   }
 
   .audience-viewers-table {
-    min-width: 18rem;
+    min-width: 36rem;
   }
 
   .audience-toolbar__controls {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .audience-toolbar__search {
+    flex: 0 0 auto;
+    width: 100%;
   }
 }
 

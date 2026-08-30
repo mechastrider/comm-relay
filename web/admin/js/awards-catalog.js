@@ -24,24 +24,35 @@ function isAwardsVisible() {
     parseAudienceHash(window.location.hash) === "awards";
 }
 
-function setFieldError(element, message) {
-  if (!element) {
+function setFieldError(input, element, message) {
+  if (!input || !element) {
     return;
   }
   element.textContent = message || "";
   element.hidden = !message;
+  if (message) {
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-describedby", element.id);
+  } else {
+    input.removeAttribute("aria-invalid");
+    input.removeAttribute("aria-describedby");
+  }
 }
 
 function clearFieldErrors() {
-  setFieldError(dom.awardPointsError, "");
+  setFieldError(dom.awardNameInput, dom.awardNameError, "");
+  setFieldError(dom.awardPointsInput, dom.awardPointsError, "");
+  setFieldError(dom.awardSplashInput, dom.awardSplashError, "");
 }
 
 function setButtonsDisabled(disabled) {
   if (dom.awardsSaveButton) {
     dom.awardsSaveButton.disabled = disabled;
+    dom.awardsSaveButton.setAttribute("aria-busy", saveInFlight ? "true" : "false");
   }
   if (dom.awardsDeleteButton) {
     dom.awardsDeleteButton.disabled = disabled || creatingNew || !selectedAwardId;
+    dom.awardsDeleteButton.setAttribute("aria-busy", deleteInFlight ? "true" : "false");
   }
   if (dom.awardsCreateButton) {
     dom.awardsCreateButton.disabled = disabled && !listHasLoaded;
@@ -100,6 +111,7 @@ function renderAwardsList() {
     } else {
       item.setAttribute("aria-selected", "false");
     }
+    item.tabIndex = item.dataset.awardId === selectedAwardId ? 0 : -1;
 
     const name = document.createElement("span");
     name.className = "audience-catalog-items__primary";
@@ -112,6 +124,30 @@ function renderAwardsList() {
     item.append(name, meta);
     item.addEventListener("click", function () {
       selectAward(String(award.id || ""), false);
+      focusAwardItem(String(award.id || ""));
+    });
+    item.addEventListener("keydown", function (event) {
+      if (["ArrowUp", "ArrowDown", "Home", "End", "Enter", " "].indexOf(event.key) === -1) {
+        return;
+      }
+      event.preventDefault();
+      const currentIndex = awardsCache.indexOf(award);
+      let nextIndex = currentIndex;
+      if (event.key === "Home") {
+        nextIndex = 0;
+      } else if (event.key === "End") {
+        nextIndex = awardsCache.length - 1;
+      } else if (event.key === "ArrowDown") {
+        nextIndex = Math.min(awardsCache.length - 1, currentIndex + 1);
+      } else if (event.key === "ArrowUp") {
+        nextIndex = Math.max(0, currentIndex - 1);
+      }
+      const next = awardsCache[nextIndex];
+      if (next) {
+        const nextId = String(next.id || "");
+        selectAward(nextId, false);
+        focusAwardItem(nextId);
+      }
     });
     dom.awardsList.append(item);
   });
@@ -129,6 +165,15 @@ function renderAwardsList() {
   } else if (!listLoadError && awardsCache.length > 0) {
     setRegionState(dom.awardsListRegion, null);
   }
+}
+
+function focusAwardItem(id) {
+  window.requestAnimationFrame(function () {
+    const item = dom.awardsList?.querySelector('[data-award-id="' + CSS.escape(id) + '"]');
+    if (item instanceof HTMLElement) {
+      item.focus();
+    }
+  });
 }
 
 function fillEditorFromAward(award) {
@@ -197,7 +242,13 @@ function applyFieldErrors(fields) {
     return;
   }
   if (fields.points && dom.awardPointsError) {
-    setFieldError(dom.awardPointsError, fields.points);
+    setFieldError(dom.awardPointsInput, dom.awardPointsError, fields.points);
+  }
+  if (fields.name && dom.awardNameError) {
+    setFieldError(dom.awardNameInput, dom.awardNameError, fields.name);
+  }
+  if (fields.splash_template && dom.awardSplashError) {
+    setFieldError(dom.awardSplashInput, dom.awardSplashError, fields.splash_template);
   }
 }
 
@@ -270,15 +321,23 @@ async function saveAward() {
 
   clearFieldErrors();
   const payload = readEditorPayload();
-  const pointsErrorKey = validateAwardPoints(payload.points);
-  if (pointsErrorKey) {
-    setFieldError(dom.awardPointsError, t(pointsErrorKey));
+  if (String(payload.name || "").trim() === "") {
+    setFieldError(dom.awardNameInput, dom.awardNameError, t("awards.nameRequired"));
+    dom.awardNameInput?.focus();
     return;
   }
-  if (String(payload.name || "").trim() === "") {
+  const pointsErrorKey = validateAwardPoints(payload.points);
+  if (pointsErrorKey) {
+    setFieldError(dom.awardPointsInput, dom.awardPointsError, t(pointsErrorKey));
+    dom.awardPointsInput?.focus();
     return;
   }
   if (String(payload.splash_template || "").trim() === "") {
+    setFieldError(dom.awardSplashInput, dom.awardSplashError, t("catalog.splashRequired"));
+    dom.awardSplashInput?.focus();
+    return;
+  }
+  if (dom.awardsEditorForm && !dom.awardsEditorForm.reportValidity()) {
     return;
   }
 
@@ -381,20 +440,44 @@ export function initAwardsCatalog() {
   if (dom.awardsCreateButton) {
     dom.awardsCreateButton.addEventListener("click", function () {
       selectAward("", true);
+      dom.awardNameInput?.focus();
     });
   }
   if (dom.awardsEmptyCreate) {
     dom.awardsEmptyCreate.addEventListener("click", function () {
       selectAward("", true);
+      dom.awardNameInput?.focus();
     });
   }
-  if (dom.awardsSaveButton) {
-    dom.awardsSaveButton.addEventListener("click", function () {
+  if (dom.awardsEditorForm) {
+    dom.awardsEditorForm.addEventListener("submit", function (event) {
+      event.preventDefault();
       saveAward().catch(function () {
         /* handled */
       });
     });
+    dom.awardsEditorForm.addEventListener("keydown", function (event) {
+      if (
+        event.key !== "Enter" ||
+        event.isComposing ||
+        !(event.target instanceof HTMLInputElement) ||
+        ["checkbox", "radio", "file"].includes(event.target.type)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      dom.awardsEditorForm.requestSubmit();
+    });
   }
+  dom.awardNameInput?.addEventListener("input", function () {
+    setFieldError(dom.awardNameInput, dom.awardNameError, "");
+  });
+  dom.awardPointsInput?.addEventListener("input", function () {
+    setFieldError(dom.awardPointsInput, dom.awardPointsError, "");
+  });
+  dom.awardSplashInput?.addEventListener("input", function () {
+    setFieldError(dom.awardSplashInput, dom.awardSplashError, "");
+  });
   if (dom.awardsDeleteButton) {
     dom.awardsDeleteButton.addEventListener("click", function () {
       if (!selectedAwardId) {
