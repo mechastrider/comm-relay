@@ -8,7 +8,8 @@ import {
   normalizePreviewBackground,
   overlayAssetURL,
   overlayViewFromConfig,
-} from "../overlay-settings.js";
+} from "/overlay/overlay-settings.js?v=4";
+import { createChatRender } from "/shared/chat-render.js?v=12";
 import { ensureAudioContext, scheduleAlertSound } from "./alert-sound.js";
 
 const INITIAL_RECONNECT_MS = 1000;
@@ -57,6 +58,7 @@ const SAMPLE_ALERT = {
   sound: "chime",
   duration_ms: 5000,
 };
+const { userAccent } = createChatRender();
 
 function wsURL() {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -183,6 +185,13 @@ function renderAvatar(name, avatarURL) {
     avatar.alt = "";
     avatar.loading = "eager";
     avatar.referrerPolicy = "no-referrer";
+    avatar.addEventListener(
+      "error",
+      function () {
+        avatar.replaceWith(renderAvatar(name, ""));
+      },
+      { once: true }
+    );
     return avatar;
   }
 
@@ -191,6 +200,11 @@ function renderAvatar(name, avatarURL) {
   const initial = typeof name === "string" && name.trim() ? name.trim().charAt(0).toUpperCase() : "?";
   placeholder.textContent = initial;
   return placeholder;
+}
+
+function accentIdentity(name) {
+  const display = typeof name === "string" ? name : "";
+  return { user: display, username: display, display_name: display };
 }
 
 function playSound(sound) {
@@ -219,15 +233,17 @@ function showSplash(alert) {
   }
 
   const name = typeof alert.name === "string" ? alert.name : "";
-  splash.append(
-    renderAvatar(name, alert.avatar_url),
-    (function () {
-      const text = document.createElement("p");
-      text.className = "alert-text";
-      text.textContent = typeof alert.text === "string" ? alert.text : "";
-      return text;
-    })()
-  );
+  splash.style.setProperty("--message-accent", userAccent(accentIdentity(name)));
+
+  const accent = document.createElement("span");
+  accent.className = "alert-accent";
+  accent.setAttribute("aria-hidden", "true");
+
+  const text = document.createElement("p");
+  text.className = "alert-text";
+  text.textContent = typeof alert.text === "string" ? alert.text : "";
+
+  splash.append(renderAvatar(name, alert.avatar_url), accent, text);
 
   root.append(splash);
   playSound(alert.sound);
