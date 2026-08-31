@@ -32,6 +32,14 @@ Dark/light admin rows only if the product exposes them. Overlay theme cards are 
 | admin-design-system / wide | 1440×900 Studio | Preview is the widest pane; Replay and copy visible | P0 |
 | admin-design-system / short | ~700px tall Studio, open Advanced | Inspector scrolls; heading and Publish stay reachable | P0 |
 | admin-design-system / keyboard | Tab through surfaces, theme cards, Advanced, Add to OBS, Escape | Visible focus, names, Escape closes sheet to opener | P0 |
+| admin-design-system / selected surface | Select each surface in expanded and collapsed wide layouts | Background plus edge/icon/type cue identify selection; accessible pressed state matches | P0 |
+| admin-design-system / adaptive rail | Collapse rail, reload, then resize below and above 1024px | Wide collapse restores; compact remains a horizontal labeled selector | P0 |
+| admin-and-dock / density mode | Make an edit, switch Essentials → All settings → Essentials, reload | Draft and surface remain; local mode restores; switch performs no network mutation | P0 |
+| admin-and-dock / setup outcomes | Clear storage; test Close, Escape, Later, Done, and reopen | Only unseen auto-opens; seen/skipped reminder persists; Done hides reminder; persistent action reopens | P0 |
+| admin-and-dock / dirty activation | Edit a non-active look without publishing | Use on stream is disabled and explains Publish; after successful Publish it becomes available | P0 |
+| admin-and-dock / alert context | Select Alerts in Essentials | Shared theme remains editable and a localized explanation replaces irrelevant surface fields | P1 |
+| admin-design-system / preview recovery | Block preview load, wait for timeout, choose Retry | Failed state appears outside iframe; retry keeps surface and draft query | P0 |
+| admin-design-system / compact actions | Scroll a 390×844 and short-height Studio to the last field | Sticky dirty/use/publish actions remain reachable and cover no content | P0 |
 | ui_contract / no dialog transplant | Inspect Studio DOM | Workspace does not depend on moving `#overlay-dialog` panels | P1 |
 | localization | RU/EN Studio | New strings present; `npm run test:i18n` green | P1 |
 | reduced motion / zoom | Reduced motion + 200% | State without animation; no overlap | P1 |
@@ -81,3 +89,10 @@ Manual: Chromium against `go run ./cmd/comm-relay-server` with a temp config tha
 - Skip OBS WebSocket/scene visibility (non-goal).
 - Skip installer/signing.
 - Skip `-race` only if the environment cannot run it; record the skip. Frontend-only change should still run Go tests for regressions.
+
+### Refinement evidence — 2026-08-31
+
+- Playwright Chromium smoke at 1440×900 (expanded Essentials), 1100×700 (collapsed All settings), and 390×844 (Essentials and All settings). The compact run verified the fixed publication bar above bottom navigation and the horizontal labeled surface selector.
+- First-visit run with empty storage verified the OBS setup dialog opens; its close, Later, and Done state transitions are covered by helper tests and distinct markup actions.
+- Local server smoke returned `200` for `/overlay`, `/overlay/leaderboard`, `/overlay/alert`, and `/dock/messages`; no program-output assets changed.
+- Packaged Wails/WebView and OBS-host screenshots are release-smoke work and were not available in this Linux agent environment.

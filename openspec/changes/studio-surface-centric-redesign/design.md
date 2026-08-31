@@ -103,3 +103,21 @@ No data migration. Existing presets, pinned OBS URLs, and preview localStorage k
 ## Open Questions
 
 None blocking. Assumed from exploration option B: Add to OBS auto-opens on first Studio visit (not "first unpublished theme"); Live keeps activate; Studio Use on stream is the only Studio activation path.
+
+## Refinement Decisions
+
+### Essentials and All settings are density, not separate workflows
+
+The two modes project one selected surface and one draft. Essentials hides engineering details but retains the shortest complete path: select surface, choose look, adjust the common controls, preview, connect OBS, and Publish. All settings reveals the existing raw URLs, preview tuning, Advanced form, and preset management. The preference is browser-local because it is operator UI state, not stream configuration.
+
+### The surface list adapts instead of disappearing
+
+Wide Studio uses an expanded icon-and-label rail by default and permits an icon-only collapse remembered locally. Compact Studio always renders the three surfaces as a horizontal labeled selector, ignoring the visual collapse preference until wide layout returns. Selection uses an amber edge marker plus background, icon, and type weight; keyboard arrows move and activate selection.
+
+### OBS setup has explicit outcomes
+
+The local setup state is `unseen`, `seen`, `skipped`, or `completed`. Only `unseen` auto-opens. Close, Escape, and backdrop write `seen`; Later writes `skipped`; Done writes `completed`. Essentials reminds for every state except `completed`, while the toolbar-level setup action always remains. The legacy dismissed boolean maps to completed so existing users are not interrupted after upgrade.
+
+### Activation cannot use a stale persisted look
+
+Use on stream continues to be a hot activation and remains separate from Publish, but it is disabled while the edited look is dirty. This prevents the previewed draft from implying that activation will put those unpublished values on air. The control explains the required Publish step; Publish itself does not activate automatically.

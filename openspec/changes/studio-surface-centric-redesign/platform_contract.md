@@ -25,7 +25,7 @@ Font rasterization may differ; selection, copy, Publish, activate, focus, and ac
 
 ## Security / Privacy / Trust Boundary
 
-The webview and external browser remain untrusted localhost clients. This change adds no route, secret surface, or cloud call. Copyable URLs MUST NOT include OAuth tokens or proxy passwords. Add to OBS dismissed state and preview preferences are non-secret UI flags in the browser/webview profile only.
+The webview and external browser remain untrusted localhost clients. This change adds no route, secret surface, or cloud call. Copyable URLs MUST NOT include OAuth tokens or proxy passwords. OBS setup outcome, Studio density/collapse state, and preview preferences are non-secret UI flags in the browser/webview profile only.
 
 If the operator binds beyond loopback, existing exposure risk is unchanged and MUST NOT be understated.
 

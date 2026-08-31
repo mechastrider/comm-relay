@@ -27,6 +27,10 @@ import {
 import { normalizeLeaderboardLayout } from './leaderboard-url.js';
 import { parseWorkspaceHash } from "./workspace-router.js";
 
+const PREVIEW_LOAD_TIMEOUT_MS = 8000;
+let previewLoadTimeout = null;
+let previewState = "idle";
+
 function isOverlayPreviewActive() {
   return parseWorkspaceHash(window.location.hash) === "studio";
 }
@@ -288,8 +292,11 @@ export function applyPreviewSurface(surface) {
     document.querySelectorAll("[data-obs-preview-surface]").forEach(function (button) {
       const selected = button.getAttribute("data-obs-preview-surface") === current;
       button.setAttribute("aria-pressed", selected ? "true" : "false");
-      if (button.getAttribute("role") === "tab") {
-        button.setAttribute("aria-selected", selected ? "true" : "false");
+      button.setAttribute("tabindex", selected ? "0" : "-1");
+      if (selected) {
+        button.setAttribute("aria-current", "true");
+      } else {
+        button.removeAttribute("aria-current");
       }
     });
     if (dom.overlayChatFields) {
@@ -304,6 +311,40 @@ export function applyPreviewSurface(surface) {
     syncStudioInspectorEssential(current);
     writeOverlayPreviewPreference(OVERLAY_PREVIEW_SURFACE_KEY, current);
     document.dispatchEvent(new Event("overlay-preview-surface-changed"));
+}
+
+function clearPreviewLoadTimeout() {
+  if (previewLoadTimeout !== null) {
+    window.clearTimeout(previewLoadTimeout);
+    previewLoadTimeout = null;
+  }
+}
+
+/**
+ * @param {"idle"|"loading"|"ready"|"error"} nextState
+ */
+function setOverlayPreviewState(nextState) {
+  previewState = nextState;
+  if (!dom.overlayPreviewState || !dom.overlayPreviewStateText || !dom.overlayPreviewRetry) {
+    return;
+  }
+  dom.overlayPreviewState.dataset.state = nextState;
+  dom.overlayPreviewState.hidden = nextState === "idle" || nextState === "ready";
+  dom.overlayPreviewStateText.textContent = t(
+    nextState === "error" ? "studio.previewError" : "studio.previewLoading"
+  );
+  dom.overlayPreviewRetry.hidden = nextState !== "error";
+}
+
+function startPreviewLoadTimeout() {
+  clearPreviewLoadTimeout();
+  setOverlayPreviewState("loading");
+  previewLoadTimeout = window.setTimeout(function () {
+    previewLoadTimeout = null;
+    if (isOverlayPreviewActive()) {
+      setOverlayPreviewState("error");
+    }
+  }, PREVIEW_LOAD_TIMEOUT_MS);
 }
 
 export function updateOverlayPreviewOpenLink() {
@@ -350,6 +391,7 @@ export function refreshOverlayPreview(force) {
     state.overlayPreviewRevision += 1;
     url.searchParams.set("_preview_revision", String(state.overlayPreviewRevision));
     dom.overlayPreviewFrame.dataset.previewUrl = baseURL;
+    startPreviewLoadTimeout();
     dom.overlayPreviewFrame.src = url.toString();
   }
 
@@ -383,6 +425,8 @@ export function unmountOverlayPreview() {
       window.clearTimeout(state.overlayPreviewRefreshTimer);
       state.overlayPreviewRefreshTimer = null;
     }
+    clearPreviewLoadTimeout();
+    setOverlayPreviewState("idle");
     if (!dom.overlayPreviewFrame) {
       return;
     }
@@ -473,7 +517,49 @@ export function initOverlayPreview() {
         document.dispatchEvent(new Event("overlay-preview-refresh"));
         refreshOverlayPreview(true);
       });
+      button.addEventListener("keydown", function (event) {
+        const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
+        if (!keys.includes(event.key)) {
+          return;
+        }
+        const buttons = Array.from(document.querySelectorAll("[data-obs-preview-surface]"));
+        const currentIndex = buttons.indexOf(button);
+        if (currentIndex < 0) {
+          return;
+        }
+        event.preventDefault();
+        let nextIndex = currentIndex;
+        if (event.key === "Home") {
+          nextIndex = 0;
+        } else if (event.key === "End") {
+          nextIndex = buttons.length - 1;
+        } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+          nextIndex = (currentIndex - 1 + buttons.length) % buttons.length;
+        } else {
+          nextIndex = (currentIndex + 1) % buttons.length;
+        }
+        const nextButton = buttons[nextIndex];
+        nextButton.focus();
+        nextButton.click();
+      });
     });
+
+    dom.overlayPreviewFrame.addEventListener("load", function () {
+      if (!isOverlayPreviewActive() || dom.overlayPreviewFrame.src === "about:blank") {
+        return;
+      }
+      clearPreviewLoadTimeout();
+      setOverlayPreviewState("ready");
+    });
+    dom.overlayPreviewFrame.addEventListener("error", function () {
+      clearPreviewLoadTimeout();
+      setOverlayPreviewState("error");
+    });
+    if (dom.overlayPreviewRetry) {
+      dom.overlayPreviewRetry.addEventListener("click", function () {
+        refreshOverlayPreview(true);
+      });
+    }
 
     const storedBackground = readOverlayPreviewPreference(
       OVERLAY_PREVIEW_BACKGROUND_KEY,
@@ -592,6 +678,9 @@ export function initOverlayPreview() {
     });
 
     document.addEventListener("overlay-preview-refresh", scheduleOverlayPreviewRefresh);
+    window.addEventListener("admin-locale-applied", function () {
+      setOverlayPreviewState(previewState);
+    });
     const overlayPreviewHost = document.getElementById("workspace-studio");
     if (overlayPreviewHost) {
       overlayPreviewHost.addEventListener("input", function (event) {

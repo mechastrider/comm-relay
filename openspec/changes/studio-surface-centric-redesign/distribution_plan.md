@@ -31,7 +31,7 @@ No migration. Rollback is the previous package. In-memory Studio drafts are not 
 
 ## Release Notes and Support
 
-Implementation MUST add concise Russian bullets under `CHANGELOG.md` `[Unreleased]` for the streamer-visible Studio IA: one surface list, Add to OBS, layered appearance, Live-only hot look switch, Use on stream. Skip implementation trivia.
+Implementation MUST add concise Russian bullets under `CHANGELOG.md` `[Unreleased]` for the streamer-visible Studio IA: adaptive surface selector, Essentials / All settings, resumable OBS setup, layered appearance, and safe Use on stream. Skip implementation trivia.
 
 README and FAQ Studio/OBS copy steps MUST name Add to OBS, Follow-active on the selected surface, pinned URLs in overflow/sheet, and Publish. Do not rewrite unrelated versioned changelog sections.
 

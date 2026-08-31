@@ -17,7 +17,16 @@ import {
   writeAddToObsDismissedPreference,
   MESSAGE_TTL_CHIP_VALUES,
   shouldShowUseOnStream,
+  shouldDisableUseOnStream,
   shouldShowPresetCrudInPrimary,
+  normalizeStudioSetupState,
+  readStudioSetupState,
+  writeStudioSetupState,
+  normalizeStudioMode,
+  readStudioModePreference,
+  writeStudioModePreference,
+  readStudioSurfaceRailCollapsedPreference,
+  writeStudioSurfaceRailCollapsedPreference,
 } from "./studio-helpers.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
@@ -177,6 +186,35 @@ assert.equal(shouldShowUseOnStream("look-a", "look-b"), true);
 assert.equal(shouldShowUseOnStream("look-a", "look-a"), false);
 assert.equal(shouldShowUseOnStream("", "look-a"), false);
 assert.equal(shouldShowUseOnStream("look-a", ""), false);
+assert.equal(shouldDisableUseOnStream(true, false, false), false);
+assert.equal(shouldDisableUseOnStream(true, true, false), true);
+assert.equal(shouldDisableUseOnStream(true, false, true), true);
+assert.equal(shouldDisableUseOnStream(false, false, false), true);
+
+assert.equal(normalizeStudioSetupState("seen"), "seen");
+assert.equal(normalizeStudioSetupState("skipped"), "skipped");
+assert.equal(normalizeStudioSetupState("completed"), "completed");
+assert.equal(normalizeStudioSetupState("invalid"), "unseen");
+assert.equal(readStudioSetupState(missingStorage), "unseen");
+assert.equal(readStudioSetupState(dismissedStorage), "completed");
+writeStudioSetupState(dismissedStorage, "seen");
+assert.equal(readStudioSetupState(dismissedStorage), "seen");
+writeStudioSetupState(dismissedStorage, "skipped");
+assert.equal(readStudioSetupState(dismissedStorage), "skipped");
+writeStudioSetupState(dismissedStorage, "completed");
+assert.equal(readStudioSetupState(dismissedStorage), "completed");
+
+assert.equal(normalizeStudioMode("all"), "all");
+assert.equal(normalizeStudioMode("expert"), "essentials");
+assert.equal(readStudioModePreference(missingStorage), "essentials");
+writeStudioModePreference(dismissedStorage, "all");
+assert.equal(readStudioModePreference(dismissedStorage), "all");
+
+assert.equal(readStudioSurfaceRailCollapsedPreference(missingStorage), false);
+writeStudioSurfaceRailCollapsedPreference(dismissedStorage, true);
+assert.equal(readStudioSurfaceRailCollapsedPreference(dismissedStorage), true);
+writeStudioSurfaceRailCollapsedPreference(dismissedStorage, false);
+assert.equal(readStudioSurfaceRailCollapsedPreference(dismissedStorage), false);
 
 assert.equal(shouldShowPresetCrudInPrimary(1), false);
 assert.equal(shouldShowPresetCrudInPrimary(2), true);

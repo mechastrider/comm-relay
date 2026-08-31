@@ -8,13 +8,13 @@
 | `comm-relay.db` | Viewers/stats; viewer store | Beside config | Existing Goose schema | Local identity data; untouched |
 | overlay asset files | Panel images | Existing asset directory | Existing validated image types | Operator media; upload path unchanged |
 | browser memory | Studio draft/baseline, dirty flag, selected surface while the document is open | Per loaded document | JavaScript only | Public overlay draft; no secrets |
-| browser preference storage | Preview mode/surface/backdrop/size (existing `commRelay.overlayPreview.*` keys); Add to OBS dismissed flag (new, same `commRelay.` prefix) | Browser/webview profile; not portable across browsers | String flags | Non-secret UI preferences |
+| browser preference storage | Preview mode/surface/backdrop/size (existing `commRelay.overlayPreview.*` keys); OBS setup outcome; Studio density mode and wide-rail collapse | Browser/webview profile; not portable across browsers | String flags | Non-secret UI preferences |
 
 ## Changed Structures / Formats
 
 `config.json` and SQLite do not change. `message_ttl_seconds` stays an integer; duration chips are a UI mapping onto 8, 20, and 0.
 
-Add one local preference, for example `commRelay.studio.addToObsDismissed`, with values treated as dismissed vs not. Invalid or missing values mean the sheet auto-opens. Existing overlay preview keys keep their names and meaning; `overlayPreview.surface` remains the selected on-stream surface (`chat` / `leaderboard` / `alerts`).
+The OBS setup preference stores `unseen`, `seen`, `skipped`, or `completed`; missing and invalid values mean unseen. A legacy truthy `commRelay.studio.addToObsDismissed` value maps to completed so an upgrade does not interrupt an existing operator. Studio density stores `essentials` or `all`; rail collapse stores a boolean string. Invalid density/collapse values use expanded Essentials defaults. Existing overlay preview keys keep their names and meaning; `overlayPreview.surface` remains the selected on-stream surface (`chat` / `leaderboard` / `alerts`).
 
 Studio drafts stay in memory until Publish. This change MUST NOT write overlay drafts, presets, or secrets to localStorage.
 
@@ -28,11 +28,11 @@ Unchanged. No secret, full config snapshot, or chat history in localStorage.
 
 ## Migration / Downgrade / Backup / Export
 
-No migration. Downgrading the binary ignores the new dismissed key and restores the old Studio layout; overlay data remains compatible. Backup remains copy of the config directory. Clearing site/webview data re-shows Add to OBS; that is intended.
+No server-data migration. The client lazily interprets the legacy dismissed flag as completed. Downgrading the binary ignores the newer UI keys and restores the old Studio layout; overlay data remains compatible. Backup remains copy of the config directory. Clearing site/webview data re-shows OBS setup; that is intended.
 
 ## Corruption Recovery / Cleanup / Uninstall
 
-Invalid preview or dismissed values fall back to defaults (sample mode, chat surface, auto-open Add to OBS) without rewriting `config.json`. Uninstall does not need to delete browser preferences.
+Invalid preview, setup, mode, or collapse values fall back to defaults (sample mode, chat surface, auto-open OBS setup, Essentials, expanded rail) without rewriting `config.json`. Uninstall does not need to delete browser preferences.
 
 ## Verification
 

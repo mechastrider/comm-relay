@@ -436,31 +436,55 @@
 
         <section id="workspace-studio" class="workspace studio-workspace" data-workspace="studio" hidden aria-labelledby="workspace-studio-heading">
           <header class="studio-toolbar">
-            <h1 id="workspace-studio-heading" class="studio-toolbar__title workspace-heading" tabindex="-1" data-i18n="workspace.studioHeading">Studio</h1>
+            <div class="studio-toolbar__identity">
+              <h1 id="workspace-studio-heading" class="studio-toolbar__title workspace-heading" tabindex="-1" data-i18n="workspace.studioHeading">Studio</h1>
+              <div class="studio-mode-switch" role="group" data-i18n-aria-label="studio.modeLabel" aria-label="Studio settings level">
+                <button id="studio-mode-essentials" class="studio-mode-switch__button" type="button" data-studio-mode="essentials" aria-pressed="true" data-i18n="studio.modeEssentials">Essentials</button>
+                <button id="studio-mode-all" class="studio-mode-switch__button" type="button" data-studio-mode="all" aria-pressed="false" data-i18n="studio.modeAll">All settings</button>
+              </div>
+            </div>
             <div class="studio-toolbar__actions">
               <span id="studio-dirty-status" class="studio-dirty-status" role="status" aria-live="polite">Published</span>
-              <button id="studio-use-on-stream" class="btn-physical btn-secondary studio-use-on-stream" type="button" hidden data-i18n="studio.useOnStream">Use on stream</button>
+              <span id="studio-use-on-stream-hint" class="studio-activation-hint" hidden data-i18n="studio.publishBeforeUse">Publish changes before using this look on stream.</span>
+              <button id="studio-use-on-stream" class="btn-physical btn-secondary studio-use-on-stream" type="button" aria-describedby="studio-use-on-stream-hint" hidden data-i18n="studio.useOnStream">Use on stream</button>
               <button id="studio-publish" class="btn-physical btn-start" type="button" data-i18n="studio.publish">Publish</button>
             </div>
           </header>
           <div class="studio-layout">
             <div id="studio-sources-mount" class="studio-column studio-sources-mount" data-studio-overlay>
-              <nav class="studio-surface-list" role="tablist" data-i18n-aria-label="obs.previewSurface" aria-label="Preview surface">
+              <div class="studio-surface-list__header">
                 <p class="studio-surface-list__label obs-source-group-label" data-i18n="obs.sourcesOnStream">On stream · Browser Source</p>
-                <button id="studio-surface-chat" class="studio-surface-item obs-source-item" type="button" role="tab" data-obs-preview-surface="chat" aria-selected="true" aria-pressed="true">
-                  <span data-i18n="obs.surfaceChat">Chat</span>
-                  <small>/overlay</small>
+                <button id="studio-surface-collapse" class="icon-btn has-tooltip studio-surface-collapse" type="button" aria-expanded="true" aria-controls="studio-surface-list" data-i18n-aria-label="studio.collapseSurfaces">
+                  <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14 7-5 5 5 5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="studio.collapseSurfaces">Collapse surfaces</span>
                 </button>
-                <button id="studio-surface-leaderboard" class="studio-surface-item obs-source-item" type="button" role="tab" data-obs-preview-surface="leaderboard" aria-selected="false" aria-pressed="false">
-                  <span data-i18n="obs.surfaceLeaderboard">Leaderboard</span>
-                  <small>/overlay/leaderboard</small>
+              </div>
+              <nav id="studio-surface-list" class="studio-surface-list" data-i18n-aria-label="obs.previewSurface" aria-label="Preview surface">
+                <button id="studio-surface-chat" class="studio-surface-item obs-source-item has-tooltip" type="button" data-obs-preview-surface="chat" aria-pressed="true" data-i18n-aria-label="obs.surfaceChat">
+                  <svg class="studio-surface-item__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 5h14v10H9l-4 4V5Z" stroke-linejoin="round"></path><path d="M8 9h8M8 12h5" stroke-linecap="round"></path></svg>
+                  <span class="studio-surface-item__copy"><span data-i18n="obs.surfaceChat">Chat</span><small>/overlay</small></span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="obs.surfaceChat">Chat</span>
                 </button>
-                <button id="studio-surface-alerts" class="studio-surface-item obs-source-item" type="button" role="tab" data-obs-preview-surface="alerts" aria-selected="false" aria-pressed="false">
-                  <span data-i18n="obs.surfaceAlerts">Alerts</span>
-                  <small>/overlay/alert</small>
+                <button id="studio-surface-leaderboard" class="studio-surface-item obs-source-item has-tooltip" type="button" data-obs-preview-surface="leaderboard" aria-pressed="false" data-i18n-aria-label="obs.surfaceLeaderboard">
+                  <svg class="studio-surface-item__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 19V9h4v10M10 19V5h4v14M15 19v-7h4v7" stroke-linejoin="round"></path><path d="M3 19h18" stroke-linecap="round"></path></svg>
+                  <span class="studio-surface-item__copy"><span data-i18n="obs.surfaceLeaderboard">Leaderboard</span><small>/overlay/leaderboard</small></span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="obs.surfaceLeaderboard">Leaderboard</span>
+                </button>
+                <button id="studio-surface-alerts" class="studio-surface-item obs-source-item has-tooltip" type="button" data-obs-preview-surface="alerts" aria-pressed="false" data-i18n-aria-label="obs.surfaceAlerts">
+                  <svg class="studio-surface-item__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4a5 5 0 0 0-5 5v3l-2 3h14l-2-3V9a5 5 0 0 0-5-5Z" stroke-linejoin="round"></path><path d="M10 18h4" stroke-linecap="round"></path></svg>
+                  <span class="studio-surface-item__copy"><span data-i18n="obs.surfaceAlerts">Alerts</span><small>/overlay/alert</small></span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="obs.surfaceAlerts">Alerts</span>
                 </button>
               </nav>
-              <button id="studio-add-to-obs-open" class="btn-physical btn-secondary studio-add-to-obs-open" type="button" data-i18n="studio.addToObs">Add to OBS</button>
+              <aside id="studio-setup-reminder" class="studio-setup-reminder" data-studio-essential-only>
+                <h3 data-i18n="studio.setupReminderTitle">Ready for OBS?</h3>
+                <ol><li data-i18n="studio.setupStepSource">Add a Browser Source</li><li data-i18n="studio.setupStepLook">Choose the look</li><li data-i18n="studio.setupStepPublish">Publish changes</li></ol>
+              </aside>
+              <button id="studio-add-to-obs-open" class="btn-physical btn-secondary studio-add-to-obs-open has-tooltip" type="button" data-i18n-aria-label="studio.obsSetup">
+                <svg class="studio-add-to-obs-open__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="13" rx="2"></rect><path d="M8 21h8M12 17v4" stroke-linecap="round"></path></svg>
+                <span class="studio-add-to-obs-open__label" data-i18n="studio.obsSetup">OBS setup</span>
+                <span class="ui-tooltip" role="tooltip" data-i18n="studio.obsSetup">OBS setup</span>
+              </button>
             </div>
             <div id="studio-preview-mount" class="studio-column studio-column--preview studio-preview-mount" data-preview-only>
               <section class="panel overlay-preview-panel" aria-labelledby="overlay-preview-heading" data-preview-only>
@@ -468,14 +492,18 @@
                   <h3 id="overlay-preview-heading" class="overlay-preview-heading" data-i18n="obs.preview">Preview</h3>
                   <div class="overlay-preview-chrome__main">
                     <button id="overlay-preview-replay" class="btn-physical btn-small" type="button" data-i18n="obs.replay">Replay</button>
-                    <div class="studio-follow-url overlay-preview-follow">
+                    <div class="studio-copy-obs-link-wrap" data-studio-essential-only>
+                      <input id="studio-follow-url-compact" class="visually-hidden" type="text" readonly tabindex="-1" aria-hidden="true" value="/overlay">
+                      <button class="btn-physical btn-small studio-copy-obs-link" type="button" data-copy-obs-url="studio-follow-url-compact" data-copy-label="Overlay URL" data-i18n="studio.copyObsLink">Copy OBS link</button>
+                    </div>
+                    <div class="studio-follow-url overlay-preview-follow" data-studio-all-only>
                       <label for="studio-follow-url" data-i18n="obs.followActivePreset">Follow active preset</label>
                       <div class="obs-url-row">
                         <input id="studio-follow-url" type="text" readonly value="/overlay">
                         <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-follow-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
                       </div>
                     </div>
-                    <div class="overlay-preview-overflow">
+                    <div class="overlay-preview-overflow" data-studio-all-only>
                       <button
                         id="overlay-preview-overflow-toggle"
                         class="icon-btn has-tooltip"
@@ -555,6 +583,10 @@
                   <div id="overlay-preview-viewport" class="overlay-preview-viewport">
                     <iframe id="overlay-preview-frame" data-i18n-title="obs.previewTitle" title="OBS overlay preview" referrerpolicy="no-referrer"></iframe>
                   </div>
+                  <div id="overlay-preview-state" class="overlay-preview-state" data-state="loading" role="status" aria-live="polite">
+                    <span id="overlay-preview-state-text" data-i18n="studio.previewLoading">Loading preview…</span>
+                    <button id="overlay-preview-retry" class="btn-physical btn-small" type="button" hidden data-i18n="studio.retryPreview">Retry</button>
+                  </div>
                 </div>
 
                 <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite" data-i18n="obs.previewNoteSample">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
@@ -569,7 +601,7 @@
                     <select id="overlay-preset-select"></select>
                     <span id="preset-island-count" class="preset-island__count" aria-live="polite">1/32</span>
                   </div>
-                  <div class="preset-island__overflow preset-overflow" id="preset-island-overflow" hidden>
+                  <div class="preset-island__overflow preset-overflow" id="preset-island-overflow" data-studio-all-only hidden>
                     <button
                       id="preset-island-overflow-toggle"
                       class="icon-btn has-tooltip preset-overflow__toggle"
@@ -592,7 +624,7 @@
                       <button id="preset-overflow-delete" class="preset-overflow__action" type="button" data-i18n="obs.presetDelete">Delete</button>
                     </div>
                   </div>
-                  <div id="preset-island-icon-actions" class="preset-island__icon-actions" role="group" data-i18n-aria-label="obs.presetActions">
+                  <div id="preset-island-icon-actions" class="preset-island__icon-actions" role="group" data-studio-all-only data-i18n-aria-label="obs.presetActions">
                     <button id="overlay-preset-add" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetAdd">
                       <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
                         <path d="M12 5v14M5 12h14" stroke-linecap="round"></path>
@@ -640,10 +672,10 @@
 <div class="overlay-settings-column studio-inspector">
                 <section class="panel overlay-appearance-panel">
                   <div class="panel__body studio-inspector__body">
-                    <p class="panel-intro" data-i18n="obs.displayIntro">Shared scene look for every Browser Source that uses this preset. The preview follows the surface tab above.</p>
+                    <p class="panel-intro" data-i18n="studio.sharedPresetIntro">Shared preset look applies to every Browser Source that uses it.</p>
 
                     <div class="studio-inspector-essential form form--compact">
-                      <h3 class="overlay-section-title form__field--full" data-i18n="obs.sceneLook">Scene look</h3>
+                      <h3 class="overlay-section-title form__field--full" data-i18n="studio.sharedPresetLook">Shared preset look</h3>
 
                       <div class="form__field form__field--full studio-theme-field">
                         <span id="overlay-theme-label" class="field-label" data-i18n="obs.theme">Theme</span>
@@ -690,9 +722,14 @@
                           <option value="all" data-i18n="viewers.periodAll">All-time</option>
                         </select>
                       </div>
+
+                      <div id="studio-essential-alerts-note" class="studio-surface-note form__field form__field--full" hidden>
+                        <strong data-i18n="studio.alertsSettingsTitle">Alert settings</strong>
+                        <span data-i18n="studio.alertsSharedOnly">Alerts use the shared theme and typography of this preset. Event content is configured in Audience.</span>
+                      </div>
                     </div>
 
-                    <details class="overlay-group studio-inspector-advanced" id="studio-inspector-advanced">
+                    <details class="overlay-group studio-inspector-advanced" id="studio-inspector-advanced" data-studio-all-only>
                       <summary data-i18n="studio.advanced">Advanced</summary>
                       <div class="form form--compact form--overlay-display">
                         <div class="form__field">
@@ -709,7 +746,7 @@
                           <input id="overlay-text-edge-strength" type="number" min="0" max="8" step="1" inputmode="numeric">
                         </div>
 
-                        <h3 class="overlay-section-title form__field--full" data-i18n="obs.thisSurface">This surface</h3>
+                        <h3 id="studio-selected-surface-heading" class="overlay-section-title form__field--full" data-i18n="studio.surfaceChatSettings">Chat settings</h3>
 
                         <div id="overlay-chat-fields" class="overlay-surface-fields">
                           <div class="form__field">
@@ -909,6 +946,12 @@
 
           
             </div>
+          </div>
+          <div class="studio-compact-actions" data-i18n-aria-label="studio.publicationActions" aria-label="Publication actions">
+            <span id="studio-compact-dirty-status" class="studio-dirty-status" role="status" aria-live="polite">Published</span>
+            <span id="studio-compact-use-on-stream-hint" class="studio-activation-hint" hidden data-i18n="studio.publishBeforeUse">Publish changes before using this look on stream.</span>
+            <button id="studio-compact-use-on-stream" class="btn-physical btn-secondary studio-use-on-stream" type="button" aria-describedby="studio-compact-use-on-stream-hint" hidden data-i18n="studio.useOnStream">Use on stream</button>
+            <button id="studio-compact-publish" class="btn-physical btn-start" type="button" data-i18n="studio.publish">Publish</button>
           </div>
         </section>
 
@@ -1417,27 +1460,27 @@
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>
-            <span class="dialog-kicker" data-i18n="studio.addToObsKicker">First step</span>
-            <h2 id="studio-add-to-obs-heading" data-i18n="studio.addToObs">Add to OBS</h2>
+            <span class="dialog-kicker" data-i18n="studio.addToObsKicker">Setup</span>
+            <h2 id="studio-add-to-obs-heading" data-i18n="studio.addToObs">OBS setup</h2>
           </div>
-          <button class="btn-physical btn-small" type="button" data-studio-add-to-obs-dismiss data-i18n="dialog.close" data-i18n-aria-label="studio.addToObsClose" aria-label="Close Add to OBS">Close</button>
+          <button class="btn-physical btn-small" type="button" data-studio-add-to-obs-action="close" data-i18n="dialog.close" data-i18n-aria-label="studio.addToObsClose" aria-label="Close OBS setup">Close</button>
         </div>
 
         <div class="studio-add-to-obs-body">
-          <nav class="studio-add-to-obs-nav" role="tablist" data-i18n-aria-label="studio.addToObsSources" aria-label="OBS sources">
-            <button class="studio-add-to-obs-nav-item" type="button" role="tab" data-studio-add-to-obs-source="chat" aria-pressed="true" aria-current="true">
+          <nav class="studio-add-to-obs-nav" data-i18n-aria-label="studio.addToObsSources" aria-label="OBS sources">
+            <button class="studio-add-to-obs-nav-item" type="button" data-studio-add-to-obs-source="chat" aria-pressed="true" aria-current="true">
               <span data-i18n="obs.surfaceChat">Chat</span>
               <small>/overlay</small>
             </button>
-            <button class="studio-add-to-obs-nav-item" type="button" role="tab" data-studio-add-to-obs-source="leaderboard" aria-pressed="false">
+            <button class="studio-add-to-obs-nav-item" type="button" data-studio-add-to-obs-source="leaderboard" aria-pressed="false">
               <span data-i18n="obs.surfaceLeaderboard">Leaderboard</span>
               <small>/overlay/leaderboard</small>
             </button>
-            <button class="studio-add-to-obs-nav-item" type="button" role="tab" data-studio-add-to-obs-source="alerts" aria-pressed="false">
+            <button class="studio-add-to-obs-nav-item" type="button" data-studio-add-to-obs-source="alerts" aria-pressed="false">
               <span data-i18n="obs.surfaceAlerts">Alerts</span>
               <small>/overlay/alert</small>
             </button>
-            <button class="studio-add-to-obs-nav-item" type="button" role="tab" data-studio-add-to-obs-source="dock" aria-pressed="false">
+            <button class="studio-add-to-obs-nav-item" type="button" data-studio-add-to-obs-source="dock" aria-pressed="false">
               <span data-i18n="obs.messageDock">Message dock</span>
               <small>/dock/messages</small>
             </button>
@@ -1557,8 +1600,8 @@
         </div>
 
         <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-studio-add-to-obs-dismiss data-i18n="studio.addToObsLater">Later</button>
-          <button class="btn-physical btn-start" type="button" data-studio-add-to-obs-dismiss data-i18n="studio.addToObsDone">Done, customize look</button>
+          <button class="btn-physical" type="button" data-studio-add-to-obs-action="later" data-i18n="studio.addToObsLater">Later</button>
+          <button class="btn-physical btn-start" type="button" data-studio-add-to-obs-action="done" data-i18n="studio.addToObsDone">Done</button>
         </div>
       </div>
     </dialog>

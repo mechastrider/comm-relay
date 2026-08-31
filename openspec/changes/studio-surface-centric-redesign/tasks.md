@@ -95,3 +95,17 @@ No production Go, HTTP, or `config.json` schema work. Overlay activate/update co
 ## Gate: distribution-readiness
 
 - [x] D.1 Confirm packaged/embedded `web/` would include the new Studio assets; no signing or publish. `openspec validate studio-surface-centric-redesign --strict` succeeds.
+
+## Refinement: mode, navigation, and recovery
+
+- [x] 8.1 Add the adaptive icon surface rail with non-color selected state, directional keyboard behavior, and a remembered wide-layout collapse preference.
+- [x] 8.2 Add persistent Essentials / All settings density modes over the same draft; refine inspector hierarchy, Alerts context, theme cards, and compact-vs-raw preview copy chrome.
+- [x] 8.3 Replace boolean onboarding dismissal with migrated unseen/seen/skipped/completed outcomes, an Essentials checklist, and a persistent OBS setup action.
+- [x] 8.4 Disable Use on stream for dirty drafts, add synchronized compact publication actions, and expose preview loading/error/retry without losing the draft.
+- [x] 8.5 Add RU/EN strings and focused helper/markup tests for the new preference, setup-state, selection, and activation-safety contracts.
+
+## Refinement: docs and verification
+
+- [x] 9.1 Update README/FAQ usage wording and append concise Russian `[Unreleased]` bullets for the new Studio modes and safeguards.
+- [x] 10.1 Run OpenSpec validation, frontend lint/tests/i18n, Go tests including race, golangci-lint, and build.
+- [x] 10.2 Smoke-check Studio at wide, compact, and short-height sizes plus overlay transparency; review the final diff before delivery.
