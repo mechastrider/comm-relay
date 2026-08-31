@@ -13,13 +13,13 @@ Live, Audience, Settings, About, and the dock page do not change layout in this 
 
 ## Menus / Tray / Commands / Shortcuts
 
-No native menu, tray, global shortcut, or new keyboard shortcut. In-document: Tab order through surface list, preview overflow, inspector, Add to OBS, and Publish; Escape dismisses Add to OBS when allowed; Enter/Space activate choices. Existing dirty-Studio `beforeunload` and hash-navigation confirm remain.
+No native menu, tray, global shortcut, or new keyboard shortcut. In-document: Tab order through surface list, preview overflow, inspector, Add to OBS, and Publish; Escape dismisses Add to OBS when allowed; Enter/Space activate choices. Dirty hash navigation uses the CommRelay prompt dialog; browser reload/window close retains the required native `beforeunload` warning.
 
 ## View / Flow: `Studio`
 
 ### Layout and Components
 
-Wide layout: adaptive on-stream surface rail (chat, leaderboard, alerts) | dominant preview | layered inspector. The rail starts with icons and labels, can collapse to icons, and remembers the local preference. Compact: horizontal labeled surface selector, preview, inspector. Preview iframe keeps a stable aspect box; chrome sits outside the iframe.
+Wide layout: adaptive on-stream surface rail (chat, leaderboard, alerts) | dominant preview | layered inspector. The rail starts with icons and labels, can collapse to icons, and remembers the local preference. The three panel shells share a top edge, inset, border, and section-spacing rhythm. Rail collapse animates briefly on wide layouts and resolves immediately under reduced motion. Compact: horizontal labeled surface selector, preview, inspector. Preview iframe keeps a stable aspect box; chrome sits outside the iframe.
 
 Always-visible Essentials preview chrome: Replay and compact Follow-active copy for the selected surface. All settings additionally exposes selectable raw URL and an overflow with source size, custom width/height, backdrop (white / checkerboard / game footage / black), sample vs live chat (chat only), and pinned URL copy.
 
@@ -69,6 +69,8 @@ Unchanged from the current Live contract.
 ## Accessibility / Keyboard / Focus
 
 Surface controls use pressed-button semantics with visible selected state and names, not color alone. Arrow keys, Home, and End move and activate within the group. Collapsed icon controls retain names and hover/focus tooltips. Theme choices have accessible names matching localized theme labels. Icon-only overflow, OBS setup, Replay, and preset actions have names and hover/focus tooltips. OBS setup and Advanced trap nothing; Escape closes the sheet, records seen rather than completion, and returns focus to the opener. After opening Advanced, the operator can tab to every revealed field and to Publish. Focus moves to the Studio heading when entering `#studio`, consistent with other workspaces.
+
+The dirty-navigation dialog is labelled by its title, describes the unpublished draft, offers Cancel and a visually destructive Discard action, closes on Escape as Cancel, and returns focus to the navigation control that initiated the attempted workspace change.
 
 ## Scaling / Theme / Localization / Reduced Motion
 

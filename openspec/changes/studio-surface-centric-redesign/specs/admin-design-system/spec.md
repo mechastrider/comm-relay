@@ -52,3 +52,18 @@ The preview SHALL expose loading and failed states outside the iframe. Failure S
 - **WHEN** the selected surface preview does not load within the client timeout or emits an error
 - **THEN** Studio shows a localized failed state and Retry control
 - **AND** retry reloads the same surface with the same unpublished draft
+
+### Requirement: Studio panels share one visual grid
+The surface rail, preview, and inspector SHALL align to the same top edge and SHALL use one spacing rhythm for panel padding, internal section gaps, and control groups. Peer panels MUST use consistent border, radius, and surface treatment so the workspace reads as one editor rather than unrelated cards.
+
+#### Scenario: Compare wide panel geometry
+- **WHEN** Studio is viewed at a wide desktop size
+- **THEN** the three primary panel shells start and end on common grid lines where their content permits
+- **AND** headings and first controls use matching insets
+
+### Requirement: Surface rail collapse has purposeful motion
+Collapsing or expanding the wide surface rail SHALL animate the label and panel transition within 150–300 milliseconds without blocking input. Motion MUST NOT be the only indication of state, MUST avoid content flashing, and MUST be disabled when `prefers-reduced-motion: reduce` is active. Compact horizontal navigation MUST NOT inherit the wide collapse animation.
+
+#### Scenario: Reduced motion rail toggle
+- **WHEN** the operator requests reduced motion and toggles the wide rail
+- **THEN** the rail reaches the same expanded or collapsed state without an animated transition

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 
 const markup = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const styles = readFileSync(new URL("../styles/studio.css", import.meta.url), "utf8");
+const studioScript = readFileSync(new URL("./studio.js", import.meta.url), "utf8");
 
 const surfaceList = markup.match(
   /<nav id="studio-surface-list"[\s\S]*?<\/nav>/
@@ -20,5 +21,9 @@ assert.match(markup, /id="studio-compact-publish"/);
 assert.match(markup, /data-studio-add-to-obs-action="close"/);
 assert.match(markup, /data-studio-add-to-obs-action="later"/);
 assert.match(markup, /data-studio-add-to-obs-action="done"/);
+assert.match(markup, /id="studio-discard-dialog"[^>]*class="prompt-dialog studio-discard-dialog"/);
+assert.match(markup, /id="studio-discard-confirm"[^>]*class="btn-physical btn-danger"/);
+assert.doesNotMatch(studioScript, /window\.confirm\(/);
+assert.match(styles, /prefers-reduced-motion:\s*reduce/);
 
 console.log("studio-markup OK");

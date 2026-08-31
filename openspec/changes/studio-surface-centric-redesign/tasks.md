@@ -109,3 +109,10 @@ No production Go, HTTP, or `config.json` schema work. Overlay activate/update co
 - [x] 9.1 Update README/FAQ usage wording and append concise Russian `[Unreleased]` bullets for the new Studio modes and safeguards.
 - [x] 10.1 Run OpenSpec validation, frontend lint/tests/i18n, Go tests including race, golangci-lint, and build.
 - [x] 10.2 Smoke-check Studio at wide, compact, and short-height sizes plus overlay transparency; review the final diff before delivery.
+
+## Refinement: visual rhythm, motion, and dirty navigation
+
+- [x] 11.1 Align the three Studio panel shells and normalize their outer padding, heading insets, section gaps, borders, and radii on wide and compact layouts.
+- [x] 11.2 Animate wide rail collapse/expand without label flashing or blocked input; disable the transition under reduced motion and on compact navigation.
+- [x] 11.3 Replace the Studio hash-navigation `window.confirm` with a localized design-system prompt dialog that preserves draft and focus on Cancel and continues navigation after Discard; keep native `beforeunload` only for reload/window close.
+- [x] 11.4 Add focused markup/behavior coverage and visually verify 1440×900, 1100×700, 390×844, dirty Cancel/Discard, rail motion, and reduced motion.

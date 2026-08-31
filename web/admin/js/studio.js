@@ -57,6 +57,8 @@ let navigationGuardBound = false;
 let lastWorkspace = "live";
 let suppressNavigationGuard = false;
 let skipStudioReenter = false;
+/** @type {Promise<boolean> | null} */
+let discardPromptPromise = null;
 
 /**
  * @returns {boolean}
@@ -156,13 +158,34 @@ export function restoreStudioBaseline() {
 }
 
 /**
- * @returns {boolean}
+ * @param {HTMLElement | null} [opener]
+ * @returns {Promise<boolean>}
  */
-export function confirmDiscardStudioDraft() {
+export function confirmDiscardStudioDraft(opener) {
   if (!isStudioOverlayDirty()) {
-    return true;
+    return Promise.resolve(true);
   }
-  return window.confirm(t("studio.discardConfirm"));
+  if (discardPromptPromise) {
+    return discardPromptPromise;
+  }
+  if (!dom.studioDiscardDialog || typeof dom.studioDiscardDialog.showModal !== "function") {
+    return Promise.resolve(false);
+  }
+
+  const focusTarget = opener && opener.isConnected ? opener : null;
+  dom.studioDiscardDialog.returnValue = "cancel";
+  discardPromptPromise = new Promise(function (resolve) {
+    dom.studioDiscardDialog.addEventListener("close", function () {
+      const shouldDiscard = dom.studioDiscardDialog.returnValue === "discard";
+      discardPromptPromise = null;
+      if (!shouldDiscard && focusTarget) {
+        focusTarget.focus({ preventScroll: true });
+      }
+      resolve(shouldDiscard);
+    }, { once: true });
+    dom.studioDiscardDialog.showModal();
+  });
+  return discardPromptPromise;
 }
 
 function updateStudioUseOnStream() {
@@ -228,6 +251,11 @@ function initStudioViewPreferences() {
     readStudioSurfaceRailCollapsedPreference(window.localStorage),
     false
   );
+  window.requestAnimationFrame(function () {
+    if (dom.studioWorkspace) {
+      dom.studioWorkspace.classList.add("studio-surface-rail--motion-ready");
+    }
+  });
   [dom.studioModeEssentials, dom.studioModeAll].filter(Boolean).forEach(function (button) {
     button.addEventListener("click", function () {
       applyStudioMode(button.dataset.studioMode === "all" ? "all" : "essentials", true);
@@ -239,6 +267,48 @@ function initStudioViewPreferences() {
         ? dom.studioWorkspace.classList.contains("studio-surface-rail--collapsed")
         : false;
       applyStudioSurfaceRail(!collapsed, true);
+    });
+  }
+}
+
+function interceptStudioNavigationClicks() {
+  document.addEventListener("click", function (event) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    const target = event.target;
+    const link = target instanceof Element ? target.closest("a[data-workspace-nav]") : null;
+    if (!(link instanceof HTMLAnchorElement)) {
+      return;
+    }
+    const targetHash = new URL(link.href, window.location.href).hash;
+    if (!isStudioWorkspaceActive() || parseWorkspaceHash(targetHash) === "studio" || !isStudioOverlayDirty()) {
+      return;
+    }
+
+    event.preventDefault();
+    confirmDiscardStudioDraft(link).then(function (shouldDiscard) {
+      if (!shouldDiscard) {
+        return;
+      }
+      restoreStudioBaseline();
+      window.location.hash = targetHash;
+    });
+  }, true);
+}
+
+function initStudioDiscardDialog() {
+  if (!dom.studioDiscardDialog) {
+    return;
+  }
+  if (dom.studioDiscardCancel) {
+    dom.studioDiscardCancel.addEventListener("click", function () {
+      dom.studioDiscardDialog.close("cancel");
+    });
+  }
+  if (dom.studioDiscardConfirm) {
+    dom.studioDiscardConfirm.addEventListener("click", function () {
+      dom.studioDiscardDialog.close("discard");
     });
   }
 }
@@ -270,7 +340,7 @@ function interceptHashNavigation() {
   navigationGuardBound = true;
   lastWorkspace = parseWorkspaceHash(window.location.hash);
 
-  window.addEventListener("hashchange", function () {
+  window.addEventListener("hashchange", async function () {
     if (suppressNavigationGuard) {
       suppressNavigationGuard = false;
       lastWorkspace = parseWorkspaceHash(window.location.hash);
@@ -288,16 +358,13 @@ function interceptHashNavigation() {
       skipStudioReenter = true;
       suppressNavigationGuard = true;
       window.location.hash = workspaceHash("studio");
-      if (!confirmDiscardStudioDraft()) {
+      if (!await confirmDiscardStudioDraft(document.activeElement instanceof HTMLElement ? document.activeElement : null)) {
         lastWorkspace = "studio";
         return;
       }
       skipStudioReenter = false;
       restoreStudioBaseline();
-      suppressNavigationGuard = true;
       window.location.hash = targetHash;
-      lastWorkspace = parseWorkspaceHash(window.location.hash);
-      handleWorkspaceChange();
       return;
     }
 
@@ -363,7 +430,9 @@ async function publishStudioDraft() {
 
 export function initStudio() {
   initStudioAddToObs();
+  initStudioDiscardDialog();
   initStudioViewPreferences();
+  interceptStudioNavigationClicks();
   interceptHashNavigation();
 
   [dom.studioPublishButton, dom.studioCompactPublishButton].filter(Boolean).forEach(function (button) {

@@ -1,4 +1,8 @@
 .studio-workspace {
+  --studio-panel-inset: var(--primitive-space-5);
+  --studio-section-gap: var(--primitive-space-4);
+  --studio-motion-duration: 220ms;
+  --studio-motion-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   flex-direction: column;
   gap: var(--primitive-space-4);
@@ -96,22 +100,31 @@
 
 .studio-layout {
   display: grid;
-  grid-template-columns: minmax(200px, 240px) minmax(0, 2fr) minmax(240px, 320px);
+  grid-template-columns: 240px minmax(0, 2fr) minmax(240px, 320px);
+  align-items: stretch;
   gap: var(--primitive-space-4);
   flex: 1;
   min-height: 0;
 }
 
 .studio-surface-rail--collapsed .studio-layout {
-  grid-template-columns: 68px minmax(0, 2fr) minmax(240px, 320px);
+  grid-template-columns: 76px minmax(0, 2fr) minmax(240px, 320px);
+}
+
+.studio-surface-rail--motion-ready .studio-layout {
+  transition: grid-template-columns var(--studio-motion-duration) var(--studio-motion-easing);
 }
 
 .studio-column {
   display: flex;
   flex-direction: column;
-  gap: var(--primitive-space-3);
+  gap: var(--studio-section-gap);
   min-width: 0;
   min-height: 0;
+  padding: var(--studio-panel-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--primitive-radius-sm);
+  background: var(--surface-raised);
 }
 
 .studio-column--preview {
@@ -120,7 +133,6 @@
 
 .studio-column--inspector {
   overflow: hidden;
-  max-height: calc(100vh - 12rem);
 }
 
 .studio-inspector-mount {
@@ -131,6 +143,11 @@
 
 .studio-inspector-mount .preset-island {
   flex-shrink: 0;
+  padding: 0 0 var(--studio-section-gap);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
 }
 
 .studio-inspector-mount .preset-overflow {
@@ -192,12 +209,23 @@
   min-width: 0;
 }
 
+.studio-inspector-mount .overlay-appearance-panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .studio-inspector__body {
   display: flex;
   flex-direction: column;
-  gap: var(--primitive-space-3);
+  gap: var(--studio-section-gap);
   min-height: 0;
   overflow: auto;
+  padding: 0 var(--primitive-space-2) 0 0;
+}
+
+.studio-inspector__body > .panel-intro {
+  margin: 0;
 }
 
 .studio-inspector-essential {
@@ -374,6 +402,9 @@
 
 .studio-surface-list__label {
   margin: 0;
+  max-width: 14rem;
+  overflow: hidden;
+  line-height: 1.35;
 }
 
 .studio-surface-item {
@@ -394,8 +425,12 @@
 }
 
 .studio-surface-item__copy {
+  display: block;
+  max-width: 14rem;
   min-width: 0;
+  overflow: hidden;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .studio-surface-item[aria-pressed="true"] {
@@ -425,18 +460,29 @@
   transform: translateY(-50%);
 }
 
+.studio-surface-rail--motion-ready .studio-surface-list__label,
+.studio-surface-rail--motion-ready .studio-surface-item__copy,
+.studio-surface-rail--motion-ready .studio-add-to-obs-open__label,
+.studio-surface-rail--motion-ready .studio-setup-reminder {
+  transition:
+    max-width var(--studio-motion-duration) var(--studio-motion-easing),
+    max-height var(--studio-motion-duration) var(--studio-motion-easing),
+    margin var(--studio-motion-duration) var(--studio-motion-easing),
+    padding var(--studio-motion-duration) var(--studio-motion-easing),
+    border-width var(--studio-motion-duration) var(--studio-motion-easing),
+    opacity 150ms ease-out,
+    transform var(--studio-motion-duration) var(--studio-motion-easing),
+    visibility 0s linear 0s;
+}
+
 .studio-surface-rail--collapsed .studio-surface-list__label,
 .studio-surface-rail--collapsed .studio-surface-item__copy,
-.studio-surface-rail--collapsed .studio-add-to-obs-open__label,
-.studio-surface-rail--collapsed .studio-setup-reminder {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
+.studio-surface-rail--collapsed .studio-add-to-obs-open__label {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-6px);
+  visibility: hidden;
+  transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, 0s, var(--studio-motion-duration);
 }
 
 .studio-surface-rail--collapsed .studio-surface-list__header {
@@ -448,7 +494,8 @@
 }
 
 .studio-surface-rail--collapsed .studio-surface-item {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr) 0;
+  gap: 0;
   justify-items: center;
   padding-inline: 8px;
 }
@@ -465,10 +512,23 @@
   border: 1px solid var(--amber-dim);
   border-radius: 4px;
   background: rgba(212, 160, 23, 0.07);
+  max-height: 16rem;
+  overflow: hidden;
 }
 
 .studio-setup-reminder[hidden] {
   display: none !important;
+}
+
+.studio-surface-rail--collapsed .studio-setup-reminder {
+  max-height: 0;
+  margin-top: 0;
+  padding-block: 0;
+  border-width: 0;
+  opacity: 0;
+  transform: translateX(-6px);
+  visibility: hidden;
+  transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, 0s, var(--studio-motion-duration);
 }
 
 .studio-setup-reminder h3,
@@ -502,6 +562,12 @@
   width: 20px;
   height: 20px;
   flex: 0 0 auto;
+}
+
+.studio-add-to-obs-open__label {
+  max-width: 10rem;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .studio-surface-rail--collapsed .studio-add-to-obs-open {
@@ -589,13 +655,16 @@
   min-width: 0;
   min-height: 0;
   height: 100%;
-  gap: var(--primitive-space-3);
+  gap: var(--studio-section-gap);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .studio-preview-mount .overlay-preview-chrome {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--primitive-space-3);
   flex-shrink: 0;
 }
@@ -608,7 +677,7 @@
 .studio-preview-mount .overlay-preview-chrome__main {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--primitive-space-2);
   flex: 1 1 12rem;
   min-width: 0;
@@ -718,6 +787,40 @@
 .studio-preview-mount .overlay-preview-note,
 .studio-preview-mount .obs-copy-status {
   flex-shrink: 0;
+  margin: 0;
+}
+
+.studio-discard-dialog {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.studio-discard-dialog .prompt-dialog__frame {
+  gap: var(--primitive-space-3);
+  padding: var(--primitive-space-5);
+}
+
+.studio-discard-dialog .dialog-kicker {
+  color: var(--color-status-warning);
+}
+
+.studio-discard-dialog .prompt-dialog__actions .btn-physical {
+  padding-inline: var(--primitive-space-4);
+  white-space: nowrap;
+}
+
+.studio-discard-dialog[open] .prompt-dialog__frame {
+  animation: studio-dialog-enter 180ms var(--studio-motion-easing, ease-out);
+}
+
+@keyframes studio-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .studio-sources-mount .obs-sources {
@@ -825,14 +928,15 @@
   .studio-surface-rail--collapsed .studio-surface-item__copy,
   .studio-surface-rail--collapsed .studio-add-to-obs-open__label,
   .studio-surface-rail--collapsed .studio-setup-reminder {
-    position: static;
-    width: auto;
-    height: auto;
-    padding: initial;
+    max-width: none;
+    max-height: none;
     margin: initial;
     overflow: visible;
-    clip: auto;
+    opacity: 1;
+    transform: none;
+    visibility: visible;
     white-space: normal;
+    transition: none;
   }
 
   .studio-surface-rail--collapsed .studio-surface-item {
@@ -844,7 +948,9 @@
   .studio-surface-rail--collapsed .studio-setup-reminder {
     display: grid;
     gap: var(--primitive-space-2);
+    margin-top: var(--primitive-space-3);
     padding: var(--primitive-space-3);
+    border-width: 1px;
   }
 
   .studio-surface-item > .ui-tooltip,
@@ -878,7 +984,6 @@
   }
 
   .studio-column--inspector {
-    max-height: none;
     overflow: visible;
   }
 
@@ -947,10 +1052,27 @@
   .studio-compact-actions .studio-dirty-status {
     margin-right: auto;
   }
+
+  .studio-discard-dialog .prompt-dialog__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .studio-discard-dialog .prompt-dialog__actions .btn-physical {
+    width: 100%;
+  }
 }
 
-@media (min-width: 1024px) and (max-height: 700px) {
-  .studio-column--inspector {
-    max-height: calc(100vh - 10rem);
+@media (prefers-reduced-motion: reduce) {
+  .studio-surface-rail--motion-ready .studio-layout,
+  .studio-surface-rail--motion-ready .studio-surface-list__label,
+  .studio-surface-rail--motion-ready .studio-surface-item__copy,
+  .studio-surface-rail--motion-ready .studio-add-to-obs-open__label,
+  .studio-surface-rail--motion-ready .studio-setup-reminder {
+    transition: none;
+  }
+
+  .studio-discard-dialog[open] .prompt-dialog__frame {
+    animation: none;
   }
 }

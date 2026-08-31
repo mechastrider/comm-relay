@@ -194,7 +194,9 @@ The admin SHALL distinguish hot actions that apply immediately, Studio fields th
 
 #### Scenario: Leave dirty Studio draft
 - **WHEN** the operator navigates away or closes the page with unpublished Studio edits
-- **THEN** the UI asks for confirmation before discarding those edits
+- **THEN** in-app workspace navigation uses a localized CommRelay confirmation dialog before discarding those edits
+- **AND** Cancel keeps the operator in Studio with the draft and previous focus intact
+- **AND** browser reload or window close may use the browser-required native `beforeunload` prompt
 
 #### Scenario: Edit cold setting
 - **WHEN** the operator changes language, sound, platform, proxy, or another Settings field

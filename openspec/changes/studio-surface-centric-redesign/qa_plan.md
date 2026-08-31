@@ -44,6 +44,9 @@ Dark/light admin rows only if the product exposes them. Overlay theme cards are 
 | localization | RU/EN Studio | New strings present; `npm run test:i18n` green | P1 |
 | reduced motion / zoom | Reduced motion + 200% | State without animation; no overlap | P1 |
 | clipboard denied | Deny clipboard; copy | URL selectable; failure reported; no success toast | P0 |
+| admin-design-system / panel rhythm | Compare rail, preview, and inspector at 1440×900 and 1100×700 | Common top edge, panel insets, border/radius treatment, and section gaps; no visibly drifting panel headings | P0 |
+| admin-design-system / rail motion | Toggle rail expanded/collapsed, then repeat with reduced motion | Wide transition is smooth and interruptible; labels do not flash; reduced motion changes state immediately; compact layout is stable | P0 |
+| admin-and-dock / dirty navigation dialog | Edit a look, choose another workspace, Cancel, then repeat and Discard | Branded localized dialog replaces `window.confirm`; Cancel preserves draft/focus; Discard restores baseline and navigates | P0 |
 
 ## Filesystem / IPC / Permission / Lifecycle Scenarios
 
@@ -96,3 +99,6 @@ Manual: Chromium against `go run ./cmd/comm-relay-server` with a temp config tha
 - First-visit run with empty storage verified the OBS setup dialog opens; its close, Later, and Done state transitions are covered by helper tests and distinct markup actions.
 - Local server smoke returned `200` for `/overlay`, `/overlay/leaderboard`, `/overlay/alert`, and `/dock/messages`; no program-output assets changed.
 - Packaged Wails/WebView and OBS-host screenshots are release-smoke work and were not available in this Linux agent environment.
+- Follow-up geometry smoke measured identical rail/preview/inspector top coordinates, heights, 12px panel insets, borders, and radii at 1440×900; at 1100×700 all three panel heights matched and the inspector body scrolled.
+- Rail motion sampling measured intermediate widths during the 220ms transition (`240 → 190 → 80 → 76px`); under `prefers-reduced-motion: reduce` it changed directly from 240px to 76px. Compact navigation remained three equal labeled columns.
+- Dirty navigation smoke verified the localized CommRelay dialog on side/bottom navigation and browser Back. Cancel preserved the dirty draft and restored navigation focus; Discard continued to Settings. At 390×844 the dialog stayed inside 19px side gutters with two stacked 44px actions and no horizontal overflow.

@@ -121,3 +121,11 @@ The local setup state is `unseen`, `seen`, `skipped`, or `completed`. Only `unse
 ### Activation cannot use a stale persisted look
 
 Use on stream continues to be a hot activation and remains separate from Publish, but it is disabled while the edited look is dirty. This prevents the previewed draft from implying that activation will put those unpublished values on air. The control explains the required Publish step; Publish itself does not activate automatically.
+
+### Studio uses one geometry and motion rhythm
+
+The rail, preview, and inspector use common panel padding and section gaps from the existing spacing tokens, with shared top alignment and panel treatment. Wide rail collapse uses a short opacity/transform transition plus the grid-column transition; compact navigation remains stable. Reduced-motion users receive the final state immediately.
+
+### Dirty workspace navigation uses an in-product prompt
+
+Hash navigation away from Studio opens a native HTML `dialog` styled with the existing prompt component. Cancel restores focus and leaves the draft untouched; Discard restores the published baseline and continues to the requested workspace. The `beforeunload` handler remains for browser reload/window close because browsers require their own non-customizable warning there.

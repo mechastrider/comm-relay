@@ -1606,6 +1606,18 @@
       </div>
     </dialog>
 
+    <dialog id="studio-discard-dialog" class="prompt-dialog studio-discard-dialog" aria-labelledby="studio-discard-title" aria-describedby="studio-discard-message">
+      <div class="prompt-dialog__frame">
+        <span class="dialog-kicker" data-i18n="studio.discardKicker">Unpublished draft</span>
+        <h3 id="studio-discard-title" data-i18n="studio.discardTitle">Leave Studio?</h3>
+        <p id="studio-discard-message" class="prompt-dialog__message" data-i18n="studio.discardMessage">Your unpublished appearance changes will be lost.</p>
+        <div class="prompt-dialog__actions">
+          <button id="studio-discard-cancel" class="btn-physical" type="button" autofocus data-i18n="studio.keepEditing">Keep editing</button>
+          <button id="studio-discard-confirm" class="btn-physical btn-danger" type="button" data-i18n="studio.discardChanges">Discard changes</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="new-stream-prompt" class="prompt-dialog" aria-labelledby="new-stream-prompt-title">
       <div class="prompt-dialog__frame">
         <h3 id="new-stream-prompt-title" data-i18n="stream.newStreamTitle">Start a new stream?</h3>
