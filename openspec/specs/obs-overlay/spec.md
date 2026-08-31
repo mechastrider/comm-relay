@@ -113,15 +113,19 @@ When `/overlay` is loaded with a preview query, `preview_background` SHALL apply
 - **THEN** the page background stays transparent
 
 ### Requirement: Admin source copy distinguishes following and pinned URLs
-Studio SHALL offer an unpinned URL that follows the active preset as the primary copy action for overlay and leaderboard sources. It SHALL also offer an explicitly labeled pinned URL for operators who require a scene-specific preset. Existing URLs with `preset` MUST remain valid.
+Studio SHALL offer an unpinned URL that follows the active preset as the primary copy action for the selected on-stream surface (chat overlay, leaderboard, or alerts). It SHALL also offer an explicitly labeled pinned URL for operators who require a scene-specific preset, from preview overflow and/or Add to OBS. Existing URLs with `preset` MUST remain valid. Leaderboard period continues to appear on leaderboard URLs as today.
 
 #### Scenario: Copy default overlay source
-- **WHEN** the operator uses the primary copy action for the chat overlay
+- **WHEN** the operator uses the primary copy action while chat is the selected surface
 - **THEN** the copied URL omits `preset` and is labeled as following the active preset
 
 #### Scenario: Copy pinned leaderboard source
-- **WHEN** the operator chooses the pinned copy option for a leaderboard preset
+- **WHEN** the operator chooses the pinned copy option for a leaderboard look
 - **THEN** the copied URL includes that preset's identifier and is labeled as pinned
+
+#### Scenario: Copy default alert source
+- **WHEN** the operator uses the primary copy action while alerts is the selected surface
+- **THEN** the copied URL omits `preset` and uses the `/overlay/alert` path for the current listen address
 
 ### Requirement: Overlay themes are the on-stream visual language
 Registered overlay themes (`default`, `dashboard`, `cockpit_panel`, `cockpit_popups`, `g_rebels_popups`) SHALL define the visual language for every on-stream Browser Source that honors `preset`, not only the chat queue. Chat `/overlay` SHALL keep its existing per-theme message layout (panel versus popups). Other surfaces MUST use the same theme tokens and chrome language and MUST NOT ship an unthemed one-off look.
