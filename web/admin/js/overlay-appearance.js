@@ -154,6 +154,18 @@ export function syncStudioInspectorEssential(surface) {
   if (dom.studioEssentialPeriod) {
     dom.studioEssentialPeriod.hidden = current !== "leaderboard";
   }
+  if (dom.studioEssentialAlertsNote) {
+    dom.studioEssentialAlertsNote.hidden = current !== "alerts";
+  }
+  if (dom.studioSelectedSurfaceHeading) {
+    const headingKey =
+      current === "leaderboard"
+        ? "studio.surfaceLeaderboardSettings"
+        : current === "alerts"
+          ? "studio.surfaceAlertsSettings"
+          : "studio.surfaceChatSettings";
+    dom.studioSelectedSurfaceHeading.textContent = t(headingKey);
+  }
 }
 
 function newID(prefix) {
@@ -1253,5 +1265,11 @@ export function initOverlayAppearance() {
 
   window.addEventListener("admin-locale-applied", function () {
     refreshThemeCardLabels();
+    const selectedSurface = document.querySelector(
+      "[data-obs-preview-surface][aria-pressed='true']"
+    );
+    syncStudioInspectorEssential(
+      selectedSurface ? selectedSurface.getAttribute("data-obs-preview-surface") : "chat"
+    );
   });
 }

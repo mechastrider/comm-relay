@@ -2,10 +2,16 @@
  * Pure helpers for Studio draft comparison and OBS source URLs.
  */
 
-import { ADD_TO_OBS_DISMISSED_KEY } from "./constants.js";
+import {
+  ADD_TO_OBS_DISMISSED_KEY,
+  STUDIO_MODE_KEY,
+  STUDIO_SETUP_STATE_KEY,
+  STUDIO_SURFACE_RAIL_COLLAPSED_KEY,
+} from "./constants.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
 
 const ADD_TO_OBS_DISMISSED_TRUTHY = new Set(["1", "true", "yes"]);
+const STUDIO_SETUP_STATES = new Set(["unseen", "seen", "skipped", "completed"]);
 
 const STUDIO_SURFACES = new Set(["chat", "leaderboard", "alerts"]);
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
@@ -168,6 +174,16 @@ export function shouldShowUseOnStream(editedPresetId, onAirPresetId) {
 }
 
 /**
+ * @param {boolean} visible
+ * @param {boolean} dirty
+ * @param {boolean} inFlight
+ * @returns {boolean}
+ */
+export function shouldDisableUseOnStream(visible, dirty, inFlight) {
+  return !visible || dirty || inFlight;
+}
+
+/**
  * @param {number} presetCount
  * @returns {boolean}
  */
@@ -272,6 +288,121 @@ export function writeAddToObsDismissedPreference(storage, dismissed) {
     if (typeof storage.removeItem === "function") {
       storage.removeItem(ADD_TO_OBS_DISMISSED_KEY);
     }
+  } catch {
+    /* localStorage can be unavailable in locked-down browser contexts. */
+  }
+}
+
+/**
+ * @param {unknown} value
+ * @returns {"unseen"|"seen"|"skipped"|"completed"}
+ */
+export function normalizeStudioSetupState(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return STUDIO_SETUP_STATES.has(normalized)
+    ? /** @type {"unseen"|"seen"|"skipped"|"completed"} */ (normalized)
+    : "unseen";
+}
+
+/**
+ * @param {Pick<Storage, "getItem"> | null | undefined} storage
+ * @returns {"unseen"|"seen"|"skipped"|"completed"}
+ */
+export function readStudioSetupState(storage) {
+  if (!storage || typeof storage.getItem !== "function") {
+    return "unseen";
+  }
+  try {
+    const stored = storage.getItem(STUDIO_SETUP_STATE_KEY);
+    if (stored !== null) {
+      return normalizeStudioSetupState(stored);
+    }
+    return parseAddToObsDismissedValue(storage.getItem(ADD_TO_OBS_DISMISSED_KEY))
+      ? "completed"
+      : "unseen";
+  } catch {
+    return "unseen";
+  }
+}
+
+/**
+ * @param {Pick<Storage, "setItem"> | null | undefined} storage
+ * @param {unknown} state
+ */
+export function writeStudioSetupState(storage, state) {
+  if (!storage || typeof storage.setItem !== "function") {
+    return;
+  }
+  try {
+    storage.setItem(STUDIO_SETUP_STATE_KEY, normalizeStudioSetupState(state));
+  } catch {
+    /* localStorage can be unavailable in locked-down browser contexts. */
+  }
+}
+
+/**
+ * @param {unknown} value
+ * @returns {"essentials"|"all"}
+ */
+export function normalizeStudioMode(value) {
+  return String(value || "").trim().toLowerCase() === "all" ? "all" : "essentials";
+}
+
+/**
+ * @param {Pick<Storage, "getItem"> | null | undefined} storage
+ * @returns {"essentials"|"all"}
+ */
+export function readStudioModePreference(storage) {
+  if (!storage || typeof storage.getItem !== "function") {
+    return "essentials";
+  }
+  try {
+    return normalizeStudioMode(storage.getItem(STUDIO_MODE_KEY));
+  } catch {
+    return "essentials";
+  }
+}
+
+/**
+ * @param {Pick<Storage, "setItem"> | null | undefined} storage
+ * @param {unknown} mode
+ */
+export function writeStudioModePreference(storage, mode) {
+  if (!storage || typeof storage.setItem !== "function") {
+    return;
+  }
+  try {
+    storage.setItem(STUDIO_MODE_KEY, normalizeStudioMode(mode));
+  } catch {
+    /* localStorage can be unavailable in locked-down browser contexts. */
+  }
+}
+
+/**
+ * @param {Pick<Storage, "getItem"> | null | undefined} storage
+ * @returns {boolean}
+ */
+export function readStudioSurfaceRailCollapsedPreference(storage) {
+  if (!storage || typeof storage.getItem !== "function") {
+    return false;
+  }
+  try {
+    return storage.getItem(STUDIO_SURFACE_RAIL_COLLAPSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @param {Pick<Storage, "setItem"> | null | undefined} storage
+ * @param {boolean} collapsed
+ */
+export function writeStudioSurfaceRailCollapsedPreference(storage, collapsed) {
+  if (!storage || typeof storage.setItem !== "function") {
+    return;
+  }
+  try {
+    storage.setItem(STUDIO_SURFACE_RAIL_COLLAPSED_KEY, collapsed ? "true" : "false");
   } catch {
     /* localStorage can be unavailable in locked-down browser contexts. */
   }

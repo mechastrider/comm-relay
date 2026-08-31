@@ -14,6 +14,7 @@ Primary user: a streamer or OBS operator on the local admin (`/` in the Wails sh
 - Show a dismissible **Add to OBS** sheet on first Studio visit (chat Browser Source steps + copy). Leaderboard, alerts, and the operator-only message dock live in that sheet, not as a permanent third of the screen equal to themed surfaces.
 - Keep draft-until-Publish. Remove the Studio toolbar **Active preset** hot control; Live keeps it. When the edited look is not on air, Studio offers **Use on stream**. Collapse preset CRUD while only one look exists.
 - Own Studio markup instead of transplanting the leftover OBS dialog panels.
+- Refine the workspace with persistent **Essentials / All settings** density modes, an adaptive icon surface rail, resumable OBS setup, and explicit draft safety before a look can be used on stream.
 
 ## Capabilities
 

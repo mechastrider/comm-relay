@@ -2,8 +2,8 @@ import * as dom from "./dom.js";
 import { apiURL } from "./api.js";
 import { t } from "./i18n-ui.js";
 import {
-  readAddToObsDismissedPreference,
-  writeAddToObsDismissedPreference,
+  readStudioSetupState,
+  writeStudioSetupState,
 } from "./studio-helpers.js";
 import { bindCopyButtons, resetOBSCopyFeedback } from "./obs-setup.js";
 import { updatePresetIsland } from "./overlay-appearance.js";
@@ -15,7 +15,16 @@ let lastOpener = null;
  * @returns {boolean}
  */
 export function isAddToObsDismissed() {
-  return readAddToObsDismissedPreference(window.localStorage);
+  return readStudioSetupState(window.localStorage) !== "unseen";
+}
+
+export function syncStudioSetupReminder() {
+  if (!dom.studioSetupReminder) {
+    return;
+  }
+  const setupState = readStudioSetupState(window.localStorage);
+  dom.studioSetupReminder.hidden = setupState === "completed";
+  dom.studioSetupReminder.dataset.setupState = setupState;
 }
 
 /**
@@ -36,8 +45,12 @@ export function openStudioAddToObs(options) {
   }
 }
 
-export function dismissStudioAddToObs() {
-  writeAddToObsDismissedPreference(window.localStorage, true);
+/**
+ * @param {"seen"|"skipped"|"completed"} outcome
+ */
+export function finishStudioAddToObs(outcome) {
+  writeStudioSetupState(window.localStorage, outcome);
+  syncStudioSetupReminder();
   closeStudioAddToObs();
 }
 
@@ -57,7 +70,8 @@ export function closeStudioAddToObs() {
 }
 
 export function maybeAutoOpenStudioAddToObs() {
-  if (isAddToObsDismissed()) {
+  syncStudioSetupReminder();
+  if (readStudioSetupState(window.localStorage) !== "unseen") {
     return;
   }
   openStudioAddToObs();
@@ -174,6 +188,7 @@ export function initStudioAddToObs() {
 
   bindCopyButtons(dom.studioAddToObsDialog);
   setStudioAddToObsSource("chat");
+  syncStudioSetupReminder();
 
   if (dom.studioAddToObsOpenButton) {
     dom.studioAddToObsOpenButton.addEventListener("click", function () {
@@ -190,15 +205,18 @@ export function initStudioAddToObs() {
     });
   });
 
-  dom.studioAddToObsDialog.querySelectorAll("[data-studio-add-to-obs-dismiss]").forEach(function (button) {
+  dom.studioAddToObsDialog.querySelectorAll("[data-studio-add-to-obs-action]").forEach(function (button) {
     button.addEventListener("click", function () {
-      dismissStudioAddToObs();
+      const action = button.getAttribute("data-studio-add-to-obs-action");
+      finishStudioAddToObs(
+        action === "done" ? "completed" : action === "later" ? "skipped" : "seen"
+      );
     });
   });
 
   dom.studioAddToObsDialog.addEventListener("click", function (event) {
     if (event.target === dom.studioAddToObsDialog) {
-      dismissStudioAddToObs();
+      finishStudioAddToObs("seen");
     }
   });
 
@@ -215,7 +233,7 @@ export function initStudioAddToObs() {
 
   dom.studioAddToObsDialog.addEventListener("cancel", function (event) {
     event.preventDefault();
-    dismissStudioAddToObs();
+    finishStudioAddToObs("seen");
   });
 
   if (dom.studioAddToObsLeaderboardPeriod) {

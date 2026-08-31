@@ -95,3 +95,31 @@ No production Go, HTTP, or `config.json` schema work. Overlay activate/update co
 ## Gate: distribution-readiness
 
 - [x] D.1 Confirm packaged/embedded `web/` would include the new Studio assets; no signing or publish. `openspec validate studio-surface-centric-redesign --strict` succeeds.
+
+## Refinement: mode, navigation, and recovery
+
+- [x] 8.1 Add the adaptive icon surface rail with non-color selected state, directional keyboard behavior, and a remembered wide-layout collapse preference.
+- [x] 8.2 Add persistent Essentials / All settings density modes over the same draft; refine inspector hierarchy, Alerts context, theme cards, and compact-vs-raw preview copy chrome.
+- [x] 8.3 Replace boolean onboarding dismissal with migrated unseen/seen/skipped/completed outcomes, an Essentials checklist, and a persistent OBS setup action.
+- [x] 8.4 Disable Use on stream for dirty drafts, add synchronized compact publication actions, and expose preview loading/error/retry without losing the draft.
+- [x] 8.5 Add RU/EN strings and focused helper/markup tests for the new preference, setup-state, selection, and activation-safety contracts.
+
+## Refinement: docs and verification
+
+- [x] 9.1 Update README/FAQ usage wording and append concise Russian `[Unreleased]` bullets for the new Studio modes and safeguards.
+- [x] 10.1 Run OpenSpec validation, frontend lint/tests/i18n, Go tests including race, golangci-lint, and build.
+- [x] 10.2 Smoke-check Studio at wide, compact, and short-height sizes plus overlay transparency; review the final diff before delivery.
+
+## Refinement: visual rhythm, motion, and dirty navigation
+
+- [x] 11.1 Align the three Studio panel shells and normalize their outer padding, heading insets, section gaps, borders, and radii on wide and compact layouts.
+- [x] 11.2 Animate wide rail collapse/expand without label flashing or blocked input; disable the transition under reduced motion and on compact navigation.
+- [x] 11.3 Replace the Studio hash-navigation `window.confirm` with a localized design-system prompt dialog that preserves draft and focus on Cancel and continues navigation after Discard; keep native `beforeunload` only for reload/window close.
+- [x] 11.4 Add focused markup/behavior coverage and visually verify 1440×900, 1100×700, 390×844, dirty Cancel/Discard, rail motion, and reduced motion.
+
+## Refinement: preview toolbar, disclosure spacing, and responsive prompt
+
+- [x] 12.1 Keep All-settings Replay, URL, copy, and overflow on one control baseline; remove the visible Follow-active caption while preserving the input's localized accessible name.
+- [x] 12.2 Add internal spacing to preview options and Advanced, and widen the inspector only on wide screens while keeping preview dominant.
+- [x] 12.3 Make the dirty-navigation dialog and translated actions shrink, wrap, or stack without viewport overflow.
+- [x] 12.4 Add focused markup coverage and visually verify 1440×900, 520×600, and 390×600 geometry before rerunning the full required checks.

@@ -13,19 +13,21 @@ Live, Audience, Settings, About, and the dock page do not change layout in this 
 
 ## Menus / Tray / Commands / Shortcuts
 
-No native menu, tray, global shortcut, or new keyboard shortcut. In-document: Tab order through surface list, preview overflow, inspector, Add to OBS, and Publish; Escape dismisses Add to OBS when allowed; Enter/Space activate choices. Existing dirty-Studio `beforeunload` and hash-navigation confirm remain.
+No native menu, tray, global shortcut, or new keyboard shortcut. In-document: Tab order through surface list, preview overflow, inspector, Add to OBS, and Publish; Escape dismisses Add to OBS when allowed; Enter/Space activate choices. Dirty hash navigation uses the CommRelay prompt dialog; browser reload/window close retains the required native `beforeunload` warning.
 
 ## View / Flow: `Studio`
 
 ### Layout and Components
 
-Wide layout: on-stream surface list (chat, leaderboard, alerts) | dominant preview | layered inspector. Compact: stack list, preview, inspector. Preview iframe keeps a stable aspect box; chrome sits outside the iframe.
+Wide layout: adaptive on-stream surface rail (chat, leaderboard, alerts) | dominant preview | layered inspector. The rail starts with icons and labels, can collapse to icons, and remembers the local preference. The three panel shells share a top edge, inset, border, and section-spacing rhythm. Rail collapse animates briefly on wide layouts and resolves immediately under reduced motion. Compact: horizontal labeled surface selector, preview, inspector. Preview iframe keeps a stable aspect box; chrome sits outside the iframe.
 
-Always-visible preview chrome: Replay, Follow-active copy for the selected surface, overflow control. Overflow holds source size, custom width/height, backdrop (white / checkerboard / game footage / black), sample vs live chat (chat only), and pinned URL copy.
+Always-visible Essentials preview chrome: Replay and compact Follow-active copy for the selected surface. All settings additionally exposes a selectable raw URL with a localized accessible name and an overflow with source size, custom width/height, backdrop (white / checkerboard / game footage / black), sample vs live chat (chat only), and pinned URL copy. Replay, URL, copy, and overflow controls share one height and baseline; the visible Follow-active caption is omitted from this compact toolbar.
 
-Inspector essential layer: visual theme choices, font size for the selected surface, chat duration chips when chat is selected. Advanced disclosure contains every remaining current appearance field. Look name and Publish sit in the Studio header. Preset CRUD is overflow or shown when more than one look exists. Use on stream appears only when the edited look is not `overlay.active_preset_id`.
+Essentials inspector: look selection, visual theme choices, selected-surface font, chat duration or leaderboard period, and a contextual Alerts explanation when the surface has no dedicated controls. All settings reveals Advanced and preset CRUD. Look name and Publish sit in the Studio header. Use on stream appears only when the edited look is not `overlay.active_preset_id`, and is disabled while the draft is dirty.
 
-Add to OBS is a height-capped sheet/dialog: shared Browser Source steps, per-source Follow-active (and pinned) URLs for chat/leaderboard/alerts, leaderboard period, message dock URL and Custom Browser Dock steps. It auto-opens once per browser/webview until dismissed and remains reopenable.
+The toolbar exposes Essentials / All settings as a pressed-button group. Both modes share the same draft and selected surface. Compact view adds a sticky bottom action bar for dirty status, Use on stream, and Publish, with enough document padding to keep the last control visible.
+
+OBS setup is a height-capped sheet/dialog: shared Browser Source steps, per-source Follow-active (and pinned) URLs for chat/leaderboard/alerts, leaderboard period, message dock URL and Custom Browser Dock steps. It auto-opens only while unseen. Close, Later, and Done produce distinct local states; an Essentials checklist remains for seen/skipped setup and a persistent action always reopens it.
 
 Studio MUST NOT show a second Chat/Leaderboard/Alerts tab strip that can disagree with the surface list. Studio MUST NOT transplant `#overlay-dialog` panels as the workspace layout.
 
@@ -66,7 +68,9 @@ Unchanged from the current Live contract.
 
 ## Accessibility / Keyboard / Focus
 
-Surface list uses a single selection pattern with visible selected state and names, not color alone. Theme choices have accessible names matching localized theme labels. Icon-only overflow, Add to OBS, Replay, and preset actions have names and hover/focus tooltips. Add to OBS and Advanced trap nothing; Escape closes the sheet when dismissal is allowed and returns focus to the opener. After opening Advanced, the operator can tab to every revealed field and to Publish. Focus moves to the Studio heading when entering `#studio`, consistent with other workspaces.
+Surface controls use pressed-button semantics with visible selected state and names, not color alone. Arrow keys, Home, and End move and activate within the group. Collapsed icon controls retain names and hover/focus tooltips. Theme choices have accessible names matching localized theme labels. Icon-only overflow, OBS setup, Replay, and preset actions have names and hover/focus tooltips. OBS setup and Advanced trap nothing; Escape closes the sheet, records seen rather than completion, and returns focus to the opener. After opening Advanced, the operator can tab to every revealed field and to Publish. Focus moves to the Studio heading when entering `#studio`, consistent with other workspaces.
+
+The dirty-navigation dialog is labelled by its title, describes the unpublished draft, offers Cancel and a visually destructive Discard action, closes on Escape as Cancel, and returns focus to the navigation control that initiated the attempted workspace change. Its frame and translated actions remain inside the viewport without horizontal page scroll; actions wrap or stack when space is insufficient.
 
 ## Scaling / Theme / Localization / Reduced Motion
 

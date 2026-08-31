@@ -32,10 +32,23 @@ Dark/light admin rows only if the product exposes them. Overlay theme cards are 
 | admin-design-system / wide | 1440×900 Studio | Preview is the widest pane; Replay and copy visible | P0 |
 | admin-design-system / short | ~700px tall Studio, open Advanced | Inspector scrolls; heading and Publish stay reachable | P0 |
 | admin-design-system / keyboard | Tab through surfaces, theme cards, Advanced, Add to OBS, Escape | Visible focus, names, Escape closes sheet to opener | P0 |
+| admin-design-system / selected surface | Select each surface in expanded and collapsed wide layouts | Background plus edge/icon/type cue identify selection; accessible pressed state matches | P0 |
+| admin-design-system / adaptive rail | Collapse rail, reload, then resize below and above 1024px | Wide collapse restores; compact remains a horizontal labeled selector | P0 |
+| admin-and-dock / density mode | Make an edit, switch Essentials → All settings → Essentials, reload | Draft and surface remain; local mode restores; switch performs no network mutation | P0 |
+| admin-and-dock / setup outcomes | Clear storage; test Close, Escape, Later, Done, and reopen | Only unseen auto-opens; seen/skipped reminder persists; Done hides reminder; persistent action reopens | P0 |
+| admin-and-dock / dirty activation | Edit a non-active look without publishing | Use on stream is disabled and explains Publish; after successful Publish it becomes available | P0 |
+| admin-and-dock / alert context | Select Alerts in Essentials | Shared theme remains editable and a localized explanation replaces irrelevant surface fields | P1 |
+| admin-design-system / preview recovery | Block preview load, wait for timeout, choose Retry | Failed state appears outside iframe; retry keeps surface and draft query | P0 |
+| admin-design-system / compact actions | Scroll a 390×844 and short-height Studio to the last field | Sticky dirty/use/publish actions remain reachable and cover no content | P0 |
 | ui_contract / no dialog transplant | Inspect Studio DOM | Workspace does not depend on moving `#overlay-dialog` panels | P1 |
 | localization | RU/EN Studio | New strings present; `npm run test:i18n` green | P1 |
 | reduced motion / zoom | Reduced motion + 200% | State without animation; no overlap | P1 |
 | clipboard denied | Deny clipboard; copy | URL selectable; failure reported; no success toast | P0 |
+| admin-design-system / panel rhythm | Compare rail, preview, and inspector at 1440×900 and 1100×700 | Common top edge, panel insets, border/radius treatment, and section gaps; no visibly drifting panel headings | P0 |
+| admin-design-system / rail motion | Toggle rail expanded/collapsed, then repeat with reduced motion | Wide transition is smooth and interruptible; labels do not flash; reduced motion changes state immediately; compact layout is stable | P0 |
+| admin-and-dock / dirty navigation dialog | Edit a look, choose another workspace, Cancel, then repeat and Discard | Branded localized dialog replaces `window.confirm`; Cancel preserves draft/focus; Discard restores baseline and navigates | P0 |
+| admin-design-system / preview toolbar and disclosures | Open All settings at 1440×900; compare Replay/URL/copy/overflow, then open preview options and Advanced | Toolbar controls share one height/baseline; no visible Follow-active caption; both disclosures have clear field and group spacing; inspector is wider while preview remains dominant | P0 |
+| admin-design-system / narrow dirty dialog | Open a dirty-navigation prompt at 520×600 and 390×600 | Dialog and actions stay inside the viewport; no horizontal document scroll; long labels wrap or actions stack | P0 |
 
 ## Filesystem / IPC / Permission / Lifecycle Scenarios
 
@@ -81,3 +94,15 @@ Manual: Chromium against `go run ./cmd/comm-relay-server` with a temp config tha
 - Skip OBS WebSocket/scene visibility (non-goal).
 - Skip installer/signing.
 - Skip `-race` only if the environment cannot run it; record the skip. Frontend-only change should still run Go tests for regressions.
+
+### Refinement evidence — 2026-08-31
+
+- Playwright Chromium smoke at 1440×900 (expanded Essentials), 1100×700 (collapsed All settings), and 390×844 (Essentials and All settings). The compact run verified the fixed publication bar above bottom navigation and the horizontal labeled surface selector.
+- First-visit run with empty storage verified the OBS setup dialog opens; its close, Later, and Done state transitions are covered by helper tests and distinct markup actions.
+- Local server smoke returned `200` for `/overlay`, `/overlay/leaderboard`, `/overlay/alert`, and `/dock/messages`; no program-output assets changed.
+- Packaged Wails/WebView and OBS-host screenshots are release-smoke work and were not available in this Linux agent environment.
+- Follow-up geometry smoke measured identical rail/preview/inspector top coordinates, heights, 12px panel insets, borders, and radii at 1440×900; at 1100×700 all three panel heights matched and the inspector body scrolled.
+- Rail motion sampling measured intermediate widths during the 220ms transition (`240 → 190 → 80 → 76px`); under `prefers-reduced-motion: reduce` it changed directly from 240px to 76px. Compact navigation remained three equal labeled columns.
+- Dirty navigation smoke verified the localized CommRelay dialog on side/bottom navigation and browser Back. Cancel preserved the dirty draft and restored navigation focus; Discard continued to Settings. At 390×844 the dialog stayed inside 19px side gutters with two stacked 44px actions and no horizontal overflow.
+- All-settings follow-up measured Replay, raw URL, copy, and overflow at the same `y=147` and `40px` height on 1440×900. The preview remained dominant at `564px` while the inspector expanded to `380px`; the visible Follow-active caption was absent and the URL kept its localized accessible name.
+- Preview options measured 12px panel padding and 12px field gaps; Advanced measured 16px row gaps with 12px horizontal/bottom padding. Dirty-dialog checks at 520×600, 390×600, and 320×568 kept the frame and both actions inside the viewport with no document or dialog horizontal overflow.

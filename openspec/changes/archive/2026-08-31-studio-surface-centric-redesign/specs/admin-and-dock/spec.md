@@ -7,6 +7,8 @@ Studio becomes a surface-centric preparation workspace: one on-stream selection 
 ### Requirement: Studio selection is a single on-stream surface
 Studio SHALL keep one selected on-stream surface among chat, leaderboard, and alerts. That selection MUST retarget the preview iframe, MUST show only inspector fields that apply to that surface, and MUST bind the primary Follow-active copy action to that surface's URL. Studio MUST NOT keep a second independent surface or source selector that can disagree with the preview.
 
+The surface selector SHALL expose icon and text labels with a non-color selected cue. On wide viewports it SHALL be collapsible to an icon rail and remember that local preference. On compact viewports it SHALL remain a horizontal labeled selector regardless of the wide-layout preference.
+
 #### Scenario: Select leaderboard
 - **WHEN** the operator selects the leaderboard surface
 - **THEN** the preview iframe loads `/overlay/leaderboard` with `preview=sample` and the current unsaved appearance query, showing a fictitious top-5
@@ -27,6 +29,21 @@ Studio SHALL keep one selected on-stream surface among chat, leaderboard, and al
 - **WHEN** the operator opens Studio's on-stream surface list
 - **THEN** the list does not include the message dock as a previewable themed surface
 - **AND** overlay theme controls MUST NOT apply to `/dock/messages`
+
+#### Scenario: Collapse and restore the surface rail
+- **WHEN** the operator collapses the surface selector on a wide viewport and later returns to Studio
+- **THEN** the selector restores as an icon rail with accessible names and hover or focus tooltips
+- **AND** the selected surface remains identifiable without relying on color alone
+
+### Requirement: Studio offers Essentials and All settings density modes
+Studio SHALL offer Essentials and All settings as two views of the same selected surface and the same in-memory draft. Switching modes MUST NOT reset the draft, surface selection, or scroll the page to the beginning. The local mode preference SHALL be restored on the next visit.
+
+Essentials SHALL keep surface selection, preview, look selection, visual theme, selected-surface font, selected-surface timing or period, Publish, and OBS setup reachable. All settings SHALL additionally reveal raw and pinned URLs, preview dimensions and backdrop, Advanced appearance fields, and preset CRUD.
+
+#### Scenario: Change mode with an unpublished draft
+- **WHEN** the operator changes a theme in Essentials, switches to All settings, and returns to Essentials
+- **THEN** the same unpublished theme remains in the draft and preview
+- **AND** no server update or preset activation occurs because of the mode switch
 
 ### Requirement: Studio inspector discloses appearance in layers
 The Studio inspector SHALL show essential look controls first: a visual theme picker for the supported overlay themes, font size for the selected surface, and chat message duration when chat is selected. Every appearance control that exists today SHALL remain reachable under an explicit More or Advanced disclosure, including spacing, platform marker, text edge, font family, line height, panel color and opacity, panel image and fit, borders, queue cap, reset-to-theme, and preset add/rename/duplicate/delete.
@@ -53,6 +70,8 @@ The Studio inspector SHALL show essential look controls first: a visual theme pi
 ### Requirement: Add to OBS is a dismissible setup sheet
 Studio SHALL offer an Add to OBS sheet that contains Browser Source install steps once, Follow-active copy for chat, leaderboard, and alerts, pinned-copy access, the operator-only message dock URL and Custom Browser Dock help, and source-specific options such as leaderboard period. The sheet SHALL open on the first visit to Studio in that browser or desktop webview until the operator dismisses it, and MUST remain reopenable from Studio afterward. Shared Browser Source steps MUST NOT be repeated once per source.
 
+Studio SHALL distinguish setup outcomes: closing the sheet only records that it was seen, Later records a skipped state, and Done records completion. Seen and skipped states SHALL keep a compact setup reminder in Essentials; completion SHALL hide that reminder. A persistent OBS setup action SHALL reopen the sheet in every state. Existing dismissed boolean preferences SHALL migrate without unexpectedly reopening onboarding.
+
 #### Scenario: First Studio visit
 - **WHEN** the operator opens Studio and has not dismissed Add to OBS in that browser or webview
 - **THEN** the sheet is shown with chat Browser Source steps and a chat Follow-active copy control
@@ -61,6 +80,16 @@ Studio SHALL offer an Add to OBS sheet that contains Browser Source install step
 - **WHEN** the operator dismisses Add to OBS and later opens the Add to OBS control
 - **THEN** the sheet opens again with the same copyable URLs
 - **AND** the next Studio visit in that browser or webview does not auto-open the sheet
+
+#### Scenario: Close is not completion
+- **WHEN** the operator closes the setup sheet with its close control, Escape, or backdrop
+- **THEN** the sheet does not auto-open on the next visit
+- **AND** Essentials keeps a compact OBS setup reminder that can reopen it
+
+#### Scenario: Mark setup done
+- **WHEN** the operator chooses Done
+- **THEN** the compact reminder is hidden
+- **AND** the persistent OBS setup action remains available
 
 #### Scenario: Copy alert URL from Add to OBS
 - **WHEN** the operator chooses Alerts in Add to OBS
@@ -81,8 +110,13 @@ Studio SHALL NOT include a toolbar hot control that activates `overlay.active_pr
 
 #### Scenario: Use on stream
 - **WHEN** the operator is editing a non-active look and activates Use on stream
-- **THEN** the client calls `POST /api/overlay/activate` with that look's `preset_id` without requiring Publish
+- **THEN** the client calls `POST /api/overlay/activate` with that look's `preset_id` when the Studio draft is clean
 - **AND** progress and success or failure are reported on that control
+
+#### Scenario: Unpublished look cannot activate stale settings
+- **WHEN** the operator is editing a non-active look and Studio has unpublished changes
+- **THEN** Use on stream is disabled
+- **AND** the UI explains that the look must be published first
 
 #### Scenario: Live still switches the on-air look
 - **WHEN** the operator selects a different active preset in the Live hot control
@@ -160,7 +194,9 @@ The admin SHALL distinguish hot actions that apply immediately, Studio fields th
 
 #### Scenario: Leave dirty Studio draft
 - **WHEN** the operator navigates away or closes the page with unpublished Studio edits
-- **THEN** the UI asks for confirmation before discarding those edits
+- **THEN** in-app workspace navigation uses a localized CommRelay confirmation dialog before discarding those edits
+- **AND** Cancel keeps the operator in Studio with the draft and previous focus intact
+- **AND** browser reload or window close may use the browser-required native `beforeunload` prompt
 
 #### Scenario: Edit cold setting
 - **WHEN** the operator changes language, sound, platform, proxy, or another Settings field
