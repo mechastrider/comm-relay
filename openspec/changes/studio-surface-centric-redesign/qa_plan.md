@@ -47,6 +47,8 @@ Dark/light admin rows only if the product exposes them. Overlay theme cards are 
 | admin-design-system / panel rhythm | Compare rail, preview, and inspector at 1440×900 and 1100×700 | Common top edge, panel insets, border/radius treatment, and section gaps; no visibly drifting panel headings | P0 |
 | admin-design-system / rail motion | Toggle rail expanded/collapsed, then repeat with reduced motion | Wide transition is smooth and interruptible; labels do not flash; reduced motion changes state immediately; compact layout is stable | P0 |
 | admin-and-dock / dirty navigation dialog | Edit a look, choose another workspace, Cancel, then repeat and Discard | Branded localized dialog replaces `window.confirm`; Cancel preserves draft/focus; Discard restores baseline and navigates | P0 |
+| admin-design-system / preview toolbar and disclosures | Open All settings at 1440×900; compare Replay/URL/copy/overflow, then open preview options and Advanced | Toolbar controls share one height/baseline; no visible Follow-active caption; both disclosures have clear field and group spacing; inspector is wider while preview remains dominant | P0 |
+| admin-design-system / narrow dirty dialog | Open a dirty-navigation prompt at 520×600 and 390×600 | Dialog and actions stay inside the viewport; no horizontal document scroll; long labels wrap or actions stack | P0 |
 
 ## Filesystem / IPC / Permission / Lifecycle Scenarios
 
@@ -102,3 +104,5 @@ Manual: Chromium against `go run ./cmd/comm-relay-server` with a temp config tha
 - Follow-up geometry smoke measured identical rail/preview/inspector top coordinates, heights, 12px panel insets, borders, and radii at 1440×900; at 1100×700 all three panel heights matched and the inspector body scrolled.
 - Rail motion sampling measured intermediate widths during the 220ms transition (`240 → 190 → 80 → 76px`); under `prefers-reduced-motion: reduce` it changed directly from 240px to 76px. Compact navigation remained three equal labeled columns.
 - Dirty navigation smoke verified the localized CommRelay dialog on side/bottom navigation and browser Back. Cancel preserved the dirty draft and restored navigation focus; Discard continued to Settings. At 390×844 the dialog stayed inside 19px side gutters with two stacked 44px actions and no horizontal overflow.
+- All-settings follow-up measured Replay, raw URL, copy, and overflow at the same `y=147` and `40px` height on 1440×900. The preview remained dominant at `564px` while the inspector expanded to `380px`; the visible Follow-active caption was absent and the URL kept its localized accessible name.
+- Preview options measured 12px panel padding and 12px field gaps; Advanced measured 16px row gaps with 12px horizontal/bottom padding. Dirty-dialog checks at 520×600, 390×600, and 320×568 kept the frame and both actions inside the viewport with no document or dialog horizontal overflow.

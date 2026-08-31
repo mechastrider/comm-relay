@@ -54,12 +54,22 @@ The preview SHALL expose loading and failed states outside the iframe. Failure S
 - **AND** retry reloads the same surface with the same unpublished draft
 
 ### Requirement: Studio panels share one visual grid
-The surface rail, preview, and inspector SHALL align to the same top edge and SHALL use one spacing rhythm for panel padding, internal section gaps, and control groups. Peer panels MUST use consistent border, radius, and surface treatment so the workspace reads as one editor rather than unrelated cards.
+The surface rail, preview, and inspector SHALL align to the same top edge and SHALL use one spacing rhythm for panel padding, internal section gaps, and control groups. Peer panels MUST use consistent border, radius, and surface treatment so the workspace reads as one editor rather than unrelated cards. On wide screens the inspector MAY grow beyond its base width while the preview remains the widest region. Preview overflow and Advanced SHALL provide clear spacing between adjacent fields and group boundaries.
 
 #### Scenario: Compare wide panel geometry
 - **WHEN** Studio is viewed at a wide desktop size
 - **THEN** the three primary panel shells start and end on common grid lines where their content permits
 - **AND** headings and first controls use matching insets
+
+#### Scenario: Align All-settings preview chrome
+- **WHEN** Studio is in All settings at a wide desktop size
+- **THEN** Replay, the selectable Follow-active URL, its copy action, and preview overflow share one control height and top baseline
+- **AND** the URL retains a localized accessible name without requiring a visible Follow-active caption
+
+#### Scenario: Dirty prompt fits the viewport
+- **WHEN** a localized dirty-navigation prompt opens in a narrow window
+- **THEN** its frame and both actions remain within the viewport without horizontal page scroll
+- **AND** long action labels wrap or the actions stack rather than overflowing
 
 ### Requirement: Surface rail collapse has purposeful motion
 Collapsing or expanding the wide surface rail SHALL animate the label and panel transition within 150–300 milliseconds without blocking input. Motion MUST NOT be the only indication of state, MUST avoid content flashing, and MUST be disabled when `prefers-reduced-motion: reduce` is active. Compact horizontal navigation MUST NOT inherit the wide collapse animation.

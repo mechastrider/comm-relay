@@ -116,3 +116,10 @@ No production Go, HTTP, or `config.json` schema work. Overlay activate/update co
 - [x] 11.2 Animate wide rail collapse/expand without label flashing or blocked input; disable the transition under reduced motion and on compact navigation.
 - [x] 11.3 Replace the Studio hash-navigation `window.confirm` with a localized design-system prompt dialog that preserves draft and focus on Cancel and continues navigation after Discard; keep native `beforeunload` only for reload/window close.
 - [x] 11.4 Add focused markup/behavior coverage and visually verify 1440×900, 1100×700, 390×844, dirty Cancel/Discard, rail motion, and reduced motion.
+
+## Refinement: preview toolbar, disclosure spacing, and responsive prompt
+
+- [x] 12.1 Keep All-settings Replay, URL, copy, and overflow on one control baseline; remove the visible Follow-active caption while preserving the input's localized accessible name.
+- [x] 12.2 Add internal spacing to preview options and Advanced, and widen the inspector only on wide screens while keeping preview dominant.
+- [x] 12.3 Make the dirty-navigation dialog and translated actions shrink, wrap, or stack without viewport overflow.
+- [x] 12.4 Add focused markup coverage and visually verify 1440×900, 520×600, and 390×600 geometry before rerunning the full required checks.

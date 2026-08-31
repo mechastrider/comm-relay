@@ -21,7 +21,7 @@ No native menu, tray, global shortcut, or new keyboard shortcut. In-document: Ta
 
 Wide layout: adaptive on-stream surface rail (chat, leaderboard, alerts) | dominant preview | layered inspector. The rail starts with icons and labels, can collapse to icons, and remembers the local preference. The three panel shells share a top edge, inset, border, and section-spacing rhythm. Rail collapse animates briefly on wide layouts and resolves immediately under reduced motion. Compact: horizontal labeled surface selector, preview, inspector. Preview iframe keeps a stable aspect box; chrome sits outside the iframe.
 
-Always-visible Essentials preview chrome: Replay and compact Follow-active copy for the selected surface. All settings additionally exposes selectable raw URL and an overflow with source size, custom width/height, backdrop (white / checkerboard / game footage / black), sample vs live chat (chat only), and pinned URL copy.
+Always-visible Essentials preview chrome: Replay and compact Follow-active copy for the selected surface. All settings additionally exposes a selectable raw URL with a localized accessible name and an overflow with source size, custom width/height, backdrop (white / checkerboard / game footage / black), sample vs live chat (chat only), and pinned URL copy. Replay, URL, copy, and overflow controls share one height and baseline; the visible Follow-active caption is omitted from this compact toolbar.
 
 Essentials inspector: look selection, visual theme choices, selected-surface font, chat duration or leaderboard period, and a contextual Alerts explanation when the surface has no dedicated controls. All settings reveals Advanced and preset CRUD. Look name and Publish sit in the Studio header. Use on stream appears only when the edited look is not `overlay.active_preset_id`, and is disabled while the draft is dirty.
 
@@ -70,7 +70,7 @@ Unchanged from the current Live contract.
 
 Surface controls use pressed-button semantics with visible selected state and names, not color alone. Arrow keys, Home, and End move and activate within the group. Collapsed icon controls retain names and hover/focus tooltips. Theme choices have accessible names matching localized theme labels. Icon-only overflow, OBS setup, Replay, and preset actions have names and hover/focus tooltips. OBS setup and Advanced trap nothing; Escape closes the sheet, records seen rather than completion, and returns focus to the opener. After opening Advanced, the operator can tab to every revealed field and to Publish. Focus moves to the Studio heading when entering `#studio`, consistent with other workspaces.
 
-The dirty-navigation dialog is labelled by its title, describes the unpublished draft, offers Cancel and a visually destructive Discard action, closes on Escape as Cancel, and returns focus to the navigation control that initiated the attempted workspace change.
+The dirty-navigation dialog is labelled by its title, describes the unpublished draft, offers Cancel and a visually destructive Discard action, closes on Escape as Cancel, and returns focus to the navigation control that initiated the attempted workspace change. Its frame and translated actions remain inside the viewport without horizontal page scroll; actions wrap or stack when space is insufficient.
 
 ## Scaling / Theme / Localization / Reduced Motion
 

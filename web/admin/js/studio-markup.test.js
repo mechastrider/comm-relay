@@ -23,6 +23,8 @@ assert.match(markup, /data-studio-add-to-obs-action="later"/);
 assert.match(markup, /data-studio-add-to-obs-action="done"/);
 assert.match(markup, /id="studio-discard-dialog"[^>]*class="prompt-dialog studio-discard-dialog"/);
 assert.match(markup, /id="studio-discard-confirm"[^>]*class="btn-physical btn-danger"/);
+assert.match(markup, /id="studio-follow-url"[^>]*data-i18n-aria-label="obs\.followActivePreset"/);
+assert.doesNotMatch(markup, /<label for="studio-follow-url"/);
 assert.doesNotMatch(studioScript, /window\.confirm\(/);
 assert.match(styles, /prefers-reduced-motion:\s*reduce/);
 

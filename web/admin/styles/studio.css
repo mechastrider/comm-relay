@@ -99,8 +99,9 @@
 }
 
 .studio-layout {
+  --studio-inspector-track: minmax(240px, 320px);
   display: grid;
-  grid-template-columns: 240px minmax(0, 2fr) minmax(240px, 320px);
+  grid-template-columns: 240px minmax(0, 2fr) var(--studio-inspector-track);
   align-items: stretch;
   gap: var(--primitive-space-4);
   flex: 1;
@@ -108,7 +109,7 @@
 }
 
 .studio-surface-rail--collapsed .studio-layout {
-  grid-template-columns: 76px minmax(0, 2fr) minmax(240px, 320px);
+  grid-template-columns: 76px minmax(0, 2fr) var(--studio-inspector-track);
 }
 
 .studio-surface-rail--motion-ready .studio-layout {
@@ -249,7 +250,27 @@
 }
 
 .studio-inspector-advanced[open] > summary {
-  margin-bottom: var(--primitive-space-3);
+  margin-bottom: var(--primitive-space-5);
+}
+
+.studio-inspector-advanced > .form {
+  gap: var(--primitive-space-7) var(--primitive-space-5);
+  padding: 0 var(--primitive-space-5) var(--primitive-space-5);
+}
+
+.studio-inspector-advanced > .form > .overlay-section-title {
+  margin-top: var(--primitive-space-2);
+  padding-top: var(--primitive-space-5);
+}
+
+.studio-inspector-advanced .overlay-group {
+  margin-top: var(--primitive-space-2);
+}
+
+.studio-inspector-advanced .overlay-group > .form,
+.studio-inspector-advanced .overlay-queue-group > .form {
+  gap: var(--primitive-space-5);
+  padding: 0 var(--primitive-space-5) var(--primitive-space-5);
 }
 
 .theme-picker {
@@ -675,6 +696,7 @@
 }
 
 .studio-preview-mount .overlay-preview-chrome__main {
+  --studio-preview-control-height: var(--touch-target-min);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -689,14 +711,19 @@
   margin: 0;
 }
 
-.studio-preview-mount .overlay-preview-follow label {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--subtle);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.studio-preview-mount .overlay-preview-chrome__main > .btn-physical,
+.studio-preview-mount .studio-copy-obs-link,
+.studio-preview-mount .overlay-preview-follow input,
+.studio-preview-mount .overlay-preview-follow .btn-physical,
+.studio-preview-mount .overlay-preview-overflow > .icon-btn {
+  width: auto;
+  height: var(--studio-preview-control-height);
+  min-height: var(--studio-preview-control-height);
+  max-height: var(--studio-preview-control-height);
+}
+
+.studio-preview-mount .overlay-preview-follow .obs-url-row {
+  align-items: stretch;
 }
 
 .studio-preview-mount .overlay-preview-overflow {
@@ -712,7 +739,7 @@
   width: min(22rem, calc(100vw - 2rem));
   max-height: min(70dvh, 30rem);
   overflow: auto;
-  padding: var(--primitive-space-3);
+  padding: var(--primitive-space-5);
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--surface-raised, #141418);
@@ -723,7 +750,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: end;
-  gap: var(--primitive-space-2);
+  gap: var(--primitive-space-5);
   margin: 0;
   padding: 0;
   border: 0;
@@ -734,7 +761,9 @@
 }
 
 .studio-preview-mount .studio-url-pinned {
-  margin-top: var(--primitive-space-2);
+  margin-top: var(--primitive-space-3);
+  padding-top: var(--primitive-space-5);
+  border-top: 1px solid var(--border);
 }
 
 .studio-preview-mount .overlay-preview-stage {
@@ -791,12 +820,27 @@
 }
 
 .studio-discard-dialog {
-  width: min(520px, calc(100vw - 32px));
+  width: min(520px, calc(100dvw - 24px));
+  max-width: calc(100dvw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
 }
 
 .studio-discard-dialog .prompt-dialog__frame {
+  width: 100%;
+  min-width: 0;
   gap: var(--primitive-space-3);
   padding: var(--primitive-space-5);
+}
+
+.studio-discard-dialog .prompt-dialog__message,
+.studio-discard-dialog .prompt-dialog__actions {
+  min-width: 0;
+}
+
+.studio-discard-dialog .prompt-dialog__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .studio-discard-dialog .dialog-kicker {
@@ -804,8 +848,12 @@
 }
 
 .studio-discard-dialog .prompt-dialog__actions .btn-physical {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding-inline: var(--primitive-space-4);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .studio-discard-dialog[open] .prompt-dialog__frame {
@@ -992,6 +1040,12 @@
   }
 }
 
+@media (min-width: 1360px) {
+  .studio-layout {
+    --studio-inspector-track: minmax(340px, 380px);
+  }
+}
+
 @media (max-width: 620px) {
   .studio-toolbar,
   .studio-toolbar__actions {
@@ -1005,6 +1059,7 @@
   }
 
   .studio-preview-mount .overlay-preview-chrome__main {
+    --studio-preview-control-height: var(--touch-target-narrow);
     flex-direction: column;
     align-items: stretch;
   }
@@ -1054,8 +1109,7 @@
   }
 
   .studio-discard-dialog .prompt-dialog__actions {
-    align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .studio-discard-dialog .prompt-dialog__actions .btn-physical {

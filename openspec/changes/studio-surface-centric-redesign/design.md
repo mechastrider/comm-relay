@@ -129,3 +129,7 @@ The rail, preview, and inspector use common panel padding and section gaps from 
 ### Dirty workspace navigation uses an in-product prompt
 
 Hash navigation away from Studio opens a native HTML `dialog` styled with the existing prompt component. Cancel restores focus and leaves the draft untouched; Discard restores the published baseline and continues to the requested workspace. The `beforeunload` handler remains for browser reload/window close because browsers require their own non-customizable warning there.
+
+### Preview chrome stays on one control baseline
+
+All-settings preview chrome omits the visible Follow-active caption: the selectable URL keeps a localized accessible name, while Replay, URL, copy, and overflow share one control height and baseline. Preview overflow and Advanced use larger internal spacing than the surrounding dense workspace. On wide screens the inspector grows modestly without overtaking the preview. The dirty-navigation dialog uses shrinkable content and wrapping actions so translated labels cannot create horizontal page scroll.
