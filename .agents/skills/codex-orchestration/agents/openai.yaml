@@ -1,0 +1,7 @@
+interface:
+  display_name: "Codex orchestration"
+  short_description: "Run the native Sol and Terra change loop"
+  default_prompt: "Use $codex-orchestration to plan, implement, verify, review, and close out this project change."
+
+policy:
+  allow_implicit_invocation: false
