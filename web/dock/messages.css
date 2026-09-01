@@ -113,10 +113,18 @@ body {
 }
 
 .message-list__time {
-  margin-left: auto;
   color: #777780;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.message-list__actions {
+  margin-left: auto;
+}
+
+.message-list__reward {
+  min-height: 22px;
+  font-size: 9px;
 }
 
 .message-list__delete {

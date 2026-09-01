@@ -8,6 +8,9 @@ import (
 	"github.com/muonsoft/errors"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/command"
+	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 // ClientSendBuffer is the per-client outbound queue capacity before messages are dropped.
@@ -15,20 +18,26 @@ const ClientSendBuffer = 64
 
 // Hub broadcasts chat events to connected WebSocket clients.
 type Hub struct {
-	mu      sync.Mutex
-	clients map[*wsClient]struct{}
-	bus     *bus.Bus
+	mu          sync.Mutex
+	clients     map[*wsClient]struct{}
+	bus         *bus.Bus
+	matcher     *command.Matcher
+	cfgStore    *config.Store
+	viewerStore *store.Store
 }
 
 // NewHub creates a WebSocket hub bound to the shared event bus.
-func NewHub(b *bus.Bus) (*Hub, error) {
+func NewHub(b *bus.Bus, matcher *command.Matcher, cfgStore *config.Store, viewerStore *store.Store) (*Hub, error) {
 	if b == nil {
 		return nil, errors.New("event bus is required")
 	}
 
 	return &Hub{
-		clients: make(map[*wsClient]struct{}),
-		bus:     b,
+		clients:     make(map[*wsClient]struct{}),
+		bus:         b,
+		matcher:     matcher,
+		cfgStore:    cfgStore,
+		viewerStore: viewerStore,
 	}, nil
 }
 
@@ -49,15 +58,27 @@ func (h *Hub) Run(ctx context.Context) {
 				continue
 			}
 
-			payload, err := chatMessageWirePayload(ev.Message)
-			if err != nil {
-				clog.Errorf(ctx, "chat wire payload: %w", err)
-				continue
-			}
-
-			h.broadcast(payload)
+			h.handleChatMessage(ctx, ev.Message)
 		}
 	}
+}
+
+func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
+	var matchedCmd *store.Command
+	if h.matcher != nil {
+		if cmd, ok := h.matcher.Lookup(msg.Message); ok {
+			matchedCmd = cmd
+		}
+	}
+
+	isCommand := matchedCmd != nil
+	payload, err := chatMessageWirePayload(msg, isCommand)
+	if err != nil {
+		clog.Errorf(ctx, "chat wire payload: %w", err)
+		return
+	}
+
+	h.broadcast(payload)
 }
 
 func (h *Hub) register(c *wsClient) {

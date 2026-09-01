@@ -1,0 +1,215 @@
+/* Live workspace: status strip, tabs, leaderboard table, statistics */
+
+.live-status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitive-space-3) var(--primitive-space-4);
+  flex-shrink: 0;
+  padding: var(--primitive-space-3) var(--primitive-space-5);
+  border-bottom: 1px solid var(--border-dark);
+  background: var(--surface);
+}
+
+.live-status-strip__clients {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--primitive-font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex: 1 1 auto;
+}
+
+.live-status-strip__preset {
+  display: flex;
+  align-items: center;
+  gap: var(--primitive-space-2);
+  min-width: 0;
+}
+
+.live-status-strip__preset label {
+  color: var(--muted);
+  font-size: var(--primitive-font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.live-active-preset {
+  min-width: 8rem;
+  max-width: 14rem;
+}
+
+.live-status-strip__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--primitive-space-2);
+  margin-left: auto;
+}
+
+.live-work-area {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.live-tab-panels {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.live-tab-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.live-region {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--primitive-space-4);
+}
+
+.live-leaderboard-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitive-space-2) var(--primitive-space-3);
+  flex-shrink: 0;
+  margin-bottom: var(--primitive-space-3);
+}
+
+.live-leaderboard-toolbar label {
+  color: var(--muted);
+  font-size: var(--primitive-font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.live-leaderboard-body {
+  position: relative;
+  flex: 1;
+  min-height: 12rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--primitive-font-size-md);
+}
+
+.data-table th,
+.data-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.data-table th {
+  color: var(--amber);
+  font-size: var(--primitive-font-size-sm);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.data-table__rank {
+  width: 3.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table__numeric {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.live-region-empty {
+  position: static;
+  display: block;
+  padding: var(--primitive-space-6) var(--primitive-space-3);
+  text-align: center;
+}
+
+.live-region-error {
+  margin-top: var(--primitive-space-3);
+}
+
+.live-statistics-list {
+  display: grid;
+  gap: var(--primitive-space-3);
+  margin: 0;
+}
+
+.live-statistics__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--primitive-space-3);
+  align-items: baseline;
+  padding: var(--primitive-space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface-raised);
+}
+
+.live-statistics__row dt {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--primitive-font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.live-statistics__row dd {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--primitive-font-size-lg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.live-statistics-partial {
+  flex-shrink: 0;
+  margin: 0 0 var(--primitive-space-3);
+}
+
+@media (max-width: 1100px) {
+  .live-status-strip {
+    gap: var(--primitive-space-2) var(--primitive-space-3);
+    padding-inline: var(--primitive-space-3);
+  }
+
+  .live-status-strip__actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .live-status-strip__preset {
+    flex: 1 1 100%;
+  }
+
+  .live-active-preset {
+    flex: 1;
+    max-width: none;
+  }
+}
+
+@media (max-width: 390px) {
+  .live-leaderboard-body {
+    overflow-x: auto;
+  }
+
+  .data-table {
+    min-width: 18rem;
+  }
+}

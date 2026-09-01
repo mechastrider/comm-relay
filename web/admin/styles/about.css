@@ -1,16 +1,42 @@
-.about-btn {
-  border-color: var(--amber-dim);
+.about-workspace {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--primitive-space-6) var(--primitive-space-8);
+  overflow: auto;
 }
 
-#about-dialog .about-panel {
-  margin: 12px;
-  padding: 14px 16px;
-  overflow: auto;
+.about-workspace__header {
+  flex-shrink: 0;
+  margin-bottom: var(--primitive-space-5);
+}
+
+.about-workspace__lead {
+  margin: var(--primitive-space-2) 0 0;
+  max-width: 42rem;
+}
+
+.about-workspace__body {
+  display: grid;
+  gap: var(--primitive-space-4);
+  max-width: 36rem;
+}
+
+.about-workspace__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitive-space-3);
 }
 
 .about-panel {
   display: grid;
   gap: 16px;
+  padding: var(--primitive-space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface-raised);
 }
 
 .about-identity {
@@ -94,21 +120,6 @@
 }
 
 .about-feedback {
-  align-self: center;
   color: var(--muted);
   font-size: 0.72rem;
-}
-
-.about-dialog .dialog-subtitle {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 0.78rem;
-  line-height: 1.4;
-}
-
-#about-dialog .dialog-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
 }

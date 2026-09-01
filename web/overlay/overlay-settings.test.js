@@ -91,6 +91,19 @@ test("hexToRgba converts 3 and 6 digit colors", function () {
   assert.equal(hexToRgba("#ffffff", 1), "rgba(255, 255, 255, 1)");
 });
 
+test("overlayViewFromConfig honors theme query for Studio preview", function () {
+  const view = overlayViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [{ id: "default", theme: "default" }],
+      },
+    },
+    new URLSearchParams("theme=cockpit_popups")
+  );
+  assert.equal(view.theme, "cockpit_popups");
+});
+
 test("overlayViewFromConfig uses query preset", function () {
   const view = overlayViewFromConfig(
     {

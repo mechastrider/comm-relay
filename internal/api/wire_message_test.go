@@ -22,7 +22,7 @@ func TestChatMessageWirePayload_WhenDisplayNameSet_ExpectSnakeCaseJSON(t *testin
 		AvatarURL:   "https://example.com/avatar.png",
 		Badges:      []string{"mod"},
 		Timestamp:   time.Date(2026, 6, 5, 10, 11, 12, 0, time.UTC),
-	})
+	}, false)
 	require.NoError(t, err)
 
 	var decoded map[string]any
@@ -60,7 +60,7 @@ func TestChatMessageWirePayload_WhenFragmentsSet_ExpectSnakeCaseJSON(t *testing.
 				Height:   28,
 			},
 		},
-	})
+	}, false)
 	require.NoError(t, err)
 
 	var decoded map[string]any
@@ -94,7 +94,7 @@ func TestChatMessageWirePayload_WhenUnknownFragmentType_ExpectMessageStillDelive
 		Fragments: []bus.MessageFragment{
 			{Type: "future_type", Text: "ignored by old clients"},
 		},
-	})
+	}, false)
 	require.NoError(t, err)
 
 	var decoded map[string]any

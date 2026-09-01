@@ -70,6 +70,25 @@ func TestNewHandlerRoutes(t *testing.T) {
 		require.Contains(t, cssRec.Body.String(), "background: transparent")
 	})
 
+	t.Run("alert overlay", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/overlay/alert", nil))
+		require.Equal(t, http.StatusOK, rec.Code)
+		body := rec.Body.String()
+		require.Contains(t, body, `id="alert-root"`)
+		require.NotContains(t, body, `id="messages"`)
+		require.NotContains(t, body, `id="leaderboard"`)
+
+		slashRec := httptest.NewRecorder()
+		handler.ServeHTTP(slashRec, httptest.NewRequest(http.MethodGet, "/overlay/alert/", nil))
+		require.Equal(t, http.StatusOK, slashRec.Code)
+
+		cssRec := httptest.NewRecorder()
+		handler.ServeHTTP(cssRec, httptest.NewRequest(http.MethodGet, "/overlay/alert/alert.css", nil))
+		require.Equal(t, http.StatusOK, cssRec.Code)
+		require.Contains(t, cssRec.Body.String(), "background: transparent")
+	})
+
 	t.Run("leaderboard overlay", func(t *testing.T) {
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/overlay/leaderboard", nil))

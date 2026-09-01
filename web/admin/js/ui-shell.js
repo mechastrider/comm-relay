@@ -1,6 +1,6 @@
 import * as dom from './dom.js';
 import { state } from './state.js';
-import { SIDEBAR_COLLAPSED_KEY, BANNER_SUCCESS_DISMISS_MS } from './constants.js';
+import { BANNER_SUCCESS_DISMISS_MS } from './constants.js';
 import { t } from './i18n-ui.js';
 import { translateFieldError } from '/shared/i18n.js?v=16';
 
@@ -14,7 +14,7 @@ export function showBanner(kind, message) {
       state.bannerTimer = null;
     }
     dom.banner.hidden = false;
-    dom.banner.className = "banner banner--" + kind;
+    dom.banner.className = "banner notice banner--" + kind;
     dom.banner.textContent = message;
     if (kind === "success") {
       state.bannerTimer = window.setTimeout(function () {
@@ -32,57 +32,6 @@ export function hideBanner() {
     dom.banner.hidden = true;
     dom.banner.textContent = "";
     dom.banner.className = "banner";
-  }
-
-export function readSidebarCollapsedPreference() {
-    try {
-      return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
-    } catch {
-      return false;
-    }
-  }
-
-export function writeSidebarCollapsedPreference(collapsed) {
-    try {
-      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "true" : "false");
-    } catch {
-      /* localStorage can be unavailable in locked-down browser contexts. */
-    }
-  }
-
-export function setSidebarCollapsed(collapsed, options) {
-    const shouldPersist = !options || options.persist !== false;
-    if (!dom.cockpitShell || !dom.sidebarToggle) {
-      return;
-    }
-
-    dom.cockpitShell.classList.toggle("sidebar-collapsed", collapsed);
-    dom.sidebarToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
-    dom.sidebarToggle.setAttribute(
-      "aria-label",
-      collapsed ? t("shell.expandPanel") : t("shell.collapsePanel")
-    );
-    dom.sidebarToggle.title = collapsed ? t("shell.expandPanel") : t("shell.collapsePanel");
-
-    const chevron = dom.sidebarToggle.querySelector(".sidebar-toggle__chevron");
-    if (chevron) {
-      chevron.textContent = collapsed ? "<" : ">";
-    }
-
-    if (shouldPersist) {
-      writeSidebarCollapsedPreference(collapsed);
-    }
-  }
-
-export function initSidebarToggle() {
-    if (!dom.cockpitShell || !dom.sidebarToggle) {
-      return;
-    }
-
-    setSidebarCollapsed(readSidebarCollapsedPreference(), { persist: false });
-    dom.sidebarToggle.addEventListener("click", function () {
-      setSidebarCollapsed(!dom.cockpitShell.classList.contains("sidebar-collapsed"));
-    });
   }
 
 export function setSaveButtonsDisabled(disabled) {

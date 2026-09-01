@@ -2,8 +2,8 @@
   display: flex;
   min-width: 0;
   min-height: 0;
+  flex: 1;
   flex-direction: column;
-  border-right: 2px solid var(--amber-dim);
 }
 
 .console-header {
@@ -15,6 +15,31 @@
   padding: 7px 12px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+}
+
+.console-header__start {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.console-tabs {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.canvas-panel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.canvas-panel[hidden] {
+  display: none !important;
 }
 
 .console-header h2,
@@ -161,7 +186,6 @@
 
 .message-list__delete {
   min-height: 24px;
-  margin-left: auto;
   padding: 2px 7px;
   border: 1px solid #71383d;
   border-radius: 3px;

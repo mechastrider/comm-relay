@@ -3,6 +3,7 @@ package desktopentry_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -43,10 +44,17 @@ func TestInstall_WhenValidOptions_ExpectDesktopAndIcon(t *testing.T) {
 
 	content := string(gotDesktop)
 	require.Contains(t, content, "Name=CommRelay\n")
-	require.Contains(t, content, "Exec="+execPath+"\n")
+	require.Contains(t, content, "Exec="+expectedDesktopExec(execPath)+"\n")
 	require.Contains(t, content, "Icon="+iconPath+"\n")
 	require.Contains(t, content, "StartupWMClass=CommRelay\n")
 	require.Contains(t, content, "Type=Application\n")
+}
+
+func expectedDesktopExec(path string) string {
+	if strings.ContainsAny(path, " \t\"'\\") {
+		return `"` + strings.ReplaceAll(path, `"`, `\"`) + `"`
+	}
+	return path
 }
 
 func TestInstall_WhenPathHasSpaces_ExpectQuotedExec(t *testing.T) {

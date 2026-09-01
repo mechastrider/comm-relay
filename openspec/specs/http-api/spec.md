@@ -17,12 +17,40 @@ API mutations SHALL use `POST /api/<resource>/<action>` with identifiers in the 
 - **WHEN** the operator deletes a chat line
 - **THEN** the client calls `POST /api/messages/delete` with `platform` and `id` in the JSON body
 
+#### Scenario: Viewer merge
+- **WHEN** the operator merges two viewers
+- **THEN** the client calls `POST /api/viewers/merge` with `from_id` and `into_id` in the JSON body
+
+#### Scenario: New stream session
+- **WHEN** the operator starts a new stream
+- **THEN** the client calls `POST /api/sessions/start`
+
+#### Scenario: Create command
+- **WHEN** the operator saves a new chat command
+- **THEN** the client calls `POST /api/commands/create`
+
+#### Scenario: Grant award
+- **WHEN** the operator rewards a viewer from a message
+- **THEN** the client calls `POST /api/awards/grant` with `platform`, `user_id`, and `award_id` in the JSON body
+
 ### Requirement: Reads, health, static, WebSocket, and OAuth callbacks may use GET
-The following GET routes SHALL remain available: `/`, `/overlay`, `/dock/messages`, `/shared/`, `/health`, `/ws`, `/api/config`, `/api/status`, `/api/diagnostics`, `/api/messages/recent`, `/overlay/assets/{filename}`, `/oauth/youtube/start`, and `/oauth/youtube/callback`.
+The following GET routes SHALL remain available: `/`, `/overlay`, `/overlay/leaderboard`, `/overlay/alert`, `/dock/messages`, `/shared/`, `/health`, `/ws`, `/api/config`, `/api/status`, `/api/diagnostics`, `/api/messages/recent`, `/api/viewers`, `/api/viewers/get`, `/api/leaderboard`, `/api/commands`, `/api/awards`, `/overlay/assets/{filename}`, `/oauth/youtube/start`, and `/oauth/youtube/callback`.
 
 #### Scenario: Status poll
 - **WHEN** the admin polls connector state
 - **THEN** it uses `GET /api/status`
+
+#### Scenario: Leaderboard snapshot
+- **WHEN** the leaderboard page loads
+- **THEN** it uses `GET /api/leaderboard` with a `period` query
+
+#### Scenario: List commands
+- **WHEN** the Audience commands view loads
+- **THEN** it uses `GET /api/commands`
+
+#### Scenario: Alert page
+- **WHEN** OBS loads the banners Browser Source
+- **THEN** it uses `GET /overlay/alert`
 
 ### Requirement: JSON uses snake_case
 Request and response objects SHALL use snake_case field names (`server_port`, `display_name`, `avatar_url`, `max_messages`).
@@ -52,3 +80,22 @@ Generic failures SHALL return `{"error":"<short message>"}`. Config validation f
 #### Scenario: HEIC upload
 - **WHEN** the admin uploads a HEIC image
 - **THEN** the response is 400 explaining that PNG or JPEG is required
+
+### Requirement: Active overlay preset has a targeted action
+`POST /api/overlay/activate` SHALL accept JSON body `{"preset_id":"<id>"}`, activate an existing preset without requiring a full config payload, and return the updated public config representation. A successful action MUST broadcast the existing `overlay_settings` event so unpinned overlays and other admin clients update.
+
+#### Scenario: Successful activation
+- **WHEN** the request names an existing preset
+- **THEN** the response is HTTP 200 with public config JSON, secrets are omitted, and connected WebSocket clients receive `overlay_settings`
+
+#### Scenario: Missing preset identifier
+- **WHEN** the request omits `preset_id` or sends it blank
+- **THEN** the response is HTTP 400 with a UI-safe error and configuration remains unchanged
+
+#### Scenario: Unknown preset identifier
+- **WHEN** the request names a preset that does not exist
+- **THEN** the response is HTTP 400 with a UI-safe error and configuration remains unchanged
+
+#### Scenario: Malformed activation JSON
+- **WHEN** the request body is not valid JSON
+- **THEN** the response is HTTP 400 with `{"error":"invalid JSON"}`

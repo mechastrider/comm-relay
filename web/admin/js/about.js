@@ -3,6 +3,7 @@ import { showBanner } from "./ui-shell.js";
 import { state } from "./state.js";
 import * as dom from "./dom.js";
 import { t } from "./i18n-ui.js";
+import { parseWorkspaceHash } from "./workspace-router.js";
 
 export const SUPPORT_TELEGRAM_URL = "https://t.me/mechastrider_apps/2";
 export const PROJECT_GITHUB_URL = "https://github.com/mechastrider/comm-relay";
@@ -61,14 +62,7 @@ async function copyAboutVersion() {
   }
 }
 
-export function initAboutDialog() {
-  document.querySelectorAll('[data-dialog-target="about-dialog"]').forEach(function (button) {
-    button.addEventListener("click", function () {
-      renderAboutVersion();
-      setAboutFeedback("");
-    });
-  });
-
+export function initAboutWorkspace() {
   if (dom.aboutTelegram) {
     dom.aboutTelegram.addEventListener("click", function () {
       void openSupportLink(SUPPORT_TELEGRAM_URL);
@@ -86,4 +80,11 @@ export function initAboutDialog() {
       void copyAboutVersion();
     });
   }
+
+  window.addEventListener("hashchange", function () {
+    if (parseWorkspaceHash(window.location.hash) === "about") {
+      renderAboutVersion();
+      setAboutFeedback("");
+    }
+  });
 }

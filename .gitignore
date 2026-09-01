@@ -31,6 +31,15 @@ var/
 # JavaScript dev tooling (ESLint)
 node_modules/
 
+# Python bytecode (agent skill scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Air (task web:dev)
+tmp/
+build-errors.log
+
 .agent-orchestration/
 comm-relay.db
 comm-relay.db-wal

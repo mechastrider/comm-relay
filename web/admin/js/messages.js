@@ -1,4 +1,5 @@
 import { createChatRender, safeImageURL, appendText } from '/shared/chat-render.js?v=12';
+import { createRewardControl, messageCanBeRewarded } from '/shared/reward-picker.js?v=1';
 import * as dom from './dom.js';
 import { state } from './state.js';
 import {
@@ -142,6 +143,7 @@ export function wireToAdminMessage(wire) {
     return {
       id: typeof wire.id === "string" ? wire.id : "",
       platform: typeof wire.platform === "string" ? wire.platform : "",
+      user_id: typeof wire.user_id === "string" ? wire.user_id : "",
       username: user,
       display_name: displayName,
       message: typeof wire.message === "string" ? wire.message : "",
@@ -291,6 +293,17 @@ export function buildMessageListItem(msg) {
     meta.appendChild(platform);
     meta.appendChild(time);
 
+    const actions = document.createElement("div");
+    actions.className = "message-list__actions";
+
+    if (messageCanBeRewarded(msg)) {
+      actions.appendChild(createRewardControl(msg, {
+        t: t,
+        resolveURL: apiURL,
+        displayName: messageDisplayName,
+      }));
+    }
+
     if (typeof msg.id === "string" && msg.id !== "") {
       const deleteButton = document.createElement("button");
       deleteButton.className = "message-list__delete";
@@ -300,7 +313,11 @@ export function buildMessageListItem(msg) {
       deleteButton.addEventListener("click", function () {
         deleteMessage(msg, deleteButton);
       });
-      meta.appendChild(deleteButton);
+      actions.appendChild(deleteButton);
+    }
+
+    if (actions.childElementCount > 0) {
+      meta.appendChild(actions);
     }
 
     const text = document.createElement("p");

@@ -7,15 +7,22 @@ import (
 	"strconv"
 
 	"github.com/muonsoft/clog"
+
+	"github.com/mechastrider/comm-relay/internal/command"
 )
 
 type messagesHandler struct {
 	history *MessageHistory
 	hub     *Hub
+	matcher *command.Matcher
 }
 
 func newMessagesHandler(history *MessageHistory, hub *Hub) *messagesHandler {
-	return &messagesHandler{history: history, hub: hub}
+	var matcher *command.Matcher
+	if hub != nil {
+		matcher = hub.matcher
+	}
+	return &messagesHandler{history: history, hub: hub, matcher: matcher}
 }
 
 type recentMessagesResponse struct {
@@ -31,8 +38,23 @@ func (h *messagesHandler) handleRecent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, recentMessagesResponse{
-		Messages: h.history.Recent(limit),
+		Messages: h.recentMessages(limit),
 	})
+}
+
+func (h *messagesHandler) recentMessages(limit int) []adminMessage {
+	messages := h.history.Recent(limit)
+	if h.matcher == nil {
+		return messages
+	}
+
+	for i := range messages {
+		if _, ok := h.matcher.Lookup(messages[i].Message); ok {
+			messages[i].IsCommand = true
+		}
+	}
+
+	return messages
 }
 
 type deleteMessageRequest struct {

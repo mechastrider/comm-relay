@@ -8,13 +8,13 @@ See also [`README.en.md`](../README.en.md) (installation, platform setup) and [`
 
 ## Support
 
-**Where to ask questions or report bugs:** write in the [Telegram support chat](https://t.me/mechastrider_apps/2) — it is the fastest channel. You can also write about an **OBS message theme** for your stream there. Source and issues are on [GitHub](https://github.com/mechastrider/comm-relay). In the CommRelay admin panel, links and the app version are in **Controls → About**.
+**Where to ask questions or report bugs:** write in the [Telegram support chat](https://t.me/mechastrider_apps/2) — it is the fastest channel. You can also write about an **OBS message theme** for your stream there. Source and issues are on [GitHub](https://github.com/mechastrider/comm-relay). In the CommRelay admin panel, links and the app version are in **Settings → About**.
 
 ## OBS overlay
 
 ### Black square instead of chat in OBS (Linux)
 
-**Symptoms:** CommRelay is running, the connector is `connected`, messages appear in the admin panel, the overlay URL was copied from **OBS → Setup**, but the **Browser** source shows a solid black rectangle with no text.
+**Symptoms:** CommRelay is running, the connector is `connected`, messages appear in the admin panel, the overlay URL was copied from **Studio**, but the **Browser** source shows a solid black rectangle with no text.
 
 **Fix (confirmed on Linux Mint):** disable Browser Source hardware acceleration in OBS.
 
@@ -58,9 +58,9 @@ Quick renderer check without live chat:
 http://127.0.0.1:17877/overlay?preview=sample&preview_background=checker
 ```
 
-In the admin preview (**OBS → Appearance**) you can switch the backdrop: white, checkerboard, game footage, or black, to check contrast on bright and dark scenes. The legacy query `preview_background=busy` is treated as game footage.
+In **Studio → All settings**, switch the backdrop from **Preview options** (⋯): white, checkerboard, game footage, or black, to check contrast on bright and dark scenes. The legacy query `preview_background=busy` is treated as game footage.
 
-To pin a look to an OBS scene, use a preset URL (copied on the **OBS → Setup** tab):
+To pin a look to an OBS scene, copy the **Pinned preset** URL from **OBS setup** or **Studio → All settings → Preview options** (⋯):
 
 ```
 http://127.0.0.1:17877/overlay?preset=default
@@ -68,17 +68,15 @@ http://127.0.0.1:17877/overlay?preset=default
 
 The overlay page background stays transparent: only the message card may be opaque.
 
-You should see sample messages.
-
-Sample messages should appear. The same mode exists in the admin panel: **OBS → Appearance → Preview**.
+You should see sample messages. The same mode exists in **Studio → Preview**.
 
 ### Messages in admin but not in overlay (browser and OBS)
 
-1. **Message TTL** — in **OBS → Appearance** set **0**, click **Save settings**. By default messages disappear after 20 seconds; old entries are not shown when opening the overlay.
+1. **Message TTL** — in **Studio** choose **Until replaced** (duration chip) or set a custom value in **Advanced**, then click **Publish**. By default messages disappear after 20 seconds; old entries are not shown when opening the overlay.
 2. **Text only theme** — light text on a transparent background is almost invisible in a normal browser. For testing choose **Default** or open `?preview_background=dark` (dark scene) or `?preview_background=white` (bright scene).
 3. **WebSocket** — at the bottom of the admin panel the **WS:** counter should be **2 or more** with `/overlay` open. In DevTools (F12) on the overlay tab check `ws://127.0.0.1:17877/ws`.
 4. **OBS cache** — after changing overlay settings: right-click the source → **Refresh cache of current page**.
-5. **URL and port** — copy the URL from **OBS → Setup**; if you changed the port in settings, update the Browser Source.
+5. **URL and port** — copy the URL from **OBS setup** or use **Copy OBS link** on the selected surface preview; if you changed the port in settings, update the Browser Source.
 
 ### OBS on Linux: Browser Source missing or empty (Flatpak)
 
@@ -90,7 +88,7 @@ Not every OBS build from distribution repositories includes a full Browser Sourc
 
 ### Is Google OAuth required for chat
 
-No, if public live chat is enough. By default CommRelay uses **Simple (video URL)**: set the channel handle (`@name`) or stream URL in **Connections** — no Google Cloud or account sign-in required.
+No, if public live chat is enough. By default CommRelay uses **Simple (video URL)**: set the channel handle (`@name`) or stream URL in **Settings → Platforms** — no Google Cloud or account sign-in required.
 
 ### Why Connect opens the system browser
 

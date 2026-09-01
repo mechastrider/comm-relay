@@ -7,7 +7,7 @@ import {
   normalizePreviewBackground,
   overlayAssetURL,
   overlayViewFromConfig
-} from "/overlay/overlay-settings.js?v=3";
+} from "/overlay/overlay-settings.js?v=4";
 
 "use strict";
 
@@ -111,7 +111,20 @@ import {
   };
   let overlayView = overlayViewFromConfig({ overlay: null }, params);
   let overlayAssetsRevision = Date.now();
+  let hideCommandMessages = false;
   let restyleRenderedMessages = function () {};
+
+  function applyOverlaySettingsFrame(frame) {
+    if (!frame || typeof frame !== "object") {
+      return;
+    }
+    if (typeof frame.hide_command_messages === "boolean") {
+      hideCommandMessages = frame.hide_command_messages;
+    }
+    if (frame.overlay && typeof frame.overlay === "object") {
+      applyServerOverlayConfig(frame.overlay);
+    }
+  }
 
   function applyServerOverlayConfig(serverOverlay) {
     if (!serverOverlay || typeof serverOverlay !== "object") {
@@ -345,6 +358,9 @@ import {
         return;
       }
       const payload = await response.json();
+      if (typeof payload.hide_command_messages === "boolean") {
+        hideCommandMessages = payload.hide_command_messages;
+      }
       applyServerOverlayConfig(payload && payload.overlay);
     } catch {
       /* keep URL/default config */
@@ -662,6 +678,9 @@ import {
     if (frame.type !== "message") {
       return;
     }
+    if (hideCommandMessages && frame.is_command) {
+      return;
+    }
     if (hasRenderedMessage(frame)) {
       return;
     }
@@ -712,7 +731,7 @@ import {
       return;
     }
     if (frame.type === "overlay_settings") {
-      applyServerOverlayConfig(frame.overlay);
+      applyOverlaySettingsFrame(frame);
       applyAppearance();
       restyleRenderedMessages();
       return;
@@ -744,6 +763,7 @@ import {
       avatar_url: typeof msg.avatar_url === "string" ? msg.avatar_url : "",
       fragments: Array.isArray(msg.fragments) ? msg.fragments : [],
       timestamp: typeof msg.timestamp === "string" ? msg.timestamp : "",
+      is_command: msg.is_command === true,
     };
   }
 

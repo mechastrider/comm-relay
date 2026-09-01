@@ -1,0 +1,52 @@
+version: "3"
+
+vars:
+  AIR_VERSION: v1.61.7
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  tools:install:
+    desc: Install dev tools (Air) and npm dependencies
+    cmds:
+      - go install github.com/air-verse/air@{{.AIR_VERSION}}
+      - npm ci
+
+  web:dev:
+    desc: Dev stack — Air (Go reload) + live reload for web/ at http://127.0.0.1:17878
+    deps: [tools:ensure-air, tools:ensure-node]
+    cmds:
+      - task: web:dev:parallel
+
+  web:dev:parallel:
+    internal: true
+    deps:
+      - web:dev:server
+      - web:dev:live
+
+  web:dev:server:
+    internal: true
+    cmds:
+      - air -c .air.toml
+
+  web:dev:live:
+    internal: true
+    cmds:
+      - npm run dev:live
+
+  tools:ensure-air:
+    internal: true
+    status:
+      - air -v
+    cmds:
+      - task: tools:install
+
+  tools:ensure-node:
+    internal: true
+    status:
+      - node -e "require('node:fs').accessSync('node_modules/browser-sync')"
+    cmds:
+      - npm ci

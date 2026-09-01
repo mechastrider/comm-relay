@@ -1,0 +1,37 @@
+# Live reload for comm-relay-server (backend + embedded API).
+# Run: task web:dev
+# Open http://127.0.0.1:17878 for admin with CSS/JS/HTML live reload (proxies :17877).
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/comm-relay-server.exe ./cmd/comm-relay-server"
+  bin = "./tmp/comm-relay-server.exe"
+  args_bin = ["-web", "./web", "-debug"]
+  delay = 500
+  include_dir = ["cmd/comm-relay-server", "internal"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "node_modules", "web", "docs", "openspec", "build", "var", "logs"]
+  exclude_regex = ["_test\\.go$"]
+  include_ext = ["go", "mod", "sum"]
+  kill_delay = "2s"
+  log = "build-errors.log"
+  send_interrupt = true
+  stop_on_error = true
+
+[color]
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  time = true
+
+[misc]
+  clean_on_exit = true
+
+[screen]
+  clear_on_rebuild = true
+  keep_scroll = true

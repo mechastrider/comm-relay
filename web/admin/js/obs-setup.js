@@ -2,31 +2,17 @@ import * as dom from "./dom.js";
 import { state } from "./state.js";
 import { apiURL } from "./api.js";
 import { mountOverlayPreview, unmountOverlayPreview, applyPreviewSurface } from "./overlay-preview.js";
-import { getActivePresetID, currentLeaderboardURL, updatePresetIsland } from "./overlay-appearance.js";
-import { buildObsOverlayURL } from "./overlay-url.js";
+import { updatePresetIsland } from "./overlay-appearance.js";
 import { t } from "./i18n-ui.js";
 
 export function updateOBSSetupURLs() {
   document.querySelectorAll("[data-obs-url-path]").forEach(function (input) {
     input.value = apiURL(input.dataset.obsUrlPath || "/");
   });
-  const overlayUrl = buildObsOverlayURL(getActivePresetID());
-  if (dom.obsOverlayUrl) {
-    dom.obsOverlayUrl.value = overlayUrl;
-  }
-  if (dom.obsOverlayOpen) {
-    dom.obsOverlayOpen.href = overlayUrl;
-  }
   if (dom.obsDockOpen) {
     dom.obsDockOpen.href = apiURL("/dock/messages");
   }
-  const leaderboardUrl = currentLeaderboardURL();
-  if (dom.obsLeaderboardUrl) {
-    dom.obsLeaderboardUrl.value = leaderboardUrl;
-  }
-  if (dom.obsLeaderboardOpen) {
-    dom.obsLeaderboardOpen.href = leaderboardUrl;
-  }
+  updatePresetIsland();
 }
 
 function copyButtonLabel(button) {
@@ -66,9 +52,15 @@ export function showOBSCopyFeedback(button, message, copied) {
   button.dataset.copyDefaultText = button.dataset.copyDefaultText || copyButtonLabel(button) || t("obs.copyUrl");
   setCopyButtonLabel(button, copied ? t("obs.copyCopied") : t("obs.copyFailed"));
   state.obsCopyFeedbackButton = button;
-  if (dom.obsCopyStatus) {
-    dom.obsCopyStatus.textContent = message;
-    dom.obsCopyStatus.classList.toggle("obs-copy-status--error", !copied);
+  const statusEl =
+    button.closest("#studio-add-to-obs-dialog") && dom.studioAddToObsCopyStatus
+      ? dom.studioAddToObsCopyStatus
+      : button.closest("#workspace-studio") && dom.studioCopyStatus
+        ? dom.studioCopyStatus
+        : dom.obsCopyStatus;
+  if (statusEl) {
+    statusEl.textContent = message;
+    statusEl.classList.toggle("obs-copy-status--error", !copied);
   }
   state.obsCopyFeedbackTimer = window.setTimeout(function () {
     resetOBSCopyFeedback();
@@ -103,6 +95,12 @@ export async function copyOBSURL(input) {
 }
 
 export function setOBSSection(section, options) {
+  if (dom.studioWorkspace && dom.studioWorkspace.classList.contains("workspace--active")) {
+    if (section === "appearance") {
+      mountOverlayPreview();
+    }
+    return;
+  }
   const tabs = [
     { id: "setup", tab: dom.obsSetupTab, panel: dom.obsSetupPanel },
     { id: "appearance", tab: dom.obsAppearanceTab, panel: dom.obsAppearancePanel },
@@ -142,7 +140,7 @@ export function setOBSSection(section, options) {
   }
 }
 
-function bindCopyButtons(root) {
+export function bindCopyButtons(root) {
   if (!root) {
     return;
   }
@@ -168,27 +166,46 @@ function bindCopyButtons(root) {
 }
 
 export function initOBSSetup() {
-  if (!dom.overlayDialog || !dom.obsSetupTab || !dom.obsAppearanceTab) {
+  if (!dom.obsSetupPanel) {
     return;
   }
 
   updateOBSSetupURLs();
   document.addEventListener("overlay-preview-refresh", updateOBSSetupURLs);
-  setOBSSection("setup");
+  if (dom.obsSetupTab && dom.obsAppearanceTab) {
+    setOBSSection("setup");
+  }
 
-  dom.overlayDialog.querySelectorAll("[data-obs-section]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      const sourceButton = button.closest("[data-obs-source-pane]");
-      const pane = sourceButton && sourceButton.getAttribute("data-obs-source-pane");
-      if (button.dataset.obsSection === "appearance" && (pane === "leaderboard" || pane === "chat")) {
-        applyPreviewSurface(pane);
-        updatePresetIsland();
+  bindCopyButtons(dom.obsSetupPanel);
+  if (dom.studioWorkspace) {
+    bindCopyButtons(dom.studioWorkspace);
+  }
+
+  function bindObsSectionButtons(root) {
+    if (!root) {
+      return;
+    }
+    root.querySelectorAll("[data-obs-section]").forEach(function (button) {
+      if (button.dataset.obsSectionBound === "true") {
+        return;
       }
-      setOBSSection(button.dataset.obsSection, {
-        focusTab: button.getAttribute("role") !== "tab",
+      button.dataset.obsSectionBound = "true";
+      button.addEventListener("click", function () {
+        const sourceButton = button.closest("[data-obs-source-pane]");
+        const pane = sourceButton && sourceButton.getAttribute("data-obs-source-pane");
+        if (button.dataset.obsSection === "appearance" && (pane === "leaderboard" || pane === "chat" || pane === "alerts")) {
+          applyPreviewSurface(pane);
+          updatePresetIsland();
+        }
+        setOBSSection(button.dataset.obsSection, {
+          focusTab: button.getAttribute("role") !== "tab",
+        });
       });
     });
-  });
+  }
+
+  bindObsSectionButtons(dom.overlayDialog);
+  bindObsSectionButtons(dom.obsSetupPanel);
 
   const tabs = [dom.obsSetupTab, dom.obsAppearanceTab].filter(Boolean);
   tabs.forEach(function (tab) {
@@ -216,7 +233,8 @@ export function initOBSSetup() {
   bindCopyButtons(dom.overlayDialog);
 
   function setOBSSource(name) {
-    const source = name === "leaderboard" || name === "dock" ? name : "chat";
+    const source =
+      name === "leaderboard" || name === "dock" || name === "alerts" ? name : "chat";
     document.querySelectorAll("[data-obs-source]").forEach(function (button) {
       if (button.disabled) {
         return;
@@ -245,6 +263,20 @@ export function initOBSSetup() {
       }
       if (summary) {
         summary.textContent = t("obs.leaderboardSummary");
+      }
+      if (eyebrow) {
+        eyebrow.textContent = t("obs.browserSource");
+      }
+      if (badge) {
+        badge.textContent = t("obs.visibleToViewers");
+        badge.classList.add("obs-audience-badge--live");
+      }
+    } else if (source === "alerts") {
+      if (title) {
+        title.textContent = t("obs.alerts");
+      }
+      if (summary) {
+        summary.textContent = t("obs.alertsSummary");
       }
       if (eyebrow) {
         eyebrow.textContent = t("obs.browserSource");
@@ -301,11 +333,13 @@ export function initOBSSetup() {
     dom.overlayLeaderboardPeriod.addEventListener("change", updateOBSSetupURLs);
   }
 
-  dom.overlayDialog.addEventListener("close", function () {
-    resetOBSCopyFeedback();
-    if (dom.obsCopyStatus) {
-      dom.obsCopyStatus.textContent = "";
-      dom.obsCopyStatus.classList.remove("obs-copy-status--error");
-    }
-  });
+  if (dom.overlayDialog) {
+    dom.overlayDialog.addEventListener("close", function () {
+      resetOBSCopyFeedback();
+      if (dom.obsCopyStatus) {
+        dom.obsCopyStatus.textContent = "";
+        dom.obsCopyStatus.classList.remove("obs-copy-status--error");
+      }
+    });
+  }
 }

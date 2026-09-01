@@ -7,6 +7,7 @@ import { createErrorDetailTrigger, hideErrorPopover } from './ui-error-popover.j
 import { showBanner } from './ui-shell.js';
 import { renderAboutVersion } from './about.js';
 import { t, rememberDiagnosticsPayload } from './i18n-ui.js';
+import { renderLiveDiagnostics } from './live-status.js';
 
 export function renderPlatformStatus(el, platform) {
     const platformState = typeof platform.state === "string" ? platform.state : "unknown";
@@ -76,10 +77,14 @@ export function renderStatus(status) {
 
     if (youtube.connection_mode === "page") {
       if (youtube.channel) {
-        dom.youtubeOAuthLabel.textContent = t("status.simpleChannel", { channel: youtube.channel });
+        if (dom.youtubeOAuthLabel) {
+          dom.youtubeOAuthLabel.textContent = t("status.simpleChannel", { channel: youtube.channel });
+        }
       } else if (youtube.video_id) {
-        dom.youtubeOAuthLabel.textContent = t("status.simpleVideo", { id: youtube.video_id });
-      } else {
+        if (dom.youtubeOAuthLabel) {
+          dom.youtubeOAuthLabel.textContent = t("status.simpleVideo", { id: youtube.video_id });
+        }
+      } else if (dom.youtubeOAuthLabel) {
         dom.youtubeOAuthLabel.textContent = t("status.simpleFallback");
       }
       if (dom.youtubeConnect) {
@@ -87,8 +92,10 @@ export function renderStatus(status) {
       }
     } else {
       if (youtube.oauth_connected) {
-        dom.youtubeOAuthLabel.textContent = t("status.apiConnected");
-      } else {
+        if (dom.youtubeOAuthLabel) {
+          dom.youtubeOAuthLabel.textContent = t("status.apiConnected");
+        }
+      } else if (dom.youtubeOAuthLabel) {
         dom.youtubeOAuthLabel.textContent = t("status.apiNotConnected");
       }
       if (dom.youtubeConnect) {
@@ -240,20 +247,33 @@ export function renderDiagnostics(payload) {
       state.appVersion = payload.app_version;
       renderAboutVersion();
     }
+    const uptimeText = formatUptime(payload.uptime_seconds);
+    const clients = payload.websocket_clients;
+    const wsText = typeof clients === "number" ? String(clients) : "-";
+    const messageText = formatMessageCounts(payload.message_counts);
+
     if (dom.diagUptime) {
-      dom.diagUptime.textContent = formatUptime(payload.uptime_seconds);
+      dom.diagUptime.textContent = uptimeText;
+    }
+    if (dom.settingsDiagUptime) {
+      dom.settingsDiagUptime.textContent = uptimeText;
     }
     if (dom.diagWsClients) {
-      const clients = payload.websocket_clients;
-      dom.diagWsClients.textContent =
-        typeof clients === "number" ? String(clients) : "-";
+      dom.diagWsClients.textContent = wsText;
+    }
+    if (dom.settingsDiagWsClients) {
+      dom.settingsDiagWsClients.textContent = wsText;
     }
     if (dom.diagMessageCounts) {
-      dom.diagMessageCounts.textContent = formatMessageCounts(payload.message_counts);
+      dom.diagMessageCounts.textContent = messageText;
+    }
+    if (dom.settingsDiagMessageCounts) {
+      dom.settingsDiagMessageCounts.textContent = messageText;
     }
     if (payload.connectors) {
       renderStatus(payload.connectors);
     }
+    renderLiveDiagnostics(payload);
     renderEmoteDiagnostics(payload.emote_cache);
   }
 
@@ -282,5 +302,6 @@ export function handleOAuthQuery() {
       const query = params.toString();
       const next = window.location.pathname + (query ? "?" + query : "");
       window.history.replaceState({}, "", next);
+      window.location.hash = "#settings/platforms";
     }
   }

@@ -1,5 +1,5 @@
-@media (max-width: 760px) {
-  .top-bar {
+@media (max-width: 1023px) {
+  .shell-header {
     align-items: stretch;
     flex-wrap: wrap;
   }
@@ -13,7 +13,7 @@
     flex-basis: 100%;
   }
 
-  .top-actions {
+  .shell-header__actions {
     margin-left: auto;
   }
 }
@@ -23,50 +23,27 @@
     overflow: auto;
   }
 
-  .cockpit-shell {
+  .app-shell {
     position: static;
     min-height: 100vh;
+    min-height: 100dvh;
     margin: 6px;
   }
 
-  .main-area {
-    grid-template-columns: 1fr;
+  .live-cockpit .main-area,
+  .cockpit-shell .main-area {
     overflow: visible;
   }
 
-  .banner {
+  .live-cockpit .banner,
+  .cockpit-shell .banner {
     position: static;
     margin: 10px;
   }
 
   .console-panel {
     min-height: 68vh;
-    border-right: 0;
     border-bottom: 2px solid var(--amber-dim);
-  }
-
-  .systems-panel {
-    grid-template-columns: 1fr;
-    max-height: none;
-  }
-
-  .cockpit-shell.sidebar-collapsed .systems-panel {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar-toggle {
-    grid-template-columns: auto auto;
-    grid-template-rows: 1fr;
-    gap: 8px;
-    min-height: 44px;
-    border-right: 0;
-    border-bottom: 1px solid var(--border-dark);
-  }
-
-  .sidebar-toggle__label {
-    align-self: center;
-    margin-top: 0;
-    writing-mode: horizontal-tb;
   }
 
   .form--compact {
@@ -155,10 +132,23 @@
     flex-wrap: wrap;
     white-space: normal;
   }
+
+  .shell-nav--bottom {
+    position: fixed;
+    right: 6px;
+    bottom: 6px;
+    left: 6px;
+    z-index: 40;
+    box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.38);
+  }
+
+  .workspace-host {
+    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (max-width: 620px) {
-  .top-bar,
+  .shell-header,
   .console-header,
   .dialog-header,
   .dialog-actions {
@@ -167,7 +157,7 @@
   }
 
   .connector-rack,
-  .top-actions,
+  .shell-header__actions,
   .console-actions,
   .dialog-actions {
     width: 100%;
@@ -206,6 +196,18 @@
     grid-template-columns: 1fr;
   }
 
+  .shell-header .connector-rack {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .shell-header .indicator {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    width: auto;
+  }
+
   .dialog-tab {
     width: 100%;
   }
@@ -220,16 +222,57 @@
   }
 
   .connector-rack,
-  .top-actions,
+  .shell-header__actions,
   .console-actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .live-status-strip .live-status-strip__connectors {
+    display: none;
   }
 
   .indicator,
   .btn-physical,
   .button-secondary {
     width: 100%;
+  }
+
+  .btn-small,
+  .button-secondary--small,
+  .dialog-tab,
+  .settings-nav__link,
+  .icon-btn {
+    min-height: var(--touch-target-narrow);
+  }
+
+  .btn-physical,
+  .button-secondary,
+  .console-tabs .dialog-tab,
+  .surface-tab,
+  .settings-nav__link,
+  .shell-nav__link,
+  .control-grid .btn-physical,
+  .about-link-btn,
+  .skip-link {
+    min-height: var(--touch-target-narrow);
+  }
+
+  input[type="text"],
+  input[type="search"],
+  input[type="password"],
+  input[type="number"],
+  input[type="url"],
+  input[type="file"],
+  input[type="color"],
+  input[type="range"],
+  select {
+    min-height: var(--touch-target-narrow) !important;
+    max-height: none !important;
+  }
+
+  .icon-btn {
+    min-width: var(--touch-target-narrow);
   }
 
   .message-panel {

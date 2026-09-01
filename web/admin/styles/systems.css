@@ -1,64 +1,12 @@
-.systems-panel {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  padding: 0;
-  background: var(--surface);
-  transition: grid-template-columns 160ms ease;
+.panel-heading--actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--primitive-space-3);
 }
 
-.cockpit-shell.sidebar-collapsed .systems-panel {
-  grid-template-columns: 34px 0;
-}
-
-.sidebar-toggle {
-  display: grid;
-  grid-template-rows: 32px 1fr;
-  place-items: center;
-  min-width: 34px;
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  border-right: 1px solid var(--border-dark);
-  background: var(--surface-raised);
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.sidebar-toggle:hover {
-  color: var(--amber);
-}
-
-.sidebar-toggle__chevron {
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.sidebar-toggle__label {
-  align-self: start;
-  margin-top: 18px;
-  color: currentColor;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  writing-mode: vertical-rl;
-}
-
-.systems-panel__content {
-  min-width: 0;
-  overflow: auto;
-  padding: 10px;
-  transition: opacity 120ms ease, visibility 120ms ease;
-}
-
-.cockpit-shell.sidebar-collapsed .systems-panel__content {
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
+.panel-heading--actions h2 {
+  margin: 0;
 }
 
 .panel-heading {
@@ -191,72 +139,6 @@
   line-height: 1.45;
   overflow-wrap: anywhere;
   pointer-events: none;
-}
-
-.control-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.control-grid .btn-physical {
-  min-width: 0;
-  min-height: 34px;
-  padding: 5px 6px;
-  font-size: 10px;
-  letter-spacing: 0.6px;
-}
-
-.control-grid-about {
-  display: grid;
-  gap: 2px;
-  align-content: center;
-  min-height: 40px;
-  padding: 5px 6px;
-  text-align: left;
-}
-
-.control-grid-about > span {
-  font-size: 10px;
-  letter-spacing: 0.6px;
-  line-height: 1.1;
-}
-
-.control-grid-about small {
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 7px;
-  letter-spacing: 0.4px;
-  line-height: 1.2;
-}
-
-.status-bar {
-  min-height: 34px;
-  padding: 5px 16px;
-  border-top: 2px solid var(--amber-dim);
-  font-size: 11px;
-  letter-spacing: 0.4px;
-  white-space: nowrap;
-}
-
-.status-bar strong {
-  color: var(--text);
-  font-weight: 700;
-}
-
-.status-bar .tag {
-  padding: 2px 8px;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  background: var(--surface-raised);
-  color: var(--amber);
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
-.status-bar__spacer {
-  flex: 1;
 }
 
 .status-pill {

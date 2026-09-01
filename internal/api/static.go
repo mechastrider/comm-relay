@@ -17,6 +17,7 @@ type staticRoots struct {
 	dock        fs.FS
 	overlay     fs.FS
 	leaderboard fs.FS
+	alert       fs.FS
 	shared      fs.FS
 }
 
@@ -41,12 +42,16 @@ func resolveStaticRoots(webRoot string) (staticRoots, error) {
 	if err != nil {
 		return staticRoots{}, errors.Errorf("embedded leaderboard assets: %w", err)
 	}
+	alert, err := fs.Sub(webstatic.FS, "alert")
+	if err != nil {
+		return staticRoots{}, errors.Errorf("embedded alert assets: %w", err)
+	}
 	shared, err := fs.Sub(webstatic.FS, "shared")
 	if err != nil {
 		return staticRoots{}, errors.Errorf("embedded shared assets: %w", err)
 	}
 
-	return staticRoots{admin: admin, dock: dock, overlay: overlay, leaderboard: leaderboard, shared: shared}, nil
+	return staticRoots{admin: admin, dock: dock, overlay: overlay, leaderboard: leaderboard, alert: alert, shared: shared}, nil
 }
 
 func staticRootsFromDisk(webRoot string) (staticRoots, error) {
@@ -70,6 +75,11 @@ func staticRootsFromDisk(webRoot string) (staticRoots, error) {
 		return staticRoots{}, err
 	}
 
+	alertDir := filepath.Join(webRoot, "alert")
+	if _, err := os.Stat(filepath.Join(alertDir, "index.html")); err != nil {
+		return staticRoots{}, err
+	}
+
 	sharedDir := filepath.Join(webRoot, "shared")
 	if _, err := os.Stat(filepath.Join(sharedDir, "chat-render.js")); err != nil {
 		return staticRoots{}, err
@@ -80,6 +90,7 @@ func staticRootsFromDisk(webRoot string) (staticRoots, error) {
 		dock:        os.DirFS(dockDir),
 		overlay:     os.DirFS(overlayDir),
 		leaderboard: os.DirFS(leaderboardDir),
+		alert:       os.DirFS(alertDir),
 		shared:      os.DirFS(sharedDir),
 	}, nil
 }

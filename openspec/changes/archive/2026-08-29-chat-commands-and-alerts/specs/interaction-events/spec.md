@@ -1,0 +1,37 @@
+## Purpose
+
+Records command fires and operator awards as append-only events so later achievements can be computed retrospectively.
+
+## ADDED Requirements
+
+### Requirement: Successful command fires are logged
+When a command matches and is not suppressed by cooldown, the system SHALL append an event with kind `command`, the command trigger, canonical `viewer_id` when known, `points` 0, and a timestamp. Cooldown-suppressed matches MUST NOT be logged.
+
+#### Scenario: Gg fires
+- **WHEN** identity `twitch`/`42` successfully fires `gg`
+- **THEN** an interaction event exists with kind `command`, trigger `gg`, and that viewer
+
+#### Scenario: Cooldown skip
+- **WHEN** `!gg` is ignored because of cooldown
+- **THEN** no new interaction event is appended
+
+### Requirement: Successful awards are logged
+When `POST /api/awards/grant` succeeds, the system SHALL append an event with kind `award`, the award id, `points`, canonical `viewer_id`, optional source message `platform` and `id` when provided, and a timestamp.
+
+#### Scenario: Advice grant
+- **WHEN** the operator grants Advice to a viewer
+- **THEN** an interaction event exists with kind `award`, that award id, and `points` 50
+
+### Requirement: Events are durable and not a chat archive
+Events SHALL live in SQLite beside other viewer data. The system MUST NOT persist full chat text in this log. This change MUST NOT require an admin UI to browse the log. The system MAY expose no public GET for events in this change.
+
+#### Scenario: Restart
+- **WHEN** the process restarts after a grant
+- **THEN** the award event is still present in the database
+
+### Requirement: Merge does not delete historical events
+When two viewers are merged, existing events SHALL keep their original `viewer_id` or SHALL be rewritten to the surviving viewer. Either behavior MUST be documented in design; silent deletion of events is forbidden.
+
+#### Scenario: Merge after awards
+- **WHEN** viewer A has award events and is merged into viewer B
+- **THEN** those events remain queryable for achievement work and are not dropped
