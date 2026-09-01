@@ -1,0 +1,60 @@
+:root {
+  /* Color primitives */
+  --primitive-gray-950: #08080a;
+  --primitive-gray-900: #0d0d10;
+  --primitive-gray-850: #101013;
+  --primitive-gray-800: #111114;
+  --primitive-gray-750: #151518;
+  --primitive-gray-700: #171719;
+  --primitive-gray-650: #202025;
+  --primitive-gray-600: #242428;
+  --primitive-gray-550: #28282c;
+  --primitive-gray-500: #2e2e34;
+  --primitive-gray-450: #333338;
+  --primitive-gray-400: #3a3a3e;
+  --primitive-gray-350: #444448;
+  --primitive-gray-300: #66666c;
+  --primitive-gray-200: #727278;
+  --primitive-gray-150: #98989f;
+  --primitive-gray-100: #d9d9dd;
+
+  --primitive-amber-500: #d4a017;
+  --primitive-amber-700: #8a6a10;
+  --primitive-green-500: #33cc66;
+  --primitive-green-700: #1c6e3a;
+  --primitive-red-500: #ff6268;
+  --primitive-red-700: #962428;
+  --primitive-yellow-500: #ffcc00;
+  --primitive-blue-500: #2f5f8f;
+
+  /* Typography */
+  --primitive-font-mono: Consolas, "Courier New", monospace;
+  --primitive-font-size-2xs: 9px;
+  --primitive-font-size-xs: 10px;
+  --primitive-font-size-sm: 11px;
+  --primitive-font-size-md: 12px;
+  --primitive-font-size-lg: 14px;
+  --primitive-font-size-xl: 18px;
+
+  /* Spacing */
+  --primitive-space-1: 4px;
+  --primitive-space-2: 6px;
+  --primitive-space-3: 8px;
+  --primitive-space-4: 10px;
+  --primitive-space-5: 12px;
+  --primitive-space-6: 14px;
+  --primitive-space-7: 16px;
+  --primitive-space-8: 20px;
+
+  /* Radius */
+  --primitive-radius-sm: 2px;
+  --primitive-radius-md: 3px;
+
+  /* Shadow */
+  --primitive-shadow-lg: 0 22px 42px rgba(0, 0, 0, 0.36);
+
+  /* Motion */
+  --primitive-duration-fast: 120ms;
+  --primitive-duration-normal: 160ms;
+  --primitive-ease-standard: ease;
+}

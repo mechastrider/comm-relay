@@ -17,6 +17,31 @@
   background: var(--surface);
 }
 
+.console-header__start {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.console-tabs {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.canvas-panel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.canvas-panel[hidden] {
+  display: none !important;
+}
+
 .console-header h2,
 .panel-heading h2,
 .dialog-header h2 {

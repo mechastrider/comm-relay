@@ -1,0 +1,130 @@
+.studio-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-space-4);
+  min-height: 0;
+  height: 100%;
+}
+
+.studio-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--primitive-space-3);
+}
+
+.studio-toolbar__title {
+  margin: 0;
+}
+
+.studio-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitive-space-3);
+}
+
+.studio-active-preset {
+  display: flex;
+  align-items: center;
+  gap: var(--primitive-space-2);
+}
+
+.studio-active-preset label {
+  white-space: nowrap;
+}
+
+.studio-dirty-status {
+  font-size: var(--primitive-font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.studio-dirty-status--dirty {
+  color: var(--color-status-warning);
+}
+
+.studio-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(280px, 1fr) minmax(260px, 340px);
+  gap: var(--primitive-space-4);
+  flex: 1;
+  min-height: 0;
+}
+
+.studio-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-space-3);
+  min-height: 0;
+}
+
+.studio-column--preview {
+  min-width: 0;
+}
+
+.studio-column--inspector {
+  overflow: auto;
+  max-height: calc(100vh - 12rem);
+}
+
+.studio-sources-mount .obs-setup-intro {
+  margin-bottom: var(--primitive-space-3);
+}
+
+.studio-sources-mount .obs-sources {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-space-3);
+}
+
+.studio-preview-mount .overlay-preview-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.studio-preview-mount .overlay-preview-stage {
+  aspect-ratio: 16 / 9;
+  flex: 1;
+  min-height: 200px;
+}
+
+.studio-preview-mount .overlay-preview-controls {
+  flex-shrink: 0;
+}
+
+.studio-inspector-mount .overlay-settings-column {
+  overflow: visible;
+}
+
+.studio-url-primary {
+  margin-bottom: var(--primitive-space-2);
+}
+
+.studio-url-pinned {
+  margin-top: var(--primitive-space-2);
+}
+
+.studio-url-pinned summary {
+  cursor: pointer;
+}
+
+@media (max-width: 1023px) {
+  .studio-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .studio-column--inspector {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-height: 700px) {
+  .studio-column--inspector {
+    max-height: calc(100vh - 10rem);
+  }
+}

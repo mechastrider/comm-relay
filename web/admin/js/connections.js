@@ -1,6 +1,7 @@
 import * as dom from './dom.js';
 
-export const CONNECTIONS_SECTIONS = ['twitch', 'youtube', 'vk', 'network'];
+export const PLATFORM_SECTIONS = ['twitch', 'youtube', 'vk'];
+export const CONNECTIONS_SECTIONS = PLATFORM_SECTIONS.concat(['network']);
 
 const FIELD_SECTIONS = {
   twitch_channel: 'twitch',
@@ -42,12 +43,34 @@ export function connectionsSectionForElement(el) {
   return null;
 }
 
+export function showNetworkPanel() {
+  const panel = connectionsPanel('network');
+  if (panel) {
+    panel.hidden = false;
+  }
+}
+
+export function hideOrphanNetworkTab() {
+  const tab = connectionsTab('network');
+  if (!tab) {
+    return;
+  }
+  tab.hidden = true;
+  tab.setAttribute('aria-hidden', 'true');
+  tab.tabIndex = -1;
+}
+
 export function setConnectionsSection(section, options) {
-  if (!dom.connectionsDialog || CONNECTIONS_SECTIONS.indexOf(section) === -1) {
+  if (section === 'network') {
+    showNetworkPanel();
     return;
   }
 
-  CONNECTIONS_SECTIONS.forEach(function (id) {
+  if (PLATFORM_SECTIONS.indexOf(section) === -1) {
+    return;
+  }
+
+  PLATFORM_SECTIONS.forEach(function (id) {
     const tab = connectionsTab(id);
     const panel = connectionsPanel(id);
     if (!tab || !panel) {
@@ -72,6 +95,10 @@ export function focusConnectionsField(el) {
     return;
   }
   const section = connectionsSectionForElement(el);
+  if (section === 'network') {
+    showNetworkPanel();
+    return;
+  }
   if (section) {
     setConnectionsSection(section, { focusTab: false });
   }
@@ -84,15 +111,19 @@ export function initConnectionsTabs() {
 
   setConnectionsSection('twitch');
 
-  dom.connectionsDialog.querySelectorAll('[data-connections-section]').forEach(function (button) {
-    button.addEventListener('click', function () {
-      setConnectionsSection(button.dataset.connectionsSection, {
-        focusTab: button.getAttribute('role') !== 'tab',
+  PLATFORM_SECTIONS.forEach(function (id) {
+    const tab = connectionsTab(id);
+    if (!tab) {
+      return;
+    }
+    tab.addEventListener('click', function () {
+      setConnectionsSection(id, {
+        focusTab: tab.getAttribute('role') !== 'tab',
       });
     });
   });
 
-  const tabs = CONNECTIONS_SECTIONS.map(connectionsTab).filter(Boolean);
+  const tabs = PLATFORM_SECTIONS.map(connectionsTab).filter(Boolean);
   tabs.forEach(function (tab, index) {
     tab.addEventListener('keydown', function (event) {
       if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].indexOf(event.key) === -1) {
@@ -109,7 +140,7 @@ export function initConnectionsTabs() {
       } else if (event.key === 'End') {
         nextIndex = tabs.length - 1;
       }
-      setConnectionsSection(CONNECTIONS_SECTIONS[nextIndex], { focusTab: true });
+      setConnectionsSection(PLATFORM_SECTIONS[nextIndex], { focusTab: true });
     });
   });
 }

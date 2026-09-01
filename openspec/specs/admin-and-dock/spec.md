@@ -6,12 +6,20 @@ Gives the streamer a local admin console to connect platforms and style OBS, plu
 
 ## Requirements
 
-### Requirement: Admin console manages connections, OBS setup, and appearance
-The admin page at `/` SHALL provide connection forms for Twitch, YouTube, VK, and network proxy; OBS setup URLs for overlay and dock; overlay appearance including presets; interface language and message sound; diagnostics; and an about dialog.
+### Requirement: Admin console manages live operation, audience, OBS setup, and settings
+The admin page at `/` SHALL provide persistent workspaces named Live, Audience, Studio, and Settings. Live SHALL contain current operational status and switchable Messages, Leaderboard, and current Statistics views. Audience SHALL provide the implemented viewer search, detail, merge, leaderboard, and stream-session workflows. Studio SHALL provide OBS source URLs, surface presets, preview, and appearance editing. Settings SHALL provide Twitch, YouTube, VK, network proxy, interface language, message sound, diagnostics, about information, and implemented data-management controls.
+
+#### Scenario: Open admin without a route
+- **WHEN** the operator opens `/` without a recognized hash route
+- **THEN** the Live workspace is selected and current navigation state is exposed accessibly
+
+#### Scenario: Navigate with browser history
+- **WHEN** the operator moves between workspaces and uses browser Back or Forward
+- **THEN** the workspace matching the restored hash becomes active without a full page reload
 
 #### Scenario: Copy overlay URL
-- **WHEN** the operator opens OBS setup
-- **THEN** the UI shows the overlay and dock URLs for the current listen address and can copy them
+- **WHEN** the operator opens Studio source setup
+- **THEN** the UI shows overlay, leaderboard, and dock URLs for the current listen address and can copy them
 
 #### Scenario: Save connections
 - **WHEN** the operator enables Twitch with a channel and saves
@@ -50,12 +58,94 @@ When message sound is enabled, the admin console SHALL play the selected preset 
 - **THEN** the selected sound plays without opening Interface settings
 
 ### Requirement: Appearance preview offers a shared backdrop set
-The OBS Appearance preview SHALL let the operator choose a backdrop from white, checkerboard, game footage, and black. Labels MUST describe contrast purpose (not an uploaded OBS scene). The preview iframe MUST pass the matching `preview_background` query value. Stored preference `busy` MUST map to game footage.
+The Studio preview SHALL let the operator choose a backdrop from white, checkerboard, game footage, and black. Labels MUST describe contrast purpose rather than an uploaded OBS scene. The preview iframe MUST pass the matching `preview_background` query value. Stored preference `busy` MUST map to game footage.
 
 #### Scenario: Backdrop options
-- **WHEN** the operator opens the overlay appearance preview background control
+- **WHEN** the operator opens the Studio preview background control
 - **THEN** the options are white, checkerboard, game footage, and black, in that order
 
 #### Scenario: Restored busy preference
 - **WHEN** a previously stored preview background value is `busy`
 - **THEN** the control shows game footage and the iframe uses `preview_background=scene`
+
+#### Scenario: Leaderboard uses the same backdrops
+- **WHEN** the operator switches the Studio preview to Leaderboard and chooses checkerboard
+- **THEN** the preview iframe loads the leaderboard page with `preview_background=checker`
+
+### Requirement: OBS setup lists sources instead of a card grid
+Studio source setup SHALL list on-stream Browser Sources and operator-only docks as a selectable list, not a growing grid of full setup cards. Selecting a source SHALL show that source's URL, copy control, and source-specific options. Browser Source install steps SHALL appear once as shared help, not repeated per source. `/overlay/alert` MAY appear as a disabled placeholder and MUST NOT be offered as a working URL.
+
+#### Scenario: Select leaderboard
+- **WHEN** the operator selects Leaderboard in the source list
+- **THEN** the detail pane shows the leaderboard URL, a period control, and copy, without a third full-width how-to card
+
+#### Scenario: Banners are not ready
+- **WHEN** the operator views the source list
+- **THEN** a banners or alerts row is visible and disabled, with no copyable `/overlay/alert` URL
+
+#### Scenario: Dock stays operator-only
+- **WHEN** the operator selects the message dock
+- **THEN** the UI shows the dock URL and Custom Browser Dock help, and MUST NOT apply overlay theme controls to that URL
+
+### Requirement: Appearance studio previews the selected on-stream surface
+The Studio preview SHALL keep one preset island (theme and shared style) and SHALL switch the preview between Chat and Leaderboard. Changing the surface MUST retarget the preview iframe and MUST show only settings that apply to that surface (chat queue/TTL/platform marker versus leaderboard period, font override, and layout). Preview messages and ranking rows MUST be fictitious samples, not live chat or live viewer stats. A Replay control SHALL reload the sample for the selected surface.
+
+#### Scenario: Switch to leaderboard preview
+- **WHEN** the operator selects Leaderboard in the appearance studio
+- **THEN** the preview iframe loads `/overlay/leaderboard` with `preview=sample` and the current unsaved appearance query, showing a fictitious top-5
+
+#### Scenario: Chat preview unchanged in kind
+- **WHEN** the operator selects Chat in the appearance studio
+- **THEN** the preview iframe loads `/overlay` with `preview=sample` (or live chat if that existing mode is chosen) and does not embed the leaderboard
+
+#### Scenario: Per-surface font
+- **WHEN** the operator sets a leaderboard font size different from the preset chat font size and the preview is on Leaderboard
+- **THEN** the preview reflects the leaderboard font size without changing the chat font shown when switching back to Chat
+
+### Requirement: New stream requires confirmation
+The admin chrome SHALL offer a New stream action. The system MUST NOT start a new session until the operator confirms. After success, session counters on the Audience view and session leaderboard SHALL reset while day and all-time counters remain.
+
+#### Scenario: Accidental click
+- **WHEN** the operator activates New stream and dismisses the confirmation
+- **THEN** the current session stays open and session counters are unchanged
+
+#### Scenario: Confirmed new stream
+- **WHEN** the operator confirms New stream
+- **THEN** the client calls `POST /api/sessions/start` and session totals on the Audience view are empty
+
+### Requirement: Admin actions expose their persistence timing
+The admin SHALL distinguish hot actions that apply immediately, Studio fields that remain local until Publish, and Settings forms that remain local until Save. The UI MUST NOT present one global Save action for unrelated workspaces.
+
+#### Scenario: Hot preset selection
+- **WHEN** the operator selects a different active preset in a Live or Studio hot control
+- **THEN** the activation request starts immediately, the initiating control shows progress, and success or failure is reported without requiring Publish or Save
+
+#### Scenario: Edit Studio draft
+- **WHEN** the operator changes a preset appearance field
+- **THEN** Studio preview reflects the draft while the live overlay remains unchanged and Publish becomes available
+
+#### Scenario: Leave dirty Studio draft
+- **WHEN** the operator navigates away or closes the page with unpublished Studio edits
+- **THEN** the UI asks for confirmation before discarding those edits
+
+#### Scenario: Edit cold setting
+- **WHEN** the operator changes language, sound, platform, proxy, or another Settings field
+- **THEN** the persisted configuration remains unchanged until the relevant Save action succeeds
+
+### Requirement: Live status reports only observable application facts
+Live SHALL summarize connector state, WebSocket browser-client count, and current session data using available status and viewer APIs. It MUST NOT claim that an OBS source is visible, active in a scene, or healthy without OBS integration.
+
+#### Scenario: Browser Source client connects
+- **WHEN** a WebSocket client is counted by CommRelay
+- **THEN** the console labels it as a connected overlay or browser client rather than an OBS scene-visibility signal
+
+#### Scenario: No historical samples exist
+- **WHEN** the operator opens current Statistics and only aggregate viewer/session data is available
+- **THEN** the console shows supported current aggregates and does not fabricate a historical time-series chart
+
+### Requirement: Existing capabilities remain reachable after redesign
+Every workflow available before the redesign SHALL remain reachable from one of the four workspaces or an associated dialog, including message deletion, sound, localization, platform connection, proxy, diagnostics, about, viewer detail/merge, new stream, preset management, asset upload, and OBS URL copy.
+
+#### Scenario: Feature inventory smoke check
+- **WHEN** the redesigned console is loaded with all supported connectors and viewer storage enabled
+- **THEN** each implemented pre-redesign workflow has a visible entry point and no mock-only command or splash control is presented as functional

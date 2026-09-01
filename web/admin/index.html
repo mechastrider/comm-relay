@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20">
+  <link rel="stylesheet" href="styles.css?v=22">
   <script>
     (function () {
       try {
@@ -20,11 +20,13 @@
   </script>
 </head>
 <body>
-  <div class="cockpit-shell">
-    <header class="top-bar" data-i18n-aria-label="shell.systemStatus">
+  <a class="skip-link" href="#workspace-main" data-i18n="shell.skipToContent">Skip to content</a>
+
+  <div class="app-shell" id="app-shell">
+    <header class="shell-header" data-i18n-aria-label="shell.systemStatus">
       <div class="brand-stack">
         <span class="brand-kicker" data-i18n="shell.brandKicker">LOCAL OBS COMM RELAY</span>
-        <h1>CommRelay</h1>
+        <p class="brand-title">CommRelay</p>
       </div>
 
       <div class="connector-rack" data-i18n-aria-label="shell.connectorStates">
@@ -42,63 +44,132 @@
         </div>
       </div>
 
-      <div class="top-actions">
-        <button id="new-stream-button" class="btn-physical has-tooltip" type="button">
-          <span data-i18n="stream.newStream">New stream</span>
-          <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+      <div class="shell-header__actions">
+        <button id="shell-diagnostics-button" class="btn-physical btn-small has-tooltip" type="button" aria-controls="shell-status-bar" data-i18n="shell.diagnostics" data-i18n-aria-label="shell.diagnostics">
+          Diagnostics
+          <span class="ui-tooltip" role="tooltip" data-i18n="shell.diagnosticsHint">Jump to runtime uptime, WebSocket clients, and message counts.</span>
         </button>
-        <button id="save-button" class="btn-physical btn-start" type="submit" form="settings-form" data-save-button disabled data-i18n="shell.save">Save</button>
       </div>
     </header>
 
-    <main class="main-area">
+    <div class="shell-body">
+      <nav class="shell-nav shell-nav--side" data-i18n-aria-label="shell.primaryNav" aria-label="Primary navigation">
+        <ul class="shell-nav__list">
+          <li><a class="shell-nav__link" href="#live" data-workspace-nav="live" data-i18n="nav.live">Live</a></li>
+          <li><a class="shell-nav__link" href="#audience" data-workspace-nav="audience" data-i18n="nav.audience">Audience</a></li>
+          <li><a class="shell-nav__link" href="#studio" data-workspace-nav="studio" data-i18n="nav.studio">Studio</a></li>
+          <li><a class="shell-nav__link" href="#settings" data-workspace-nav="settings" data-i18n="nav.settings">Settings</a></li>
+        </ul>
+      </nav>
+
+      <main id="workspace-main" class="workspace-host" tabindex="-1">
+        <div id="shell-announcements" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
+        <section id="workspace-live" class="workspace workspace--active" data-workspace="live" aria-labelledby="workspace-live-heading">
+          <h1 id="workspace-live-heading" class="workspace-heading visually-hidden" tabindex="-1" data-i18n="workspace.liveHeading">Live</h1>
+
+          <div class="live-cockpit cockpit-shell" id="live-cockpit">
+            <div class="live-status-strip" data-i18n-aria-label="live.statusStrip" aria-label="Live operational status">
+              <div class="live-status-strip__connectors connector-rack connector-rack--compact" data-i18n-aria-label="shell.connectorStates">
+                <div class="indicator">
+                  <span class="indicator__label">Twitch</span>
+                  <span id="live-twitch-status" class="status-pill">-</span>
+                </div>
+                <div class="indicator">
+                  <span class="indicator__label">YouTube</span>
+                  <span id="live-youtube-status" class="status-pill">-</span>
+                </div>
+                <div class="indicator">
+                  <span class="indicator__label">VK Live</span>
+                  <span id="live-vk-status" class="status-pill">-</span>
+                </div>
+              </div>
+              <p id="live-browser-clients" class="live-status-strip__clients" data-i18n="live.browserClientsCount">Connected browser clients: —</p>
+              <div class="live-status-strip__preset">
+                <label for="live-active-preset" data-i18n="live.activePreset">Active preset</label>
+                <select id="live-active-preset" class="live-active-preset"></select>
+              </div>
+              <div class="live-status-strip__actions">
+                <button id="new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
+                  <span data-i18n="stream.newStream">New stream</span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="main-area">
       <div id="banner" class="banner" role="alert" aria-live="polite" hidden></div>
 
-      <section class="console-panel" aria-labelledby="canvas-heading">
+      <section class="console-panel live-work-area" aria-labelledby="live-work-heading">
+        <h2 id="live-work-heading" class="visually-hidden" data-i18n="live.workArea">Live workspace</h2>
         <div class="console-header">
           <div class="console-header__start">
-            <div class="console-tabs" role="tablist" data-i18n-aria-label="shell.canvasSections" aria-label="Main canvas sections">
-              <button id="canvas-monitor-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="monitor-canvas-panel" data-canvas-section="monitor" data-i18n="shell.monitor">Monitor</button>
-              <button id="canvas-viewers-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="viewers-canvas-panel" tabindex="-1" data-canvas-section="viewers" data-i18n="shell.viewers">Viewers</button>
+            <div class="console-tabs" role="tablist" data-i18n-aria-label="live.tabList" aria-label="Live workspace tabs">
+              <button id="live-messages-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="live-messages-panel" data-live-tab="messages" data-i18n="live.tabMessages">Messages</button>
+              <button id="live-leaderboard-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="live-leaderboard-panel" tabindex="-1" data-live-tab="leaderboard" data-i18n="live.tabLeaderboard">Leaderboard</button>
+              <button id="live-statistics-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="live-statistics-panel" tabindex="-1" data-live-tab="statistics" data-i18n="live.tabStatistics">Statistics</button>
             </div>
-            <h2 id="canvas-heading" data-i18n="shell.liveMessages">Live messages</h2>
           </div>
           <div class="console-actions">
             <span id="settings-state" class="settings-state" aria-live="polite" data-i18n="shell.loadingSettings">Loading settings</span>
             <button id="refresh-messages" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
-            <button id="refresh-viewers" type="button" class="btn-physical btn-small" hidden data-i18n="shell.refresh">Refresh</button>
+            <button id="refresh-leaderboard" type="button" class="btn-physical btn-small" hidden data-i18n="shell.refresh">Refresh</button>
+            <button id="refresh-statistics" type="button" class="btn-physical btn-small" hidden data-i18n="shell.refresh">Refresh</button>
           </div>
         </div>
 
-        <section id="monitor-canvas-panel" class="canvas-panel" role="tabpanel" aria-labelledby="canvas-monitor-tab">
-          <div class="message-panel">
-            <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
-            <p id="recent-messages-empty" class="empty-state" data-i18n="shell.noMessagesYet">No messages yet.</p>
-          </div>
-        </section>
+        <div class="live-tab-panels">
+          <section id="live-messages-panel" class="canvas-panel live-tab-panel" role="tabpanel" aria-labelledby="live-messages-tab">
+            <div class="message-panel">
+              <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
+              <p id="recent-messages-empty" class="empty-state" data-i18n="shell.noMessagesYet">No messages yet.</p>
+            </div>
+          </section>
 
-        <section id="viewers-canvas-panel" class="canvas-panel viewers-canvas" role="tabpanel" aria-labelledby="canvas-viewers-tab" hidden>
-          <div class="viewers-workspace">
-            <aside class="viewers-list-pane" aria-labelledby="viewers-list-heading">
-              <h3 id="viewers-list-heading" class="viewers-pane-heading" data-i18n="viewers.listHeading">Viewer list</h3>
-              <div class="viewers-search">
-                <label class="visually-hidden" for="viewers-search" data-i18n="viewers.searchLabel">Search viewers</label>
-                <input id="viewers-search" type="search" autocomplete="off" data-i18n-placeholder="viewers.searchPlaceholder" placeholder="Search by name or platform">
+          <section id="live-leaderboard-panel" class="canvas-panel live-tab-panel live-leaderboard-panel" role="tabpanel" aria-labelledby="live-leaderboard-tab" hidden>
+            <div id="live-leaderboard-region" class="live-region">
+              <div class="live-leaderboard-toolbar">
+                <label for="live-leaderboard-period" data-i18n="live.leaderboardPeriod">Ranking period</label>
+                <select id="live-leaderboard-period">
+                  <option value="session" data-i18n="viewers.periodSession">Session</option>
+                  <option value="day" data-i18n="viewers.periodDay">Day</option>
+                  <option value="all" data-i18n="viewers.periodAll">All-time</option>
+                </select>
               </div>
-              <div class="viewers-pane-body">
-                <ul id="viewers-list" class="viewers-list" aria-live="polite"></ul>
-                <p id="viewers-list-empty" class="empty-state" hidden data-i18n="viewers.listEmpty">No viewers yet.</p>
-              </div>
-            </aside>
-            <div class="viewer-card-pane" aria-labelledby="viewer-card-heading">
-              <h3 id="viewer-card-heading" class="viewers-pane-heading" data-i18n="viewers.cardHeading">Selected viewer</h3>
-              <div class="viewers-pane-body">
-                <div id="viewer-card" class="viewer-card" hidden></div>
-                <p id="viewer-card-empty" class="empty-state" data-i18n="viewers.cardEmpty">Select a viewer from the list.</p>
+              <div class="live-leaderboard-body">
+                <table id="live-leaderboard-table" class="data-table" data-i18n-aria-label="live.leaderboardTable">
+                  <caption class="visually-hidden" data-i18n="live.leaderboardTable">Leaderboard rankings</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col" data-i18n="live.leaderboardRank">Rank</th>
+                      <th scope="col" data-i18n="live.leaderboardName">Viewer</th>
+                      <th scope="col" data-i18n="live.leaderboardScore">Score</th>
+                      <th scope="col" data-i18n="live.leaderboardMessages">Messages</th>
+                    </tr>
+                  </thead>
+                  <tbody id="live-leaderboard-table-body"></tbody>
+                </table>
+                <p id="live-leaderboard-empty" class="empty-state live-region-empty" hidden data-i18n="live.leaderboardEmpty">No ranked viewers for this period yet.</p>
+                <div id="live-leaderboard-error" class="notice notice--error live-region-error" hidden>
+                  <p class="notice__body"></p>
+                  <button type="button" class="state-retry btn-physical btn-small" data-i18n="state.retry">Retry</button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+
+          <section id="live-statistics-panel" class="canvas-panel live-tab-panel live-statistics-panel" role="tabpanel" aria-labelledby="live-statistics-tab" hidden>
+            <div id="live-statistics-region" class="live-region">
+              <p id="live-statistics-partial" class="field-hint live-statistics-partial" hidden data-i18n="live.statisticsPartial">Some aggregates use viewer data only because leaderboard data is unavailable.</p>
+              <dl id="live-statistics-list" class="live-statistics-list"></dl>
+              <p id="live-statistics-empty" class="empty-state live-region-empty" hidden data-i18n="live.statisticsEmpty">No viewer session data yet.</p>
+              <div id="live-statistics-error" class="notice notice--error live-region-error" hidden>
+                <p class="notice__body"></p>
+                <button type="button" class="state-retry btn-physical btn-small" data-i18n="state.retry">Retry</button>
+              </div>
+            </div>
+          </section>
+        </div>
       </section>
 
       <aside class="systems-panel" aria-labelledby="controls-heading">
@@ -108,36 +179,36 @@
         </button>
 
         <div id="systems-content" class="systems-panel__content">
-          <div class="panel-heading">
+          <div class="panel-heading panel-heading--actions">
             <h2 id="controls-heading" data-i18n="shell.controls">Controls</h2>
           </div>
 
           <div class="control-grid">
-            <button class="btn-physical has-tooltip" type="button" data-dialog-target="connections-dialog">
+            <a class="btn-physical has-tooltip" href="#settings/platforms">
               <span data-i18n="shell.connections">Connections</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.connectionsHint">Twitch, YouTube, VK Live, and SOCKS5 proxy.</span>
-            </button>
-            <button class="btn-physical has-tooltip" type="button" data-dialog-target="overlay-dialog">
+            </a>
+            <a class="btn-physical has-tooltip" href="#studio">
               <span data-i18n="shell.obs">OBS</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.obsHint">Browser Source URLs, presets, and overlay appearance.</span>
-            </button>
-            <button class="btn-physical has-tooltip" type="button" data-dialog-target="rich-chat-dialog">
+            </a>
+            <a class="btn-physical has-tooltip" href="#settings/application">
               <span data-i18n="shell.richChat">Rich chat</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.richChatHint">Emotes and safe image-link previews in chat and overlay.</span>
-            </button>
-            <button class="btn-physical has-tooltip" type="button" data-dialog-target="sound-dialog">
+            </a>
+            <a class="btn-physical has-tooltip" href="#settings/application">
               <span data-i18n="shell.sound">Sound</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.soundHint">Alert sound when a new chat message arrives.</span>
-            </button>
-            <button class="btn-physical has-tooltip" type="button" data-dialog-target="interface-dialog">
+            </a>
+            <a class="btn-physical has-tooltip" href="#settings/application">
               <span data-i18n="shell.interface">Interface</span>
-              <span class="ui-tooltip" role="tooltip" data-i18n="shell.interfaceHint">UI language and viewer scoring settings.</span>
-            </button>
-            <button class="btn-physical control-grid-about about-btn has-tooltip" type="button" data-dialog-target="about-dialog">
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.interfaceSettingsHint">UI language, message sound, and rich chat options.</span>
+            </a>
+            <a class="btn-physical control-grid-about about-btn has-tooltip" href="#settings/about">
               <span data-i18n="shell.about">About</span>
               <small data-i18n="shell.aboutSubtitle">VERSION · SUPPORT</small>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.aboutHint">Version, privacy, and support links.</span>
-            </button>
+            </a>
           </div>
 
           <div class="panel-heading panel-heading--spaced">
@@ -170,9 +241,167 @@
           <ul id="emote-provider-list" class="provider-list" data-i18n-aria-label="shell.emoteProviderStatus"></ul>
         </div>
       </aside>
-    </main>
+            </div>
+          </div>
+        </section>
 
-    <footer class="status-bar" data-i18n-aria-label="shell.runtimeDiagnostics">
+        <section id="workspace-audience" class="workspace" data-workspace="audience" hidden aria-labelledby="workspace-audience-heading">
+          <div class="audience-workspace">
+            <header class="audience-toolbar">
+              <h1 id="workspace-audience-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.audienceHeading">Audience</h1>
+              <div class="audience-toolbar__controls">
+                <div class="audience-toolbar__search form__field">
+                  <label for="viewers-search" data-i18n="viewers.searchLabel">Search viewers</label>
+                  <input id="viewers-search" type="search" autocomplete="off" data-i18n-placeholder="viewers.searchPlaceholder" placeholder="Search by name or platform">
+                </div>
+                <div class="audience-toolbar__filters">
+                  <label for="audience-period" data-i18n="audience.periodLabel">Activity period</label>
+                  <select id="audience-period" aria-describedby="audience-period-hint">
+                    <option value="session" data-i18n="viewers.periodSession">Session</option>
+                    <option value="day" data-i18n="viewers.periodDay">Day</option>
+                    <option value="all" data-i18n="viewers.periodAll">All-time</option>
+                  </select>
+                  <button id="audience-open-leaderboard" class="btn-physical btn-small" type="button" data-i18n="audience.openLeaderboard">Open leaderboard</button>
+                  <button id="refresh-viewers" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
+                </div>
+                <button id="audience-new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
+                  <span data-i18n="stream.newStream">New stream</span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+                </button>
+              </div>
+              <p id="audience-period-hint" class="field-hint audience-toolbar__hint" data-i18n="audience.periodHint">Score and message columns follow the selected period.</p>
+            </header>
+
+            <div id="audience-layout" class="audience-layout">
+              <section id="audience-table-region" class="audience-table-region" aria-labelledby="audience-table-heading">
+                <h2 id="audience-table-heading" class="visually-hidden" data-i18n="audience.tableHeading">Viewer directory</h2>
+                <div class="audience-table-body">
+                  <table id="audience-viewers-table" class="data-table audience-viewers-table" data-i18n-aria-label="audience.tableCaption">
+                    <caption class="visually-hidden" data-i18n="audience.tableCaption">Viewer directory</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col" data-i18n="audience.colViewer">Viewer</th>
+                        <th scope="col" data-i18n="audience.colPlatforms">Platforms</th>
+                        <th scope="col" class="data-table__numeric" data-i18n="audience.colScore">Score</th>
+                        <th scope="col" class="data-table__numeric" data-i18n="audience.colMessages">Messages</th>
+                        <th scope="col" data-i18n="audience.colActions">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="audience-viewers-table-body"></tbody>
+                  </table>
+                  <div id="audience-table-empty" class="empty-state audience-region-empty" hidden>
+                    <p id="audience-table-empty-message" class="audience-region-empty__message"></p>
+                    <button id="audience-clear-search" type="button" class="btn-physical btn-small" hidden data-i18n="audience.clearSearch">Clear search</button>
+                  </div>
+                  <div id="audience-table-error" class="notice notice--error audience-region-error" hidden>
+                    <p class="notice__body"></p>
+                    <button type="button" class="state-retry btn-physical btn-small" data-i18n="state.retry">Retry</button>
+                  </div>
+                </div>
+              </section>
+
+              <aside id="audience-inspector" class="audience-inspector" hidden aria-labelledby="audience-inspector-heading" aria-modal="false">
+                <header class="audience-inspector__header">
+                  <h2 id="audience-inspector-heading" class="audience-inspector__title" data-i18n="audience.detailHeading">Viewer detail</h2>
+                  <button id="audience-inspector-close" class="icon-btn audience-inspector__close" type="button" data-i18n-aria-label="audience.closeDetail" aria-label="Close viewer detail">
+                    <span aria-hidden="true">×</span>
+                  </button>
+                </header>
+                <div id="audience-inspector-body" class="audience-inspector__body" tabindex="-1"></div>
+                <p id="audience-inspector-empty" class="empty-state audience-inspector__empty" data-i18n="audience.selectViewer">Select a viewer from the table.</p>
+                <p id="audience-inspector-loading" class="audience-inspector__loading" hidden data-i18n="state.loading">Loading</p>
+              </aside>
+            </div>
+          </div>
+        </section>
+
+        <section id="workspace-studio" class="workspace studio-workspace" data-workspace="studio" hidden aria-labelledby="workspace-studio-heading">
+          <header class="studio-toolbar">
+            <h1 id="workspace-studio-heading" class="studio-toolbar__title workspace-heading" tabindex="-1" data-i18n="workspace.studioHeading">Studio</h1>
+            <div class="studio-toolbar__actions">
+              <div class="studio-active-preset">
+                <label for="studio-active-preset" data-i18n="live.activePreset">Active preset</label>
+                <select id="studio-active-preset" class="live-active-preset"></select>
+              </div>
+              <span id="studio-dirty-status" class="studio-dirty-status" role="status" aria-live="polite">Published</span>
+              <button id="studio-publish" class="btn-physical btn-start" type="button" data-i18n="studio.publish">Publish</button>
+            </div>
+          </header>
+          <div class="studio-layout">
+            <div id="studio-sources-mount" class="studio-column studio-sources-mount" data-studio-overlay></div>
+            <div id="studio-preview-mount" class="studio-column studio-column--preview studio-preview-mount" data-preview-only></div>
+            <div id="studio-inspector-mount" class="studio-column studio-column--inspector studio-inspector-mount" data-studio-overlay></div>
+          </div>
+        </section>
+
+        <section id="workspace-settings" class="workspace settings-workspace" data-workspace="settings" hidden aria-labelledby="workspace-settings-heading">
+          <div class="settings-workspace__layout">
+            <header class="settings-workspace__header">
+              <h1 id="workspace-settings-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.settingsHeading">Settings</h1>
+              <nav class="settings-nav" role="tablist" data-i18n-aria-label="settings.navLabel" aria-label="Settings sections">
+                <a class="settings-nav__link" href="#settings/platforms" role="tab" data-settings-nav="platforms" data-i18n="settings.section.platforms">Platforms</a>
+                <a class="settings-nav__link" href="#settings/network" role="tab" data-settings-nav="network" data-i18n="settings.section.network">Network</a>
+                <a class="settings-nav__link" href="#settings/data" role="tab" data-settings-nav="data" data-i18n="settings.section.data">Data</a>
+                <a class="settings-nav__link" href="#settings/application" role="tab" data-settings-nav="application" data-i18n="settings.section.application">Application</a>
+                <a class="settings-nav__link" href="#settings/diagnostics" role="tab" data-settings-nav="diagnostics" data-i18n="settings.section.diagnostics">Diagnostics</a>
+                <a class="settings-nav__link" href="#settings/about" role="tab" data-settings-nav="about" data-i18n="settings.section.about">About</a>
+              </nav>
+            </header>
+            <div id="settings-sections-mount" class="settings-workspace__content"></div>
+            <div id="settings-diagnostics-body" class="settings-diagnostics">
+              <p class="field-hint" data-i18n="settings.diagnosticsHint">Runtime uptime, WebSocket browser clients, connector details, and emote cache status.</p>
+              <div class="settings-diagnostics__toolbar">
+                <button id="settings-diagnostics-refresh" class="btn-physical btn-small" type="button" data-i18n="shell.refresh">Refresh</button>
+              </div>
+              <dl class="overview-list settings-diagnostics__summary">
+                <div class="overview-list__row">
+                  <dt data-i18n="shell.uptime">Uptime:</dt>
+                  <dd id="settings-diag-uptime" class="overview-list__value">-</dd>
+                </div>
+                <div class="overview-list__row">
+                  <dt data-i18n="shell.ws">WS:</dt>
+                  <dd id="settings-diag-ws-clients" class="overview-list__value">-</dd>
+                </div>
+                <div class="overview-list__row">
+                  <dt data-i18n="shell.messages">Messages:</dt>
+                  <dd id="settings-diag-message-counts" class="overview-list__value">-</dd>
+                </div>
+              </dl>
+              <div class="panel-heading panel-heading--spaced">
+                <h3 data-i18n="shell.youtubeOAuth">YouTube OAuth</h3>
+              </div>
+              <p id="settings-youtube-oauth-label" class="settings-diagnostics__oauth">-</p>
+              <div class="detail-stack" data-i18n-aria-label="shell.connectorDetails">
+                <p id="settings-twitch-detail" class="status-detail" hidden></p>
+                <p id="settings-youtube-detail" class="status-detail" hidden></p>
+                <p id="settings-vk-detail" class="status-detail" hidden></p>
+              </div>
+              <div class="panel-heading panel-heading--spaced">
+                <h3 data-i18n="shell.richChat">Rich chat</h3>
+              </div>
+              <dl class="overview-list emote-diagnostics" data-i18n-aria-label="shell.emoteProviderCache">
+                <div class="overview-list__row">
+                  <dt data-i18n="shell.cacheEntries">Cache entries</dt>
+                  <dd id="settings-emote-cache-entries" class="overview-list__value">-</dd>
+                </div>
+              </dl>
+              <ul id="settings-emote-provider-list" class="provider-list" data-i18n-aria-label="shell.emoteProviderStatus"></ul>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <nav class="shell-nav shell-nav--bottom" data-i18n-aria-label="shell.primaryNav" aria-label="Primary navigation">
+      <ul class="shell-nav__list">
+        <li><a class="shell-nav__link" href="#live" data-workspace-nav="live" data-i18n="nav.live">Live</a></li>
+        <li><a class="shell-nav__link" href="#audience" data-workspace-nav="audience" data-i18n="nav.audience">Audience</a></li>
+        <li><a class="shell-nav__link" href="#studio" data-workspace-nav="studio" data-i18n="nav.studio">Studio</a></li>
+        <li><a class="shell-nav__link" href="#settings" data-workspace-nav="settings" data-i18n="nav.settings">Settings</a></li>
+      </ul>
+    </nav>
+
+    <footer id="shell-status-bar" class="status-bar" data-i18n-aria-label="shell.runtimeDiagnostics">
       <span class="tag">ADMIN</span>
       <span><span data-i18n="shell.uptime">Uptime:</span> <strong id="diag-uptime">-</strong></span>
       <span><span data-i18n="shell.ws">WS:</span> <strong id="diag-ws-clients">-</strong></span>
@@ -180,7 +409,7 @@
       <span class="status-bar__spacer"></span>
       <span><span data-i18n="shell.state">State:</span> <strong id="footer-settings-state" data-i18n="shell.loadingSettings">Loading settings</strong></span>
     </footer>
-  </div>
+  </div><!-- .app-shell -->
 
   <form id="settings-form" class="settings-form" novalidate>
     <dialog id="connections-dialog" class="settings-dialog" aria-labelledby="connections-heading">
@@ -284,12 +513,12 @@
                   </div>
 
                   <div class="form__field">
-                    <label for="youtube-client-id">OAuth client ID</label>
+                    <label for="youtube-client-id" data-i18n="conn.oauthClientId">OAuth client ID</label>
                     <input id="youtube-client-id" name="youtube_client_id" type="text" autocomplete="off" spellcheck="false">
                   </div>
 
                   <div class="form__field">
-                    <label for="youtube-client-secret">OAuth client secret</label>
+                    <label for="youtube-client-secret" data-i18n="conn.oauthClientSecret">OAuth client secret</label>
                     <input id="youtube-client-secret" name="youtube_client_secret" type="password" autocomplete="off">
                     <p class="field-hint" data-i18n="conn.keepSecretHint">Leave blank to keep the existing secret.</p>
                   </div>
@@ -339,6 +568,20 @@
           </section>
 
           <section id="connections-network-panel" class="dialog-tab-panel connections-tab-panel" role="tabpanel" aria-labelledby="connections-network-tab" data-connections-panel="network" hidden>
+            <section class="panel" aria-labelledby="network-server-heading">
+              <div class="panel__header">
+                <h3 id="network-server-heading" data-i18n="settings.serverHeading">HTTP server</h3>
+              </div>
+              <div class="form">
+                <div class="form__field">
+                  <label for="server-port" data-i18n="settings.serverPort">Server port</label>
+                  <input id="server-port" name="server_port" type="number" min="1" max="65535" step="1" inputmode="numeric">
+                  <p class="field-hint" data-i18n="settings.serverPortHint">Local port for the admin panel, API, and WebSocket. Restart CommRelay after changing.</p>
+                  <p id="server-port-error" class="field-error" role="alert" hidden></p>
+                </div>
+              </div>
+            </section>
+
             <section class="panel" aria-labelledby="network-proxy-heading">
               <div class="panel__header">
                 <h3 id="network-proxy-heading" data-i18n="conn.socks5Proxy">SOCKS5 proxy</h3>
@@ -370,7 +613,6 @@
 
         <div class="dialog-actions">
           <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
         </div>
       </div>
     </dialog>
@@ -429,15 +671,23 @@
                   <span id="obs-source-badge" class="obs-audience-badge obs-audience-badge--live" data-i18n="obs.visibleToViewers">Visible to viewers</span>
                 </div>
                 <p id="obs-source-summary" class="obs-integration-card__summary" data-i18n="obs.overlaySummary">Adds chat messages to the scene output seen by your audience.</p>
-                <p class="field-hint" data-obs-source-pane="chat" data-i18n="obs.overlayPresetHint">Each OBS scene can use its own Browser Source with ?preset= in the URL.</p>
+                <p class="field-hint" data-obs-source-pane="chat" data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
 
-                <div class="obs-url-field" data-obs-source-pane="chat">
-                  <label for="obs-overlay-url" data-i18n="obs.overlayUrl">Overlay URL</label>
+                <div class="obs-url-field studio-url-primary" data-obs-source-pane="chat">
+                  <label for="obs-overlay-url" data-i18n="obs.followActivePreset">Follow active preset</label>
                   <div class="obs-url-row">
                     <input id="obs-overlay-url" type="text" readonly value="/overlay">
                     <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-overlay-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
                   </div>
                 </div>
+                <details class="studio-url-pinned" data-obs-source-pane="chat">
+                  <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+                  <p id="obs-overlay-pinned-label" class="field-hint"></p>
+                  <div class="obs-url-row">
+                    <input id="obs-overlay-url-pinned" type="text" readonly value="/overlay">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-overlay-url-pinned" data-copy-label="Pinned overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </details>
 
                 <div class="obs-url-field" data-obs-source-pane="leaderboard" hidden>
                   <label for="obs-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
@@ -448,13 +698,21 @@
                   </select>
                 </div>
 
-                <div class="obs-url-field" data-obs-source-pane="leaderboard" hidden>
-                  <label for="obs-leaderboard-url" data-i18n="obs.leaderboardUrl">Leaderboard URL</label>
+                <div class="obs-url-field studio-url-primary" data-obs-source-pane="leaderboard" hidden>
+                  <label for="obs-leaderboard-url" data-i18n="obs.followActivePreset">Follow active preset</label>
                   <div class="obs-url-row">
                     <input id="obs-leaderboard-url" type="text" readonly value="/overlay/leaderboard">
                     <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-leaderboard-url" data-copy-label="Leaderboard URL" data-i18n="obs.copyUrl">Copy URL</button>
                   </div>
                 </div>
+                <details class="studio-url-pinned" data-obs-source-pane="leaderboard" hidden>
+                  <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+                  <p id="obs-leaderboard-pinned-label" class="field-hint"></p>
+                  <div class="obs-url-row">
+                    <input id="obs-leaderboard-url-pinned" type="text" readonly value="/overlay/leaderboard">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-leaderboard-url-pinned" data-copy-label="Pinned leaderboard URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </details>
 
                 <div class="obs-url-field" data-obs-source-pane="dock" hidden>
                   <label for="obs-dock-url" data-i18n="obs.dockUrl">Message dock URL</label>
@@ -893,6 +1151,30 @@
       </div>
     </dialog>
 
+    <dialog id="viewer-merge-prompt" class="prompt-dialog" aria-labelledby="viewer-merge-prompt-title">
+      <div class="prompt-dialog__frame">
+        <h3 id="viewer-merge-prompt-title" data-i18n="audience.mergeTitle">Merge viewers?</h3>
+        <p id="viewer-merge-prompt-message" class="prompt-dialog__message"></p>
+        <div class="prompt-dialog__actions">
+          <button id="viewer-merge-prompt-cancel" class="btn-physical" type="button" data-i18n="dialog.cancel">Cancel</button>
+          <button id="viewer-merge-prompt-confirm" class="btn-physical btn-start" type="button" data-i18n="viewers.mergeConfirm">Merge</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="audience-detail-sheet" class="audience-detail-sheet" aria-labelledby="audience-sheet-heading">
+      <div class="audience-detail-sheet__frame">
+        <header class="audience-detail-sheet__header">
+          <h2 id="audience-sheet-heading" class="audience-detail-sheet__title" data-i18n="audience.detailHeading">Viewer detail</h2>
+          <button id="audience-sheet-close" class="icon-btn audience-detail-sheet__close" type="button" data-i18n-aria-label="audience.closeDetail" aria-label="Close viewer detail">
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+        <div id="audience-sheet-body" class="audience-detail-sheet__body" tabindex="-1"></div>
+        <p id="audience-sheet-loading" class="audience-detail-sheet__loading" hidden data-i18n="state.loading">Loading</p>
+      </div>
+    </dialog>
+
     <dialog id="overlay-preset-prompt" class="prompt-dialog" aria-labelledby="overlay-preset-prompt-title">
       <div class="prompt-dialog__frame">
         <h3 id="overlay-preset-prompt-title"></h3>
@@ -909,16 +1191,8 @@
       </div>
     </dialog>
 
-    <dialog id="rich-chat-dialog" class="settings-dialog" aria-labelledby="rich-chat-heading">
-      <div class="dialog-frame">
-        <div class="dialog-header">
-          <div>
-            <span class="dialog-kicker" data-i18n="dialog.configuration">Configuration</span>
-            <h2 id="rich-chat-heading" data-i18n="shell.richChat">Rich chat</h2>
-          </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeRichChat" aria-label="Close rich chat settings">Close</button>
-        </div>
-
+    <dialog id="rich-chat-dialog" class="settings-dialog" aria-labelledby="rich-chat-heading" hidden>
+      <div id="rich-chat-settings-mount" class="rich-chat-settings-mount">
         <section class="panel" aria-labelledby="emote-providers-heading">
           <div class="panel__header">
             <h3 id="emote-providers-heading" data-i18n="rich.emoteProviders">Emote providers</h3>
@@ -1009,25 +1283,12 @@
             </div>
           </div>
         </section>
-
-        <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
-        </div>
       </div>
     </dialog>
 
-    <dialog id="interface-dialog" class="settings-dialog" aria-labelledby="interface-heading">
+    <dialog id="interface-dialog" class="settings-dialog" aria-labelledby="interface-heading" hidden>
       <div class="dialog-frame">
-        <div class="dialog-header">
-          <div>
-            <span class="dialog-kicker" data-i18n="dialog.configuration">Configuration</span>
-            <h2 id="interface-heading" data-i18n="shell.interface">Interface</h2>
-          </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeInterface" aria-label="Close interface settings">Close</button>
-        </div>
-
-        <section class="panel" aria-labelledby="time-display-heading">
+        <section id="interface-language-panel" class="panel" aria-labelledby="time-display-heading">
           <div class="panel__header">
             <h3 id="time-display-heading" data-i18n="iface.language">Language</h3>
           </div>
@@ -1045,7 +1306,7 @@
           </div>
         </section>
 
-        <section class="panel" aria-labelledby="viewer-stats-heading">
+        <section id="viewer-stats-panel" class="panel" aria-labelledby="viewer-stats-heading">
           <div class="panel__header">
             <h3 id="viewer-stats-heading" data-i18n="iface.viewerStats">Viewer stats</h3>
           </div>
@@ -1065,25 +1326,12 @@
             </div>
           </div>
         </section>
-
-        <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
-        </div>
       </div>
     </dialog>
 
-    <dialog id="sound-dialog" class="settings-dialog" aria-labelledby="message-sound-heading">
+    <dialog id="sound-dialog" class="settings-dialog" aria-labelledby="message-sound-heading" hidden>
       <div class="dialog-frame">
-        <div class="dialog-header">
-          <div>
-            <span class="dialog-kicker" data-i18n="dialog.configuration">Configuration</span>
-            <h2 id="message-sound-heading">Message sound</h2>
-          </div>
-          <button class="btn-physical btn-small" type="button" data-dialog-close data-i18n="dialog.close" data-i18n-aria-label="dialog.closeSound" aria-label="Close sound settings">Close</button>
-        </div>
-
-        <section class="panel" aria-labelledby="message-sound-panel-heading">
+        <section id="message-sound-panel" class="panel" aria-labelledby="message-sound-panel-heading">
           <div class="panel__header">
             <h3 id="message-sound-panel-heading" data-i18n="sound.alertTone">Alert tone</h3>
             <button id="test-message-sound" type="button" class="button-secondary" data-i18n="sound.test">Test</button>
@@ -1118,15 +1366,10 @@
             </div>
           </div>
         </section>
-
-        <div class="dialog-actions">
-          <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
-          <button class="btn-physical btn-start" type="submit" data-save-button disabled data-i18n="dialog.saveSettings">Save settings</button>
-        </div>
       </div>
     </dialog>
 
-    <dialog id="about-dialog" class="settings-dialog about-dialog" aria-labelledby="about-heading">
+    <dialog id="about-dialog" class="settings-dialog about-dialog" aria-labelledby="about-heading" hidden>
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>

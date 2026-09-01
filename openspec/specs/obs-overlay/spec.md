@@ -25,11 +25,19 @@ The overlay SHALL keep at most `max_messages` rows (default 30). When `message_t
 - **THEN** that row is removed with the leave animation
 
 ### Requirement: Appearance follows the active preset and optional URL overrides
-Overlay look SHALL come from `overlay.presets` / `active_preset_id` (theme, display mode, font size, style tokens, panel image). Query parameters `preset`, `max_messages`, `message_ttl_seconds`, `font_size_px`, `display_mode`, and `theme` SHALL override the matching values when valid so one process can feed multiple OBS scenes.
+Overlay look SHALL come from `overlay.presets` and `active_preset_id` (theme, display mode, font size, style tokens, panel image). When `preset` is absent, `/overlay` and `/leaderboard` MUST follow the current `active_preset_id`, including changes delivered through `overlay_settings`. When a valid `preset` is present, that source MUST remain pinned to the named preset. Query parameters `max_messages`, `message_ttl_seconds`, `font_size_px`, `display_mode`, and `theme` SHALL override matching values when valid so one process can feed multiple OBS scenes.
 
-#### Scenario: Preset query
-- **WHEN** OBS loads `/overlay?preset=<id>` for an existing preset
-- **THEN** that preset's theme, queue, and style are applied
+#### Scenario: Unpinned source follows activation
+- **WHEN** an overlay or leaderboard URL has no `preset` query and the active preset changes
+- **THEN** the source applies the newly active preset without requiring its OBS URL to be replaced
+
+#### Scenario: Pinned preset query
+- **WHEN** OBS loads `/overlay?preset=<id>` for an existing preset and another preset becomes active
+- **THEN** the source continues using the preset named in its URL
+
+#### Scenario: Invalid preset query
+- **WHEN** the URL names a preset that does not exist
+- **THEN** the source falls back to the active preset without failing to render
 
 #### Scenario: Invalid theme query
 - **WHEN** the URL has `theme=not-a-theme`
@@ -103,3 +111,25 @@ When `/overlay` is loaded with a preview query, `preview_background` SHALL apply
 #### Scenario: Live OBS overlay
 - **WHEN** `/overlay` loads without a preview query
 - **THEN** the page background stays transparent
+
+### Requirement: Admin source copy distinguishes following and pinned URLs
+Studio SHALL offer an unpinned URL that follows the active preset as the primary copy action for overlay and leaderboard sources. It SHALL also offer an explicitly labeled pinned URL for operators who require a scene-specific preset. Existing URLs with `preset` MUST remain valid.
+
+#### Scenario: Copy default overlay source
+- **WHEN** the operator uses the primary copy action for the chat overlay
+- **THEN** the copied URL omits `preset` and is labeled as following the active preset
+
+#### Scenario: Copy pinned leaderboard source
+- **WHEN** the operator chooses the pinned copy option for a leaderboard preset
+- **THEN** the copied URL includes that preset's identifier and is labeled as pinned
+
+### Requirement: Overlay themes are the on-stream visual language
+Registered overlay themes (`default`, `dashboard`, `cockpit_panel`, `cockpit_popups`, `g_rebels_popups`) SHALL define the visual language for every on-stream Browser Source that honors `preset`, not only the chat queue. Chat `/overlay` SHALL keep its existing per-theme message layout (panel versus popups). Other surfaces MUST use the same theme tokens and chrome language and MUST NOT ship an unthemed one-off look.
+
+#### Scenario: Chat theme still selects message layout
+- **WHEN** `/overlay?preset=<id>` loads a preset whose theme is `cockpit_popups`
+- **THEN** chat messages still render as separate HUD popups
+
+#### Scenario: Same theme id on another surface
+- **WHEN** a second on-stream page loads the same preset id
+- **THEN** that page uses the same theme id and matching visual language rather than a hardcoded unrelated palette

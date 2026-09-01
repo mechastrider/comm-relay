@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CommRelay - Interactive Console Redesign</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d10;
+      --sidebar: #0f1115;
+      --surface: #13161b;
+      --surface-2: #181c22;
+      --surface-3: #20252d;
+      --border: #2b313b;
+      --border-strong: #3a424f;
+      --text: #f1f4f7;
+      --text-soft: #c4cbd3;
+      --muted: #929ca8;
+      --subtle: #697480;
+      --cyan: #54d4ce;
+      --cyan-soft: #153c3b;
+      --violet: #b49aff;
+      --violet-soft: #29223f;
+      --amber: #e7b85f;
+      --amber-soft: #3d311d;
+      --green: #75d493;
+      --green-soft: #173724;
+      --red: #f27c86;
+      --red-soft: #3e2025;
+      --focus: #7ce7e1;
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+      --radius: 6px;
+      --font: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      font-family: var(--font);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-width: 320px;
+      min-height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      min-height: 100dvh;
+      overflow: hidden;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button,
+    select,
+    input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    h2 {
+      font-size: 16px;
+      line-height: 1.3;
+    }
+
+    h3 {
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .visually-hidden {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      z-index: 1000;
+      transform: translateY(-160%);
+      padding: 8px 12px;
+      border-radius: 4px;
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .icon--small {
+      width: 15px;
+      height: 15px;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 208px minmax(0, 1fr);
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-height: 0;
+      padding: 14px 12px 12px;
+      border-right: 1px solid var(--border);
+      background: var(--sidebar);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 4px 8px 16px;
+    }
+
+    .brand__mark {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      border: 1px solid #365e5d;
+      border-radius: 6px;
+      background: var(--cyan-soft);
+      color: var(--cyan);
+    }
+
+    .brand__name {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .brand__caption {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .primary-nav {
+      display: flex;
+      min-height: 0;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-label {
+      padding: 10px 10px 5px;
+      color: var(--subtle);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .nav-button {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 44px;
+      padding: 0 10px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+      transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+    }
+
+    .nav-button:hover {
+      background: var(--surface-2);
+      color: var(--text-soft);
+    }
+
+    .nav-button[aria-current="page"] {
+      border-color: #2b5654;
+      background: var(--cyan-soft);
+      color: var(--cyan);
+    }
+
+    .sidebar__footer {
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-version {
+      padding: 8px 10px 0;
+      color: var(--subtle);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .stage {
+      display: grid;
+      grid-template-rows: 64px minmax(0, 1fr) 28px;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .topbar__title {
+      min-width: 150px;
+    }
+
+    .topbar__title p {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .topbar__session {
+      display: flex;
+      min-width: 0;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .session-chip,
+    .health-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      color: var(--text-soft);
+      white-space: nowrap;
+    }
+
+    .session-chip strong,
+    .health-button strong {
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .health-button:hover {
+      border-color: var(--border-strong);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 3px rgba(117, 212, 147, 0.12);
+    }
+
+    .status-dot--cyan {
+      background: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(84, 212, 206, 0.12);
+    }
+
+    .topbar__actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      color: var(--text-soft);
+      font-weight: 600;
+      transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+    }
+
+    .button:hover {
+      border-color: #53606f;
+      background: var(--surface-3);
+      color: var(--text);
+    }
+
+    .button--primary {
+      border-color: #2f7572;
+      background: #1b4d4b;
+      color: #d8fffc;
+    }
+
+    .button--primary:hover {
+      border-color: var(--cyan);
+      background: #225f5c;
+    }
+
+    .button--danger {
+      border-color: #734049;
+      background: var(--red-soft);
+      color: #ffd8dc;
+    }
+
+    .button--ghost {
+      border-color: transparent;
+      background: transparent;
+    }
+
+    .button--small {
+      min-height: 30px;
+      padding: 0 9px;
+      font-size: 12px;
+    }
+
+    .button--icon {
+      width: 36px;
+      padding: 0;
+    }
+
+    .mobile-brand {
+      display: none;
+    }
+
+    .content {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      background: var(--bg);
+      scrollbar-color: var(--border-strong) transparent;
+    }
+
+    .page {
+      min-height: 100%;
+      padding: 16px;
+    }
+
+    .page-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 40px;
+      margin-bottom: 12px;
+    }
+
+    .page-toolbar__copy p {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .toolbar-actions,
+    .segmented-control {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .segmented-control {
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .segment {
+      min-height: 32px;
+      padding: 0 11px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .segment:hover {
+      color: var(--text-soft);
+    }
+
+    .segment[aria-selected="true"] {
+      background: var(--surface-3);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px var(--border-strong);
+    }
+
+    .live-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 292px;
+      gap: 12px;
+      min-height: calc(100% - 52px);
+    }
+
+    .live-main,
+    .inspector,
+    .workspace-panel,
+    .data-detail,
+    .studio-preview,
+    .settings-content {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .live-main {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 12px 14px;
+      border-right: 1px solid var(--border);
+    }
+
+    .metric:last-child {
+      border-right: 0;
+    }
+
+    .metric__label {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .metric__value {
+      display: block;
+      margin-top: 4px;
+      font-size: 22px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric__delta {
+      margin-left: 5px;
+      color: var(--green);
+      font-size: 11px;
+    }
+
+    .live-tabs {
+      display: flex;
+      gap: 18px;
+      min-height: 46px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .live-tab {
+      position: relative;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .live-tab::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      bottom: -1px;
+      left: 0;
+      height: 2px;
+      background: transparent;
+    }
+
+    .live-tab[aria-selected="true"] {
+      color: var(--text);
+    }
+
+    .live-tab[aria-selected="true"]::after {
+      background: var(--cyan);
+    }
+
+    .live-view {
+      min-height: 480px;
+      padding: 14px;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+      gap: 12px;
+    }
+
+    .section-block {
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+    }
+
+    .section-heading {
+      display: flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-heading p {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .surface-row,
+    .activity-row,
+    .command-row,
+    .splash-row {
+      display: grid;
+      align-items: center;
+      gap: 10px;
+      min-height: 56px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .surface-row:last-child,
+    .activity-row:last-child,
+    .command-row:last-child,
+    .splash-row:last-child {
+      border-bottom: 0;
+    }
+
+    .surface-row {
+      grid-template-columns: 24px minmax(0, 1fr) auto auto;
+    }
+
+    .surface-icon {
+      display: grid;
+      width: 26px;
+      height: 26px;
+      place-items: center;
+      border-radius: 5px;
+      background: var(--cyan-soft);
+      color: var(--cyan);
+    }
+
+    .surface-icon--violet {
+      background: var(--violet-soft);
+      color: var(--violet);
+    }
+
+    .surface-icon--amber {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .row-title {
+      min-width: 0;
+      color: var(--text-soft);
+      font-weight: 600;
+    }
+
+    .row-subtitle {
+      display: block;
+      margin-top: 2px;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .state-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .state-label--ok {
+      color: var(--green);
+    }
+
+    .state-label--attention {
+      color: var(--amber);
+    }
+
+    .activity-row {
+      grid-template-columns: 28px 50px minmax(0, 1fr);
+      align-items: start;
+      min-height: 62px;
+    }
+
+    .activity-time {
+      color: var(--subtle);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .avatar {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border: 1px solid var(--border-strong);
+      border-radius: 50%;
+      background: #26313a;
+      color: var(--text-soft);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .avatar--violet {
+      border-color: #554773;
+      background: var(--violet-soft);
+      color: var(--violet);
+    }
+
+    .activity-copy {
+      min-width: 0;
+      color: var(--text-soft);
+      font-size: 12px;
+    }
+
+    .activity-copy strong {
+      color: var(--text);
+    }
+
+    .activity-copy span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+    }
+
+    .inspector {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .inspector__header {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .temperature-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+      color: var(--amber);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .inspector__body {
+      padding: 14px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    .field label,
+    .field__label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text-soft);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .field-hint {
+      margin-top: 5px;
+      color: var(--subtle);
+      font-size: 10px;
+    }
+
+    select,
+    input[type="text"],
+    input[type="search"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      min-height: 38px;
+      padding: 7px 9px;
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      background: #0f1216;
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+
+    .toggle-row {
+      display: flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toggle-row:last-child {
+      border-bottom: 0;
+    }
+
+    .toggle-row__copy {
+      color: var(--text-soft);
+      font-size: 12px;
+    }
+
+    .toggle-row__copy span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-flex;
+      width: 36px;
+      height: 20px;
+      flex: 0 0 auto;
+    }
+
+    .switch input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    .switch__track {
+      width: 100%;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      background: #242a32;
+      transition: background-color 160ms ease, border-color 160ms ease;
+    }
+
+    .switch__track::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: transform 160ms ease, background-color 160ms ease;
+    }
+
+    .switch input:checked + .switch__track {
+      border-color: #397572;
+      background: var(--cyan-soft);
+    }
+
+    .switch input:checked + .switch__track::after {
+      transform: translateX(16px);
+      background: var(--cyan);
+    }
+
+    .switch input:focus-visible + .switch__track {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .action-stack {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .leaderboard-table,
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .leaderboard-table th,
+    .leaderboard-table td,
+    .data-table th,
+    .data-table td {
+      height: 46px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .leaderboard-table th,
+    .data-table th {
+      height: 36px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .leaderboard-table tr:last-child td,
+    .data-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .number-cell {
+      font-variant-numeric: tabular-nums;
+      text-align: right !important;
+    }
+
+    .rank {
+      width: 38px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .rank--top {
+      color: var(--amber);
+      font-weight: 700;
+    }
+
+    .viewer-cell {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 600;
+    }
+
+    .platform-badges {
+      display: flex;
+      gap: 4px;
+    }
+
+    .platform-badge {
+      display: inline-flex;
+      min-height: 18px;
+      align-items: center;
+      padding: 0 5px;
+      border: 1px solid var(--border-strong);
+      border-radius: 3px;
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+    }
+
+    .activity-full {
+      display: grid;
+      grid-template-columns: 160px minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .filter-list {
+      display: grid;
+      align-content: start;
+      gap: 4px;
+    }
+
+    .filter-button,
+    .settings-nav-button,
+    .surface-select {
+      display: flex;
+      width: 100%;
+      min-height: 38px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 9px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+    }
+
+    .filter-button:hover,
+    .settings-nav-button:hover,
+    .surface-select:hover {
+      background: var(--surface-2);
+      color: var(--text-soft);
+    }
+
+    .filter-button[aria-pressed="true"],
+    .settings-nav-button[aria-selected="true"],
+    .surface-select[aria-selected="true"] {
+      border-color: var(--border-strong);
+      background: var(--surface-3);
+      color: var(--text);
+    }
+
+    .filter-count {
+      color: var(--subtle);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .chart-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+      gap: 12px;
+    }
+
+    .chart {
+      display: flex;
+      min-height: 270px;
+      align-items: flex-end;
+      gap: 9px;
+      padding: 24px 18px 28px;
+      border-top: 1px solid var(--border);
+      background-image: linear-gradient(to bottom, transparent 24%, rgba(255,255,255,0.04) 25%, transparent 26%, transparent 49%, rgba(255,255,255,0.04) 50%, transparent 51%, transparent 74%, rgba(255,255,255,0.04) 75%, transparent 76%);
+    }
+
+    .bar {
+      position: relative;
+      min-width: 10px;
+      flex: 1;
+      border-radius: 3px 3px 0 0;
+      background: #2d7773;
+    }
+
+    .bar:nth-child(3n + 2) {
+      background: #7967aa;
+    }
+
+    .bar::after {
+      content: attr(data-label);
+      position: absolute;
+      right: 0;
+      bottom: -21px;
+      left: 0;
+      color: var(--subtle);
+      font-size: 9px;
+      text-align: center;
+    }
+
+    .insight-list {
+      margin: 0;
+      padding: 8px 12px 8px 28px;
+      color: var(--text-soft);
+    }
+
+    .insight-list li {
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .insight-list li:last-child {
+      border-bottom: 0;
+    }
+
+    .insight-list span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .data-workspace {
+      display: grid;
+      grid-template-columns: minmax(540px, 1fr) 310px;
+      gap: 12px;
+      min-height: calc(100% - 52px);
+    }
+
+    .workspace-panel {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .table-toolbar {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto auto;
+      gap: 8px;
+      min-height: 56px;
+      align-items: center;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+
+    .search-wrap .icon {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: var(--subtle);
+    }
+
+    .search-wrap input {
+      padding-left: 34px;
+    }
+
+    .data-table tbody tr {
+      cursor: pointer;
+      transition: background-color 140ms ease;
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--surface-2);
+    }
+
+    .data-table tbody tr[aria-selected="true"] {
+      background: var(--cyan-soft);
+      box-shadow: inset 2px 0 var(--cyan);
+    }
+
+    .data-detail {
+      overflow: hidden;
+    }
+
+    .detail-hero {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-hero .avatar {
+      width: 38px;
+      height: 38px;
+      font-size: 12px;
+    }
+
+    .detail-hero p {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .detail-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-section:last-child {
+      border-bottom: 0;
+    }
+
+    .detail-section h3 {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .detail-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .detail-stat {
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface-2);
+    }
+
+    .detail-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .detail-stat strong {
+      display: block;
+      margin-top: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .identity-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .identity {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--text-soft);
+      font-size: 11px;
+    }
+
+    .interactions-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+      gap: 12px;
+      min-height: calc(100% - 52px);
+    }
+
+    .command-row {
+      grid-template-columns: 44px minmax(0, 1fr) 90px 90px auto;
+    }
+
+    .command-trigger {
+      color: var(--violet);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .command-meta {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .splash-row {
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+    }
+
+    .splash-swatch {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border: 1px solid #645786;
+      border-radius: 5px;
+      background: var(--violet-soft);
+      color: var(--violet);
+    }
+
+    .studio-layout {
+      display: grid;
+      grid-template-columns: 210px minmax(430px, 1fr) 280px;
+      gap: 12px;
+      min-height: calc(100% - 52px);
+    }
+
+    .studio-surfaces {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .surface-list {
+      padding: 6px;
+    }
+
+    .surface-select {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr) auto;
+      min-height: 52px;
+    }
+
+    .surface-select__copy strong {
+      display: block;
+      color: inherit;
+      font-size: 12px;
+    }
+
+    .surface-select__copy span {
+      display: block;
+      margin-top: 2px;
+      color: var(--subtle);
+      font-size: 10px;
+    }
+
+    .studio-preview {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .preview-toolbar {
+      display: flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preview-toolbar__meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .preview-stage-wrap {
+      padding: 14px;
+    }
+
+    .preview-stage {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      min-height: 300px;
+      overflow: hidden;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      background-color: #111;
+      background-image: url("../images/poster.jpg");
+      background-position: 84% 18%;
+      background-size: 200% auto;
+      background-repeat: no-repeat;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    .preview-stage::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.18);
+      pointer-events: none;
+    }
+
+    .preview-safe-area {
+      position: absolute;
+      inset: 7%;
+      z-index: 1;
+      border: 1px dashed rgba(255,255,255,0.26);
+      pointer-events: none;
+    }
+
+    .preview-chat,
+    .preview-alert,
+    .preview-leaderboard {
+      position: absolute;
+      z-index: 2;
+      color: #f5f7f8;
+      text-shadow: 0 2px 6px #000;
+    }
+
+    .preview-chat {
+      right: 5%;
+      bottom: 8%;
+      left: 5%;
+      display: grid;
+      gap: 7px;
+    }
+
+    .preview-message {
+      max-width: 58%;
+      padding: 8px 11px;
+      border-left: 3px solid var(--cyan);
+      background: rgba(8, 13, 18, 0.86);
+      font-size: 11px;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.28);
+    }
+
+    .preview-message strong {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--amber);
+      font-size: 10px;
+    }
+
+    .preview-leaderboard {
+      top: 10%;
+      right: 5%;
+      width: 42%;
+      padding: 12px;
+      border: 1px solid rgba(84, 212, 206, 0.62);
+      background: rgba(7, 15, 20, 0.88);
+    }
+
+    .preview-leaderboard h3 {
+      margin-bottom: 8px;
+      color: var(--cyan);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .preview-rank-row {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr) auto;
+      gap: 7px;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.11);
+      font-size: 10px;
+    }
+
+    .preview-rank-row:last-child {
+      border-bottom: 0;
+    }
+
+    .preview-alert {
+      top: 34%;
+      left: 20%;
+      width: 60%;
+      padding: 16px;
+      border: 1px solid rgba(180, 154, 255, 0.72);
+      background: rgba(25, 19, 39, 0.92);
+      text-align: center;
+      box-shadow: 0 14px 38px rgba(0,0,0,0.4);
+    }
+
+    .preview-alert span {
+      display: block;
+      color: var(--violet);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .preview-alert strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 16px;
+    }
+
+    .studio-inspector {
+      min-width: 0;
+    }
+
+    .publish-state {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--amber);
+      font-size: 11px;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 45px;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--cyan);
+    }
+
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 210px minmax(480px, 780px);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .settings-nav {
+      padding: 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .settings-nav-button {
+      justify-content: flex-start;
+    }
+
+    .settings-content {
+      overflow: hidden;
+    }
+
+    .settings-panel {
+      padding: 16px;
+    }
+
+    .settings-section {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 20px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-section:first-child {
+      padding-top: 0;
+    }
+
+    .settings-section:last-child {
+      border-bottom: 0;
+    }
+
+    .settings-section__intro p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .settings-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+
+    .statusbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+      padding: 0 12px;
+      border-top: 1px solid var(--border);
+      background: var(--sidebar);
+      color: var(--subtle);
+      font-family: var(--mono);
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    .statusbar__spacer {
+      flex: 1;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 42px;
+      z-index: 100;
+      max-width: min(360px, calc(100vw - 36px));
+      padding: 10px 12px;
+      border: 1px solid #397572;
+      border-radius: var(--radius);
+      background: #13302f;
+      color: #d8fffc;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .toast.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .mobile-only {
+      display: none;
+    }
+
+    @media (max-width: 1180px) {
+      .live-layout,
+      .data-workspace {
+        grid-template-columns: minmax(0, 1fr) 260px;
+      }
+
+      .studio-layout {
+        grid-template-columns: 180px minmax(370px, 1fr) 250px;
+      }
+
+      .topbar__session .session-chip:nth-child(2) {
+        display: none;
+      }
+
+      .overview-grid,
+      .chart-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .interactions-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 960px) {
+      .app-shell {
+        grid-template-columns: 184px minmax(0, 1fr);
+      }
+
+      .live-layout,
+      .data-workspace,
+      .studio-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .inspector,
+      .data-detail,
+      .studio-inspector {
+        min-height: auto;
+      }
+
+      .studio-surfaces {
+        min-height: auto;
+      }
+
+      .surface-list {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .surface-select {
+        min-width: 0;
+      }
+
+      .settings-layout {
+        grid-template-columns: 180px minmax(0, 1fr);
+      }
+
+      .topbar__session {
+        justify-content: flex-end;
+      }
+
+      .health-button span,
+      .session-chip span {
+        display: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        overflow: auto;
+        font-size: 13px;
+      }
+
+      .app-shell {
+        display: block;
+        height: auto;
+        min-height: 100dvh;
+        padding-bottom: 68px;
+      }
+
+      .sidebar {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 50;
+        display: block;
+        height: 68px;
+        padding: 5px 6px max(5px, env(safe-area-inset-bottom));
+        border-top: 1px solid var(--border-strong);
+        border-right: 0;
+        background: rgba(15, 17, 21, 0.98);
+      }
+
+      .brand,
+      .nav-label,
+      .sidebar-version {
+        display: none;
+      }
+
+      .primary-nav {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 2px;
+      }
+
+      .sidebar__footer {
+        display: contents;
+        padding: 0;
+        border: 0;
+      }
+
+      .nav-button {
+        display: flex;
+        min-width: 0;
+        min-height: 56px;
+        flex-direction: column;
+        justify-content: center;
+        gap: 3px;
+        padding: 3px 2px;
+        font-size: 9px;
+        text-align: center;
+      }
+
+      .nav-button .icon {
+        width: 19px;
+        height: 19px;
+      }
+
+      .stage {
+        display: block;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        min-height: 58px;
+        padding: 0 10px;
+      }
+
+      .topbar__title {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .topbar__title h1 {
+        font-size: 16px;
+      }
+
+      .topbar__title p,
+      .topbar__session,
+      .topbar__actions .button span {
+        display: none;
+      }
+
+      .mobile-brand {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        place-items: center;
+        border: 1px solid #365e5d;
+        border-radius: 5px;
+        color: var(--cyan);
+      }
+
+      .content {
+        overflow: visible;
+      }
+
+      .page {
+        min-height: auto;
+        padding: 10px;
+      }
+
+      .page-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .toolbar-actions,
+      .segmented-control {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .segment {
+        flex: 1 0 auto;
+      }
+
+      .metrics-strip {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .metric:nth-child(2) {
+        border-right: 0;
+      }
+
+      .metric:nth-child(-n + 2) {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .live-tabs {
+        gap: 12px;
+        overflow-x: auto;
+      }
+
+      .live-tab {
+        min-width: max-content;
+      }
+
+      .live-view {
+        min-height: 0;
+        padding: 10px;
+      }
+
+      .overview-grid,
+      .activity-full,
+      .chart-layout,
+      .interactions-layout,
+      .settings-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .activity-full .filter-list {
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .filter-button {
+        min-width: max-content;
+      }
+
+      .table-toolbar {
+        grid-template-columns: 1fr auto;
+      }
+
+      .table-toolbar .search-wrap {
+        grid-column: 1 / -1;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+      }
+
+      .data-table,
+      .leaderboard-table {
+        min-width: 620px;
+      }
+
+      .command-row {
+        grid-template-columns: 38px minmax(0, 1fr) auto;
+      }
+
+      .command-row .command-meta:nth-of-type(2),
+      .command-row .command-meta:nth-of-type(3) {
+        display: none;
+      }
+
+      .surface-list {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-stage {
+        min-height: 220px;
+      }
+
+      .preview-message {
+        max-width: 82%;
+      }
+
+      .preview-leaderboard {
+        width: 58%;
+      }
+
+      .settings-nav {
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .settings-nav-button {
+        min-width: max-content;
+      }
+
+      .settings-section {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .statusbar {
+        display: none;
+      }
+
+      .toast {
+        right: 10px;
+        bottom: 78px;
+        left: 10px;
+        max-width: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">К основному содержанию</a>
+
+  <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+    <symbol id="icon-relay" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"></circle><circle cx="19" cy="6" r="2"></circle><circle cx="19" cy="18" r="2"></circle><path d="M7 12h5M13.5 10.5 17 7M13.5 13.5 17 17"></path></symbol>
+    <symbol id="icon-live" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+    <symbol id="icon-zap" viewBox="0 0 24 24"><path d="m13 2-10 12h9l-1 8 10-12h-9z"></path></symbol>
+    <symbol id="icon-panels" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"></path><path d="M1 14h6M9 8h6M17 16h6"></path></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9z"></path></symbol>
+    <symbol id="icon-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"></rect></symbol>
+    <symbol id="icon-activity" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"></path></symbol>
+    <symbol id="icon-message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path></symbol>
+    <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="M7 16v-4M12 16V7M17 16v-7"></path></symbol>
+    <symbol id="icon-trophy" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0z"></path><path d="M7 6H3v1a4 4 0 0 0 4 4M17 6h4v1a4 4 0 0 1-4 4"></path></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></symbol>
+    <symbol id="icon-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6"></path><circle cx="12" cy="12" r="2.5"></circle></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></symbol>
+    <symbol id="icon-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></symbol>
+    <symbol id="icon-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"></path></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Основная навигация">
+      <div class="brand">
+        <span class="brand__mark"><svg class="icon" aria-hidden="true"><use href="#icon-relay"></use></svg></span>
+        <span><span class="brand__name">CommRelay</span><span class="brand__caption">Interaction console</span></span>
+      </div>
+
+      <nav class="primary-nav">
+        <span class="nav-label">Рабочее пространство</span>
+        <button class="nav-button" type="button" data-page="live" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#icon-live"></use></svg><span>Эфир</span></button>
+        <button class="nav-button" type="button" data-page="audience"><svg class="icon" aria-hidden="true"><use href="#icon-users"></use></svg><span>Аудитория</span></button>
+        <button class="nav-button" type="button" data-page="interactions"><svg class="icon" aria-hidden="true"><use href="#icon-zap"></use></svg><span>Интерактивы</span></button>
+        <button class="nav-button" type="button" data-page="studio"><svg class="icon" aria-hidden="true"><use href="#icon-panels"></use></svg><span>Студия</span></button>
+      </nav>
+
+      <div class="sidebar__footer">
+        <button class="nav-button" type="button" data-page="settings"><svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg><span>Настройки</span></button>
+        <div class="sidebar-version">PREVIEW / IA-01</div>
+      </div>
+    </aside>
+
+    <div class="stage">
+      <header class="topbar">
+        <span class="mobile-brand"><svg class="icon" aria-hidden="true"><use href="#icon-relay"></use></svg></span>
+        <div class="topbar__title">
+          <h1 id="page-title">Эфир</h1>
+          <p id="page-caption">Состояние и управление текущей сессией</p>
+        </div>
+
+        <div class="topbar__session">
+          <span class="session-chip"><span class="status-dot"></span><span>Сессия</span> <strong id="session-number">#24</strong></span>
+          <span class="session-chip"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-activity"></use></svg><span>В эфире</span> <strong id="session-timer">01:42:18</strong></span>
+          <button class="health-button" type="button" data-demo-action="Все подключения работают"><span class="status-dot status-dot--cyan"></span><span>Подключения</span> <strong>3/3</strong></button>
+        </div>
+
+        <div class="topbar__actions">
+          <button id="session-toggle" class="button button--danger" type="button" aria-label="Завершить эфир"><svg class="icon" aria-hidden="true"><use href="#icon-stop"></use></svg><span>Завершить эфир</span></button>
+        </div>
+      </header>
+
+      <main id="main-content" class="content" tabindex="-1">
+        <section id="page-live" class="page" data-page-panel="live">
+          <div class="page-toolbar">
+            <div class="page-toolbar__copy"><h2>Операторская</h2><p>Только то, что нужно контролировать прямо сейчас.</p></div>
+          </div>
+
+          <div class="live-layout">
+            <div class="live-main">
+              <div class="metrics-strip" aria-label="Метрики текущей сессии">
+                <div class="metric"><span class="metric__label">Зрители</span><strong class="metric__value">184 <span class="metric__delta">+17</span></strong></div>
+                <div class="metric"><span class="metric__label">События</span><strong class="metric__value">1 920</strong></div>
+                <div class="metric"><span class="metric__label">Команды</span><strong class="metric__value">126</strong></div>
+                <div class="metric"><span class="metric__label">Средний отклик</span><strong class="metric__value">82 мс</strong></div>
+              </div>
+
+              <div class="live-tabs" role="tablist" aria-label="Данные эфира">
+                <button class="live-tab" type="button" role="tab" aria-selected="true" data-live-tab="overview">Обзор</button>
+                <button class="live-tab" type="button" role="tab" aria-selected="false" data-live-tab="leaderboard">Лидерборд</button>
+                <button class="live-tab" type="button" role="tab" aria-selected="false" data-live-tab="activity">Активность</button>
+                <button class="live-tab" type="button" role="tab" aria-selected="false" data-live-tab="stats">Статистика</button>
+              </div>
+
+              <section class="live-view" data-live-panel="overview">
+                <div class="overview-grid">
+                  <section class="section-block" aria-labelledby="surfaces-heading">
+                    <div class="section-heading"><div><h3 id="surfaces-heading">Выходы в эфир</h3><p>Применённый профиль Main</p></div><button class="button button--small button--ghost" type="button" data-go-page="studio">Открыть студию</button></div>
+                    <div class="surface-row"><span class="surface-icon"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-message"></use></svg></span><span class="row-title">Чат<span class="row-subtitle">Cockpit popups · очередь 5</span></span><span class="state-label state-label--ok"><span class="status-dot"></span>Активен</span><button class="button button--small" type="button" data-demo-action="Чат очищен">Очистить</button></div>
+                    <div class="surface-row"><span class="surface-icon surface-icon--amber"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-trophy"></use></svg></span><span class="row-title">Лидерборд<span class="row-subtitle">Top 5 · текущая сессия</span></span><span class="state-label state-label--ok"><span class="status-dot"></span>Активен</span><button class="button button--small" type="button" data-live-tab-trigger="leaderboard">Смотреть</button></div>
+                    <div class="surface-row"><span class="surface-icon surface-icon--violet"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-zap"></use></svg></span><span class="row-title">Splash<span class="row-subtitle">Очередь свободна</span></span><span class="state-label">0 в очереди</span><button class="button button--small" type="button" data-demo-action="Тестовый splash отправлен">Тест</button></div>
+                  </section>
+
+                  <section class="section-block" aria-labelledby="recent-heading">
+                    <div class="section-heading"><div><h3 id="recent-heading">Последняя активность</h3><p>Чат, команды и системные события</p></div><button class="button button--small button--ghost" type="button" data-live-tab-trigger="activity">Вся лента</button></div>
+                    <div class="activity-row"><span class="avatar">MC</span><time class="activity-time">23:41</time><p class="activity-copy"><strong>MechaStrider</strong> вызвал <b>!gg</b><span>Splash показан · +5 score</span></p></div>
+                    <div class="activity-row"><span class="avatar avatar--violet">AK</span><time class="activity-time">23:40</time><p class="activity-copy"><strong>Akira</strong><span>Этот заход был чистым!</span></p></div>
+                    <div class="activity-row"><span class="surface-icon"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-check"></use></svg></span><time class="activity-time">23:39</time><p class="activity-copy"><strong>Система</strong><span>YouTube reconnect завершён за 1,2 с</span></p></div>
+                  </section>
+                </div>
+              </section>
+
+              <section class="live-view" data-live-panel="leaderboard" hidden>
+                <div class="section-block">
+                  <div class="section-heading"><div><h3>Лидерборд сессии</h3><p>Обновляется в реальном времени</p></div><div class="segmented-control" role="group" aria-label="Период"><button class="segment" type="button" aria-selected="true">Сессия</button><button class="segment" type="button">День</button><button class="segment" type="button">Всё время</button></div></div>
+                  <div class="table-scroll"><table class="leaderboard-table"><thead><tr><th class="rank">#</th><th>Зритель</th><th>Платформы</th><th class="number-cell">Сообщения</th><th class="number-cell">Score</th><th class="number-cell">Изменение</th></tr></thead><tbody>
+                    <tr><td class="rank rank--top">01</td><td><span class="viewer-cell"><span class="avatar">MC</span>MechaStrider</span></td><td><span class="platform-badges"><span class="platform-badge">TW</span><span class="platform-badge">YT</span></span></td><td class="number-cell">214</td><td class="number-cell"><strong>1 420</strong></td><td class="number-cell" style="color:var(--green)">+85</td></tr>
+                    <tr><td class="rank rank--top">02</td><td><span class="viewer-cell"><span class="avatar avatar--violet">AK</span>Akira</span></td><td><span class="platform-badge">YT</span></td><td class="number-cell">186</td><td class="number-cell"><strong>1 180</strong></td><td class="number-cell" style="color:var(--green)">+42</td></tr>
+                    <tr><td class="rank rank--top">03</td><td><span class="viewer-cell"><span class="avatar">NV</span>Nova</span></td><td><span class="platform-badge">VK</span></td><td class="number-cell">141</td><td class="number-cell"><strong>960</strong></td><td class="number-cell" style="color:var(--green)">+18</td></tr>
+                    <tr><td class="rank">04</td><td><span class="viewer-cell"><span class="avatar">GH</span>Ghost</span></td><td><span class="platform-badge">TW</span></td><td class="number-cell">98</td><td class="number-cell"><strong>780</strong></td><td class="number-cell">0</td></tr>
+                    <tr><td class="rank">05</td><td><span class="viewer-cell"><span class="avatar">VS</span>Vostok</span></td><td><span class="platform-badge">VK</span></td><td class="number-cell">83</td><td class="number-cell"><strong>655</strong></td><td class="number-cell" style="color:var(--green)">+12</td></tr>
+                  </tbody></table></div>
+                </div>
+              </section>
+
+              <section class="live-view" data-live-panel="activity" hidden>
+                <div class="activity-full">
+                  <div class="filter-list" aria-label="Фильтры событий">
+                    <button class="filter-button" type="button" aria-pressed="true">Все <span class="filter-count">1 920</span></button>
+                    <button class="filter-button" type="button" aria-pressed="false">Команды <span class="filter-count">126</span></button>
+                    <button class="filter-button" type="button" aria-pressed="false">Сообщения <span class="filter-count">1 761</span></button>
+                    <button class="filter-button" type="button" aria-pressed="false">Система <span class="filter-count">33</span></button>
+                  </div>
+                  <div class="section-block">
+                    <div class="section-heading"><div><h3>Лента событий</h3><p>Новые события появляются сверху</p></div><button class="button button--small" type="button" data-demo-action="Лента поставлена на паузу">Пауза</button></div>
+                    <div class="activity-row"><span class="avatar">MC</span><time class="activity-time">23:41:28</time><p class="activity-copy"><strong>MechaStrider</strong> вызвал <b>!gg</b><span>Splash «Good game» показан · +5 score</span></p></div>
+                    <div class="activity-row"><span class="avatar avatar--violet">AK</span><time class="activity-time">23:40:52</time><p class="activity-copy"><strong>Akira · YouTube</strong><span>Этот заход был чистым!</span></p></div>
+                    <div class="activity-row"><span class="surface-icon"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-check"></use></svg></span><time class="activity-time">23:39:18</time><p class="activity-copy"><strong>Система</strong><span>YouTube reconnect завершён за 1,2 с</span></p></div>
+                    <div class="activity-row"><span class="avatar">NV</span><time class="activity-time">23:38:44</time><p class="activity-copy"><strong>Nova · VK Live</strong> вызвал <b>!drop</b><span>Cooldown активен · действие пропущено</span></p></div>
+                    <div class="activity-row"><span class="avatar">GH</span><time class="activity-time">23:37:11</time><p class="activity-copy"><strong>Ghost · Twitch</strong><span>Нужен ещё один заход</span></p></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="live-view" data-live-panel="stats" hidden>
+                <div class="chart-layout">
+                  <section class="section-block"><div class="section-heading"><div><h3>Активность за последний час</h3><p>Событий за 5 минут</p></div><span class="state-label state-label--ok">Пик 62</span></div><div class="chart" aria-label="Столбчатая диаграмма активности"><span class="bar" data-label="22:45" style="height:28%"></span><span class="bar" data-label="22:50" style="height:36%"></span><span class="bar" data-label="22:55" style="height:48%"></span><span class="bar" data-label="23:00" style="height:43%"></span><span class="bar" data-label="23:05" style="height:67%"></span><span class="bar" data-label="23:10" style="height:58%"></span><span class="bar" data-label="23:15" style="height:76%"></span><span class="bar" data-label="23:20" style="height:62%"></span><span class="bar" data-label="23:25" style="height:90%"></span><span class="bar" data-label="23:30" style="height:71%"></span><span class="bar" data-label="23:35" style="height:82%"></span><span class="bar" data-label="23:40" style="height:63%"></span></div></section>
+                  <section class="section-block"><div class="section-heading"><div><h3>Наблюдения</h3><p>Текущая сессия</p></div></div><ul class="insight-list"><li>Команда <strong>!gg</strong> лидирует<span>47 использований, 37% всех команд</span></li><li>Пик аудитории в 23:26<span>184 активных зрителя</span></li><li>YouTube растёт быстрее<span>+14 зрителей за 20 минут</span></li></ul></section>
+                </div>
+              </section>
+            </div>
+
+            <aside class="inspector" aria-labelledby="live-inspector-heading">
+              <div class="inspector__header"><span class="temperature-label"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-zap"></use></svg>Горячие настройки</span><h2 id="live-inspector-heading">Управление эфиром</h2></div>
+              <div class="inspector__body">
+                <div class="field"><label for="live-profile">Активный профиль</label><select id="live-profile" data-live-control><option>Main</option><option>Battle mode</option><option>Just chatting</option></select><p class="field-hint">Применяется к активным Browser Source сразу.</p></div>
+                <div class="field"><label for="live-period">Период лидерборда</label><select id="live-period" data-live-control><option>Текущая сессия</option><option>Сегодня</option><option>Всё время</option></select></div>
+                <div class="toggle-row"><span class="toggle-row__copy">Показывать чат<span>Не меняет видимость source в OBS</span></span><label class="switch"><input type="checkbox" checked data-live-control aria-label="Показывать чат"><span class="switch__track"></span></label></div>
+                <div class="toggle-row"><span class="toggle-row__copy">Принимать команды<span>Парсер и cooldown остаются активны</span></span><label class="switch"><input type="checkbox" checked data-live-control aria-label="Принимать команды"><span class="switch__track"></span></label></div>
+                <div class="toggle-row"><span class="toggle-row__copy">Звук оператору<span>Только локальное уведомление</span></span><label class="switch"><input type="checkbox" data-live-control aria-label="Звук оператору"><span class="switch__track"></span></label></div>
+                <div class="action-stack"><button class="button button--primary" type="button" data-demo-action="Splash «Внимание» отправлен"><svg class="icon" aria-hidden="true"><use href="#icon-zap"></use></svg>Показать splash</button><button class="button" type="button" data-demo-action="Очереди оверлеев очищены">Очистить очереди</button></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="page-audience" class="page" data-page-panel="audience" hidden>
+          <div class="page-toolbar"><div class="page-toolbar__copy"><h2>Аудитория</h2><p>Зрители, идентичности и накопленные данные.</p></div><div class="toolbar-actions"><button class="button" type="button" data-demo-action="Экспорт зрителей подготовлен">Экспорт</button><button class="button button--primary" type="button" data-demo-action="Открыт сценарий склейки зрителей"><svg class="icon" aria-hidden="true"><use href="#icon-users"></use></svg>Склеить</button></div></div>
+          <div class="data-workspace">
+            <section class="workspace-panel" aria-labelledby="audience-table-heading">
+              <div class="table-toolbar"><div class="search-wrap"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-search"></use></svg><label class="visually-hidden" for="viewer-search">Поиск зрителей</label><input id="viewer-search" type="search" placeholder="Имя, логин или ID платформы"></div><select aria-label="Период"><option>Текущая сессия</option><option>Сегодня</option><option>Всё время</option></select><button class="button button--icon" type="button" aria-label="Дополнительные фильтры" title="Дополнительные фильтры" data-demo-action="Фильтры открыты"><svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg></button></div>
+              <div class="table-scroll"><table class="data-table" id="audience-table"><thead><tr><th id="audience-table-heading">Зритель</th><th>Платформы</th><th class="number-cell">Сообщения</th><th class="number-cell">Score</th><th>Последняя активность</th></tr></thead><tbody>
+                <tr tabindex="0" aria-selected="true" data-viewer-name="MechaStrider" data-viewer-initials="MC" data-viewer-platforms="Twitch @mechastrider · YouTube @mechastrider"><td><span class="viewer-cell"><span class="avatar">MC</span>MechaStrider</span></td><td><span class="platform-badges"><span class="platform-badge">TW</span><span class="platform-badge">YT</span></span></td><td class="number-cell">4 812</td><td class="number-cell">12 440</td><td>сейчас</td></tr>
+                <tr tabindex="0" aria-selected="false" data-viewer-name="Akira" data-viewer-initials="AK" data-viewer-platforms="YouTube @akira_live"><td><span class="viewer-cell"><span class="avatar avatar--violet">AK</span>Akira</span></td><td><span class="platform-badge">YT</span></td><td class="number-cell">3 216</td><td class="number-cell">9 820</td><td>1 мин назад</td></tr>
+                <tr tabindex="0" aria-selected="false" data-viewer-name="Nova" data-viewer-initials="NV" data-viewer-platforms="VK Live id:nova-17"><td><span class="viewer-cell"><span class="avatar">NV</span>Nova</span></td><td><span class="platform-badge">VK</span></td><td class="number-cell">2 901</td><td class="number-cell">8 210</td><td>3 мин назад</td></tr>
+                <tr tabindex="0" aria-selected="false" data-viewer-name="Ghost" data-viewer-initials="GH" data-viewer-platforms="Twitch @ghost_unit"><td><span class="viewer-cell"><span class="avatar">GH</span>Ghost</span></td><td><span class="platform-badge">TW</span></td><td class="number-cell">1 840</td><td class="number-cell">6 780</td><td>7 мин назад</td></tr>
+                <tr tabindex="0" aria-selected="false" data-viewer-name="Vostok" data-viewer-initials="VS" data-viewer-platforms="VK Live id:vostok"><td><span class="viewer-cell"><span class="avatar">VS</span>Vostok</span></td><td><span class="platform-badge">VK</span></td><td class="number-cell">1 228</td><td class="number-cell">4 655</td><td>11 мин назад</td></tr>
+              </tbody></table></div>
+            </section>
+
+            <aside class="data-detail" aria-labelledby="viewer-detail-name">
+              <div class="detail-hero"><span id="viewer-detail-avatar" class="avatar">MC</span><div><h2 id="viewer-detail-name">MechaStrider</h2><p>Канонический зритель · активен сейчас</p></div></div>
+              <section class="detail-section"><h3>Текущая сессия</h3><div class="detail-stats"><div class="detail-stat"><span>Сообщения</span><strong>214</strong></div><div class="detail-stat"><span>Score</span><strong>1 420</strong></div><div class="detail-stat"><span>Команды</span><strong>18</strong></div><div class="detail-stat"><span>Место</span><strong>#1</strong></div></div></section>
+              <section class="detail-section"><h3>Идентичности</h3><div id="viewer-identities" class="identity-list"><div class="identity"><span>Twitch @mechastrider</span><span class="state-label state-label--ok">Активна</span></div><div class="identity"><span>YouTube @mechastrider</span><span class="state-label state-label--ok">Активна</span></div></div></section>
+              <section class="detail-section"><button class="button" style="width:100%" type="button" data-demo-action="Открыт поиск зрителя для склейки">Склеить с другим зрителем</button></section>
+            </aside>
+          </div>
+        </section>
+
+        <section id="page-interactions" class="page" data-page-panel="interactions" hidden>
+          <div class="page-toolbar"><div class="page-toolbar__copy"><h2>Интерактивы</h2><p>Правила реакции на действия зрителей и библиотека контента.</p></div><div class="toolbar-actions"><button class="button button--primary" type="button" data-demo-action="Создан черновик новой команды"><svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>Новая команда</button></div></div>
+          <div class="interactions-layout">
+            <section class="workspace-panel" aria-labelledby="commands-heading"><div class="section-heading"><div><h3 id="commands-heading">Команды зрителей</h3><p>7 включено · 1 на паузе</p></div><button class="button button--small" type="button" data-demo-action="Все команды поставлены на паузу">Пауза всех</button></div>
+              <div class="command-row"><label class="switch"><input type="checkbox" checked aria-label="Включить команду !gg"><span class="switch__track"></span></label><span class="row-title"><span class="command-trigger">!gg</span><span class="row-subtitle">Splash «Good game» · +5 score</span></span><span class="command-meta">Cooldown<br><strong>30 с</strong></span><span class="command-meta">За сессию<br><strong>47</strong></span><button class="button button--icon button--ghost" type="button" aria-label="Действия для команды !gg" title="Действия" data-demo-action="Меню команды !gg открыто"><svg class="icon" aria-hidden="true"><use href="#icon-more"></use></svg></button></div>
+              <div class="command-row"><label class="switch"><input type="checkbox" checked aria-label="Включить команду !hi"><span class="switch__track"></span></label><span class="row-title"><span class="command-trigger">!hi</span><span class="row-subtitle">Приветствие с аватаром зрителя</span></span><span class="command-meta">Cooldown<br><strong>60 с</strong></span><span class="command-meta">За сессию<br><strong>31</strong></span><button class="button button--icon button--ghost" type="button" aria-label="Действия для команды !hi" title="Действия" data-demo-action="Меню команды !hi открыто"><svg class="icon" aria-hidden="true"><use href="#icon-more"></use></svg></button></div>
+              <div class="command-row"><label class="switch"><input type="checkbox" checked aria-label="Включить команду !drop"><span class="switch__track"></span></label><span class="row-title"><span class="command-trigger">!drop</span><span class="row-subtitle">Splash «Supply drop» · -10 score</span></span><span class="command-meta">Cooldown<br><strong>5 мин</strong></span><span class="command-meta">За сессию<br><strong>12</strong></span><button class="button button--icon button--ghost" type="button" aria-label="Действия для команды !drop" title="Действия" data-demo-action="Меню команды !drop открыто"><svg class="icon" aria-hidden="true"><use href="#icon-more"></use></svg></button></div>
+              <div class="command-row"><label class="switch"><input type="checkbox" aria-label="Включить команду !vote"><span class="switch__track"></span></label><span class="row-title"><span class="command-trigger">!vote</span><span class="row-subtitle">Черновик · действие не выбрано</span></span><span class="command-meta">Cooldown<br><strong>-</strong></span><span class="command-meta">За сессию<br><strong>0</strong></span><button class="button button--icon button--ghost" type="button" aria-label="Действия для команды !vote" title="Действия" data-demo-action="Меню команды !vote открыто"><svg class="icon" aria-hidden="true"><use href="#icon-more"></use></svg></button></div>
+            </section>
+
+            <section class="workspace-panel" aria-labelledby="splashes-heading"><div class="section-heading"><div><h3 id="splashes-heading">Splash-библиотека</h3><p>Шаблоны, доступные командам</p></div><button class="button button--small button--icon" type="button" aria-label="Создать splash" title="Создать splash" data-demo-action="Создан черновик splash"><svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg></button></div>
+              <div class="splash-row"><span class="splash-swatch"><svg class="icon" aria-hidden="true"><use href="#icon-trophy"></use></svg></span><span class="row-title">Good game<span class="row-subtitle">Используется: !gg · 4 с</span></span><button class="button button--small" type="button" data-demo-action="Splash «Good game» отправлен в preview">Preview</button></div>
+              <div class="splash-row"><span class="splash-swatch"><svg class="icon" aria-hidden="true"><use href="#icon-users"></use></svg></span><span class="row-title">Viewer hello<span class="row-subtitle">Используется: !hi · 5 с</span></span><button class="button button--small" type="button" data-demo-action="Splash «Viewer hello» отправлен в preview">Preview</button></div>
+              <div class="splash-row"><span class="splash-swatch"><svg class="icon" aria-hidden="true"><use href="#icon-zap"></use></svg></span><span class="row-title">Supply drop<span class="row-subtitle">Используется: !drop · 6 с</span></span><button class="button button--small" type="button" data-demo-action="Splash «Supply drop» отправлен в preview">Preview</button></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="page-studio" class="page" data-page-panel="studio" hidden>
+          <div class="page-toolbar"><div class="page-toolbar__copy"><h2>Студия вывода</h2><p>Подготовка оформления отдельно от live-управления.</p></div><div class="toolbar-actions"><span class="publish-state"><span class="status-dot" style="background:var(--amber);box-shadow:none"></span>Есть изменения</span><button class="button button--primary" type="button" data-demo-action="Профиль Main опубликован"><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>Опубликовать</button></div></div>
+          <div class="studio-layout">
+            <aside class="studio-surfaces" aria-labelledby="surfaces-list-heading"><div class="section-heading"><div><h3 id="surfaces-list-heading">Surfaces</h3><p>Browser Source</p></div></div><div class="surface-list">
+              <button class="surface-select" type="button" aria-selected="true" data-studio-surface="chat"><span class="surface-icon"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-message"></use></svg></span><span class="surface-select__copy"><strong>Чат</strong><span>Активен · 2 клиента</span></span><span class="status-dot"></span></button>
+              <button class="surface-select" type="button" aria-selected="false" data-studio-surface="leaderboard"><span class="surface-icon surface-icon--amber"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-trophy"></use></svg></span><span class="surface-select__copy"><strong>Лидерборд</strong><span>Активен · 1 клиент</span></span><span class="status-dot"></span></button>
+              <button class="surface-select" type="button" aria-selected="false" data-studio-surface="alert"><span class="surface-icon surface-icon--violet"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-zap"></use></svg></span><span class="surface-select__copy"><strong>Splash</strong><span>Preview · будущий output</span></span><span class="state-label state-label--attention">Draft</span></button>
+            </div></aside>
+
+            <section class="studio-preview" aria-labelledby="preview-heading"><div class="preview-toolbar"><div><h3 id="preview-heading">Preview</h3><div class="preview-toolbar__meta"><span id="preview-surface-label">Чат</span><span>·</span><span>1920 × 1080</span></div></div><div class="toolbar-actions"><button class="button button--small button--icon" type="button" aria-label="Повторить анимацию" title="Повторить анимацию" data-demo-action="Анимация preview повторена"><svg class="icon" aria-hidden="true"><use href="#icon-play"></use></svg></button><button class="button button--small button--icon" type="button" aria-label="Скопировать URL Browser Source" title="Скопировать URL" data-demo-action="URL Browser Source скопирован"><svg class="icon" aria-hidden="true"><use href="#icon-copy"></use></svg></button></div></div>
+              <div class="preview-stage-wrap"><div class="preview-stage"><div class="preview-safe-area"></div>
+                <div class="preview-chat" data-preview-surface="chat"><div class="preview-message"><strong>MECHASTRIDER · TWITCH</strong>Engine online. Начинаем новый заход.</div><div class="preview-message"><strong>AKIRA · YOUTUBE</strong>Этот заход был чистым!</div></div>
+                <div class="preview-leaderboard" data-preview-surface="leaderboard" hidden><h3>Топ зрителей · сессия</h3><div class="preview-rank-row"><span>01</span><strong>MechaStrider</strong><span>1 420</span></div><div class="preview-rank-row"><span>02</span><strong>Akira</strong><span>1 180</span></div><div class="preview-rank-row"><span>03</span><strong>Nova</strong><span>960</span></div><div class="preview-rank-row"><span>04</span><strong>Ghost</strong><span>780</span></div><div class="preview-rank-row"><span>05</span><strong>Vostok</strong><span>655</span></div></div>
+                <div class="preview-alert" data-preview-surface="alert" hidden><span>Viewer action</span><strong>MechaStrider говорит: GG!</strong></div>
+              </div></div>
+            </section>
+
+            <aside class="inspector studio-inspector" aria-labelledby="studio-inspector-heading"><div class="inspector__header"><span class="temperature-label" style="color:var(--violet)"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-panels"></use></svg>Подготовка</span><h2 id="studio-inspector-heading">Чат</h2></div><div class="inspector__body">
+              <div class="field"><label for="studio-theme">Тема профиля</label><select id="studio-theme"><option>Cockpit</option><option>Minimal dark</option><option>Broadcast light</option></select></div>
+              <div class="field" data-studio-field="layout"><label for="studio-layout">Композиция</label><select id="studio-layout"><option>Popup stack</option><option>Panel</option><option>Chips</option></select></div>
+              <div class="field"><span class="field__label">Размер текста</span><div class="range-row"><input id="studio-font-size" type="range" min="12" max="32" value="18"><output for="studio-font-size">18 px</output></div></div>
+              <div class="field"><label for="studio-duration">Время показа</label><select id="studio-duration"><option>8 секунд</option><option>12 секунд</option><option>До замены</option></select></div>
+              <div class="toggle-row"><span class="toggle-row__copy">Показывать аватары<span>Из единой модели зрителя</span></span><label class="switch"><input type="checkbox" checked aria-label="Показывать аватары"><span class="switch__track"></span></label></div>
+              <div class="action-stack"><button class="button" type="button" data-demo-action="Открыты параметры подключения к OBS"><svg class="icon" aria-hidden="true"><use href="#icon-monitor"></use></svg>Подключение к OBS</button></div>
+            </div></aside>
+          </div>
+        </section>
+
+        <section id="page-settings" class="page" data-page-panel="settings" hidden>
+          <div class="page-toolbar"><div class="page-toolbar__copy"><h2>Настройки</h2><p>Холодная зона: платформы, сеть, данные и приложение.</p></div><span class="temperature-label" style="margin:0;color:var(--muted)"><svg class="icon icon--small" aria-hidden="true"><use href="#icon-settings"></use></svg>Не для управления эфиром</span></div>
+          <div class="settings-layout">
+            <nav class="settings-nav" aria-label="Разделы настроек"><button class="settings-nav-button" type="button" role="tab" aria-selected="true" data-settings-tab="platforms">Платформы</button><button class="settings-nav-button" type="button" role="tab" aria-selected="false" data-settings-tab="network">Сеть</button><button class="settings-nav-button" type="button" role="tab" aria-selected="false" data-settings-tab="data">Данные</button><button class="settings-nav-button" type="button" role="tab" aria-selected="false" data-settings-tab="app">Приложение</button></nav>
+            <section class="settings-content">
+              <div class="settings-panel" data-settings-panel="platforms"><div class="settings-section"><div class="settings-section__intro"><h3>Twitch</h3><p>IRC-канал и состояние коннектора.</p></div><div><div class="toggle-row"><span class="toggle-row__copy">Коннектор Twitch<span>Подключён к @mechastrider</span></span><label class="switch"><input type="checkbox" checked aria-label="Коннектор Twitch"><span class="switch__track"></span></label></div><div class="field" style="margin-top:12px"><label for="twitch-channel-preview">Канал</label><input id="twitch-channel-preview" type="text" value="mechastrider"></div></div></div><div class="settings-section"><div class="settings-section__intro"><h3>YouTube Live</h3><p>Страница трансляции или OAuth API.</p></div><div><div class="toggle-row"><span class="toggle-row__copy">Коннектор YouTube<span>OAuth подключён</span></span><label class="switch"><input type="checkbox" checked aria-label="Коннектор YouTube"><span class="switch__track"></span></label></div><button class="button button--small" style="margin-top:12px" type="button" data-demo-action="Соединение YouTube проверено">Проверить соединение</button></div></div><div class="settings-section"><div class="settings-section__intro"><h3>VK Live</h3><p>Публичная live-страница.</p></div><div><div class="toggle-row"><span class="toggle-row__copy">Коннектор VK Live<span>Подключён</span></span><label class="switch"><input type="checkbox" checked aria-label="Коннектор VK Live"><span class="switch__track"></span></label></div></div></div></div>
+              <div class="settings-panel" data-settings-panel="network" hidden><div class="settings-section"><div class="settings-section__intro"><h3>HTTP server</h3><p>Локальный адрес панели и Browser Source.</p></div><div><div class="field"><label for="server-address-preview">Адрес</label><input id="server-address-preview" type="text" value="127.0.0.1:17877"></div><div class="toggle-row"><span class="toggle-row__copy">SOCKS5 proxy<span>Используется выбранными коннекторами</span></span><label class="switch"><input type="checkbox" aria-label="SOCKS5 proxy"><span class="switch__track"></span></label></div></div></div></div>
+              <div class="settings-panel" data-settings-panel="data" hidden><div class="settings-section"><div class="settings-section__intro"><h3>Локальные данные</h3><p>SQLite хранит зрителей и статистику.</p></div><div><div class="detail-stats"><div class="detail-stat"><span>Зрителей</span><strong>3 842</strong></div><div class="detail-stat"><span>Размер БД</span><strong>18,4 МБ</strong></div></div><button class="button button--small" style="margin-top:12px" type="button" data-demo-action="Папка данных показана">Показать папку данных</button></div></div><div class="settings-section"><div class="settings-section__intro"><h3>Резервная копия</h3><p>Config и база зрителей одним архивом.</p></div><div><button class="button" type="button" data-demo-action="Резервная копия создана">Создать резервную копию</button></div></div></div>
+              <div class="settings-panel" data-settings-panel="app" hidden><div class="settings-section"><div class="settings-section__intro"><h3>Интерфейс</h3><p>Язык и визуальная тема оператора.</p></div><div><div class="field"><label for="language-preview">Язык</label><select id="language-preview"><option>Русский</option><option>English</option></select></div><div class="field"><label for="ui-theme-preview">Тема</label><select id="ui-theme-preview"><option>Тёмная</option><option>Системная</option></select></div></div></div><div class="settings-section"><div class="settings-section__intro"><h3>Периоды</h3><p>Граница операторских суток.</p></div><div class="field"><label for="day-reset-preview">Новый день начинается</label><select id="day-reset-preview"><option>06:00</option><option>04:00</option><option>00:00</option></select></div></div></div>
+              <div class="settings-actions"><button class="button" type="button" data-demo-action="Изменения настроек отменены">Отменить</button><button class="button button--primary" type="button" data-demo-action="Холодные настройки сохранены">Сохранить настройки</button></div>
+            </section>
+          </div>
+        </section>
+      </main>
+
+      <footer class="statusbar" aria-label="Техническое состояние"><span>LOCAL</span><span>WS 4</span><span>DB 18.4 MB</span><span>UPTIME 03:18:44</span><span class="statusbar__spacer"></span><span>NO CLOUD RELAY</span></footer>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">Изменение применено</div>
+
+  <script>
+    (() => {
+      const pageMeta = {
+        live: ["Эфир", "Состояние и управление текущей сессией"],
+        audience: ["Аудитория", "Зрители, идентичности и статистика"],
+        interactions: ["Интерактивы", "Команды и контент для реакций зрителей"],
+        studio: ["Студия", "Подготовка и preview OBS surfaces"],
+        settings: ["Настройки", "Платформы, сеть, данные и приложение"]
+      };
+
+      const pageTitle = document.querySelector("#page-title");
+      const pageCaption = document.querySelector("#page-caption");
+      const mainContent = document.querySelector("#main-content");
+      const toast = document.querySelector("#toast");
+      let toastTimer;
+
+      function showToast(message) {
+        window.clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.classList.add("is-visible");
+        toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 2200);
+      }
+
+      function showPage(name, updateHash = true) {
+        if (!pageMeta[name]) return;
+        document.querySelectorAll("[data-page-panel]").forEach((panel) => {
+          panel.hidden = panel.dataset.pagePanel !== name;
+        });
+        document.querySelectorAll("[data-page]").forEach((button) => {
+          if (button.dataset.page === name) button.setAttribute("aria-current", "page");
+          else button.removeAttribute("aria-current");
+        });
+        pageTitle.textContent = pageMeta[name][0];
+        pageCaption.textContent = pageMeta[name][1];
+        mainContent.scrollTop = 0;
+        if (updateHash) history.replaceState(null, "", `#${name}`);
+      }
+
+      document.querySelectorAll("[data-page]").forEach((button) => {
+        button.addEventListener("click", () => showPage(button.dataset.page));
+      });
+
+      document.querySelectorAll("[data-go-page]").forEach((button) => {
+        button.addEventListener("click", () => showPage(button.dataset.goPage));
+      });
+
+      function showLivePanel(name) {
+        document.querySelectorAll("[data-live-panel]").forEach((panel) => {
+          panel.hidden = panel.dataset.livePanel !== name;
+        });
+        document.querySelectorAll("[data-live-tab]").forEach((button) => {
+          button.setAttribute("aria-selected", button.dataset.liveTab === name ? "true" : "false");
+        });
+      }
+
+      document.querySelectorAll("[data-live-tab]").forEach((button) => {
+        button.addEventListener("click", () => showLivePanel(button.dataset.liveTab));
+      });
+
+      document.querySelectorAll("[data-live-tab-trigger]").forEach((button) => {
+        button.addEventListener("click", () => showLivePanel(button.dataset.liveTabTrigger));
+      });
+
+      document.querySelectorAll("[data-demo-action]").forEach((button) => {
+        button.addEventListener("click", () => showToast(button.dataset.demoAction));
+      });
+
+      document.querySelectorAll("[data-live-control]").forEach((control) => {
+        control.addEventListener("change", () => showToast("Изменение применено в эфире"));
+      });
+
+      document.querySelectorAll(".filter-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".filter-button").forEach((item) => item.setAttribute("aria-pressed", "false"));
+          button.setAttribute("aria-pressed", "true");
+          showToast(`Фильтр «${button.firstChild.textContent.trim()}» применён`);
+        });
+      });
+
+      const viewerRows = document.querySelectorAll("#audience-table tbody tr");
+      function selectViewer(row) {
+        viewerRows.forEach((item) => item.setAttribute("aria-selected", "false"));
+        row.setAttribute("aria-selected", "true");
+        document.querySelector("#viewer-detail-name").textContent = row.dataset.viewerName;
+        document.querySelector("#viewer-detail-avatar").textContent = row.dataset.viewerInitials;
+        const identities = document.querySelector("#viewer-identities");
+        identities.replaceChildren();
+        row.dataset.viewerPlatforms.split(" · ").forEach((identityName) => {
+          const identity = document.createElement("div");
+          identity.className = "identity";
+          const name = document.createElement("span");
+          name.textContent = identityName;
+          const state = document.createElement("span");
+          state.className = "state-label state-label--ok";
+          state.textContent = "Активна";
+          identity.append(name, state);
+          identities.append(identity);
+        });
+      }
+
+      viewerRows.forEach((row) => {
+        row.addEventListener("click", () => selectViewer(row));
+        row.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectViewer(row);
+          }
+        });
+      });
+
+      const studioNames = { chat: "Чат", leaderboard: "Лидерборд", alert: "Splash" };
+      document.querySelectorAll("[data-studio-surface]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const name = button.dataset.studioSurface;
+          document.querySelectorAll("[data-studio-surface]").forEach((item) => item.setAttribute("aria-selected", "false"));
+          button.setAttribute("aria-selected", "true");
+          document.querySelectorAll("[data-preview-surface]").forEach((surface) => {
+            surface.hidden = surface.dataset.previewSurface !== name;
+          });
+          document.querySelector("#preview-surface-label").textContent = studioNames[name];
+          document.querySelector("#studio-inspector-heading").textContent = studioNames[name];
+        });
+      });
+
+      const fontSize = document.querySelector("#studio-font-size");
+      const fontOutput = document.querySelector("output[for='studio-font-size']");
+      fontSize.addEventListener("input", () => {
+        fontOutput.textContent = `${fontSize.value} px`;
+      });
+
+      document.querySelectorAll("[data-settings-tab]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const name = button.dataset.settingsTab;
+          document.querySelectorAll("[data-settings-tab]").forEach((item) => item.setAttribute("aria-selected", "false"));
+          button.setAttribute("aria-selected", "true");
+          document.querySelectorAll("[data-settings-panel]").forEach((panel) => {
+            panel.hidden = panel.dataset.settingsPanel !== name;
+          });
+        });
+      });
+
+      const sessionToggle = document.querySelector("#session-toggle");
+      let sessionActive = true;
+      sessionToggle.addEventListener("click", () => {
+        sessionActive = !sessionActive;
+        sessionToggle.classList.toggle("button--danger", sessionActive);
+        sessionToggle.classList.toggle("button--primary", !sessionActive);
+        sessionToggle.innerHTML = sessionActive
+          ? '<svg class="icon" aria-hidden="true"><use href="#icon-stop"></use></svg><span>Завершить эфир</span>'
+          : '<svg class="icon" aria-hidden="true"><use href="#icon-play"></use></svg><span>Начать эфир</span>';
+        sessionToggle.setAttribute("aria-label", sessionActive ? "Завершить эфир" : "Начать эфир");
+        showToast(sessionActive ? "Новая сессия начата" : "Сессия завершена");
+      });
+
+      const initialPage = window.location.hash.slice(1);
+      showPage(pageMeta[initialPage] ? initialPage : "live", false);
+    })();
+  </script>
+</body>
+</html>

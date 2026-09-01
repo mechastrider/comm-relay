@@ -2,7 +2,7 @@ import { t } from "./i18n-ui.js";
 import { state } from "./state.js";
 import { defaultStyleForTheme, mergeStyle } from "../../overlay/overlay-settings.js";
 import { uploadOverlayAsset } from "./overlay-asset-upload.js";
-import { showBanner, markSettingsDirty } from "./ui-shell.js";
+import { showBanner } from "./ui-shell.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
 import * as dom from "./dom.js";
@@ -42,8 +42,13 @@ function newID(prefix) {
   );
 }
 
+function notifyStudioDraftChanged() {
+  document.dispatchEvent(new Event("studio-overlay-changed"));
+}
+
 function requestPreviewRefresh() {
   updatePresetIsland();
+  notifyStudioDraftChanged();
   document.dispatchEvent(new Event("overlay-preview-refresh"));
 }
 
@@ -377,12 +382,12 @@ export function updatePresetIsland() {
       limit: String(PRESET_LIMIT),
     });
   }
-  const overlayUrl = buildObsOverlayURL(activePresetId);
+  const overlayUrl = buildObsOverlayURL({ presetId: activePresetId });
   if (dom.presetIslandUrl) {
     const surface = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
     const previewSurface = surface ? surface.getAttribute("data-obs-preview-surface") : "chat";
     if (previewSurface === "leaderboard") {
-      const leaderboardUrl = currentLeaderboardURL();
+      const leaderboardUrl = currentLeaderboardURL({ pinned: true });
       dom.presetIslandUrl.value = leaderboardUrl;
       dom.presetIslandUrl.title = leaderboardUrl;
     } else {
@@ -390,22 +395,48 @@ export function updatePresetIsland() {
       dom.presetIslandUrl.title = overlayUrl;
     }
   }
-  const connectionUrl = dom.obsOverlayUrl;
-  if (connectionUrl) {
-    connectionUrl.value = overlayUrl;
+  const followOverlayUrl = buildObsOverlayURL({ followActive: true });
+  if (dom.obsOverlayUrl) {
+    dom.obsOverlayUrl.value = followOverlayUrl;
   }
   if (dom.obsOverlayOpen) {
-    dom.obsOverlayOpen.href = overlayUrl;
+    dom.obsOverlayOpen.href = followOverlayUrl;
   }
-  const leaderboardUrl = currentLeaderboardURL();
+  if (dom.obsOverlayUrlPinned) {
+    const preset = currentPreset();
+    const pinnedLabel = preset ? preset.name || preset.id : activePresetId;
+    dom.obsOverlayUrlPinned.value = overlayUrl;
+    dom.obsOverlayUrlPinned.title = overlayUrl;
+    if (dom.obsOverlayPinnedLabel) {
+      dom.obsOverlayPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
+  const followLeaderboardUrl = currentLeaderboardURL({ followActive: true });
   if (dom.obsLeaderboardUrl) {
-    dom.obsLeaderboardUrl.value = leaderboardUrl;
+    dom.obsLeaderboardUrl.value = followLeaderboardUrl;
   }
   if (dom.obsLeaderboardOpen) {
-    dom.obsLeaderboardOpen.href = leaderboardUrl;
+    dom.obsLeaderboardOpen.href = followLeaderboardUrl;
+  }
+  if (dom.obsLeaderboardUrlPinned) {
+    const pinnedLeaderboardUrl = currentLeaderboardURL({ pinned: true });
+    dom.obsLeaderboardUrlPinned.value = pinnedLeaderboardUrl;
+    dom.obsLeaderboardUrlPinned.title = pinnedLeaderboardUrl;
+    const preset = currentPreset();
+    const pinnedLabel = preset ? preset.name || preset.id : activePresetId;
+    if (dom.obsLeaderboardPinnedLabel) {
+      dom.obsLeaderboardPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
   }
   if (dom.presetUrlStatus) {
-    const dirty = isCurrentPresetDirty();
+    const studioActive =
+      dom.studioWorkspace && dom.studioWorkspace.classList.contains("workspace--active");
+    const dirty = studioActive
+      ? Boolean(
+          dom.studioDirtyStatus &&
+            dom.studioDirtyStatus.classList.contains("studio-dirty-status--dirty")
+        )
+      : isCurrentPresetDirty();
     dom.presetUrlStatus.textContent = dirty ? t("obs.presetUrlDirtyShort") : t("obs.presetUrlSavedShort");
     dom.presetUrlStatus.title = dirty ? t("obs.presetUrlDirty") : t("obs.presetUrlSaved");
     dom.presetUrlStatus.classList.toggle("preset-island__status--dirty", dirty);
@@ -425,7 +456,7 @@ export function getActivePresetID() {
   return activePresetId;
 }
 
-export function currentLeaderboardURL() {
+export function currentLeaderboardURL(options) {
   writeFormIntoActive();
   const preset = currentPreset();
   const surface = preset && preset.surfaces && preset.surfaces.leaderboard ? preset.surfaces.leaderboard : {};
@@ -434,12 +465,15 @@ export function currentLeaderboardURL() {
     typeof surface.font_size_px === "number" && surface.font_size_px !== chatFont
       ? surface.font_size_px
       : undefined;
+  const opts = options || {};
+  const followActive = Boolean(opts.followActive);
   return buildLeaderboardURL({
     period:
       (dom.overlayLeaderboardPeriod && dom.overlayLeaderboardPeriod.value) ||
       (dom.obsLeaderboardPeriod && dom.obsLeaderboardPeriod.value) ||
       "session",
-    preset: activePresetId,
+    followActive: followActive,
+    preset: followActive ? undefined : activePresetId,
     layout: surface.layout,
     fontSizePx: leaderboardFont,
   });
@@ -633,7 +667,6 @@ function createPreset(name) {
   activePresetId = preset.id;
   renderPresetIsland();
   writeFormFromPreset(preset);
-  markSettingsDirty();
   requestPreviewRefresh();
 }
 
@@ -645,7 +678,6 @@ function renamePreset(name) {
   }
   preset.name = name;
   renderPresetIsland();
-  markSettingsDirty();
   requestPreviewRefresh();
 }
 
@@ -660,7 +692,6 @@ function duplicatePreset(name) {
   activePresetId = copy.id;
   renderPresetIsland();
   writeFormFromPreset(copy);
-  markSettingsDirty();
   requestPreviewRefresh();
 }
 
@@ -669,7 +700,6 @@ function confirmPresetPrompt() {
   if (promptMode === "delete") {
     closePresetPrompt();
     deletePreset();
-    markSettingsDirty();
     return;
   }
   const name = els.input ? String(els.input.value || "").trim() : "";

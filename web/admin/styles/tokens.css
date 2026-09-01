@@ -1,24 +1,65 @@
 :root {
   color-scheme: dark;
-  --panel-bg: #171719;
-  --surface: #242428;
-  --surface-raised: #2e2e34;
-  --surface-dark: #0d0d10;
-  --surface-darker: #08080a;
-  --border: #444;
-  --border-strong: #666;
-  --border-dark: #222;
-  --text: #d9d9dd;
-  --muted: #98989f;
-  --subtle: #727278;
-  --amber: #d4a017;
-  --amber-dim: #8a6a10;
-  --focus: #33cc66;
-  --danger: #ff6268;
-  --success: #33cc66;
-  --warning: #ffcc00;
-  --shadow: 0 22px 42px rgba(0, 0, 0, 0.36);
-  --mono: Consolas, "Courier New", monospace;
+
+  /* Semantic surfaces */
+  --color-bg-app: var(--primitive-gray-700);
+  --color-bg-elevated: var(--primitive-gray-600);
+  --color-bg-raised: var(--primitive-gray-500);
+  --color-bg-sunken: var(--primitive-gray-900);
+  --color-bg-inset: var(--primitive-gray-950);
+
+  /* Semantic text */
+  --color-text-primary: var(--primitive-gray-100);
+  --color-text-secondary: var(--primitive-gray-150);
+  --color-text-muted: var(--primitive-gray-200);
+  --color-text-accent: var(--primitive-amber-500);
+  --color-text-success: var(--primitive-green-500);
+  --color-text-warning: var(--primitive-yellow-500);
+  --color-text-danger: var(--primitive-red-500);
+  --color-text-info: #d8ecff;
+
+  /* Semantic borders */
+  --color-border-default: var(--primitive-gray-350);
+  --color-border-strong: var(--primitive-gray-300);
+  --color-border-subtle: var(--primitive-gray-850);
+  --color-border-accent: var(--primitive-amber-700);
+  --color-border-success: var(--primitive-green-700);
+  --color-border-danger: var(--primitive-red-700);
+  --color-border-info: var(--primitive-blue-500);
+
+  /* Semantic status */
+  --color-focus-ring: var(--primitive-green-500);
+  --color-status-success: var(--primitive-green-500);
+  --color-status-warning: var(--primitive-yellow-500);
+  --color-status-danger: var(--primitive-red-500);
+
+  /* Legacy aliases (existing workspace CSS) */
+  --panel-bg: var(--color-bg-app);
+  --surface: var(--color-bg-elevated);
+  --surface-raised: var(--color-bg-raised);
+  --surface-dark: var(--color-bg-sunken);
+  --surface-darker: var(--color-bg-inset);
+  --border: var(--color-border-default);
+  --border-strong: var(--color-border-strong);
+  --border-dark: var(--color-border-subtle);
+  --text: var(--color-text-primary);
+  --muted: var(--color-text-secondary);
+  --subtle: var(--color-text-muted);
+  --amber: var(--color-text-accent);
+  --amber-dim: var(--color-border-accent);
+  --focus: var(--color-focus-ring);
+  --danger: var(--color-status-danger);
+  --success: var(--color-status-success);
+  --warning: var(--color-status-warning);
+  --shadow: var(--primitive-shadow-lg);
+  --mono: var(--primitive-font-mono);
+
+  /* Density */
+  --control-min-height: 38px;
+  --control-min-height-compact: 30px;
+  --touch-target-min: 40px;
+  --touch-target-narrow: 44px;
+
   font-family: var(--mono);
 }
 
@@ -40,12 +81,13 @@ body {
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   background:
-    radial-gradient(circle at 18px 18px, #333 1.5px, transparent 2px),
-    radial-gradient(circle at calc(100% - 18px) 18px, #333 1.5px, transparent 2px),
-    radial-gradient(circle at 18px calc(100% - 18px), #333 1.5px, transparent 2px),
-    radial-gradient(circle at calc(100% - 18px) calc(100% - 18px), #333 1.5px, transparent 2px),
+    radial-gradient(circle at 18px 18px, var(--primitive-gray-450) 1.5px, transparent 2px),
+    radial-gradient(circle at calc(100% - 18px) 18px, var(--primitive-gray-450) 1.5px, transparent 2px),
+    radial-gradient(circle at 18px calc(100% - 18px), var(--primitive-gray-450) 1.5px, transparent 2px),
+    radial-gradient(circle at calc(100% - 18px) calc(100% - 18px), var(--primitive-gray-450) 1.5px, transparent 2px),
     var(--panel-bg);
   background-size: 100% 100%;
   color: var(--text);
@@ -54,7 +96,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 

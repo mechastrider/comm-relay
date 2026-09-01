@@ -1,5 +1,10 @@
 export const form = document.getElementById("settings-form");
-export const cockpitShell = document.querySelector(".cockpit-shell");
+export const appShell = document.getElementById("app-shell");
+export const cockpitShell = document.getElementById("live-cockpit") || document.querySelector(".cockpit-shell");
+export const workspaceMain = document.getElementById("workspace-main");
+export const shellAnnouncements = document.getElementById("shell-announcements");
+export const shellDiagnosticsButton = document.getElementById("shell-diagnostics-button");
+export const shellStatusBar = document.getElementById("shell-status-bar");
 export const sidebarToggle = document.getElementById("sidebar-toggle");
 export const saveButtons = Array.from(document.querySelectorAll("[data-save-button]"));
 export const settingsState = document.getElementById("settings-state");
@@ -12,6 +17,7 @@ export const twitchChannel = document.getElementById("twitch-channel");
 export const networkSocks5Address = document.getElementById("network-socks5-address");
 export const networkSocks5Username = document.getElementById("network-socks5-username");
 export const networkSocks5Password = document.getElementById("network-socks5-password");
+export const serverPortInput = document.getElementById("server-port");
 export const youtubeUseProxy = document.getElementById("youtube-use-proxy");
 export const vkUseProxy = document.getElementById("vk-use-proxy");
 export const youtubeStatus = document.getElementById("youtube-status");
@@ -69,7 +75,11 @@ export const obsCopyStatus = document.getElementById("obs-copy-status");
 export const obsOverlayOpen = document.getElementById("obs-overlay-open");
 export const obsDockOpen = document.getElementById("obs-dock-open");
 export const obsOverlayUrl = document.getElementById("obs-overlay-url");
+export const obsOverlayUrlPinned = document.getElementById("obs-overlay-url-pinned");
+export const obsOverlayPinnedLabel = document.getElementById("obs-overlay-pinned-label");
 export const obsLeaderboardUrl = document.getElementById("obs-leaderboard-url");
+export const obsLeaderboardUrlPinned = document.getElementById("obs-leaderboard-url-pinned");
+export const obsLeaderboardPinnedLabel = document.getElementById("obs-leaderboard-pinned-label");
 export const obsLeaderboardPeriod = document.getElementById("obs-leaderboard-period");
 export const obsLeaderboardOpen = document.getElementById("obs-leaderboard-open");
 export const presetIslandUrl = document.getElementById("preset-island-url");
@@ -91,17 +101,58 @@ export const emoteProviderList = document.getElementById("emote-provider-list");
 export const recentMessages = document.getElementById("recent-messages");
 export const recentMessagesEmpty = document.getElementById("recent-messages-empty");
 export const refreshMessages = document.getElementById("refresh-messages");
+export const refreshLeaderboard = document.getElementById("refresh-leaderboard");
+export const refreshStatistics = document.getElementById("refresh-statistics");
 export const refreshViewers = document.getElementById("refresh-viewers");
-export const canvasMonitorTab = document.getElementById("canvas-monitor-tab");
-export const canvasViewersTab = document.getElementById("canvas-viewers-tab");
-export const canvasHeading = document.getElementById("canvas-heading");
-export const monitorCanvasPanel = document.getElementById("monitor-canvas-panel");
-export const viewersCanvasPanel = document.getElementById("viewers-canvas-panel");
+export const liveMessagesTab = document.getElementById("live-messages-tab");
+export const liveLeaderboardTab = document.getElementById("live-leaderboard-tab");
+export const liveStatisticsTab = document.getElementById("live-statistics-tab");
+export const liveMessagesPanel = document.getElementById("live-messages-panel");
+export const liveLeaderboardPanel = document.getElementById("live-leaderboard-panel");
+export const liveStatisticsPanel = document.getElementById("live-statistics-panel");
+export const liveLeaderboardRegion = document.getElementById("live-leaderboard-region");
+export const liveLeaderboardPeriod = document.getElementById("live-leaderboard-period");
+export const liveLeaderboardTableBody = document.getElementById("live-leaderboard-table-body");
+export const liveLeaderboardEmpty = document.getElementById("live-leaderboard-empty");
+export const liveLeaderboardError = document.getElementById("live-leaderboard-error");
+export const liveStatisticsRegion = document.getElementById("live-statistics-region");
+export const liveStatisticsList = document.getElementById("live-statistics-list");
+export const liveStatisticsEmpty = document.getElementById("live-statistics-empty");
+export const liveStatisticsPartial = document.getElementById("live-statistics-partial");
+export const liveStatisticsError = document.getElementById("live-statistics-error");
+export const liveActivePreset = document.getElementById("live-active-preset");
+export const studioWorkspace = document.getElementById("workspace-studio");
+export const studioPublishButton = document.getElementById("studio-publish");
+export const studioDirtyStatus = document.getElementById("studio-dirty-status");
+export const studioActivePreset = document.getElementById("studio-active-preset");
+export const liveBrowserClients = document.getElementById("live-browser-clients");
+export const liveTwitchStatus = document.getElementById("live-twitch-status");
+export const liveYoutubeStatus = document.getElementById("live-youtube-status");
+export const liveVkStatus = document.getElementById("live-vk-status");
+export const audienceNewStreamButton = document.getElementById("audience-new-stream-button");
+export const audiencePeriod = document.getElementById("audience-period");
+export const audienceOpenLeaderboard = document.getElementById("audience-open-leaderboard");
+export const audienceLayout = document.getElementById("audience-layout");
+export const audienceTableRegion = document.getElementById("audience-table-region");
+export const audienceViewersTableBody = document.getElementById("audience-viewers-table-body");
+export const audienceTableEmpty = document.getElementById("audience-table-empty");
+export const audienceTableEmptyMessage = document.getElementById("audience-table-empty-message");
+export const audienceClearSearch = document.getElementById("audience-clear-search");
+export const audienceTableError = document.getElementById("audience-table-error");
+export const audienceInspector = document.getElementById("audience-inspector");
+export const audienceInspectorBody = document.getElementById("audience-inspector-body");
+export const audienceInspectorEmpty = document.getElementById("audience-inspector-empty");
+export const audienceInspectorLoading = document.getElementById("audience-inspector-loading");
+export const audienceInspectorClose = document.getElementById("audience-inspector-close");
+export const audienceDetailSheet = document.getElementById("audience-detail-sheet");
+export const audienceSheetBody = document.getElementById("audience-sheet-body");
+export const audienceSheetLoading = document.getElementById("audience-sheet-loading");
+export const audienceSheetClose = document.getElementById("audience-sheet-close");
 export const viewersSearch = document.getElementById("viewers-search");
-export const viewersList = document.getElementById("viewers-list");
-export const viewersListEmpty = document.getElementById("viewers-list-empty");
-export const viewerCard = document.getElementById("viewer-card");
-export const viewerCardEmpty = document.getElementById("viewer-card-empty");
+export const viewerMergePrompt = document.getElementById("viewer-merge-prompt");
+export const viewerMergePromptMessage = document.getElementById("viewer-merge-prompt-message");
+export const viewerMergePromptCancel = document.getElementById("viewer-merge-prompt-cancel");
+export const viewerMergePromptConfirm = document.getElementById("viewer-merge-prompt-confirm");
 export const newStreamButton = document.getElementById("new-stream-button");
 export const newStreamPrompt = document.getElementById("new-stream-prompt");
 export const newStreamPromptCancel = document.getElementById("new-stream-prompt-cancel");
@@ -125,6 +176,7 @@ export const statusErrorPopover = document.getElementById("status-error-popover"
 export const fieldErrors = {
     twitch_channel: document.getElementById("twitch-channel-error"),
     network_socks5_address: document.getElementById("network-socks5-address-error"),
+    server_port: document.getElementById("server-port-error"),
     vk_channel: document.getElementById("vk-channel-error"),
     youtube_video_input: document.getElementById("youtube-video-input-error"),
     youtube_channel_handle: document.getElementById("youtube-channel-handle-error"),
@@ -149,6 +201,7 @@ export const fieldErrors = {
 export const fieldInputs = {
     twitch_channel: twitchChannel,
     network_socks5_address: networkSocks5Address,
+    server_port: serverPortInput,
     vk_channel: vkChannel,
     youtube_video_input: youtubeVideoInput,
     youtube_channel_handle: youtubeChannelHandle,

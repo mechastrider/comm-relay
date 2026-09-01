@@ -24,8 +24,8 @@ You can see CommRelay in use on the author's streams:
 - Shows a unified transparent overlay for OBS: `http://127.0.0.1:17877/overlay`.
 - Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
 - Tracks viewer stats (score, messages, session/day/all-time) in a local `comm-relay.db` file next to `config.json` — no separate database server.
-- Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?preset=…&period=session|day|all` (same theme as chat).
-- Provides a local control panel with statuses, message monitor, viewers tab, overlay settings, and diagnostics.
+- Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?period=session|day|all` (same theme as chat; without `preset` it follows the active preset).
+- Provides a local console with Live, Audience, Studio, and Settings workspaces: statuses, messages, viewers, overlay setup, and diagnostics.
 - Supports Twitch emotes, FrankerFaceZ, BetterTTV, 7TV, and safe image previews.
 - Automatically reconnects connectors and stores settings locally in `config.json`.
 
@@ -70,17 +70,17 @@ Do not move the `CommRelay` folder after installing the shortcut without running
 ## First launch
 
 1. Launch the app. The CommRelay window opens and the local server starts inside it.
-2. Open **Connections** and enable the platforms you need.
-3. Click **Save** after changing settings.
-4. In the **Controls** panel click **OBS**: the **Setup** tab walks you through connecting the overlay and message log.
+2. Open **Settings → Platforms** and enable the platforms you need.
+3. Click **Save** on that section after changing settings.
+4. Open **Studio**: the source list walks you through connecting the overlay, leaderboard, and message log.
 
 By default CommRelay listens on `127.0.0.1:17877`. The admin panel is available at `http://127.0.0.1:17877/`, and the overlay at `http://127.0.0.1:17877/overlay`.
 
 ## OBS Browser Source
 
-1. In CommRelay open **OBS → Connection**: a source list on the left (chat, leaderboard, message dock; banners are not ready yet).
-2. Select the source, click **Copy URL**, and in OBS add a **Browser** source (chat and leaderboard) or a Custom Browser Dock (message dock).
-3. Chat and leaderboard URLs already include `?preset=` for the active preset; the leaderboard also includes `period` and, when needed, `layout` / `font_size_px`.
+1. In CommRelay open **Studio**: a source list on the left (chat, leaderboard, message dock; banners are not ready yet).
+2. Select the source, copy **Follow active preset**, and in OBS add a **Browser** source (chat and leaderboard) or a Custom Browser Dock (message dock).
+3. The primary chat and leaderboard URLs **omit** `?preset=` — the source follows the active preset. For a scene-specific look, copy the **Pinned preset** URL. The leaderboard also includes `period` and, when needed, `layout` / `font_size_px`.
 4. Set the size for your scene layout. Do not add a background manually: on-stream sources are already transparent.
 5. Keep CommRelay running during the stream.
 
@@ -90,7 +90,7 @@ If you changed the port in settings, update the URL in OBS.
 
 CommRelay can show a separate chat feed directly in the OBS interface. This panel is for the streamer: it does not appear on the scene and is not visible to viewers.
 
-1. In CommRelay open **OBS → Connection**, select **Message dock**, and click **Copy URL**.
+1. In CommRelay open **Studio**, select **Message dock**, and click **Copy URL**.
 2. In OBS open **View → Docks → Custom Browser Docks…** (**Вид → Док-панели → Пользовательские браузерные доки…**).
 3. Enter a name, for example `CommRelay Messages`, and paste the copied URL.
 4. Click **Apply**, then place the new panel in a convenient part of the OBS interface.
@@ -101,7 +101,7 @@ If the CommRelay port was changed, replace `17877` in the URL. The app must stay
 
 ## Overlay settings
 
-Open **OBS → Appearance** in the CommRelay control panel.
+Open **Studio** in the CommRelay control panel.
 
 | Setting | What it does |
 |---------|--------------|
@@ -111,13 +111,13 @@ Open **OBS → Appearance** in the CommRelay control panel.
 | **Spacing** | **Comfortable** — normal padding. **Compact** — denser when many lines are on screen. |
 | **Theme** | **Default** — cards with a semi-transparent background. **Text only** — text only, no background. **Cockpit panel** — shared HUD panel. **Cockpit popups** — separate MW5 HUD pop-up messages. **G-Rebels Cockpit popups** — pop-up messages in a gold aviation HUD style. The same theme styles chat and the leaderboard. |
 | **Presets** | A named look for a scene or game: theme, limit, TTL, density, text edge, platform marker, panel, plus leaderboard font and layout (`panel` / `chips`). An older `config.json` without presets becomes the **Default** preset. |
-| **URL `?preset=`** | Each OBS scene can have its own Browser Source: copy the URL from the source list on the **Connection** tab — it already includes the active preset. |
+| **Follow / Pinned URL** | The primary copy action is **Follow active preset** (no `?preset=`). A pinned URL with `?preset=` locks that preset for one scene. Existing sources that already include `preset` keep working. |
 | **Preview** | **Chat / Leaderboard** switch: the leaderboard preview always shows a fictitious top-5, never live stats. |
 
-After any change:
+After changing appearance in Studio:
 
-1. Click **Save settings**.
-2. Refresh the Browser Source in OBS: right-click the source → **Refresh cache of current page** (or the refresh button in source properties).
+1. Click **Publish**. Until the draft is published, the live overlay does not change.
+2. If the source is pinned (`?preset=`), refresh the Browser Source in OBS: right-click the source → **Refresh cache of current page**. An unpinned source picks up the active preset over WebSocket; still refresh the cache if the look looks stuck.
 
 Without reloading in OBS, the overlay continues with the old parameters.
 
@@ -129,11 +129,11 @@ For **Cockpit panel**, **Cockpit popups**, and **G-Rebels Cockpit popups** theme
 
 ## Interface language
 
-In the control panel open **Interface → Language** and choose `Русский` or `English`. The admin panel and OBS dock use the selected language and a unified 24-hour `HH:MM:SS` format without AM/PM.
+In the control panel open **Settings → Application** and choose `Русский` or `English`. The admin panel and OBS dock use the selected language and a unified 24-hour `HH:MM:SS` format without AM/PM.
 
 ## Platform setup
 
-All settings are in the control panel, **Connections** button.
+All platform settings are in **Settings → Platforms**.
 
 ### Twitch
 
@@ -186,7 +186,7 @@ More on typical overlay and OBS issues on Linux: [`docs/FAQ.en.md`](docs/FAQ.en.
 
 ## Common issues
 
-- **I change font or theme — nothing changes**: click **Save settings**, then refresh the Browser Source in OBS. Font size is only from 12 to 48 px.
+- **I change font or theme — nothing changes**: in **Studio** click **Publish**, then refresh the Browser Source in OBS if needed. Font size is only from 12 to 48 px.
 - **Spacing and Theme look the same**: compare with active chat; Compact is more noticeable with 5+ messages; Text only is easier to see on a green or dark scene background; Cockpit themes are meant for output over the game frame.
 - **OBS shows nothing**: check that CommRelay is running, the URL in the Browser Source matches the port, and the connector in the admin panel has status `connected`. On **Linux** if the Browser Source shows a black square, disable browser hardware acceleration in OBS (**File → Settings → Advanced → Sources**) — see [`docs/FAQ.en.md`](docs/FAQ.en.md).
 - **Port 17877 is in use**: close another app on that port or launch CommRelay with a different address via `-addr 127.0.0.1:<port>`.
@@ -327,7 +327,7 @@ If the version section already exists in `CHANGELOG.md`, the workflow does not d
 
 - **Questions, suggestions, and feedback** — [Telegram support chat](https://t.me/mechastrider_apps/2).
 - **Source code and issues** — [GitHub](https://github.com/mechastrider/comm-relay).
-- In the admin panel: **Controls → About** (version and support links).
+- In the admin panel: **Settings → About** (version and support links).
 
 ### A message theme for your stream
 

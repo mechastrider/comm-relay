@@ -25,6 +25,14 @@ import {
   normalizePreviewBackground,
 } from '../../overlay/overlay-settings.js';
 import { normalizeLeaderboardLayout } from './leaderboard-url.js';
+import { parseWorkspaceHash } from "./workspace-router.js";
+
+function isOverlayPreviewActive() {
+  return (
+    parseWorkspaceHash(window.location.hash) === "studio" ||
+    Boolean(dom.overlayDialog && dom.overlayDialog.open)
+  );
+}
 
 export function overlayDisplaySettingsChanged(payload) {
     if (!state.currentConfig) {
@@ -317,7 +325,7 @@ export function refreshOverlayPreview(force) {
       state.overlayPreviewRefreshTimer = null;
     }
     updateOverlayPreviewOpenLink();
-    if (!dom.overlayDialog || !dom.overlayDialog.open || !dom.overlayPreviewFrame) {
+    if (!isOverlayPreviewActive() || !dom.overlayPreviewFrame) {
       return;
     }
     const mode = dom.overlayPreviewMode && dom.overlayPreviewMode.value === "live"
@@ -336,7 +344,7 @@ export function refreshOverlayPreview(force) {
 
 export function scheduleOverlayPreviewRefresh() {
     updateOverlayPreviewOpenLink();
-    if (!dom.overlayDialog || !dom.overlayDialog.open) {
+    if (!isOverlayPreviewActive()) {
       return;
     }
     if (state.overlayPreviewRefreshTimer !== null) {
@@ -373,7 +381,6 @@ export function unmountOverlayPreview() {
 
 export function initOverlayPreview() {
     if (
-      !dom.overlayDialog ||
       !dom.overlayPreviewFrame ||
       !dom.overlayPreviewMode ||
       !dom.overlayPreviewBackground ||
@@ -511,8 +518,9 @@ export function initOverlayPreview() {
     });
 
     document.addEventListener("overlay-preview-refresh", scheduleOverlayPreviewRefresh);
-    if (dom.overlayDialog) {
-      dom.overlayDialog.addEventListener("input", function (event) {
+    const overlayPreviewHost = document.getElementById("workspace-studio") || dom.overlayDialog;
+    if (overlayPreviewHost) {
+      overlayPreviewHost.addEventListener("input", function (event) {
         if (
           event.target &&
           event.target.closest &&
@@ -529,7 +537,9 @@ export function initOverlayPreview() {
       });
     }
 
-    dom.overlayDialog.addEventListener("close", unmountOverlayPreview);
+    if (dom.overlayDialog) {
+      dom.overlayDialog.addEventListener("close", unmountOverlayPreview);
+    }
     if (typeof ResizeObserver === "function" && dom.overlayPreviewStage) {
       state.overlayPreviewResizeObserver = new ResizeObserver(updateOverlayPreviewScale);
       state.overlayPreviewResizeObserver.observe(dom.overlayPreviewStage);
