@@ -59,6 +59,9 @@
   --control-min-height-compact: 30px;
   --touch-target-min: 40px;
   --touch-target-narrow: 44px;
+  --sidebar-width-expanded: 196px;
+  --sidebar-width-collapsed: 64px;
+  --sidebar-icon-size: 20px;
 
   font-family: var(--mono);
 }

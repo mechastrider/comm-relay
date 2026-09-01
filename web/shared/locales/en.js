@@ -46,6 +46,8 @@ export default {
   "shell.settingsUnavailable": "Settings unavailable",
   "shell.skipToContent": "Skip to content",
   "shell.primaryNav": "Primary navigation",
+  "shell.collapseSidebar": "Collapse menu",
+  "shell.expandSidebar": "Expand menu",
   "shell.diagnostics": "Diagnostics",
   "shell.diagnosticsHint": "Jump to runtime uptime, WebSocket clients, and message counts.",
 
