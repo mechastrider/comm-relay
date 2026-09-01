@@ -69,6 +69,10 @@ func (s *Store) Merge(fromID, intoID string, dayResetHour int, now time.Time) er
 		return errors.Errorf("hide merged source viewer: %w", err)
 	}
 
+	if err := s.rewriteInteractionEventsLocked(tx, fromID, intoID); err != nil {
+		return err
+	}
+
 	if err := tx.Commit(); err != nil {
 		return errors.Errorf("commit merge: %w", err)
 	}

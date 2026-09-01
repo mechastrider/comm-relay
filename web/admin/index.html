@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=22">
+  <link rel="stylesheet" href="styles.css?v=23">
   <script>
     (function () {
       try {
@@ -247,8 +247,17 @@
 
         <section id="workspace-audience" class="workspace" data-workspace="audience" hidden aria-labelledby="workspace-audience-heading">
           <div class="audience-workspace">
-            <header class="audience-toolbar">
+            <header class="audience-toolbar audience-toolbar--primary">
               <h1 id="workspace-audience-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.audienceHeading">Audience</h1>
+              <div class="audience-tabs console-tabs" role="tablist" data-i18n-aria-label="audience.tabList" aria-label="Audience sections">
+                <button id="audience-viewers-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="audience-viewers-panel" data-audience-tab="viewers" data-i18n="audience.tabViewers">Viewers</button>
+                <button id="audience-commands-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-commands-panel" data-audience-tab="commands" data-i18n="audience.tabCommands">Commands</button>
+                <button id="audience-awards-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-awards-panel" data-audience-tab="awards" data-i18n="audience.tabAwards">Awards</button>
+              </div>
+            </header>
+
+            <div id="audience-viewers-panel" class="audience-panel" role="tabpanel" aria-labelledby="audience-viewers-tab">
+            <header class="audience-toolbar">
               <div class="audience-toolbar__controls">
                 <div class="audience-toolbar__search form__field">
                   <label for="viewers-search" data-i18n="viewers.searchLabel">Search viewers</label>
@@ -312,6 +321,138 @@
                 <p id="audience-inspector-loading" class="audience-inspector__loading" hidden data-i18n="state.loading">Loading</p>
               </aside>
             </div>
+            </div>
+
+            <div id="audience-commands-panel" class="audience-panel audience-catalog-panel" role="tabpanel" aria-labelledby="audience-commands-tab" hidden>
+              <div class="audience-catalog-layout">
+                <section id="commands-list-region" class="audience-catalog-list" aria-labelledby="commands-list-heading">
+                  <header class="audience-catalog-list__header">
+                    <h2 id="commands-list-heading" class="audience-catalog-list__title" data-i18n="commands.listHeading">Chat commands</h2>
+                    <button id="commands-create-button" class="btn-physical btn-small" type="button" data-i18n="catalog.create">Create</button>
+                  </header>
+                  <div class="audience-catalog-list__body">
+                    <ul id="commands-list" class="audience-catalog-items" role="listbox" aria-labelledby="commands-list-heading"></ul>
+                    <div id="commands-list-empty" class="empty-state audience-region-empty" hidden>
+                      <p class="audience-region-empty__message" data-i18n="commands.empty">No commands yet.</p>
+                      <button id="commands-empty-create" class="btn-physical btn-small" type="button" data-i18n="catalog.create">Create</button>
+                    </div>
+                    <div id="commands-list-error" class="notice notice--error audience-region-error" hidden>
+                      <p class="notice__body"></p>
+                      <button type="button" class="state-retry btn-physical btn-small" data-i18n="state.retry">Retry</button>
+                    </div>
+                  </div>
+                </section>
+                <aside id="commands-editor" class="audience-catalog-editor" aria-labelledby="commands-editor-heading">
+                  <header class="audience-catalog-editor__header">
+                    <h2 id="commands-editor-heading" class="audience-catalog-editor__title" data-i18n="commands.editorHeading">Edit command</h2>
+                    <div class="audience-catalog-editor__actions">
+                      <button id="commands-save-button" class="btn-physical btn-small" type="submit" form="commands-editor-form" data-i18n="catalog.save">Save</button>
+                      <button id="commands-delete-button" class="btn-physical btn-danger btn-small" type="button" data-i18n="catalog.delete">Delete</button>
+                    </div>
+                  </header>
+                  <form id="commands-editor-form" class="audience-catalog-editor__body" hidden>
+                    <div class="form__field">
+                      <label for="command-trigger-input" data-i18n="commands.triggerLabel">Trigger (!slug)</label>
+                      <input id="command-trigger-input" type="text" autocomplete="off" spellcheck="false" required>
+                      <p id="command-trigger-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="command-enabled-input">
+                        <input id="command-enabled-input" type="checkbox">
+                        <span data-i18n="commands.enabledLabel">Enabled</span>
+                      </label>
+                    </div>
+                    <div class="form__field">
+                      <label for="command-cooldown-input" data-i18n="commands.cooldownLabel">Cooldown (seconds)</label>
+                      <input id="command-cooldown-input" type="number" min="0" step="1" value="30" required>
+                    </div>
+                    <div class="form__field">
+                      <label for="command-splash-input" data-i18n="catalog.splashTemplate">Splash template</label>
+                      <input id="command-splash-input" type="text" autocomplete="off" required>
+                      <p id="command-splash-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="command-sound-input" data-i18n="catalog.soundLabel">Sound</label>
+                      <select id="command-sound-input">
+                        <option value="" data-i18n="sound.silence">Silence</option>
+                        <option value="chime" data-i18n="sound.chime">Chime - soft two-tone</option>
+                        <option value="ping" data-i18n="sound.ping">Ping - short high note</option>
+                        <option value="soft" data-i18n="sound.soft">Soft - quiet low tone</option>
+                        <option value="alert" data-i18n="sound.alert">Alert - quick double beep</option>
+                      </select>
+                    </div>
+                    <div class="form__field">
+                      <label for="command-duration-input" data-i18n="catalog.durationLabel">Duration (ms)</label>
+                      <input id="command-duration-input" type="number" min="1" step="1" value="5000" required>
+                    </div>
+                  </form>
+                  <p id="commands-editor-empty" class="empty-state audience-catalog-editor__empty" data-i18n="commands.selectOrCreate">Select a command or create one.</p>
+                </aside>
+              </div>
+            </div>
+
+            <div id="audience-awards-panel" class="audience-panel audience-catalog-panel" role="tabpanel" aria-labelledby="audience-awards-tab" hidden>
+              <div class="audience-catalog-layout">
+                <section id="awards-list-region" class="audience-catalog-list" aria-labelledby="awards-list-heading">
+                  <header class="audience-catalog-list__header">
+                    <h2 id="awards-list-heading" class="audience-catalog-list__title" data-i18n="awards.listHeading">Award types</h2>
+                    <button id="awards-create-button" class="btn-physical btn-small" type="button" data-i18n="catalog.create">Create</button>
+                  </header>
+                  <div class="audience-catalog-list__body">
+                    <ul id="awards-list" class="audience-catalog-items" role="listbox" aria-labelledby="awards-list-heading"></ul>
+                    <div id="awards-list-empty" class="empty-state audience-region-empty" hidden>
+                      <p class="audience-region-empty__message" data-i18n="awards.empty">No award types yet.</p>
+                      <button id="awards-empty-create" class="btn-physical btn-small" type="button" data-i18n="catalog.create">Create</button>
+                    </div>
+                    <div id="awards-list-error" class="notice notice--error audience-region-error" hidden>
+                      <p class="notice__body"></p>
+                      <button type="button" class="state-retry btn-physical btn-small" data-i18n="state.retry">Retry</button>
+                    </div>
+                  </div>
+                </section>
+                <aside id="awards-editor" class="audience-catalog-editor" aria-labelledby="awards-editor-heading">
+                  <header class="audience-catalog-editor__header">
+                    <h2 id="awards-editor-heading" class="audience-catalog-editor__title" data-i18n="awards.editorHeading">Edit award</h2>
+                    <div class="audience-catalog-editor__actions">
+                      <button id="awards-save-button" class="btn-physical btn-small" type="submit" form="awards-editor-form" data-i18n="catalog.save">Save</button>
+                      <button id="awards-delete-button" class="btn-physical btn-danger btn-small" type="button" data-i18n="catalog.delete">Delete</button>
+                    </div>
+                  </header>
+                  <form id="awards-editor-form" class="audience-catalog-editor__body" hidden>
+                    <div class="form__field">
+                      <label for="award-name-input" data-i18n="awards.nameLabel">Name</label>
+                      <input id="award-name-input" type="text" autocomplete="off" required>
+                      <p id="award-name-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="award-points-input" data-i18n="awards.pointsLabel">Points</label>
+                      <input id="award-points-input" type="number" min="1" step="1" value="10" required>
+                      <p id="award-points-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="award-splash-input" data-i18n="catalog.splashTemplate">Splash template</label>
+                      <input id="award-splash-input" type="text" autocomplete="off" required>
+                      <p id="award-splash-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="award-sound-input" data-i18n="catalog.soundLabel">Sound</label>
+                      <select id="award-sound-input">
+                        <option value="" data-i18n="sound.silence">Silence</option>
+                        <option value="chime" data-i18n="sound.chime">Chime - soft two-tone</option>
+                        <option value="ping" data-i18n="sound.ping">Ping - short high note</option>
+                        <option value="soft" data-i18n="sound.soft">Soft - quiet low tone</option>
+                        <option value="alert" data-i18n="sound.alert">Alert - quick double beep</option>
+                      </select>
+                    </div>
+                    <div class="form__field">
+                      <label for="award-duration-input" data-i18n="catalog.durationLabel">Duration (ms)</label>
+                      <input id="award-duration-input" type="number" min="1" step="1" value="5000" required>
+                    </div>
+                  </form>
+                  <p id="awards-editor-empty" class="empty-state audience-catalog-editor__empty" data-i18n="awards.selectOrCreate">Select an award or create one.</p>
+                </aside>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -339,12 +480,12 @@
             <header class="settings-workspace__header">
               <h1 id="workspace-settings-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.settingsHeading">Settings</h1>
               <nav class="settings-nav" role="tablist" data-i18n-aria-label="settings.navLabel" aria-label="Settings sections">
-                <a class="settings-nav__link" href="#settings/platforms" role="tab" data-settings-nav="platforms" data-i18n="settings.section.platforms">Platforms</a>
-                <a class="settings-nav__link" href="#settings/network" role="tab" data-settings-nav="network" data-i18n="settings.section.network">Network</a>
-                <a class="settings-nav__link" href="#settings/data" role="tab" data-settings-nav="data" data-i18n="settings.section.data">Data</a>
-                <a class="settings-nav__link" href="#settings/application" role="tab" data-settings-nav="application" data-i18n="settings.section.application">Application</a>
-                <a class="settings-nav__link" href="#settings/diagnostics" role="tab" data-settings-nav="diagnostics" data-i18n="settings.section.diagnostics">Diagnostics</a>
-                <a class="settings-nav__link" href="#settings/about" role="tab" data-settings-nav="about" data-i18n="settings.section.about">About</a>
+                <a id="settings-platforms-tab" class="settings-nav__link" href="#settings/platforms" role="tab" aria-controls="settings-platforms-panel" data-settings-nav="platforms" data-i18n="settings.section.platforms">Platforms</a>
+                <a id="settings-network-tab" class="settings-nav__link" href="#settings/network" role="tab" aria-controls="settings-network-panel" data-settings-nav="network" data-i18n="settings.section.network">Network</a>
+                <a id="settings-data-tab" class="settings-nav__link" href="#settings/data" role="tab" aria-controls="settings-data-panel" data-settings-nav="data" data-i18n="settings.section.data">Data</a>
+                <a id="settings-application-tab" class="settings-nav__link" href="#settings/application" role="tab" aria-controls="settings-application-panel" data-settings-nav="application" data-i18n="settings.section.application">Application</a>
+                <a id="settings-diagnostics-tab" class="settings-nav__link" href="#settings/diagnostics" role="tab" aria-controls="settings-diagnostics-panel" data-settings-nav="diagnostics" data-i18n="settings.section.diagnostics">Diagnostics</a>
+                <a id="settings-about-tab" class="settings-nav__link" href="#settings/about" role="tab" aria-controls="settings-about-panel" data-settings-nav="about" data-i18n="settings.section.about">About</a>
               </nav>
             </header>
             <div id="settings-sections-mount" class="settings-workspace__content"></div>
@@ -651,9 +792,9 @@
                   <span data-i18n="obs.leaderboard">Leaderboard</span>
                   <small>/overlay/leaderboard</small>
                 </button>
-                <button class="obs-source-item" type="button" data-obs-source="alerts" disabled>
+                <button class="obs-source-item" type="button" data-obs-source="alerts">
                   <span data-i18n="obs.alerts">Banners</span>
-                  <small data-i18n="obs.alertsSoon">Later · /overlay/alert</small>
+                  <small>/overlay/alert</small>
                 </button>
                 <p class="obs-source-group-label" data-i18n="obs.sourcesOperator">Only visible to you</p>
                 <button class="obs-source-item" type="button" data-obs-source="dock">
@@ -714,6 +855,24 @@
                   </div>
                 </details>
 
+                <p class="field-hint" data-obs-source-pane="alerts" hidden data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
+
+                <div class="obs-url-field studio-url-primary" data-obs-source-pane="alerts" hidden>
+                  <label for="obs-alert-url" data-i18n="obs.followActivePreset">Follow active preset</label>
+                  <div class="obs-url-row">
+                    <input id="obs-alert-url" type="text" readonly value="/overlay/alert">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-alert-url" data-copy-label="Alert URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </div>
+                <details class="studio-url-pinned" data-obs-source-pane="alerts" hidden>
+                  <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+                  <p id="obs-alert-pinned-label" class="field-hint"></p>
+                  <div class="obs-url-row">
+                    <input id="obs-alert-url-pinned" type="text" readonly value="/overlay/alert">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-alert-url-pinned" data-copy-label="Pinned alert URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </details>
+
                 <div class="obs-url-field" data-obs-source-pane="dock" hidden>
                   <label for="obs-dock-url" data-i18n="obs.dockUrl">Message dock URL</label>
                   <div class="obs-url-row">
@@ -747,6 +906,10 @@
                 </div>
                 <div class="obs-integration-actions" data-obs-source-pane="leaderboard" hidden>
                   <a id="obs-leaderboard-open" class="button-secondary button-secondary--small" href="/overlay/leaderboard" target="_blank" rel="noopener" data-i18n="obs.openLeaderboard">Open leaderboard</a>
+                  <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance" data-i18n="obs.customizeAppearance">Customize appearance</button>
+                </div>
+                <div class="obs-integration-actions" data-obs-source-pane="alerts" hidden>
+                  <a id="obs-alert-open" class="button-secondary button-secondary--small" href="/overlay/alert?preview=sample" target="_blank" rel="noopener" data-i18n="obs.openAlerts">Open alerts</a>
                   <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance" data-i18n="obs.customizeAppearance">Customize appearance</button>
                 </div>
                 <div class="obs-integration-actions" data-obs-source-pane="dock" hidden>
@@ -816,6 +979,7 @@
                 <div class="surface-tabs__list">
                   <button id="obs-surface-chat" class="surface-tab" type="button" role="tab" data-obs-preview-surface="chat" aria-selected="true" aria-pressed="true" data-i18n="obs.surfaceChat">Chat</button>
                   <button id="obs-surface-leaderboard" class="surface-tab" type="button" role="tab" data-obs-preview-surface="leaderboard" aria-selected="false" aria-pressed="false" data-i18n="obs.surfaceLeaderboard">Leaderboard</button>
+                  <button id="obs-surface-alerts" class="surface-tab" type="button" role="tab" data-obs-preview-surface="alerts" aria-selected="false" aria-pressed="false" data-i18n="obs.surfaceAlerts">Alerts</button>
                 </div>
               </div>
 
@@ -1081,6 +1245,7 @@
 
             <div class="overlay-preview-controls">
               <div class="preview-control overlay-chat-only" id="overlay-preview-mode-control">
+                <label for="overlay-preview-mode" data-i18n="obs.previewMode">Preview mode</label>
                 <select id="overlay-preview-mode">
                   <option value="sample" data-i18n="obs.sample">Sample</option>
                   <option value="live" data-i18n="obs.liveChat">Live chat</option>
@@ -1158,6 +1323,17 @@
         <div class="prompt-dialog__actions">
           <button id="viewer-merge-prompt-cancel" class="btn-physical" type="button" data-i18n="dialog.cancel">Cancel</button>
           <button id="viewer-merge-prompt-confirm" class="btn-physical btn-start" type="button" data-i18n="viewers.mergeConfirm">Merge</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="catalog-delete-prompt" class="prompt-dialog" aria-labelledby="catalog-delete-prompt-title">
+      <div class="prompt-dialog__frame">
+        <h3 id="catalog-delete-prompt-title" data-i18n="catalog.deleteTitle">Delete item?</h3>
+        <p id="catalog-delete-prompt-message" class="prompt-dialog__message"></p>
+        <div class="prompt-dialog__actions">
+          <button id="catalog-delete-prompt-cancel" class="btn-physical" type="button" data-i18n="dialog.cancel">Cancel</button>
+          <button id="catalog-delete-prompt-confirm" class="btn-physical btn-danger" type="button" data-i18n="catalog.deleteConfirm">Delete</button>
         </div>
       </div>
     </dialog>
@@ -1324,6 +1500,13 @@
               <p class="field-hint" data-i18n="iface.dayResetHourHint">Local hour when the stats day rolls over (0–23).</p>
               <p id="day-reset-hour-error" class="field-error" role="alert" hidden></p>
             </div>
+            <div class="form__field">
+              <label class="checkbox" for="hide-command-messages">
+                <input id="hide-command-messages" name="hide_command_messages" type="checkbox">
+                <span data-i18n="iface.hideCommandMessages">Hide command lines in chat overlay</span>
+              </label>
+              <p class="field-hint" data-i18n="iface.hideCommandMessagesHint">When enabled, !commands still appear in admin and the dock, but not on /overlay.</p>
+            </div>
           </div>
         </section>
       </div>
@@ -1419,6 +1602,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=21"></script>
+  <script type="module" src="app.js?v=23"></script>
 </body>
 </html>

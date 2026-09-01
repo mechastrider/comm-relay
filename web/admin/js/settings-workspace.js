@@ -141,6 +141,9 @@ function collectSectionValuesFromDOM(sectionId) {
       day_reset_hour: dom.dayResetHourInput
         ? Number.parseInt(dom.dayResetHourInput.value, 10)
         : 6,
+      hide_command_messages: dom.hideCommandMessagesInput
+        ? dom.hideCommandMessagesInput.checked
+        : false,
     };
   }
 
@@ -270,6 +273,9 @@ function applySectionValuesToDOM(sectionId, values) {
     }
     if (dom.dayResetHourInput) {
       dom.dayResetHourInput.value = String(values.day_reset_hour);
+    }
+    if (dom.hideCommandMessagesInput) {
+      dom.hideCommandMessagesInput.checked = Boolean(values.hide_command_messages);
     }
     return;
   }
@@ -581,6 +587,7 @@ function confirmDiscardSection(sectionId) {
 /**
  * @param {string} sectionId
  * @param {{ skipDirtyCheck?: boolean }} [options]
+ * @returns {boolean}
  */
 export function selectSettingsSection(sectionId, options) {
   const nextSection = SETTINGS_SECTIONS.includes(sectionId) ? sectionId : DEFAULT_SETTINGS_SECTION;
@@ -592,7 +599,7 @@ export function selectSettingsSection(sectionId, options) {
       isSectionDirty(activeSection) &&
       !confirmDiscardSection(activeSection)
     ) {
-      return;
+      return false;
     }
     if (isSectionDirty(activeSection)) {
       applySectionBaselineToDOM(activeSection);
@@ -645,6 +652,7 @@ export function selectSettingsSection(sectionId, options) {
     suppressNavigationGuard = true;
     window.history.replaceState(null, "", desiredHash);
   }
+  return true;
 }
 
 async function saveSettingsSection(sectionId) {
@@ -735,9 +743,11 @@ function createSectionToolbar(sectionId) {
 function mountEditableSection(sectionId, bodyMount, contentNodes) {
   const section = document.createElement("section");
   section.className = "settings-section";
+  section.id = "settings-" + sectionId + "-panel";
+  section.setAttribute("role", "tabpanel");
   section.dataset.settingsSectionPanel = sectionId;
   section.hidden = sectionId !== activeSection;
-  section.setAttribute("aria-labelledby", "settings-section-" + sectionId + "-heading");
+  section.setAttribute("aria-labelledby", "settings-" + sectionId + "-tab");
 
   const heading = document.createElement("h2");
   heading.id = "settings-section-" + sectionId + "-heading";
@@ -749,8 +759,12 @@ function mountEditableSection(sectionId, bodyMount, contentNodes) {
   form.className = "settings-section__form";
   form.dataset.settingsEditable = sectionId;
 
-  section.appendChild(heading);
-  section.appendChild(createSectionToolbar(sectionId));
+  const header = document.createElement("header");
+  header.className = "settings-section__header";
+  header.appendChild(heading);
+  header.appendChild(createSectionToolbar(sectionId));
+
+  section.appendChild(header);
   form.appendChild(contentNodes);
   section.appendChild(form);
   bodyMount.appendChild(section);
@@ -835,9 +849,11 @@ function mountApplicationSection(mount) {
 function mountDiagnosticsSection(mount) {
   const section = document.createElement("section");
   section.className = "settings-section settings-section--readonly";
+  section.id = "settings-diagnostics-panel";
+  section.setAttribute("role", "tabpanel");
   section.dataset.settingsSectionPanel = "diagnostics";
   section.hidden = activeSection !== "diagnostics";
-  section.setAttribute("aria-labelledby", "settings-section-diagnostics-heading");
+  section.setAttribute("aria-labelledby", "settings-diagnostics-tab");
 
   const heading = document.createElement("h2");
   heading.id = "settings-section-diagnostics-heading";
@@ -860,9 +876,11 @@ function mountAboutSection(mount) {
   }
   const section = document.createElement("section");
   section.className = "settings-section settings-section--readonly";
+  section.id = "settings-about-panel";
+  section.setAttribute("role", "tabpanel");
   section.dataset.settingsSectionPanel = "about";
   section.hidden = activeSection !== "about";
-  section.setAttribute("aria-labelledby", "settings-section-about-heading");
+  section.setAttribute("aria-labelledby", "settings-about-tab");
 
   const heading = document.createElement("h2");
   heading.id = "settings-section-about-heading";
@@ -945,7 +963,8 @@ function bindSectionInputHandlers() {
 }
 
 function bindSettingsNavigation() {
-  document.querySelectorAll("[data-settings-nav]").forEach(function (link) {
+  const links = Array.from(document.querySelectorAll("[data-settings-nav]"));
+  links.forEach(function (link, index) {
     link.addEventListener("click", function (event) {
       const sectionId = link.getAttribute("data-settings-nav");
       if (!sectionId) {
@@ -955,7 +974,30 @@ function bindSettingsNavigation() {
         return;
       }
       event.preventDefault();
-      selectSettingsSection(sectionId);
+      if (!selectSettingsSection(sectionId)) {
+        document.querySelector('[data-settings-nav][aria-selected="true"]')?.focus();
+      }
+    });
+    link.addEventListener("keydown", function (event) {
+      if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(event.key) === -1) {
+        return;
+      }
+      event.preventDefault();
+      let nextIndex = index;
+      if (event.key === "Home") {
+        nextIndex = 0;
+      } else if (event.key === "End") {
+        nextIndex = links.length - 1;
+      } else if (event.key === "ArrowRight") {
+        nextIndex = (index + 1) % links.length;
+      } else {
+        nextIndex = (index - 1 + links.length) % links.length;
+      }
+      const nextLink = links[nextIndex];
+      const nextSection = nextLink && nextLink.getAttribute("data-settings-nav");
+      if (nextSection && selectSettingsSection(nextSection)) {
+        nextLink.focus();
+      }
     });
   });
 }

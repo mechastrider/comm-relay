@@ -86,6 +86,14 @@ func (b *Bus) Publish(event Event) error {
 	return nil
 }
 
+// SubscriberCount returns the number of active subscribers.
+func (b *Bus) SubscriberCount() int {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return len(b.subs)
+}
+
 // Close stops the bus, closes all subscriber channels, and rejects further publishes.
 func (b *Bus) Close() {
 	b.mu.Lock()

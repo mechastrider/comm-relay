@@ -28,6 +28,9 @@ import {
 } from "./js/settings.js";
 import { initStudio } from "./js/studio.js";
 import { initAudienceViewers, initNewStreamControl } from "./js/viewers.js";
+import { initAudienceTabs } from "./js/audience-tabs.js";
+import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js";
+import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
 import { initWorkspaceRouter } from "./js/workspace-router.js";
 import { initLiveTabs } from "./js/live-tabs.js";
@@ -130,6 +133,17 @@ initAboutDialog();
 initMessageSoundControls();
 bindLocaleSelect();
 initAudienceViewers();
+initAudienceTabs({
+  onTabChange: function (tab) {
+    if (tab === "commands") {
+      ensureCommandsLoaded();
+    } else if (tab === "awards") {
+      ensureAwardsLoaded();
+    }
+  },
+});
+initCommandsCatalog();
+initAwardsCatalog();
 initLiveTabs();
 initLiveLeaderboard(function () {
   /* period change handled in leaderboard module */

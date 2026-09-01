@@ -4,6 +4,7 @@ import { defaultStyleForTheme, mergeStyle } from "../../overlay/overlay-settings
 import { uploadOverlayAsset } from "./overlay-asset-upload.js";
 import { showBanner } from "./ui-shell.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
+import { buildObsAlertURL } from "./alert-url.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
 import * as dom from "./dom.js";
 
@@ -383,6 +384,7 @@ export function updatePresetIsland() {
     });
   }
   const overlayUrl = buildObsOverlayURL({ presetId: activePresetId });
+  const alertUrl = buildObsAlertURL({ presetId: activePresetId });
   if (dom.presetIslandUrl) {
     const surface = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
     const previewSurface = surface ? surface.getAttribute("data-obs-preview-surface") : "chat";
@@ -390,6 +392,9 @@ export function updatePresetIsland() {
       const leaderboardUrl = currentLeaderboardURL({ pinned: true });
       dom.presetIslandUrl.value = leaderboardUrl;
       dom.presetIslandUrl.title = leaderboardUrl;
+    } else if (previewSurface === "alerts") {
+      dom.presetIslandUrl.value = alertUrl;
+      dom.presetIslandUrl.title = alertUrl;
     } else {
       dom.presetIslandUrl.value = overlayUrl;
       dom.presetIslandUrl.title = overlayUrl;
@@ -426,6 +431,25 @@ export function updatePresetIsland() {
     const pinnedLabel = preset ? preset.name || preset.id : activePresetId;
     if (dom.obsLeaderboardPinnedLabel) {
       dom.obsLeaderboardPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
+  const followAlertUrl = buildObsAlertURL({ followActive: true });
+  if (dom.obsAlertUrl) {
+    dom.obsAlertUrl.value = followAlertUrl;
+  }
+  if (dom.obsAlertOpen) {
+    const previewUrl = new URL(followAlertUrl);
+    previewUrl.searchParams.set("preview", "sample");
+    dom.obsAlertOpen.href = previewUrl.toString();
+  }
+  if (dom.obsAlertUrlPinned) {
+    const pinnedAlertUrl = buildObsAlertURL({ presetId: activePresetId });
+    dom.obsAlertUrlPinned.value = pinnedAlertUrl;
+    dom.obsAlertUrlPinned.title = pinnedAlertUrl;
+    const preset = currentPreset();
+    const pinnedLabel = preset ? preset.name || preset.id : activePresetId;
+    if (dom.obsAlertPinnedLabel) {
+      dom.obsAlertPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
     }
   }
   if (dom.presetUrlStatus) {

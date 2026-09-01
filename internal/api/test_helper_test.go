@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
@@ -21,6 +23,7 @@ type testEnv struct {
 	Bus         *bus.Bus
 	ViewerStore *store.Store
 	ConfigStore *config.Store
+	Matcher     *command.Matcher
 }
 
 func testViewerStore(t *testing.T) *store.Store {
@@ -41,24 +44,51 @@ func testHandler(t *testing.T) http.Handler {
 func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 	t.Helper()
 
-	hub, err := NewHub(b)
-	require.NoError(t, err)
-
 	ctx, cancel := context.WithCancel(context.Background())
 
 	cfgStore := testConfigStore(t)
 	viewerStore := testViewerStore(t)
+	matcher := command.NewMatcher(viewerStore)
+
+	hub, err := NewHub(b, matcher, cfgStore, viewerStore)
+	require.NoError(t, err)
+
 	history := NewMessageHistory(0)
 	publisher := NewLeaderboardPublisher(hub, viewerStore, cfgStore)
-	ingest := NewViewerIngest(viewerStore, cfgStore, publisher)
+	ingest := NewViewerIngest(viewerStore, cfgStore, publisher, matcher, hub)
 
-	go hub.Run(ctx)
-	go history.Run(ctx, b)
-	go ingest.Run(ctx, b)
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		hub.Run(ctx)
+	}()
+	go func() {
+		defer wg.Done()
+		history.Run(ctx, b)
+	}()
+	go func() {
+		defer wg.Done()
+		ingest.Run(ctx, b)
+	}()
+
+	require.Eventually(t, func() bool {
+		return b.SubscriberCount() >= 3
+	}, time.Second, 5*time.Millisecond)
 
 	t.Cleanup(func() {
 		cancel()
 		publisher.Stop()
+		done := make(chan struct{})
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+			t.Fatal("timed out waiting for api test runnables to stop")
+		}
 		require.NoError(t, viewerStore.Close())
 	})
 
@@ -76,6 +106,7 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 		Bus:         b,
 		ViewerStore: viewerStore,
 		ConfigStore: cfgStore,
+		Matcher:     matcher,
 	}
 }
 

@@ -268,6 +268,9 @@ export function applyConfig(config) {
         typeof config.day_reset_hour === "number" ? config.day_reset_hour : 6
       );
     }
+    if (dom.hideCommandMessagesInput) {
+      dom.hideCommandMessagesInput.checked = Boolean(config.hide_command_messages);
+    }
     const nextLocale = localeFromConfig(config);
     if (previousLocale !== nextLocale && state.recentMessageCache.length > 0) {
       renderRecentMessages(state.recentMessageCache, { force: true });
@@ -293,6 +296,9 @@ export function buildPayload() {
       day_reset_hour: dom.dayResetHourInput
         ? Number.parseInt(dom.dayResetHourInput.value, 10)
         : 6,
+      hide_command_messages: dom.hideCommandMessagesInput
+        ? dom.hideCommandMessagesInput.checked
+        : false,
       network: {
         socks5: {
           address: dom.networkSocks5Address ? dom.networkSocks5Address.value.trim() : "",
@@ -354,6 +360,7 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
       server_port: latest.server_port,
       points_per_message: latest.points_per_message,
       day_reset_hour: latest.day_reset_hour,
+      hide_command_messages: Boolean(latest.hide_command_messages),
       network: {
         socks5: {
           address: socks5.address || "",

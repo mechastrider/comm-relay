@@ -29,6 +29,31 @@ type LastSeenIdentity struct {
 	AvatarURL string
 }
 
+// Command is a persisted chat command catalog entry.
+type Command struct {
+	ID              string
+	Trigger         string
+	Enabled         bool
+	CooldownSeconds int
+	SplashTemplate  string
+	Sound           string
+	DurationMs      int
+	ImageAsset      string
+	SoundFile       string
+}
+
+// AwardType is a persisted operator award catalog entry.
+type AwardType struct {
+	ID             string
+	Name           string
+	Points         int
+	SplashTemplate string
+	Sound          string
+	DurationMs     int
+	ImageAsset     string
+	SoundFile      string
+}
+
 // Viewer is a canonical viewer with period counters and linked identities.
 type Viewer struct {
 	ID                  string

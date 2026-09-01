@@ -7,7 +7,7 @@ Gives the streamer a local admin console to connect platforms and style OBS, plu
 ## Requirements
 
 ### Requirement: Admin console manages live operation, audience, OBS setup, and settings
-The admin page at `/` SHALL provide persistent workspaces named Live, Audience, Studio, and Settings. Live SHALL contain current operational status and switchable Messages, Leaderboard, and current Statistics views. Audience SHALL provide the implemented viewer search, detail, merge, leaderboard, and stream-session workflows. Studio SHALL provide OBS source URLs, surface presets, preview, and appearance editing. Settings SHALL provide Twitch, YouTube, VK, network proxy, interface language, message sound, diagnostics, about information, and implemented data-management controls.
+The admin page at `/` SHALL provide persistent workspaces named Live, Audience, Studio, and Settings. Live SHALL contain current operational status and switchable Messages, Leaderboard, and current Statistics views. Audience SHALL provide the implemented viewer search, detail, merge, leaderboard, and stream-session workflows, plus command and award catalogs. Studio SHALL provide OBS source URLs including `/overlay/alert`, surface presets, preview, and appearance editing. Settings SHALL provide Twitch, YouTube, VK, network proxy, interface language, message sound, `hide_command_messages`, diagnostics, about information, and implemented data-management controls.
 
 #### Scenario: Open admin without a route
 - **WHEN** the operator opens `/` without a recognized hash route
@@ -20,6 +20,14 @@ The admin page at `/` SHALL provide persistent workspaces named Live, Audience, 
 #### Scenario: Copy overlay URL
 - **WHEN** the operator opens Studio source setup
 - **THEN** the UI shows overlay, leaderboard, and dock URLs for the current listen address and can copy them
+
+#### Scenario: Copy alert URL
+- **WHEN** the operator opens Studio source setup and selects Alerts
+- **THEN** the UI shows a copyable `/overlay/alert` URL for the current listen address and the source is not a disabled placeholder
+
+#### Scenario: Hide command messages
+- **WHEN** the operator enables hide command messages and saves
+- **THEN** `POST /api/config/update` persists `hide_command_messages` true
 
 #### Scenario: Save connections
 - **WHEN** the operator enables Twitch with a channel and saves
@@ -73,15 +81,15 @@ The Studio preview SHALL let the operator choose a backdrop from white, checkerb
 - **THEN** the preview iframe loads the leaderboard page with `preview_background=checker`
 
 ### Requirement: OBS setup lists sources instead of a card grid
-Studio source setup SHALL list on-stream Browser Sources and operator-only docks as a selectable list, not a growing grid of full setup cards. Selecting a source SHALL show that source's URL, copy control, and source-specific options. Browser Source install steps SHALL appear once as shared help, not repeated per source. `/overlay/alert` MAY appear as a disabled placeholder and MUST NOT be offered as a working URL.
+Studio source setup SHALL list on-stream Browser Sources and operator-only docks as a selectable list, not a growing grid of full setup cards. Selecting a source SHALL show that source's URL, copy control, and source-specific options. Browser Source install steps SHALL appear once as shared help, not repeated per source. Alerts SHALL appear as a working Browser Source with a copyable `/overlay/alert` URL.
 
 #### Scenario: Select leaderboard
 - **WHEN** the operator selects Leaderboard in the source list
 - **THEN** the detail pane shows the leaderboard URL, a period control, and copy, without a third full-width how-to card
 
-#### Scenario: Banners are not ready
-- **WHEN** the operator views the source list
-- **THEN** a banners or alerts row is visible and disabled, with no copyable `/overlay/alert` URL
+#### Scenario: Select alerts
+- **WHEN** the operator selects Alerts in the source list
+- **THEN** the detail pane shows a copyable `/overlay/alert` URL for the current listen address
 
 #### Scenario: Dock stays operator-only
 - **WHEN** the operator selects the message dock
@@ -149,3 +157,17 @@ Every workflow available before the redesign SHALL remain reachable from one of 
 #### Scenario: Feature inventory smoke check
 - **WHEN** the redesigned console is loaded with all supported connectors and viewer storage enabled
 - **THEN** each implemented pre-redesign workflow has a visible entry point and no mock-only command or splash control is presented as functional
+
+### Requirement: Audience hosts two catalogs
+Audience SHALL offer Commands and Awards lists separate from the viewers people workspace. Each catalog SHALL support create, edit, enable (commands), cooldown (commands), points (awards), splash text, sound, and delete. Catalog editors MUST NOT appear in the dock.
+
+#### Scenario: Open commands
+- **WHEN** the operator opens Audience Commands
+- **THEN** seeded or operator-defined commands are listed and can be edited without leaving `/`
+
+### Requirement: Messages offer Reward next to delete
+Live Messages and `/dock/messages` SHALL show a Reward control on rows that have a stable `user_id`, in addition to delete when a source `id` exists. Reward SHALL open a picker of award types, not a stack of per-type buttons on the row. The picker MUST be usable in a height-capped dock: header stays put, the list scrolls.
+
+#### Scenario: Reward then delete still available
+- **WHEN** a message has both source `id` and `user_id`
+- **THEN** both Delete and Reward are available

@@ -5,6 +5,7 @@ import {
   workspaceHash,
   workspaceSectionId,
 } from "./workspace-router.js";
+import { nextAudienceTab } from "./audience-tabs.js";
 
 assert.deepEqual(WORKSPACES, ["live", "audience", "studio", "settings"]);
 
@@ -38,5 +39,11 @@ assert.equal(workspaceHash("settings"), "#settings");
 
 assert.equal(workspaceSectionId("live"), "workspace-live");
 assert.equal(workspaceSectionId("settings"), "workspace-settings");
+
+assert.equal(nextAudienceTab("viewers", "ArrowRight"), "commands");
+assert.equal(nextAudienceTab("awards", "ArrowRight"), "viewers");
+assert.equal(nextAudienceTab("viewers", "ArrowLeft"), "awards");
+assert.equal(nextAudienceTab("commands", "Home"), "viewers");
+assert.equal(nextAudienceTab("commands", "End"), "awards");
 
 console.log("workspace-router OK");

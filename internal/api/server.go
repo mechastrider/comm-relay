@@ -66,6 +66,8 @@ func NewHandler(opts Options) (http.Handler, error) {
 		leaderboardPublisher = newLeaderboardPublisher(opts.Hub, opts.ViewerStore, opts.Store)
 	}
 	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher)
+	commandsHandler := newCommandsHandler(opts.ViewerStore)
+	awardsHandler := newAwardsHandler(opts.ViewerStore, opts.Hub, leaderboardPublisher, opts.Store)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", handleHealth)
@@ -88,6 +90,15 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("POST /api/viewers/update", viewersHandler.handleUpdate)
 	mux.HandleFunc("POST /api/sessions/start", viewersHandler.handleStartSession)
 	mux.HandleFunc("GET /api/leaderboard", viewersHandler.handleLeaderboard)
+	mux.HandleFunc("GET /api/commands", commandsHandler.handleList)
+	mux.HandleFunc("POST /api/commands/create", commandsHandler.handleCreate)
+	mux.HandleFunc("POST /api/commands/update", commandsHandler.handleUpdate)
+	mux.HandleFunc("POST /api/commands/delete", commandsHandler.handleDelete)
+	mux.HandleFunc("GET /api/awards", awardsHandler.handleList)
+	mux.HandleFunc("POST /api/awards/create", awardsHandler.handleCreate)
+	mux.HandleFunc("POST /api/awards/update", awardsHandler.handleUpdate)
+	mux.HandleFunc("POST /api/awards/delete", awardsHandler.handleDelete)
+	mux.HandleFunc("POST /api/awards/grant", awardsHandler.handleGrant)
 	mux.Handle("GET /dock/messages/", http.StripPrefix("/dock/messages/", http.FileServer(http.FS(static.dock))))
 	mux.HandleFunc("GET /dock/messages", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.dock, "index.html")
@@ -96,6 +107,10 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.Handle("GET /overlay/leaderboard/", http.StripPrefix("/overlay/leaderboard/", http.FileServer(http.FS(static.leaderboard))))
 	mux.HandleFunc("GET /overlay/leaderboard", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.leaderboard, "index.html")
+	})
+	mux.Handle("GET /overlay/alert/", http.StripPrefix("/overlay/alert/", http.FileServer(http.FS(static.alert))))
+	mux.HandleFunc("GET /overlay/alert", func(w http.ResponseWriter, r *http.Request) {
+		serveFSFile(w, r, static.alert, "index.html")
 	})
 	mux.Handle("GET /overlay/", http.StripPrefix("/overlay/", http.FileServer(http.FS(static.overlay))))
 	mux.HandleFunc("GET /overlay", func(w http.ResponseWriter, r *http.Request) {

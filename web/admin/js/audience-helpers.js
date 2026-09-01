@@ -103,3 +103,35 @@ export function validateDisplayName(displayName) {
   }
   return null;
 }
+
+/**
+ * @param {string} trigger
+ * @returns {string | null} validation message key or null when valid
+ */
+export function validateCommandTrigger(trigger) {
+  const value = String(trigger || "").trim().toLowerCase();
+  if (value === "") {
+    return "commands.triggerRequired";
+  }
+  if (value.includes("!") || /\s/.test(value)) {
+    return "commands.triggerInvalid";
+  }
+  if (!/^[a-z0-9_]{1,32}$/.test(value)) {
+    return "commands.triggerInvalid";
+  }
+
+  return null;
+}
+
+/**
+ * @param {number | string} points
+ * @returns {string | null} validation message key or null when valid
+ */
+export function validateAwardPoints(points) {
+  const value = Number(points);
+  if (!Number.isFinite(value) || value < 1) {
+    return "awards.pointsInvalid";
+  }
+
+  return null;
+}

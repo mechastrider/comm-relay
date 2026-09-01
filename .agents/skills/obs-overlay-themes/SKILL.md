@@ -1,6 +1,6 @@
 ---
 name: obs-overlay-themes
-description: Design and implement CommRelay OBS overlay themes for on-stream surfaces (chat and leaderboard). Use when creating, refining, or debugging overlay themes, HUD panels, popup message styles, Browser Source rectangle behavior, message queue layout, leaderboard panel/chips layouts, clipping, fading, animation, and stream-readability issues in web/overlay and web/leaderboard.
+description: Design and implement CommRelay OBS overlay themes for on-stream surfaces (chat, leaderboard, and /overlay/alert). Use when creating, refining, or debugging overlay themes, HUD panels, popup message styles, alert splashes, Browser Source rectangle behavior, message queue layout, leaderboard panel/chips layouts, clipping, fading, animation, and stream-readability issues in web/overlay, web/leaderboard, and web/alert.
 ---
 
 # OBS Overlay Themes
@@ -11,8 +11,8 @@ Use this together with `web-static-frontend` for static files and `comm-relay` f
 
 A **theme** is the on-stream visual language (tokens, chrome, body classes `overlay-theme--*`). It is not limited to chat.
 
-- Chat (`/overlay`) and leaderboard (`/overlay/leaderboard`) share the same theme id and style tokens.
-- A **new theme** must cover every on-stream surface that uses themes (today: chat + leaderboard).
+- Chat (`/overlay`), leaderboard (`/overlay/leaderboard`), and alert splashes (`/overlay/alert`, `web/alert/`) share the same theme id and style tokens.
+- A **new theme** must cover every on-stream surface that uses themes (today: chat + leaderboard + alert).
 - A **new surface** must implement every existing theme (same body classes; surface-specific CSS selectors).
 - Do not theme `/dock/messages` — that is operator chrome, not an on-stream surface.
 - Leaderboard layout (`panel` | `chips`) is a surface override, not a new theme id. Popup chat themes do not force chips on the ranking.
@@ -20,15 +20,17 @@ A **theme** is the on-stream visual language (tokens, chrome, body classes `over
 ## Preview sample rules
 
 - Admin Appearance preview for leaderboard uses `preview=sample` with a built-in fictitious top-5.
+- Admin Appearance preview for alert uses `preview=sample` with a built-in fictitious splash; it must not rely on live `/ws` alert frames as the only preview.
 - Sample mode must not fetch live `/api/leaderboard` or paint live `leaderboard` WebSocket frames.
 - Shared `preview_background` values match chat (`white`, `checker`, `scene`, `dark`; legacy `busy` → `scene`).
-- Outside preview, `html`/`body` stay transparent for OBS.
+- Outside preview, `html`/`body` stay transparent for OBS on every themed surface (chat, leaderboard, alert).
 
 ## Workflow
 
 1. Inspect the current overlay structure before editing:
    - `web/overlay/index.html`, `web/overlay/overlay.js`, `web/overlay/overlay.css`
    - `web/leaderboard/` when the change affects ranking
+   - `web/alert/` when the change affects command/award splashes
    - admin/config files if the theme must be selectable
 2. Decide whether the request is:
    - a mockup only, usually under `docs/mockups/`;
@@ -42,7 +44,8 @@ A **theme** is the on-stream visual language (tokens, chrome, body classes `over
    - long multi-line messages;
    - messages leaving by TTL;
    - overlay reload with recent-message restore, when relevant;
-   - leaderboard `panel` and `chips` for each theme when touching ranking CSS.
+   - leaderboard `panel` and `chips` for each theme when touching ranking CSS;
+   - alert splash sample preview and live queue for each theme when touching alert CSS.
 
 ## Theme Registration
 
@@ -51,9 +54,10 @@ For a new selectable theme, update all theme surfaces consistently:
 - `internal/config`: add the theme constant and validation.
 - Config tests: cover known theme validation.
 - `web/admin/index.html`: add the select option and theme label mapping in appearance JS.
-- `web/overlay/overlay.js` and `web/leaderboard/leaderboard.js`: body class mapping (`overlay-theme--*`).
+- `web/overlay/overlay.js`, `web/leaderboard/leaderboard.js`, and `web/alert/alert.js`: body class mapping (`overlay-theme--*`).
 - `web/overlay/overlay.css`: chat visual style and shared HUD tokens.
 - `web/leaderboard/leaderboard.css`: panel and chips rules for the new theme.
+- `web/alert/alert.css`: splash visual style for the new theme.
 - `README.md` / `README.en.md`: user-facing behavior and OBS sizing expectations.
 - `CHANGELOG.md`: Russian `[Unreleased]` notes for streamer-visible overlay behavior.
 

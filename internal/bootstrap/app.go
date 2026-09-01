@@ -12,6 +12,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/api"
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	twitchconnector "github.com/mechastrider/comm-relay/internal/connector/twitch"
@@ -75,14 +76,16 @@ func New(opts Options) (*App, error) {
 	}
 
 	eventBus := bus.New(0)
-	hub, err := api.NewHub(eventBus)
-	if err != nil {
-		return nil, errors.Errorf("create websocket hub: %w", err)
-	}
 
 	cfgStore, err := config.NewStore(opts.ConfigPath, cfg)
 	if err != nil {
 		return nil, errors.Errorf("create config store: %w", err)
+	}
+
+	commandMatcher := command.NewMatcher(viewerStore)
+	hub, err := api.NewHub(eventBus, commandMatcher, cfgStore, viewerStore)
+	if err != nil {
+		return nil, errors.Errorf("create websocket hub: %w", err)
 	}
 
 	history := api.NewMessageHistory(0)
@@ -100,7 +103,7 @@ func New(opts Options) (*App, error) {
 	youtubeEmojiRefresher := ytemoji.NewRefresher(youtubeEmojiCatalog, emoteHTTP)
 
 	leaderboardPublisher := api.NewLeaderboardPublisher(hub, viewerStore, cfgStore)
-	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher)
+	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher, commandMatcher, hub)
 
 	handler, err := api.NewHandler(api.Options{
 		WebRoot:              webRoot,

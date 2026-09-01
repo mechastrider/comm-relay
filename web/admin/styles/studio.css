@@ -4,6 +4,7 @@
   gap: var(--primitive-space-4);
   min-height: 0;
   height: 100%;
+  padding: var(--primitive-space-4) var(--primitive-space-5);
 }
 
 .studio-toolbar {
@@ -111,15 +112,36 @@
   cursor: pointer;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1199px) {
+  .studio-workspace {
+    height: auto;
+    min-height: 100%;
+  }
+
   .studio-layout {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
+    flex: 0 0 auto;
   }
 
   .studio-column--inspector {
     max-height: none;
     overflow: visible;
+  }
+}
+
+@media (max-width: 620px) {
+  .studio-toolbar,
+  .studio-toolbar__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .studio-toolbar__actions,
+  .studio-active-preset,
+  .studio-active-preset select,
+  .studio-toolbar__actions .btn-physical {
+    width: 100%;
   }
 }
 

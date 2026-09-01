@@ -4,7 +4,7 @@ package web
 
 import "embed"
 
-// FS contains admin/, dock/, overlay/, leaderboard/, and shared/ trees (siblings of this file).
+// FS contains admin/, dock/, overlay/, leaderboard/, alert/, and shared/ trees (siblings of this file).
 //
-//go:embed admin dock overlay leaderboard shared
+//go:embed admin dock overlay leaderboard alert shared
 var FS embed.FS
