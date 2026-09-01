@@ -93,6 +93,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 | `skill-authoring` | Editing or publishing skills in `muonsoft/skills` — hub vs consumer boundaries, `catalog.yaml`, `lint-hub` |
 | `task-delegation` | Delegating bounded coding slices; hub skill push/pull workflow |
 | `work-intake` | Default research-first entry point for an idea, symptom, question, or underspecified request; investigate the repo before asking and select the appropriate OpenSpec profile/tier |
+| `codex-orchestration` | Opt-in Codex-native workflow with Sol design/review, broad Terra slices, desktop-profile QA, and OpenSpec closeout |
 | `change-orchestration` | Opt-in Codex/Claude + Cursor workflow for a substantial change: parent-owned design, broad Composer slices, profile QA, fresh review, and closeout |
 | `openspec-propose` | Create a change and generate all planning artifacts in one step |
 | `openspec-explore` | Think through ideas, problems, and requirements before or during a change |

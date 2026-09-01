@@ -2,7 +2,7 @@ version: 4
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: ba7143b4fdea3170f20b48376abd32dc895f233f
+    commit: 5decc3a9090bfc94da396ea536b711aa93457f1e
 preset: desktop-app
 include:
     - theme: backend/go
@@ -32,6 +32,7 @@ selected_packages:
     - brand
     - change-orchestration
     - closeout
+    - codex-orchestration
     - cursor-orchestration
     - database-migrations
     - design
@@ -120,6 +121,16 @@ packages:
               src: .
               dest: .agents/skills/closeout
               installed_hash: sha256:5a27c7df3ffe03131b5a986696d097a562dc54e2a16542dfe0139fcd18474a87
+    codex-orchestration:
+        hub_path: process/codex-orchestration
+        upstream_hash: sha256:85f8d5f1885821408d7dade68485ffe685cabfdd1e42231ea0e5405a09a3fb31
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/codex-orchestration
+              installed_hash: sha256:85f8d5f1885821408d7dade68485ffe685cabfdd1e42231ea0e5405a09a3fb31
     cursor-orchestration:
         hub_path: process/cursor-orchestration
         upstream_hash: sha256:1a2a45d32a841f4d8f68fbc8b681dade7967fcd6c92d8d705882ba07f9e88d5b
@@ -398,11 +409,11 @@ packages:
               installed_hash: sha256:442d2be25eede4bb75e16859818c39461665772559198cb814047b0fe80ccbe8
     work-intake:
         hub_path: process/work-intake
-        upstream_hash: sha256:f9dafce169a4f770f14492579cda15505c8cb3a58a3b140601ac5e38bf984039
+        upstream_hash: sha256:771dece6998a5f85a18b77f56930ddadc6eb9400117e10002192439c23356bc9
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/work-intake
-              installed_hash: sha256:f9dafce169a4f770f14492579cda15505c8cb3a58a3b140601ac5e38bf984039
+              installed_hash: sha256:771dece6998a5f85a18b77f56930ddadc6eb9400117e10002192439c23356bc9
