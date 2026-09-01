@@ -77,10 +77,14 @@ export function renderStatus(status) {
 
     if (youtube.connection_mode === "page") {
       if (youtube.channel) {
-        dom.youtubeOAuthLabel.textContent = t("status.simpleChannel", { channel: youtube.channel });
+        if (dom.youtubeOAuthLabel) {
+          dom.youtubeOAuthLabel.textContent = t("status.simpleChannel", { channel: youtube.channel });
+        }
       } else if (youtube.video_id) {
-        dom.youtubeOAuthLabel.textContent = t("status.simpleVideo", { id: youtube.video_id });
-      } else {
+        if (dom.youtubeOAuthLabel) {
+          dom.youtubeOAuthLabel.textContent = t("status.simpleVideo", { id: youtube.video_id });
+        }
+      } else if (dom.youtubeOAuthLabel) {
         dom.youtubeOAuthLabel.textContent = t("status.simpleFallback");
       }
       if (dom.youtubeConnect) {
@@ -88,8 +92,10 @@ export function renderStatus(status) {
       }
     } else {
       if (youtube.oauth_connected) {
-        dom.youtubeOAuthLabel.textContent = t("status.apiConnected");
-      } else {
+        if (dom.youtubeOAuthLabel) {
+          dom.youtubeOAuthLabel.textContent = t("status.apiConnected");
+        }
+      } else if (dom.youtubeOAuthLabel) {
         dom.youtubeOAuthLabel.textContent = t("status.apiNotConnected");
       }
       if (dom.youtubeConnect) {
@@ -241,68 +247,34 @@ export function renderDiagnostics(payload) {
       state.appVersion = payload.app_version;
       renderAboutVersion();
     }
+    const uptimeText = formatUptime(payload.uptime_seconds);
+    const clients = payload.websocket_clients;
+    const wsText = typeof clients === "number" ? String(clients) : "-";
+    const messageText = formatMessageCounts(payload.message_counts);
+
     if (dom.diagUptime) {
-      dom.diagUptime.textContent = formatUptime(payload.uptime_seconds);
+      dom.diagUptime.textContent = uptimeText;
+    }
+    if (dom.settingsDiagUptime) {
+      dom.settingsDiagUptime.textContent = uptimeText;
     }
     if (dom.diagWsClients) {
-      const clients = payload.websocket_clients;
-      dom.diagWsClients.textContent =
-        typeof clients === "number" ? String(clients) : "-";
+      dom.diagWsClients.textContent = wsText;
+    }
+    if (dom.settingsDiagWsClients) {
+      dom.settingsDiagWsClients.textContent = wsText;
     }
     if (dom.diagMessageCounts) {
-      dom.diagMessageCounts.textContent = formatMessageCounts(payload.message_counts);
+      dom.diagMessageCounts.textContent = messageText;
     }
-    mirrorSettingsDiagnosticsSummary();
+    if (dom.settingsDiagMessageCounts) {
+      dom.settingsDiagMessageCounts.textContent = messageText;
+    }
     if (payload.connectors) {
       renderStatus(payload.connectors);
-      mirrorSettingsConnectorDiagnostics();
     }
     renderLiveDiagnostics(payload);
     renderEmoteDiagnostics(payload.emote_cache);
-    mirrorSettingsEmoteDiagnostics();
-  }
-
-function mirrorTextContent(sourceId, targetId) {
-    const source = document.getElementById(sourceId);
-    const target = document.getElementById(targetId);
-    if (source && target) {
-      target.textContent = source.textContent;
-    }
-  }
-
-function mirrorSettingsDiagnosticsSummary() {
-    mirrorTextContent("diag-uptime", "settings-diag-uptime");
-    mirrorTextContent("diag-ws-clients", "settings-diag-ws-clients");
-    mirrorTextContent("diag-message-counts", "settings-diag-message-counts");
-  }
-
-function mirrorSettingsConnectorDiagnostics() {
-    mirrorTextContent("youtube-oauth-label", "settings-youtube-oauth-label");
-    ["twitch", "youtube", "vk"].forEach(function (platform) {
-      const source = document.getElementById(platform + "-detail");
-      const target = document.getElementById("settings-" + platform + "-detail");
-      if (!source || !target) {
-        return;
-      }
-      target.replaceChildren(...Array.from(source.childNodes).map(function (node) {
-        return node.cloneNode(true);
-      }));
-      target.hidden = source.hidden;
-      target.className = source.className;
-    });
-  }
-
-function mirrorSettingsEmoteDiagnostics() {
-    mirrorTextContent("emote-cache-entries", "settings-emote-cache-entries");
-    const sourceList = dom.emoteProviderList;
-    const targetList = document.getElementById("settings-emote-provider-list");
-    if (!sourceList || !targetList) {
-      return;
-    }
-    targetList.replaceChildren(...Array.from(sourceList.childNodes).map(function (node) {
-      return node.cloneNode(true);
-    }));
-    targetList.dataset.renderKey = sourceList.dataset.renderKey || "";
   }
 
 export function handleOAuthQuery() {

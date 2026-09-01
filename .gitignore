@@ -31,6 +31,10 @@ var/
 # JavaScript dev tooling (ESLint)
 node_modules/
 
+# Air (task web:dev)
+tmp/
+build-errors.log
+
 .agent-orchestration/
 comm-relay.db
 comm-relay.db-wal

@@ -34,7 +34,6 @@ import {
   setFieldError,
   showBanner,
 } from "./ui-shell.js";
-import { renderAboutVersion } from "./about.js";
 import { MESSAGE_SOUND_TYPES } from "./constants.js";
 import {
   focusConnectionsField,
@@ -643,10 +642,6 @@ export function selectSettingsSection(sectionId, options) {
     showNetworkPanel();
   }
 
-  if (nextSection === "about") {
-    renderAboutVersion();
-  }
-
   const desiredHash = settingsSectionHash(nextSection);
   if (isSettingsWorkspaceActive() && window.location.hash !== desiredHash) {
     suppressNavigationGuard = true;
@@ -869,39 +864,6 @@ function mountDiagnosticsSection(mount) {
   }
 }
 
-function mountAboutSection(mount) {
-  const aboutPanel = document.querySelector("#about-dialog .about-panel");
-  if (!aboutPanel) {
-    return;
-  }
-  const section = document.createElement("section");
-  section.className = "settings-section settings-section--readonly";
-  section.id = "settings-about-panel";
-  section.setAttribute("role", "tabpanel");
-  section.dataset.settingsSectionPanel = "about";
-  section.hidden = activeSection !== "about";
-  section.setAttribute("aria-labelledby", "settings-about-tab");
-
-  const heading = document.createElement("h2");
-  heading.id = "settings-section-about-heading";
-  heading.className = "settings-section__heading";
-  heading.setAttribute("data-i18n", "settings.section.about");
-  heading.textContent = t("settings.section.about");
-
-  const actions = document.createElement("div");
-  actions.className = "settings-about-actions";
-  if (dom.aboutCopyVersion) {
-    actions.appendChild(dom.aboutCopyVersion);
-  }
-  if (dom.aboutFeedback) {
-    actions.appendChild(dom.aboutFeedback);
-  }
-
-  section.appendChild(heading);
-  section.appendChild(aboutPanel);
-  section.appendChild(actions);
-  mount.appendChild(section);
-}
 
 function mountSettingsWorkspace() {
   if (settingsMounted) {
@@ -917,13 +879,12 @@ function mountSettingsWorkspace() {
   mountDataSection(mount);
   mountApplicationSection(mount);
   mountDiagnosticsSection(mount);
-  mountAboutSection(mount);
   hideOrphanNetworkTab();
 
   if (dom.connectionsDialog) {
     dom.connectionsDialog.hidden = true;
   }
-  ["rich-chat-dialog", "interface-dialog", "sound-dialog", "about-dialog"].forEach(function (id) {
+  ["rich-chat-dialog", "interface-dialog", "sound-dialog"].forEach(function (id) {
     const dialog = document.getElementById(id);
     if (dialog) {
       dialog.hidden = true;

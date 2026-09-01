@@ -1,9 +1,9 @@
 import { isSettingsWorkspaceHash } from "./settings-helpers.js";
 
-/** @typedef {"live"|"audience"|"studio"|"settings"} WorkspaceId */
+/** @typedef {"live"|"audience"|"studio"|"settings"|"about"} WorkspaceId */
 
 /** @type {readonly WorkspaceId[]} */
-export const WORKSPACES = Object.freeze(["live", "audience", "studio", "settings"]);
+export const WORKSPACES = Object.freeze(["live", "audience", "studio", "settings", "about"]);
 
 /**
  * @param {string | null | undefined} hash
@@ -15,6 +15,9 @@ export function parseWorkspaceHash(hash) {
   }
   const raw = hash.charAt(0) === "#" ? hash.slice(1) : hash;
   const id = raw.toLowerCase().split("/")[0];
+  if (id === "settings" && raw.toLowerCase().split("/")[1] === "about") {
+    return "about";
+  }
   if (WORKSPACES.includes(/** @type {WorkspaceId} */ (id))) {
     return /** @type {WorkspaceId} */ (id);
   }
@@ -157,6 +160,15 @@ export function initWorkspaceRouter(doc, translate, routerOptions) {
         doc.defaultView.removeEventListener("popstate", syncFromLocation);
       };
     }
+  }
+
+  const rawHash = doc.location.hash || "";
+  if (rawHash.toLowerCase() === "#settings/about") {
+    doc.location.replace(workspaceHash("about"));
+    return function () {
+      doc.defaultView.removeEventListener("hashchange", syncFromLocation);
+      doc.defaultView.removeEventListener("popstate", syncFromLocation);
+    };
   }
 
   syncFromLocation();

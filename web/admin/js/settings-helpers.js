@@ -2,7 +2,7 @@
  * Pure helpers for Settings workspace section baselines, dirty state, and save composition.
  */
 
-/** @typedef {"platforms"|"network"|"data"|"application"|"diagnostics"|"about"} SettingsSectionId */
+/** @typedef {"platforms"|"network"|"data"|"application"|"diagnostics"} SettingsSectionId */
 
 /** @type {readonly SettingsSectionId[]} */
 export const SETTINGS_SECTIONS = Object.freeze([
@@ -11,7 +11,6 @@ export const SETTINGS_SECTIONS = Object.freeze([
   "data",
   "application",
   "diagnostics",
-  "about",
 ]);
 
 /** @type {readonly SettingsSectionId[]} */

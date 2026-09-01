@@ -19,7 +19,6 @@ assert.deepEqual(SETTINGS_SECTIONS, [
   "data",
   "application",
   "diagnostics",
-  "about",
 ]);
 assert.deepEqual(SETTINGS_EDITABLE_SECTIONS, ["platforms", "network", "data", "application"]);
 assert.equal(DEFAULT_SETTINGS_SECTION, "platforms");

@@ -32,7 +32,6 @@
 
   .live-cockpit .main-area,
   .cockpit-shell .main-area {
-    grid-template-columns: 1fr;
     overflow: visible;
   }
 
@@ -44,33 +43,7 @@
 
   .console-panel {
     min-height: 68vh;
-    border-right: 0;
     border-bottom: 2px solid var(--amber-dim);
-  }
-
-  .systems-panel {
-    grid-template-columns: 1fr;
-    max-height: none;
-  }
-
-  .cockpit-shell.sidebar-collapsed .systems-panel,
-  .live-cockpit.sidebar-collapsed .systems-panel {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar-toggle {
-    grid-template-columns: auto auto;
-    grid-template-rows: 1fr;
-    gap: 8px;
-    min-height: 44px;
-    border-right: 0;
-    border-bottom: 1px solid var(--border-dark);
-  }
-
-  .sidebar-toggle__label {
-    align-self: center;
-    margin-top: 0;
-    writing-mode: horizontal-tb;
   }
 
   .form--compact {

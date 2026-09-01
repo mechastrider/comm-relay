@@ -7,7 +7,7 @@ import {
 } from "./workspace-router.js";
 import { nextAudienceTab } from "./audience-tabs.js";
 
-assert.deepEqual(WORKSPACES, ["live", "audience", "studio", "settings"]);
+assert.deepEqual(WORKSPACES, ["live", "audience", "studio", "settings", "about"]);
 
 const cases = [
   ["", "live"],
@@ -19,6 +19,8 @@ const cases = [
   ["#studio", "studio"],
   ["#settings", "settings"],
   ["#settings/platforms", "settings"],
+  ["#settings/about", "about"],
+  ["#about", "about"],
   ["#settings/network", "settings"],
   ["#settings/unknown", "settings"],
   ["#nope", "live"],
@@ -36,6 +38,7 @@ assert.equal(workspaceHash("live"), "#live");
 assert.equal(workspaceHash("audience"), "#audience");
 assert.equal(workspaceHash("studio"), "#studio");
 assert.equal(workspaceHash("settings"), "#settings");
+assert.equal(workspaceHash("about"), "#about");
 
 assert.equal(workspaceSectionId("live"), "workspace-live");
 assert.equal(workspaceSectionId("settings"), "workspace-settings");

@@ -7,7 +7,6 @@ export const OVERLAY_FONT_SIZE_MAX = 48;
 export const OVERLAY_THEMES = ["default", "dashboard", "cockpit_panel", "cockpit_popups", "g_rebels_popups"];
 export const INITIAL_WS_RECONNECT_MS = 1000;
 export const MAX_WS_RECONNECT_MS = 30000;
-export const SIDEBAR_COLLAPSED_KEY = "commRelay.sidebarCollapsed";
 export const OVERLAY_PREVIEW_MODE_KEY = "commRelay.overlayPreview.mode";
 export const OVERLAY_PREVIEW_SURFACE_KEY = "commRelay.overlayPreview.surface";
 export const OVERLAY_PREVIEW_BACKGROUND_KEY = "commRelay.overlayPreview.background";

@@ -4,7 +4,6 @@ import * as dom from "./js/dom.js";
 import { state } from "./js/state.js";
 import { handleOAuthQuery } from "./js/status.js";
 import {
-  initSidebarToggle,
   renderSettingsState,
   markSettingsUnavailable,
   showBanner,
@@ -14,7 +13,7 @@ import { initOBSSetup } from "./js/obs-setup.js";
 import { initOverlayAppearance, updatePresetIsland } from "./js/overlay-appearance.js";
 import { initConnectionsTabs } from "./js/connections.js";
 import { initSettingsDialogs } from "./js/dialogs.js";
-import { initAboutDialog } from "./js/about.js";
+import { initAboutWorkspace } from "./js/about.js";
 import { initMessageSoundControls } from "./js/sound.js";
 import { initI18n, bindLocaleSelect, t } from "./js/i18n-ui.js";
 import {
@@ -123,13 +122,12 @@ dom.refreshMessages.addEventListener("click", function () {
 });
 
 handleOAuthQuery();
-initSidebarToggle();
 initOverlayPreview();
 initOBSSetup();
 initOverlayAppearance();
 initConnectionsTabs();
 initSettingsDialogs();
-initAboutDialog();
+initAboutWorkspace();
 initMessageSoundControls();
 bindLocaleSelect();
 initAudienceViewers();

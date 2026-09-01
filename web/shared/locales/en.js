@@ -53,6 +53,7 @@ export default {
   "nav.audience": "Audience",
   "nav.studio": "Studio",
   "nav.settings": "Settings",
+  "nav.about": "About",
 
   "workspace.liveHeading": "Live",
   "workspace.audienceHeading": "Audience",
@@ -62,6 +63,7 @@ export default {
   "workspace.studioPlaceholder": "Overlay presets, preview, and OBS source setup will live here. Open OBS from Live controls until this workspace is populated.",
   "workspace.settingsPlaceholder": "Configure platforms, network, data, and application options in labeled sections with explicit Save actions.",
   "workspace.announce.settings": "Settings workspace",
+  "workspace.announce.about": "About CommRelay",
 
   "settings.navLabel": "Settings sections",
   "settings.section.platforms": "Platforms",
