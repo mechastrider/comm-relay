@@ -7,7 +7,7 @@ import {
   normalizePreviewBackground,
   overlayAssetURL,
   overlayViewFromConfig
-} from "/overlay/overlay-settings.js?v=3";
+} from "/overlay/overlay-settings.js?v=4";
 
 "use strict";
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=24">
+  <link rel="stylesheet" href="styles.css?v=26">
   <script>
     (function () {
       try {
@@ -436,20 +436,521 @@
 
         <section id="workspace-studio" class="workspace studio-workspace" data-workspace="studio" hidden aria-labelledby="workspace-studio-heading">
           <header class="studio-toolbar">
-            <h1 id="workspace-studio-heading" class="studio-toolbar__title workspace-heading" tabindex="-1" data-i18n="workspace.studioHeading">Studio</h1>
-            <div class="studio-toolbar__actions">
-              <div class="studio-active-preset">
-                <label for="studio-active-preset" data-i18n="live.activePreset">Active preset</label>
-                <select id="studio-active-preset" class="live-active-preset"></select>
+            <div class="studio-toolbar__identity">
+              <h1 id="workspace-studio-heading" class="studio-toolbar__title workspace-heading" tabindex="-1" data-i18n="workspace.studioHeading">Studio</h1>
+              <div class="studio-mode-switch" role="group" data-i18n-aria-label="studio.modeLabel" aria-label="Studio settings level">
+                <button id="studio-mode-essentials" class="studio-mode-switch__button" type="button" data-studio-mode="essentials" aria-pressed="true" data-i18n="studio.modeEssentials">Essentials</button>
+                <button id="studio-mode-all" class="studio-mode-switch__button" type="button" data-studio-mode="all" aria-pressed="false" data-i18n="studio.modeAll">All settings</button>
               </div>
+            </div>
+            <div class="studio-toolbar__actions">
               <span id="studio-dirty-status" class="studio-dirty-status" role="status" aria-live="polite">Published</span>
+              <span id="studio-use-on-stream-hint" class="studio-activation-hint" hidden data-i18n="studio.publishBeforeUse">Publish changes before using this look on stream.</span>
+              <button id="studio-use-on-stream" class="btn-physical btn-secondary studio-use-on-stream" type="button" aria-describedby="studio-use-on-stream-hint" hidden data-i18n="studio.useOnStream">Use on stream</button>
               <button id="studio-publish" class="btn-physical btn-start" type="button" data-i18n="studio.publish">Publish</button>
             </div>
           </header>
           <div class="studio-layout">
-            <div id="studio-sources-mount" class="studio-column studio-sources-mount" data-studio-overlay></div>
-            <div id="studio-preview-mount" class="studio-column studio-column--preview studio-preview-mount" data-preview-only></div>
-            <div id="studio-inspector-mount" class="studio-column studio-column--inspector studio-inspector-mount" data-studio-overlay></div>
+            <div id="studio-sources-mount" class="studio-column studio-sources-mount" data-studio-overlay>
+              <div class="studio-surface-list__header">
+                <p class="studio-surface-list__label obs-source-group-label" data-i18n="obs.sourcesOnStream">On stream · Browser Source</p>
+                <button id="studio-surface-collapse" class="icon-btn has-tooltip studio-surface-collapse" type="button" aria-expanded="true" aria-controls="studio-surface-list" data-i18n-aria-label="studio.collapseSurfaces">
+                  <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14 7-5 5 5 5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="studio.collapseSurfaces">Collapse surfaces</span>
+                </button>
+              </div>
+              <nav id="studio-surface-list" class="studio-surface-list" data-i18n-aria-label="obs.previewSurface" aria-label="Preview surface">
+                <button id="studio-surface-chat" class="studio-surface-item obs-source-item has-tooltip" type="button" data-obs-preview-surface="chat" aria-pressed="true" data-i18n-aria-label="obs.surfaceChat">
+                  <svg class="studio-surface-item__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 5h14v10H9l-4 4V5Z" stroke-linejoin="round"></path><path d="M8 9h8M8 12h5" stroke-linecap="round"></path></svg>
+                  <span class="studio-surface-item__copy"><span data-i18n="obs.surfaceChat">Chat</span><small>/overlay</small></span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="obs.surfaceChat">Chat</span>
+                </button>
+                <button id="studio-surface-leaderboard" class="studio-surface-item obs-source-item has-tooltip" type="button" data-obs-preview-surface="leaderboard" aria-pressed="false" data-i18n-aria-label="obs.surfaceLeaderboard">
+                  <svg class="studio-surface-item__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 19V9h4v10M10 19V5h4v14M15 19v-7h4v7" stroke-linejoin="round"></path><path d="M3 19h18" stroke-linecap="round"></path></svg>
+                  <span class="studio-surface-item__copy"><span data-i18n="obs.surfaceLeaderboard">Leaderboard</span><small>/overlay/leaderboard</small></span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="obs.surfaceLeaderboard">Leaderboard</span>
+                </button>
+                <button id="studio-surface-alerts" class="studio-surface-item obs-source-item has-tooltip" type="button" data-obs-preview-surface="alerts" aria-pressed="false" data-i18n-aria-label="obs.surfaceAlerts">
+                  <svg class="studio-surface-item__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4a5 5 0 0 0-5 5v3l-2 3h14l-2-3V9a5 5 0 0 0-5-5Z" stroke-linejoin="round"></path><path d="M10 18h4" stroke-linecap="round"></path></svg>
+                  <span class="studio-surface-item__copy"><span data-i18n="obs.surfaceAlerts">Alerts</span><small>/overlay/alert</small></span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="obs.surfaceAlerts">Alerts</span>
+                </button>
+              </nav>
+              <aside id="studio-setup-reminder" class="studio-setup-reminder" data-studio-essential-only>
+                <h3 data-i18n="studio.setupReminderTitle">Ready for OBS?</h3>
+                <ol><li data-i18n="studio.setupStepSource">Add a Browser Source</li><li data-i18n="studio.setupStepLook">Choose the look</li><li data-i18n="studio.setupStepPublish">Publish changes</li></ol>
+              </aside>
+              <button id="studio-add-to-obs-open" class="btn-physical btn-secondary studio-add-to-obs-open has-tooltip" type="button" data-i18n-aria-label="studio.obsSetup">
+                <svg class="studio-add-to-obs-open__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="13" rx="2"></rect><path d="M8 21h8M12 17v4" stroke-linecap="round"></path></svg>
+                <span class="studio-add-to-obs-open__label" data-i18n="studio.obsSetup">OBS setup</span>
+                <span class="ui-tooltip" role="tooltip" data-i18n="studio.obsSetup">OBS setup</span>
+              </button>
+            </div>
+            <div id="studio-preview-mount" class="studio-column studio-column--preview studio-preview-mount" data-preview-only>
+              <section class="panel overlay-preview-panel" aria-labelledby="overlay-preview-heading" data-preview-only>
+                <div class="overlay-preview-chrome">
+                  <h3 id="overlay-preview-heading" class="overlay-preview-heading" data-i18n="obs.preview">Preview</h3>
+                  <div class="overlay-preview-chrome__main">
+                    <button id="overlay-preview-replay" class="btn-physical btn-small" type="button" data-i18n="obs.replay">Replay</button>
+                    <div class="studio-copy-obs-link-wrap" data-studio-essential-only>
+                      <input id="studio-follow-url-compact" class="visually-hidden" type="text" readonly tabindex="-1" aria-hidden="true" value="/overlay">
+                      <button class="btn-physical btn-small studio-copy-obs-link" type="button" data-copy-obs-url="studio-follow-url-compact" data-copy-label="Overlay URL" data-i18n="studio.copyObsLink">Copy OBS link</button>
+                    </div>
+                    <div class="studio-follow-url overlay-preview-follow" data-studio-all-only>
+                      <div class="obs-url-row">
+                        <input id="studio-follow-url" type="text" readonly value="/overlay" data-i18n-aria-label="obs.followActivePreset" aria-label="Follow active preset">
+                        <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-follow-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
+                      </div>
+                    </div>
+                    <div class="overlay-preview-overflow" data-studio-all-only>
+                      <button
+                        id="overlay-preview-overflow-toggle"
+                        class="icon-btn has-tooltip"
+                        type="button"
+                        aria-expanded="false"
+                        aria-controls="overlay-preview-overflow-panel"
+                        data-i18n-aria-label="studio.previewOverflow"
+                      >
+                        <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                          <circle cx="5" cy="12" r="1.75"></circle>
+                          <circle cx="12" cy="12" r="1.75"></circle>
+                          <circle cx="19" cy="12" r="1.75"></circle>
+                        </svg>
+                        <span class="ui-tooltip" role="tooltip" data-i18n="studio.previewOverflow">Preview options</span>
+                      </button>
+                      <div id="overlay-preview-overflow-panel" class="overlay-preview-overflow__panel" hidden>
+                        <div class="overlay-preview-controls">
+                          <div class="preview-control overlay-chat-only" id="overlay-preview-mode-control">
+                            <label for="overlay-preview-mode" data-i18n="obs.previewMode">Preview mode</label>
+                            <select id="overlay-preview-mode">
+                              <option value="sample" data-i18n="obs.sample">Sample</option>
+                              <option value="live" data-i18n="obs.liveChat">Live chat</option>
+                            </select>
+                          </div>
+
+                          <div class="preview-control preview-control--size">
+                            <label for="overlay-preview-size" data-i18n="obs.sourceSize">Source size</label>
+                            <select id="overlay-preview-size">
+                              <option value="640x360">640 × 360</option>
+                              <option value="800x600">800 × 600</option>
+                              <option value="1280x720">1280 × 720</option>
+                              <option value="480x720">480 × 720</option>
+                              <option value="custom" data-i18n="obs.custom">Custom</option>
+                            </select>
+                          </div>
+
+                          <div class="preview-control preview-control--dimension">
+                            <label for="overlay-preview-width" data-i18n="obs.width">Width</label>
+                            <input id="overlay-preview-width" type="number" min="240" max="3840" step="1" inputmode="numeric" value="640">
+                          </div>
+
+                          <span class="preview-dimension-mark" aria-hidden="true">×</span>
+
+                          <div class="preview-control preview-control--dimension">
+                            <label for="overlay-preview-height" data-i18n="obs.height">Height</label>
+                            <input id="overlay-preview-height" type="number" min="180" max="2160" step="1" inputmode="numeric" value="360">
+                          </div>
+
+                          <div class="preview-control">
+                            <label for="overlay-preview-background" data-i18n="obs.background">Background</label>
+                            <select id="overlay-preview-background">
+                              <option value="white" data-i18n="obs.bgWhite">White</option>
+                              <option value="checker" data-i18n="obs.bgChecker">Checkerboard</option>
+                              <option value="scene" selected data-i18n="obs.bgScene">Game footage</option>
+                              <option value="dark" data-i18n="obs.bgDark">Black</option>
+                            </select>
+                          </div>
+
+                          <div class="preview-control preview-control--full studio-url-pinned">
+                            <label id="studio-pinned-url-label" for="studio-pinned-url" data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</label>
+                            <div class="obs-url-row">
+                              <input id="studio-pinned-url" type="text" readonly value="/overlay">
+                              <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-pinned-url" data-copy-label="Pinned URL" data-i18n="obs.copyUrl">Copy URL</button>
+                            </div>
+                          </div>
+
+                          <div class="preview-control preview-control--full">
+                            <a id="overlay-preview-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener" data-i18n="obs.openOverlay">Open overlay</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="overlay-preview-stage" class="overlay-preview-stage">
+                  <div id="overlay-preview-viewport" class="overlay-preview-viewport">
+                    <iframe id="overlay-preview-frame" data-i18n-title="obs.previewTitle" title="OBS overlay preview" referrerpolicy="no-referrer"></iframe>
+                  </div>
+                  <div id="overlay-preview-state" class="overlay-preview-state" data-state="loading" role="status" aria-live="polite">
+                    <span id="overlay-preview-state-text" data-i18n="studio.previewLoading">Loading preview…</span>
+                    <button id="overlay-preview-retry" class="btn-physical btn-small" type="button" hidden data-i18n="studio.retryPreview">Retry</button>
+                  </div>
+                </div>
+
+                <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite" data-i18n="obs.previewNoteSample">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
+                <p id="studio-copy-status" class="obs-copy-status" role="status" aria-live="polite"></p>
+              </section>
+            </div>
+            <div id="studio-inspector-mount" class="studio-column studio-column--inspector studio-inspector-mount" data-studio-overlay>
+<div id="preset-island" class="preset-island" data-i18n-aria-label="obs.presetIntro">
+                <div class="preset-island__toolbar">
+                  <div class="preset-island__group preset-island__group--preset">
+                    <label class="preset-island__inline-label" for="overlay-preset-select" data-i18n="obs.preset">Preset</label>
+                    <select id="overlay-preset-select"></select>
+                    <span id="preset-island-count" class="preset-island__count" aria-live="polite">1/32</span>
+                  </div>
+                  <div class="preset-island__overflow preset-overflow" id="preset-island-overflow" data-studio-all-only hidden>
+                    <button
+                      id="preset-island-overflow-toggle"
+                      class="icon-btn has-tooltip preset-overflow__toggle"
+                      type="button"
+                      aria-expanded="false"
+                      aria-controls="preset-island-overflow-panel"
+                      data-i18n-aria-label="studio.presetOverflow"
+                    >
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                        <circle cx="5" cy="12" r="1.75"></circle>
+                        <circle cx="12" cy="12" r="1.75"></circle>
+                        <circle cx="19" cy="12" r="1.75"></circle>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="studio.presetOverflow">Look actions</span>
+                    </button>
+                    <div id="preset-island-overflow-panel" class="preset-overflow__panel" hidden>
+                      <button id="preset-overflow-add" class="preset-overflow__action" type="button" data-i18n="obs.presetAdd">New preset</button>
+                      <button id="preset-overflow-rename" class="preset-overflow__action" type="button" data-i18n="obs.presetRename">Rename</button>
+                      <button id="preset-overflow-duplicate" class="preset-overflow__action" type="button" data-i18n="obs.presetDuplicate">Duplicate</button>
+                      <button id="preset-overflow-delete" class="preset-overflow__action" type="button" data-i18n="obs.presetDelete">Delete</button>
+                    </div>
+                  </div>
+                  <div id="preset-island-icon-actions" class="preset-island__icon-actions" role="group" data-studio-all-only data-i18n-aria-label="obs.presetActions">
+                    <button id="overlay-preset-add" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetAdd">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M12 5v14M5 12h14" stroke-linecap="round"></path>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetAdd">New preset</span>
+                    </button>
+                    <button id="overlay-preset-rename" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetRename">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M4 20h4L19 9l-4-4L4 16v4z" stroke-linejoin="round"></path>
+                        <path d="M13 7l4 4" stroke-linecap="round"></path>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetRename">Rename</span>
+                    </button>
+                    <button id="overlay-preset-duplicate" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetDuplicate">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <rect x="8" y="8" width="12" height="12" rx="1.5"></rect>
+                        <path d="M4 16V6a2 2 0 0 1 2-2h10" stroke-linecap="round"></path>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetDuplicate">Duplicate</span>
+                    </button>
+                    <button id="overlay-preset-delete" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetDelete">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M4 7h16M9 7V5h6v2M10 11v6M14 11v6M6 7l1 13h10l1-13" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetDelete">Delete</span>
+                    </button>
+                  </div>
+                  <div class="preset-island__divider" aria-hidden="true"></div>
+                  <div class="preset-island__group preset-island__group--url">
+                    <label class="preset-island__inline-label" for="preset-island-url" data-i18n="obs.presetUrl">URL</label>
+                    <input id="preset-island-url" class="preset-island__url-input" type="text" readonly value="/overlay">
+                    <button class="icon-btn has-tooltip" type="button" data-copy-obs-url="preset-island-url" data-copy-label="Overlay URL" data-i18n-aria-label="obs.copyUrl">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <rect x="9" y="9" width="13" height="13" rx="1.5"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-linecap="round"></path>
+                      </svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.copyUrl">Copy URL</span>
+                    </button>
+                    <span id="preset-url-status" class="preset-island__status" role="status" aria-live="polite"></span>
+                  </div>
+                </div>
+              </div>
+
+              
+<div class="overlay-settings-column studio-inspector">
+                <section class="panel overlay-appearance-panel">
+                  <div class="panel__body studio-inspector__body">
+                    <p class="panel-intro" data-i18n="studio.sharedPresetIntro">Shared preset look applies to every Browser Source that uses it.</p>
+
+                    <div class="studio-inspector-essential form form--compact">
+                      <h3 class="overlay-section-title form__field--full" data-i18n="studio.sharedPresetLook">Shared preset look</h3>
+
+                      <div class="form__field form__field--full studio-theme-field">
+                        <span id="overlay-theme-label" class="field-label" data-i18n="obs.theme">Theme</span>
+                        <select id="overlay-theme" name="overlay_theme" class="visually-hidden" tabindex="-1" aria-hidden="true">
+                          <option value="default" data-i18n="obs.themeDefault">Default</option>
+                          <option value="dashboard" data-i18n="obs.themeTextOnly">Text only (no background)</option>
+                          <option value="cockpit_panel" data-i18n="obs.themeCockpitPanel">MW5 Mercs Cockpit panel</option>
+                          <option value="cockpit_popups" data-i18n="obs.themeCockpitPopups">MW5 Mercs Cockpit popups</option>
+                          <option value="g_rebels_popups" data-i18n="obs.themeGRebels">G-Rebels Cockpit popups</option>
+                        </select>
+                        <div id="overlay-theme-picker" class="theme-picker" role="radiogroup" aria-labelledby="overlay-theme-label"></div>
+                        <p class="field-hint" data-i18n="obs.themeHint">Cockpit themes use HUD-style panels for streams over gameplay. The same theme styles chat and the leaderboard.</p>
+                        <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
+                      </div>
+
+                      <div id="studio-essential-font-chat" class="form__field overlay-chat-only">
+                        <label for="overlay-font-size" data-i18n="obs.fontSize">Font size (px)</label>
+                        <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="48" step="1">
+                        <p class="field-hint" data-i18n="obs.fontSizeHint">12–48 px. After saving, refresh the Browser Source in OBS.</p>
+                        <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
+                      </div>
+
+                      <div id="studio-essential-font-leaderboard" class="form__field" hidden>
+                        <label for="overlay-leaderboard-font-size" data-i18n="obs.leaderboardFontSize">Leaderboard font size (px)</label>
+                        <input id="overlay-leaderboard-font-size" name="overlay_leaderboard_font_size_px" type="number" min="12" max="48" step="1">
+                        <p class="field-hint" data-i18n="obs.leaderboardFontSizeHint">12–48 px. Independent from chat so a narrow ranking can stay smaller.</p>
+                        <p id="overlay-leaderboard-font-size-error" class="field-error" role="alert" hidden></p>
+                      </div>
+
+                      <div id="studio-essential-duration" class="form__field form__field--full overlay-chat-only">
+                        <span id="overlay-duration-label" class="field-label" data-i18n="obs.messageDuration">How long messages stay</span>
+                        <div id="overlay-duration-chips" class="duration-chips" role="radiogroup" aria-labelledby="overlay-duration-label">
+                          <button class="duration-chip" type="button" role="radio" data-ttl="8" aria-checked="false" data-i18n="obs.duration8s">8 s</button>
+                          <button class="duration-chip" type="button" role="radio" data-ttl="20" aria-checked="false" data-i18n="obs.duration20s">20 s</button>
+                          <button class="duration-chip" type="button" role="radio" data-ttl="0" aria-checked="false" data-i18n="obs.durationUntilReplaced">Until replaced</button>
+                        </div>
+                      </div>
+
+                      <div id="studio-essential-period" class="form__field" hidden>
+                        <label for="overlay-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
+                        <select id="overlay-leaderboard-period">
+                          <option value="session" data-i18n="viewers.periodSession">Session</option>
+                          <option value="day" data-i18n="viewers.periodDay">Day</option>
+                          <option value="all" data-i18n="viewers.periodAll">All-time</option>
+                        </select>
+                      </div>
+
+                      <div id="studio-essential-alerts-note" class="studio-surface-note form__field form__field--full" hidden>
+                        <strong data-i18n="studio.alertsSettingsTitle">Alert settings</strong>
+                        <span data-i18n="studio.alertsSharedOnly">Alerts use the shared theme and typography of this preset. Event content is configured in Audience.</span>
+                      </div>
+                    </div>
+
+                    <details class="overlay-group studio-inspector-advanced" id="studio-inspector-advanced" data-studio-all-only>
+                      <summary data-i18n="studio.advanced">Advanced</summary>
+                      <div class="form form--compact form--overlay-display">
+                        <div class="form__field">
+                          <label for="overlay-text-edge" data-i18n="obs.textEdge">Text edge</label>
+                          <select id="overlay-text-edge">
+                            <option value="none" data-i18n="obs.textEdgeNone">None</option>
+                            <option value="shadow" data-i18n="obs.textEdgeShadow">Shadow</option>
+                            <option value="outline" data-i18n="obs.textEdgeOutline">Outline</option>
+                          </select>
+                        </div>
+
+                        <div class="form__field">
+                          <label for="overlay-text-edge-strength" data-i18n="obs.textEdgeStrength">Edge strength</label>
+                          <input id="overlay-text-edge-strength" type="number" min="0" max="8" step="1" inputmode="numeric">
+                        </div>
+
+                        <h3 id="studio-selected-surface-heading" class="overlay-section-title form__field--full" data-i18n="studio.surfaceChatSettings">Chat settings</h3>
+
+                        <div id="overlay-chat-fields" class="overlay-surface-fields">
+                          <div class="form__field">
+                            <label for="overlay-display-mode" data-i18n="obs.spacing">Spacing</label>
+                            <select id="overlay-display-mode" name="overlay_display_mode">
+                              <option value="normal" data-i18n="obs.comfortable">Comfortable</option>
+                              <option value="compact" data-i18n="obs.compact">Compact</option>
+                            </select>
+                            <p class="field-hint" data-i18n="obs.spacingHint">Compact reduces gaps between lines — useful with a busy chat.</p>
+                            <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
+                          </div>
+
+                          <div class="form__field form__field--full">
+                            <label for="overlay-platform-marker" data-i18n="obs.platformMarker">Platform marker</label>
+                            <select id="overlay-platform-marker">
+                              <option value="stripe" data-i18n="obs.markerStripe">Stripe</option>
+                              <option value="icon" data-i18n="obs.markerIcon">Icon</option>
+                              <option value="both" data-i18n="obs.markerBoth">Stripe and icon</option>
+                              <option value="none" data-i18n="obs.markerNone">None</option>
+                            </select>
+                            <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="basics" data-i18n="obs.resetGroup">Reset group to theme</button>
+                          </div>
+                        </div>
+
+                        <div id="overlay-leaderboard-fields" class="overlay-surface-fields" hidden>
+                          <div class="form__field">
+                            <label for="overlay-leaderboard-layout" data-i18n="obs.leaderboardLayout">Leaderboard layout</label>
+                            <select id="overlay-leaderboard-layout">
+                              <option value="panel" data-i18n="obs.leaderboardLayoutPanel">Panel</option>
+                              <option value="chips" data-i18n="obs.leaderboardLayoutChips">Chips</option>
+                            </select>
+                            <p class="field-hint" data-i18n="obs.leaderboardLayoutHint">Panel is one HUD frame. Chips make each rank a separate card in the same theme.</p>
+                          </div>
+                        </div>
+
+              <details class="overlay-group">
+                <summary data-i18n="obs.textGroup">Text</summary>
+                <div class="form form--compact">
+                  <div class="form__field">
+                    <label for="overlay-font-family" data-i18n="obs.fontFamily">Font</label>
+                    <select id="overlay-font-family">
+                      <option value="system" data-i18n="obs.fontSystem">System</option>
+                      <option value="segoe" data-i18n="obs.fontSegoe">Segoe UI</option>
+                      <option value="georgia" data-i18n="obs.fontGeorgia">Georgia</option>
+                      <option value="trebuchet" data-i18n="obs.fontTrebuchet">Trebuchet</option>
+                      <option value="mono" data-i18n="obs.fontMono">Monospace</option>
+                    </select>
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-line-height" data-i18n="obs.lineHeight">Line height</label>
+                    <input id="overlay-line-height" type="number" min="1" max="2" step="0.05" inputmode="decimal">
+                  </div>
+                  <div class="form__field form__field--full">
+                    <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="text" data-i18n="obs.resetGroup">Reset group to theme</button>
+                  </div>
+                </div>
+              </details>
+
+              <details class="overlay-group">
+                <summary data-i18n="obs.surfaceGroup">Surface</summary>
+                <p class="field-hint" data-i18n="obs.surfaceHint">Only the message block can be opaque. Cockpit themes still draw their own HUD frame.</p>
+                <div class="form form--compact">
+                  <div class="form__field">
+                    <label for="overlay-panel-color" data-i18n="obs.panelColor">Panel color</label>
+                    <input id="overlay-panel-color" type="color" value="#000000">
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-panel-opacity" data-i18n="obs.panelOpacity">Panel opacity</label>
+                    <input id="overlay-panel-opacity" type="number" min="0" max="1" step="0.05" inputmode="decimal">
+                  </div>
+                  <div class="form__field form__field--full">
+                    <label for="overlay-panel-image-file" data-i18n="obs.panelImage">Panel image</label>
+                    <input id="overlay-panel-image" type="hidden" value="">
+                    <div class="panel-image-controls">
+                      <input id="overlay-panel-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml">
+                      <img id="overlay-panel-image-preview" class="panel-image-preview" alt="" hidden width="72" height="40">
+                      <button id="overlay-panel-image-clear" class="button-secondary button-secondary--small" type="button" data-i18n="obs.clearImage">Clear image</button>
+                      <p id="overlay-panel-image-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div id="overlay-panel-image-options" class="panel-image-options" hidden>
+                      <div class="form__field form__field--full">
+                        <label id="overlay-panel-image-fit-label" data-i18n="obs.panelImageFit">Scale</label>
+                        <input id="overlay-panel-image-fit" type="hidden" value="cover">
+                        <div
+                          class="icon-choice-group"
+                          role="radiogroup"
+                          aria-labelledby="overlay-panel-image-fit-label"
+                        >
+                          <button
+                            class="icon-choice icon-choice--active has-tooltip"
+                            type="button"
+                            role="radio"
+                            data-panel-image-fit="cover"
+                            aria-checked="true"
+                            data-i18n-aria-label="obs.panelImageFitCover"
+                          >
+                            <svg class="icon-choice__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
+                              <rect x="4" y="6" width="16" height="12" rx="1.5"></rect>
+                              <path d="M4 10h16M10 6v12" stroke-opacity="0.45"></path>
+                              <rect x="2" y="4" width="20" height="16" rx="1" stroke-dasharray="2 2" stroke-opacity="0.55"></rect>
+                            </svg>
+                            <span class="ui-tooltip" role="tooltip" data-i18n="obs.panelImageFitCover">Fill</span>
+                          </button>
+                          <button
+                            class="icon-choice has-tooltip"
+                            type="button"
+                            role="radio"
+                            data-panel-image-fit="contain"
+                            aria-checked="false"
+                            data-i18n-aria-label="obs.panelImageFitContain"
+                          >
+                            <svg class="icon-choice__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
+                              <rect x="3" y="5" width="18" height="14" rx="1.5"></rect>
+                              <rect x="7.5" y="8.5" width="9" height="7" rx="1" fill="currentColor" fill-opacity="0.22"></rect>
+                            </svg>
+                            <span class="ui-tooltip" role="tooltip" data-i18n="obs.panelImageFitContain">Fit</span>
+                          </button>
+                          <button
+                            class="icon-choice has-tooltip"
+                            type="button"
+                            role="radio"
+                            data-panel-image-fit="fill"
+                            aria-checked="false"
+                            data-i18n-aria-label="obs.panelImageFitFill"
+                          >
+                            <svg class="icon-choice__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
+                              <rect x="4" y="6" width="16" height="12" rx="1.5"></rect>
+                              <path d="M8 9 6 7M16 9l2-2M8 15l-2 2M16 15l2 2" stroke-linecap="round"></path>
+                            </svg>
+                            <span class="ui-tooltip" role="tooltip" data-i18n="obs.panelImageFitFill">Stretch</span>
+                          </button>
+                          <button
+                            class="icon-choice has-tooltip"
+                            type="button"
+                            role="radio"
+                            data-panel-image-fit="tile"
+                            aria-checked="false"
+                            data-i18n-aria-label="obs.panelImageFitTile"
+                          >
+                            <svg class="icon-choice__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
+                              <rect x="3" y="5" width="18" height="14" rx="1.5"></rect>
+                              <path d="M3 11h18M11 5v14"></path>
+                            </svg>
+                            <span class="ui-tooltip" role="tooltip" data-i18n="obs.panelImageFitTile">Tile</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="form__field">
+                        <label for="overlay-panel-image-scope" data-i18n="obs.panelImageScope">Anchor</label>
+                        <select id="overlay-panel-image-scope">
+                          <option value="message" data-i18n="obs.panelImageScopeMessage">Per message</option>
+                          <option value="column" data-i18n="obs.panelImageScopeColumn">Chat column</option>
+                        </select>
+                      </div>
+                      <p class="field-hint" data-i18n="obs.panelImageOptionsHint">Applies when a panel image is set. Column anchor works on the Default theme.</p>
+                    </div>
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-border-color" data-i18n="obs.borderColor">Border color</label>
+                    <input id="overlay-border-color" type="color" value="#ffffff">
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-border-width" data-i18n="obs.borderWidth">Border width</label>
+                    <input id="overlay-border-width" type="number" min="0" max="8" step="1" inputmode="numeric">
+                  </div>
+                  <div class="form__field">
+                    <label for="overlay-border-radius" data-i18n="obs.borderRadius">Corner radius</label>
+                    <input id="overlay-border-radius" type="number" min="0" max="24" step="1" inputmode="numeric">
+                  </div>
+                  <div class="form__field form__field--full">
+                    <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="surface" data-i18n="obs.resetGroup">Reset group to theme</button>
+                  </div>
+                </div>
+              </details>
+                    <div class="overlay-queue-group overlay-chat-only">
+                      <h3 class="overlay-queue-group__title" data-i18n="obs.queueGroup">Queue</h3>
+                      <div class="form form--compact">
+                        <div class="form__field">
+                          <label for="overlay-max-messages" data-i18n="obs.maxMessages">Max messages</label>
+                          <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
+                          <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
+                        </div>
+
+                        <div class="form__field">
+                          <label for="overlay-message-ttl" data-i18n="obs.messageTtl">Message TTL (seconds)</label>
+                          <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
+                          <p class="field-hint" data-i18n="obs.ttlHint">0 keeps messages until they scroll off (max messages limit).</p>
+                          <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
+                        </div>
+                      </div>
+                    </div>
+                      </div>
+                    </details>
+                  </div>
+                </section>
+              </div>
+
+          
+            </div>
+          </div>
+          <div class="studio-compact-actions" data-i18n-aria-label="studio.publicationActions" aria-label="Publication actions">
+            <span id="studio-compact-dirty-status" class="studio-dirty-status" role="status" aria-live="polite">Published</span>
+            <span id="studio-compact-use-on-stream-hint" class="studio-activation-hint" hidden data-i18n="studio.publishBeforeUse">Publish changes before using this look on stream.</span>
+            <button id="studio-compact-use-on-stream" class="btn-physical btn-secondary studio-use-on-stream" type="button" aria-describedby="studio-compact-use-on-stream-hint" hidden data-i18n="studio.useOnStream">Use on stream</button>
+            <button id="studio-compact-publish" class="btn-physical btn-start" type="button" data-i18n="studio.publish">Publish</button>
           </div>
         </section>
 
@@ -776,7 +1277,7 @@
       </div>
     </dialog>
 
-    <dialog id="overlay-dialog" class="settings-dialog" aria-labelledby="overlay-heading">
+    <dialog id="overlay-dialog" class="settings-dialog" hidden aria-labelledby="overlay-heading">
       <div class="dialog-frame">
         <div class="dialog-header">
           <div>
@@ -941,377 +1442,8 @@
 
           <section id="obs-appearance-panel" class="dialog-tab-panel obs-tab-panel--appearance" role="tabpanel" aria-labelledby="obs-appearance-tab" hidden>
             <div class="overlay-editor">
-              <div id="preset-island" class="preset-island" data-i18n-aria-label="obs.presetIntro">
-                <div class="preset-island__toolbar">
-                  <div class="preset-island__group preset-island__group--preset">
-                    <label class="preset-island__inline-label" for="overlay-preset-select" data-i18n="obs.preset">Preset</label>
-                    <select id="overlay-preset-select"></select>
-                    <span id="preset-island-count" class="preset-island__count" aria-live="polite">1/32</span>
-                  </div>
-                  <div class="preset-island__icon-actions" role="group" data-i18n-aria-label="obs.presetActions">
-                    <button id="overlay-preset-add" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetAdd">
-                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M12 5v14M5 12h14" stroke-linecap="round"></path>
-                      </svg>
-                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetAdd">New preset</span>
-                    </button>
-                    <button id="overlay-preset-rename" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetRename">
-                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M4 20h4L19 9l-4-4L4 16v4z" stroke-linejoin="round"></path>
-                        <path d="M13 7l4 4" stroke-linecap="round"></path>
-                      </svg>
-                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetRename">Rename</span>
-                    </button>
-                    <button id="overlay-preset-duplicate" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetDuplicate">
-                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <rect x="8" y="8" width="12" height="12" rx="1.5"></rect>
-                        <path d="M4 16V6a2 2 0 0 1 2-2h10" stroke-linecap="round"></path>
-                      </svg>
-                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetDuplicate">Duplicate</span>
-                    </button>
-                    <button id="overlay-preset-delete" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetDelete">
-                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M4 7h16M9 7V5h6v2M10 11v6M14 11v6M6 7l1 13h10l1-13" stroke-linecap="round" stroke-linejoin="round"></path>
-                      </svg>
-                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetDelete">Delete</span>
-                    </button>
-                  </div>
-                  <div class="preset-island__divider" aria-hidden="true"></div>
-                  <div class="preset-island__group preset-island__group--url">
-                    <label class="preset-island__inline-label" for="preset-island-url" data-i18n="obs.presetUrl">URL</label>
-                    <input id="preset-island-url" class="preset-island__url-input" type="text" readonly value="/overlay">
-                    <button class="icon-btn has-tooltip" type="button" data-copy-obs-url="preset-island-url" data-copy-label="Overlay URL" data-i18n-aria-label="obs.copyUrl">
-                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <rect x="9" y="9" width="13" height="13" rx="1.5"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-linecap="round"></path>
-                      </svg>
-                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.copyUrl">Copy URL</span>
-                    </button>
-                    <span id="preset-url-status" class="preset-island__status" role="status" aria-live="polite"></span>
-                  </div>
-                </div>
-              </div>
+                          <p class="field-hint" hidden data-studio-dialog-placeholder>OBS appearance moved to Studio workspace.</p>
 
-              <div class="surface-tabs" role="tablist" data-i18n-aria-label="obs.previewSurface">
-                <p class="surface-tabs__hint" data-i18n="obs.surfaceTabsHint">One scene look. Switch surface to edit its fields and preview.</p>
-                <div class="surface-tabs__list">
-                  <button id="obs-surface-chat" class="surface-tab" type="button" role="tab" data-obs-preview-surface="chat" aria-selected="true" aria-pressed="true" data-i18n="obs.surfaceChat">Chat</button>
-                  <button id="obs-surface-leaderboard" class="surface-tab" type="button" role="tab" data-obs-preview-surface="leaderboard" aria-selected="false" aria-pressed="false" data-i18n="obs.surfaceLeaderboard">Leaderboard</button>
-                  <button id="obs-surface-alerts" class="surface-tab" type="button" role="tab" data-obs-preview-surface="alerts" aria-selected="false" aria-pressed="false" data-i18n="obs.surfaceAlerts">Alerts</button>
-                </div>
-              </div>
-
-              <div class="overlay-settings-column">
-                <section class="panel overlay-appearance-panel">
-                  <div class="panel__body">
-                    <p class="panel-intro" data-i18n="obs.displayIntro">Shared scene look for every Browser Source that uses this preset. The preview follows the surface tab above.</p>
-
-                    <div class="form form--compact form--overlay-display">
-                      <h3 class="overlay-section-title form__field--full" data-i18n="obs.sceneLook">Scene look</h3>
-                      <div class="form__field form__field--full">
-                        <label for="overlay-theme" data-i18n="obs.theme">Theme</label>
-                        <select id="overlay-theme" name="overlay_theme">
-                          <option value="default" data-i18n="obs.themeDefault">Default</option>
-                          <option value="dashboard" data-i18n="obs.themeTextOnly">Text only (no background)</option>
-                          <option value="cockpit_panel" data-i18n="obs.themeCockpitPanel">MW5 Mercs Cockpit panel</option>
-                          <option value="cockpit_popups" data-i18n="obs.themeCockpitPopups">MW5 Mercs Cockpit popups</option>
-                          <option value="g_rebels_popups" data-i18n="obs.themeGRebels">G-Rebels Cockpit popups</option>
-                        </select>
-                        <p class="field-hint" data-i18n="obs.themeHint">Cockpit themes use HUD-style panels for streams over gameplay. The same theme styles chat and the leaderboard.</p>
-                        <p id="overlay-theme-error" class="field-error" role="alert" hidden></p>
-                      </div>
-
-                      <div class="form__field">
-                        <label for="overlay-text-edge" data-i18n="obs.textEdge">Text edge</label>
-                        <select id="overlay-text-edge">
-                          <option value="none" data-i18n="obs.textEdgeNone">None</option>
-                          <option value="shadow" data-i18n="obs.textEdgeShadow">Shadow</option>
-                          <option value="outline" data-i18n="obs.textEdgeOutline">Outline</option>
-                        </select>
-                      </div>
-
-                      <div class="form__field">
-                        <label for="overlay-text-edge-strength" data-i18n="obs.textEdgeStrength">Edge strength</label>
-                        <input id="overlay-text-edge-strength" type="number" min="0" max="8" step="1" inputmode="numeric">
-                      </div>
-
-                      <h3 class="overlay-section-title form__field--full" data-i18n="obs.thisSurface">This surface</h3>
-
-                      <div id="overlay-chat-fields" class="overlay-surface-fields">
-                      <div class="form__field">
-                  <label for="overlay-font-size" data-i18n="obs.fontSize">Font size (px)</label>
-                  <input id="overlay-font-size" name="overlay_font_size_px" type="number" min="12" max="48" step="1">
-                  <p class="field-hint" data-i18n="obs.fontSizeHint">12–48 px. After saving, refresh the Browser Source in OBS.</p>
-                  <p id="overlay-font-size-error" class="field-error" role="alert" hidden></p>
-                </div>
-
-                <div class="form__field">
-                  <label for="overlay-display-mode" data-i18n="obs.spacing">Spacing</label>
-                  <select id="overlay-display-mode" name="overlay_display_mode">
-                    <option value="normal" data-i18n="obs.comfortable">Comfortable</option>
-                    <option value="compact" data-i18n="obs.compact">Compact</option>
-                  </select>
-                  <p class="field-hint" data-i18n="obs.spacingHint">Compact reduces gaps between lines — useful with a busy chat.</p>
-                  <p id="overlay-display-mode-error" class="field-error" role="alert" hidden></p>
-                </div>
-
-                <div class="form__field form__field--full">
-                  <label for="overlay-platform-marker" data-i18n="obs.platformMarker">Platform marker</label>
-                  <select id="overlay-platform-marker">
-                    <option value="stripe" data-i18n="obs.markerStripe">Stripe</option>
-                    <option value="icon" data-i18n="obs.markerIcon">Icon</option>
-                    <option value="both" data-i18n="obs.markerBoth">Stripe and icon</option>
-                    <option value="none" data-i18n="obs.markerNone">None</option>
-                  </select>
-                  <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="basics" data-i18n="obs.resetGroup">Reset group to theme</button>
-                </div>
-                      </div>
-
-                      <div id="overlay-leaderboard-fields" class="overlay-surface-fields" hidden>
-                        <div class="form__field">
-                          <label for="overlay-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
-                          <select id="overlay-leaderboard-period">
-                            <option value="session" data-i18n="viewers.periodSession">Session</option>
-                            <option value="day" data-i18n="viewers.periodDay">Day</option>
-                            <option value="all" data-i18n="viewers.periodAll">All-time</option>
-                          </select>
-                        </div>
-                        <div class="form__field">
-                          <label for="overlay-leaderboard-font-size" data-i18n="obs.leaderboardFontSize">Leaderboard font size (px)</label>
-                          <input id="overlay-leaderboard-font-size" name="overlay_leaderboard_font_size_px" type="number" min="12" max="48" step="1">
-                          <p class="field-hint" data-i18n="obs.leaderboardFontSizeHint">12–48 px. Independent from chat so a narrow ranking can stay smaller.</p>
-                          <p id="overlay-leaderboard-font-size-error" class="field-error" role="alert" hidden></p>
-                        </div>
-                        <div class="form__field">
-                          <label for="overlay-leaderboard-layout" data-i18n="obs.leaderboardLayout">Leaderboard layout</label>
-                          <select id="overlay-leaderboard-layout">
-                            <option value="panel" data-i18n="obs.leaderboardLayoutPanel">Panel</option>
-                            <option value="chips" data-i18n="obs.leaderboardLayoutChips">Chips</option>
-                          </select>
-                          <p class="field-hint" data-i18n="obs.leaderboardLayoutHint">Panel is one HUD frame. Chips make each rank a separate card in the same theme.</p>
-                        </div>
-                      </div>
-
-              <details class="overlay-group">
-                <summary data-i18n="obs.textGroup">Text</summary>
-                <div class="form form--compact">
-                  <div class="form__field">
-                    <label for="overlay-font-family" data-i18n="obs.fontFamily">Font</label>
-                    <select id="overlay-font-family">
-                      <option value="system" data-i18n="obs.fontSystem">System</option>
-                      <option value="segoe" data-i18n="obs.fontSegoe">Segoe UI</option>
-                      <option value="georgia" data-i18n="obs.fontGeorgia">Georgia</option>
-                      <option value="trebuchet" data-i18n="obs.fontTrebuchet">Trebuchet</option>
-                      <option value="mono" data-i18n="obs.fontMono">Monospace</option>
-                    </select>
-                  </div>
-                  <div class="form__field">
-                    <label for="overlay-line-height" data-i18n="obs.lineHeight">Line height</label>
-                    <input id="overlay-line-height" type="number" min="1" max="2" step="0.05" inputmode="decimal">
-                  </div>
-                  <div class="form__field form__field--full">
-                    <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="text" data-i18n="obs.resetGroup">Reset group to theme</button>
-                  </div>
-                </div>
-              </details>
-
-              <details class="overlay-group">
-                <summary data-i18n="obs.surfaceGroup">Surface</summary>
-                <p class="field-hint" data-i18n="obs.surfaceHint">Only the message block can be opaque. Cockpit themes still draw their own HUD frame.</p>
-                <div class="form form--compact">
-                  <div class="form__field">
-                    <label for="overlay-panel-color" data-i18n="obs.panelColor">Panel color</label>
-                    <input id="overlay-panel-color" type="color" value="#000000">
-                  </div>
-                  <div class="form__field">
-                    <label for="overlay-panel-opacity" data-i18n="obs.panelOpacity">Panel opacity</label>
-                    <input id="overlay-panel-opacity" type="number" min="0" max="1" step="0.05" inputmode="decimal">
-                  </div>
-                  <div class="form__field form__field--full">
-                    <label for="overlay-panel-image-file" data-i18n="obs.panelImage">Panel image</label>
-                    <input id="overlay-panel-image" type="hidden" value="">
-                    <div class="panel-image-controls">
-                      <input id="overlay-panel-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml">
-                      <img id="overlay-panel-image-preview" class="panel-image-preview" alt="" hidden width="72" height="40">
-                      <button id="overlay-panel-image-clear" class="button-secondary button-secondary--small" type="button" data-i18n="obs.clearImage">Clear image</button>
-                      <p id="overlay-panel-image-error" class="field-error" role="alert" hidden></p>
-                    </div>
-                    <div id="overlay-panel-image-options" class="panel-image-options" hidden>
-                      <div class="form__field form__field--full">
-                        <label id="overlay-panel-image-fit-label" data-i18n="obs.panelImageFit">Scale</label>
-                        <input id="overlay-panel-image-fit" type="hidden" value="cover">
-                        <div
-                          class="icon-choice-group"
-                          role="radiogroup"
-                          aria-labelledby="overlay-panel-image-fit-label"
-                        >
-                          <button
-                            class="icon-choice icon-choice--active has-tooltip"
-                            type="button"
-                            role="radio"
-                            data-panel-image-fit="cover"
-                            aria-checked="true"
-                            data-i18n-aria-label="obs.panelImageFitCover"
-                          >
-                            <svg class="icon-choice__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
-                              <rect x="4" y="6" width="16" height="12" rx="1.5"></rect>
-                              <path d="M4 10h16M10 6v12" stroke-opacity="0.45"></path>
-                              <rect x="2" y="4" width="20" height="16" rx="1" stroke-dasharray="2 2" stroke-opacity="0.55"></rect>
-                            </svg>
-                            <span class="ui-tooltip" role="tooltip" data-i18n="obs.panelImageFitCover">Fill</span>
-                          </button>
-                          <button
-                            class="icon-choice has-tooltip"
-                            type="button"
-                            role="radio"
-                            data-panel-image-fit="contain"
-                            aria-checked="false"
-                            data-i18n-aria-label="obs.panelImageFitContain"
-                          >
-                            <svg class="icon-choice__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
-                              <rect x="3" y="5" width="18" height="14" rx="1.5"></rect>
-                              <rect x="7.5" y="8.5" width="9" height="7" rx="1" fill="currentColor" fill-opacity="0.22"></rect>
-                            </svg>
-                            <span class="ui-tooltip" role="tooltip" data-i18n="obs.panelImageFitContain">Fit</span>
-                          </button>
-                          <button
-                            class="icon-choice has-tooltip"
-                            type="button"
-                            role="radio"
-                            data-panel-image-fit="fill"
-                            aria-checked="false"
-                            data-i18n-aria-label="obs.panelImageFitFill"
-                          >
-                            <svg class="icon-choice__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
-                              <rect x="4" y="6" width="16" height="12" rx="1.5"></rect>
-                              <path d="M8 9 6 7M16 9l2-2M8 15l-2 2M16 15l2 2" stroke-linecap="round"></path>
-                            </svg>
-                            <span class="ui-tooltip" role="tooltip" data-i18n="obs.panelImageFitFill">Stretch</span>
-                          </button>
-                          <button
-                            class="icon-choice has-tooltip"
-                            type="button"
-                            role="radio"
-                            data-panel-image-fit="tile"
-                            aria-checked="false"
-                            data-i18n-aria-label="obs.panelImageFitTile"
-                          >
-                            <svg class="icon-choice__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
-                              <rect x="3" y="5" width="18" height="14" rx="1.5"></rect>
-                              <path d="M3 11h18M11 5v14"></path>
-                            </svg>
-                            <span class="ui-tooltip" role="tooltip" data-i18n="obs.panelImageFitTile">Tile</span>
-                          </button>
-                        </div>
-                      </div>
-                      <div class="form__field">
-                        <label for="overlay-panel-image-scope" data-i18n="obs.panelImageScope">Anchor</label>
-                        <select id="overlay-panel-image-scope">
-                          <option value="message" data-i18n="obs.panelImageScopeMessage">Per message</option>
-                          <option value="column" data-i18n="obs.panelImageScopeColumn">Chat column</option>
-                        </select>
-                      </div>
-                      <p class="field-hint" data-i18n="obs.panelImageOptionsHint">Applies when a panel image is set. Column anchor works on the Default theme.</p>
-                    </div>
-                  </div>
-                  <div class="form__field">
-                    <label for="overlay-border-color" data-i18n="obs.borderColor">Border color</label>
-                    <input id="overlay-border-color" type="color" value="#ffffff">
-                  </div>
-                  <div class="form__field">
-                    <label for="overlay-border-width" data-i18n="obs.borderWidth">Border width</label>
-                    <input id="overlay-border-width" type="number" min="0" max="8" step="1" inputmode="numeric">
-                  </div>
-                  <div class="form__field">
-                    <label for="overlay-border-radius" data-i18n="obs.borderRadius">Corner radius</label>
-                    <input id="overlay-border-radius" type="number" min="0" max="24" step="1" inputmode="numeric">
-                  </div>
-                  <div class="form__field form__field--full">
-                    <button class="button-secondary button-secondary--small" type="button" data-overlay-reset-group="surface" data-i18n="obs.resetGroup">Reset group to theme</button>
-                  </div>
-                </div>
-              </details>
-                    <div class="overlay-queue-group overlay-chat-only">
-                      <h3 class="overlay-queue-group__title" data-i18n="obs.queueGroup">Queue</h3>
-                      <div class="form form--compact">
-                        <div class="form__field">
-                          <label for="overlay-max-messages" data-i18n="obs.maxMessages">Max messages</label>
-                          <input id="overlay-max-messages" name="overlay_max_messages" type="number" min="1" step="1">
-                          <p id="overlay-max-messages-error" class="field-error" role="alert" hidden></p>
-                        </div>
-
-                        <div class="form__field">
-                          <label for="overlay-message-ttl" data-i18n="obs.messageTtl">Message TTL (seconds)</label>
-                          <input id="overlay-message-ttl" name="overlay_message_ttl_seconds" type="number" min="0" step="1">
-                          <p class="field-hint" data-i18n="obs.ttlHint">0 keeps messages until they scroll off (max messages limit).</p>
-                          <p id="overlay-message-ttl-error" class="field-error" role="alert" hidden></p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-              </div>
-
-          <section class="panel overlay-preview-panel" aria-labelledby="overlay-preview-heading" data-preview-only>
-            <div class="panel__header overlay-preview-header">
-              <h3 id="overlay-preview-heading" data-i18n="obs.preview">Preview</h3>
-              <div class="overlay-preview-actions">
-                <button id="overlay-preview-replay" class="btn-physical btn-small" type="button" data-i18n="obs.replay">Replay</button>
-                <a id="overlay-preview-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener" data-i18n="obs.openOverlay">Open overlay</a>
-              </div>
-            </div>
-
-            <div class="overlay-preview-controls">
-              <div class="preview-control overlay-chat-only" id="overlay-preview-mode-control">
-                <label for="overlay-preview-mode" data-i18n="obs.previewMode">Preview mode</label>
-                <select id="overlay-preview-mode">
-                  <option value="sample" data-i18n="obs.sample">Sample</option>
-                  <option value="live" data-i18n="obs.liveChat">Live chat</option>
-                </select>
-              </div>
-
-              <div class="preview-control preview-control--size">
-                <label for="overlay-preview-size" data-i18n="obs.sourceSize">Source size</label>
-                <select id="overlay-preview-size">
-                  <option value="640x360">640 × 360</option>
-                  <option value="800x600">800 × 600</option>
-                  <option value="1280x720">1280 × 720</option>
-                  <option value="480x720">480 × 720</option>
-                  <option value="custom" data-i18n="obs.custom">Custom</option>
-                </select>
-              </div>
-
-              <div class="preview-control preview-control--dimension">
-                <label for="overlay-preview-width" data-i18n="obs.width">Width</label>
-                <input id="overlay-preview-width" type="number" min="240" max="3840" step="1" inputmode="numeric" value="640">
-              </div>
-
-              <span class="preview-dimension-mark" aria-hidden="true">×</span>
-
-              <div class="preview-control preview-control--dimension">
-                <label for="overlay-preview-height" data-i18n="obs.height">Height</label>
-                <input id="overlay-preview-height" type="number" min="180" max="2160" step="1" inputmode="numeric" value="360">
-              </div>
-
-              <div class="preview-control">
-                <label for="overlay-preview-background" data-i18n="obs.background">Background</label>
-                <select id="overlay-preview-background">
-                  <option value="white" data-i18n="obs.bgWhite">White</option>
-                  <option value="checker" data-i18n="obs.bgChecker">Checkerboard</option>
-                  <option value="scene" selected data-i18n="obs.bgScene">Game footage</option>
-                  <option value="dark" data-i18n="obs.bgDark">Black</option>
-                </select>
-              </div>
-            </div>
-
-            <div id="overlay-preview-stage" class="overlay-preview-stage">
-              <div id="overlay-preview-viewport" class="overlay-preview-viewport">
-                <iframe id="overlay-preview-frame" data-i18n-title="obs.previewTitle" title="OBS overlay preview" referrerpolicy="no-referrer"></iframe>
-              </div>
-            </div>
-
-            <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite" data-i18n="obs.previewNoteSample">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
-          </section>
         </div>
           </section>
         </div>
@@ -1319,6 +1451,168 @@
         <div class="dialog-actions">
           <button class="btn-physical" type="button" data-dialog-close data-i18n="dialog.close">Close</button>
           <button class="btn-physical btn-start" type="submit" data-save-button data-obs-appearance-only disabled hidden data-i18n="dialog.saveSettings">Save settings</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="studio-add-to-obs-dialog" class="settings-dialog studio-add-to-obs-dialog" aria-labelledby="studio-add-to-obs-heading">
+      <div class="dialog-frame">
+        <div class="dialog-header">
+          <div>
+            <span class="dialog-kicker" data-i18n="studio.addToObsKicker">Setup</span>
+            <h2 id="studio-add-to-obs-heading" data-i18n="studio.addToObs">OBS setup</h2>
+          </div>
+          <button class="btn-physical btn-small" type="button" data-studio-add-to-obs-action="close" data-i18n="dialog.close" data-i18n-aria-label="studio.addToObsClose" aria-label="Close OBS setup">Close</button>
+        </div>
+
+        <div class="studio-add-to-obs-body">
+          <nav class="studio-add-to-obs-nav" data-i18n-aria-label="studio.addToObsSources" aria-label="OBS sources">
+            <button class="studio-add-to-obs-nav-item" type="button" data-studio-add-to-obs-source="chat" aria-pressed="true" aria-current="true">
+              <span data-i18n="obs.surfaceChat">Chat</span>
+              <small>/overlay</small>
+            </button>
+            <button class="studio-add-to-obs-nav-item" type="button" data-studio-add-to-obs-source="leaderboard" aria-pressed="false">
+              <span data-i18n="obs.surfaceLeaderboard">Leaderboard</span>
+              <small>/overlay/leaderboard</small>
+            </button>
+            <button class="studio-add-to-obs-nav-item" type="button" data-studio-add-to-obs-source="alerts" aria-pressed="false">
+              <span data-i18n="obs.surfaceAlerts">Alerts</span>
+              <small>/overlay/alert</small>
+            </button>
+            <button class="studio-add-to-obs-nav-item" type="button" data-studio-add-to-obs-source="dock" aria-pressed="false">
+              <span data-i18n="obs.messageDock">Message dock</span>
+              <small>/dock/messages</small>
+            </button>
+          </nav>
+
+          <div class="studio-add-to-obs-detail">
+            <div class="obs-source-detail__header">
+              <div>
+                <span id="studio-add-to-obs-source-eyebrow" class="obs-integration-card__eyebrow" data-i18n="obs.browserSource">Browser Source</span>
+                <h3 id="studio-add-to-obs-source-title" data-i18n="obs.onStreamOverlay">On-stream overlay</h3>
+              </div>
+              <span id="studio-add-to-obs-source-badge" class="obs-audience-badge obs-audience-badge--live" data-i18n="obs.visibleToViewers">Visible to viewers</span>
+            </div>
+            <p id="studio-add-to-obs-source-summary" class="obs-integration-card__summary" data-i18n="obs.overlaySummary">Adds chat messages to the scene output seen by your audience.</p>
+
+            <p class="field-hint" data-studio-add-to-obs-pane="chat" data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
+            <p class="field-hint" data-studio-add-to-obs-pane="alerts" hidden data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
+
+            <div class="obs-url-field studio-url-primary" data-studio-add-to-obs-pane="chat">
+              <label for="studio-add-to-obs-follow-url" data-i18n="obs.followActivePreset">Follow active preset</label>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-follow-url" type="text" readonly value="/overlay">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-follow-url" data-copy-label="Overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </div>
+            <details class="studio-url-pinned" data-studio-add-to-obs-pane="chat">
+              <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+              <p id="studio-add-to-obs-pinned-label" class="field-hint"></p>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-pinned-url" type="text" readonly value="/overlay">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-pinned-url" data-copy-label="Pinned overlay URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </details>
+
+            <div class="obs-url-field" data-studio-add-to-obs-pane="leaderboard" hidden>
+              <label for="studio-add-to-obs-leaderboard-period" data-i18n="obs.leaderboardPeriod">Ranking period</label>
+              <select id="studio-add-to-obs-leaderboard-period">
+                <option value="session" data-i18n="viewers.periodSession">Session</option>
+                <option value="day" data-i18n="viewers.periodDay">Day</option>
+                <option value="all" data-i18n="viewers.periodAll">All-time</option>
+              </select>
+            </div>
+            <div class="obs-url-field studio-url-primary" data-studio-add-to-obs-pane="leaderboard" hidden>
+              <label for="studio-add-to-obs-leaderboard-follow-url" data-i18n="obs.followActivePreset">Follow active preset</label>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-leaderboard-follow-url" type="text" readonly value="/overlay/leaderboard">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-leaderboard-follow-url" data-copy-label="Leaderboard URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </div>
+            <details class="studio-url-pinned" data-studio-add-to-obs-pane="leaderboard" hidden>
+              <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+              <p id="studio-add-to-obs-leaderboard-pinned-label" class="field-hint"></p>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-leaderboard-pinned-url" type="text" readonly value="/overlay/leaderboard">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-leaderboard-pinned-url" data-copy-label="Pinned leaderboard URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </details>
+
+            <div class="obs-url-field studio-url-primary" data-studio-add-to-obs-pane="alerts" hidden>
+              <label for="studio-add-to-obs-alert-follow-url" data-i18n="obs.followActivePreset">Follow active preset</label>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-alert-follow-url" type="text" readonly value="/overlay/alert">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-alert-follow-url" data-copy-label="Alert URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </div>
+            <details class="studio-url-pinned" data-studio-add-to-obs-pane="alerts" hidden>
+              <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+              <p id="studio-add-to-obs-alert-pinned-label" class="field-hint"></p>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-alert-pinned-url" type="text" readonly value="/overlay/alert">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-alert-pinned-url" data-copy-label="Pinned alert URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </details>
+
+            <div class="obs-url-field" data-studio-add-to-obs-pane="dock" hidden>
+              <label for="studio-add-to-obs-dock-url" data-i18n="obs.dockUrl">Message dock URL</label>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-dock-url" type="text" readonly value="/dock/messages">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-dock-url" data-copy-label="Message dock URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </div>
+
+            <details class="obs-howto" data-studio-add-to-obs-pane="browser">
+              <summary data-i18n="obs.howToBrowser">How to add a Browser Source</summary>
+              <ol class="obs-setup-steps">
+                <li data-i18n-html="obs.stepBrowser">In OBS Sources, add a <strong>Browser</strong> source.</li>
+                <li data-i18n="obs.stepPaste">Paste the URL above into its URL field.</li>
+                <li data-i18n="obs.stepSize">Set the source width and height for your scene.</li>
+                <li data-i18n="obs.stepRunning">Keep CommRelay running while you stream.</li>
+              </ol>
+            </details>
+
+            <details class="obs-howto" data-studio-add-to-obs-pane="dock" hidden>
+              <summary data-i18n="obs.howToDock">How to add a Custom Browser Dock</summary>
+              <ol class="obs-setup-steps">
+                <li data-i18n-html="obs.stepDocks">Open <strong>View → Docks → Custom Browser Docks…</strong> in OBS.</li>
+                <li data-i18n="obs.stepDockName">Enter a dock name and paste the URL above.</li>
+                <li data-i18n="obs.stepDockPlace">Apply the change and place the dock where it is convenient.</li>
+              </ol>
+            </details>
+
+            <div class="obs-integration-actions" data-studio-add-to-obs-pane="chat">
+              <a id="studio-add-to-obs-overlay-open" class="button-secondary button-secondary--small" href="/overlay" target="_blank" rel="noopener" data-i18n="obs.openOverlay">Open overlay</a>
+            </div>
+            <div class="obs-integration-actions" data-studio-add-to-obs-pane="leaderboard" hidden>
+              <a id="studio-add-to-obs-leaderboard-open" class="button-secondary button-secondary--small" href="/overlay/leaderboard" target="_blank" rel="noopener" data-i18n="obs.openLeaderboard">Open leaderboard</a>
+            </div>
+            <div class="obs-integration-actions" data-studio-add-to-obs-pane="alerts" hidden>
+              <a id="studio-add-to-obs-alert-open" class="button-secondary button-secondary--small" href="/overlay/alert?preview=sample" target="_blank" rel="noopener" data-i18n="obs.openAlerts">Open alerts</a>
+            </div>
+            <div class="obs-integration-actions" data-studio-add-to-obs-pane="dock" hidden>
+              <a id="studio-add-to-obs-dock-open" class="button-secondary button-secondary--small" href="/dock/messages" target="_blank" rel="noopener" data-i18n="obs.openMessageDock">Open message dock</a>
+            </div>
+
+            <p id="studio-add-to-obs-copy-status" class="obs-copy-status" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <div class="dialog-actions">
+          <button class="btn-physical" type="button" data-studio-add-to-obs-action="later" data-i18n="studio.addToObsLater">Later</button>
+          <button class="btn-physical btn-start" type="button" data-studio-add-to-obs-action="done" data-i18n="studio.addToObsDone">Done</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="studio-discard-dialog" class="prompt-dialog studio-discard-dialog" aria-labelledby="studio-discard-title" aria-describedby="studio-discard-message">
+      <div class="prompt-dialog__frame">
+        <span class="dialog-kicker" data-i18n="studio.discardKicker">Unpublished draft</span>
+        <h3 id="studio-discard-title" data-i18n="studio.discardTitle">Leave Studio?</h3>
+        <p id="studio-discard-message" class="prompt-dialog__message" data-i18n="studio.discardMessage">Your unpublished appearance changes will be lost.</p>
+        <div class="prompt-dialog__actions">
+          <button id="studio-discard-cancel" class="btn-physical" type="button" autofocus data-i18n="studio.keepEditing">Keep editing</button>
+          <button id="studio-discard-confirm" class="btn-physical btn-danger" type="button" data-i18n="studio.discardChanges">Discard changes</button>
         </div>
       </div>
     </dialog>

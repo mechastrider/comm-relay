@@ -5,7 +5,9 @@ import { uploadOverlayAsset } from "./overlay-asset-upload.js";
 import { showBanner } from "./ui-shell.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildObsAlertURL } from "./alert-url.js";
+import { buildFollowActiveURLForSurface, messageTtlToChipValue, chipValueToMessageTtl, shouldShowPresetCrudInPrimary } from "./studio-helpers.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
+import { OVERLAY_THEMES } from "./constants.js";
 import * as dom from "./dom.js";
 
 let presets = [];
@@ -27,6 +29,143 @@ const THEME_LABEL_KEYS = {
 function themeLabel(theme) {
   const key = THEME_LABEL_KEYS[theme] || THEME_LABEL_KEYS.default;
   return t(key);
+}
+
+function syncThemeCards() {
+  const themeSelect = document.getElementById("overlay-theme");
+  const picker = dom.overlayThemePicker;
+  if (!themeSelect || !picker) {
+    return;
+  }
+  const current = themeSelect.value || "default";
+  picker.querySelectorAll(".theme-card").forEach(function (button) {
+    const selected = button.dataset.theme === current;
+    button.setAttribute("aria-checked", selected ? "true" : "false");
+  });
+}
+
+function setThemeFromCard(themeId) {
+  const themeSelect = document.getElementById("overlay-theme");
+  if (!themeSelect || !OVERLAY_THEMES.includes(themeId)) {
+    return;
+  }
+  themeSelect.value = themeId;
+  syncThemeCards();
+  requestPreviewRefresh();
+}
+
+function syncDurationChips() {
+  const ttlInput = document.getElementById("overlay-message-ttl");
+  const chipsRoot = dom.overlayDurationChips;
+  if (!ttlInput || !chipsRoot) {
+    return;
+  }
+  const chipValue = messageTtlToChipValue(ttlInput.value);
+  chipsRoot.querySelectorAll(".duration-chip").forEach(function (button) {
+    const selected = chipValue !== null && Number.parseInt(button.dataset.ttl, 10) === chipValue;
+    button.setAttribute("aria-checked", selected ? "true" : "false");
+  });
+}
+
+function setDurationFromChip(chipValue) {
+  const ttl = chipValueToMessageTtl(chipValue);
+  const ttlInput = document.getElementById("overlay-message-ttl");
+  if (ttl === null || !ttlInput) {
+    return;
+  }
+  ttlInput.value = String(ttl);
+  syncDurationChips();
+  requestPreviewRefresh();
+}
+
+function refreshThemeCardLabels() {
+  const picker = dom.overlayThemePicker;
+  if (!picker) {
+    return;
+  }
+  picker.querySelectorAll(".theme-card").forEach(function (button) {
+    const themeId = button.dataset.theme;
+    if (!themeId) {
+      return;
+    }
+    button.setAttribute("aria-label", themeLabel(themeId));
+    const label = button.querySelector(".theme-card__label");
+    if (label) {
+      label.textContent = themeLabel(themeId);
+    }
+  });
+}
+
+function initThemePicker() {
+  const picker = dom.overlayThemePicker;
+  const themeSelect = document.getElementById("overlay-theme");
+  if (!picker || !themeSelect) {
+    return;
+  }
+  if (picker.dataset.bound !== "true") {
+    picker.dataset.bound = "true";
+    picker.innerHTML = "";
+    OVERLAY_THEMES.forEach(function (themeId) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "theme-card";
+      button.dataset.theme = themeId;
+      button.setAttribute("role", "radio");
+      button.setAttribute("aria-checked", "false");
+
+      const thumb = document.createElement("span");
+      thumb.className = "theme-card__thumb";
+      thumb.setAttribute("aria-hidden", "true");
+
+      const label = document.createElement("em");
+      label.className = "theme-card__label";
+
+      button.appendChild(thumb);
+      button.appendChild(label);
+      button.addEventListener("click", function () {
+        setThemeFromCard(themeId);
+      });
+      picker.appendChild(button);
+    });
+  }
+  refreshThemeCardLabels();
+  syncThemeCards();
+}
+
+function initDurationChips() {
+  const chipsRoot = dom.overlayDurationChips;
+  if (!chipsRoot || chipsRoot.dataset.bound === "true") {
+    return;
+  }
+  chipsRoot.dataset.bound = "true";
+  chipsRoot.querySelectorAll(".duration-chip").forEach(function (button) {
+    button.addEventListener("click", function () {
+      setDurationFromChip(button.dataset.ttl);
+    });
+  });
+  syncDurationChips();
+}
+
+export function syncStudioInspectorEssential(surface) {
+  const current = surface === "leaderboard" ? "leaderboard" : surface === "alerts" ? "alerts" : "chat";
+  if (dom.studioEssentialFontLeaderboard) {
+    dom.studioEssentialFontLeaderboard.hidden = current !== "leaderboard";
+  }
+  if (dom.studioEssentialPeriod) {
+    dom.studioEssentialPeriod.hidden = current !== "leaderboard";
+  }
+  if (dom.studioEssentialAlertsNote) {
+    dom.studioEssentialAlertsNote.hidden = current !== "alerts";
+  }
+  if (dom.studioSelectedSurfaceHeading) {
+    const headingKey =
+      current === "leaderboard"
+        ? "studio.surfaceLeaderboardSettings"
+        : current === "alerts"
+          ? "studio.surfaceAlertsSettings"
+          : "studio.surfaceChatSettings";
+    dom.studioSelectedSurfaceHeading.textContent = t(headingKey);
+  }
 }
 
 function newID(prefix) {
@@ -268,6 +407,8 @@ function writeFormFromPreset(preset) {
   setFieldValue("overlay-leaderboard-font-size", String(leaderboard.font_size_px));
   setFieldValue("overlay-leaderboard-layout", leaderboard.layout);
   updatePanelImagePreview(style.panel_image);
+  syncThemeCards();
+  syncDurationChips();
 }
 
 function currentPreset() {
@@ -319,6 +460,7 @@ function updatePresetActionButtons() {
   const add = document.getElementById("overlay-preset-add");
   const duplicate = document.getElementById("overlay-preset-duplicate");
   const remove = document.getElementById("overlay-preset-delete");
+  const rename = document.getElementById("overlay-preset-rename");
   if (add) {
     add.disabled = atLimit;
   }
@@ -328,11 +470,97 @@ function updatePresetActionButtons() {
   if (remove) {
     remove.disabled = onlyOne;
   }
+  if (dom.presetOverflowAdd) {
+    dom.presetOverflowAdd.disabled = atLimit;
+  }
+  if (dom.presetOverflowDuplicate) {
+    dom.presetOverflowDuplicate.disabled = atLimit;
+  }
+  if (dom.presetOverflowDelete) {
+    dom.presetOverflowDelete.disabled = onlyOne;
+  }
+  if (rename && dom.presetOverflowRename) {
+    dom.presetOverflowRename.disabled = rename.disabled;
+  }
+}
+
+function updatePresetCrudVisibility() {
+  const showPrimary = shouldShowPresetCrudInPrimary(presets.length);
+  if (dom.presetIslandIconActions) {
+    dom.presetIslandIconActions.hidden = !showPrimary;
+  }
+  if (dom.presetIslandOverflow) {
+    dom.presetIslandOverflow.hidden = showPrimary;
+  }
+  if (!showPrimary) {
+    closePresetOverflowPanel();
+  }
+  updatePresetActionButtons();
+}
+
+function closePresetOverflowPanel() {
+  if (!dom.presetIslandOverflowPanel || !dom.presetIslandOverflowToggle) {
+    return;
+  }
+  dom.presetIslandOverflowPanel.hidden = true;
+  dom.presetIslandOverflowToggle.setAttribute("aria-expanded", "false");
+}
+
+function initPresetOverflowPanel() {
+  if (!dom.presetIslandOverflowPanel || !dom.presetIslandOverflowToggle) {
+    return;
+  }
+  if (dom.presetIslandOverflowToggle.dataset.presetOverflowBound === "true") {
+    return;
+  }
+  dom.presetIslandOverflowToggle.dataset.presetOverflowBound = "true";
+
+  dom.presetIslandOverflowToggle.addEventListener("click", function (event) {
+    event.stopPropagation();
+    const panel = dom.presetIslandOverflowPanel;
+    if (!panel) {
+      return;
+    }
+    if (panel.hidden) {
+      panel.hidden = false;
+      dom.presetIslandOverflowToggle.setAttribute("aria-expanded", "true");
+      return;
+    }
+    closePresetOverflowPanel();
+  });
+
+  document.addEventListener("click", function (event) {
+    const panel = dom.presetIslandOverflowPanel;
+    const toggle = dom.presetIslandOverflowToggle;
+    if (!panel || panel.hidden || !toggle) {
+      return;
+    }
+    if (
+      event.target === toggle ||
+      toggle.contains(/** @type {Node} */ (event.target)) ||
+      panel.contains(/** @type {Node} */ (event.target))
+    ) {
+      return;
+    }
+    closePresetOverflowPanel();
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") {
+      return;
+    }
+    const panel = dom.presetIslandOverflowPanel;
+    if (!panel || panel.hidden) {
+      return;
+    }
+    closePresetOverflowPanel();
+    dom.presetIslandOverflowToggle.focus();
+  });
 }
 
 function renderPresetSelect() {
   fillPresetSelect(document.getElementById("overlay-preset-select"));
-  updatePresetActionButtons();
+  updatePresetCrudVisibility();
 }
 
 function getSavedPreset(presetId) {
@@ -383,11 +611,11 @@ export function updatePresetIsland() {
       limit: String(PRESET_LIMIT),
     });
   }
+  const surface = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
+  const previewSurface = surface ? surface.getAttribute("data-obs-preview-surface") : "chat";
   const overlayUrl = buildObsOverlayURL({ presetId: activePresetId });
   const alertUrl = buildObsAlertURL({ presetId: activePresetId });
   if (dom.presetIslandUrl) {
-    const surface = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
-    const previewSurface = surface ? surface.getAttribute("data-obs-preview-surface") : "chat";
     if (previewSurface === "leaderboard") {
       const leaderboardUrl = currentLeaderboardURL({ pinned: true });
       dom.presetIslandUrl.value = leaderboardUrl;
@@ -452,6 +680,83 @@ export function updatePresetIsland() {
       dom.obsAlertPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
     }
   }
+  if (dom.studioFollowUrl) {
+    const period =
+      (dom.overlayLeaderboardPeriod && dom.overlayLeaderboardPeriod.value) ||
+      (dom.studioAddToObsLeaderboardPeriod && dom.studioAddToObsLeaderboardPeriod.value) ||
+      (dom.obsLeaderboardPeriod && dom.obsLeaderboardPeriod.value) ||
+      "session";
+    const followUrl = buildFollowActiveURLForSurface(previewSurface, {
+      origin: window.location.origin,
+      period: period,
+    });
+    dom.studioFollowUrl.value = followUrl;
+    dom.studioFollowUrl.title = followUrl;
+  }
+  if (dom.studioPinnedUrl) {
+    let pinnedUrl;
+    if (previewSurface === "leaderboard") {
+      pinnedUrl = currentLeaderboardURL({ pinned: true });
+    } else if (previewSurface === "alerts") {
+      pinnedUrl = alertUrl;
+    } else {
+      pinnedUrl = overlayUrl;
+    }
+    dom.studioPinnedUrl.value = pinnedUrl;
+    dom.studioPinnedUrl.title = pinnedUrl;
+    const preset = currentPreset();
+    const pinnedLabel = preset ? preset.name || preset.id : activePresetId;
+    if (dom.studioPinnedUrlLabel) {
+      dom.studioPinnedUrlLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
+  const preset = currentPreset();
+  const pinnedLabel = preset ? preset.name || preset.id : activePresetId;
+  if (dom.studioAddToObsFollowUrl) {
+    dom.studioAddToObsFollowUrl.value = followOverlayUrl;
+    dom.studioAddToObsFollowUrl.title = followOverlayUrl;
+  }
+  if (dom.studioAddToObsOverlayOpen) {
+    dom.studioAddToObsOverlayOpen.href = followOverlayUrl;
+  }
+  if (dom.studioAddToObsPinnedUrl) {
+    dom.studioAddToObsPinnedUrl.value = overlayUrl;
+    dom.studioAddToObsPinnedUrl.title = overlayUrl;
+    if (dom.studioAddToObsPinnedLabel) {
+      dom.studioAddToObsPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
+  if (dom.studioAddToObsLeaderboardFollowUrl) {
+    dom.studioAddToObsLeaderboardFollowUrl.value = followLeaderboardUrl;
+    dom.studioAddToObsLeaderboardFollowUrl.title = followLeaderboardUrl;
+  }
+  if (dom.studioAddToObsLeaderboardOpen) {
+    dom.studioAddToObsLeaderboardOpen.href = followLeaderboardUrl;
+  }
+  if (dom.studioAddToObsLeaderboardPinnedUrl) {
+    const pinnedLeaderboardUrl = currentLeaderboardURL({ pinned: true });
+    dom.studioAddToObsLeaderboardPinnedUrl.value = pinnedLeaderboardUrl;
+    dom.studioAddToObsLeaderboardPinnedUrl.title = pinnedLeaderboardUrl;
+    if (dom.studioAddToObsLeaderboardPinnedLabel) {
+      dom.studioAddToObsLeaderboardPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
+  if (dom.studioAddToObsAlertFollowUrl) {
+    dom.studioAddToObsAlertFollowUrl.value = followAlertUrl;
+    dom.studioAddToObsAlertFollowUrl.title = followAlertUrl;
+  }
+  if (dom.studioAddToObsAlertOpen) {
+    const previewUrl = new URL(followAlertUrl);
+    previewUrl.searchParams.set("preview", "sample");
+    dom.studioAddToObsAlertOpen.href = previewUrl.toString();
+  }
+  if (dom.studioAddToObsAlertPinnedUrl) {
+    dom.studioAddToObsAlertPinnedUrl.value = alertUrl;
+    dom.studioAddToObsAlertPinnedUrl.title = alertUrl;
+    if (dom.studioAddToObsAlertPinnedLabel) {
+      dom.studioAddToObsAlertPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
   if (dom.presetUrlStatus) {
     const studioActive =
       dom.studioWorkspace && dom.studioWorkspace.classList.contains("workspace--active");
@@ -494,6 +799,7 @@ export function currentLeaderboardURL(options) {
   return buildLeaderboardURL({
     period:
       (dom.overlayLeaderboardPeriod && dom.overlayLeaderboardPeriod.value) ||
+      (dom.studioAddToObsLeaderboardPeriod && dom.studioAddToObsLeaderboardPeriod.value) ||
       (dom.obsLeaderboardPeriod && dom.obsLeaderboardPeriod.value) ||
       "session",
     followActive: followActive,
@@ -796,6 +1102,8 @@ export function initOverlayAppearance() {
   }
   bound = true;
   initPanelImageFitIcons();
+  initThemePicker();
+  initDurationChips();
   const appearanceSelect = document.getElementById("overlay-preset-select");
   if (appearanceSelect) {
     appearanceSelect.addEventListener("change", function () {
@@ -832,6 +1140,31 @@ export function initOverlayAppearance() {
       openPresetPrompt("delete");
     });
   }
+  if (dom.presetOverflowAdd) {
+    dom.presetOverflowAdd.addEventListener("click", function () {
+      closePresetOverflowPanel();
+      openPresetPrompt("create");
+    });
+  }
+  if (dom.presetOverflowRename) {
+    dom.presetOverflowRename.addEventListener("click", function () {
+      closePresetOverflowPanel();
+      openPresetPrompt("rename");
+    });
+  }
+  if (dom.presetOverflowDuplicate) {
+    dom.presetOverflowDuplicate.addEventListener("click", function () {
+      closePresetOverflowPanel();
+      openPresetPrompt("duplicate");
+    });
+  }
+  if (dom.presetOverflowDelete) {
+    dom.presetOverflowDelete.addEventListener("click", function () {
+      closePresetOverflowPanel();
+      openPresetPrompt("delete");
+    });
+  }
+  initPresetOverflowPanel();
   const promptCancel = document.getElementById("overlay-preset-prompt-cancel");
   if (promptCancel) {
     promptCancel.addEventListener("click", closePresetPrompt);
@@ -888,11 +1221,24 @@ export function initOverlayAppearance() {
   }
   const theme = document.getElementById("overlay-theme");
   if (theme) {
-    theme.addEventListener("change", requestPreviewRefresh);
+    theme.addEventListener("change", function () {
+      syncThemeCards();
+      requestPreviewRefresh();
+    });
+  }
+  const ttlInput = document.getElementById("overlay-message-ttl");
+  if (ttlInput) {
+    ttlInput.addEventListener("input", function () {
+      syncDurationChips();
+      requestPreviewRefresh();
+    });
+    ttlInput.addEventListener("change", function () {
+      syncDurationChips();
+      requestPreviewRefresh();
+    });
   }
   [
     "overlay-max-messages",
-    "overlay-message-ttl",
     "overlay-font-size",
     "overlay-display-mode",
     "overlay-text-edge",
@@ -915,5 +1261,15 @@ export function initOverlayAppearance() {
       el.addEventListener("change", requestPreviewRefresh);
       el.addEventListener("input", requestPreviewRefresh);
     }
+  });
+
+  window.addEventListener("admin-locale-applied", function () {
+    refreshThemeCardLabels();
+    const selectedSurface = document.querySelector(
+      "[data-obs-preview-surface][aria-pressed='true']"
+    );
+    syncStudioInspectorEssential(
+      selectedSurface ? selectedSurface.getAttribute("data-obs-preview-surface") : "chat"
+    );
   });
 }

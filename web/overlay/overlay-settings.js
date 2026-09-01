@@ -220,14 +220,25 @@ export function applyQueryStyleOverrides(style, params) {
  * @param {URLSearchParams|string} [params]
  * @returns {object}
  */
+function themeFromResolvedAndQuery(resolved, query) {
+  let theme = resolved && resolved.theme ? resolved.theme : "default";
+  if (query && typeof query.get === "function" && typeof query.has === "function") {
+    const raw = String(query.get("theme") || "").trim().toLowerCase();
+    if (query.has("theme") && THEMES.has(raw)) {
+      theme = normalizeTheme(raw);
+    }
+  }
+  return theme;
+}
+
 export function overlayViewFromConfig(config, params) {
   const overlay = config && typeof config === "object" ? config.overlay : null;
-  const queryPreset =
-    params && typeof params.get === "function" ? params.get("preset") : params;
+  const query = params && typeof params.get === "function" ? params : undefined;
+  const queryPreset = query ? query.get("preset") : params;
   const resolved = resolvePreset(overlay, queryPreset);
-  const theme = resolved && resolved.theme ? resolved.theme : "default";
+  const theme = themeFromResolvedAndQuery(resolved, query);
   const merged = mergeStyle(theme, resolved && resolved.style);
-  const style = applyQueryStyleOverrides(merged, params && typeof params.get === "function" ? params : undefined);
+  const style = applyQueryStyleOverrides(merged, query);
 
   return {
     max_messages: resolved && typeof resolved.max_messages === "number" ? resolved.max_messages : 30,
@@ -265,13 +276,7 @@ export function leaderboardViewFromConfig(config, params) {
   const query = params && typeof params.get === "function" ? params : undefined;
   const queryPreset = query ? query.get("preset") : params;
   const resolved = resolvePreset(overlay, queryPreset);
-  let theme = resolved && resolved.theme ? resolved.theme : "default";
-  if (query && typeof query.get === "function") {
-    const queriedTheme = normalizeTheme(query.get("theme"));
-    if (query.has("theme") && THEMES.has(String(query.get("theme") || "").trim().toLowerCase())) {
-      theme = queriedTheme;
-    }
-  }
+  const theme = themeFromResolvedAndQuery(resolved, query);
   const merged = mergeStyle(theme, resolved && resolved.style);
   const style = applyQueryStyleOverrides(merged, query);
   const surface =

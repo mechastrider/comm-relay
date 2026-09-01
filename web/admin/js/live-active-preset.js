@@ -27,6 +27,10 @@ function activePresetId() {
   return options.length > 0 ? options[0].id : "";
 }
 
+function notifyActivateStateChanged() {
+  document.dispatchEvent(new CustomEvent("overlay-activate-state-changed"));
+}
+
 /**
  * @param {HTMLSelectElement | null} select
  */
@@ -71,6 +75,18 @@ export function renderLiveActivePresetControl() {
   renderActivePresetSelect(dom.liveActivePreset);
 }
 
+export function getOnAirPresetId() {
+  return activePresetId();
+}
+
+export function isOverlayActivateInFlight() {
+  return activateInFlight;
+}
+
+export async function activateOverlayPreset(requestedId) {
+  return activatePreset(requestedId);
+}
+
 async function activatePreset(requestedId) {
   const previousId = activePresetId();
   if (!requestedId) {
@@ -88,12 +104,10 @@ async function activatePreset(requestedId) {
   }
 
   activateInFlight = true;
-    if (dom.liveActivePreset) {
-      dom.liveActivePreset.disabled = true;
-    }
-    if (dom.studioActivePreset) {
-      dom.studioActivePreset.disabled = true;
-    }
+  notifyActivateStateChanged();
+  if (dom.liveActivePreset) {
+    dom.liveActivePreset.disabled = true;
+  }
 
   try {
     const response = await fetch(apiURL("/api/overlay/activate"), {
@@ -108,9 +122,6 @@ async function activatePreset(requestedId) {
       if (dom.liveActivePreset) {
         dom.liveActivePreset.value = rollback.selectedId;
       }
-      if (dom.studioActivePreset) {
-        dom.studioActivePreset.value = rollback.selectedId;
-      }
       showBanner("error", message);
       return;
     }
@@ -120,11 +131,7 @@ async function activatePreset(requestedId) {
     if (dom.liveActivePreset) {
       dom.liveActivePreset.value = applied.selectedId;
     }
-    if (dom.studioActivePreset) {
-      dom.studioActivePreset.value = applied.selectedId;
-    }
     renderLiveActivePresetControl();
-    renderActivePresetSelect(dom.studioActivePreset);
     document.dispatchEvent(new CustomEvent("live-active-preset-changed", {
       detail: { presetId: applied.activeId },
     }));
@@ -133,17 +140,12 @@ async function activatePreset(requestedId) {
     if (dom.liveActivePreset) {
       dom.liveActivePreset.value = rollback.selectedId;
     }
-    if (dom.studioActivePreset) {
-      dom.studioActivePreset.value = rollback.selectedId;
-    }
     showBanner("error", t("banner.cannotReach"));
   } finally {
     activateInFlight = false;
+    notifyActivateStateChanged();
     if (dom.liveActivePreset) {
       dom.liveActivePreset.disabled = presetOptions().length === 0;
-    }
-    if (dom.studioActivePreset) {
-      dom.studioActivePreset.disabled = presetOptions().length === 0;
     }
     const nextQueued = queuedPresetId;
     queuedPresetId = null;
@@ -177,6 +179,5 @@ export function initLiveActivePreset() {
 
   document.addEventListener("admin-config-applied", function () {
     renderLiveActivePresetControl();
-    renderActivePresetSelect(dom.studioActivePreset);
   });
 }

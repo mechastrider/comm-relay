@@ -70,7 +70,11 @@ func NewHandler(opts Options) (http.Handler, error) {
 	awardsHandler := newAwardsHandler(opts.ViewerStore, opts.Hub, leaderboardPublisher, opts.Store)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", handleHealth)
+	instanceID := ""
+	if rt != nil {
+		instanceID = rt.InstanceID
+	}
+	mux.HandleFunc("GET /health", handleHealth(instanceID))
 	mux.HandleFunc("GET /ws", opts.Hub.serveWS)
 	mux.HandleFunc("GET /api/config", configHandler.handleGet)
 	mux.HandleFunc("POST /api/config/update", configHandler.handleUpdate)

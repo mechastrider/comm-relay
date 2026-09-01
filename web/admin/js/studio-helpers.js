@@ -2,8 +2,55 @@
  * Pure helpers for Studio draft comparison and OBS source URLs.
  */
 
+import {
+  ADD_TO_OBS_DISMISSED_KEY,
+  STUDIO_MODE_KEY,
+  STUDIO_SETUP_STATE_KEY,
+  STUDIO_SURFACE_RAIL_COLLAPSED_KEY,
+} from "./constants.js";
+import { buildLeaderboardURL } from "./leaderboard-url.js";
+
+const ADD_TO_OBS_DISMISSED_TRUTHY = new Set(["1", "true", "yes"]);
+const STUDIO_SETUP_STATES = new Set(["unseen", "seen", "skipped", "completed"]);
+
+const STUDIO_SURFACES = new Set(["chat", "leaderboard", "alerts"]);
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
 const OVERLAY_DISPLAY_MODES = new Set(["normal", "compact"]);
+
+/** @type {readonly number[]} */
+export const MESSAGE_TTL_CHIP_VALUES = [8, 20, 0];
+
+/**
+ * Map a stored TTL to a chip value when it matches 8, 20, or 0.
+ *
+ * @param {unknown} ttlSeconds
+ * @returns {8 | 20 | 0 | null}
+ */
+export function messageTtlToChipValue(ttlSeconds) {
+  const parsed = Number.parseInt(String(ttlSeconds), 10);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+  return MESSAGE_TTL_CHIP_VALUES.includes(parsed) ? /** @type {8 | 20 | 0} */ (parsed) : null;
+}
+
+/**
+ * @param {unknown} chipValue
+ * @returns {boolean}
+ */
+export function isMessageTtlChipValue(chipValue) {
+  return messageTtlToChipValue(chipValue) !== null;
+}
+
+/**
+ * Coerce a chip selection to a persisted TTL, or null when invalid.
+ *
+ * @param {unknown} chipValue
+ * @returns {8 | 20 | 0 | null}
+ */
+export function chipValueToMessageTtl(chipValue) {
+  return messageTtlToChipValue(chipValue);
+}
 
 /**
  * @param {unknown} value
@@ -75,14 +122,32 @@ export function normalizeOverlayAppearanceDraft(overlay) {
 }
 
 /**
+ * Appearance fields compared for Studio dirty state (excludes edited-look id).
+ *
+ * @param {unknown} overlay
+ * @returns {Record<string, unknown>}
+ */
+function overlayAppearanceContentForDirtyCompare(overlay) {
+  const normalized = normalizeOverlayAppearanceDraft(overlay);
+  return {
+    max_messages: normalized.max_messages,
+    message_ttl_seconds: normalized.message_ttl_seconds,
+    font_size_px: normalized.font_size_px,
+    display_mode: normalized.display_mode,
+    theme: normalized.theme,
+    presets: normalized.presets,
+  };
+}
+
+/**
  * @param {unknown} baseline
  * @param {unknown} draft
  * @returns {boolean}
  */
 export function overlayDraftIsDirty(baseline, draft) {
   return (
-    JSON.stringify(normalizeOverlayAppearanceDraft(baseline)) !==
-    JSON.stringify(normalizeOverlayAppearanceDraft(draft))
+    JSON.stringify(overlayAppearanceContentForDirtyCompare(baseline)) !==
+    JSON.stringify(overlayAppearanceContentForDirtyCompare(draft))
   );
 }
 
@@ -92,6 +157,38 @@ export function overlayDraftIsDirty(baseline, draft) {
  */
 export function cloneOverlayAppearanceDraft(overlay) {
   return JSON.parse(JSON.stringify(normalizeOverlayAppearanceDraft(overlay)));
+}
+
+/**
+ * @param {unknown} editedPresetId
+ * @param {unknown} onAirPresetId
+ * @returns {boolean}
+ */
+export function shouldShowUseOnStream(editedPresetId, onAirPresetId) {
+  const edited = typeof editedPresetId === "string" ? editedPresetId.trim() : "";
+  const onAir = typeof onAirPresetId === "string" ? onAirPresetId.trim() : "";
+  if (!edited || !onAir) {
+    return false;
+  }
+  return edited !== onAir;
+}
+
+/**
+ * @param {boolean} visible
+ * @param {boolean} dirty
+ * @param {boolean} inFlight
+ * @returns {boolean}
+ */
+export function shouldDisableUseOnStream(visible, dirty, inFlight) {
+  return !visible || dirty || inFlight;
+}
+
+/**
+ * @param {number} presetCount
+ * @returns {boolean}
+ */
+export function shouldShowPresetCrudInPrimary(presetCount) {
+  return Number.isFinite(presetCount) && presetCount > 1;
 }
 
 /**
@@ -134,4 +231,215 @@ export function sourceUrlOmitsPreset(origin, pathname) {
 export function sourceUrlPinsPreset(href, presetId) {
   const url = new URL(href);
   return url.searchParams.get("preset") === presetId;
+}
+
+/**
+ * @param {unknown} surface
+ * @returns {"chat"|"leaderboard"|"alerts"}
+ */
+export function normalizeStudioSurface(surface) {
+  const raw = String(surface || "").trim().toLowerCase();
+  return STUDIO_SURFACES.has(raw) ? /** @type {"chat"|"leaderboard"|"alerts"} */ (raw) : "chat";
+}
+
+/**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+export function parseAddToObsDismissedValue(value) {
+  if (value === null || value === undefined) {
+    return false;
+  }
+  const normalized = String(value).trim().toLowerCase();
+  if (normalized === "") {
+    return false;
+  }
+  return ADD_TO_OBS_DISMISSED_TRUTHY.has(normalized);
+}
+
+/**
+ * @param {Pick<Storage, "getItem"> | null | undefined} storage
+ * @returns {boolean}
+ */
+export function readAddToObsDismissedPreference(storage) {
+  if (!storage || typeof storage.getItem !== "function") {
+    return false;
+  }
+  try {
+    return parseAddToObsDismissedValue(storage.getItem(ADD_TO_OBS_DISMISSED_KEY));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @param {Pick<Storage, "setItem"|"removeItem"> | null | undefined} storage
+ * @param {boolean} dismissed
+ */
+export function writeAddToObsDismissedPreference(storage, dismissed) {
+  if (!storage) {
+    return;
+  }
+  try {
+    if (dismissed) {
+      storage.setItem(ADD_TO_OBS_DISMISSED_KEY, "1");
+      return;
+    }
+    if (typeof storage.removeItem === "function") {
+      storage.removeItem(ADD_TO_OBS_DISMISSED_KEY);
+    }
+  } catch {
+    /* localStorage can be unavailable in locked-down browser contexts. */
+  }
+}
+
+/**
+ * @param {unknown} value
+ * @returns {"unseen"|"seen"|"skipped"|"completed"}
+ */
+export function normalizeStudioSetupState(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return STUDIO_SETUP_STATES.has(normalized)
+    ? /** @type {"unseen"|"seen"|"skipped"|"completed"} */ (normalized)
+    : "unseen";
+}
+
+/**
+ * @param {Pick<Storage, "getItem"> | null | undefined} storage
+ * @returns {"unseen"|"seen"|"skipped"|"completed"}
+ */
+export function readStudioSetupState(storage) {
+  if (!storage || typeof storage.getItem !== "function") {
+    return "unseen";
+  }
+  try {
+    const stored = storage.getItem(STUDIO_SETUP_STATE_KEY);
+    if (stored !== null) {
+      return normalizeStudioSetupState(stored);
+    }
+    return parseAddToObsDismissedValue(storage.getItem(ADD_TO_OBS_DISMISSED_KEY))
+      ? "completed"
+      : "unseen";
+  } catch {
+    return "unseen";
+  }
+}
+
+/**
+ * @param {Pick<Storage, "setItem"> | null | undefined} storage
+ * @param {unknown} state
+ */
+export function writeStudioSetupState(storage, state) {
+  if (!storage || typeof storage.setItem !== "function") {
+    return;
+  }
+  try {
+    storage.setItem(STUDIO_SETUP_STATE_KEY, normalizeStudioSetupState(state));
+  } catch {
+    /* localStorage can be unavailable in locked-down browser contexts. */
+  }
+}
+
+/**
+ * @param {unknown} value
+ * @returns {"essentials"|"all"}
+ */
+export function normalizeStudioMode(value) {
+  return String(value || "").trim().toLowerCase() === "all" ? "all" : "essentials";
+}
+
+/**
+ * @param {Pick<Storage, "getItem"> | null | undefined} storage
+ * @returns {"essentials"|"all"}
+ */
+export function readStudioModePreference(storage) {
+  if (!storage || typeof storage.getItem !== "function") {
+    return "essentials";
+  }
+  try {
+    return normalizeStudioMode(storage.getItem(STUDIO_MODE_KEY));
+  } catch {
+    return "essentials";
+  }
+}
+
+/**
+ * @param {Pick<Storage, "setItem"> | null | undefined} storage
+ * @param {unknown} mode
+ */
+export function writeStudioModePreference(storage, mode) {
+  if (!storage || typeof storage.setItem !== "function") {
+    return;
+  }
+  try {
+    storage.setItem(STUDIO_MODE_KEY, normalizeStudioMode(mode));
+  } catch {
+    /* localStorage can be unavailable in locked-down browser contexts. */
+  }
+}
+
+/**
+ * @param {Pick<Storage, "getItem"> | null | undefined} storage
+ * @returns {boolean}
+ */
+export function readStudioSurfaceRailCollapsedPreference(storage) {
+  if (!storage || typeof storage.getItem !== "function") {
+    return false;
+  }
+  try {
+    return storage.getItem(STUDIO_SURFACE_RAIL_COLLAPSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @param {Pick<Storage, "setItem"> | null | undefined} storage
+ * @param {boolean} collapsed
+ */
+export function writeStudioSurfaceRailCollapsedPreference(storage, collapsed) {
+  if (!storage || typeof storage.setItem !== "function") {
+    return;
+  }
+  try {
+    storage.setItem(STUDIO_SURFACE_RAIL_COLLAPSED_KEY, collapsed ? "true" : "false");
+  } catch {
+    /* localStorage can be unavailable in locked-down browser contexts. */
+  }
+}
+
+/**
+ * Follow-active OBS URL for a Studio on-stream surface (no preset query).
+ *
+ * @param {unknown} surface
+ * @param {{ origin?: string, period?: string }} [options]
+ * @returns {string}
+ */
+export function buildFollowActiveURLForSurface(surface, options) {
+  const normalized = normalizeStudioSurface(surface);
+  const opts = options || {};
+  const origin =
+    opts.origin ||
+    (typeof window !== "undefined" && window.location && window.location.origin
+      ? window.location.origin
+      : "http://127.0.0.1");
+  if (normalized === "leaderboard") {
+    return buildLeaderboardURL({
+      origin: origin,
+      period: opts.period || "session",
+      followActive: true,
+    });
+  }
+  if (normalized === "alerts") {
+    return overlaySourceURL({
+      origin: origin,
+      pathname: "/overlay/alert",
+      followActive: true,
+    });
+  }
+  return overlaySourceURL({
+    origin: origin,
+    pathname: "/overlay",
+    followActive: true,
+  });
 }

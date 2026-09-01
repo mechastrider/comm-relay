@@ -5,14 +5,23 @@ import { t } from "./i18n-ui.js";
 import {
   cloneOverlayAppearanceDraft,
   overlayDraftIsDirty,
+  buildFollowActiveURLForSurface,
+  readStudioModePreference,
+  readStudioSurfaceRailCollapsedPreference,
+  shouldDisableUseOnStream,
+  shouldShowUseOnStream,
+  writeStudioModePreference,
+  writeStudioSurfaceRailCollapsedPreference,
 } from "./studio-helpers.js";
 import { resolveStudioDraftAfterConfigApply } from "./config-apply-restore.js";
 import {
   applyOverlayAppearance,
   collectOverlayAppearance,
   updatePresetIsland,
+  getActivePresetID,
 } from "./overlay-appearance.js";
 import {
+  getPreviewSurface,
   mountOverlayPreview,
   unmountOverlayPreview,
   scheduleOverlayPreviewRefresh,
@@ -30,20 +39,26 @@ import {
   hideBanner,
 } from "./ui-shell.js";
 import { parseWorkspaceHash, workspaceHash } from "./workspace-router.js";
-import { initActivePresetSelect, renderActivePresetSelect } from "./live-active-preset.js";
+import {
+  activateOverlayPreset,
+  getOnAirPresetId,
+  isOverlayActivateInFlight,
+} from "./live-active-preset.js";
 import { bindCopyButtons } from "./obs-setup.js";
+import { initStudioAddToObs, maybeAutoOpenStudioAddToObs } from "./studio-add-to-obs.js";
 
 /** @type {Record<string, unknown> | null} */
 let baseline = null;
 /** @type {Record<string, unknown> | null} */
 let draft = null;
 let publishInFlight = false;
-let studioMounted = false;
 let navigationGuardBound = false;
 /** @type {import("./workspace-router.js").WorkspaceId} */
 let lastWorkspace = "live";
 let suppressNavigationGuard = false;
 let skipStudioReenter = false;
+/** @type {Promise<boolean> | null} */
+let discardPromptPromise = null;
 
 /**
  * @returns {boolean}
@@ -62,20 +77,42 @@ export function isStudioOverlayDirty() {
   return overlayDraftIsDirty(baseline, draft);
 }
 
+export function updateStudioFollowCopy() {
+  if (!dom.studioFollowUrl && !dom.studioFollowUrlCompact) {
+    return;
+  }
+  const surface = getPreviewSurface();
+  const period =
+    (dom.overlayLeaderboardPeriod && dom.overlayLeaderboardPeriod.value) ||
+    (dom.studioAddToObsLeaderboardPeriod && dom.studioAddToObsLeaderboardPeriod.value) ||
+    (dom.obsLeaderboardPeriod && dom.obsLeaderboardPeriod.value) ||
+    "session";
+  const href = buildFollowActiveURLForSurface(surface, {
+    origin: window.location.origin,
+    period: period,
+  });
+  [dom.studioFollowUrl, dom.studioFollowUrlCompact].filter(Boolean).forEach(function (input) {
+    input.value = href;
+    input.title = href;
+  });
+}
+
 function syncDraftFromForm() {
   draft = collectOverlayAppearance();
 }
 
 function renderStudioDirtyState() {
-  if (!dom.studioDirtyStatus || !dom.studioPublishButton) {
-    return;
-  }
   const dirty = isStudioOverlayDirty();
-  dom.studioDirtyStatus.textContent = dirty ? t("studio.dirty") : t("studio.published");
-  dom.studioDirtyStatus.classList.toggle("studio-dirty-status--dirty", dirty);
-  dom.studioPublishButton.disabled = publishInFlight || !dirty;
-  dom.studioPublishButton.setAttribute("aria-busy", publishInFlight ? "true" : "false");
+  [dom.studioDirtyStatus, dom.studioCompactDirtyStatus].filter(Boolean).forEach(function (status) {
+    status.textContent = dirty ? t("studio.dirty") : t("studio.published");
+    status.classList.toggle("studio-dirty-status--dirty", dirty);
+  });
+  [dom.studioPublishButton, dom.studioCompactPublishButton].filter(Boolean).forEach(function (button) {
+    button.disabled = publishInFlight || !dirty;
+    button.setAttribute("aria-busy", publishInFlight ? "true" : "false");
+  });
   updatePresetIsland();
+  updateStudioUseOnStream();
 }
 
 function restoreStudioDraftAfterConfigApply() {
@@ -121,61 +158,167 @@ export function restoreStudioBaseline() {
 }
 
 /**
- * @returns {boolean}
+ * @param {HTMLElement | null} [opener]
+ * @returns {Promise<boolean>}
  */
-export function confirmDiscardStudioDraft() {
+export function confirmDiscardStudioDraft(opener) {
   if (!isStudioOverlayDirty()) {
-    return true;
+    return Promise.resolve(true);
   }
-  return window.confirm(t("studio.discardConfirm"));
+  if (discardPromptPromise) {
+    return discardPromptPromise;
+  }
+  if (!dom.studioDiscardDialog || typeof dom.studioDiscardDialog.showModal !== "function") {
+    return Promise.resolve(false);
+  }
+
+  const focusTarget = opener && opener.isConnected ? opener : null;
+  dom.studioDiscardDialog.returnValue = "cancel";
+  discardPromptPromise = new Promise(function (resolve) {
+    dom.studioDiscardDialog.addEventListener("close", function () {
+      const shouldDiscard = dom.studioDiscardDialog.returnValue === "discard";
+      discardPromptPromise = null;
+      if (!shouldDiscard && focusTarget) {
+        focusTarget.focus({ preventScroll: true });
+      }
+      resolve(shouldDiscard);
+    }, { once: true });
+    dom.studioDiscardDialog.showModal();
+  });
+  return discardPromptPromise;
 }
 
-function mountStudioPanels() {
-  if (studioMounted || !dom.studioWorkspace) {
+function updateStudioUseOnStream() {
+  const editedId = getActivePresetID();
+  const onAirId = getOnAirPresetId();
+  const show = shouldShowUseOnStream(editedId, onAirId);
+  const inFlight = isOverlayActivateInFlight();
+  const dirty = isStudioOverlayDirty();
+  [dom.studioUseOnStream, dom.studioCompactUseOnStream].filter(Boolean).forEach(function (button) {
+    button.hidden = !show;
+    button.disabled = shouldDisableUseOnStream(show, dirty, inFlight);
+    button.setAttribute("aria-busy", inFlight ? "true" : "false");
+    button.title = dirty && show ? t("studio.publishBeforeUse") : "";
+  });
+  [dom.studioUseOnStreamHint, dom.studioCompactUseOnStreamHint].filter(Boolean).forEach(function (hint) {
+    hint.hidden = !show || !dirty;
+  });
+}
+
+/**
+ * @param {"essentials"|"all"} mode
+ * @param {boolean} persist
+ */
+function applyStudioMode(mode, persist) {
+  if (!dom.studioWorkspace) {
     return;
   }
-
-  const sourcesMount = document.getElementById("studio-sources-mount");
-  const previewMount = document.getElementById("studio-preview-mount");
-  const inspectorMount = document.getElementById("studio-inspector-mount");
-
-  if (dom.obsSetupPanel && sourcesMount) {
-    sourcesMount.appendChild(dom.obsSetupPanel);
-    dom.obsSetupPanel.hidden = false;
+  const current = mode === "all" ? "all" : "essentials";
+  dom.studioWorkspace.dataset.studioMode = current;
+  [dom.studioModeEssentials, dom.studioModeAll].filter(Boolean).forEach(function (button) {
+    button.setAttribute("aria-pressed", button.dataset.studioMode === current ? "true" : "false");
+  });
+  if (persist) {
+    writeStudioModePreference(window.localStorage, current);
   }
+}
 
-  const previewPanel = document.querySelector("#obs-appearance-panel .overlay-preview-panel");
-  if (previewPanel && previewMount) {
-    previewMount.appendChild(previewPanel);
+/**
+ * @param {boolean} collapsed
+ * @param {boolean} persist
+ */
+function applyStudioSurfaceRail(collapsed, persist) {
+  if (!dom.studioWorkspace || !dom.studioSurfaceCollapse) {
+    return;
   }
+  dom.studioWorkspace.classList.toggle("studio-surface-rail--collapsed", collapsed);
+  dom.studioSurfaceCollapse.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  const labelKey = collapsed ? "studio.expandSurfaces" : "studio.collapseSurfaces";
+  const label = t(labelKey);
+  dom.studioSurfaceCollapse.setAttribute("aria-label", label);
+  const tooltip = dom.studioSurfaceCollapse.querySelector(".ui-tooltip");
+  if (tooltip) {
+    tooltip.textContent = label;
+  }
+  if (persist) {
+    writeStudioSurfaceRailCollapsedPreference(window.localStorage, collapsed);
+  }
+}
 
-  const presetIsland = document.getElementById("preset-island");
-  const surfaceTabs = document.querySelector("#obs-appearance-panel .surface-tabs");
-  const settingsColumn = document.querySelector("#obs-appearance-panel .overlay-settings-column");
-  if (inspectorMount) {
-    if (presetIsland) {
-      inspectorMount.appendChild(presetIsland);
+function initStudioViewPreferences() {
+  applyStudioMode(readStudioModePreference(window.localStorage), false);
+  applyStudioSurfaceRail(
+    readStudioSurfaceRailCollapsedPreference(window.localStorage),
+    false
+  );
+  window.requestAnimationFrame(function () {
+    if (dom.studioWorkspace) {
+      dom.studioWorkspace.classList.add("studio-surface-rail--motion-ready");
     }
-    if (surfaceTabs) {
-      inspectorMount.appendChild(surfaceTabs);
-    }
-    if (settingsColumn) {
-      inspectorMount.appendChild(settingsColumn);
-    }
+  });
+  [dom.studioModeEssentials, dom.studioModeAll].filter(Boolean).forEach(function (button) {
+    button.addEventListener("click", function () {
+      applyStudioMode(button.dataset.studioMode === "all" ? "all" : "essentials", true);
+    });
+  });
+  if (dom.studioSurfaceCollapse) {
+    dom.studioSurfaceCollapse.addEventListener("click", function () {
+      const collapsed = dom.studioWorkspace
+        ? dom.studioWorkspace.classList.contains("studio-surface-rail--collapsed")
+        : false;
+      applyStudioSurfaceRail(!collapsed, true);
+    });
   }
+}
 
-  if (dom.overlayDialog) {
-    dom.overlayDialog.hidden = true;
+function interceptStudioNavigationClicks() {
+  document.addEventListener("click", function (event) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    const target = event.target;
+    const link = target instanceof Element ? target.closest("a[data-workspace-nav]") : null;
+    if (!(link instanceof HTMLAnchorElement)) {
+      return;
+    }
+    const targetHash = new URL(link.href, window.location.href).hash;
+    if (!isStudioWorkspaceActive() || parseWorkspaceHash(targetHash) === "studio" || !isStudioOverlayDirty()) {
+      return;
+    }
+
+    event.preventDefault();
+    confirmDiscardStudioDraft(link).then(function (shouldDiscard) {
+      if (!shouldDiscard) {
+        return;
+      }
+      restoreStudioBaseline();
+      window.location.hash = targetHash;
+    });
+  }, true);
+}
+
+function initStudioDiscardDialog() {
+  if (!dom.studioDiscardDialog) {
+    return;
   }
-
-  studioMounted = true;
+  if (dom.studioDiscardCancel) {
+    dom.studioDiscardCancel.addEventListener("click", function () {
+      dom.studioDiscardDialog.close("cancel");
+    });
+  }
+  if (dom.studioDiscardConfirm) {
+    dom.studioDiscardConfirm.addEventListener("click", function () {
+      dom.studioDiscardDialog.close("discard");
+    });
+  }
 }
 
 function onStudioEnter() {
-  mountStudioPanels();
   resetStudioDraftFromConfig();
-  renderActivePresetSelect(dom.studioActivePreset);
+  updateStudioFollowCopy();
+  updateStudioUseOnStream();
   mountOverlayPreview();
+  maybeAutoOpenStudioAddToObs();
 }
 
 function onStudioLeave() {
@@ -197,7 +340,7 @@ function interceptHashNavigation() {
   navigationGuardBound = true;
   lastWorkspace = parseWorkspaceHash(window.location.hash);
 
-  window.addEventListener("hashchange", function () {
+  window.addEventListener("hashchange", async function () {
     if (suppressNavigationGuard) {
       suppressNavigationGuard = false;
       lastWorkspace = parseWorkspaceHash(window.location.hash);
@@ -215,16 +358,13 @@ function interceptHashNavigation() {
       skipStudioReenter = true;
       suppressNavigationGuard = true;
       window.location.hash = workspaceHash("studio");
-      if (!confirmDiscardStudioDraft()) {
+      if (!await confirmDiscardStudioDraft(document.activeElement instanceof HTMLElement ? document.activeElement : null)) {
         lastWorkspace = "studio";
         return;
       }
       skipStudioReenter = false;
       restoreStudioBaseline();
-      suppressNavigationGuard = true;
       window.location.hash = targetHash;
-      lastWorkspace = parseWorkspaceHash(window.location.hash);
-      handleWorkspaceChange();
       return;
     }
 
@@ -289,42 +429,71 @@ async function publishStudioDraft() {
 }
 
 export function initStudio() {
-  mountStudioPanels();
+  initStudioAddToObs();
+  initStudioDiscardDialog();
+  initStudioViewPreferences();
+  interceptStudioNavigationClicks();
   interceptHashNavigation();
 
-  if (dom.studioPublishButton) {
-    dom.studioPublishButton.addEventListener("click", function () {
+  [dom.studioPublishButton, dom.studioCompactPublishButton].filter(Boolean).forEach(function (button) {
+    button.addEventListener("click", function () {
       publishStudioDraft().catch(function () {
         showBanner("error", t("banner.cannotReach"));
       });
     });
-  }
+  });
 
   if (dom.studioWorkspace) {
     bindCopyButtons(dom.studioWorkspace);
   }
 
-  initActivePresetSelect(dom.studioActivePreset);
+  [dom.studioUseOnStream, dom.studioCompactUseOnStream].filter(Boolean).forEach(function (button) {
+    button.addEventListener("click", function () {
+      if (isStudioOverlayDirty()) {
+        return;
+      }
+      const editedId = getActivePresetID();
+      activateOverlayPreset(editedId).catch(function () {
+        showBanner("error", t("banner.cannotReach"));
+      });
+    });
+  });
 
   document.addEventListener("studio-overlay-changed", function () {
     notifyStudioOverlayChanged();
+    updateStudioUseOnStream();
   });
 
   document.addEventListener("admin-config-applied", function () {
     if (!isStudioWorkspaceActive()) {
-      renderActivePresetSelect(dom.studioActivePreset);
+      updateStudioUseOnStream();
       return;
     }
     restoreStudioDraftAfterConfigApply();
-    renderActivePresetSelect(dom.studioActivePreset);
+    updateStudioUseOnStream();
   });
 
   document.addEventListener("live-active-preset-changed", function () {
     updatePresetIsland();
+    updateStudioFollowCopy();
+    updateStudioUseOnStream();
+  });
+
+  document.addEventListener("overlay-activate-state-changed", function () {
+    updateStudioUseOnStream();
+  });
+
+  document.addEventListener("overlay-preview-surface-changed", function () {
+    updateStudioFollowCopy();
   });
 
   window.addEventListener("admin-locale-applied", function () {
     renderStudioDirtyState();
+    updateStudioUseOnStream();
+    applyStudioSurfaceRail(
+      Boolean(dom.studioWorkspace && dom.studioWorkspace.classList.contains("studio-surface-rail--collapsed")),
+      false
+    );
   });
 
   if (isStudioWorkspaceActive()) {

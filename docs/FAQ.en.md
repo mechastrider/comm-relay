@@ -58,9 +58,9 @@ Quick renderer check without live chat:
 http://127.0.0.1:17877/overlay?preview=sample&preview_background=checker
 ```
 
-In the admin preview (**Studio**) you can switch the backdrop: white, checkerboard, game footage, or black, to check contrast on bright and dark scenes. The legacy query `preview_background=busy` is treated as game footage.
+In **Studio → All settings**, switch the backdrop from **Preview options** (⋯): white, checkerboard, game footage, or black, to check contrast on bright and dark scenes. The legacy query `preview_background=busy` is treated as game footage.
 
-To pin a look to an OBS scene, copy the **Pinned preset** URL from **Studio**:
+To pin a look to an OBS scene, copy the **Pinned preset** URL from **OBS setup** or **Studio → All settings → Preview options** (⋯):
 
 ```
 http://127.0.0.1:17877/overlay?preset=default
@@ -72,11 +72,11 @@ You should see sample messages. The same mode exists in **Studio → Preview**.
 
 ### Messages in admin but not in overlay (browser and OBS)
 
-1. **Message TTL** — in **Studio** set **0**, click **Publish**. By default messages disappear after 20 seconds; old entries are not shown when opening the overlay.
+1. **Message TTL** — in **Studio** choose **Until replaced** (duration chip) or set a custom value in **Advanced**, then click **Publish**. By default messages disappear after 20 seconds; old entries are not shown when opening the overlay.
 2. **Text only theme** — light text on a transparent background is almost invisible in a normal browser. For testing choose **Default** or open `?preview_background=dark` (dark scene) or `?preview_background=white` (bright scene).
 3. **WebSocket** — at the bottom of the admin panel the **WS:** counter should be **2 or more** with `/overlay` open. In DevTools (F12) on the overlay tab check `ws://127.0.0.1:17877/ws`.
 4. **OBS cache** — after changing overlay settings: right-click the source → **Refresh cache of current page**.
-5. **URL and port** — copy the URL from **Studio**; if you changed the port in settings, update the Browser Source.
+5. **URL and port** — copy the URL from **OBS setup** or use **Copy OBS link** on the selected surface preview; if you changed the port in settings, update the Browser Source.
 
 ### OBS on Linux: Browser Source missing or empty (Flatpak)
 

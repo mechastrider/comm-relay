@@ -43,6 +43,7 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	prev := h.store.Snapshot()
 	incoming.MergeYouTubeOAuthFrom(prev)
 	incoming.MergeNetworkSOCKS5From(prev)
+	incoming.MergeOverlayPresetsFrom(prev, overlayPresetsPresent(body))
 	incoming.ApplyDefaults()
 
 	if err := h.store.Replace(incoming); err != nil {
@@ -70,4 +71,16 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, saved.Public())
+}
+
+func overlayPresetsPresent(data []byte) bool {
+	var doc struct {
+		Overlay *struct {
+			Presets *json.RawMessage `json:"presets"`
+		} `json:"overlay"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.Overlay != nil && doc.Overlay.Presets != nil
 }
