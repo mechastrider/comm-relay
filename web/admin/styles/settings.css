@@ -100,13 +100,40 @@
 }
 
 .settings-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-space-4);
   overflow: auto;
   min-height: 0;
   padding-right: var(--primitive-space-1);
 }
 
-.settings-platform-panels {
+.settings-section__body.dialog-tab-body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--primitive-space-3);
+}
+
+.settings-workspace .connections-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-space-4);
   min-height: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.settings-platform-panels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-space-4);
+  min-height: 0;
+}
+
+.settings-platform-tabs.dialog-tabs {
+  padding: 0;
+  border-bottom: 0;
+  background: transparent;
 }
 
 .settings-application-body {
@@ -115,16 +142,22 @@
   gap: var(--primitive-space-4);
 }
 
+.settings-diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-space-4);
+}
+
 .settings-diagnostics__toolbar {
-  margin-bottom: var(--primitive-space-3);
+  margin: 0;
 }
 
 .settings-diagnostics__summary {
-  margin-bottom: var(--primitive-space-4);
+  margin: 0;
 }
 
 .settings-diagnostics__oauth {
-  margin: 0 0 var(--primitive-space-3);
+  margin: 0;
 }
 
 .settings-about-actions {
