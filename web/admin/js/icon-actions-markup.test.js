@@ -61,6 +61,7 @@ test("shared action buttons use raised and pressed states without flattening ove
   assert.match(styles, /\.btn-physical,[\s\S]*?box-shadow:[\s\S]*?0 2px 0/);
   assert.match(styles, /\.btn-physical:active:not\(:disabled\),[\s\S]*?box-shadow:[\s\S]*?inset 0 2px/);
   assert.match(styles, /\.icon-btn\s*\{[\s\S]*?box-shadow:[\s\S]*?0 2px 0/);
+  assert.match(styles, /\.icon-btn\s*\{[\s\S]*?border:\s*1px solid var\(--border\)/);
   assert.match(styles, /\.icon-btn:active:not\(:disabled\)\s*\{[\s\S]*?box-shadow:[\s\S]*?inset 0 2px/);
   assert.doesNotMatch(formStyles, /\.icon-btn\s*\{[^}]*\b(?:background|border):/);
 });

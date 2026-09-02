@@ -108,7 +108,7 @@
   min-width: var(--touch-target-min);
   min-height: var(--touch-target-min);
   padding: var(--primitive-space-2);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-top-color: var(--border-strong);
   border-left-color: var(--border-strong);
   border-bottom-color: var(--border-dark);
