@@ -31,7 +31,8 @@ Theme-focused browser/OBS coverage SHALL include `default`, `dashboard`, `cockpi
 | live ranking | Select session/day/all and inject matching/nonmatching frames | Only matching period renders; HTTP recovery and manual Refresh remain | P0 |
 | live Statistics | Burst multiple leaderboard frames while active/hidden | At most one refresh per second when active; refresh on open when hidden | P0 |
 | config-store / opacity | Round-trip 0, 0.35, 1 independently for three surfaces | Exact values preserved; invalid values reject atomically | P0 |
-| legacy config | Load preset with only shared opacity, preview all surfaces, publish without edits | All surfaces retain the original effective opacity | P0 |
+| legacy config | Load a normal preset with only shared opacity and each cockpit theme with shared zero; preview all surfaces and publish without edits | Normal surfaces retain shared opacity; cockpit surfaces retain historical glass; no override is materialized | P0 |
+| explicit cockpit opacity | Set one cockpit surface to 0, 0.35, and 1 while the other surfaces remain omitted | The edited surface follows the explicit value and omitted surfaces retain historical glass | P0 |
 | OBS transparency | Check opacity 0/0.35/1 on all surfaces | Only chrome changes; page, text, avatars, emotes stay unaffected | P0 |
 | catalogs / selection | Select, hover away, save error, delete selected using keyboard | Selected state remains distinct; focus recovery is predictable | P1 |
 | Live toolbar | Check New stream at desktop/narrow widths and cancel/confirm | Alignment fixed; confirmation and reset semantics unchanged | P1 |
@@ -83,7 +84,7 @@ Add focused fixtures/tests for:
 - alert lane insertion, selection, expiry, and all capacity branches using a fake clock;
 - exact message-reference matching and repeated highlight timer reset;
 - latest leaderboard snapshot per period plus Statistics debounce/cancellation;
-- legacy/shared and explicit per-surface opacity normalization/round-trip;
+- legacy/shared opacity, historical cockpit glass, explicit cockpit zero, and per-surface normalization/round-trip;
 - English/Russian catalog parity and Studio markup bindings.
 
 Manual OBS setup uses one chat, one leaderboard, and one alert Browser Source against the same local server, plus the message dock. Feed synthetic short/long Latin and Cyrillic messages, missing/stable ids, missing/broken avatars, rapid commands, and operator awards.

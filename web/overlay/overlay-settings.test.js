@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+	alertViewFromConfig,
   applyQueryStyleOverrides,
   defaultStyleForTheme,
   hexToRgba,
@@ -9,22 +10,24 @@ import {
   normalizeLeaderboardLayout,
   normalizePanelImageFit,
   normalizePanelImageScope,
+  panelBackground,
   normalizePreviewBackground,
   overlayViewFromConfig,
   resolvePreset,
 } from "./overlay-settings.js";
 
-test("resolvePreset uses query id before active preset", function () {
+test("resolvePreset uses valid query id, then active preset, then first preset", function () {
   const overlay = {
-    active_preset_id: "default",
+    active_preset_id: "raid",
     presets: [
       { id: "default", name: "Default", theme: "default" },
       { id: "raid", name: "Raid", theme: "dashboard" },
     ],
   };
   assert.equal(resolvePreset(overlay, "raid").id, "raid");
-  assert.equal(resolvePreset(overlay, "").id, "default");
-  assert.equal(resolvePreset(overlay, "missing").id, "default");
+  assert.equal(resolvePreset(overlay, "").id, "raid");
+  assert.equal(resolvePreset(overlay, "missing").id, "raid");
+  assert.equal(resolvePreset({ presets: overlay.presets }, "missing").id, "default");
 });
 
 test("defaultStyleForTheme keeps dashboard panel transparent", function () {
@@ -121,6 +124,71 @@ test("overlayViewFromConfig uses query preset", function () {
   assert.equal(view.max_messages, 8);
   assert.equal(view.display_mode, "compact");
   assert.equal(view.style.platform_marker, "icon");
+});
+
+test("surface views resolve independent opacity overrides with legacy fallback", function () {
+  const config = {
+    overlay: {
+      active_preset_id: "default",
+      presets: [{
+        id: "default",
+        theme: "default",
+        style: { panel_opacity: 0.58 },
+        surfaces: {
+          chat: { panel_opacity: 0 },
+          leaderboard: { panel_opacity: 0.35 },
+          alerts: { panel_opacity: 1 },
+        },
+      }],
+    },
+  };
+  assert.equal(overlayViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 0);
+  assert.equal(leaderboardViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 0.35);
+  assert.equal(alertViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 1);
+
+  config.overlay.presets[0].surfaces = {};
+  assert.equal(overlayViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 0.58);
+  assert.equal(leaderboardViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 0.58);
+  assert.equal(alertViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 0.58);
+});
+
+test("legacy cockpit glass remains fixed without an override but explicit zero stays transparent", function () {
+  const legacyThemes = {
+    cockpit_panel: "rgb(6 13 17 / 0.74)",
+    cockpit_popups: "rgb(6 13 17 / 0.88)",
+    g_rebels_popups: "rgb(5 6 4 / 0.78)",
+  };
+  Object.entries(legacyThemes).forEach(function ([theme, glass]) {
+    const config = { overlay: { presets: [{ id: "cockpit", theme, style: { panel_opacity: 0 }, surfaces: {} }] } };
+    [overlayViewFromConfig, leaderboardViewFromConfig, alertViewFromConfig].forEach(function (viewForSurface) {
+      const view = viewForSurface(config, new URLSearchParams());
+      assert.equal(view.style.legacy_cockpit_glass, true);
+      assert.equal(panelBackground(view.theme, view.style), glass);
+    });
+    config.overlay.presets[0].surfaces = { chat: { panel_opacity: 0 }, leaderboard: { panel_opacity: 0 }, alerts: { panel_opacity: 0 } };
+    [overlayViewFromConfig, leaderboardViewFromConfig, alertViewFromConfig].forEach(function (viewForSurface) {
+      const view = viewForSurface(config, new URLSearchParams());
+      assert.equal(view.style.legacy_cockpit_glass, false);
+      assert.equal(panelBackground(view.theme, view.style), "rgba(0, 0, 0, 0)");
+    });
+  });
+});
+
+test("surface views keep valid panel opacity query overrides", function () {
+  const config = {
+    overlay: {
+      presets: [{
+        id: "default",
+        theme: "default",
+        style: { panel_opacity: 0.58 },
+        surfaces: { chat: { panel_opacity: 0.2 }, leaderboard: { panel_opacity: 0.7 }, alerts: { panel_opacity: 0.4 } },
+      }],
+    },
+  };
+  const query = new URLSearchParams("panel_opacity=0.9&theme=dashboard");
+  assert.equal(overlayViewFromConfig(config, query).style.panel_opacity, 0.9);
+  assert.equal(leaderboardViewFromConfig(config, query).style.panel_opacity, 0.9);
+  assert.equal(alertViewFromConfig(config, query).style.panel_opacity, 0.9);
 });
 
 test("normalizeLeaderboardLayout defaults invalid values to panel", function () {

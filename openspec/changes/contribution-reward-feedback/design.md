@@ -61,7 +61,7 @@ The server treats `message_text` as untrusted local input: request size remains 
 3. **Keep scheduling in the alert client.** This preserves the stateless WebSocket model and multiple Browser Source support. A server-side redemption queue belongs with Reward Library, where acknowledgements and refunds exist.
 4. **Use one visible hero alert with priority lanes.** Simultaneous cards or a vertical stack compete with gameplay and sound. Strict FIFO allows stale commands to hide manual recognition.
 5. **Make only commands expire in this slice.** Ten seconds is the initial relevance budget. Awards remain protected by priority and the hard pending cap; tuning/configuration follows live QA.
-6. **Store per-surface opacity as optional overrides.** Runtime fallback to shared opacity makes old configs safe and rollback simple. Eagerly rewriting every preset adds no observable benefit.
+6. **Store per-surface opacity as optional overrides with a cockpit compatibility exception.** Runtime normally falls back to shared opacity. Legacy cockpit themes historically ignored their shared zero and supplied fixed dark glass in CSS, so an omitted surface override preserves that theme-specific alpha; any explicit surface value, including zero, opts that surface into the new model and wins. Eagerly rewriting every preset would lose the distinction between absent and explicitly transparent values.
 7. **Reuse leaderboard frames.** A new statistics event is unnecessary until richer historical aggregates exist.
 
 ## Risks / Trade-offs
@@ -69,12 +69,12 @@ The server treats `message_text` as untrusted local input: request size remains 
 - Separate Browser Sources can diverge after a local reload or dropped frame; this already applies to live alerts and remains acceptable until durable redemptions.
 - Award priority can starve commands during an unusual reward burst. Manual recognition is intentionally higher value; the pending cap prevents unbounded memory.
 - A local client could submit quote text different from the source row. This does not affect score identity or durable facts, but it can affect transient copy. The localhost operator boundary and lack of remote API authentication make this consistent with current trust assumptions.
-- Per-theme award variants and opacity must be verified across every current theme, both leaderboard layouts, long Cyrillic text, and reduced motion.
+- Per-theme award variants and opacity must be verified across every current theme, including the historical cockpit glass fallback, explicit zero, both leaderboard layouts, long Cyrillic text, and reduced motion.
 - Debounced Statistics refresh still performs HTTP reads during active use, but bounds them to one per second rather than one per event.
 
 ## Migration / Rollout / Rollback
 
-No SQLite migration is required. Old config files omit surface opacity and resolve to shared `style.panel_opacity`; Studio may materialize unchanged effective values on the next publish. New optional request and WebSocket fields do not break old clients. Rollback ignores additive config fields and restores FIFO presentation without data loss. User-visible behavior requires a Russian `[Unreleased]` changelog entry during implementation.
+No SQLite migration or eager config rewrite is required. Old non-cockpit config files omit surface opacity and resolve to shared `style.panel_opacity`. An old cockpit preset with shared zero and no surface override retains its historical theme glass in live and preview rendering; the first explicit surface edit, including zero, opts only that surface into the new value. Studio must not materialize an override on an unchanged publish. New optional request and WebSocket fields do not break old clients. Rollback ignores additive config fields and restores FIFO presentation without data loss. User-visible behavior requires a Russian `[Unreleased]` changelog entry during implementation.
 
 ## Open Questions
 

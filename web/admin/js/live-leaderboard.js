@@ -2,12 +2,15 @@ import * as dom from "./dom.js";
 import { apiURL, readJSON, mapHTTPError } from "./api.js";
 import { setRegionState } from "./shell-state.js";
 import { t } from "./i18n-ui.js";
+import { createLeaderboardSnapshotCache, leaderboardPeriodTransition } from "./live-data-helpers.js";
 
 export const LIVE_TABS = ["messages", "leaderboard", "statistics"];
 
 let currentPeriod = "session";
 let loadController = null;
 let loadGeneration = 0;
+let renderedPeriod = null;
+const snapshots = createLeaderboardSnapshotCache();
 
 function leaderboardRegion() {
   return dom.liveLeaderboardRegion;
@@ -31,7 +34,6 @@ function showLeaderboardError(message) {
   if (dom.liveLeaderboardEmpty) {
     dom.liveLeaderboardEmpty.hidden = true;
   }
-  clearLeaderboardTable();
   setRegionState(leaderboardRegion(), "error");
 }
 
@@ -64,6 +66,28 @@ function renderLeaderboardRows(entries) {
   });
 }
 
+/**
+ * @param {{ period?: string, entries?: Array<Record<string, unknown>> }} payload
+ */
+function renderLeaderboardPayload(payload) {
+  const entries = Array.isArray(payload && payload.entries) ? payload.entries : [];
+  hideLeaderboardError();
+  if (entries.length === 0) {
+    clearLeaderboardTable();
+    if (dom.liveLeaderboardEmpty) {
+      dom.liveLeaderboardEmpty.hidden = false;
+    }
+    setRegionState(leaderboardRegion(), "empty");
+  } else {
+    renderLeaderboardRows(entries);
+    if (dom.liveLeaderboardEmpty) {
+      dom.liveLeaderboardEmpty.hidden = true;
+    }
+    setRegionState(leaderboardRegion(), null);
+  }
+  renderedPeriod = payload && payload.period ? payload.period : currentPeriod;
+}
+
 export function getLeaderboardPeriod() {
   return currentPeriod;
 }
@@ -80,6 +104,11 @@ export function setLeaderboardPeriod(period, options) {
   }
   if (dom.audiencePeriod && dom.audiencePeriod.value !== next) {
     dom.audiencePeriod.value = next;
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("live-leaderboard-period-change", {
+      detail: { period: next },
+    }));
   }
   if (options && options.reload) {
     return loadLiveLeaderboard({ period: next });
@@ -102,10 +131,18 @@ export async function loadLiveLeaderboard(options) {
   const generation = ++loadGeneration;
   const signal = loadController.signal;
 
-  hideLeaderboardError();
-  setRegionState(leaderboardRegion(), "loading");
-  if (dom.liveLeaderboardEmpty) {
-    dom.liveLeaderboardEmpty.hidden = true;
+  const cached = snapshots.get(period);
+  const transition = leaderboardPeriodTransition(renderedPeriod, period, Boolean(cached && opts.useCache !== false));
+  if (cached && opts.useCache !== false) {
+    renderLeaderboardPayload(cached);
+  } else if (transition.showLoading) {
+    clearLeaderboardTable();
+    renderedPeriod = null;
+    hideLeaderboardError();
+    setRegionState(leaderboardRegion(), "loading");
+    if (dom.liveLeaderboardEmpty) {
+      dom.liveLeaderboardEmpty.hidden = true;
+    }
   }
 
   try {
@@ -120,19 +157,9 @@ export async function loadLiveLeaderboard(options) {
     if (!response.ok) {
       throw new Error(mapHTTPError(response.status, payload && payload.error));
     }
-    const entries = (payload && payload.entries) || [];
-    if (entries.length === 0) {
-      clearLeaderboardTable();
-      if (dom.liveLeaderboardEmpty) {
-        dom.liveLeaderboardEmpty.hidden = false;
-      }
-      setRegionState(leaderboardRegion(), "empty");
-    } else {
-      renderLeaderboardRows(entries);
-      if (dom.liveLeaderboardEmpty) {
-        dom.liveLeaderboardEmpty.hidden = true;
-      }
-      setRegionState(leaderboardRegion(), null);
+    const snapshot = snapshots.remember(payload);
+    if (snapshot && snapshot.period === currentPeriod) {
+      renderLeaderboardPayload(snapshot);
     }
     return payload;
   } catch (err) {
@@ -143,6 +170,10 @@ export async function loadLiveLeaderboard(options) {
       return null;
     }
     const message = err instanceof Error && err.message ? err.message : t("live.leaderboardLoadFailed");
+    if (!transition.preserveRowsOnError) {
+      clearLeaderboardTable();
+      renderedPeriod = null;
+    }
     showLeaderboardError(message);
     return null;
   } finally {
@@ -152,8 +183,42 @@ export async function loadLiveLeaderboard(options) {
   }
 }
 
+/**
+ * Cache every valid leaderboard frame. Rendering is intentionally left to the
+ * active Live tab so a hidden workspace does not churn its DOM.
+ *
+ * @param {unknown} frame
+ * @returns {boolean}
+ */
+export function cacheLiveLeaderboardFrame(frame) {
+  return snapshots.remember(frame) !== null;
+}
+
+/**
+ * @param {unknown} frame
+ * @returns {boolean}
+ */
+export function applyLiveLeaderboardFrame(frame) {
+  const snapshot = snapshots.remember(frame);
+  if (!snapshot || snapshot.period !== currentPeriod) {
+    return false;
+  }
+  renderLeaderboardPayload(snapshot);
+  return true;
+}
+
+export function renderCachedLiveLeaderboard() {
+  const snapshot = snapshots.get(currentPeriod);
+  if (!snapshot) {
+    return false;
+  }
+  renderLeaderboardPayload(snapshot);
+  return true;
+}
+
 export function abortLiveLeaderboard() {
   if (loadController) {
+    loadGeneration += 1;
     loadController.abort();
     loadController = null;
   }

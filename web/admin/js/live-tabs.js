@@ -1,6 +1,13 @@
 import * as dom from "./dom.js";
-import { loadLiveLeaderboard, abortLiveLeaderboard } from "./live-leaderboard.js";
-import { loadLiveStatistics, abortLiveStatistics } from "./live-statistics.js";
+import {
+  loadLiveLeaderboard,
+  abortLiveLeaderboard,
+  renderCachedLiveLeaderboard,
+} from "./live-leaderboard.js";
+import {
+  openLiveStatistics,
+  deactivateLiveStatistics,
+} from "./live-statistics.js";
 
 export const LIVE_TABS = ["messages", "leaderboard", "statistics"];
 
@@ -28,11 +35,12 @@ function refreshActions(tab) {
 
 function loadTabData(tab) {
   if (tab === "leaderboard") {
+    renderCachedLiveLeaderboard();
     loadLiveLeaderboard().catch(function () {
       /* region handles error */
     });
   } else if (tab === "statistics") {
-    loadLiveStatistics().catch(function () {
+    openLiveStatistics().catch(function () {
       /* region handles error */
     });
   }
@@ -69,7 +77,7 @@ export function setLiveTab(tab, options) {
     if (previous === "leaderboard") {
       abortLiveLeaderboard();
     } else if (previous === "statistics") {
-      abortLiveStatistics();
+      deactivateLiveStatistics();
     }
   }
 
@@ -126,9 +134,40 @@ export function initLiveTabs() {
         /* noop */
       });
     } else if (currentTab === "statistics") {
-      loadLiveStatistics().catch(function () {
+      openLiveStatistics().catch(function () {
         /* noop */
       });
     }
   });
+}
+
+/**
+ * Workspace navigation is a cancellation boundary: active Live content can be
+ * recovered through its regular HTTP load when the operator returns.
+ *
+ * @param {string} workspaceId
+ */
+export function handleLiveWorkspaceChange(workspaceId) {
+  if (workspaceId !== "live") {
+    abortLiveLeaderboard();
+    deactivateLiveStatistics();
+    return;
+  }
+  if (currentTab === "leaderboard") {
+    loadTabData("leaderboard");
+  } else if (currentTab === "statistics") {
+    loadTabData("statistics");
+  }
+}
+
+export function reconcileActiveLiveData() {
+  const workspace = document.getElementById("workspace-live");
+  if (!workspace || workspace.hidden) {
+    return;
+  }
+  if (currentTab === "leaderboard") {
+    loadTabData("leaderboard");
+  } else if (currentTab === "statistics") {
+    loadTabData("statistics");
+  }
 }

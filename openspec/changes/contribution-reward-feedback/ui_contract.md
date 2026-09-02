@@ -84,11 +84,11 @@ Opening, creating, deleting, and switching catalog items keep current behavior. 
 
 ### Layout and Components
 
-Studio Advanced shows the same labeled Panel opacity control for the selected Chat, Leaderboard, or Alerts surface. Switching surfaces changes the field to that surface's effective draft value. The preview reflects the selected surface only. Text/media opacity is not exposed because the control affects background chrome.
+Studio Advanced shows the same labeled Panel opacity control for the selected Chat, Leaderboard, or Alerts surface. Switching surfaces changes the field to that surface's effective draft value. The preview reflects the selected surface only. An untouched legacy cockpit surface preserves its historical theme glass; its shared zero remains visible in the numeric field until the operator makes an explicit edit, which opts only that surface into the new override semantics. Text/media opacity is not exposed because the control affects background chrome.
 
 ### Data / Forms / Actions
 
-The numeric control retains range 0–1 and step 0.05. Legacy presets display the shared opacity as each surface's initial effective value. Editing one surface creates/updates only its draft override; Publish persists all draft surface values through the existing config update.
+The numeric control retains range 0–1 and step 0.05. Legacy non-cockpit presets display the shared opacity as each surface's initial effective value. Untouched legacy cockpit previews omit the opacity query so their historical glass is not accidentally replaced by shared zero. Editing one surface creates/updates only its draft override; Publish persists all draft surface values through the existing config update and does not materialize untouched surfaces.
 
 ### States and Recovery
 
@@ -99,7 +99,7 @@ The numeric control retains range 0–1 and step 0.05. Legacy presets display th
 | error/retry | Show the field/server error and keep the unpublished draft |
 | offline/degraded | Preview may remain local; live OBS surfaces remain on the last published config |
 | permission denied | Not applicable |
-| interrupted/recovered | Existing dirty-draft navigation protection applies |
+| interrupted/recovered | Existing dirty-draft navigation protection applies; an invalid touched value remains associated with its surface until corrected or the preset is reloaded |
 
 ## View / Flow: On-stream Feedback
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="stylesheet" href="styles.css?v=27">
   <script>
     (function () {
       try {
@@ -137,12 +137,6 @@
                 <label for="live-active-preset" data-i18n="live.activePreset">Active preset</label>
                 <select id="live-active-preset" class="live-active-preset"></select>
               </div>
-              <div class="live-status-strip__actions">
-                <button id="new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
-                  <span data-i18n="stream.newStream">New stream</span>
-                  <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
-                </button>
-              </div>
             </div>
 
             <div class="main-area">
@@ -158,8 +152,12 @@
               <button id="live-statistics-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="live-statistics-panel" tabindex="-1" data-live-tab="statistics" data-i18n="live.tabStatistics">Statistics</button>
             </div>
           </div>
-          <div class="console-actions">
+          <div class="console-actions live-toolbar-actions">
             <span id="settings-state" class="settings-state" aria-live="polite" data-i18n="shell.loadingSettings">Loading settings</span>
+            <button id="new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
+              <span data-i18n="stream.newStream">New stream</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+            </button>
             <button id="refresh-messages" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
             <button id="refresh-leaderboard" type="button" class="btn-physical btn-small" hidden data-i18n="shell.refresh">Refresh</button>
             <button id="refresh-statistics" type="button" class="btn-physical btn-small" hidden data-i18n="shell.refresh">Refresh</button>
@@ -814,7 +812,9 @@
                   </div>
                   <div class="form__field">
                     <label for="overlay-panel-opacity" data-i18n="obs.panelOpacity">Panel opacity</label>
-                    <input id="overlay-panel-opacity" type="number" min="0" max="1" step="0.05" inputmode="decimal">
+                    <input id="overlay-panel-opacity" type="number" min="0" max="1" step="0.05" inputmode="decimal" aria-describedby="overlay-panel-opacity-hint" data-field-hint-id="overlay-panel-opacity-hint">
+                    <p id="overlay-panel-opacity-hint" class="field-hint" data-i18n="obs.panelOpacityHint">Applies to the selected on-stream surface only. Enter a value from 0 to 1.</p>
+                    <p id="overlay-panel-opacity-error" class="field-error" role="alert" hidden></p>
                   </div>
                   <div class="form__field form__field--full">
                     <label for="overlay-panel-image-file" data-i18n="obs.panelImage">Panel image</label>
@@ -1867,6 +1867,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=24"></script>
+  <script type="module" src="app.js?v=25"></script>
 </body>
 </html>

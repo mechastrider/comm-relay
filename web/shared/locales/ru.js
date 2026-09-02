@@ -371,6 +371,7 @@ export default {
   "obs.surfaceHint": "Непрозрачным может быть только блок сообщения. Рамку HUD по-прежнему рисует тема.",
   "obs.panelColor": "Цвет панели",
   "obs.panelOpacity": "Прозрачность панели",
+  "obs.panelOpacityHint": "Применяется только к выбранной поверхности в эфире. Введите значение от 0 до 1.",
   "obs.panelImage": "Картинка панели",
   "obs.panelImageFit": "Масштаб",
   "obs.panelImageFitCover": "Заполнить",
@@ -567,6 +568,7 @@ export default {
   "reward.loading": "Загрузка наград…",
   "reward.emptyCatalog": "Добавьте типы наград в Аудитория → Награды.",
   "reward.grantFailed": "Не удалось выдать награду.",
+  "reward.grantSucceeded": "Награда «{award}» выдана: +{points} очк.",
 
   "dock.waiting": "Ожидание сообщений чата",
   "dock.delete": "Удалить",

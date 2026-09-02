@@ -1,5 +1,5 @@
 import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
-import { createRewardControl, messageCanBeRewarded } from "/shared/reward-picker.js?v=1";
+import { createRewardControl, messageCanBeRewarded } from "/shared/reward-picker.js?v=3";
 import { setLocale, t } from "/shared/i18n.js?v=16";
 
 "use strict";

@@ -73,8 +73,17 @@ body {
   box-shadow: 0 0 12px color-mix(in srgb, var(--message-accent) 72%, transparent);
 }
 
-.alert-text {
+.alert-content {
   grid-area: text;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.alert-text,
+.alert-award-name,
+.alert-award-viewer,
+.alert-quote {
   margin: 0;
   font-size: calc(var(--overlay-font-size) * 1.05);
   line-height: 1.35;
@@ -82,17 +91,45 @@ body {
   overflow-wrap: anywhere;
 }
 
-body.overlay-text-edge--none .alert-text {
+.alert-award-name {
+  color: var(--message-accent);
+  font-size: calc(var(--overlay-font-size) * 0.82);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.alert-award-viewer {
+  font-size: calc(var(--overlay-font-size) * 1.12);
+  font-weight: 800;
+}
+
+.alert-points {
+  display: inline-block;
+  margin-left: 0.45em;
+  color: var(--message-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.alert-quote {
+  padding-left: 0.72em;
+  border-left: 2px solid color-mix(in srgb, var(--message-accent) 72%, transparent);
+  color: color-mix(in srgb, var(--overlay-text) 88%, transparent);
+  font-size: calc(var(--overlay-font-size) * 0.88);
+  font-style: italic;
+}
+
+body.overlay-text-edge--none .alert-content {
   text-shadow: none;
 }
 
-body.overlay-text-edge--shadow .alert-text {
+body.overlay-text-edge--shadow .alert-content {
   text-shadow:
     0 0 calc(var(--overlay-text-edge-strength) * 1px) rgba(0, 0, 0, 0.9),
     0 calc(var(--overlay-text-edge-strength) * 0.5px) calc(var(--overlay-text-edge-strength) * 1px) rgba(0, 0, 0, 0.85);
 }
 
-body.overlay-text-edge--outline .alert-text {
+body.overlay-text-edge--outline .alert-content {
   text-shadow:
     calc(var(--overlay-text-edge-strength) * 0.35px) 0 0 #000,
     calc(var(--overlay-text-edge-strength) * -0.35px) 0 0 #000,
@@ -107,6 +144,10 @@ body.overlay-theme--default .alert-splash {
   border-left: 3px solid var(--message-accent);
   background: var(--overlay-panel-bg);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+body.overlay-theme--default .alert-splash--award {
+  border-left-width: 5px;
 }
 
 body.overlay-theme--default.overlay-has-panel .alert-splash {
@@ -144,8 +185,16 @@ body.overlay-theme--dashboard .alert-splash {
   box-shadow: none;
 }
 
-body.overlay-theme--dashboard .alert-text {
+body.overlay-theme--dashboard.overlay-has-panel .alert-splash {
+  background: var(--overlay-panel-bg);
+}
+
+body.overlay-theme--dashboard .alert-content {
   font-weight: 800;
+}
+
+body.overlay-theme--dashboard .alert-splash--award .alert-award-name {
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.72);
 }
 
 body.overlay-theme--cockpit-panel .alert-splash,
@@ -187,12 +236,22 @@ body.overlay-theme--g-rebels-popups .alert-avatar--placeholder {
   font-size: 1.05rem;
 }
 
-body.overlay-theme--cockpit-panel .alert-text,
-body.overlay-theme--cockpit-popups .alert-text {
+body.overlay-theme--cockpit-panel .alert-content,
+body.overlay-theme--cockpit-popups .alert-content {
   color: var(--overlay-text);
   font-size: clamp(20px, calc(var(--overlay-font-size) * 1.25), 28px);
   font-weight: 800;
   line-height: 1.16;
+}
+
+body.overlay-theme--cockpit-panel .alert-award-name,
+body.overlay-theme--cockpit-popups .alert-award-name {
+  color: var(--hud-cyan);
+}
+
+body.overlay-theme--cockpit-panel .alert-quote,
+body.overlay-theme--cockpit-popups .alert-quote {
+  border-left-color: rgba(53, 210, 208, 0.72);
 }
 
 body.overlay-theme--cockpit-panel .alert-splash {
@@ -207,7 +266,7 @@ body.overlay-theme--cockpit-panel .alert-splash {
     linear-gradient(90deg, rgba(51, 222, 204, 0.12) 0 46px, transparent 46px),
     linear-gradient(90deg, rgba(53, 210, 208, 0.38) 0 1px, transparent 1px) 46px 0 / 1px 100% no-repeat,
     linear-gradient(90deg, rgba(43, 191, 190, 0.14), transparent 34%),
-    var(--hud-glass);
+    var(--overlay-panel-bg);
   clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.5) inset,
@@ -261,7 +320,7 @@ body.overlay-theme--cockpit-popups .alert-splash {
   border-radius: 0;
   background:
     linear-gradient(90deg, rgba(53, 210, 208, 0.18), transparent 34%),
-    var(--hud-glass-strong);
+    var(--overlay-panel-bg);
   clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 14px 100%, 0 calc(100% - 14px));
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.58) inset,
@@ -309,7 +368,7 @@ body.overlay-theme--g-rebels-popups .alert-splash {
     linear-gradient(180deg, rgba(247, 227, 106, 0.12), transparent 44%),
     repeating-linear-gradient(90deg, rgba(247, 227, 106, 0.07) 0 1px, transparent 1px 58px),
     repeating-linear-gradient(0deg, rgba(247, 227, 106, 0.05) 0 1px, transparent 1px 32px),
-    var(--rebels-glass);
+    var(--overlay-panel-bg);
   clip-path: polygon(0 16px, 16px 0, calc(100% - 22px) 0, 100% 22px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 18px 100%, 0 calc(100% - 18px));
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.72) inset,
@@ -368,9 +427,25 @@ body.overlay-theme--g-rebels-popups .alert-accent {
     0 0 13px color-mix(in srgb, var(--message-accent) 42%, transparent);
 }
 
-body.overlay-theme--g-rebels-popups .alert-text {
+body.overlay-theme--g-rebels-popups .alert-content {
   color: var(--overlay-text);
   font-size: clamp(20px, calc(var(--overlay-font-size) * 1.24), 28px);
   font-weight: 800;
   line-height: 1.16;
+}
+
+body.overlay-theme--g-rebels-popups .alert-award-name {
+  color: var(--rebels-gold);
+}
+
+body.overlay-theme--g-rebels-popups .alert-quote {
+  border-left-color: var(--rebels-gold-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert-splash,
+  .alert-splash--visible {
+    transition: none;
+    transform: none;
+  }
 }

@@ -14,15 +14,56 @@ export function messageCanBeRewarded(message) {
   return trimString(message.user_id) !== "" && trimString(message.platform) !== "";
 }
 
+export function awardGrantRequest(message, award) {
+  const body = {
+    platform: message.platform,
+    user_id: message.user_id,
+    award_id: typeof award.id === "string" ? award.id : "",
+  };
+  if (typeof message.id === "string" && message.id !== "") {
+    body.message_id = message.id;
+  }
+  if (typeof message.message === "string" && message.message !== "") {
+    body.message_text = message.message;
+  }
+  return body;
+}
+
+export function awardGrantStatus(t, award) {
+  const name = typeof award.name === "string" ? award.name : award.id;
+  const points = typeof award.points === "number" ? award.points : 0;
+  return t("reward.grantSucceeded", { award: name, points: points });
+}
+
+export function awardGrantFailure(t) {
+  return t("reward.grantFailed");
+}
+
 function closePicker(picker, trigger) {
   if (picker && picker.parentNode) {
     picker.parentNode.removeChild(picker);
   }
   if (trigger) {
-    trigger.setAttribute("aria-expanded", "false");
-    trigger.disabled = false;
-    trigger.focus();
+    restoreRewardTrigger(trigger);
   }
+}
+
+export function restoreRewardTrigger(trigger) {
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.disabled = false;
+  trigger.focus();
+}
+
+export function enableRewardRetry(trigger) {
+  trigger.disabled = false;
+}
+
+export function setRewardItemPending(item, pending) {
+  if (!item) {
+    return;
+  }
+  item.disabled = pending;
+  item.setAttribute("aria-busy", pending ? "true" : "false");
 }
 
 function positionPicker(picker, trigger, flipClass) {
@@ -112,6 +153,20 @@ export function createRewardControl(message, options) {
 
   let activePicker = null;
   let dismissHandler = null;
+  let feedback = null;
+
+  function reportFeedback(message) {
+    if (!feedback) {
+      feedback = document.createElement("p");
+      feedback.className = "message-list__reward-feedback";
+      feedback.setAttribute("role", "status");
+      feedback.setAttribute("aria-live", "polite");
+      if (button.parentNode) {
+        button.parentNode.appendChild(feedback);
+      }
+    }
+    feedback.textContent = message;
+  }
 
   function dismissPicker() {
     if (dismissHandler) {
@@ -173,8 +228,9 @@ export function createRewardControl(message, options) {
     try {
       awards = await loadAwards(resolveURL);
     } catch {
-      status.textContent = t("reward.grantFailed");
-      button.disabled = false;
+      status.textContent = awardGrantFailure(t);
+      status.setAttribute("role", "alert");
+      enableRewardRetry(button);
       return;
     }
 
@@ -185,7 +241,7 @@ export function createRewardControl(message, options) {
       empty.textContent = t("reward.emptyCatalog");
       picker.appendChild(empty);
       positionPicker(picker, button, flipClass);
-      button.disabled = false;
+      enableRewardRetry(button);
       picker.focus();
       return;
     }
@@ -195,14 +251,14 @@ export function createRewardControl(message, options) {
     list.setAttribute("role", "none");
 
     const items = awards.map(function (award) {
-      return buildPickerItem(award, function (selectedAward) {
-        grantSelected(selectedAward);
+      return buildPickerItem(award, function (selectedAward, selectedItem) {
+        grantSelected(selectedAward, selectedItem);
       });
     });
     items.forEach(function (item) { list.appendChild(item); });
     picker.appendChild(list);
     positionPicker(picker, button, flipClass);
-    button.disabled = false;
+    enableRewardRetry(button);
     items[0].focus();
 
     picker.addEventListener("keydown", function (event) {
@@ -225,21 +281,14 @@ export function createRewardControl(message, options) {
     });
   }
 
-  async function grantSelected(award) {
+  async function grantSelected(award, selectedItem) {
     if (!award || button.disabled) {
       return;
     }
 
     button.disabled = true;
-    const awardID = typeof award.id === "string" ? award.id : "";
-    const body = {
-      platform: message.platform,
-      user_id: message.user_id,
-      award_id: awardID,
-    };
-    if (typeof message.id === "string" && message.id !== "") {
-      body.message_id = message.id;
-    }
+    setRewardItemPending(selectedItem, true);
+    const body = awardGrantRequest(message, award);
 
     let errorNode = activePicker && activePicker.querySelector(".reward-picker__error");
     if (errorNode) {
@@ -256,12 +305,18 @@ export function createRewardControl(message, options) {
         throw new Error("grant failed");
       }
       dismissPicker();
+      reportFeedback(awardGrantStatus(t, award));
     } catch {
-      button.disabled = false;
+      enableRewardRetry(button);
+      setRewardItemPending(selectedItem, false);
+      if (selectedItem) {
+        selectedItem.focus();
+      }
       if (activePicker) {
         const err = document.createElement("p");
         err.className = "reward-picker__error";
-        err.textContent = t("reward.grantFailed");
+        err.setAttribute("role", "alert");
+        err.textContent = awardGrantFailure(t);
         activePicker.insertBefore(err, activePicker.firstChild);
       }
     }

@@ -24,7 +24,7 @@ Each overlay preset may add these optional numbers:
 }
 ```
 
-Every value is inclusive 0–1. Omission means inherit `style.panel_opacity`; omission is not semantically different from storing the inherited number until the operator edits that surface. Existing `surfaces.leaderboard.font_size_px` and `layout` remain in the same object.
+Every value is inclusive 0–1. Omission normally means inherit `style.panel_opacity`. One compatibility distinction is intentional: legacy cockpit presets with shared zero used fixed theme glass before these fields existed, so omission preserves that historical glass while storing an explicit zero makes only that surface transparent. Existing `surfaces.leaderboard.font_size_px` and `layout` remain in the same object.
 
 The SQLite format does not change. Award events continue to write only existing `message_platform` and `message_id`. `message_text`, bounded quote text, alert queue state, and reward highlight state have no durable field.
 
@@ -43,8 +43,8 @@ No credential or secret format changes. Public config exposes only non-secret op
 ## Migration / Downgrade / Backup / Export
 
 - No Goose migration and no eager config rewrite are required.
-- On load, legacy presets resolve every surface opacity from shared `style.panel_opacity`.
-- On first Studio publish, the implementation MAY materialize resolved per-surface values; effective appearance must remain unchanged when the operator did not edit opacity.
+- On load, legacy non-cockpit presets resolve every surface opacity from shared `style.panel_opacity`; a legacy cockpit preset with shared zero and no override preserves its theme's historical glass alpha at render time.
+- Studio MUST NOT materialize a per-surface opacity merely by opening, previewing, switching surfaces, or publishing an otherwise unchanged preset. The first explicit edit opts only that surface into the stored value, including an explicit transparent zero.
 - Downgraded binaries ignore unknown `surfaces.chat`/`surfaces.alerts` and unknown `panel_opacity` fields according to current additive config behavior, while shared `style.panel_opacity` remains the compatibility fallback.
 - Existing backup/export behavior remains sufficient: copy/export the config directory. There is no new asset or database file.
 

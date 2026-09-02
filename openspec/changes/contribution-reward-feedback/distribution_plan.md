@@ -18,7 +18,7 @@ Use the existing Go version from `go.mod`, Wails version pinned by the release w
 ## Install / Upgrade / Downgrade / Uninstall
 
 - Install and portable extraction behavior are unchanged.
-- Upgrade loads legacy presets without per-surface opacity and resolves all three surfaces from shared `style.panel_opacity`; no user action is required.
+- Upgrade loads legacy presets without per-surface opacity with no user action. Non-cockpit presets resolve all three surfaces from shared `style.panel_opacity`; cockpit presets whose shared zero was historically ignored retain their former theme glass until an explicit surface edit.
 - Existing OBS Browser Source and dock URLs remain valid. Users do not recreate sources.
 - Downgrade ignores additive surface fields and uses the retained shared opacity. New award/WebSocket fields are transient and leave no downgrade state.
 - Uninstall and removal of the existing config directory remain unchanged.
@@ -31,7 +31,7 @@ Because the web assets and Go server ship in one application bundle, mixed serve
 
 ## Data Migration and Rollback
 
-There is no SQLite migration. Config format growth is additive and uses runtime fallback rather than eager rewrite. Before a release smoke, test a copy of a legacy config with custom shared opacity and multiple presets. Rollback consists of restoring the prior binary; no database restore is required. Normal config backup remains recommended before any version change.
+There is no SQLite migration. Config format growth is additive and uses runtime fallback rather than eager rewrite. Before a release smoke, test copies of both a normal legacy preset with custom shared opacity and every legacy cockpit theme with shared zero, then verify explicit per-surface zero and nonzero values. Rollback consists of restoring the prior binary; no database restore is required. Normal config backup remains recommended before any version change.
 
 ## Release Notes and Support
 

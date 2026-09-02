@@ -1,13 +1,18 @@
 import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.js?v=12";
 import {
   fontStack,
-  hexToRgba,
+  panelBackground,
   normalizePanelImageFit,
   normalizePanelImageScope,
   normalizePreviewBackground,
   overlayAssetURL,
   overlayViewFromConfig
-} from "/overlay/overlay-settings.js?v=4";
+} from "/overlay/overlay-settings.js?v=6";
+import {
+  findRewardedEntry,
+  restartRewardHighlight,
+  rewardLabelText,
+} from "/overlay/reward-highlight.js?v=2";
 
 "use strict";
 
@@ -250,7 +255,11 @@ import {
     );
     document.documentElement.style.setProperty(
       "--overlay-panel-bg",
-      hexToRgba(style.panel_color, style.panel_opacity)
+      panelBackground(overlayView.theme, style)
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-panel-opacity",
+      String(typeof style.panel_opacity === "number" ? style.panel_opacity : 0.58)
     );
     document.documentElement.style.setProperty(
       "--overlay-panel-image",
@@ -378,7 +387,7 @@ import {
   function initOverlay(listEl) {
   applyAppearance();
 
-  /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, messageKey: string }>} */
+  /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, rewardTimer: number | null, messageKey: string }>} */
   const entries = [];
   const renderedMessageIDs = new Set();
   let reconnectDelayMs = INITIAL_RECONNECT_MS;
@@ -427,6 +436,10 @@ import {
     if (entry.ttlTimer !== null) {
       window.clearTimeout(entry.ttlTimer);
       entry.ttlTimer = null;
+    }
+    if (entry.rewardTimer !== null) {
+      window.clearTimeout(entry.rewardTimer);
+      entry.rewardTimer = null;
     }
     if (entry.messageKey !== "") {
       renderedMessageIDs.delete(entry.messageKey);
@@ -620,7 +633,7 @@ import {
     el.appendChild(svg);
   }
 
-  function fillMessageRow(row, frame) {
+  function fillMessageRow(row, frame, reward) {
     const user = messageDisplayName(frame);
     const text = typeof frame.message === "string" ? frame.message : "";
 
@@ -661,12 +674,28 @@ import {
     row.appendChild(accentEl);
     row.appendChild(identityEl);
     row.appendChild(textEl);
+    if (reward) {
+      const rewardEl = document.createElement("span");
+      rewardEl.className = "message__reward";
+      const label = rewardLabelText(reward);
+      rewardEl.setAttribute("aria-label", label);
+      rewardEl.title = label;
+      const awardName = document.createElement("span");
+      awardName.className = "message__reward-name";
+      appendText(awardName, typeof reward.award_name === "string" ? reward.award_name.trim() : "");
+      const points = document.createElement("span");
+      points.className = "message__reward-points";
+      appendText(points, typeof reward.points === "number" && reward.points > 0 ? "+" + String(reward.points) : "");
+      rewardEl.append(awardName, points);
+      identityEl.appendChild(rewardEl);
+      row.classList.add("message--rewarded");
+    }
   }
 
   function restyleVisibleMessages() {
     entries.forEach(function (entry) {
       if (entry.frame) {
-        fillMessageRow(entry.el, entry.frame);
+        fillMessageRow(entry.el, entry.frame, entry.reward);
       }
     });
     trimToLimit();
@@ -713,11 +742,27 @@ import {
     entries.push({
       el: row,
       ttlTimer: ttlTimer,
+      rewardTimer: null,
+      reward: null,
       messageKey: messageKey(frame),
       frame: frame,
     });
     trimToLimit();
     scrollToBottom();
+  }
+
+  function highlightRewardedMessage(alert) {
+    const entry = findRewardedEntry(entries, alert);
+    restartRewardHighlight(entry, alert, {
+      setTimeout: window.setTimeout,
+      clearTimeout: window.clearTimeout,
+      onStart: function (target, reward) {
+        fillMessageRow(target.el, target.frame, reward);
+      },
+      onEnd: function (target) {
+        fillMessageRow(target.el, target.frame);
+      },
+    });
   }
 
   function handleSocketMessage(event) {
@@ -738,6 +783,10 @@ import {
     }
     if (frame.type === "message_deleted") {
       removeMessage(frame);
+      return;
+    }
+    if (frame.type === "alert") {
+      highlightRewardedMessage(frame);
       return;
     }
     if (frame.type !== "message") {

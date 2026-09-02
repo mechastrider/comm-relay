@@ -5,6 +5,7 @@ import { setRegionState } from "./shell-state.js";
 import { validateAwardPoints } from "./audience-helpers.js";
 import { parseAudienceHash } from "./audience-tabs.js";
 import { parseWorkspaceHash } from "./workspace-router.js";
+import { neighboringCatalogSelection } from "./catalog-selection.js";
 
 const FETCH_TIMEOUT_MS = 15000;
 
@@ -18,6 +19,7 @@ let listLoadError = false;
 let saveInFlight = false;
 let deleteInFlight = false;
 let pendingDelete = null;
+let pendingSelectionAfterDelete = null;
 
 function isAwardsVisible() {
   return parseWorkspaceHash(window.location.hash) === "audience" &&
@@ -176,6 +178,12 @@ function focusAwardItem(id) {
   });
 }
 
+function focusAwardCreate() {
+  window.requestAnimationFrame(function () {
+    dom.awardsCreateButton?.focus();
+  });
+}
+
 function fillEditorFromAward(award) {
   if (!dom.awardsEditorForm) {
     return;
@@ -274,10 +282,17 @@ async function fetchAwardsList() {
     listLoadError = false;
     hideListError();
     if (!creatingNew) {
+      const preferredSelection = pendingSelectionAfterDelete;
+      pendingSelectionAfterDelete = null;
+      const preferredStillExists = Boolean(preferredSelection) && awardsCache.some(function (item) {
+        return String(item.id) === preferredSelection;
+      });
       const stillSelected = Boolean(selectedAwardId) && awardsCache.some(function (item) {
         return String(item.id) === selectedAwardId;
       });
-      if (!stillSelected && awardsCache.length > 0) {
+      if (preferredStillExists) {
+        selectedAwardId = preferredSelection;
+      } else if (!stillSelected && awardsCache.length > 0) {
         selectedAwardId = String(awardsCache[0].id || "");
       }
       if (selectedAwardId) {
@@ -406,6 +421,7 @@ async function deleteAward() {
   setButtonsDisabled(true);
 
   try {
+    pendingSelectionAfterDelete = neighboringCatalogSelection(awardsCache, pendingDelete.id);
     const response = await fetch(apiURL("/api/awards/delete"), {
       method: "POST",
       headers: {
@@ -425,7 +441,13 @@ async function deleteAward() {
     closeDeletePrompt();
     await loadAwardsCatalog();
     syncEditorVisibility();
+    if (selectedAwardId) {
+      focusAwardItem(selectedAwardId);
+    } else {
+      focusAwardCreate();
+    }
   } catch (err) {
+    pendingSelectionAfterDelete = null;
     const message = err instanceof Error && err.message ? err.message : t("catalog.deleteFailed");
     showListError(message);
     closeDeletePrompt();

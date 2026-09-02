@@ -118,17 +118,19 @@ export function mergeStyle(theme, style) {
 
 export function resolvePreset(overlay, queryPreset) {
   const presets = Array.isArray(overlay && overlay.presets) ? overlay.presets : [];
-  const wanted =
-    String(queryPreset || "").trim() ||
-    String((overlay && overlay.active_preset_id) || "").trim();
-  if (wanted) {
+  const find = function (id) {
+    const wanted = String(id || "").trim();
+    if (!wanted) {
+      return null;
+    }
     for (let i = 0; i < presets.length; i += 1) {
       if (presets[i] && presets[i].id === wanted) {
         return presets[i];
       }
     }
-  }
-  return presets[0] || null;
+    return null;
+  };
+  return find(queryPreset) || find(overlay && overlay.active_preset_id) || presets[0] || null;
 }
 
 export function hexToRgba(hex, opacity) {
@@ -232,13 +234,60 @@ function themeFromResolvedAndQuery(resolved, query) {
 }
 
 export function overlayViewFromConfig(config, params) {
+  return surfaceViewFromConfig(config, params, "chat");
+}
+
+function surfaceOpacity(resolved, surface, fallback) {
+  const surfaces = resolved && resolved.surfaces && typeof resolved.surfaces === "object"
+    ? resolved.surfaces
+    : null;
+  const override = surfaces && surfaces[surface] && typeof surfaces[surface] === "object"
+    ? surfaces[surface].panel_opacity
+    : undefined;
+  return typeof override === "number" && Number.isFinite(override) && override >= 0 && override <= 1
+    ? override
+    : fallback;
+}
+
+function hasSurfaceOpacityOverride(resolved, surface) {
+  const surfaces = resolved && resolved.surfaces && typeof resolved.surfaces === "object"
+    ? resolved.surfaces
+    : null;
+  const override = surfaces && surfaces[surface] && typeof surfaces[surface] === "object"
+    ? surfaces[surface].panel_opacity
+    : undefined;
+  return typeof override === "number" && Number.isFinite(override) && override >= 0 && override <= 1;
+}
+
+// Cockpit themes historically supplied their own fixed glass even though their
+// shared style opacity default is zero. Keep that legacy appearance only when
+// a surface has not opted into an explicit override.
+export function panelBackground(theme, style) {
+  if (style && style.legacy_cockpit_glass) {
+    switch (normalizeTheme(theme)) {
+      case "cockpit_panel":
+        return "rgb(6 13 17 / 0.74)";
+      case "cockpit_popups":
+        return "rgb(6 13 17 / 0.88)";
+      case "g_rebels_popups":
+        return "rgb(5 6 4 / 0.78)";
+      default:
+        break;
+    }
+  }
+  return hexToRgba(style && style.panel_color, style && style.panel_opacity);
+}
+
+function surfaceViewFromConfig(config, params, surface) {
   const overlay = config && typeof config === "object" ? config.overlay : null;
   const query = params && typeof params.get === "function" ? params : undefined;
   const queryPreset = query ? query.get("preset") : params;
   const resolved = resolvePreset(overlay, queryPreset);
   const theme = themeFromResolvedAndQuery(resolved, query);
   const merged = mergeStyle(theme, resolved && resolved.style);
+  merged.panel_opacity = surfaceOpacity(resolved, surface, merged.panel_opacity);
   const style = applyQueryStyleOverrides(merged, query);
+  markLegacyCockpitGlass(style, resolved, surface, theme, query);
 
   return {
     max_messages: resolved && typeof resolved.max_messages === "number" ? resolved.max_messages : 30,
@@ -249,6 +298,20 @@ export function overlayViewFromConfig(config, params) {
     theme: theme,
     style: style,
   };
+}
+
+function markLegacyCockpitGlass(style, resolved, surface, theme, query) {
+  style.legacy_cockpit_glass =
+    !hasSurfaceOpacityOverride(resolved, surface) &&
+    !(query && query.has("panel_opacity")) &&
+    style.panel_opacity === 0 &&
+    ["cockpit_panel", "cockpit_popups", "g_rebels_popups"].includes(theme);
+  return style;
+}
+
+// alertViewFromConfig resolves alert chrome independently from chat and leaderboard.
+export function alertViewFromConfig(config, params) {
+  return surfaceViewFromConfig(config, params, "alerts");
 }
 
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
@@ -278,7 +341,9 @@ export function leaderboardViewFromConfig(config, params) {
   const resolved = resolvePreset(overlay, queryPreset);
   const theme = themeFromResolvedAndQuery(resolved, query);
   const merged = mergeStyle(theme, resolved && resolved.style);
+  merged.panel_opacity = surfaceOpacity(resolved, "leaderboard", merged.panel_opacity);
   const style = applyQueryStyleOverrides(merged, query);
+  markLegacyCockpitGlass(style, resolved, "leaderboard", theme, query);
   const surface =
     resolved && resolved.surfaces && resolved.surfaces.leaderboard && typeof resolved.surfaces.leaderboard === "object"
       ? resolved.surfaces.leaderboard

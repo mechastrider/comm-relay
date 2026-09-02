@@ -5,6 +5,7 @@ import { setRegionState } from "./shell-state.js";
 import { validateCommandTrigger } from "./audience-helpers.js";
 import { parseAudienceHash } from "./audience-tabs.js";
 import { parseWorkspaceHash } from "./workspace-router.js";
+import { neighboringCatalogSelection } from "./catalog-selection.js";
 
 const FETCH_TIMEOUT_MS = 15000;
 
@@ -18,6 +19,7 @@ let listLoadError = false;
 let saveInFlight = false;
 let deleteInFlight = false;
 let pendingDelete = null;
+let pendingSelectionAfterDelete = null;
 
 function isCommandsVisible() {
   return parseWorkspaceHash(window.location.hash) === "audience" &&
@@ -175,6 +177,12 @@ function focusCommandItem(id) {
   });
 }
 
+function focusCommandCreate() {
+  window.requestAnimationFrame(function () {
+    dom.commandsCreateButton?.focus();
+  });
+}
+
 function fillEditorFromCommand(cmd) {
   if (!dom.commandsEditorForm) {
     return;
@@ -275,10 +283,17 @@ async function fetchCommandsList() {
     listLoadError = false;
     hideListError();
     if (!creatingNew) {
+      const preferredSelection = pendingSelectionAfterDelete;
+      pendingSelectionAfterDelete = null;
+      const preferredStillExists = Boolean(preferredSelection) && commandsCache.some(function (item) {
+        return String(item.id) === preferredSelection;
+      });
       const stillSelected = Boolean(selectedCommandId) && commandsCache.some(function (item) {
         return String(item.id) === selectedCommandId;
       });
-      if (!stillSelected && commandsCache.length > 0) {
+      if (preferredStillExists) {
+        selectedCommandId = preferredSelection;
+      } else if (!stillSelected && commandsCache.length > 0) {
         selectedCommandId = String(commandsCache[0].id || "");
       }
       if (selectedCommandId) {
@@ -402,6 +417,7 @@ async function deleteCommand() {
   setButtonsDisabled(true);
 
   try {
+    pendingSelectionAfterDelete = neighboringCatalogSelection(commandsCache, pendingDelete.id);
     const response = await fetch(apiURL("/api/commands/delete"), {
       method: "POST",
       headers: {
@@ -421,7 +437,13 @@ async function deleteCommand() {
     closeDeletePrompt();
     await loadCommandsCatalog();
     syncEditorVisibility();
+    if (selectedCommandId) {
+      focusCommandItem(selectedCommandId);
+    } else {
+      focusCommandCreate();
+    }
   } catch (err) {
+    pendingSelectionAfterDelete = null;
     const message = err instanceof Error && err.message ? err.message : t("catalog.deleteFailed");
     showListError(message);
     closeDeletePrompt();

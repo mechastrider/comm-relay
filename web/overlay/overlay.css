@@ -6,6 +6,7 @@
   --overlay-message-padding-x: 10px;
   --overlay-message-radius: 8px;
   --overlay-panel-bg: rgba(0, 0, 0, 0.58);
+  --overlay-panel-opacity: 0.58;
   --overlay-font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --overlay-text-edge-strength: 2;
   --overlay-panel-image: none;
@@ -106,6 +107,7 @@ body.overlay--compact {
 }
 
 .message {
+  position: relative;
   box-sizing: border-box;
   display: flex;
   flex-wrap: wrap;
@@ -211,6 +213,40 @@ body.overlay--compact {
   word-break: break-word;
 }
 
+.message--rewarded {
+  outline: 2px solid #f4d35e;
+  outline-offset: -2px;
+  box-shadow: 0 0 0 3px rgba(244, 211, 94, 0.28), 0 0 18px rgba(244, 211, 94, 0.5);
+}
+
+.message__reward {
+  display: inline-flex;
+  flex: 0 1 min(12em, 52%);
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.3em;
+  padding: 1px 5px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: rgba(20, 16, 4, 0.94);
+  color: #fff1a8;
+  font-family: inherit;
+  font-size: max(10px, 0.62em);
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.message__reward-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message__reward-points {
+  flex: 0 0 auto;
+}
+
 .message__emote {
   display: inline-block;
   width: auto;
@@ -263,6 +299,14 @@ body.overlay-theme--dashboard .message {
   box-shadow: none;
 }
 
+body.overlay-theme--dashboard.overlay-has-panel .message {
+  background: var(--overlay-panel-bg);
+}
+
+body.overlay-theme--dashboard .message--rewarded {
+  box-shadow: 0 0 0 3px rgba(244, 211, 94, 0.3), 0 0 18px rgba(244, 211, 94, 0.5);
+}
+
 body.overlay-theme--dashboard .message__platform {
   display: inline-flex;
 }
@@ -287,8 +331,8 @@ body.overlay-theme--g-rebels-popups {
   --hud-cyan: #35d2d0;
   --hud-green: #8ed83f;
   --hud-amber: #f0df58;
-  --hud-glass: rgba(8, 17, 22, 0.7);
-  --hud-glass-strong: rgba(4, 13, 17, 0.76);
+  --hud-glass: rgb(8 17 22 / calc(0.7 * var(--overlay-panel-opacity)));
+  --hud-glass-strong: rgb(4 13 17 / calc(0.76 * var(--overlay-panel-opacity)));
   --overlay-text: #f4f6f0;
   --overlay-text-shadow:
     0 2px 3px #000,
@@ -304,7 +348,7 @@ body.overlay-theme--g-rebels-popups {
   --rebels-gold: #f7e36a;
   --rebels-gold-muted: #a6933c;
   --rebels-gold-dim: rgba(247, 227, 106, 0.22);
-  --rebels-glass: rgba(5, 6, 4, 0.78);
+  --rebels-glass: rgb(5 6 4 / calc(0.78 * var(--overlay-panel-opacity)));
   --overlay-text: #fff7d2;
   --overlay-text-shadow:
     0 2px 3px #000,
@@ -336,7 +380,7 @@ body.overlay-theme--cockpit-panel .messages {
     linear-gradient(90deg, rgba(51, 222, 204, 0.12) 0 58px, transparent 58px),
     linear-gradient(90deg, rgba(53, 210, 208, 0.38) 0 1px, transparent 1px) 58px 0 / 1px 100% no-repeat,
     linear-gradient(90deg, rgba(43, 191, 190, 0.14), transparent 34%),
-    var(--hud-glass);
+    var(--overlay-panel-bg);
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.5) inset,
     0 0 28px rgba(16, 218, 216, 0.16),
@@ -409,6 +453,27 @@ body.overlay-theme--cockpit-panel .message {
   transform: none;
   flex: 0 0 auto;
   animation: cockpit-message-in 0.32s ease-out forwards;
+}
+
+body.overlay-theme--cockpit-panel .message--rewarded,
+body.overlay-theme--cockpit-popups .message--rewarded,
+body.overlay-theme--g-rebels-popups .message--rewarded {
+  outline-color: var(--hud-amber, var(--rebels-gold, #f4d35e));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message--rewarded {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+body.overlay-theme--cockpit-panel .message__reward,
+body.overlay-theme--cockpit-popups .message__reward,
+body.overlay-theme--g-rebels-popups .message__reward {
+  border-radius: 0;
+  background: rgba(6, 13, 17, 0.96);
+  color: var(--hud-amber, var(--rebels-gold, #f4d35e));
 }
 
 body.overlay-theme--cockpit-panel .message--leaving,
@@ -549,7 +614,7 @@ body.overlay-theme--cockpit-popups .message {
   border-radius: 0;
   background:
     linear-gradient(90deg, rgba(53, 210, 208, 0.18), transparent 34%),
-    var(--hud-glass-strong);
+    var(--overlay-panel-bg);
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.58) inset,
     0 0 22px rgba(53, 210, 208, 0.16),
@@ -655,7 +720,7 @@ body.overlay-theme--g-rebels-popups .message {
     linear-gradient(180deg, rgba(247, 227, 106, 0.12), transparent 44%),
     repeating-linear-gradient(90deg, rgba(247, 227, 106, 0.07) 0 1px, transparent 1px 58px),
     repeating-linear-gradient(0deg, rgba(247, 227, 106, 0.05) 0 1px, transparent 1px 32px),
-    var(--rebels-glass);
+    var(--overlay-panel-bg);
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.72) inset,
     0 0 0 2px rgba(247, 227, 106, 0.08) inset,
@@ -860,6 +925,7 @@ body.overlay-theme--default.overlay-panel-image-fit--tile.overlay-panel-image-sc
 
 .message__identity .message__user {
   min-width: 0;
+  flex: 0 1 auto;
 }
 
 body.overlay-theme--cockpit-panel .message__identity,

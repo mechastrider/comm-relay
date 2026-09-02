@@ -22,8 +22,12 @@ When the chat overlay receives an award alert with `message_platform` and `messa
 
 ### Requirement: Chat chrome uses its surface opacity
 
-The chat overlay SHALL resolve panel opacity from `surfaces.chat.panel_opacity`, falling back to the preset shared `style.panel_opacity`. It MUST apply that value to panel/card background chrome and MUST NOT reduce page transparency, text opacity, emotes, or image previews.
+The chat overlay SHALL resolve panel opacity from `surfaces.chat.panel_opacity`, normally falling back to the preset shared `style.panel_opacity`. When a legacy cockpit preset has shared zero and no chat override, chat SHALL retain that theme's historical glass color and alpha; an explicit chat value, including zero, SHALL win. It MUST apply the resolved appearance to panel/card background chrome and MUST NOT reduce page transparency, text opacity, emotes, or image previews.
 
 #### Scenario: Independent chat opacity
 - **WHEN** a preset stores chat opacity `0.20` and leaderboard opacity `0.70`
 - **THEN** chat chrome uses `0.20` without changing leaderboard rendering
+
+#### Scenario: Untouched legacy cockpit chat
+- **WHEN** a cockpit preset has shared opacity `0` and no chat opacity override
+- **THEN** chat chrome retains that theme's historical dark glass rather than becoming transparent

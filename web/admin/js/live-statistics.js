@@ -4,9 +4,19 @@ import { setRegionState } from "./shell-state.js";
 import { summarizeLiveStatistics } from "./live-helpers.js";
 import { getLeaderboardPeriod } from "./live-leaderboard.js";
 import { t } from "./i18n-ui.js";
+import { createStatisticsInvalidator } from "./live-data-helpers.js";
 
 let loadController = null;
 let loadGeneration = 0;
+let hasRenderedStatistics = false;
+
+const invalidator = createStatisticsInvalidator({
+  refresh(revision) {
+    loadLiveStatistics({ background: true, invalidationRevision: revision }).catch(function () {
+      /* The region retains the existing retryable error state. */
+    });
+  },
+});
 
 function statisticsRegion() {
   return dom.liveStatisticsRegion;
@@ -47,7 +57,6 @@ function showStatisticsError(message) {
   if (dom.liveStatisticsPartial) {
     dom.liveStatisticsPartial.hidden = true;
   }
-  clearStatisticsList();
   setRegionState(statisticsRegion(), "error");
 }
 
@@ -67,6 +76,7 @@ function renderStatisticsSummary(summary) {
       dom.liveStatisticsPartial.hidden = true;
     }
     setRegionState(statisticsRegion(), "empty");
+    hasRenderedStatistics = true;
     return;
   }
 
@@ -98,6 +108,7 @@ function renderStatisticsSummary(summary) {
   }
 
   setRegionState(statisticsRegion(), null);
+  hasRenderedStatistics = true;
 }
 
 async function fetchJSON(path, signal) {
@@ -112,6 +123,9 @@ async function fetchJSON(path, signal) {
 export async function loadLiveStatistics(options) {
   const opts = options || {};
   const period = opts.period || getLeaderboardPeriod();
+  const invalidationRevision = typeof opts.invalidationRevision === "number"
+    ? opts.invalidationRevision
+    : invalidator.beginRefresh();
 
   if (loadController) {
     loadController.abort();
@@ -120,13 +134,15 @@ export async function loadLiveStatistics(options) {
   const generation = ++loadGeneration;
   const signal = loadController.signal;
 
-  hideStatisticsError();
-  setRegionState(statisticsRegion(), "loading");
-  if (dom.liveStatisticsEmpty) {
-    dom.liveStatisticsEmpty.hidden = true;
-  }
-  if (dom.liveStatisticsPartial) {
-    dom.liveStatisticsPartial.hidden = true;
+  if (!opts.background && !hasRenderedStatistics) {
+    hideStatisticsError();
+    setRegionState(statisticsRegion(), "loading");
+    if (dom.liveStatisticsEmpty) {
+      dom.liveStatisticsEmpty.hidden = true;
+    }
+    if (dom.liveStatisticsPartial) {
+      dom.liveStatisticsPartial.hidden = true;
+    }
   }
 
   try {
@@ -155,16 +171,20 @@ export async function loadLiveStatistics(options) {
       leaderboardFailed: leaderboardFailed,
     });
     renderStatisticsSummary(summary);
+    invalidator.finishRefresh(invalidationRevision, true);
     return summary;
   } catch (err) {
     if (err && err.name === "AbortError") {
+      invalidator.finishRefresh(invalidationRevision, false);
       return null;
     }
     if (generation !== loadGeneration) {
+      invalidator.finishRefresh(invalidationRevision, false);
       return null;
     }
     const message = err instanceof Error && err.message ? err.message : t("live.statisticsLoadFailed");
     showStatisticsError(message);
+    invalidator.finishRefresh(invalidationRevision, false);
     return null;
   } finally {
     if (generation === loadGeneration) {
@@ -174,10 +194,39 @@ export async function loadLiveStatistics(options) {
 }
 
 export function abortLiveStatistics() {
+  invalidator.cancel();
   if (loadController) {
+    loadGeneration += 1;
     loadController.abort();
     loadController = null;
   }
+}
+
+/**
+ * @param {{ active?: boolean }} [options]
+ */
+export function invalidateLiveStatistics(options) {
+  const opts = options || {};
+  invalidator.invalidate(Boolean(opts.active));
+}
+
+/**
+ * Run HTTP recovery when Statistics becomes visible. Hidden invalidations stay
+ * dirty until this call, and active opens still reconcile after a reconnect.
+ */
+export function openLiveStatistics() {
+  invalidator.setActive(true);
+  return loadLiveStatistics();
+}
+
+export function deactivateLiveStatistics() {
+  invalidator.setActive(false);
+  abortLiveStatistics();
+}
+
+function statisticsTabIsActive() {
+  const workspace = document.getElementById("workspace-live");
+  return Boolean(workspace && !workspace.hidden && dom.liveStatisticsPanel && !dom.liveStatisticsPanel.hidden);
 }
 
 export function initLiveStatistics() {
@@ -199,4 +248,9 @@ export function initLiveStatistics() {
       });
     });
   }
+
+  window.addEventListener("live-leaderboard-period-change", function () {
+    abortLiveStatistics();
+    invalidateLiveStatistics({ active: statisticsTabIsActive() });
+  });
 }
