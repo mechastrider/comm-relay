@@ -50,6 +50,16 @@ func connectOverlayWS(t *testing.T, srv *httptest.Server) *websocket.Conn {
 	return conn
 }
 
+func connectDebugOverlayWS(t *testing.T, srv *httptest.Server) *websocket.Conn {
+	t.Helper()
+
+	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http") + "/ws/overlay-debug"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
+	return conn
+}
+
 func drainWSUntilIdle(t *testing.T, conn *websocket.Conn) {
 	t.Helper()
 
@@ -218,6 +228,36 @@ func TestOverlayActivate_WhenValid_ExpectOverlaySettingsBroadcastToTwoClients(t 
 	overlay2 := frame2["overlay"].(map[string]any)
 	require.Equal(t, "stream-main", overlay1["active_preset_id"])
 	require.Equal(t, "stream-main", overlay2["active_preset_id"])
+}
+
+func TestOverlayActivate_WhenValid_ExpectSettingsOnProductionAndDebugAudiencesOnly(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	env := newTestEnv(t, bus.New(0))
+	seedOverlayPreset(t, env.ConfigStore)
+	srv := httptest.NewServer(env.Handler)
+	t.Cleanup(srv.Close)
+	production := connectOverlayWS(t, srv)
+	debug := connectDebugOverlayWS(t, srv)
+	initialDebugSettings := readWebSocketFrame(t, debug)
+	require.Equal(t, wireOverlaySettingsType, initialDebugSettings["type"])
+
+	// Act
+	resp := postOverlayActivateURL(t, srv.URL+"/api/overlay/activate", `{"preset_id":"stream-main"}`)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Assert: both sockets receive the same active-preset appearance without reload.
+	productionSettings := readOverlaySettingsEventually(t, production, "stream-main")
+	debugSettings := readOverlaySettingsEventually(t, debug, "stream-main")
+	require.Equal(t, productionSettings, debugSettings)
+
+	// Preserve content isolation while settings remain shared.
+	require.NoError(t, env.Bus.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		ID: "live-after-activate", Platform: "twitch", Username: "Live", Message: "production only",
+	})))
+	require.Equal(t, wireMessageType, readWebSocketFrame(t, production)["type"])
+	assertNoWebSocketFrame(t, debug)
 }
 
 func TestOverlayActivate_WhenSaveFails_ExpectServerErrorAndNoBroadcast(t *testing.T) {

@@ -97,6 +97,11 @@
   border-color: var(--amber-dim);
 }
 
+.icon-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .icon-btn:disabled,
 .icon-btn.state-busy {
   opacity: 0.45;

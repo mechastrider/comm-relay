@@ -16,10 +16,11 @@ const (
 )
 
 type wsClient struct {
-	ctx  context.Context
-	hub  *Hub
-	conn *websocket.Conn
-	send chan []byte
+	ctx   context.Context
+	hub   *Hub
+	conn  *websocket.Conn
+	send  chan []byte
+	debug bool
 }
 
 func (c *wsClient) readPump() {

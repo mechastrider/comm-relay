@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=27">
+  <link rel="stylesheet" href="styles.css?v=28">
   <script>
     (function () {
       try {
@@ -158,9 +158,18 @@
               <span data-i18n="stream.newStream">New stream</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
             </button>
-            <button id="refresh-messages" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
-            <button id="refresh-leaderboard" type="button" class="btn-physical btn-small" hidden data-i18n="shell.refresh">Refresh</button>
-            <button id="refresh-statistics" type="button" class="btn-physical btn-small" hidden data-i18n="shell.refresh">Refresh</button>
+            <button id="refresh-messages" type="button" class="icon-btn has-tooltip" data-i18n-aria-label="shell.refresh" aria-label="Refresh">
+              <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
+            </button>
+            <button id="refresh-leaderboard" type="button" class="icon-btn has-tooltip" hidden data-i18n-aria-label="shell.refresh" aria-label="Refresh">
+              <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
+            </button>
+            <button id="refresh-statistics" type="button" class="icon-btn has-tooltip" hidden data-i18n-aria-label="shell.refresh" aria-label="Refresh">
+              <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
+            </button>
           </div>
         </div>
 
@@ -247,7 +256,10 @@
                     <option value="all" data-i18n="viewers.periodAll">All-time</option>
                   </select>
                   <button id="audience-open-leaderboard" class="btn-physical btn-small" type="button" data-i18n="audience.openLeaderboard">Open leaderboard</button>
-                  <button id="refresh-viewers" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
+                  <button id="refresh-viewers" type="button" class="icon-btn has-tooltip" data-i18n-aria-label="shell.refresh" aria-label="Refresh">
+                    <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
+                  </button>
                 </div>
                 <button id="audience-new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
                   <span data-i18n="stream.newStream">New stream</span>
@@ -489,7 +501,11 @@
                 <div class="overlay-preview-chrome">
                   <h3 id="overlay-preview-heading" class="overlay-preview-heading" data-i18n="obs.preview">Preview</h3>
                   <div class="overlay-preview-chrome__main">
-                    <button id="overlay-preview-replay" class="btn-physical btn-small" type="button" data-i18n="obs.replay">Replay</button>
+                    <button id="overlay-preview-replay" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.replay" aria-label="Replay">
+                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 1 0 2.3-5.7" stroke-linecap="round"></path><path d="M4 4v5h5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.replay">Replay</span>
+                    </button>
+                    <button id="overlay-debug-toggle" class="btn-physical btn-small" type="button" aria-expanded="false" aria-controls="overlay-debug-panel" data-i18n="studio.debugOpen">Test overlay</button>
                     <div class="studio-copy-obs-link-wrap" data-studio-essential-only>
                       <input id="studio-follow-url-compact" class="visually-hidden" type="text" readonly tabindex="-1" aria-hidden="true" value="/overlay">
                       <button class="btn-physical btn-small studio-copy-obs-link" type="button" data-copy-obs-url="studio-follow-url-compact" data-copy-label="Overlay URL" data-i18n="studio.copyObsLink">Copy OBS link</button>
@@ -587,6 +603,64 @@
                 </div>
 
                 <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite" data-i18n="obs.previewNoteSample">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
+                <section id="overlay-debug-panel" class="overlay-debug-panel" aria-labelledby="overlay-debug-heading" hidden>
+                  <div class="overlay-debug-panel__header">
+                    <div>
+                      <h4 id="overlay-debug-heading" tabindex="-1" data-i18n="studio.debugHeading">Test overlay</h4>
+                      <p data-i18n="studio.debugSharedChannel">Test-only sources share one global channel. Run, Replay, or Reset from another Studio tab also replaces this test.</p>
+                    </div>
+                    <button id="overlay-debug-close" class="btn-physical btn-small" type="button" data-i18n="studio.debugClose">Close</button>
+                  </div>
+                  <div class="overlay-debug-panel__body">
+                    <div class="form__field">
+                      <label for="overlay-debug-scenario" data-i18n="studio.debugScenarioLabel">Scenario</label>
+                      <select id="overlay-debug-scenario" aria-describedby="overlay-debug-scenario-error"></select>
+                      <p id="overlay-debug-scenario-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field" data-overlay-debug-field="display_name">
+                      <label for="overlay-debug-display_name" data-i18n="studio.debugDisplayName">Display name</label>
+                      <input id="overlay-debug-display_name" type="text" maxlength="64" autocomplete="off" aria-describedby="overlay-debug-display_name-error">
+                      <p id="overlay-debug-display_name-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field" data-overlay-debug-field="message">
+                      <label for="overlay-debug-message" data-i18n="studio.debugMessage">Message</label>
+                      <textarea id="overlay-debug-message" maxlength="500" rows="2" aria-describedby="overlay-debug-message-error"></textarea>
+                      <p id="overlay-debug-message-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field" data-overlay-debug-field="label">
+                      <label for="overlay-debug-label" data-i18n="studio.debugLabel">Label</label>
+                      <input id="overlay-debug-label" type="text" maxlength="80" autocomplete="off" aria-describedby="overlay-debug-label-error">
+                      <p id="overlay-debug-label-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field" data-overlay-debug-field="points">
+                      <label for="overlay-debug-points" data-i18n="studio.debugPoints">Points</label>
+                      <input id="overlay-debug-points" type="number" min="1" max="1000" step="1" inputmode="numeric" aria-describedby="overlay-debug-points-error">
+                      <p id="overlay-debug-points-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="overlay-debug-panel__actions">
+                      <button id="overlay-debug-run" class="btn-physical btn-start" type="button" data-i18n="studio.debugRun">Run</button>
+                      <button id="overlay-debug-replay" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="studio.debugReplay" aria-label="Replay last scenario" disabled>
+                        <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 1 0 2.3-5.7" stroke-linecap="round"></path><path d="M4 4v5h5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                        <span class="ui-tooltip" role="tooltip" data-i18n="studio.debugReplay">Replay last scenario</span>
+                      </button>
+                      <button id="overlay-debug-reset" class="btn-physical" type="button" data-i18n="studio.debugResetAction">Reset</button>
+                      <button id="overlay-debug-retry" class="button-secondary button-secondary--small" type="button" hidden data-i18n="studio.debugRetry">Retry</button>
+                    </div>
+                    <p id="overlay-debug-status" class="overlay-debug-panel__status" role="status" aria-live="polite"></p>
+                    <div class="overlay-debug-panel__urls">
+                      <div class="form__field">
+                        <label for="overlay-debug-stable-url" data-i18n="studio.debugStableURL">Stable test-only OBS URL</label>
+                        <div class="obs-url-row"><input id="overlay-debug-stable-url" type="text" readonly><button id="overlay-debug-stable-copy" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.copyUrl" aria-label="Copy URL"><svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="9" y="9" width="13" height="13" rx="1.5"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-linecap="round"></path></svg><span class="ui-tooltip" role="tooltip" data-i18n="obs.copyUrl">Copy URL</span></button></div>
+                      </div>
+                      <div class="form__field">
+                        <label for="overlay-debug-snapshot-url" data-i18n="studio.debugSnapshotURL">Current preview snapshot URL</label>
+                        <div class="obs-url-row"><input id="overlay-debug-snapshot-url" type="text" readonly><button id="overlay-debug-snapshot-copy" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.copyUrl" aria-label="Copy URL"><svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="9" y="9" width="13" height="13" rx="1.5"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-linecap="round"></path></svg><span class="ui-tooltip" role="tooltip" data-i18n="obs.copyUrl">Copy URL</span></button></div>
+                        <p class="field-hint" data-i18n="studio.debugSnapshotHint">A snapshot keeps the current unpublished appearance. Copy it again after changing the draft.</p>
+                      </div>
+                    </div>
+                    <p class="field-hint" data-i18n="studio.debugTestOnly">Test only: these URLs never receive live events.</p>
+                  </div>
+                </section>
                 <p id="studio-copy-status" class="obs-copy-status" role="status" aria-live="polite"></p>
               </section>
             </div>
@@ -622,32 +696,10 @@
                     </div>
                   </div>
                   <div id="preset-island-icon-actions" class="preset-island__icon-actions" role="group" data-studio-all-only data-i18n-aria-label="obs.presetActions">
-                    <button id="overlay-preset-add" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetAdd">
-                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M12 5v14M5 12h14" stroke-linecap="round"></path>
-                      </svg>
-                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetAdd">New preset</span>
-                    </button>
-                    <button id="overlay-preset-rename" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetRename">
-                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M4 20h4L19 9l-4-4L4 16v4z" stroke-linejoin="round"></path>
-                        <path d="M13 7l4 4" stroke-linecap="round"></path>
-                      </svg>
-                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetRename">Rename</span>
-                    </button>
-                    <button id="overlay-preset-duplicate" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetDuplicate">
-                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <rect x="8" y="8" width="12" height="12" rx="1.5"></rect>
-                        <path d="M4 16V6a2 2 0 0 1 2-2h10" stroke-linecap="round"></path>
-                      </svg>
-                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetDuplicate">Duplicate</span>
-                    </button>
-                    <button id="overlay-preset-delete" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.presetDelete">
-                      <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M4 7h16M9 7V5h6v2M10 11v6M14 11v6M6 7l1 13h10l1-13" stroke-linecap="round" stroke-linejoin="round"></path>
-                      </svg>
-                      <span class="ui-tooltip" role="tooltip" data-i18n="obs.presetDelete">Delete</span>
-                    </button>
+                    <button id="overlay-preset-add" class="btn-physical btn-small" type="button" data-i18n="obs.presetAdd">New preset</button>
+                    <button id="overlay-preset-rename" class="btn-physical btn-small" type="button" data-i18n="obs.presetRename">Rename</button>
+                    <button id="overlay-preset-duplicate" class="btn-physical btn-small" type="button" data-i18n="obs.presetDuplicate">Duplicate</button>
+                    <button id="overlay-preset-delete" class="btn-physical btn-small btn-danger" type="button" data-i18n="obs.presetDelete">Delete</button>
                   </div>
                   <div class="preset-island__divider" aria-hidden="true"></div>
                   <div class="preset-island__group preset-island__group--url">
@@ -970,7 +1022,10 @@
             <div id="settings-diagnostics-body" class="settings-diagnostics">
               <p class="field-hint" data-i18n="settings.diagnosticsHint">Runtime uptime, WebSocket browser clients, connector details, and emote cache status.</p>
               <div class="settings-diagnostics__toolbar">
-                <button id="settings-diagnostics-refresh" class="btn-physical btn-small" type="button" data-i18n="shell.refresh">Refresh</button>
+                <button id="settings-diagnostics-refresh" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="shell.refresh" aria-label="Refresh">
+                  <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
+                </button>
               </div>
               <dl class="overview-list settings-diagnostics__summary">
                 <div class="overview-list__row">
@@ -1867,6 +1922,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=27"></script>
+  <script type="module" src="app.js?v=28"></script>
 </body>
 </html>

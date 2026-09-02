@@ -107,6 +107,22 @@ func TestNewHandlerRoutes(t *testing.T) {
 		require.Contains(t, cssRec.Body.String(), "background: transparent")
 	})
 
+	t.Run("dedicated test overlays reuse production pages", func(t *testing.T) {
+		for _, route := range []struct {
+			path string
+			id   string
+		}{
+			{path: "/overlay/test/chat", id: `id="messages"`},
+			{path: "/overlay/test/leaderboard", id: `id="leaderboard"`},
+			{path: "/overlay/test/alert", id: `id="alert-root"`},
+		} {
+			rec := httptest.NewRecorder()
+			handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, route.path, nil))
+			require.Equal(t, http.StatusOK, rec.Code, route.path)
+			require.Contains(t, rec.Body.String(), route.id, route.path)
+		}
+	})
+
 	t.Run("shared chat render module", func(t *testing.T) {
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/shared/chat-render.js", nil))

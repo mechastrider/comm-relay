@@ -50,6 +50,7 @@ import {
 } from "./live-active-preset.js";
 import { bindCopyButtons } from "./obs-setup.js";
 import { initStudioAddToObs, maybeAutoOpenStudioAddToObs } from "./studio-add-to-obs.js";
+import { deactivateOverlayDebugPanel, initOverlayDebugPanel } from "./overlay-debug-panel.js";
 
 /** @type {Record<string, unknown> | null} */
 let baseline = null;
@@ -326,6 +327,7 @@ function onStudioEnter() {
 }
 
 function onStudioLeave() {
+  deactivateOverlayDebugPanel();
   unmountOverlayPreview();
 }
 
@@ -447,6 +449,7 @@ async function publishStudioDraft() {
 }
 
 export function initStudio() {
+  initOverlayDebugPanel();
   initStudioAddToObs();
   initStudioDiscardDialog();
   initStudioViewPreferences();

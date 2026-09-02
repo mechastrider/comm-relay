@@ -13,6 +13,7 @@ import {
   restartRewardHighlight,
   rewardLabelText,
 } from "/overlay/reward-highlight.js?v=2";
+import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.js?v=1";
 
 "use strict";
 
@@ -34,6 +35,7 @@ import {
   const params = new URLSearchParams(window.location.search);
   const samplePreviewEnabled = params.get("preview") === "sample";
   const previewEnabled = params.has("preview");
+  const debugTestEnabled = isOverlayDebugPage(window.location);
 
   function readPositiveInt(name, fallback) {
     const raw = params.get(name);
@@ -396,8 +398,7 @@ import {
   let shouldRun = true;
 
   function wsURL() {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    return protocol + "//" + window.location.host + "/ws";
+    return overlayWebSocketURL(window.location);
   }
 
   function clearReconnectTimer() {
@@ -506,6 +507,21 @@ import {
       removeEntryElement(entry.el, true);
     });
     renderedMessageIDs.delete(key);
+  }
+
+  function resetDebugSurface() {
+    entries.forEach(function (entry) {
+      if (entry.ttlTimer !== null) {
+        window.clearTimeout(entry.ttlTimer);
+      }
+      if (entry.rewardTimer !== null) {
+        window.clearTimeout(entry.rewardTimer);
+      }
+      entry.el.remove();
+    });
+    entries.splice(0, entries.length);
+    renderedMessageIDs.clear();
+    listEl.replaceChildren();
   }
 
   function messageTTLMilliseconds(frame) {
@@ -776,6 +792,10 @@ import {
       restyleRenderedMessages();
       return;
     }
+    if (debugTestEnabled && frame.type === "debug_reset") {
+      resetDebugSurface();
+      return;
+    }
     if (frame.type === "message_deleted") {
       removeMessage(frame);
       return;
@@ -912,6 +932,8 @@ import {
   if (samplePreviewEnabled) {
     loadServerConfig().finally(renderSamplePreview);
   } else {
-    loadServerConfig().then(loadRecentMessages).finally(connect);
+    loadServerConfig().then(function () {
+      return debugTestEnabled ? undefined : loadRecentMessages();
+    }).finally(connect);
   }
 }

@@ -13,11 +13,17 @@ description: HTTP and WebSocket API conventions for comm-relay — routes, snake
 | `/dock/messages` | GET | Messages-only OBS Custom Browser Dock |
 | `/overlay` | GET | OBS Browser Source page |
 | `/ws` | GET | WebSocket upgrade for overlay |
+| `/overlay/test/chat` | GET | Dedicated test-only chat Browser Source page |
+| `/overlay/test/leaderboard` | GET | Dedicated test-only leaderboard Browser Source page |
+| `/overlay/test/alert` | GET | Dedicated test-only alert Browser Source page |
+| `/ws/overlay-debug` | GET | Isolated local-only WebSocket for dedicated test pages |
 | `/healthz` | GET | Liveness |
 | `/api/status` | GET | Connector connection status (JSON) |
 | `/api/diagnostics` | GET | Runtime info, message counts, connector statuses, app version |
 | `/api/support/open` | POST | Open allowlisted support URLs in the system browser |
 | `/api/config` | GET/POST | Read/update settings (snake_case JSON) |
+| `/api/overlay-debug/scenario/fire` | POST | Run one bounded, typed local overlay test scenario |
+| `/api/overlay-debug/session/reset` | POST | Cancel and clear the global local overlay test scenario |
 | `/api/youtube/oauth/start` | POST | Begin YouTube OAuth (open system browser) |
 | `/oauth/youtube/start` | GET | Legacy OAuth start (opens browser, redirects admin to pending) |
 | `/oauth/youtube/callback` | GET | OAuth callback |
@@ -40,6 +46,10 @@ Adjust paths when implementing; keep this table and `internal/api` router in syn
 - Server → client: chat events per [comm-relay](../comm-relay/SKILL.md)
 - Optional server → client: `type: "ping"` / client `pong` for keepalive
 - On connect, optionally send recent buffered messages (document limit)
+- `/ws/overlay-debug` is a separate local test-only audience for the dedicated
+  `/overlay/test/*` pages. It MUST NOT be selected with a query parameter on
+  `/ws`, and production `/ws` clients MUST NOT receive test frames (nor debug
+  clients production content).
 
 ## Response helpers
 
@@ -70,6 +80,9 @@ Keep `error` strings short and UI-safe; log details with `clog.Errorf` server-si
 
 - Mirror snake_case in `fetch` payloads.
 - Base URL: same origin (`window.location.origin`) unless config injects port.
+- Overlay-debug actions are local, POST-action endpoints with enumerated,
+  bounded inputs only. Dedicated test URLs and `/ws/overlay-debug` are
+  fail-closed; never fall back to `/ws` or a production overlay route.
 
 ## Adding an endpoint
 

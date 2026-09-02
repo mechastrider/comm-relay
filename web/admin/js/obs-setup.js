@@ -4,6 +4,7 @@ import { apiURL } from "./api.js";
 import { mountOverlayPreview, unmountOverlayPreview, applyPreviewSurface } from "./overlay-preview.js";
 import { updatePresetIsland } from "./overlay-appearance.js";
 import { t } from "./i18n-ui.js";
+import { localizedCopyLabel } from "./obs-copy-feedback.js";
 
 export function updateOBSSetupURLs() {
   document.querySelectorAll("[data-obs-url-path]").forEach(function (input) {
@@ -23,6 +24,44 @@ function copyButtonLabel(button) {
   return button.textContent || "";
 }
 
+function makeCopyIconButton(button) {
+  if (button.dataset.copyIconReady === "true" || button.querySelector(".icon-btn__icon")) {
+    return;
+  }
+  const label = copyButtonLabel(button) || t("obs.copyUrl");
+  button.dataset.copyIconReady = "true";
+  button.classList.remove("btn-physical", "btn-small");
+  button.classList.add("icon-btn", "has-tooltip", "icon-btn--copy");
+  button.removeAttribute("data-i18n");
+  button.setAttribute("aria-label", label);
+  button.setAttribute("data-i18n-aria-label", "obs.copyUrl");
+
+  const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  icon.setAttribute("class", "icon-btn__icon");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("aria-hidden", "true");
+  icon.setAttribute("fill", "none");
+  icon.setAttribute("stroke", "currentColor");
+  icon.setAttribute("stroke-width", "1.75");
+  const front = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  front.setAttribute("x", "9");
+  front.setAttribute("y", "9");
+  front.setAttribute("width", "13");
+  front.setAttribute("height", "13");
+  front.setAttribute("rx", "1.5");
+  const back = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  back.setAttribute("d", "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1");
+  back.setAttribute("stroke-linecap", "round");
+  icon.append(front, back);
+
+  const tooltip = document.createElement("span");
+  tooltip.className = "ui-tooltip";
+  tooltip.setAttribute("role", "tooltip");
+  tooltip.setAttribute("data-i18n", "obs.copyUrl");
+  tooltip.textContent = label;
+  button.replaceChildren(icon, tooltip);
+}
+
 function setCopyButtonLabel(button, label) {
   const tooltip = button.querySelector(".ui-tooltip");
   if (tooltip) {
@@ -39,17 +78,13 @@ export function resetOBSCopyFeedback() {
     state.obsCopyFeedbackTimer = null;
   }
   if (state.obsCopyFeedbackButton) {
-    setCopyButtonLabel(
-      state.obsCopyFeedbackButton,
-      state.obsCopyFeedbackButton.dataset.copyDefaultText || t("obs.copyUrl")
-    );
+    setCopyButtonLabel(state.obsCopyFeedbackButton, localizedCopyLabel(t));
     state.obsCopyFeedbackButton = null;
   }
 }
 
 export function showOBSCopyFeedback(button, message, copied) {
   resetOBSCopyFeedback();
-  button.dataset.copyDefaultText = button.dataset.copyDefaultText || copyButtonLabel(button) || t("obs.copyUrl");
   setCopyButtonLabel(button, copied ? t("obs.copyCopied") : t("obs.copyFailed"));
   state.obsCopyFeedbackButton = button;
   const statusEl =
@@ -145,6 +180,7 @@ export function bindCopyButtons(root) {
     return;
   }
   root.querySelectorAll("[data-copy-obs-url]").forEach(function (button) {
+    makeCopyIconButton(button);
     if (button.dataset.copyBound === "true") {
       return;
     }

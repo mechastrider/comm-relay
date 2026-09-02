@@ -13,7 +13,8 @@ import { createChatRender } from "/shared/chat-render.js?v=12";
 import { ensureAudioContext, scheduleAlertSound } from "./alert-sound.js";
 import { startSplashLifecycle } from "./alert-lifecycle.js?v=2";
 import { createAlertSplash } from "./alert-render.js?v=2";
-import { createAlertScheduler } from "./alert-scheduler.js?v=3";
+import { createAlertScheduler } from "./alert-scheduler.js?v=4";
+import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.js?v=1";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;
@@ -38,6 +39,7 @@ const PREVIEW_BACKGROUND_CLASSES = [
 const params = new URLSearchParams(window.location.search);
 const samplePreviewEnabled = params.get("preview") === "sample";
 const previewEnabled = params.has("preview");
+const debugTestEnabled = isOverlayDebugPage(window.location);
 
 const root = document.getElementById("alert-root");
 let overlayView = alertViewFromConfig({ overlay: null }, params);
@@ -64,8 +66,7 @@ const SAMPLE_ALERT = {
 const { userAccent } = createChatRender();
 
 function wsURL() {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return protocol + "//" + window.location.host + "/ws";
+  return overlayWebSocketURL(window.location);
 }
 
 function applyAppearance() {
@@ -253,6 +254,11 @@ function handleSocketMessage(event) {
       applyServerOverlayConfig(frame.overlay);
       applyAppearance();
     }
+    return;
+  }
+  if (debugTestEnabled && frame.type === "debug_reset") {
+    scheduler.reset();
+    clearSplash();
     return;
   }
   if (frame.type !== "alert") {

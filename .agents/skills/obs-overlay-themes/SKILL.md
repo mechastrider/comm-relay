@@ -36,7 +36,7 @@ A **theme** is the on-stream visual language (tokens, chrome, body classes `over
    - a mockup only, usually under `docs/mockups/`;
    - a real selectable theme, requiring config validation, admin options, JS theme mapping, CSS for **all** themed surfaces, README/changelog updates;
    - a refinement of an existing theme, usually CSS-only unless behavior changes.
-3. Treat the OBS Browser Source as the frame. Theme containers should usually fill `position: fixed; inset: 0; width: auto; height: auto;` so users can place and resize the source rectangle in OBS.
+3. Treat the OBS Browser Source as the frame. Every on-stream surface's top-level runtime container must fill it with `position: fixed; inset: 0; width: auto; height: auto; min-width: 0; min-height: 0; box-sizing: border-box; overflow: hidden;` so users can place and resize the source rectangle in OBS.
 4. Verify the stream-state cases:
    - no messages / empty ranking;
    - one short message;
@@ -73,6 +73,9 @@ When a theme is branded or game-specific, keep these concerns separate:
 
 - Keep `html, body` transparent for OBS.
 - Design from the user's OBS rectangle, not from a full-page website mindset.
+- Filling the Browser Source applies to the surface root, not automatically to every message, row, or chip. Preserve each surface's interaction model: bottom-anchored content-sized chat messages, the selected leaderboard layout, and other intentional queue behavior.
+- When a surface has one primary piece of chrome, such as an alert splash or a panel-style leaderboard, size that chrome from the available rectangle instead of constraining it with an intrinsic viewport `max-width`. Use safe inner padding to keep content readable.
+- Verify every surface in landscape, square, portrait, and narrow-banner Browser Source rectangles. The frame must remain visible without clipped borders, accidental scrollbars, or a fixed aspect-ratio assumption.
 - Make fixed-format HUD frames responsive with stable dimensions: `inset`, `padding`, `minmax(0, 1fr)`, `box-sizing: border-box`, and explicit gaps.
 - Avoid left rails or headers consuming too much chat space. Decorative HUD parts must stay small unless the user asks for a framed panel.
 - Do not let titles overlap messages. Put panel titles in their own layer (`::before` can work), give messages a lower `z-index`, and add a gradient curtain if old messages scroll underneath.

@@ -52,6 +52,7 @@ func (h *configHandler) handleOverlayActivate(w http.ResponseWriter, r *http.Req
 			clog.Errorf(ctx, "overlay settings wire payload: %w", err)
 		} else {
 			h.hub.broadcast(payload)
+			h.hub.BroadcastDebug(payload)
 		}
 	}
 
