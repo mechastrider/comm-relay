@@ -66,6 +66,7 @@ PASS
 
 | Repair / requirement | Evidence | Result |
 |---|---|---|
+| Reward frame animation | The rewarded row now runs two short outline/glow pulses without changing layout or replacing the 2.5-second semantic highlight. The CSS-focused test requires the keyframes and requires the existing reduced-motion static fallback. `npm test`, `npm run lint`, strict OpenSpec validation, and `git diff --check` pass after the repair. | **PASS (automated/source)** |
 | Rich chat node identity through reward start, expiry, and restart | `reward-highlight.test.js` creates avatar, emote, image-preview, and fallback text nodes; it asserts strict child identity after start, timer expiry, and a restart. `overlay.js` stores `entry.rewardSlot` and transition callbacks call `updateRewardFeedback`, not `fillMessageRow`; the focused source assertion rejects either transition callback calling `fillMessageRow`. | **PASS** |
 | Exact, non-restoring reward lookup | The same test covers exact `platform + message_id` matching, rejects command/missing-id alerts, and covers resettable timers. The implementation only updates a matching existing entry. | **PASS** |
 | Exponent opacity input | `parsePanelOpacity("1e-1")` is tested as `0.1`; `1e`, `0.1px`, and `0x1` are rejected. Source tracing confirms the same parser is used for draft validation, Studio publish validation, surface collection/persistence, and preview query serialization, so a valid exponent form publishes/previews as `0.1` rather than a `parseFloat` prefix. | **PASS (automated/source)** |
@@ -148,15 +149,15 @@ to this change.
 
 ## Gates and verdict
 
-**Verdict: PARTIAL.** All available required automated checks, repair-focused
-tests, source verification, and local static-route smoke pass. The prior
-reward-transition, exponent-parser, non-positive-award, and stale-incoming
-command defects are verified as repaired by this run.
+**Verdict: ARCHIVE ACCEPTED WITH EXPLICIT MANUAL GAPS.** All available required
+automated checks, repair-focused tests, source verification, and local
+static-route smoke pass. The prior reward-transition, exponent-parser,
+non-positive-award, and stale-incoming command defects are verified as repaired
+by this run.
 
-Q.1 is correctly **unchecked**: the required manual platform/theme/scaling
-matrix, captures, and packaged evidence are incomplete. Independent R.1/R.2
-full-diff review passed and the implementation is reconciled with the active
-delta scenarios, but this does **not** mark the distribution gate or release as
-complete. Release readiness remains blocked by the explicit P0 browser/OBS and
-Windows packaged Wails/OBS matrix, plus the listed P1 packaged checks and the
-local `golangci-lint` version mismatch.
+On 2026-09-02 the product owner explicitly accepted closing Q.1, D.1, and D.2
+for archival without executing the unavailable browser/OBS and cross-platform
+package matrix. The unrun scenarios above remain facts and are not converted to
+passes. This acceptance closes the historical change record; it is not a
+release-readiness certification and does not erase the listed P0/P1 evidence
+gaps or the local `golangci-lint` version mismatch.

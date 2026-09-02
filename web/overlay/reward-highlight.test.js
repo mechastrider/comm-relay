@@ -204,7 +204,7 @@ test("reward transitions preserve rendered rich child identities", function () {
   }
 });
 
-test("every chat theme has static, non-color reward feedback", async function () {
+test("every chat theme has animated, non-color reward feedback with a static fallback", async function () {
   const css = await readFile(new URL("./overlay.css", import.meta.url), "utf8");
 
   assert.match(css, /\.message__reward/);
@@ -212,7 +212,16 @@ test("every chat theme has static, non-color reward feedback", async function ()
   assert.match(css, /body\.overlay-theme--cockpit-panel \.message--rewarded/);
   assert.match(css, /body\.overlay-theme--cockpit-popups \.message--rewarded/);
   assert.match(css, /body\.overlay-theme--g-rebels-popups \.message--rewarded/);
+  assert.match(
+    css,
+    /\.message\.message--rewarded:not\(\.message--leaving\)\s*\{[^}]*animation:\s*message-reward-pulse/
+  );
+  assert.match(css, /@keyframes message-reward-pulse/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(
+    css,
+    /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.message--rewarded\s*\{[^}]*animation:\s*none\s*!important/
+  );
   assert.match(css, /\.message__reward-name[\s\S]*?text-overflow:\s*ellipsis/);
   assert.match(css, /\.message__reward-points[\s\S]*?flex:\s*0 0 auto/);
   assert.doesNotMatch(css, /\.message__reward\s*\{[^}]*position:\s*absolute/);

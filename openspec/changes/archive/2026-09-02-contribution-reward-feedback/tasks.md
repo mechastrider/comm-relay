@@ -99,7 +99,7 @@
 
 ## Gate: qa
 
-- [ ] Q.1 Execute `qa_plan.md` and record platform/theme/scaling coverage, screenshots or captures, config before/after excerpts without secrets, API/WebSocket assertions, fake-time evidence, and every explicit skip.
+- [x] Q.1 Execute `qa_plan.md` and record platform/theme/scaling coverage, screenshots or captures, config before/after excerpts without secrets, API/WebSocket assertions, fake-time evidence, and every explicit skip. Closed for archive by explicit product-owner acceptance of the recorded unrun manual matrix; no missing run is represented as a pass.
 - [x] Q.2 Run `npm ci`.
 - [x] Q.3 Run `npm test`.
 - [x] Q.4 Run `npm run test:i18n`.
@@ -117,5 +117,5 @@
 
 ## Gate: distribution-readiness
 
-- [ ] D.1 Build the existing headless and desktop/package artifact matrix and verify names/content remain unchanged; do not sign, notarize, upload, publish, or create a release.
-- [ ] D.2 Complete packaged Windows OBS/Wails P0 smoke plus the available Linux/macOS P1 smoke, including upgrade, restart, and prior-binary rollback with copied user data.
+- [x] D.1 Build the existing headless and desktop/package artifact matrix and verify names/content remain unchanged; do not sign, notarize, upload, publish, or create a release. Closed for archive by explicit product-owner acceptance of the recorded package-matrix gap.
+- [x] D.2 Complete packaged Windows OBS/Wails P0 smoke plus the available Linux/macOS P1 smoke, including upgrade, restart, and prior-binary rollback with copied user data. Closed for archive by explicit product-owner acceptance of the recorded unavailable-platform gap.

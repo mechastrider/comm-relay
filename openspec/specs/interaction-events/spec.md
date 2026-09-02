@@ -25,11 +25,19 @@ When `POST /api/awards/grant` succeeds, the system SHALL append an event with ki
 - **THEN** an interaction event exists with kind `award`, that award id, and `points` 50
 
 ### Requirement: Events are durable and not a chat archive
-Events SHALL live in SQLite beside other viewer data. The system MUST NOT persist full chat text in this log. This change MUST NOT require an admin UI to browse the log. The system MAY expose no public GET for events in this change.
+Interaction events SHALL remain durable in SQLite and MAY store a source message `platform` and stable `id`. They MUST NOT persist `message_text`, a rendered quote, fragments, or other full chat content. The system MUST NOT add an interaction-log browsing API or UI in this change.
+
+#### Scenario: Message-aware award survives restart
+- **WHEN** an award grant includes a message id and transient quote and the process restarts
+- **THEN** the durable event retains the message platform and id but no quote text
 
 #### Scenario: Restart
 - **WHEN** the process restarts after a grant
-- **THEN** the award event is still present in the database
+- **THEN** the award event is still present in the database without persisted full chat text
+
+#### Scenario: Grant without message reference
+- **WHEN** a valid award is granted without a stable message id
+- **THEN** the durable award event is still appended with null source-message fields
 
 ### Requirement: Merge does not delete historical events
 When two viewers are merged, existing events SHALL keep their original `viewer_id` or SHALL be rewritten to the surviving viewer. Either behavior MUST be documented in design; silent deletion of events is forbidden.
