@@ -1,4 +1,4 @@
-import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.js?v=12";
+import { appendText, createChatRender, createRewardSlot, safeImageURL, setRewardSlot } from "/shared/chat-render.js?v=13";
 import {
   fontStack,
   panelBackground,
@@ -7,7 +7,7 @@ import {
   normalizePreviewBackground,
   overlayAssetURL,
   overlayViewFromConfig
-} from "/overlay/overlay-settings.js?v=6";
+} from "/overlay/overlay-settings.js?v=8";
 import {
   findRewardedEntry,
   restartRewardHighlight,
@@ -666,6 +666,8 @@ import {
     identityEl.appendChild(platformEl);
     identityEl.appendChild(userEl);
 
+    const rewardSlot = createRewardSlot();
+
     const textEl = document.createElement("span");
     textEl.className = "message__text";
     appendMessageContent(textEl, frame, text);
@@ -674,28 +676,20 @@ import {
     row.appendChild(accentEl);
     row.appendChild(identityEl);
     row.appendChild(textEl);
-    if (reward) {
-      const rewardEl = document.createElement("span");
-      rewardEl.className = "message__reward";
-      const label = rewardLabelText(reward);
-      rewardEl.setAttribute("aria-label", label);
-      rewardEl.title = label;
-      const awardName = document.createElement("span");
-      awardName.className = "message__reward-name";
-      appendText(awardName, typeof reward.award_name === "string" ? reward.award_name.trim() : "");
-      const points = document.createElement("span");
-      points.className = "message__reward-points";
-      appendText(points, typeof reward.points === "number" && reward.points > 0 ? "+" + String(reward.points) : "");
-      rewardEl.append(awardName, points);
-      identityEl.appendChild(rewardEl);
-      row.classList.add("message--rewarded");
-    }
+    row.appendChild(rewardSlot);
+    updateRewardFeedback(row, rewardSlot, reward);
+    return rewardSlot;
+  }
+
+  function updateRewardFeedback(row, rewardSlot, reward) {
+    setRewardSlot(rewardSlot, reward, rewardLabelText(reward));
+    row.classList.toggle("message--rewarded", Boolean(reward));
   }
 
   function restyleVisibleMessages() {
     entries.forEach(function (entry) {
       if (entry.frame) {
-        fillMessageRow(entry.el, entry.frame, entry.reward);
+        entry.rewardSlot = fillMessageRow(entry.el, entry.frame, entry.reward);
       }
     });
     trimToLimit();
@@ -728,7 +722,7 @@ import {
     }
 
     const row = document.createElement("div");
-    fillMessageRow(row, frame);
+    const rewardSlot = fillMessageRow(row, frame);
     listEl.appendChild(row);
 
     let ttlTimer = null;
@@ -744,6 +738,7 @@ import {
       ttlTimer: ttlTimer,
       rewardTimer: null,
       reward: null,
+      rewardSlot: rewardSlot,
       messageKey: messageKey(frame),
       frame: frame,
     });
@@ -757,10 +752,10 @@ import {
       setTimeout: window.setTimeout,
       clearTimeout: window.clearTimeout,
       onStart: function (target, reward) {
-        fillMessageRow(target.el, target.frame, reward);
+        updateRewardFeedback(target.el, target.rewardSlot, reward);
       },
       onEnd: function (target) {
-        fillMessageRow(target.el, target.frame);
+        updateRewardFeedback(target.el, target.rewardSlot, null);
       },
     });
   }

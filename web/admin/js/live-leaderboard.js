@@ -2,15 +2,19 @@ import * as dom from "./dom.js";
 import { apiURL, readJSON, mapHTTPError } from "./api.js";
 import { setRegionState } from "./shell-state.js";
 import { t } from "./i18n-ui.js";
-import { createLeaderboardSnapshotCache, leaderboardPeriodTransition } from "./live-data-helpers.js";
+import {
+  createLeaderboardLoadSequencer,
+  createLeaderboardSnapshotCache,
+  leaderboardPeriodTransition,
+} from "./live-data-helpers.js";
 
 export const LIVE_TABS = ["messages", "leaderboard", "statistics"];
 
 let currentPeriod = "session";
 let loadController = null;
-let loadGeneration = 0;
 let renderedPeriod = null;
 const snapshots = createLeaderboardSnapshotCache();
+const loadSequencer = createLeaderboardLoadSequencer();
 
 function leaderboardRegion() {
   return dom.liveLeaderboardRegion;
@@ -128,7 +132,7 @@ export async function loadLiveLeaderboard(options) {
     loadController.abort();
   }
   loadController = new AbortController();
-  const generation = ++loadGeneration;
+  const generation = loadSequencer.begin(period);
   const signal = loadController.signal;
 
   const cached = snapshots.get(period);
@@ -151,7 +155,7 @@ export async function loadLiveLeaderboard(options) {
       { signal: signal }
     );
     const payload = await readJSON(response);
-    if (generation !== loadGeneration) {
+    if (!loadSequencer.acceptsResponse(generation, period)) {
       return null;
     }
     if (!response.ok) {
@@ -166,7 +170,7 @@ export async function loadLiveLeaderboard(options) {
     if (err && err.name === "AbortError") {
       return null;
     }
-    if (generation !== loadGeneration) {
+    if (!loadSequencer.acceptsResponse(generation, period)) {
       return null;
     }
     const message = err instanceof Error && err.message ? err.message : t("live.leaderboardLoadFailed");
@@ -177,7 +181,7 @@ export async function loadLiveLeaderboard(options) {
     showLeaderboardError(message);
     return null;
   } finally {
-    if (generation === loadGeneration) {
+    if (loadSequencer.finish(generation)) {
       loadController = null;
     }
   }
@@ -191,7 +195,17 @@ export async function loadLiveLeaderboard(options) {
  * @returns {boolean}
  */
 export function cacheLiveLeaderboardFrame(frame) {
-  return snapshots.remember(frame) !== null;
+  const snapshot = snapshots.remember(frame);
+  if (!snapshot) {
+    return false;
+  }
+  if (snapshot.period === currentPeriod && loadSequencer.invalidateForSnapshot(snapshot.period)) {
+    if (loadController) {
+      loadController.abort();
+      loadController = null;
+    }
+  }
+  return true;
 }
 
 /**
@@ -199,7 +213,10 @@ export function cacheLiveLeaderboardFrame(frame) {
  * @returns {boolean}
  */
 export function applyLiveLeaderboardFrame(frame) {
-  const snapshot = snapshots.remember(frame);
+  if (!cacheLiveLeaderboardFrame(frame)) {
+    return false;
+  }
+  const snapshot = snapshots.get(frame && frame.period);
   if (!snapshot || snapshot.period !== currentPeriod) {
     return false;
   }
@@ -218,7 +235,7 @@ export function renderCachedLiveLeaderboard() {
 
 export function abortLiveLeaderboard() {
   if (loadController) {
-    loadGeneration += 1;
+    loadSequencer.cancel();
     loadController.abort();
     loadController = null;
   }

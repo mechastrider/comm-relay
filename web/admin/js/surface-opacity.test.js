@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   effectiveSurfaceOpacity,
   isPanelOpacityDraft,
+  parsePanelOpacity,
   previewSurfacePanelOpacity,
   withLeaderboardAppearance,
   withSurfacePanelOpacity,
@@ -29,6 +30,14 @@ test("blank and out-of-range opacity drafts remain invalid until corrected", fun
   assert.equal(isPanelOpacityDraft("0"), true);
   assert.equal(isPanelOpacityDraft("0.35"), true);
   assert.equal(isPanelOpacityDraft("1"), true);
+});
+
+test("opacity parser accepts complete decimal exponent values consistently", function () {
+  assert.equal(parsePanelOpacity("1e-1"), 0.1);
+  assert.equal(isPanelOpacityDraft("1e-1"), true);
+  assert.equal(parsePanelOpacity("1e"), null);
+  assert.equal(parsePanelOpacity("0.1px"), null);
+  assert.equal(parsePanelOpacity("0x1"), null);
 });
 
 test("surface opacity editing changes only the selected surface and retains all overrides", function () {

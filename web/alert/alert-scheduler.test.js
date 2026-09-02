@@ -1,11 +1,54 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createAlertScheduler } from "./alert-scheduler.js";
+import { createAlertScheduler, isValidAlertEnvelope } from "./alert-scheduler.js";
 
 function alert(id, source = "command", extra = {}) {
-  return { id, source, ...extra };
+  const envelope = {
+    id,
+    source,
+    name: "Nova",
+    text: "A valid alert",
+    points: 0,
+    duration_ms: 1_000,
+    ...extra,
+  };
+  if (source === "award") {
+    if (!Object.hasOwn(extra, "points")) {
+      envelope.points = 10;
+    }
+    envelope.award_id = Object.hasOwn(extra, "award_id") ? extra.award_id : "spotter";
+    envelope.award_name = Object.hasOwn(extra, "award_name") ? extra.award_name : "Spotter";
+  }
+  return envelope;
 }
+
+test("rejects malformed envelopes before they can occupy the visible or pending queues", function () {
+  const scheduler = createAlertScheduler({ now: () => 0 });
+  [null, {}, { name: " ", text: "x", points: 0, duration_ms: 1 }, {
+    name: "Nova", text: "x", points: "0", duration_ms: 1,
+  }, {
+    name: "Nova", text: "x", points: 0, duration_ms: 0,
+  }, {
+    name: "Nova", text: "x", points: 10, duration_ms: 1, source: "award", award_name: "Spotter",
+  }, {
+    name: "Nova", text: "x", points: 0, duration_ms: 1, source: "award", award_id: "spotter", award_name: "Spotter",
+  }, {
+    name: "Nova", text: "x", points: -5, duration_ms: 1, source: "award", award_id: "spotter", award_name: "Spotter",
+  }].forEach(function (frame) {
+    assert.equal(isValidAlertEnvelope(frame), false);
+    assert.equal(scheduler.enqueue(frame), null);
+  });
+  assert.deepEqual(scheduler.snapshot(), { visible: null, awards: [], commands: [] });
+});
+
+test("accepts legacy-valid command frames with missing source and created_at", function () {
+  const scheduler = createAlertScheduler({ now: () => 0 });
+  const legacy = { name: "Nova", text: "Legacy command", points: 0, duration_ms: 1_000 };
+  assert.equal(isValidAlertEnvelope(legacy), true);
+  assert.equal(scheduler.enqueue(legacy), legacy);
+  assert.equal(scheduler.snapshot().visible, legacy);
+});
 
 test("keeps one visible splash and selects pending awards before commands", function () {
   let clock = 0;
@@ -59,6 +102,26 @@ test("keeps a fractional-second command until its full ten-second lifetime ends"
 
   clock = 20_998;
   assert.equal(scheduler.completeVisible().id, "fractional");
+});
+
+test("rejects stale incoming commands before they displace fresh pending commands", function () {
+  let clock = 20_000;
+  const scheduler = createAlertScheduler({ now: () => clock });
+  const freshCommandIDs = Array.from({ length: 20 }, (_, index) => "fresh-" + String(index));
+
+  scheduler.enqueue(alert("visible", "award"));
+  freshCommandIDs.forEach(function (id) {
+    scheduler.enqueue(alert(id));
+  });
+
+  const stale = alert("stale", "command", { created_at: new Date(clock - 10_001).toISOString() });
+  assert.equal(scheduler.enqueue(stale), null);
+  assert.equal(scheduler.snapshot().visible.id, "visible");
+  assert.deepEqual(scheduler.snapshot().commands.map((item) => item.id), freshCommandIDs);
+
+  const directScheduler = createAlertScheduler({ now: () => clock });
+  assert.equal(directScheduler.enqueue(stale), null);
+  assert.deepEqual(directScheduler.snapshot(), { visible: null, awards: [], commands: [] });
 });
 
 test("applies all capacity branches without allowing commands to displace awards", function () {

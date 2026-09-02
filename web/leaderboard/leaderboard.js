@@ -8,7 +8,7 @@ import {
   normalizePanelImageScope,
   normalizePreviewBackground,
   overlayAssetURL,
-} from "../overlay-settings.js?v=6";
+} from "../overlay-settings.js?v=8";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;

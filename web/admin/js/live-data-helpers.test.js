@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   createLeaderboardSnapshotCache,
+  createLeaderboardLoadSequencer,
   createStatisticsInvalidator,
   leaderboardPeriodTransition,
   leaderboardPeriodFrom,
@@ -33,11 +34,26 @@ assert.deepEqual(
   { preserveRowsOnError: true, clearRows: false, showLoading: false },
   "a same-period retry preserves its last successful snapshot on error"
 );
-// A reconnect's HTTP recovery response is authoritative for its period and
-// replaces an older event snapshot without touching the other cached period.
-snapshots.remember({ period: "session", entries: [{ display_name: "Recovered", score: 4 }] });
-assert.equal(snapshots.get("session")?.entries[0].display_name, "Recovered");
+// A complete matching WebSocket frame invalidates an in-flight HTTP response.
+// Resolving that deferred older response cannot replace the cache or visible rows.
+const loadSequencer = createLeaderboardLoadSequencer();
+const httpGeneration = loadSequencer.begin("session");
+let resolveHTTP;
+const deferredHTTP = new Promise(function (resolve) {
+  resolveHTTP = resolve;
+});
+const completedHTTP = deferredHTTP.then(function (payload) {
+  if (loadSequencer.acceptsResponse(httpGeneration, payload.period)) {
+    snapshots.remember(payload);
+  }
+});
+snapshots.remember({ period: "session", entries: [{ display_name: "WebSocket newest", score: 4 }] });
+assert.equal(loadSequencer.invalidateForSnapshot("session"), true);
+resolveHTTP({ period: "session", entries: [{ display_name: "HTTP older", score: 3 }] });
+await completedHTTP;
+assert.equal(snapshots.get("session")?.entries[0].display_name, "WebSocket newest");
 assert.equal(snapshots.get("day")?.entries[0].display_name, "Day");
+assert.equal(loadSequencer.invalidateForSnapshot("day"), false, "a different period leaves no stale active request");
 
 let clock = 0;
 let nextTimer = 0;

@@ -12,6 +12,7 @@ import {
   isPanelOpacityDraft,
   isPanelOpacity,
   normalizeOpacitySurface,
+  parsePanelOpacity,
   previewSurfacePanelOpacity,
   withLeaderboardAppearance,
   withSurfacePanelOpacity,
@@ -254,8 +255,8 @@ function collectSurfaces(base) {
   const rawOpacity = panelOpacityTouched
     ? panelOpacityDrafts[opacityEditorSurface]
     : fieldValue("overlay-panel-opacity", "");
-  const opacity = Number.parseFloat(rawOpacity);
-  if (panelOpacityTouched && isPanelOpacity(opacity)) {
+  const opacity = parsePanelOpacity(rawOpacity);
+  if (panelOpacityTouched && opacity !== null) {
     surfaces = withSurfacePanelOpacity(surfaces, opacityEditorSurface, opacity);
   }
   return surfaces;
@@ -910,7 +911,12 @@ export function collectAppearanceQuery() {
   writeFormIntoActive();
   const preset = currentPreset();
   const style = collectStyleFromForm(preset);
-  const previewOpacity = previewSurfacePanelOpacity(preset, selectedOpacitySurface(), style.panel_opacity);
+  const draftOpacity = panelOpacityTouched
+    ? parsePanelOpacity(panelOpacityDrafts[opacityEditorSurface])
+    : null;
+  const previewOpacity = draftOpacity === null
+    ? previewSurfacePanelOpacity(preset, selectedOpacitySurface(), style.panel_opacity)
+    : draftOpacity;
   const query = {
     preset: activePresetId,
     font_family: style.font_family,

@@ -22,6 +22,7 @@ import {
   hasInvalidPanelOpacityDraft,
   revealInvalidPanelOpacityDraft,
 } from "./overlay-appearance.js";
+import { parsePanelOpacity } from "./surface-opacity.js";
 import {
   getPreviewSurface,
   mountOverlayPreview,
@@ -391,8 +392,8 @@ async function publishStudioDraft() {
   clearFieldErrors();
   revealInvalidPanelOpacityDraft();
   const opacityInput = document.getElementById("overlay-panel-opacity");
-  const opacity = Number.parseFloat(opacityInput && opacityInput.value);
-  if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) {
+  const opacity = parsePanelOpacity(opacityInput && opacityInput.value);
+  if (opacity === null) {
     setFieldError("overlay_panel_opacity", t("obs.panelOpacityHint"));
     showBanner("error", t("banner.checkFields"));
     if (opacityInput) {

@@ -31,6 +31,51 @@ export function appendText(el, text) {
   el.appendChild(document.createTextNode(typeof text === "string" ? text : ""));
 }
 
+// The overlay creates this once with each message row. Keeping the feedback in
+// a dedicated slot lets reward timers update only transient decoration instead
+// of rebuilding rich message content (emotes, previews, and avatars).
+export function createRewardSlot() {
+  const rewardSlot = document.createElement("span");
+  rewardSlot.className = "message__reward-slot";
+  rewardSlot.setAttribute("aria-hidden", "true");
+  const rewardEl = document.createElement("span");
+  rewardEl.className = "message__reward";
+  const awardName = document.createElement("span");
+  awardName.className = "message__reward-name";
+  const points = document.createElement("span");
+  points.className = "message__reward-points";
+  rewardEl.append(awardName, points);
+  rewardSlot.appendChild(rewardEl);
+  return rewardSlot;
+}
+
+export function setRewardSlot(rewardSlot, reward, label) {
+  const rewardEl = rewardSlot.querySelector(".message__reward");
+  const awardName = rewardSlot.querySelector(".message__reward-name");
+  const points = rewardSlot.querySelector(".message__reward-points");
+  if (!reward || !rewardEl || !awardName || !points) {
+    rewardSlot.setAttribute("aria-hidden", "true");
+    if (rewardEl) {
+      rewardEl.removeAttribute("aria-label");
+      rewardEl.removeAttribute("title");
+    }
+    if (awardName) {
+      awardName.textContent = "";
+    }
+    if (points) {
+      points.textContent = "";
+    }
+    return;
+  }
+
+  const accessibleLabel = typeof label === "string" ? label : "";
+  rewardEl.setAttribute("aria-label", accessibleLabel);
+  rewardEl.title = accessibleLabel;
+  awardName.textContent = typeof reward.award_name === "string" ? reward.award_name.trim() : "";
+  points.textContent = typeof reward.points === "number" && reward.points > 0 ? "+" + String(reward.points) : "";
+  rewardSlot.removeAttribute("aria-hidden");
+}
+
 export function readFragmentText(fragment) {
   return typeof fragment.text === "string" ? fragment.text : "";
 }

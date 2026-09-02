@@ -154,6 +154,7 @@ export function createRewardControl(message, options) {
   let activePicker = null;
   let dismissHandler = null;
   let feedback = null;
+  let grantInFlight = false;
 
   function reportFeedback(message) {
     if (!feedback) {
@@ -169,6 +170,9 @@ export function createRewardControl(message, options) {
   }
 
   function dismissPicker() {
+    if (grantInFlight) {
+      return false;
+    }
     if (dismissHandler) {
       document.removeEventListener("pointerdown", dismissHandler, true);
       document.removeEventListener("keydown", dismissHandler, true);
@@ -178,6 +182,7 @@ export function createRewardControl(message, options) {
       closePicker(activePicker, button);
       activePicker = null;
     }
+    return true;
   }
 
   async function openPicker() {
@@ -282,10 +287,12 @@ export function createRewardControl(message, options) {
   }
 
   async function grantSelected(award, selectedItem) {
-    if (!award || button.disabled) {
+    if (!award || grantInFlight || !activePicker) {
       return;
     }
 
+    const requestPicker = activePicker;
+    grantInFlight = true;
     button.disabled = true;
     setRewardItemPending(selectedItem, true);
     const body = awardGrantRequest(message, award);
@@ -304,15 +311,19 @@ export function createRewardControl(message, options) {
       if (!response.ok) {
         throw new Error("grant failed");
       }
-      dismissPicker();
+      grantInFlight = false;
+      if (activePicker === requestPicker) {
+        dismissPicker();
+      }
       reportFeedback(awardGrantStatus(t, award));
     } catch {
+      grantInFlight = false;
       enableRewardRetry(button);
       setRewardItemPending(selectedItem, false);
       if (selectedItem) {
         selectedItem.focus();
       }
-      if (activePicker) {
+      if (activePicker === requestPicker) {
         const err = document.createElement("p");
         err.className = "reward-picker__error";
         err.setAttribute("role", "alert");

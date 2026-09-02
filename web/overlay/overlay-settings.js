@@ -17,6 +17,7 @@ const THEMES = new Set([
 
 const PANEL_IMAGE_FITS = new Set(["cover", "contain", "fill", "tile"]);
 const PANEL_IMAGE_SCOPES = new Set(["message", "column"]);
+const PANEL_OPACITY_QUERY = /^(?:(?:0|1)(?:\.\d*)?|\.\d+)$/;
 
 export function normalizeTheme(theme) {
   const value = String(theme || "").trim().toLowerCase();
@@ -154,6 +155,21 @@ export function fontStack(fontFamily) {
   return FONT_STACKS[fontFamily] || FONT_STACKS.system;
 }
 
+// Return a query opacity only when the complete parameter is a finite value in
+// the persisted 0..1 range. Number.parseFloat would accept prefixes such as
+// "0.5junk", while an empty query parameter must not become transparent.
+export function panelOpacityQueryValue(params) {
+  if (!params || typeof params.get !== "function" || typeof params.has !== "function" || !params.has("panel_opacity")) {
+    return null;
+  }
+  const raw = String(params.get("panel_opacity") || "").trim();
+  if (!PANEL_OPACITY_QUERY.test(raw)) {
+    return null;
+  }
+  const value = Number(raw);
+  return Number.isFinite(value) && value >= 0 && value <= 1 ? value : null;
+}
+
 export function applyQueryStyleOverrides(style, params) {
   const next = Object.assign({}, style);
   const get = typeof params.get === "function" ? params.get.bind(params) : function () { return null; };
@@ -182,11 +198,9 @@ export function applyQueryStyleOverrides(style, params) {
   if (has("panel_color") && /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(get("panel_color"))) {
     next.panel_color = get("panel_color");
   }
-  if (has("panel_opacity")) {
-    const value = Number.parseFloat(get("panel_opacity"));
-    if (Number.isFinite(value) && value >= 0 && value <= 1) {
-      next.panel_opacity = value;
-    }
+  const panelOpacity = panelOpacityQueryValue(params);
+  if (panelOpacity !== null) {
+    next.panel_opacity = panelOpacity;
   }
   if (has("panel_image")) {
     next.panel_image = get("panel_image") || "";
@@ -263,17 +277,8 @@ function hasSurfaceOpacityOverride(resolved, surface) {
 // shared style opacity default is zero. Keep that legacy appearance only when
 // a surface has not opted into an explicit override.
 export function panelBackground(theme, style) {
-  if (style && style.legacy_cockpit_glass) {
-    switch (normalizeTheme(theme)) {
-      case "cockpit_panel":
-        return "rgb(6 13 17 / 0.74)";
-      case "cockpit_popups":
-        return "rgb(6 13 17 / 0.88)";
-      case "g_rebels_popups":
-        return "rgb(5 6 4 / 0.78)";
-      default:
-        break;
-    }
+  if (style && style.legacy_cockpit_glass_background) {
+    return style.legacy_cockpit_glass_background;
   }
   return hexToRgba(style && style.panel_color, style && style.panel_opacity);
 }
@@ -300,12 +305,35 @@ function surfaceViewFromConfig(config, params, surface) {
   };
 }
 
-function markLegacyCockpitGlass(style, resolved, surface, theme, query) {
+function legacyCockpitGlassBackground(theme, surface, layout) {
+  if (normalizeTheme(theme) === "g_rebels_popups") {
+    return "rgb(5 6 4 / 0.78)";
+  }
+  if (surface === "chat") {
+    return normalizeTheme(theme) === "cockpit_panel"
+      ? "rgb(8 17 22 / 0.70)"
+      : "rgb(4 13 17 / 0.76)";
+  }
+  if (surface === "leaderboard" && layout === "chips") {
+    return "rgb(4 13 17 / 0.76)";
+  }
+  if (surface === "leaderboard") {
+    return "rgb(8 17 22 / 0.70)";
+  }
+  return normalizeTheme(theme) === "cockpit_panel"
+    ? "rgb(8 17 22 / 0.70)"
+    : "rgb(4 13 17 / 0.76)";
+}
+
+function markLegacyCockpitGlass(style, resolved, surface, theme, query, layout) {
   style.legacy_cockpit_glass =
     !hasSurfaceOpacityOverride(resolved, surface) &&
-    !(query && query.has("panel_opacity")) &&
+    panelOpacityQueryValue(query) === null &&
     style.panel_opacity === 0 &&
     ["cockpit_panel", "cockpit_popups", "g_rebels_popups"].includes(theme);
+  style.legacy_cockpit_glass_background = style.legacy_cockpit_glass
+    ? legacyCockpitGlassBackground(theme, surface, layout)
+    : "";
   return style;
 }
 
@@ -343,7 +371,6 @@ export function leaderboardViewFromConfig(config, params) {
   const merged = mergeStyle(theme, resolved && resolved.style);
   merged.panel_opacity = surfaceOpacity(resolved, "leaderboard", merged.panel_opacity);
   const style = applyQueryStyleOverrides(merged, query);
-  markLegacyCockpitGlass(style, resolved, "leaderboard", theme, query);
   const surface =
     resolved && resolved.surfaces && resolved.surfaces.leaderboard && typeof resolved.surfaces.leaderboard === "object"
       ? resolved.surfaces.leaderboard
@@ -365,6 +392,7 @@ export function leaderboardViewFromConfig(config, params) {
       layout = queriedLayout;
     }
   }
+  markLegacyCockpitGlass(style, resolved, "leaderboard", theme, query, layout);
 
   return {
     font_size_px: fontSizePx,

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -172,6 +173,62 @@ func TestAwardGrant_WhenNoMessageContext_ExpectGrantWithoutHighlightFields(t *te
 	require.NotContains(t, alert, "message_platform")
 	require.NotContains(t, alert, "message_id")
 	require.NotContains(t, alert, "message_text")
+}
+
+func TestAwardGrant_WhenQuoteIsProvided_ExpectNoDurableOrResponseQuote(t *testing.T) {
+	// Arrange
+	env := newTestEnv(t, bus.New(0))
+	seedViewer(t, env, "twitch", "42", "Alice")
+	const quote = "private award quote must not persist"
+
+	// Act
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(
+		http.MethodPost,
+		"/api/awards/grant",
+		strings.NewReader(`{"platform":"twitch","user_id":"42","award_id":"joke","message_id":"msg-42","message_text":"`+quote+`"}`),
+	))
+
+	// Assert: the normal grant DTO is not a quote carrier.
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.NotContains(t, rec.Body.String(), quote)
+
+	var grantPayload struct {
+		ViewerID string `json:"viewer_id"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &grantPayload))
+	events, err := env.ViewerStore.ListInteractionEventsByViewer(grantPayload.ViewerID)
+	require.NoError(t, err)
+	require.Len(t, events, 1)
+	persistedEvent, err := json.Marshal(events[0])
+	require.NoError(t, err)
+	require.NotContains(t, string(persistedEvent), quote)
+
+	configBytes, err := os.ReadFile(env.ConfigStore.Path())
+	require.NoError(t, err)
+	require.NotContains(t, string(configBytes), quote)
+	publicConfig, err := json.Marshal(env.ConfigStore.Snapshot().Public())
+	require.NoError(t, err)
+	require.NotContains(t, string(publicConfig), quote)
+}
+
+func TestAwardGrant_WhenRejectedWithQuote_ExpectErrorDTODoesNotEchoQuote(t *testing.T) {
+	// Arrange
+	env := newTestEnv(t, bus.New(0))
+	const quote = "private quote must not reach an error DTO"
+
+	// Act
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(
+		http.MethodPost,
+		"/api/awards/grant",
+		strings.NewReader(`{"platform":"twitch","user_id":"42","award_id":"missing","message_text":"`+quote+`"}`),
+	))
+
+	// Assert
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	require.NotContains(t, rec.Body.String(), quote)
+	require.NotContains(t, rec.Body.String(), "message_text")
 }
 
 func TestAwardGrant_WhenEmptyUserID_ExpectBadRequest(t *testing.T) {

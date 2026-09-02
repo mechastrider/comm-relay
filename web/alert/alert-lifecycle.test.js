@@ -6,8 +6,14 @@ import { createAlertScheduler } from "./alert-scheduler.js";
 
 test("an audio failure cannot prevent visible completion from advancing the queue", async function () {
   const scheduler = createAlertScheduler({ now: () => 0 });
-  assert.equal(scheduler.enqueue({ id: "visible", source: "command" }).id, "visible");
-  scheduler.enqueue({ id: "next-award", source: "award" });
+  assert.equal(
+    scheduler.enqueue({ id: "visible", source: "command", name: "Nova", text: "Ready", points: 0, duration_ms: 5_000 }).id,
+    "visible"
+  );
+  scheduler.enqueue({
+    id: "next-award", source: "award", name: "Nova", text: "Awarded", points: 10,
+    duration_ms: 5_000, award_id: "spotter", award_name: "Spotter",
+  });
 
   let scheduled = null;
   startSplashLifecycle({

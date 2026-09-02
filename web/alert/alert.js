@@ -8,12 +8,12 @@ import {
   normalizePreviewBackground,
   overlayAssetURL,
   alertViewFromConfig,
-} from "/overlay/overlay-settings.js?v=6";
+} from "/overlay/overlay-settings.js?v=8";
 import { createChatRender } from "/shared/chat-render.js?v=12";
 import { ensureAudioContext, scheduleAlertSound } from "./alert-sound.js";
 import { startSplashLifecycle } from "./alert-lifecycle.js?v=2";
 import { createAlertSplash } from "./alert-render.js?v=2";
-import { createAlertScheduler } from "./alert-scheduler.js?v=2";
+import { createAlertScheduler } from "./alert-scheduler.js?v=3";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;

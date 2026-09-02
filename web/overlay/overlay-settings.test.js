@@ -10,6 +10,7 @@ import {
   normalizeLeaderboardLayout,
   normalizePanelImageFit,
   normalizePanelImageScope,
+  panelOpacityQueryValue,
   panelBackground,
   normalizePreviewBackground,
   overlayViewFromConfig,
@@ -152,20 +153,41 @@ test("surface views resolve independent opacity overrides with legacy fallback",
   assert.equal(alertViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 0.58);
 });
 
-test("legacy cockpit glass remains fixed without an override but explicit zero stays transparent", function () {
-  const legacyThemes = {
-    cockpit_panel: "rgb(6 13 17 / 0.74)",
-    cockpit_popups: "rgb(6 13 17 / 0.88)",
-    g_rebels_popups: "rgb(5 6 4 / 0.78)",
+test("legacy cockpit glass exactly matches every baseline theme, surface, and leaderboard layout", function () {
+  const legacyMappings = {
+    cockpit_panel: {
+      chat: "rgb(8 17 22 / 0.70)",
+      alerts: "rgb(8 17 22 / 0.70)",
+      leaderboard: { panel: "rgb(8 17 22 / 0.70)", chips: "rgb(4 13 17 / 0.76)" },
+    },
+    cockpit_popups: {
+      chat: "rgb(4 13 17 / 0.76)",
+      alerts: "rgb(4 13 17 / 0.76)",
+      leaderboard: { panel: "rgb(8 17 22 / 0.70)", chips: "rgb(4 13 17 / 0.76)" },
+    },
+    g_rebels_popups: {
+      chat: "rgb(5 6 4 / 0.78)",
+      alerts: "rgb(5 6 4 / 0.78)",
+      leaderboard: { panel: "rgb(5 6 4 / 0.78)", chips: "rgb(5 6 4 / 0.78)" },
+    },
   };
-  Object.entries(legacyThemes).forEach(function ([theme, glass]) {
-    const config = { overlay: { presets: [{ id: "cockpit", theme, style: { panel_opacity: 0 }, surfaces: {} }] } };
-    [overlayViewFromConfig, leaderboardViewFromConfig, alertViewFromConfig].forEach(function (viewForSurface) {
+
+  Object.entries(legacyMappings).forEach(function ([theme, expected]) {
+    const preset = { id: "cockpit", theme, style: { panel_opacity: 0 }, surfaces: {} };
+    const config = { overlay: { presets: [preset] } };
+    [["chat", overlayViewFromConfig], ["alerts", alertViewFromConfig]].forEach(function ([surface, viewForSurface]) {
       const view = viewForSurface(config, new URLSearchParams());
       assert.equal(view.style.legacy_cockpit_glass, true);
-      assert.equal(panelBackground(view.theme, view.style), glass);
+      assert.equal(panelBackground(view.theme, view.style), expected[surface]);
     });
-    config.overlay.presets[0].surfaces = { chat: { panel_opacity: 0 }, leaderboard: { panel_opacity: 0 }, alerts: { panel_opacity: 0 } };
+    ["panel", "chips"].forEach(function (layout) {
+      preset.surfaces = { leaderboard: { layout } };
+      const view = leaderboardViewFromConfig(config, new URLSearchParams());
+      assert.equal(view.style.legacy_cockpit_glass, true);
+      assert.equal(panelBackground(view.theme, view.style), expected.leaderboard[layout]);
+    });
+
+    preset.surfaces = { chat: { panel_opacity: 0 }, leaderboard: { panel_opacity: 0 }, alerts: { panel_opacity: 0 } };
     [overlayViewFromConfig, leaderboardViewFromConfig, alertViewFromConfig].forEach(function (viewForSurface) {
       const view = viewForSurface(config, new URLSearchParams());
       assert.equal(view.style.legacy_cockpit_glass, false);
@@ -189,6 +211,48 @@ test("surface views keep valid panel opacity query overrides", function () {
   assert.equal(overlayViewFromConfig(config, query).style.panel_opacity, 0.9);
   assert.equal(leaderboardViewFromConfig(config, query).style.panel_opacity, 0.9);
   assert.equal(alertViewFromConfig(config, query).style.panel_opacity, 0.9);
+
+  const transparentQuery = new URLSearchParams("panel_opacity=0");
+  assert.equal(overlayViewFromConfig(config, transparentQuery).style.panel_opacity, 0);
+});
+
+test("only valid panel opacity queries replace opacity or suppress legacy cockpit glass", function () {
+  const config = {
+    overlay: {
+      presets: [{ id: "cockpit", theme: "cockpit_panel", style: { panel_opacity: 0 }, surfaces: {} }],
+    },
+  };
+  const views = [
+    ["chat", overlayViewFromConfig],
+    ["alerts", alertViewFromConfig],
+    ["leaderboard panel", leaderboardViewFromConfig],
+    ["leaderboard chips", leaderboardViewFromConfig],
+  ];
+  const invalid = ["", "not-a-number", "0.5junk", "0x1", "-0.01", "1.01"];
+
+  invalid.forEach(function (raw) {
+    const query = new URLSearchParams("panel_opacity=" + encodeURIComponent(raw));
+    assert.equal(panelOpacityQueryValue(query), null, raw);
+    views.forEach(function ([surface, viewForSurface]) {
+      const params = surface === "leaderboard chips"
+        ? new URLSearchParams(query.toString() + "&layout=chips")
+        : query;
+      const view = viewForSurface(config, params);
+      assert.equal(view.style.panel_opacity, 0, surface + " keeps its stored opacity for " + raw);
+      assert.equal(view.style.legacy_cockpit_glass, true, surface + " keeps fallback glass for " + raw);
+    });
+  });
+
+  const transparent = new URLSearchParams("panel_opacity=0");
+  assert.equal(panelOpacityQueryValue(transparent), 0);
+  views.forEach(function ([surface, viewForSurface]) {
+    const params = surface === "leaderboard chips"
+      ? new URLSearchParams("panel_opacity=0&layout=chips")
+      : transparent;
+    const view = viewForSurface(config, params);
+    assert.equal(view.style.panel_opacity, 0, surface + " accepts explicit transparent opacity");
+    assert.equal(view.style.legacy_cockpit_glass, false, surface + " disables legacy glass only for valid zero");
+  });
 });
 
 test("normalizeLeaderboardLayout defaults invalid values to panel", function () {

@@ -61,6 +61,50 @@ export function leaderboardPeriodTransition(renderedPeriod, nextPeriod, hasCache
 }
 
 /**
+ * Tracks the one active leaderboard HTTP response. A newer complete WebSocket
+ * frame for the same period invalidates that response before it can replace
+ * the frame cache or visible rows.
+ *
+ * @returns {{ begin: (period: unknown) => number, acceptsResponse: (generation: number, period: unknown) => boolean, invalidateForSnapshot: (period: unknown) => boolean, cancel: () => void, finish: (generation: number) => boolean }}
+ */
+export function createLeaderboardLoadSequencer() {
+  let nextGeneration = 0;
+  let activeGeneration = 0;
+  let activePeriod = null;
+
+  return {
+    begin(period) {
+      activeGeneration = ++nextGeneration;
+      activePeriod = leaderboardPeriodFrom(period);
+      return activeGeneration;
+    },
+    acceptsResponse(generation, period) {
+      return activeGeneration === generation && activePeriod === leaderboardPeriodFrom(period);
+    },
+    invalidateForSnapshot(period) {
+      if (activePeriod !== leaderboardPeriodFrom(period) || activePeriod === null) {
+        return false;
+      }
+      activeGeneration = 0;
+      activePeriod = null;
+      return true;
+    },
+    cancel() {
+      activeGeneration = 0;
+      activePeriod = null;
+    },
+    finish(generation) {
+      if (activeGeneration !== generation) {
+        return false;
+      }
+      activeGeneration = 0;
+      activePeriod = null;
+      return true;
+    },
+  };
+}
+
+/**
  * Debounces live-data invalidation without allowing a refresh more often than
  * the configured interval. The caller owns HTTP cancellation and resolves the
  * returned revision when that request completes.

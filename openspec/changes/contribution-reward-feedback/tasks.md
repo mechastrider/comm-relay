@@ -95,11 +95,11 @@
 
 - [x] 5.1 Add concise Russian streamer-facing bullets under `CHANGELOG.md` `[Unreleased]` for contextual rewards, award-priority alerts, live ranking feedback, and independent per-overlay opacity without rewriting released sections.
 - [x] 5.2 Update operator-facing README/FAQ instructions only if the implemented Studio placement or fallback behavior cannot be understood from existing setup guidance; otherwise record the explicit skip in review evidence.
-- [ ] 5.3 Reconcile implemented behavior against every delta scenario and prepare the change for the normal OpenSpec sync/archive workflow without archiving it as part of implementation.
+- [x] 5.3 Reconcile implemented behavior against every delta scenario and prepare the change for the normal OpenSpec sync/archive workflow without archiving it as part of implementation.
 
 ## Gate: qa
 
-- [x] Q.1 Execute `qa_plan.md` and record platform/theme/scaling coverage, screenshots or captures, config before/after excerpts without secrets, API/WebSocket assertions, fake-time evidence, and every explicit skip.
+- [ ] Q.1 Execute `qa_plan.md` and record platform/theme/scaling coverage, screenshots or captures, config before/after excerpts without secrets, API/WebSocket assertions, fake-time evidence, and every explicit skip.
 - [x] Q.2 Run `npm ci`.
 - [x] Q.3 Run `npm test`.
 - [x] Q.4 Run `npm run test:i18n`.
@@ -112,8 +112,8 @@
 
 ## Gate: review
 
-- [ ] R.1 Perform a fresh full-diff review with CRITICAL findings at zero and all affected checks green.
-- [ ] R.2 Confirm privacy and compatibility explicitly: no persisted/logged quote text, unchanged POST-action routing, optional wire/config additions, exact message matching, and safe old-config/old-client fallback.
+- [x] R.1 Perform a fresh full-diff review with CRITICAL findings at zero and all affected checks green.
+- [x] R.2 Confirm privacy and compatibility explicitly: no persisted/logged quote text, unchanged POST-action routing, optional wire/config additions, exact message matching, and safe old-config/old-client fallback.
 
 ## Gate: distribution-readiness
 

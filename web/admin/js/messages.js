@@ -1,5 +1,5 @@
 import { createChatRender, safeImageURL, appendText } from '/shared/chat-render.js?v=12';
-import { createRewardControl, messageCanBeRewarded } from '/shared/reward-picker.js?v=3';
+import { createRewardControl, messageCanBeRewarded } from '/shared/reward-picker.js?v=4';
 import * as dom from './dom.js';
 import { state } from './state.js';
 import {

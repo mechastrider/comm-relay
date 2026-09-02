@@ -8,14 +8,24 @@ export function isPanelOpacity(value) {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
 }
 
+// Number inputs permit decimal exponent notation (for example, 1e-1). Parse
+// that complete numeric grammar consistently; partial values such as "1e" or
+// unrelated JavaScript number spellings are not valid Studio drafts.
+const PANEL_OPACITY_PATTERN = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
+
+export function parsePanelOpacity(value) {
+  if (typeof value !== "string" || !PANEL_OPACITY_PATTERN.test(value)) {
+    return null;
+  }
+  const parsed = Number(value);
+  return isPanelOpacity(parsed) ? parsed : null;
+}
+
 // Inputs stay strings while a Studio draft is being edited. Empty and
 // out-of-range values are invalid drafts, not an instruction to discard a
 // surface override.
 export function isPanelOpacityDraft(value) {
-  if (typeof value !== "string" || value.trim() === "") {
-    return false;
-  }
-  return isPanelOpacity(Number(value));
+  return parsePanelOpacity(value) !== null;
 }
 
 export function effectiveSurfaceOpacity(surfaces, surface, fallback) {
