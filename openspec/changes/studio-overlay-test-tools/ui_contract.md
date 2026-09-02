@@ -10,7 +10,7 @@
 
 ## Menus / Tray / Commands / Shortcuts
 
-No application menu, tray, global shortcut, or native command changes. The preview toolbar uses the shared replay, copy, refresh, and test icons where context is explicit. Run remains a text-labelled primary action; Reset retains a visible label where clearing all test surfaces could be mistaken for replay.
+No application menu, tray, global shortcut, or native command changes. The preview toolbar uses the shared replay, copy, refresh, and test icons where context is explicit. Run remains a text-labelled primary action; Reset retains a visible label where clearing all test surfaces could be mistaken for replay. The preset toolbar keeps create, rename, duplicate, and delete visible beside the selector as icon-only actions rather than placing them in an overflow menu.
 
 ## View / Flow: `Studio overlay test mode`
 
@@ -21,6 +21,7 @@ No application menu, tray, global shortcut, or native command changes. The previ
 - Chat offers `message` and `rewarded_message`; leaderboard offers `leaderboard_update`; alerts offer `command_alert`, `rewarded_message`, and `alert_burst`. Scenario fields reuse defaults and remain optional.
 - Test mode replaces the selected iframe's static sample connection only while active. Exiting restores the existing sample preview and appearance controls.
 - The preview and all runtime overlay roots fill their containing rectangle. Alert chrome fills its rectangle with safe padding; chat messages remain bottom-anchored and content-sized; leaderboard retains panel/chips layout.
+- Shared text and icon action buttons use a raised rest/hover surface and a pressed active state. The preset action group may wrap with the preset controls at narrow widths, but its actions remain visible and the URL group moves to its own row before controls overlap or clip.
 
 ### Data / Forms / Actions
 
@@ -45,9 +46,10 @@ Stable copy actions produce `/overlay/test/chat`, `/overlay/test/leaderboard`, o
 ## Accessibility / Keyboard / Focus
 
 - All controls remain reachable in logical DOM order; opening the panel moves focus to its heading or first control, and closing returns focus to the trigger.
-- Icon-only copy, refresh, and replay controls have localized `aria-label`, the shared hover/focus tooltip, visible focus rings, and consistent pointer targets.
+- Icon-only copy, refresh, replay, and preset controls have localized `aria-label`, the shared hover/focus tooltip, visible focus rings, and consistent pointer targets.
+- Preset deletion is visually destructive, disabled when only one preset exists, and opens the existing confirmation flow; color is not its only identification because its tooltip and accessible name remain available.
 - Scenario inputs have persistent labels. Validation, delivery count, and asynchronous results use an appropriate live region without stealing focus.
-- Run, Reset, close, and any ambiguous action keep visible localized text. Color or icon shape is never the sole status signal.
+- Run, Reset, close, and any ambiguous action outside the explicit preset toolbar keep visible localized text. Color or icon shape is never the sole status signal.
 - Reduced motion disables non-essential preview transitions but does not skip scenario event ordering.
 
 ## Scaling / Theme / Localization / Reduced Motion

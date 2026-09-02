@@ -36,15 +36,18 @@
 > **Outcome**: Familiar contextual actions are quieter and accessible, and every runtime surface fits the user-sized OBS rectangle while preserving its content semantics.
 > **Acceptance**: `npm test`, `npm run lint`, and the viewport matrix in `qa_plan.md`
 > **Skills**: `admin-design-system`, `web-static-frontend`, `ui-styling`, `obs-overlay-themes`
-> **Scope**: Existing copy/refresh/replay controls, shared icon button behavior, chat/leaderboard/alert roots and theme chrome
+> **Scope**: Existing copy/refresh/replay controls, preset-management controls, shared text/icon button behavior, chat/leaderboard/alert roots and theme chrome
 > **Allowed fallout**: Inline SVG symbols, shared tooltip/a11y helpers, markup tests, responsive theme CSS
-> **Blocked**: icon-only ambiguous/primary/destructive actions, new icon dependency, whole-page scaling, stretched chat rows, new theme
+> **Blocked**: icon-only ambiguous/primary/destructive actions outside the explicit preset toolbar, new icon dependency, whole-page scaling, stretched chat rows, new theme
 
 - [x] 3.1 Inventory contextual copy, refresh, and replay actions and convert suitable controls to the shared current-color icon pattern with localized accessible names, tooltips, focus, and stable async feedback.
 - [x] 3.2 Add/adjust markup and accessibility tests proving icon-only eligibility while visible labels remain for Run, Reset, destructive, and workflow-specific actions.
 - [x] 3.3 Make chat and leaderboard runtime roots fill the Browser Source rectangle without changing bottom-anchored message sizing or panel/chips semantics.
 - [x] 3.4 Remove intrinsic narrow alert chrome constraints and adapt every alert theme to fill the available rectangle with safe padding, wrapping, and bounded overflow.
 - [x] 3.5 Smoke and correct all affected themes at 320×180, 640×360, 1080×1080, 480×720, and 1920×240, including long content and reduced motion.
+- [x] 3.6 Restore always-visible icon-only create, rename, duplicate, and delete controls beside the Studio preset selector; remove the preset-count overflow substitution while preserving limits, disabled states, localized tooltips/accessibility names, and delete confirmation.
+- [x] 3.7 Give the shared text and icon button components raised rest/hover styling and a pressed active state without changing tabs, navigation, selects, or choice chips.
+- [x] 3.8 Add markup, accessibility, behavior, and responsive tests for the preset action group and shared raised button states at supported Studio widths and themes.
 
 ## Docs: Operator-facing contract and project guidance
 

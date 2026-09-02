@@ -11,7 +11,7 @@ The change serves streamers and OBS operators using the web or Wails Studio. Win
 - Add one process-global, local-only Studio test channel that emits typed message, rewarded-message, command-alert, leaderboard-update, and alert-burst scenarios to dedicated test overlay routes.
 - Serve test chat, leaderboard, and alert pages only at `/overlay/test/chat`, `/overlay/test/leaderboard`, and `/overlay/test/alert`; connect them only to `/ws/overlay-debug` so test content fails closed and never reaches production overlay routes or `/ws`.
 - Provide stable active-preset test URLs plus optional current-preview snapshot URLs, receiver/delivery feedback, and global reset/replay controls without changing scores, history, analytics, active presets, published settings, or live overlay clients.
-- Use familiar icons for contextual copy, refresh, and replay actions, with localized accessible names, keyboard focus, and tooltips. Ambiguous, primary, and destructive actions retain visible labels.
+- Use familiar icons for contextual copy, refresh, replay, and preset-management actions, with localized accessible names, keyboard focus, and tooltips. Keep the preset actions visible beside the preset selector, distinguish deletion visually and retain its confirmation, and give shared text and icon buttons a raised physical treatment with a pressed state. Other ambiguous, primary, and destructive actions retain visible labels.
 - Make every overlay root fill its Browser Source rectangle. Make the alert's primary chrome use the available rectangle rather than a narrow maximum width, while preserving content-sized chat messages and configured leaderboard layouts.
 
 ## Capabilities
@@ -30,7 +30,7 @@ The change serves streamers and OBS operators using the web or Wails Studio. Win
 
 ## Scope / Non-Goals
 
-No arbitrary JSON/script injection, persistent scenario state, score grants, chat recording, OBS scene control, new theme, or icon-only conversion of workflow-specific actions is included.
+No arbitrary JSON/script injection, persistent scenario state, score grants, chat recording, OBS scene control, new theme, icon-only conversion of workflow-specific actions outside the explicit preset toolbar, or redesign of tabs and navigation controls is included.
 
 ## Impact
 

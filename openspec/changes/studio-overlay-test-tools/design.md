@@ -48,7 +48,8 @@ The feature remains on the existing localhost server boundary. Dedicated page an
 3. **Keep static sample preview and add explicit test mode.** Static samples remain faster for theme comparison; test mode makes its non-live event semantics unambiguous. Stable test URLs follow the active preset and can remain in OBS, while optional snapshot URLs carry current unpublished draft appearance overrides and must be recopied after later draft edits.
 4. **Reuse production frame handlers.** Test rendering must not drift into a parallel mock renderer. Debug routing metadata stays outside domain persistence.
 5. **Fill the surface root, then preserve component semantics.** Alerts have one primary chrome and therefore fill the available rectangle; chat rows remain bottom-anchored and content-sized, and leaderboard panel/chips behavior remains configurable.
-6. **Reserve icon-only controls for familiar contextual actions.** Copy, refresh, and replay gain standard icons, tooltips, accessible names, and focus states. Primary, destructive, or ambiguous actions keep visible labels.
+6. **Use icon-only controls for familiar contextual actions.** Copy, refresh, replay, and the preset toolbar's create, rename, duplicate, and delete actions use standard icons, tooltips, accessible names, and focus states. Preset actions remain visible beside the selector instead of moving into a text overflow menu; deletion keeps destructive styling, disabled semantics, and confirmation. Primary and ambiguous actions elsewhere keep visible labels.
+7. **Give shared buttons physical depth.** Existing shared text and icon button components use a raised rest/hover treatment and a pressed active treatment without layout movement. Tabs, navigation, selects, and choice chips keep their distinct interaction language.
 
 ## Risks / Trade-offs
 
