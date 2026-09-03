@@ -89,26 +89,26 @@ func (s *Store) repointIdentitiesLocked(tx *sql.Tx, fromID, intoID string) error
 }
 
 func (s *Store) sumAllTimeCountersLocked(tx *sql.Tx, fromID, intoID string) error {
-	var messageCount, score int
+	var messageCount, xp int
 	err := tx.QueryRow(
-		`SELECT message_count, score FROM viewers WHERE id = ?`,
+		`SELECT message_count, xp FROM viewers WHERE id = ?`,
 		fromID,
-	).Scan(&messageCount, &score)
+	).Scan(&messageCount, &xp)
 	if err != nil {
 		return errors.Errorf("load source all-time counters: %w", err)
 	}
 
-	if messageCount == 0 && score == 0 {
+	if messageCount == 0 && xp == 0 {
 		return nil
 	}
 
 	if _, err := tx.Exec(
 		`UPDATE viewers
 		 SET message_count = message_count + ?,
-		     score = score + ?
+		     xp = xp + ?
 		 WHERE id = ?`,
 		messageCount,
-		score,
+		xp,
 		intoID,
 	); err != nil {
 		return errors.Errorf("sum all-time counters: %w", err)
@@ -118,12 +118,14 @@ func (s *Store) sumAllTimeCountersLocked(tx *sql.Tx, fromID, intoID string) erro
 }
 
 func (s *Store) sumSessionCountersLocked(tx *sql.Tx, fromID, intoID, sessionID string) error {
-	var messageCount, score int
+	var messageCount, xp, activityGrants int
+	var lastActivityAt sql.NullString
 	err := tx.QueryRow(
-		`SELECT message_count, score FROM viewer_session_stats WHERE viewer_id = ? AND session_id = ?`,
+		`SELECT message_count, xp, activity_grants, last_activity_at
+		 FROM viewer_session_stats WHERE viewer_id = ? AND session_id = ?`,
 		fromID,
 		sessionID,
-	).Scan(&messageCount, &score)
+	).Scan(&messageCount, &xp, &activityGrants, &lastActivityAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil
 	}
@@ -132,15 +134,24 @@ func (s *Store) sumSessionCountersLocked(tx *sql.Tx, fromID, intoID, sessionID s
 	}
 
 	if _, err := tx.Exec(
-		`INSERT INTO viewer_session_stats (viewer_id, session_id, message_count, score)
-		 VALUES (?, ?, ?, ?)
+		`INSERT INTO viewer_session_stats (viewer_id, session_id, message_count, xp, activity_grants, last_activity_at)
+		 VALUES (?, ?, ?, ?, ?, ?)
 		 ON CONFLICT(viewer_id, session_id) DO UPDATE SET
 		   message_count = message_count + excluded.message_count,
-		   score = score + excluded.score`,
+		   xp = xp + excluded.xp,
+		   activity_grants = activity_grants + excluded.activity_grants,
+		   last_activity_at = CASE
+		     WHEN excluded.last_activity_at IS NULL THEN last_activity_at
+		     WHEN last_activity_at IS NULL THEN excluded.last_activity_at
+		     WHEN excluded.last_activity_at > last_activity_at THEN excluded.last_activity_at
+		     ELSE last_activity_at
+		   END`,
 		intoID,
 		sessionID,
 		messageCount,
-		score,
+		xp,
+		activityGrants,
+		lastActivityAt,
 	); err != nil {
 		return errors.Errorf("sum session counters: %w", err)
 	}
@@ -149,12 +160,12 @@ func (s *Store) sumSessionCountersLocked(tx *sql.Tx, fromID, intoID, sessionID s
 }
 
 func (s *Store) sumDayCountersLocked(tx *sql.Tx, fromID, intoID, dayKey string) error {
-	var messageCount, score int
+	var messageCount, xp int
 	err := tx.QueryRow(
-		`SELECT message_count, score FROM viewer_day_stats WHERE viewer_id = ? AND day_key = ?`,
+		`SELECT message_count, xp FROM viewer_day_stats WHERE viewer_id = ? AND day_key = ?`,
 		fromID,
 		dayKey,
-	).Scan(&messageCount, &score)
+	).Scan(&messageCount, &xp)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil
 	}
@@ -163,15 +174,15 @@ func (s *Store) sumDayCountersLocked(tx *sql.Tx, fromID, intoID, dayKey string) 
 	}
 
 	if _, err := tx.Exec(
-		`INSERT INTO viewer_day_stats (viewer_id, day_key, message_count, score)
+		`INSERT INTO viewer_day_stats (viewer_id, day_key, message_count, xp)
 		 VALUES (?, ?, ?, ?)
 		 ON CONFLICT(viewer_id, day_key) DO UPDATE SET
 		   message_count = message_count + excluded.message_count,
-		   score = score + excluded.score`,
+		   xp = xp + excluded.xp`,
 		intoID,
 		dayKey,
 		messageCount,
-		score,
+		xp,
 	); err != nil {
 		return errors.Errorf("sum day counters: %w", err)
 	}

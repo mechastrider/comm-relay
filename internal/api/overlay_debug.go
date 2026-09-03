@@ -291,9 +291,9 @@ func debugLeaderboardPayload(name string, points int) ([]byte, error) {
 		Type:   wireLeaderboardType,
 		Period: "session",
 		Entries: []wireLeaderboardEntry{
-			{Rank: 1, DisplayName: name, Score: points, MessageCount: 12},
-			{Rank: 2, DisplayName: "Overlay Pilot", Score: 75, MessageCount: 9},
-			{Rank: 3, DisplayName: "Chat Explorer", Score: 50, MessageCount: 6},
+			{Rank: 1, DisplayName: name, XP: points, MessageCount: 12},
+			{Rank: 2, DisplayName: "Overlay Pilot", XP: 75, MessageCount: 9},
+			{Rank: 3, DisplayName: "Chat Explorer", XP: 50, MessageCount: 6},
 		},
 	})
 	if err != nil {

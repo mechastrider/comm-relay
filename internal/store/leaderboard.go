@@ -15,7 +15,7 @@ type LeaderboardEntry struct {
 	Rank         int
 	DisplayName  string
 	AvatarURL    string
-	Score        int
+	XP           int
 	MessageCount int
 }
 
@@ -69,7 +69,7 @@ func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time
 		if err := rows.Scan(
 			&entry.DisplayName,
 			&entry.AvatarURL,
-			&entry.Score,
+			&entry.XP,
 			&entry.MessageCount,
 		); err != nil {
 			return nil, errors.Errorf("scan leaderboard row: %w", err)
@@ -126,36 +126,36 @@ const leaderboardSessionQuery = `
 SELECT
 	` + effectiveDisplayNameSQL + `,
 	` + lastSeenAvatarSQL + `,
-	COALESCE(vss.score, 0),
+	COALESCE(vss.xp, 0),
 	COALESCE(vss.message_count, 0)
 FROM viewers v
 INNER JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
 WHERE v.hidden = 0
-  AND (COALESCE(vss.score, 0) > 0 OR COALESCE(vss.message_count, 0) > 0)
-ORDER BY COALESCE(vss.score, 0) DESC, COALESCE(vss.message_count, 0) DESC
+  AND (COALESCE(vss.xp, 0) > 0 OR COALESCE(vss.message_count, 0) > 0)
+ORDER BY COALESCE(vss.xp, 0) DESC, COALESCE(vss.message_count, 0) DESC
 LIMIT ?`
 
 const leaderboardDayQuery = `
 SELECT
 	` + effectiveDisplayNameSQL + `,
 	` + lastSeenAvatarSQL + `,
-	COALESCE(vds.score, 0),
+	COALESCE(vds.xp, 0),
 	COALESCE(vds.message_count, 0)
 FROM viewers v
 INNER JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?
 WHERE v.hidden = 0
-  AND (COALESCE(vds.score, 0) > 0 OR COALESCE(vds.message_count, 0) > 0)
-ORDER BY COALESCE(vds.score, 0) DESC, COALESCE(vds.message_count, 0) DESC
+  AND (COALESCE(vds.xp, 0) > 0 OR COALESCE(vds.message_count, 0) > 0)
+ORDER BY COALESCE(vds.xp, 0) DESC, COALESCE(vds.message_count, 0) DESC
 LIMIT ?`
 
 const leaderboardAllQuery = `
 SELECT
 	` + effectiveDisplayNameSQL + `,
 	` + lastSeenAvatarSQL + `,
-	v.score,
+	v.xp,
 	v.message_count
 FROM viewers v
 WHERE v.hidden = 0
-  AND (v.score > 0 OR v.message_count > 0)
-ORDER BY v.score DESC, v.message_count DESC
+  AND (v.xp > 0 OR v.message_count > 0)
+ORDER BY v.xp DESC, v.message_count DESC
 LIMIT ?`

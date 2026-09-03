@@ -76,7 +76,7 @@ function updateSortHeader(buttonId, column) {
 
 function updateSortHeaders() {
   updateSortHeader("audience-sort-viewer", "viewer");
-  updateSortHeader("audience-sort-score", "score");
+  updateSortHeader("audience-sort-xp", "xp");
   updateSortHeader("audience-sort-messages", "messages");
 }
 
@@ -289,7 +289,7 @@ function renderViewersTable(viewers) {
 
     const scoreCell = document.createElement("td");
     scoreCell.className = "data-table__numeric";
-    scoreCell.textContent = String(metrics.score);
+    scoreCell.textContent = String(metrics.xp);
 
     const messagesCell = document.createElement("td");
     messagesCell.className = "data-table__numeric";
@@ -398,9 +398,9 @@ function renderViewerDetail(viewer) {
   const stats = document.createElement("dl");
   stats.className = "audience-detail__stats";
   [
-    ["viewers.periodSession", viewer.session_score, viewer.session_message_count],
-    ["viewers.periodDay", viewer.day_score, viewer.day_message_count],
-    ["viewers.periodAll", viewer.score, viewer.message_count],
+    ["viewers.periodSession", viewer.session_xp, viewer.session_message_count],
+    ["viewers.periodDay", viewer.day_xp, viewer.day_message_count],
+    ["viewers.periodAll", viewer.xp, viewer.message_count],
   ].forEach(function (row) {
     const dt = document.createElement("dt");
     dt.textContent = t(row[0]);
@@ -825,10 +825,10 @@ export function initAudienceViewers() {
       handleSortClick("viewer");
     });
   }
-  const sortScoreButton = document.getElementById("audience-sort-score");
-  if (sortScoreButton) {
-    sortScoreButton.addEventListener("click", function () {
-      handleSortClick("score");
+  const sortXPButton = document.getElementById("audience-sort-xp");
+  if (sortXPButton) {
+    sortXPButton.addEventListener("click", function () {
+      handleSortClick("xp");
     });
   }
   const sortMessagesButton = document.getElementById("audience-sort-messages");

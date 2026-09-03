@@ -33,12 +33,13 @@ func TestCommandFire_WhenBangGG_ExpectInteractionEvent(t *testing.T) {
 	for time.Now().Before(deadline) {
 		events, listErr := env.ViewerStore.ListInteractionEventsByViewer(viewerID)
 		require.NoError(t, listErr)
-		if len(events) == 1 {
-			require.Equal(t, store.InteractionEventCommand, events[0].Kind)
-			require.Equal(t, "gg", events[0].CommandTrigger)
-			require.Equal(t, viewerID, events[0].ViewerID)
-			require.Equal(t, 0, events[0].Points)
-			return
+		for _, event := range events {
+			if event.Kind == store.InteractionEventCommand {
+				require.Equal(t, "gg", event.CommandTrigger)
+				require.Equal(t, viewerID, event.ViewerID)
+				require.Equal(t, 0, event.Points)
+				return
+			}
 		}
 		time.Sleep(25 * time.Millisecond)
 	}
@@ -51,7 +52,9 @@ func TestCommandFire_WhenUnseenIdentityBangGG_ExpectEventHasViewerID(t *testing.
 	env := newTestEnv(t, b)
 
 	cfg := env.ConfigStore.Snapshot()
-	cfg.PointsPerMessage = 5
+	cfg.ActivityXP = 0
+	cfg.ActivityIntervalSeconds = 0
+	cfg.ActivitySessionLimit = 0
 	require.NoError(t, env.ConfigStore.Replace(cfg))
 
 	srv := httptest.NewServer(env.Handler)
@@ -98,12 +101,17 @@ func TestCommandFire_WhenUnseenIdentityBangGG_ExpectEventHasViewerID(t *testing.
 
 	require.Eventually(t, func() bool {
 		events, listErr := env.ViewerStore.ListInteractionEventsByViewer(viewerID)
-		if listErr != nil || len(events) != 1 {
+		if listErr != nil {
 			return false
 		}
-		return events[0].Kind == store.InteractionEventCommand &&
-			events[0].ViewerID == viewerID &&
-			events[0].CommandTrigger == "gg"
+		for _, event := range events {
+			if event.Kind == store.InteractionEventCommand &&
+				event.ViewerID == viewerID &&
+				event.CommandTrigger == "gg" {
+				return true
+			}
+		}
+		return false
 	}, 2*time.Second, 25*time.Millisecond)
 
 	rec := httptest.NewRecorder()
@@ -113,13 +121,13 @@ func TestCommandFire_WhenUnseenIdentityBangGG_ExpectEventHasViewerID(t *testing.
 	var payload struct {
 		Viewers []struct {
 			MessageCount int `json:"message_count"`
-			Score        int `json:"score"`
+			XP        int `json:"xp"`
 		} `json:"viewers"`
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
 	require.Len(t, payload.Viewers, 1)
 	require.Equal(t, 1, payload.Viewers[0].MessageCount)
-	require.Equal(t, 0, payload.Viewers[0].Score)
+	require.Equal(t, 0, payload.Viewers[0].XP)
 }
 
 func TestCommandFire_WhenCooldown_ExpectOneInteractionEvent(t *testing.T) {
@@ -168,10 +176,16 @@ func TestAwardGrant_WhenJoke_ExpectInteractionEvent(t *testing.T) {
 
 	events, err := env.ViewerStore.ListInteractionEventsByViewer(grantPayload.ViewerID)
 	require.NoError(t, err)
-	require.Len(t, events, 1)
-	require.Equal(t, store.InteractionEventAward, events[0].Kind)
-	require.Equal(t, "joke", events[0].AwardID)
-	require.Equal(t, 10, events[0].Points)
-	require.Equal(t, "twitch", events[0].MessagePlatform)
-	require.Equal(t, "msg-42", events[0].MessageID)
+	var awardEvent *store.InteractionEvent
+	for i := range events {
+		if events[i].Kind == store.InteractionEventAward {
+			awardEvent = &events[i]
+			break
+		}
+	}
+	require.NotNil(t, awardEvent)
+	require.Equal(t, "joke", awardEvent.AwardID)
+	require.Equal(t, 10, awardEvent.Points)
+	require.Equal(t, "twitch", awardEvent.MessagePlatform)
+	require.Equal(t, "msg-42", awardEvent.MessageID)
 }

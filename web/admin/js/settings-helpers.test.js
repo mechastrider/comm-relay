@@ -36,7 +36,9 @@ assert.equal(settingsSectionHash("application"), "#settings/application");
 
 const serverConfig = {
   server_port: 17877,
-  points_per_message: 2,
+  activity_interval_seconds: 300,
+  activity_session_limit: 10,
+  activity_xp: 2,
   day_reset_hour: 8,
   network: { socks5: { address: "127.0.0.1:1080", username: "u", password: "secret" } },
   twitch: { enabled: true, channel: "tester" },
@@ -69,7 +71,9 @@ assert.equal(settingsSectionDirty(platformsBaseline, platformsBaseline, "platfor
 
 const basePayload = {
   server_port: 17877,
-  points_per_message: 2,
+  activity_interval_seconds: 300,
+  activity_session_limit: 10,
+  activity_xp: 2,
   day_reset_hour: 8,
   network: { socks5: { address: "127.0.0.1:1080", username: "u", password: "" } },
   twitch: { enabled: true, channel: "tester" },
@@ -79,9 +83,11 @@ const basePayload = {
   admin: { time_locale: "ru-RU", message_sound: { enabled: false, volume: 0.5, sound: "chime" } },
 };
 
-const dataValues = { points_per_message: 5, day_reset_hour: 12 };
+const dataValues = { activity_interval_seconds: 120, activity_session_limit: 5, activity_xp: 3, day_reset_hour: 12 };
 const withData = applySectionToConfig(basePayload, "data", dataValues);
-assert.equal(withData.points_per_message, 5);
+assert.equal(withData.activity_interval_seconds, 120);
+assert.equal(withData.activity_session_limit, 5);
+assert.equal(withData.activity_xp, 3);
 assert.equal(withData.day_reset_hour, 12);
 assert.equal(withData.twitch.channel, "tester");
 

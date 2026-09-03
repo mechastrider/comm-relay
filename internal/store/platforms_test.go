@@ -16,10 +16,10 @@ func TestList_WhenMergedTwitchAndYouTube_ExpectPlatformsLastSeenFirst(t *testing
 	t0 := time.Date(2026, 3, 1, 12, 0, 0, 0, time.UTC)
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "twitch", UserID: "t1", DisplayName: "Alice",
-	}, 1, testDayResetHour, t0))
+	}, defaultActivity(), testDayResetHour, t0))
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "youtube", UserID: "y1", DisplayName: "Alice",
-	}, 1, testDayResetHour, t0.Add(time.Minute)))
+	}, defaultActivity(), testDayResetHour, t0.Add(time.Minute)))
 
 	fromID := viewerID(t, s, "twitch", "t1", testDayResetHour, t0.Add(time.Minute))
 	intoID := viewerID(t, s, "youtube", "y1", testDayResetHour, t0.Add(time.Minute))
@@ -39,10 +39,10 @@ func TestList_WhenDuplicatePlatformIdentities_ExpectSinglePlatformID(t *testing.
 	now := time.Date(2026, 3, 1, 12, 0, 0, 0, time.UTC)
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "twitch", UserID: "user1", DisplayName: "Alice",
-	}, 1, testDayResetHour, now))
+	}, defaultActivity(), testDayResetHour, now))
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "twitch", UserID: "user2", DisplayName: "Alice",
-	}, 1, testDayResetHour, now.Add(time.Minute)))
+	}, defaultActivity(), testDayResetHour, now.Add(time.Minute)))
 
 	fromID := viewerID(t, s, "twitch", "user1", testDayResetHour, now.Add(time.Minute))
 	intoID := viewerID(t, s, "twitch", "user2", testDayResetHour, now.Add(time.Minute))
@@ -62,13 +62,13 @@ func TestList_WhenMultiplePlatforms_ExpectLastSeenFirstThenRecency(t *testing.T)
 	t0 := time.Date(2026, 3, 1, 12, 0, 0, 0, time.UTC)
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "twitch", UserID: "t1", DisplayName: "Alice",
-	}, 1, testDayResetHour, t0))
+	}, defaultActivity(), testDayResetHour, t0))
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "vk", UserID: "v1", DisplayName: "Alice",
-	}, 1, testDayResetHour, t0.Add(30*time.Minute)))
+	}, defaultActivity(), testDayResetHour, t0.Add(30*time.Minute)))
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "youtube", UserID: "y1", DisplayName: "Alice",
-	}, 1, testDayResetHour, t0.Add(time.Hour)))
+	}, defaultActivity(), testDayResetHour, t0.Add(time.Hour)))
 
 	twitchID := viewerID(t, s, "twitch", "t1", testDayResetHour, t0.Add(time.Hour))
 	vkID := viewerID(t, s, "vk", "v1", testDayResetHour, t0.Add(time.Hour))

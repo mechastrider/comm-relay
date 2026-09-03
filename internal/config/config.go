@@ -14,17 +14,20 @@ var ErrInvalidConfig = errors.New("invalid config")
 
 // Config holds application settings persisted in config.json.
 type Config struct {
-	ServerPort          int           `json:"server_port"`
-	PointsPerMessage    int           `json:"points_per_message"`
-	DayResetHour        int           `json:"day_reset_hour"`
-	HideCommandMessages bool          `json:"hide_command_messages"`
-	Network             NetworkConfig `json:"network"`
-	Twitch              TwitchConfig  `json:"twitch"`
-	YouTube             YouTubeConfig `json:"youtube"`
-	VK                  VKConfig      `json:"vk"`
-	Overlay             OverlayConfig `json:"overlay"`
-	Admin               AdminConfig   `json:"admin"`
-	Logging             LoggingConfig `json:"logging"`
+	ServerPort              int           `json:"server_port"`
+	PointsPerMessage        int           `json:"points_per_message,omitempty"`
+	ActivityIntervalSeconds int           `json:"activity_interval_seconds"`
+	ActivitySessionLimit    int           `json:"activity_session_limit"`
+	ActivityXP              int           `json:"activity_xp"`
+	DayResetHour            int           `json:"day_reset_hour"`
+	HideCommandMessages     bool          `json:"hide_command_messages"`
+	Network                 NetworkConfig `json:"network"`
+	Twitch                  TwitchConfig  `json:"twitch"`
+	YouTube                 YouTubeConfig `json:"youtube"`
+	VK                      VKConfig      `json:"vk"`
+	Overlay                 OverlayConfig `json:"overlay"`
+	Admin                   AdminConfig   `json:"admin"`
+	Logging                 LoggingConfig `json:"logging"`
 }
 
 // TwitchConfig holds Twitch connector settings.
@@ -79,9 +82,11 @@ type OverlayConfig struct {
 // Default returns safe prototype defaults.
 func Default() *Config {
 	cfg := &Config{
-		ServerPort:       17877,
-		PointsPerMessage: 1,
-		DayResetHour:     6,
+		ServerPort:              17877,
+		ActivityIntervalSeconds: 300,
+		ActivitySessionLimit:    10,
+		ActivityXP:              1,
+		DayResetHour:            6,
 		Twitch: TwitchConfig{
 			Enabled: false,
 			Channel: "",
@@ -169,6 +174,13 @@ func Load(path string) (*Config, error) {
 	}
 
 	cfg.ApplyDefaults()
+	cfg.PointsPerMessage = 0
+	if !activitySettingsPresent(data) {
+		def := Default()
+		cfg.ActivityIntervalSeconds = def.ActivityIntervalSeconds
+		cfg.ActivitySessionLimit = def.ActivitySessionLimit
+		cfg.ActivityXP = def.ActivityXP
+	}
 	if !overlayEmotesPresent(data) {
 		cfg.Overlay.Emotes = defaultEmotes()
 	}
@@ -192,6 +204,20 @@ func overlayEmotesPresent(data []byte) bool {
 	return doc.Overlay != nil && doc.Overlay.Emotes != nil
 }
 
+func activitySettingsPresent(data []byte) bool {
+	var doc struct {
+		ActivityIntervalSeconds *json.RawMessage `json:"activity_interval_seconds"`
+		ActivitySessionLimit    *json.RawMessage `json:"activity_session_limit"`
+		ActivityXP              *json.RawMessage `json:"activity_xp"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.ActivityIntervalSeconds != nil ||
+		doc.ActivitySessionLimit != nil ||
+		doc.ActivityXP != nil
+}
+
 func overlayPresetsPresent(data []byte) bool {
 	var doc struct {
 		Overlay *struct {
@@ -210,6 +236,7 @@ func (c *Config) Save(path string) error {
 		return err
 	}
 
+	c.PointsPerMessage = 0
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return errors.Errorf("marshal config: %w", err)

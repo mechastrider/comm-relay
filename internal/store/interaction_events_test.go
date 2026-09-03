@@ -21,7 +21,7 @@ func TestAppendInteractionEvent_WhenCommandFire_ExpectListedByViewer(t *testing.
 		Platform:    "twitch",
 		UserID:      "42",
 		DisplayName: "Alice",
-	}, 1, testDayResetHour, now))
+	}, disabledActivity(), testDayResetHour, now))
 	viewerID := viewerID(t, s, "twitch", "42", testDayResetHour, now)
 
 	// Act
@@ -82,10 +82,10 @@ func TestMerge_WhenAwardEventsExist_ExpectViewerIDRewritten(t *testing.T) {
 	now := time.Date(2026, 8, 29, 12, 0, 0, 0, time.UTC)
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "twitch", UserID: "1", DisplayName: "A",
-	}, 1, testDayResetHour, now))
+	}, disabledActivity(), testDayResetHour, now))
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "youtube", UserID: "2", DisplayName: "B",
-	}, 1, testDayResetHour, now))
+	}, disabledActivity(), testDayResetHour, now))
 
 	fromID := viewerID(t, s, "twitch", "1", testDayResetHour, now)
 	intoID := viewerID(t, s, "youtube", "2", testDayResetHour, now)

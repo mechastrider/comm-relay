@@ -11,19 +11,19 @@
 
 ### Backend
 
-- [ ] 1.1 Add Goose `00003` renaming `score` → `xp` on viewer/session/day tables and adding `activity_grants` / `last_activity_at` on `viewer_session_stats`; cover a pre-migration fixture.
-- [ ] 1.2 Persist `activity_interval_seconds` (default 300), `activity_session_limit` (default 10), and `activity_xp` (default 1); ignore `points_per_message` as progress; validate integers ≥ 0; expose them on public config.
-- [ ] 1.3 Ingest identified lines with +1 `message_count` only, then grant activity XP in the same transaction when eligible (first line, interval, cap, zeros disable); persist session counters across restart; no alert.
-- [ ] 1.4 Switch award, merge, new-stream, list, card, and leaderboard store/API/WebSocket fields from `score` to `xp`; keep award `points` as the grant delta; append `activity` interaction events; merge sums activity counters.
+- [x] 1.1 Add Goose `00003` renaming `score` → `xp` on viewer/session/day tables and adding `activity_grants` / `last_activity_at` on `viewer_session_stats`; cover a pre-migration fixture.
+- [x] 1.2 Persist `activity_interval_seconds` (default 300), `activity_session_limit` (default 10), and `activity_xp` (default 1); ignore `points_per_message` as progress; validate integers ≥ 0; expose them on public config.
+- [x] 1.3 Ingest identified lines with +1 `message_count` only, then grant activity XP in the same transaction when eligible (first line, interval, cap, zeros disable); persist session counters across restart; no alert.
+- [x] 1.4 Switch award, merge, new-stream, list, card, and leaderboard store/API/WebSocket fields from `score` to `xp`; keep award `points` as the grant delta; append `activity` interaction events; merge sums activity counters.
 
 ### Frontend
 
-- [ ] 1.5 Replace Settings points-per-message with labeled activity fields (EN/RU helper text: silent, per viewer, session cap); wire save/validation.
-- [ ] 1.6 Relabel Audience/Live/card/dock/leaderboard Score → XP; read `xp`; treat stored sort `score` as `xp`; keep Reward `+points` copy.
+- [x] 1.5 Replace Settings points-per-message with labeled activity fields (EN/RU helper text: silent, per viewer, session cap); wire save/validation.
+- [x] 1.6 Relabel Audience/Live/card/dock/leaderboard Score → XP; read `xp`; treat stored sort `score` as `xp`; keep Reward `+points` copy.
 
 ### Documentation
 
-- [ ] 1.7 Update `docs/concept.md` and `docs/roadmap.md` 6c language to XP-only windows (Credits still later); append concise Russian `[Unreleased]` bullets for XP rename, activity, and no per-message progress.
+- [x] 1.7 Update `docs/concept.md` and `docs/roadmap.md` 6c language to XP-only windows (Credits still later); append concise Russian `[Unreleased]` bullets for XP rename, activity, and no per-message progress.
 
 ## Slice: Extra contribution award seeds
 

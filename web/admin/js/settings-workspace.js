@@ -134,9 +134,13 @@ function collectSectionValuesFromDOM(sectionId) {
 
   if (sectionId === "data") {
     return {
-      points_per_message: dom.pointsPerMessageInput
-        ? Number.parseInt(dom.pointsPerMessageInput.value, 10)
-        : 1,
+      activity_interval_seconds: dom.activityIntervalSecondsInput
+        ? Number.parseInt(dom.activityIntervalSecondsInput.value, 10)
+        : 300,
+      activity_session_limit: dom.activitySessionLimitInput
+        ? Number.parseInt(dom.activitySessionLimitInput.value, 10)
+        : 10,
+      activity_xp: dom.activityXPInput ? Number.parseInt(dom.activityXPInput.value, 10) : 1,
       day_reset_hour: dom.dayResetHourInput
         ? Number.parseInt(dom.dayResetHourInput.value, 10)
         : 6,
@@ -267,8 +271,14 @@ function applySectionValuesToDOM(sectionId, values) {
   }
 
   if (sectionId === "data") {
-    if (dom.pointsPerMessageInput) {
-      dom.pointsPerMessageInput.value = String(values.points_per_message);
+    if (dom.activityIntervalSecondsInput) {
+      dom.activityIntervalSecondsInput.value = String(values.activity_interval_seconds);
+    }
+    if (dom.activitySessionLimitInput) {
+      dom.activitySessionLimitInput.value = String(values.activity_session_limit);
+    }
+    if (dom.activityXPInput) {
+      dom.activityXPInput.value = String(values.activity_xp);
     }
     if (dom.dayResetHourInput) {
       dom.dayResetHourInput.value = String(values.day_reset_hour);
@@ -426,9 +436,17 @@ function validateSettingsSection(sectionId, payload) {
   }
 
   if (sectionId === "data") {
-    if (!Number.isFinite(payload.points_per_message) || payload.points_per_message < 0) {
-      setFieldError("points_per_message", "Points per message must be 0 or greater.");
-      firstInvalid = firstInvalid || dom.pointsPerMessageInput;
+    if (!Number.isFinite(payload.activity_interval_seconds) || payload.activity_interval_seconds < 0) {
+      setFieldError("activity_interval_seconds", "Activity interval must be 0 or greater.");
+      firstInvalid = firstInvalid || dom.activityIntervalSecondsInput;
+    }
+    if (!Number.isFinite(payload.activity_session_limit) || payload.activity_session_limit < 0) {
+      setFieldError("activity_session_limit", "Activity session limit must be 0 or greater.");
+      firstInvalid = firstInvalid || dom.activitySessionLimitInput;
+    }
+    if (!Number.isFinite(payload.activity_xp) || payload.activity_xp < 0) {
+      setFieldError("activity_xp", "Activity XP must be 0 or greater.");
+      firstInvalid = firstInvalid || dom.activityXPInput;
     }
     if (
       !Number.isFinite(payload.day_reset_hour) ||

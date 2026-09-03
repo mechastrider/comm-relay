@@ -156,7 +156,7 @@
             <span id="settings-state" class="settings-state" aria-live="polite" data-i18n="shell.loadingSettings">Loading settings</span>
             <button id="new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
               <span data-i18n="stream.newStream">New stream</span>
-              <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer XP and the session leaderboard. Day and all-time stay.</span>
             </button>
             <button id="refresh-messages" type="button" class="icon-btn has-tooltip" data-i18n-aria-label="shell.refresh" aria-label="Refresh">
               <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
@@ -265,7 +265,7 @@
                 </button>
                 <button id="audience-new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
                   <span data-i18n="stream.newStream">New stream</span>
-                  <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer XP and the session leaderboard. Day and all-time stay.</span>
                 </button>
               </div>
               <p id="audience-period-hint" class="field-hint audience-toolbar__hint" data-i18n="audience.periodHint">Score and message columns follow the selected period.</p>
@@ -290,7 +290,7 @@
                         </th>
                         <th scope="col" data-i18n="audience.colPlatforms">Platforms</th>
                         <th scope="col" class="data-table__numeric audience-viewers-table__sortable" aria-sort="none">
-                          <button id="audience-sort-score" class="audience-sort-button" type="button" data-i18n="audience.colScore" data-i18n-aria-label="audience.sortScore">Score</button>
+                          <button id="audience-sort-xp" class="audience-sort-button" type="button" data-i18n="audience.colXP" data-i18n-aria-label="audience.sortXP">XP</button>
                         </th>
                         <th scope="col" class="data-table__numeric audience-viewers-table__sortable" aria-sort="none">
                           <button id="audience-sort-messages" class="audience-sort-button" type="button" data-i18n="audience.colMessages" data-i18n-aria-label="audience.sortMessages">Messages</button>
@@ -1858,10 +1858,22 @@
 
           <div class="form form--compact">
             <div class="form__field">
-              <label for="points-per-message" data-i18n="iface.pointsPerMessage">Points per message</label>
-              <input id="points-per-message" name="points_per_message" type="number" min="0" step="1" inputmode="numeric">
-              <p class="field-hint" data-i18n="iface.pointsPerMessageHint">How many score points each counted chat line adds.</p>
-              <p id="points-per-message-error" class="field-error" role="alert" hidden></p>
+              <label for="activity-interval-seconds" data-i18n="iface.activityIntervalSeconds">Activity interval (seconds)</label>
+              <input id="activity-interval-seconds" name="activity_interval_seconds" type="number" min="0" step="1" inputmode="numeric">
+              <p class="field-hint" data-i18n="iface.activityIntervalSecondsHint">Silent XP grant: at most once per viewer per interval during the current stream. Set 0 to disable.</p>
+              <p id="activity-interval-seconds-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="activity-session-limit" data-i18n="iface.activitySessionLimit">Activity grants per stream</label>
+              <input id="activity-session-limit" name="activity_session_limit" type="number" min="0" step="1" inputmode="numeric">
+              <p class="field-hint" data-i18n="iface.activitySessionLimitHint">Maximum silent activity grants per viewer for the current stream session.</p>
+              <p id="activity-session-limit-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="activity-xp" data-i18n="iface.activityXP">XP per activity grant</label>
+              <input id="activity-xp" name="activity_xp" type="number" min="0" step="1" inputmode="numeric">
+              <p class="field-hint" data-i18n="iface.activityXPHint">XP added silently when a viewer becomes eligible. Chat lines alone no longer add unbounded XP.</p>
+              <p id="activity-xp-error" class="field-error" role="alert" hidden></p>
             </div>
             <div class="form__field">
               <label for="day-reset-hour" data-i18n="iface.dayResetHour">Day reset hour</label>
