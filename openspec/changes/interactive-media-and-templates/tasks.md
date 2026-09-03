@@ -30,17 +30,17 @@
 
 ## Gate: qa
 
-- [ ] Q.1 Execute `qa_plan.md`; record coverage and skips.
-- [ ] Q.2 Run `npm ci`.
-- [ ] Q.3 Run `npm test`.
-- [ ] Q.4 Run `npm run test:i18n`.
-- [ ] Q.5 Run `npm run lint`.
-- [ ] Q.6 Run `go test ./...`.
-- [ ] Q.7 Run `go test -race ./internal/api/... ./internal/overlayassets/... ./internal/command/...`.
-- [ ] Q.8 Run `golangci-lint run ./...`.
-- [ ] Q.9 Run `go build ./...`.
-- [ ] Q.10 Run `openspec validate interactive-media-and-templates --strict`.
-- [ ] Q.11 Run `git diff --check`.
+- [x] Q.1 Execute `qa_plan.md`; record coverage and skips.
+- [x] Q.2 Run `npm ci`.
+- [x] Q.3 Run `npm test`.
+- [x] Q.4 Run `npm run test:i18n`.
+- [x] Q.5 Run `npm run lint`.
+- [x] Q.6 Run `go test ./...`.
+- [x] Q.7 Run `go test -race ./internal/api/... ./internal/overlayassets/... ./internal/command/...`.
+- [x] Q.8 Run `golangci-lint run ./...`.
+- [x] Q.9 Run `go build ./...`.
+- [x] Q.10 Run `openspec validate interactive-media-and-templates --strict`.
+- [x] Q.11 Run `git diff --check`.
 
 ## Gate: review
 
@@ -49,5 +49,5 @@
 
 ## Gate: distribution-readiness
 
-- [ ] D.1 Existing package names; backup note includes `overlay-assets`; do not sign or publish.
-- [ ] D.2 Manual smoke: Settings name, command image+sound, award layout, OBS alert.
+- [x] D.1 Existing package names; backup note includes `overlay-assets`; do not sign or publish.
+- [x] D.2 Manual smoke: Settings name, command image+sound, award layout, OBS alert.
