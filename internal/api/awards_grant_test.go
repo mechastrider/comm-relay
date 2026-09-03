@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -81,12 +82,153 @@ func TestAwardGrant_WhenJokeToExistingViewer_ExpectScoreAndAlert(t *testing.T) {
 		sawAlert = true
 		require.Equal(t, "award", frame["source"])
 		require.Equal(t, "joke", frame["award_id"])
+		require.Equal(t, "Joke", frame["award_name"])
 		require.Equal(t, float64(10), frame["points"])
+		require.NotEmpty(t, frame["created_at"])
 		require.Contains(t, frame["text"], "Alice")
 		require.Contains(t, frame["text"], "10")
 		break
 	}
 	require.True(t, sawAlert, "expected award alert frame")
+}
+
+func TestAwardGrant_WhenMessageTextExceedsCodePointLimit_ExpectTransientBoundedQuote(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+	srv := httptest.NewServer(env.Handler)
+	t.Cleanup(srv.Close)
+	seedViewer(t, env, "twitch", "42", "Alice")
+
+	conn, _, err := websocket.DefaultDialer.Dial("ws"+strings.TrimPrefix(srv.URL, "http")+"/ws", nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
+	time.Sleep(50 * time.Millisecond)
+
+	quote := "  " + strings.Repeat("😀", 281) + "  "
+	body, err := json.Marshal(map[string]string{
+		"platform":     "twitch",
+		"user_id":      "42",
+		"award_id":     "joke",
+		"message_id":   "msg-42",
+		"message_text": quote,
+	})
+	require.NoError(t, err)
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/awards/grant", strings.NewReader(string(body))))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var alert map[string]any
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
+		_, data, readErr := conn.ReadMessage()
+		if readErr != nil || json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
+			continue
+		}
+		break
+	}
+	require.Equal(t, "twitch", alert["message_platform"])
+	require.Equal(t, "msg-42", alert["message_id"])
+	alertQuote, ok := alert["message_text"].(string)
+	require.True(t, ok)
+	require.Len(t, []rune(alertQuote), 280)
+
+	var grantPayload struct {
+		ViewerID string `json:"viewer_id"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &grantPayload))
+	events, err := env.ViewerStore.ListInteractionEventsByViewer(grantPayload.ViewerID)
+	require.NoError(t, err)
+	require.Len(t, events, 1)
+	require.Equal(t, "twitch", events[0].MessagePlatform)
+	require.Equal(t, "msg-42", events[0].MessageID)
+}
+
+func TestAwardGrant_WhenNoMessageContext_ExpectGrantWithoutHighlightFields(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+	srv := httptest.NewServer(env.Handler)
+	t.Cleanup(srv.Close)
+	seedViewer(t, env, "twitch", "42", "Alice")
+
+	conn, _, err := websocket.DefaultDialer.Dial("ws"+strings.TrimPrefix(srv.URL, "http")+"/ws", nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
+	time.Sleep(50 * time.Millisecond)
+
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/awards/grant", strings.NewReader(`{"platform":"twitch","user_id":"42","award_id":"joke"}`)))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var alert map[string]any
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
+		_, data, readErr := conn.ReadMessage()
+		if readErr != nil || json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
+			continue
+		}
+		break
+	}
+	require.NotContains(t, alert, "message_platform")
+	require.NotContains(t, alert, "message_id")
+	require.NotContains(t, alert, "message_text")
+}
+
+func TestAwardGrant_WhenQuoteIsProvided_ExpectNoDurableOrResponseQuote(t *testing.T) {
+	// Arrange
+	env := newTestEnv(t, bus.New(0))
+	seedViewer(t, env, "twitch", "42", "Alice")
+	const quote = "private award quote must not persist"
+
+	// Act
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(
+		http.MethodPost,
+		"/api/awards/grant",
+		strings.NewReader(`{"platform":"twitch","user_id":"42","award_id":"joke","message_id":"msg-42","message_text":"`+quote+`"}`),
+	))
+
+	// Assert: the normal grant DTO is not a quote carrier.
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.NotContains(t, rec.Body.String(), quote)
+
+	var grantPayload struct {
+		ViewerID string `json:"viewer_id"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &grantPayload))
+	events, err := env.ViewerStore.ListInteractionEventsByViewer(grantPayload.ViewerID)
+	require.NoError(t, err)
+	require.Len(t, events, 1)
+	persistedEvent, err := json.Marshal(events[0])
+	require.NoError(t, err)
+	require.NotContains(t, string(persistedEvent), quote)
+
+	configBytes, err := os.ReadFile(env.ConfigStore.Path())
+	require.NoError(t, err)
+	require.NotContains(t, string(configBytes), quote)
+	publicConfig, err := json.Marshal(env.ConfigStore.Snapshot().Public())
+	require.NoError(t, err)
+	require.NotContains(t, string(publicConfig), quote)
+}
+
+func TestAwardGrant_WhenRejectedWithQuote_ExpectErrorDTODoesNotEchoQuote(t *testing.T) {
+	// Arrange
+	env := newTestEnv(t, bus.New(0))
+	const quote = "private quote must not reach an error DTO"
+
+	// Act
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(
+		http.MethodPost,
+		"/api/awards/grant",
+		strings.NewReader(`{"platform":"twitch","user_id":"42","award_id":"missing","message_text":"`+quote+`"}`),
+	))
+
+	// Assert
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	require.NotContains(t, rec.Body.String(), quote)
+	require.NotContains(t, rec.Body.String(), "message_text")
 }
 
 func TestAwardGrant_WhenEmptyUserID_ExpectBadRequest(t *testing.T) {

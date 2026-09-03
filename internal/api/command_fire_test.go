@@ -63,6 +63,9 @@ func TestCommandFire_WhenBangGG_ExpectAlertAndIsCommand(t *testing.T) {
 			require.Equal(t, "Good game, Alice!", frame["text"])
 			require.Equal(t, float64(0), frame["points"])
 			require.Equal(t, "chime", frame["sound"])
+			require.NotEmpty(t, frame["created_at"])
+			require.NotContains(t, frame, "award_id")
+			require.NotContains(t, frame, "message_text")
 		}
 		if sawMessage && sawAlert {
 			return

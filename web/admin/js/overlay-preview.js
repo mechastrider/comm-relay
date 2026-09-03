@@ -30,6 +30,7 @@ import { parseWorkspaceHash } from "./workspace-router.js";
 const PREVIEW_LOAD_TIMEOUT_MS = 8000;
 let previewLoadTimeout = null;
 let previewState = "idle";
+let testModeActive = false;
 
 function isOverlayPreviewActive() {
   return parseWorkspaceHash(window.location.hash) === "studio";
@@ -380,6 +381,9 @@ export function refreshOverlayPreview(force) {
     if (!isOverlayPreviewActive() || !dom.overlayPreviewFrame) {
       return;
     }
+    if (testModeActive) {
+      return;
+    }
     const mode = dom.overlayPreviewMode && dom.overlayPreviewMode.value === "live"
       ? "live"
       : "sample";
@@ -394,6 +398,23 @@ export function refreshOverlayPreview(force) {
     startPreviewLoadTimeout();
     dom.overlayPreviewFrame.src = url.toString();
   }
+
+export function setOverlayPreviewTestMode(enabled, href) {
+  testModeActive = enabled === true;
+  if (!dom.overlayPreviewFrame || !isOverlayPreviewActive()) {
+    return;
+  }
+  if (!testModeActive) {
+    refreshOverlayPreview(true);
+    return;
+  }
+  const url = new URL(href, window.location.origin);
+  state.overlayPreviewRevision += 1;
+  url.searchParams.set("_preview_revision", String(state.overlayPreviewRevision));
+  dom.overlayPreviewFrame.dataset.previewUrl = url.toString();
+  startPreviewLoadTimeout();
+  dom.overlayPreviewFrame.src = url.toString();
+}
 
 export function scheduleOverlayPreviewRefresh() {
     updateOverlayPreviewOpenLink();
@@ -421,6 +442,7 @@ export function mountOverlayPreview() {
   }
 
 export function unmountOverlayPreview() {
+    testModeActive = false;
     if (state.overlayPreviewRefreshTimer !== null) {
       window.clearTimeout(state.overlayPreviewRefreshTimer);
       state.overlayPreviewRefreshTimer = null;

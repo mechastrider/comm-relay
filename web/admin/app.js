@@ -9,7 +9,7 @@ import {
   showBanner,
 } from "./js/ui-shell.js";
 import { initOverlayPreview, updateOverlayPreviewScale } from "./js/overlay-preview.js";
-import { initOBSSetup } from "./js/obs-setup.js";
+import { initOBSSetup } from "./js/obs-setup.js?v=2";
 import { initOverlayAppearance, updatePresetIsland } from "./js/overlay-appearance.js";
 import { initConnectionsTabs } from "./js/connections.js";
 import { initSettingsDialogs } from "./js/dialogs.js";
@@ -32,7 +32,7 @@ import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog
 import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
 import { initWorkspaceRouter } from "./js/workspace-router.js";
-import { initLiveTabs } from "./js/live-tabs.js";
+import { initLiveTabs, handleLiveWorkspaceChange } from "./js/live-tabs.js";
 import { initLiveLeaderboard } from "./js/live-leaderboard.js";
 import { initLiveStatistics } from "./js/live-statistics.js";
 import { initLiveActivePreset, renderLiveActivePresetControl } from "./js/live-active-preset.js";
@@ -77,7 +77,10 @@ if (dom.youtubeConnect) {
 initI18n();
 initSidebar(document, t);
 initWorkspaceRouter(document, t, {
-  onWorkspaceChange: handleSettingsWorkspaceChange,
+  onWorkspaceChange: function (workspaceId) {
+    handleSettingsWorkspaceChange(workspaceId);
+    handleLiveWorkspaceChange(workspaceId);
+  },
 });
 
 Object.keys(dom.fieldInputs).forEach(bindFieldClear);

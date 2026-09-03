@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { INITIAL_WS_RECONNECT_MS, MAX_WS_RECONNECT_MS } from './constants.js';
 import { handleWireMessage } from './messages.js';
+import { reconcileActiveLiveData } from "./live-tabs.js";
 
 export function wsURL() {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -42,6 +43,7 @@ export function connectMessageWebSocket() {
 
     socket.addEventListener("open", function () {
       state.wsReconnectDelayMs = INITIAL_WS_RECONNECT_MS;
+      reconcileActiveLiveData();
     });
 
     socket.addEventListener("message", function (event) {

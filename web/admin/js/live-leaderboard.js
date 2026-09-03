@@ -2,12 +2,19 @@ import * as dom from "./dom.js";
 import { apiURL, readJSON, mapHTTPError } from "./api.js";
 import { setRegionState } from "./shell-state.js";
 import { t } from "./i18n-ui.js";
+import {
+  createLeaderboardLoadSequencer,
+  createLeaderboardSnapshotCache,
+  leaderboardPeriodTransition,
+} from "./live-data-helpers.js";
 
 export const LIVE_TABS = ["messages", "leaderboard", "statistics"];
 
 let currentPeriod = "session";
 let loadController = null;
-let loadGeneration = 0;
+let renderedPeriod = null;
+const snapshots = createLeaderboardSnapshotCache();
+const loadSequencer = createLeaderboardLoadSequencer();
 
 function leaderboardRegion() {
   return dom.liveLeaderboardRegion;
@@ -31,7 +38,6 @@ function showLeaderboardError(message) {
   if (dom.liveLeaderboardEmpty) {
     dom.liveLeaderboardEmpty.hidden = true;
   }
-  clearLeaderboardTable();
   setRegionState(leaderboardRegion(), "error");
 }
 
@@ -64,6 +70,28 @@ function renderLeaderboardRows(entries) {
   });
 }
 
+/**
+ * @param {{ period?: string, entries?: Array<Record<string, unknown>> }} payload
+ */
+function renderLeaderboardPayload(payload) {
+  const entries = Array.isArray(payload && payload.entries) ? payload.entries : [];
+  hideLeaderboardError();
+  if (entries.length === 0) {
+    clearLeaderboardTable();
+    if (dom.liveLeaderboardEmpty) {
+      dom.liveLeaderboardEmpty.hidden = false;
+    }
+    setRegionState(leaderboardRegion(), "empty");
+  } else {
+    renderLeaderboardRows(entries);
+    if (dom.liveLeaderboardEmpty) {
+      dom.liveLeaderboardEmpty.hidden = true;
+    }
+    setRegionState(leaderboardRegion(), null);
+  }
+  renderedPeriod = payload && payload.period ? payload.period : currentPeriod;
+}
+
 export function getLeaderboardPeriod() {
   return currentPeriod;
 }
@@ -80,6 +108,11 @@ export function setLeaderboardPeriod(period, options) {
   }
   if (dom.audiencePeriod && dom.audiencePeriod.value !== next) {
     dom.audiencePeriod.value = next;
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("live-leaderboard-period-change", {
+      detail: { period: next },
+    }));
   }
   if (options && options.reload) {
     return loadLiveLeaderboard({ period: next });
@@ -99,13 +132,21 @@ export async function loadLiveLeaderboard(options) {
     loadController.abort();
   }
   loadController = new AbortController();
-  const generation = ++loadGeneration;
+  const generation = loadSequencer.begin(period);
   const signal = loadController.signal;
 
-  hideLeaderboardError();
-  setRegionState(leaderboardRegion(), "loading");
-  if (dom.liveLeaderboardEmpty) {
-    dom.liveLeaderboardEmpty.hidden = true;
+  const cached = snapshots.get(period);
+  const transition = leaderboardPeriodTransition(renderedPeriod, period, Boolean(cached && opts.useCache !== false));
+  if (cached && opts.useCache !== false) {
+    renderLeaderboardPayload(cached);
+  } else if (transition.showLoading) {
+    clearLeaderboardTable();
+    renderedPeriod = null;
+    hideLeaderboardError();
+    setRegionState(leaderboardRegion(), "loading");
+    if (dom.liveLeaderboardEmpty) {
+      dom.liveLeaderboardEmpty.hidden = true;
+    }
   }
 
   try {
@@ -114,46 +155,87 @@ export async function loadLiveLeaderboard(options) {
       { signal: signal }
     );
     const payload = await readJSON(response);
-    if (generation !== loadGeneration) {
+    if (!loadSequencer.acceptsResponse(generation, period)) {
       return null;
     }
     if (!response.ok) {
       throw new Error(mapHTTPError(response.status, payload && payload.error));
     }
-    const entries = (payload && payload.entries) || [];
-    if (entries.length === 0) {
-      clearLeaderboardTable();
-      if (dom.liveLeaderboardEmpty) {
-        dom.liveLeaderboardEmpty.hidden = false;
-      }
-      setRegionState(leaderboardRegion(), "empty");
-    } else {
-      renderLeaderboardRows(entries);
-      if (dom.liveLeaderboardEmpty) {
-        dom.liveLeaderboardEmpty.hidden = true;
-      }
-      setRegionState(leaderboardRegion(), null);
+    const snapshot = snapshots.remember(payload);
+    if (snapshot && snapshot.period === currentPeriod) {
+      renderLeaderboardPayload(snapshot);
     }
     return payload;
   } catch (err) {
     if (err && err.name === "AbortError") {
       return null;
     }
-    if (generation !== loadGeneration) {
+    if (!loadSequencer.acceptsResponse(generation, period)) {
       return null;
     }
     const message = err instanceof Error && err.message ? err.message : t("live.leaderboardLoadFailed");
+    if (!transition.preserveRowsOnError) {
+      clearLeaderboardTable();
+      renderedPeriod = null;
+    }
     showLeaderboardError(message);
     return null;
   } finally {
-    if (generation === loadGeneration) {
+    if (loadSequencer.finish(generation)) {
       loadController = null;
     }
   }
 }
 
+/**
+ * Cache every valid leaderboard frame. Rendering is intentionally left to the
+ * active Live tab so a hidden workspace does not churn its DOM.
+ *
+ * @param {unknown} frame
+ * @returns {boolean}
+ */
+export function cacheLiveLeaderboardFrame(frame) {
+  const snapshot = snapshots.remember(frame);
+  if (!snapshot) {
+    return false;
+  }
+  if (snapshot.period === currentPeriod && loadSequencer.invalidateForSnapshot(snapshot.period)) {
+    if (loadController) {
+      loadController.abort();
+      loadController = null;
+    }
+  }
+  return true;
+}
+
+/**
+ * @param {unknown} frame
+ * @returns {boolean}
+ */
+export function applyLiveLeaderboardFrame(frame) {
+  if (!cacheLiveLeaderboardFrame(frame)) {
+    return false;
+  }
+  const snapshot = snapshots.get(frame && frame.period);
+  if (!snapshot || snapshot.period !== currentPeriod) {
+    return false;
+  }
+  renderLeaderboardPayload(snapshot);
+  return true;
+}
+
+export function renderCachedLiveLeaderboard() {
+  const snapshot = snapshots.get(currentPeriod);
+  if (!snapshot) {
+    return false;
+  }
+  renderLeaderboardPayload(snapshot);
+  return true;
+}
+
 export function abortLiveLeaderboard() {
   if (loadController) {
+    loadSequencer.cancel();
     loadController.abort();
     loadController = null;
   }

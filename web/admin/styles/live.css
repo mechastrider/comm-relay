@@ -41,18 +41,19 @@
   max-width: 14rem;
 }
 
-.live-status-strip__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--primitive-space-2);
-  margin-left: auto;
-}
-
 .live-work-area {
   display: flex;
   flex: 1;
   min-height: 0;
   flex-direction: column;
+}
+
+.live-work-area .console-header {
+  flex-wrap: wrap;
+}
+
+.live-toolbar-actions {
+  flex-wrap: wrap;
 }
 
 .live-tab-panels {
@@ -133,6 +134,11 @@
   text-align: right;
 }
 
+.data-table td.data-table__numeric,
+.data-table th.data-table__numeric {
+  text-align: right;
+}
+
 .live-region-empty {
   position: static;
   display: block;
@@ -187,11 +193,6 @@
   .live-status-strip {
     gap: var(--primitive-space-2) var(--primitive-space-3);
     padding-inline: var(--primitive-space-3);
-  }
-
-  .live-status-strip__actions {
-    width: 100%;
-    margin-left: 0;
   }
 
   .live-status-strip__preset {

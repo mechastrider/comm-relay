@@ -19,7 +19,10 @@ import {
   collectOverlayAppearance,
   updatePresetIsland,
   getActivePresetID,
+  hasInvalidPanelOpacityDraft,
+  revealInvalidPanelOpacityDraft,
 } from "./overlay-appearance.js";
+import { parsePanelOpacity } from "./surface-opacity.js";
 import {
   getPreviewSurface,
   mountOverlayPreview,
@@ -35,6 +38,7 @@ import {
 import {
   applyServerFieldErrors,
   clearFieldErrors,
+  setFieldError,
   showBanner,
   hideBanner,
 } from "./ui-shell.js";
@@ -46,6 +50,7 @@ import {
 } from "./live-active-preset.js";
 import { bindCopyButtons } from "./obs-setup.js";
 import { initStudioAddToObs, maybeAutoOpenStudioAddToObs } from "./studio-add-to-obs.js";
+import { deactivateOverlayDebugPanel, initOverlayDebugPanel } from "./overlay-debug-panel.js";
 
 /** @type {Record<string, unknown> | null} */
 let baseline = null;
@@ -74,7 +79,7 @@ export function isStudioOverlayDirty() {
   if (!baseline || !draft) {
     return false;
   }
-  return overlayDraftIsDirty(baseline, draft);
+  return hasInvalidPanelOpacityDraft() || overlayDraftIsDirty(baseline, draft);
 }
 
 export function updateStudioFollowCopy() {
@@ -322,6 +327,7 @@ function onStudioEnter() {
 }
 
 function onStudioLeave() {
+  deactivateOverlayDebugPanel();
   unmountOverlayPreview();
 }
 
@@ -381,11 +387,25 @@ function interceptHashNavigation() {
 }
 
 async function publishStudioDraft() {
-  if (publishInFlight || !isStudioOverlayDirty()) {
+  if (publishInFlight) {
     return;
   }
   hideBanner();
   clearFieldErrors();
+  revealInvalidPanelOpacityDraft();
+  const opacityInput = document.getElementById("overlay-panel-opacity");
+  const opacity = parsePanelOpacity(opacityInput && opacityInput.value);
+  if (opacity === null) {
+    setFieldError("overlay_panel_opacity", t("obs.panelOpacityHint"));
+    showBanner("error", t("banner.checkFields"));
+    if (opacityInput) {
+      opacityInput.focus();
+    }
+    return;
+  }
+  if (!isStudioOverlayDirty()) {
+    return;
+  }
   syncDraftFromForm();
 
   publishInFlight = true;
@@ -429,6 +449,7 @@ async function publishStudioDraft() {
 }
 
 export function initStudio() {
+  initOverlayDebugPanel();
   initStudioAddToObs();
   initStudioDiscardDialog();
   initStudioViewPreferences();

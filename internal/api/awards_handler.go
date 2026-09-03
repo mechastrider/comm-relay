@@ -228,10 +228,11 @@ func (h *awardsHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 type grantAwardRequest struct {
-	Platform  string `json:"platform"`
-	UserID    string `json:"user_id"`
-	AwardID   string `json:"award_id"`
-	MessageID string `json:"message_id,omitempty"`
+	Platform    string `json:"platform"`
+	UserID      string `json:"user_id"`
+	AwardID     string `json:"award_id"`
+	MessageID   string `json:"message_id,omitempty"`
+	MessageText string `json:"message_text,omitempty"`
 }
 
 type grantAwardResponse struct {
@@ -305,7 +306,16 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 		name = userID
 	}
 	text := command.SubstituteTemplate(award.SplashTemplate, name, award.Points)
-	alertPayload, err := awardAlertWirePayload(award, name, result.AvatarURL, text, award.Points)
+	messageID := strings.TrimSpace(request.MessageID)
+	messagePlatform := ""
+	if messageID != "" {
+		messagePlatform = platform
+	}
+	alertPayload, err := awardAlertWirePayload(award, name, result.AvatarURL, text, award.Points, now, awardAlertContext{
+		MessagePlatform: messagePlatform,
+		MessageID:       messageID,
+		MessageText:     trimAwardMessageText(request.MessageText),
+	})
 	if err != nil {
 		clog.Errorf(r.Context(), "award alert wire payload: %w", err)
 		writeError(w, http.StatusInternalServerError, "failed to broadcast alert")
@@ -324,7 +334,7 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 		Points:   award.Points,
 		Now:      now,
 	}
-	if messageID := strings.TrimSpace(request.MessageID); messageID != "" {
+	if messageID != "" {
 		event.MessagePlatform = platform
 		event.MessageID = messageID
 	}
@@ -336,4 +346,16 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 		ViewerID: result.ViewerID,
 		Points:   award.Points,
 	})
+}
+
+const maxAwardMessageTextCodePoints = 280
+
+// trimAwardMessageText keeps a source quote transient and bounded for the wire alert.
+func trimAwardMessageText(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if len([]rune(trimmed)) <= maxAwardMessageTextCodePoints {
+		return trimmed
+	}
+
+	return string([]rune(trimmed)[:maxAwardMessageTextCodePoints])
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 func TestChatMessageWirePayload_WhenDisplayNameSet_ExpectSnakeCaseJSON(t *testing.T) {
@@ -39,6 +40,18 @@ func TestChatMessageWirePayload_WhenDisplayNameSet_ExpectSnakeCaseJSON(t *testin
 	require.Equal(t, "2026-06-05T10:11:12Z", decoded["timestamp"])
 	_, hasFragments := decoded["fragments"]
 	require.False(t, hasFragments)
+}
+
+func TestAwardAlertWirePayload_WhenCreatedAtHasFraction_ExpectRFC3339Nano(t *testing.T) {
+	t.Parallel()
+
+	createdAt := time.Date(2026, 6, 5, 10, 11, 12, 987654321, time.UTC)
+	payload, err := awardAlertWirePayload(&store.AwardType{ID: "award", Name: "Award"}, "Nova", "", "", 10, createdAt, awardAlertContext{})
+	require.NoError(t, err)
+
+	var decoded map[string]any
+	require.NoError(t, json.Unmarshal(payload, &decoded))
+	require.Equal(t, "2026-06-05T10:11:12.987654321Z", decoded["created_at"])
 }
 
 func TestChatMessageWirePayload_WhenFragmentsSet_ExpectSnakeCaseJSON(t *testing.T) {

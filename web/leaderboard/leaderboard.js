@@ -2,13 +2,14 @@
 
 import {
   fontStack,
-  hexToRgba,
+  panelBackground,
   leaderboardViewFromConfig,
   normalizePanelImageFit,
   normalizePanelImageScope,
   normalizePreviewBackground,
   overlayAssetURL,
-} from "../overlay-settings.js";
+} from "../overlay-settings.js?v=8";
+import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.js?v=1";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;
@@ -42,6 +43,7 @@ const root = document.getElementById("leaderboard");
 const params = new URLSearchParams(window.location.search);
 const previewEnabled = params.has("preview");
 const samplePreviewEnabled = previewEnabled;
+const debugTestEnabled = isOverlayDebugPage(window.location);
 
 function normalizePeriod(raw) {
   const value = String(raw || "").trim().toLowerCase();
@@ -58,8 +60,7 @@ let reconnectDelayMs = INITIAL_RECONNECT_MS;
 let shouldRun = true;
 
 function wsURL() {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return protocol + "//" + window.location.host + "/ws";
+  return overlayWebSocketURL(window.location);
 }
 
 function escapeText(value) {
@@ -83,7 +84,11 @@ function applyAppearance() {
   );
   document.documentElement.style.setProperty(
     "--overlay-panel-bg",
-    hexToRgba(style.panel_color, style.panel_opacity)
+    panelBackground(overlayView.theme, style)
+  );
+  document.documentElement.style.setProperty(
+    "--overlay-panel-opacity",
+    String(typeof style.panel_opacity === "number" ? style.panel_opacity : 0.58)
   );
   document.documentElement.style.setProperty(
     "--overlay-panel-image",
@@ -239,6 +244,10 @@ function handleSocketMessage(event) {
   if (samplePreviewEnabled) {
     return;
   }
+  if (debugTestEnabled && frame.type === "debug_reset") {
+    renderEntries([]);
+    return;
+  }
   if (frame.type !== "leaderboard" || frame.period !== period) {
     return;
   }
@@ -296,7 +305,9 @@ async function start() {
     renderEntries(SAMPLE_ENTRIES);
     return;
   }
-  await loadSnapshot();
+  if (!debugTestEnabled) {
+    await loadSnapshot();
+  }
   connect();
 }
 

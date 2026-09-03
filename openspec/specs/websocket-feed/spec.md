@@ -53,15 +53,27 @@ Each client SHALL have a bounded outbound queue (64 frames). If that queue is fu
 - **THEN** other connected clients still receive new frames
 
 ### Requirement: Alert events use a stable wire envelope
-When a command fires or an award is granted, the hub SHALL broadcast JSON with `type` `"alert"`, resolved splash `text`, `name`, optional `avatar_url`, `points`, `sound`, `duration_ms`, and optional `source` (`command` or `award`) plus the command trigger or `award_id`. Chat overlay, leaderboard, admin, and dock clients SHALL ignore unknown types, including `alert`.
+Command and award events SHALL continue to use `type` `"alert"` with `name`, optional `avatar_url`, resolved `text`, `points`, `sound`, `duration_ms`, and `source`. Every alert SHALL include RFC3339 `created_at`. Command alerts SHALL include `trigger`. Award alerts SHALL include `award_id`, `award_name`, and optional `message_platform`, `message_id`, and bounded `message_text`. These additions MUST remain optional so older clients can ignore them. The chat overlay SHALL inspect award alerts only to highlight a matching visible row; admin, dock, and leaderboard clients MAY otherwise ignore alert frames.
+
+#### Scenario: Message-aware award frame
+- **WHEN** Advice is granted from Twitch message `abc`
+- **THEN** clients receive one award alert with `award_id`, `award_name`, `message_platform` `twitch`, `message_id` `abc`, and the bounded quote
+
+#### Scenario: Command frame remains compatible
+- **WHEN** `!gg` fires
+- **THEN** clients receive an alert with `source` `command`, `trigger` `gg`, and no award message context
 
 #### Scenario: Command fire
 - **WHEN** `!gg` matches
 - **THEN** `/ws` clients receive `type` `alert` with `source` `command` and trigger `gg`
 
 #### Scenario: Chat overlay ignores alerts
-- **WHEN** an `alert` frame arrives at `/overlay`
-- **THEN** the chat queue is unchanged except for the separate `message` frame of the chat line
+- **WHEN** a command alert or an award alert without an exact visible message reference arrives at `/overlay`
+- **THEN** the chat queue is unchanged and no message row is inserted
+
+#### Scenario: Award without stable message id
+- **WHEN** an award succeeds without a message id
+- **THEN** its alert omits `message_platform` and `message_id` and remains renderable
 
 ### Requirement: Config broadcasts include hide_command_messages
 After a successful config update that changes `hide_command_messages`, the hub SHALL include that flag in the public config or overlay settings payload used by overlay clients so they can hide or show new command lines without reload.

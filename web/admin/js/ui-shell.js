@@ -105,7 +105,7 @@ export function clearFieldErrors() {
       }
       if (input) {
         input.removeAttribute("aria-invalid");
-        input.removeAttribute("aria-describedby");
+        restoreFieldHint(input);
       }
     });
   }
@@ -128,6 +128,15 @@ export function applyServerFieldErrors(fields) {
     });
     return firstInvalid;
   }
+
+function restoreFieldHint(input) {
+  const hintID = input.dataset.fieldHintId;
+  if (hintID) {
+    input.setAttribute("aria-describedby", hintID);
+    return;
+  }
+  input.removeAttribute("aria-describedby");
+}
 
 export function setFieldError(field, message) {
     const el = dom.fieldErrors[field];

@@ -48,16 +48,21 @@ type wireMessageDeleted struct {
 }
 
 type wireAlert struct {
-	Type       string `json:"type"`
-	Name       string `json:"name"`
-	AvatarURL  string `json:"avatar_url,omitempty"`
-	Text       string `json:"text"`
-	Points     int    `json:"points"`
-	Sound      string `json:"sound"`
-	DurationMs int    `json:"duration_ms"`
-	Source     string `json:"source"`
-	Trigger    string `json:"trigger,omitempty"`
-	AwardID    string `json:"award_id,omitempty"`
+	Type            string `json:"type"`
+	Name            string `json:"name"`
+	AvatarURL       string `json:"avatar_url,omitempty"`
+	Text            string `json:"text"`
+	Points          int    `json:"points"`
+	Sound           string `json:"sound"`
+	DurationMs      int    `json:"duration_ms"`
+	Source          string `json:"source"`
+	CreatedAt       string `json:"created_at"`
+	Trigger         string `json:"trigger,omitempty"`
+	AwardID         string `json:"award_id,omitempty"`
+	AwardName       string `json:"award_name,omitempty"`
+	MessagePlatform string `json:"message_platform,omitempty"`
+	MessageID       string `json:"message_id,omitempty"`
+	MessageText     string `json:"message_text,omitempty"`
 }
 
 func chatMessageWirePayload(msg bus.ChatMessage, isCommand bool) ([]byte, error) {
@@ -132,6 +137,7 @@ func alertWirePayload(cmd *store.Command, msg bus.ChatMessage, text string, poin
 		Sound:      cmd.Sound,
 		DurationMs: cmd.DurationMs,
 		Source:     "command",
+		CreatedAt:  time.Now().UTC().Format(time.RFC3339Nano),
 		Trigger:    cmd.Trigger,
 	})
 	if err != nil {
@@ -141,17 +147,34 @@ func alertWirePayload(cmd *store.Command, msg bus.ChatMessage, text string, poin
 	return data, nil
 }
 
-func awardAlertWirePayload(award *store.AwardType, name, avatarURL, text string, points int) ([]byte, error) {
+type awardAlertContext struct {
+	MessagePlatform string
+	MessageID       string
+	MessageText     string
+}
+
+func awardAlertWirePayload(
+	award *store.AwardType,
+	name, avatarURL, text string,
+	points int,
+	createdAt time.Time,
+	context awardAlertContext,
+) ([]byte, error) {
 	data, err := json.Marshal(wireAlert{
-		Type:       wireAlertType,
-		Name:       name,
-		AvatarURL:  avatarURL,
-		Text:       text,
-		Points:     points,
-		Sound:      award.Sound,
-		DurationMs: award.DurationMs,
-		Source:     "award",
-		AwardID:    award.ID,
+		Type:            wireAlertType,
+		Name:            name,
+		AvatarURL:       avatarURL,
+		Text:            text,
+		Points:          points,
+		Sound:           award.Sound,
+		DurationMs:      award.DurationMs,
+		Source:          "award",
+		CreatedAt:       createdAt.UTC().Format(time.RFC3339Nano),
+		AwardID:         award.ID,
+		AwardName:       award.Name,
+		MessagePlatform: context.MessagePlatform,
+		MessageID:       context.MessageID,
+		MessageText:     context.MessageText,
 	})
 	if err != nil {
 		return nil, errors.Errorf("marshal award alert wire event: %w", err)

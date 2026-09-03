@@ -67,5 +67,6 @@ type Viewer struct {
 	DayScore            int
 	LastSeenAt          time.Time
 	LastSeen            LastSeenIdentity
+	Platforms           []string
 	Identities          []Identity
 }

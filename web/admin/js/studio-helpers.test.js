@@ -18,7 +18,6 @@ import {
   MESSAGE_TTL_CHIP_VALUES,
   shouldShowUseOnStream,
   shouldDisableUseOnStream,
-  shouldShowPresetCrudInPrimary,
   normalizeStudioSetupState,
   readStudioSetupState,
   writeStudioSetupState,
@@ -77,6 +76,26 @@ const baseline = normalizeOverlayAppearanceDraft({
 });
 const draftCopy = cloneOverlayAppearanceDraft(baseline);
 assert.equal(overlayDraftIsDirty(baseline, draftCopy), false);
+
+const surfaceOpacityDraft = cloneOverlayAppearanceDraft({
+  active_preset_id: "default",
+  presets: [{
+    id: "default",
+    name: "Default",
+    font_size_px: 18,
+    theme: "default",
+    surfaces: {
+      chat: { panel_opacity: 0 },
+      leaderboard: { font_size_px: 14, layout: "chips", panel_opacity: 0.65 },
+      alerts: { panel_opacity: 1 },
+    },
+  }],
+});
+assert.deepEqual(surfaceOpacityDraft.presets[0].surfaces, {
+  chat: { panel_opacity: 0 },
+  leaderboard: { font_size_px: 14, layout: "chips", panel_opacity: 0.65 },
+  alerts: { panel_opacity: 1 },
+});
 
 const dirtyDraft = cloneOverlayAppearanceDraft(baseline);
 dirtyDraft.max_messages = 25;
@@ -215,9 +234,5 @@ writeStudioSurfaceRailCollapsedPreference(dismissedStorage, true);
 assert.equal(readStudioSurfaceRailCollapsedPreference(dismissedStorage), true);
 writeStudioSurfaceRailCollapsedPreference(dismissedStorage, false);
 assert.equal(readStudioSurfaceRailCollapsedPreference(dismissedStorage), false);
-
-assert.equal(shouldShowPresetCrudInPrimary(1), false);
-assert.equal(shouldShowPresetCrudInPrimary(2), true);
-assert.equal(shouldShowPresetCrudInPrimary(0), false);
 
 console.log("studio-helpers OK");

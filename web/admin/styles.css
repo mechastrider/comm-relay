@@ -1,5 +1,5 @@
 @import url("../shared/tooltip.css?v=21");
-@import url("../shared/reward-picker.css?v=1");
+@import url("../shared/reward-picker.css?v=2");
 @import url("./styles/primitives.css");
 @import url("./styles/tokens.css?v=24");
 @import url("./styles/components.css");
@@ -8,11 +8,11 @@
 @import url("./styles/console.css");
 @import url("./styles/systems.css");
 @import url("./styles/dialogs.css?v=21");
-@import url("./styles/dialog-frame.css?v=22");
+@import url("./styles/dialog-frame.css?v=23");
 @import url("./styles/forms.css?v=21");
 @import url("./styles/about.css");
-@import url("./styles/viewers.css");
-@import url("./styles/live.css");
-@import url("./styles/studio.css?v=24");
+@import url("./styles/viewers.css?v=17");
+@import url("./styles/live.css?v=2");
+@import url("./styles/studio.css?v=28");
 @import url("./styles/settings.css");
 @import url("./styles/media.css?v=21");

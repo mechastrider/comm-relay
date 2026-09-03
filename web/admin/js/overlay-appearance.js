@@ -5,8 +5,18 @@ import { uploadOverlayAsset } from "./overlay-asset-upload.js";
 import { showBanner } from "./ui-shell.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildObsAlertURL } from "./alert-url.js";
-import { buildFollowActiveURLForSurface, messageTtlToChipValue, chipValueToMessageTtl, shouldShowPresetCrudInPrimary } from "./studio-helpers.js";
+import { buildFollowActiveURLForSurface, messageTtlToChipValue, chipValueToMessageTtl } from "./studio-helpers.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
+import {
+  effectiveSurfaceOpacity,
+  isPanelOpacityDraft,
+  isPanelOpacity,
+  normalizeOpacitySurface,
+  parsePanelOpacity,
+  previewSurfacePanelOpacity,
+  withLeaderboardAppearance,
+  withSurfacePanelOpacity,
+} from "./surface-opacity.js";
 import { OVERLAY_THEMES } from "./constants.js";
 import * as dom from "./dom.js";
 
@@ -14,6 +24,9 @@ let presets = [];
 let activePresetId = "default";
 let bound = false;
 let switchingPreset = false;
+let opacityEditorSurface = "chat";
+let panelOpacityTouched = false;
+let panelOpacityDrafts = {};
 
 const PANEL_IMAGE_FIT_VALUES = ["cover", "contain", "fill", "tile"];
 const PRESET_LIMIT = 32;
@@ -208,10 +221,10 @@ function setFieldValue(id, value) {
   el.value = value;
 }
 
-function collectStyleFromForm() {
+function collectStyleFromForm(base) {
   const lineHeight = Number.parseFloat(fieldValue("overlay-line-height", "1.35"));
   const textEdgeStrength = Number.parseInt(fieldValue("overlay-text-edge-strength", "2"), 10);
-  const panelOpacity = Number.parseFloat(fieldValue("overlay-panel-opacity", "0.58"));
+  const baseStyle = mergeStyle(fieldValue("overlay-theme", "default"), base && base.style);
   const borderWidth = Number.parseInt(fieldValue("overlay-border-width", "0"), 10);
   const borderRadius = Number.parseInt(fieldValue("overlay-border-radius", "8"), 10);
   return {
@@ -221,7 +234,9 @@ function collectStyleFromForm() {
     text_edge_strength: Number.isFinite(textEdgeStrength) ? textEdgeStrength : 2,
     platform_marker: fieldValue("overlay-platform-marker", "stripe"),
     panel_color: fieldValue("overlay-panel-color", "#000000"),
-    panel_opacity: Number.isFinite(panelOpacity) ? panelOpacity : 0.58,
+    // Shared opacity remains the legacy fallback. The Studio control below owns
+    // a surface override instead, so an edit never changes another surface.
+    panel_opacity: baseStyle.panel_opacity,
     panel_image: fieldValue("overlay-panel-image", ""),
     panel_image_fit: fieldValue("overlay-panel-image-fit", "cover"),
     panel_image_scope: fieldValue("overlay-panel-image-scope", "message"),
@@ -231,18 +246,20 @@ function collectStyleFromForm() {
   };
 }
 
-function collectLeaderboardSurface(base) {
+function collectSurfaces(base) {
   const chatFont = Number.parseInt(fieldValue("overlay-font-size", String((base && base.font_size_px) || 18)), 10);
   const rawFont = Number.parseInt(fieldValue("overlay-leaderboard-font-size", String(chatFont)), 10);
   const layout = fieldValue("overlay-leaderboard-layout", "panel") === "chips" ? "chips" : "panel";
-  const leaderboard = {};
-  if (Number.isFinite(rawFont) && rawFont !== chatFont) {
-    leaderboard.font_size_px = rawFont;
+  const current = base && base.surfaces && typeof base.surfaces === "object" ? base.surfaces : {};
+  let surfaces = withLeaderboardAppearance(current, rawFont, chatFont, layout);
+  const rawOpacity = panelOpacityTouched
+    ? panelOpacityDrafts[opacityEditorSurface]
+    : fieldValue("overlay-panel-opacity", "");
+  const opacity = parsePanelOpacity(rawOpacity);
+  if (panelOpacityTouched && opacity !== null) {
+    surfaces = withSurfacePanelOpacity(surfaces, opacityEditorSurface, opacity);
   }
-  if (layout === "chips") {
-    leaderboard.layout = layout;
-  }
-  return { leaderboard };
+  return surfaces;
 }
 
 function collectPresetFromForm(base) {
@@ -254,8 +271,8 @@ function collectPresetFromForm(base) {
     font_size_px: Number.parseInt(fieldValue("overlay-font-size", "18"), 10),
     display_mode: fieldValue("overlay-display-mode", "normal") === "compact" ? "compact" : "normal",
     theme: fieldValue("overlay-theme", "default"),
-    style: collectStyleFromForm(),
-    surfaces: collectLeaderboardSurface(base),
+    style: collectStyleFromForm(base),
+    surfaces: collectSurfaces(base),
   };
 }
 
@@ -273,6 +290,20 @@ function normalizeLeaderboardSurface(raw, fontSizePx) {
   };
 }
 
+function normalizedSurfaceOverrides(raw, fontSizePx) {
+  const incoming = raw && typeof raw === "object" ? raw : {};
+  const surfaces = normalizeLeaderboardSurface(incoming, fontSizePx);
+  ["chat", "leaderboard", "alerts"].forEach(function (surface) {
+    const value = incoming[surface] && typeof incoming[surface] === "object"
+      ? incoming[surface].panel_opacity
+      : undefined;
+    if (isPanelOpacity(value)) {
+      surfaces[surface] = Object.assign({}, surfaces[surface], { panel_opacity: value });
+    }
+  });
+  return surfaces;
+}
+
 function normalizePreset(raw) {
   const theme = raw && raw.theme ? raw.theme : "default";
   const fontSizePx = typeof raw.font_size_px === "number" ? raw.font_size_px : 18;
@@ -285,7 +316,7 @@ function normalizePreset(raw) {
     display_mode: raw && raw.display_mode === "compact" ? "compact" : "normal",
     theme: theme,
     style: mergeStyle(theme, raw && raw.style),
-    surfaces: normalizeLeaderboardSurface(raw && raw.surfaces, fontSizePx),
+    surfaces: normalizedSurfaceOverrides(raw && raw.surfaces, fontSizePx),
   };
 }
 
@@ -396,7 +427,13 @@ function writeFormFromPreset(preset) {
   setFieldValue("overlay-text-edge-strength", String(style.text_edge_strength));
   setFieldValue("overlay-platform-marker", style.platform_marker);
   setFieldValue("overlay-panel-color", style.panel_color);
-  setFieldValue("overlay-panel-opacity", String(style.panel_opacity));
+  opacityEditorSurface = selectedOpacitySurface();
+  panelOpacityTouched = false;
+  panelOpacityDrafts = {};
+  setFieldValue(
+    "overlay-panel-opacity",
+    String(effectiveSurfaceOpacity(preset.surfaces, opacityEditorSurface, style.panel_opacity))
+  );
   setFieldValue("overlay-panel-image", style.panel_image || "");
   setPanelImageFit(style.panel_image_fit || "cover");
   setFieldValue("overlay-panel-image-scope", style.panel_image_scope || "message");
@@ -409,6 +446,66 @@ function writeFormFromPreset(preset) {
   updatePanelImagePreview(style.panel_image);
   syncThemeCards();
   syncDurationChips();
+}
+
+function selectedOpacitySurface() {
+  const selected = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
+  return normalizeOpacitySurface(selected && selected.getAttribute("data-obs-preview-surface"));
+}
+
+function syncOpacityEditorSurface() {
+  const preset = currentPreset();
+  if (!preset) {
+    return;
+  }
+  rememberPanelOpacityDraft();
+  // Persist the previous editor field before changing its surface association.
+  writeFormIntoActive();
+  const updatedPreset = currentPreset();
+  if (!updatedPreset) {
+    return;
+  }
+  opacityEditorSurface = selectedOpacitySurface();
+  panelOpacityTouched = Object.hasOwn(panelOpacityDrafts, opacityEditorSurface);
+  const style = mergeStyle(updatedPreset.theme, updatedPreset.style);
+  setFieldValue(
+    "overlay-panel-opacity",
+    panelOpacityTouched
+      ? panelOpacityDrafts[opacityEditorSurface]
+      : String(effectiveSurfaceOpacity(updatedPreset.surfaces, opacityEditorSurface, style.panel_opacity))
+  );
+  requestPreviewRefresh();
+}
+
+function rememberPanelOpacityDraft() {
+  if (!panelOpacityTouched) {
+    return;
+  }
+  panelOpacityDrafts[opacityEditorSurface] = fieldValue("overlay-panel-opacity", "");
+}
+
+export function hasInvalidPanelOpacityDraft() {
+  return Object.values(panelOpacityDrafts).some(function (raw) {
+    return !isPanelOpacityDraft(raw);
+  });
+}
+
+export function revealInvalidPanelOpacityDraft() {
+  const surface = Object.keys(panelOpacityDrafts).find(function (key) {
+    return !isPanelOpacityDraft(panelOpacityDrafts[key]);
+  });
+  if (!surface) {
+    return false;
+  }
+  const selector = "[data-obs-preview-surface='" + surface + "']";
+  const button = document.querySelector(selector);
+  if (button && button.getAttribute("aria-pressed") !== "true") {
+    button.click();
+  }
+  opacityEditorSurface = normalizeOpacitySurface(surface);
+  panelOpacityTouched = true;
+  setFieldValue("overlay-panel-opacity", panelOpacityDrafts[surface]);
+  return true;
 }
 
 function currentPreset() {
@@ -460,7 +557,6 @@ function updatePresetActionButtons() {
   const add = document.getElementById("overlay-preset-add");
   const duplicate = document.getElementById("overlay-preset-duplicate");
   const remove = document.getElementById("overlay-preset-delete");
-  const rename = document.getElementById("overlay-preset-rename");
   if (add) {
     add.disabled = atLimit;
   }
@@ -470,92 +566,10 @@ function updatePresetActionButtons() {
   if (remove) {
     remove.disabled = onlyOne;
   }
-  if (dom.presetOverflowAdd) {
-    dom.presetOverflowAdd.disabled = atLimit;
-  }
-  if (dom.presetOverflowDuplicate) {
-    dom.presetOverflowDuplicate.disabled = atLimit;
-  }
-  if (dom.presetOverflowDelete) {
-    dom.presetOverflowDelete.disabled = onlyOne;
-  }
-  if (rename && dom.presetOverflowRename) {
-    dom.presetOverflowRename.disabled = rename.disabled;
-  }
 }
 
 function updatePresetCrudVisibility() {
-  const showPrimary = shouldShowPresetCrudInPrimary(presets.length);
-  if (dom.presetIslandIconActions) {
-    dom.presetIslandIconActions.hidden = !showPrimary;
-  }
-  if (dom.presetIslandOverflow) {
-    dom.presetIslandOverflow.hidden = showPrimary;
-  }
-  if (!showPrimary) {
-    closePresetOverflowPanel();
-  }
   updatePresetActionButtons();
-}
-
-function closePresetOverflowPanel() {
-  if (!dom.presetIslandOverflowPanel || !dom.presetIslandOverflowToggle) {
-    return;
-  }
-  dom.presetIslandOverflowPanel.hidden = true;
-  dom.presetIslandOverflowToggle.setAttribute("aria-expanded", "false");
-}
-
-function initPresetOverflowPanel() {
-  if (!dom.presetIslandOverflowPanel || !dom.presetIslandOverflowToggle) {
-    return;
-  }
-  if (dom.presetIslandOverflowToggle.dataset.presetOverflowBound === "true") {
-    return;
-  }
-  dom.presetIslandOverflowToggle.dataset.presetOverflowBound = "true";
-
-  dom.presetIslandOverflowToggle.addEventListener("click", function (event) {
-    event.stopPropagation();
-    const panel = dom.presetIslandOverflowPanel;
-    if (!panel) {
-      return;
-    }
-    if (panel.hidden) {
-      panel.hidden = false;
-      dom.presetIslandOverflowToggle.setAttribute("aria-expanded", "true");
-      return;
-    }
-    closePresetOverflowPanel();
-  });
-
-  document.addEventListener("click", function (event) {
-    const panel = dom.presetIslandOverflowPanel;
-    const toggle = dom.presetIslandOverflowToggle;
-    if (!panel || panel.hidden || !toggle) {
-      return;
-    }
-    if (
-      event.target === toggle ||
-      toggle.contains(/** @type {Node} */ (event.target)) ||
-      panel.contains(/** @type {Node} */ (event.target))
-    ) {
-      return;
-    }
-    closePresetOverflowPanel();
-  });
-
-  document.addEventListener("keydown", function (event) {
-    if (event.key !== "Escape") {
-      return;
-    }
-    const panel = dom.presetIslandOverflowPanel;
-    if (!panel || panel.hidden) {
-      return;
-    }
-    closePresetOverflowPanel();
-    dom.presetIslandOverflowToggle.focus();
-  });
 }
 
 function renderPresetSelect() {
@@ -592,6 +606,7 @@ export function isCurrentPresetDirty() {
   // Compare a form snapshot without mutating in-memory presets. Calling
   // writeFormIntoActive() here used to overwrite the active preset with HTML
   // defaults before writeFormFromPreset ran on config load.
+  rememberPanelOpacityDraft();
   const current = collectPresetFromForm(base);
   const saved = getSavedPreset(activePresetId);
   if (!saved) {
@@ -811,7 +826,14 @@ export function currentLeaderboardURL(options) {
 
 export function collectAppearanceQuery() {
   writeFormIntoActive();
-  const style = collectStyleFromForm();
+  const preset = currentPreset();
+  const style = collectStyleFromForm(preset);
+  const draftOpacity = panelOpacityTouched
+    ? parsePanelOpacity(panelOpacityDrafts[opacityEditorSurface])
+    : null;
+  const previewOpacity = draftOpacity === null
+    ? previewSurfacePanelOpacity(preset, selectedOpacitySurface(), style.panel_opacity)
+    : draftOpacity;
   const query = {
     preset: activePresetId,
     font_family: style.font_family,
@@ -820,7 +842,7 @@ export function collectAppearanceQuery() {
     text_edge_strength: String(style.text_edge_strength),
     platform_marker: style.platform_marker,
     panel_color: style.panel_color,
-    panel_opacity: String(style.panel_opacity),
+    panel_opacity: previewOpacity == null ? undefined : String(previewOpacity),
     border_width: String(style.border_width),
     border_color: style.border_color,
     border_radius: String(style.border_radius),
@@ -1016,7 +1038,8 @@ function duplicatePreset(name) {
   if (presets.length >= PRESET_LIMIT) {
     return;
   }
-  const copy = collectPresetFromForm({ id: newID("preset"), name: name });
+  const source = currentPreset();
+  const copy = collectPresetFromForm(Object.assign({}, source, { id: newID("preset"), name: name }));
   copy.name = name;
   presets.push(copy);
   activePresetId = copy.id;
@@ -1072,6 +1095,7 @@ function resetGroup(group) {
   } else if (group === "surface") {
     setFieldValue("overlay-panel-color", defaults.panel_color);
     setFieldValue("overlay-panel-opacity", String(defaults.panel_opacity));
+    panelOpacityTouched = true;
     setFieldValue("overlay-panel-image", "");
     setPanelImageFit(defaults.panel_image_fit);
     setFieldValue("overlay-panel-image-scope", defaults.panel_image_scope);
@@ -1140,31 +1164,6 @@ export function initOverlayAppearance() {
       openPresetPrompt("delete");
     });
   }
-  if (dom.presetOverflowAdd) {
-    dom.presetOverflowAdd.addEventListener("click", function () {
-      closePresetOverflowPanel();
-      openPresetPrompt("create");
-    });
-  }
-  if (dom.presetOverflowRename) {
-    dom.presetOverflowRename.addEventListener("click", function () {
-      closePresetOverflowPanel();
-      openPresetPrompt("rename");
-    });
-  }
-  if (dom.presetOverflowDuplicate) {
-    dom.presetOverflowDuplicate.addEventListener("click", function () {
-      closePresetOverflowPanel();
-      openPresetPrompt("duplicate");
-    });
-  }
-  if (dom.presetOverflowDelete) {
-    dom.presetOverflowDelete.addEventListener("click", function () {
-      closePresetOverflowPanel();
-      openPresetPrompt("delete");
-    });
-  }
-  initPresetOverflowPanel();
   const promptCancel = document.getElementById("overlay-preset-prompt-cancel");
   if (promptCancel) {
     promptCancel.addEventListener("click", closePresetPrompt);
@@ -1237,6 +1236,16 @@ export function initOverlayAppearance() {
       requestPreviewRefresh();
     });
   }
+  const panelOpacityInput = document.getElementById("overlay-panel-opacity");
+  if (panelOpacityInput) {
+    ["input", "change"].forEach(function (eventName) {
+      panelOpacityInput.addEventListener(eventName, function () {
+        panelOpacityTouched = true;
+        rememberPanelOpacityDraft();
+      });
+    });
+  }
+  document.addEventListener("overlay-preview-surface-changed", syncOpacityEditorSurface);
   [
     "overlay-max-messages",
     "overlay-font-size",
