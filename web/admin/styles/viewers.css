@@ -102,8 +102,15 @@
 }
 
 .audience-viewers-table__head th {
+  position: sticky;
+  z-index: 1;
+  top: 0;
   background: var(--surface-raised);
   border-bottom: 2px solid var(--border);
+}
+
+.audience-viewers-table__sortable {
+  padding: 0;
 }
 
 .audience-sort-button {
@@ -111,14 +118,16 @@
   align-items: center;
   gap: 0.35rem;
   width: 100%;
+  min-height: var(--touch-target-narrow);
   margin: 0;
-  padding: 0;
+  padding: 8px 10px;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
   letter-spacing: inherit;
   text-transform: inherit;
+  touch-action: manipulation;
   cursor: pointer;
 }
 
@@ -202,6 +211,16 @@
   color: var(--muted);
 }
 
+.audience-viewers-table tbody tr[data-viewer-id] {
+  cursor: pointer;
+}
+
+.audience-viewers-table tbody tr[data-viewer-id]:hover,
+.audience-viewers-table tbody tr[data-viewer-id]:focus-within,
+.audience-viewers-table tbody tr[data-viewer-id]:active {
+  background: color-mix(in srgb, var(--amber) 8%, var(--surface));
+}
+
 .platform-icon-wrap {
   display: inline-flex;
 }
@@ -246,6 +265,7 @@
 
 .audience-viewers-table__row--selected {
   background: linear-gradient(135deg, rgba(212, 160, 23, 0.08), var(--surface-raised));
+  box-shadow: inset 3px 0 0 var(--amber-dim);
 }
 
 .audience-viewers-table tr[data-viewer-id]:focus-visible {

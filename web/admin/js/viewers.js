@@ -210,6 +210,27 @@ function updateTableSelection(id) {
   });
 }
 
+function repairFocusReturnElement() {
+  if (!selectedViewerId || !focusReturnElement || focusReturnElement.isConnected) {
+    return;
+  }
+  const selectedRow = dom.audienceViewersTableBody
+    ? Array.from(
+      dom.audienceViewersTableBody.querySelectorAll("tr[data-viewer-id]")
+    ).find(function (row) {
+      return row.getAttribute("data-viewer-id") === selectedViewerId;
+    })
+    : null;
+  if (!selectedRow) {
+    focusReturnElement = null;
+    return;
+  }
+  const returnToRow = focusReturnElement.matches("tr[data-viewer-id]");
+  focusReturnElement = returnToRow
+    ? selectedRow
+    : selectedRow.querySelector(".audience-viewers-table__name-button") || selectedRow;
+}
+
 function renderViewersTable(viewers) {
   if (!dom.audienceViewersTableBody) {
     return;
@@ -291,6 +312,7 @@ function renderViewersTable(viewers) {
   updateSortHeaders();
 
   updateTableSelection(selectedViewerId);
+  repairFocusReturnElement();
 
   if (selectedViewerId && !viewers.some(function (viewer) {
     return viewer.id === selectedViewerId;
@@ -565,6 +587,7 @@ function handleTableRowKeydown(event) {
   if (!dom.audienceViewersTableBody) {
     return;
   }
+  const nameButton = event.target.closest(".audience-viewers-table__name-button");
   const rows = Array.from(dom.audienceViewersTableBody.querySelectorAll("tr[data-viewer-id]"));
   const currentIndex = rows.indexOf(event.currentTarget);
   if (currentIndex === -1) {
@@ -575,15 +598,17 @@ function handleTableRowKeydown(event) {
     event.preventDefault();
     const next = rows[currentIndex + 1];
     if (next) {
-      next.focus();
+      const nextNameButton = next.querySelector(".audience-viewers-table__name-button");
+      (nextNameButton || next).focus();
     }
   } else if (event.key === "ArrowUp") {
     event.preventDefault();
     const previous = rows[currentIndex - 1];
     if (previous) {
-      previous.focus();
+      const previousNameButton = previous.querySelector(".audience-viewers-table__name-button");
+      (previousNameButton || previous).focus();
     }
-  } else if (event.key === "Enter" || event.key === " ") {
+  } else if ((event.key === "Enter" || event.key === " ") && !nameButton) {
     event.preventDefault();
     const viewerId = event.currentTarget.getAttribute("data-viewer-id");
     if (viewerId) {

@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const markup = await readFile(join(here, "..", "index.html"), "utf8");
+const styles = await readFile(join(here, "..", "styles", "viewers.css"), "utf8");
+const viewersSource = await readFile(join(here, "viewers.js"), "utf8");
 
 const viewersToolbar = markup.match(
   /<header class="audience-toolbar">([\s\S]*?)<\/header>/
@@ -29,5 +31,45 @@ assert.doesNotMatch(
 );
 assert.match(markup, /id="audience-sort-score"/, "Score sort button must exist");
 assert.match(markup, /id="audience-sort-messages"/, "Messages sort button must exist");
+assert.match(
+  markup,
+  /class="data-table__numeric audience-viewers-table__sortable" aria-sort="none"/,
+  "Sortable headers must own aria-sort and a full-cell interaction surface"
+);
+assert.match(
+  styles,
+  /\.audience-viewers-table__head th\s*\{[\s\S]*?position:\s*sticky/,
+  "Audience table headers must remain visible while the directory scrolls"
+);
+assert.match(
+  styles,
+  /\.audience-sort-button\s*\{[\s\S]*?min-height:\s*var\(--touch-target-narrow\)/,
+  "Sort buttons must keep a touch-friendly target"
+);
+assert.match(
+  styles,
+  /tr\[data-viewer-id\]\s*\{[\s\S]*?cursor:\s*pointer/,
+  "Clickable viewer rows must advertise pointer activation"
+);
+assert.match(
+  styles,
+  /tr\[data-viewer-id\]:focus-within/,
+  "Viewer rows must expose a keyboard focus affordance"
+);
+assert.match(
+  viewersSource,
+  /next\.querySelector\("\.audience-viewers-table__name-button"\)/,
+  "Arrow navigation must keep focus on the semantic name controls"
+);
+assert.match(
+  viewersSource,
+  /\(event\.key === "Enter" \|\| event\.key === " "\) && !nameButton/,
+  "Name controls must keep native Enter and Space activation"
+);
+assert.match(
+  viewersSource,
+  /function repairFocusReturnElement\(\)/,
+  "Table rerenders must repair detail focus return targets"
+);
 
 console.log("audience-toolbar-markup OK");
