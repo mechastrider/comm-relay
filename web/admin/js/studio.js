@@ -19,7 +19,10 @@ import {
   collectOverlayAppearance,
   updatePresetIsland,
   getActivePresetID,
+  hasInvalidPanelOpacityDraft,
+  revealInvalidPanelOpacityDraft,
 } from "./overlay-appearance.js";
+import { parsePanelOpacity } from "./surface-opacity.js";
 import {
   getPreviewSurface,
   mountOverlayPreview,
@@ -35,6 +38,7 @@ import {
 import {
   applyServerFieldErrors,
   clearFieldErrors,
+  setFieldError,
   showBanner,
   hideBanner,
 } from "./ui-shell.js";
@@ -74,7 +78,7 @@ export function isStudioOverlayDirty() {
   if (!baseline || !draft) {
     return false;
   }
-  return overlayDraftIsDirty(baseline, draft);
+  return hasInvalidPanelOpacityDraft() || overlayDraftIsDirty(baseline, draft);
 }
 
 export function updateStudioFollowCopy() {
@@ -381,11 +385,25 @@ function interceptHashNavigation() {
 }
 
 async function publishStudioDraft() {
-  if (publishInFlight || !isStudioOverlayDirty()) {
+  if (publishInFlight) {
     return;
   }
   hideBanner();
   clearFieldErrors();
+  revealInvalidPanelOpacityDraft();
+  const opacityInput = document.getElementById("overlay-panel-opacity");
+  const opacity = parsePanelOpacity(opacityInput && opacityInput.value);
+  if (opacity === null) {
+    setFieldError("overlay_panel_opacity", t("obs.panelOpacityHint"));
+    showBanner("error", t("banner.checkFields"));
+    if (opacityInput) {
+      opacityInput.focus();
+    }
+    return;
+  }
+  if (!isStudioOverlayDirty()) {
+    return;
+  }
   syncDraftFromForm();
 
   publishInFlight = true;

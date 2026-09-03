@@ -62,6 +62,20 @@ function normalizeLayout(value) {
 }
 
 /**
+ * @param {unknown} surface
+ * @returns {Record<string, unknown>}
+ */
+function normalizeSurfaceOpacity(surface) {
+  const raw = surface && typeof surface === "object"
+    ? /** @type {Record<string, unknown>} */ (surface)
+    : {};
+  const opacity = raw.panel_opacity;
+  return typeof opacity === "number" && Number.isFinite(opacity) && opacity >= 0 && opacity <= 1
+    ? { panel_opacity: opacity }
+    : {};
+}
+
+/**
  * @param {unknown} preset
  * @returns {Record<string, unknown>}
  */
@@ -89,10 +103,12 @@ function normalizePreset(preset) {
     theme: typeof raw.theme === "string" ? raw.theme : "default",
     style: style,
     surfaces: {
-      leaderboard: {
+      chat: normalizeSurfaceOpacity(surfaces.chat),
+      leaderboard: Object.assign({}, normalizeSurfaceOpacity(leaderboard), {
         font_size_px: leaderboardFont,
         layout: normalizeLayout(leaderboard.layout),
-      },
+      }),
+      alerts: normalizeSurfaceOpacity(surfaces.alerts),
     },
   };
 }

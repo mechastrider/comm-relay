@@ -761,7 +761,12 @@ export function bindFieldClear(fieldKey) {
         el.hidden = true;
         el.textContent = "";
         input.removeAttribute("aria-invalid");
-        input.removeAttribute("aria-describedby");
+        const hintID = input.dataset.fieldHintId;
+        if (hintID) {
+          input.setAttribute("aria-describedby", hintID);
+        } else {
+          input.removeAttribute("aria-describedby");
+        }
       }
     });
   }

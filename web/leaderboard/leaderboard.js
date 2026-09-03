@@ -2,13 +2,13 @@
 
 import {
   fontStack,
-  hexToRgba,
+  panelBackground,
   leaderboardViewFromConfig,
   normalizePanelImageFit,
   normalizePanelImageScope,
   normalizePreviewBackground,
   overlayAssetURL,
-} from "../overlay-settings.js";
+} from "../overlay-settings.js?v=8";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;
@@ -83,7 +83,11 @@ function applyAppearance() {
   );
   document.documentElement.style.setProperty(
     "--overlay-panel-bg",
-    hexToRgba(style.panel_color, style.panel_opacity)
+    panelBackground(overlayView.theme, style)
+  );
+  document.documentElement.style.setProperty(
+    "--overlay-panel-opacity",
+    String(typeof style.panel_opacity === "number" ? style.panel_opacity : 0.58)
   );
   document.documentElement.style.setProperty(
     "--overlay-panel-image",

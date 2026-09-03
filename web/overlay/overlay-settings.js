@@ -17,6 +17,7 @@ const THEMES = new Set([
 
 const PANEL_IMAGE_FITS = new Set(["cover", "contain", "fill", "tile"]);
 const PANEL_IMAGE_SCOPES = new Set(["message", "column"]);
+const PANEL_OPACITY_QUERY = /^(?:(?:0|1)(?:\.\d*)?|\.\d+)$/;
 
 export function normalizeTheme(theme) {
   const value = String(theme || "").trim().toLowerCase();
@@ -118,17 +119,19 @@ export function mergeStyle(theme, style) {
 
 export function resolvePreset(overlay, queryPreset) {
   const presets = Array.isArray(overlay && overlay.presets) ? overlay.presets : [];
-  const wanted =
-    String(queryPreset || "").trim() ||
-    String((overlay && overlay.active_preset_id) || "").trim();
-  if (wanted) {
+  const find = function (id) {
+    const wanted = String(id || "").trim();
+    if (!wanted) {
+      return null;
+    }
     for (let i = 0; i < presets.length; i += 1) {
       if (presets[i] && presets[i].id === wanted) {
         return presets[i];
       }
     }
-  }
-  return presets[0] || null;
+    return null;
+  };
+  return find(queryPreset) || find(overlay && overlay.active_preset_id) || presets[0] || null;
 }
 
 export function hexToRgba(hex, opacity) {
@@ -150,6 +153,21 @@ export function hexToRgba(hex, opacity) {
 
 export function fontStack(fontFamily) {
   return FONT_STACKS[fontFamily] || FONT_STACKS.system;
+}
+
+// Return a query opacity only when the complete parameter is a finite value in
+// the persisted 0..1 range. Number.parseFloat would accept prefixes such as
+// "0.5junk", while an empty query parameter must not become transparent.
+export function panelOpacityQueryValue(params) {
+  if (!params || typeof params.get !== "function" || typeof params.has !== "function" || !params.has("panel_opacity")) {
+    return null;
+  }
+  const raw = String(params.get("panel_opacity") || "").trim();
+  if (!PANEL_OPACITY_QUERY.test(raw)) {
+    return null;
+  }
+  const value = Number(raw);
+  return Number.isFinite(value) && value >= 0 && value <= 1 ? value : null;
 }
 
 export function applyQueryStyleOverrides(style, params) {
@@ -180,11 +198,9 @@ export function applyQueryStyleOverrides(style, params) {
   if (has("panel_color") && /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(get("panel_color"))) {
     next.panel_color = get("panel_color");
   }
-  if (has("panel_opacity")) {
-    const value = Number.parseFloat(get("panel_opacity"));
-    if (Number.isFinite(value) && value >= 0 && value <= 1) {
-      next.panel_opacity = value;
-    }
+  const panelOpacity = panelOpacityQueryValue(params);
+  if (panelOpacity !== null) {
+    next.panel_opacity = panelOpacity;
   }
   if (has("panel_image")) {
     next.panel_image = get("panel_image") || "";
@@ -232,13 +248,51 @@ function themeFromResolvedAndQuery(resolved, query) {
 }
 
 export function overlayViewFromConfig(config, params) {
+  return surfaceViewFromConfig(config, params, "chat");
+}
+
+function surfaceOpacity(resolved, surface, fallback) {
+  const surfaces = resolved && resolved.surfaces && typeof resolved.surfaces === "object"
+    ? resolved.surfaces
+    : null;
+  const override = surfaces && surfaces[surface] && typeof surfaces[surface] === "object"
+    ? surfaces[surface].panel_opacity
+    : undefined;
+  return typeof override === "number" && Number.isFinite(override) && override >= 0 && override <= 1
+    ? override
+    : fallback;
+}
+
+function hasSurfaceOpacityOverride(resolved, surface) {
+  const surfaces = resolved && resolved.surfaces && typeof resolved.surfaces === "object"
+    ? resolved.surfaces
+    : null;
+  const override = surfaces && surfaces[surface] && typeof surfaces[surface] === "object"
+    ? surfaces[surface].panel_opacity
+    : undefined;
+  return typeof override === "number" && Number.isFinite(override) && override >= 0 && override <= 1;
+}
+
+// Cockpit themes historically supplied their own fixed glass even though their
+// shared style opacity default is zero. Keep that legacy appearance only when
+// a surface has not opted into an explicit override.
+export function panelBackground(theme, style) {
+  if (style && style.legacy_cockpit_glass_background) {
+    return style.legacy_cockpit_glass_background;
+  }
+  return hexToRgba(style && style.panel_color, style && style.panel_opacity);
+}
+
+function surfaceViewFromConfig(config, params, surface) {
   const overlay = config && typeof config === "object" ? config.overlay : null;
   const query = params && typeof params.get === "function" ? params : undefined;
   const queryPreset = query ? query.get("preset") : params;
   const resolved = resolvePreset(overlay, queryPreset);
   const theme = themeFromResolvedAndQuery(resolved, query);
   const merged = mergeStyle(theme, resolved && resolved.style);
+  merged.panel_opacity = surfaceOpacity(resolved, surface, merged.panel_opacity);
   const style = applyQueryStyleOverrides(merged, query);
+  markLegacyCockpitGlass(style, resolved, surface, theme, query);
 
   return {
     max_messages: resolved && typeof resolved.max_messages === "number" ? resolved.max_messages : 30,
@@ -249,6 +303,43 @@ export function overlayViewFromConfig(config, params) {
     theme: theme,
     style: style,
   };
+}
+
+function legacyCockpitGlassBackground(theme, surface, layout) {
+  if (normalizeTheme(theme) === "g_rebels_popups") {
+    return "rgb(5 6 4 / 0.78)";
+  }
+  if (surface === "chat") {
+    return normalizeTheme(theme) === "cockpit_panel"
+      ? "rgb(8 17 22 / 0.70)"
+      : "rgb(4 13 17 / 0.76)";
+  }
+  if (surface === "leaderboard" && layout === "chips") {
+    return "rgb(4 13 17 / 0.76)";
+  }
+  if (surface === "leaderboard") {
+    return "rgb(8 17 22 / 0.70)";
+  }
+  return normalizeTheme(theme) === "cockpit_panel"
+    ? "rgb(8 17 22 / 0.70)"
+    : "rgb(4 13 17 / 0.76)";
+}
+
+function markLegacyCockpitGlass(style, resolved, surface, theme, query, layout) {
+  style.legacy_cockpit_glass =
+    !hasSurfaceOpacityOverride(resolved, surface) &&
+    panelOpacityQueryValue(query) === null &&
+    style.panel_opacity === 0 &&
+    ["cockpit_panel", "cockpit_popups", "g_rebels_popups"].includes(theme);
+  style.legacy_cockpit_glass_background = style.legacy_cockpit_glass
+    ? legacyCockpitGlassBackground(theme, surface, layout)
+    : "";
+  return style;
+}
+
+// alertViewFromConfig resolves alert chrome independently from chat and leaderboard.
+export function alertViewFromConfig(config, params) {
+  return surfaceViewFromConfig(config, params, "alerts");
 }
 
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
@@ -278,6 +369,7 @@ export function leaderboardViewFromConfig(config, params) {
   const resolved = resolvePreset(overlay, queryPreset);
   const theme = themeFromResolvedAndQuery(resolved, query);
   const merged = mergeStyle(theme, resolved && resolved.style);
+  merged.panel_opacity = surfaceOpacity(resolved, "leaderboard", merged.panel_opacity);
   const style = applyQueryStyleOverrides(merged, query);
   const surface =
     resolved && resolved.surfaces && resolved.surfaces.leaderboard && typeof resolved.surfaces.leaderboard === "object"
@@ -300,6 +392,7 @@ export function leaderboardViewFromConfig(config, params) {
       layout = queriedLayout;
     }
   }
+  markLegacyCockpitGlass(style, resolved, "leaderboard", theme, query, layout);
 
   return {
     font_size_px: fontSizePx,

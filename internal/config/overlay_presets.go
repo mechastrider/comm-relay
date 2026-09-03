@@ -38,13 +38,26 @@ type OverlayPreset struct {
 
 // OverlayPresetSurfaces holds optional per-surface overrides on a preset.
 type OverlayPresetSurfaces struct {
+	Chat        OverlayChatSurface        `json:"chat"`
 	Leaderboard OverlayLeaderboardSurface `json:"leaderboard"`
+	Alerts      OverlayAlertsSurface      `json:"alerts"`
+}
+
+// OverlayChatSurface holds optional chat-only appearance overrides.
+type OverlayChatSurface struct {
+	PanelOpacity *float64 `json:"panel_opacity,omitempty"`
 }
 
 // OverlayLeaderboardSurface is the leaderboard look for one overlay preset.
 type OverlayLeaderboardSurface struct {
-	FontSizePx int    `json:"font_size_px,omitempty"`
-	Layout     string `json:"layout,omitempty"`
+	FontSizePx   int      `json:"font_size_px,omitempty"`
+	Layout       string   `json:"layout,omitempty"`
+	PanelOpacity *float64 `json:"panel_opacity,omitempty"`
+}
+
+// OverlayAlertsSurface holds optional alert-only appearance overrides.
+type OverlayAlertsSurface struct {
+	PanelOpacity *float64 `json:"panel_opacity,omitempty"`
 }
 
 func (p *OverlayPreset) applyDefaults() {
@@ -113,7 +126,9 @@ func (p OverlayPreset) validateFields(prefix string) FieldErrors {
 		fields[key("theme")] = "Choose a supported overlay theme."
 	}
 	mergeFieldErrors(fields, p.Style.validateFields(key("style")))
+	mergeFieldErrors(fields, p.Surfaces.Chat.validateFields(key("surfaces_chat")))
 	mergeFieldErrors(fields, p.Surfaces.Leaderboard.validateFields(key("surfaces_leaderboard")))
+	mergeFieldErrors(fields, p.Surfaces.Alerts.validateFields(key("surfaces_alerts")))
 	return fields
 }
 
@@ -143,7 +158,46 @@ func (s OverlayLeaderboardSurface) validateFields(prefix string) FieldErrors {
 	default:
 		fields[key("layout")] = "Choose panel or chips layout."
 	}
+	mergeFieldErrors(fields, validateSurfacePanelOpacity(prefix, s.PanelOpacity))
 	return fields
+}
+
+func (s OverlayChatSurface) validateFields(prefix string) FieldErrors {
+	return validateSurfacePanelOpacity(prefix, s.PanelOpacity)
+}
+
+func (s OverlayAlertsSurface) validateFields(prefix string) FieldErrors {
+	return validateSurfacePanelOpacity(prefix, s.PanelOpacity)
+}
+
+func validateSurfacePanelOpacity(prefix string, opacity *float64) FieldErrors {
+	if opacity == nil || (*opacity >= overlayPanelOpacityMin && *opacity <= overlayPanelOpacityMax) {
+		return FieldErrors{}
+	}
+
+	return FieldErrors{prefix + "_panel_opacity": "Panel opacity must be between 0 and 1."}
+}
+
+// ChatPanelOpacity returns the chat override or the shared style value for legacy presets.
+func (p OverlayPreset) ChatPanelOpacity() float64 {
+	return resolvedSurfacePanelOpacity(p.Style.PanelOpacity, p.Surfaces.Chat.PanelOpacity)
+}
+
+// LeaderboardPanelOpacity returns the leaderboard override or the shared style value.
+func (p OverlayPreset) LeaderboardPanelOpacity() float64 {
+	return resolvedSurfacePanelOpacity(p.Style.PanelOpacity, p.Surfaces.Leaderboard.PanelOpacity)
+}
+
+// AlertsPanelOpacity returns the alerts override or the shared style value.
+func (p OverlayPreset) AlertsPanelOpacity() float64 {
+	return resolvedSurfacePanelOpacity(p.Style.PanelOpacity, p.Surfaces.Alerts.PanelOpacity)
+}
+
+func resolvedSurfacePanelOpacity(fallback float64, override *float64) float64 {
+	if override != nil {
+		return *override
+	}
+	return fallback
 }
 
 // LeaderboardFontSizePx returns the leaderboard font, inheriting the preset font when unset.

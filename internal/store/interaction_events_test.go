@@ -3,6 +3,7 @@ package store_test
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
 
@@ -188,4 +189,17 @@ func TestInteractionEventSchema_WhenInspected_ExpectNoMessageBodyColumn(t *testi
 		"message_id",
 		"created_at",
 	}, rows)
+	assert.NotContains(t, rows, "message_text")
+	assert.NotContains(t, rows, "quote")
+}
+
+func TestInteractionEventStorageContract_WhenInspected_ExpectNoQuoteField(t *testing.T) {
+	// These are the only store input and durable DTO types that a grant can use.
+	for _, value := range []any{store.AppendInteractionEventInput{}, store.InteractionEvent{}} {
+		typeOfValue := reflect.TypeOf(value)
+		_, hasMessageText := typeOfValue.FieldByName("MessageText")
+		_, hasQuote := typeOfValue.FieldByName("Quote")
+		assert.False(t, hasMessageText, typeOfValue.Name())
+		assert.False(t, hasQuote, typeOfValue.Name())
+	}
 }

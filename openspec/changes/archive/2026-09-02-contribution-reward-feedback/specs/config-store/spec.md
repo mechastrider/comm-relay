@@ -6,7 +6,7 @@ Persist one opacity concept as independent Chat, Leaderboard, and Alerts values 
 
 ### Requirement: Overlay presets may store per-surface overrides
 
-Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_size_px` SHALL be an integer 12–48 when present. `surfaces.leaderboard.layout` SHALL be `panel` or `chips` when present. Omitted leaderboard font SHALL inherit the preset `font_size_px`; omitted leaderboard layout SHALL default to `panel`. `surfaces.chat.panel_opacity`, `surfaces.leaderboard.panel_opacity`, and `surfaces.alerts.panel_opacity` SHALL each be a number from 0 through 1 when present. Omitted surface opacity SHALL inherit the preset shared `style.panel_opacity`. Unknown surface keys MAY be ignored. Chat fields on the preset (`max_messages`, `message_ttl_seconds`, `font_size_px`, theme, style) SHALL remain the chat defaults. Page opacity MUST remain unsupported.
+Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_size_px` SHALL be an integer 12–48 when present. `surfaces.leaderboard.layout` SHALL be `panel` or `chips` when present. Omitted leaderboard font SHALL inherit the preset `font_size_px`; omitted leaderboard layout SHALL default to `panel`. `surfaces.chat.panel_opacity`, `surfaces.leaderboard.panel_opacity`, and `surfaces.alerts.panel_opacity` SHALL each be a number from 0 through 1 when present. Omitted surface opacity SHALL normally inherit the preset shared `style.panel_opacity`. For a legacy `cockpit_panel`, `cockpit_popups`, or `g_rebels_popups` preset whose shared opacity is zero, omission SHALL instead preserve that theme's historical glass alpha; any explicit surface opacity, including zero, SHALL take precedence. Unknown surface keys MAY be ignored. Chat fields on the preset (`max_messages`, `message_ttl_seconds`, `font_size_px`, theme, style) SHALL remain the chat defaults. Page opacity MUST remain unsupported.
 
 #### Scenario: Inherit font
 - **WHEN** a saved preset has `font_size_px` 18 and no `surfaces.leaderboard.font_size_px`
@@ -38,4 +38,12 @@ Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_
 
 #### Scenario: First publish from a legacy preset
 - **WHEN** Studio opens a legacy preset and the operator publishes without changing opacity
-- **THEN** the resulting effective opacity of every surface remains equal to the former shared value
+- **THEN** every surface retains its former effective appearance and no opacity override is materialized merely by publishing
+
+#### Scenario: Legacy cockpit glass remains readable
+- **WHEN** a cockpit preset has shared opacity `0` and no per-surface opacity fields
+- **THEN** every surface retains that theme's historical glass alpha without rewriting the preset
+
+#### Scenario: Explicit transparent cockpit surface
+- **WHEN** the operator explicitly stores chat opacity `0` in that cockpit preset
+- **THEN** chat chrome becomes transparent while the omitted leaderboard and alerts surfaces retain their historical glass alpha

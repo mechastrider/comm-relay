@@ -418,9 +418,36 @@
   cursor: pointer;
 }
 
-.audience-catalog-items__item:hover,
-.audience-catalog-items__item--selected {
+.audience-catalog-items__item:hover {
   background: var(--surface-elevated, var(--surface));
+}
+
+.audience-catalog-items__item--selected {
+  position: relative;
+  padding-left: calc(var(--primitive-space-3) + 1.25rem);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--amber) 18%, var(--surface-raised)), var(--surface-raised));
+  box-shadow: inset 0 0 0 1px var(--amber-dim);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.audience-catalog-items__item--selected::before {
+  position: absolute;
+  left: var(--primitive-space-2);
+  content: "›";
+  color: currentColor;
+  font-size: 1.4em;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.audience-catalog-items__item--selected .audience-catalog-items__meta {
+  color: currentColor;
+}
+
+.audience-catalog-items__item:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .audience-catalog-items__primary {

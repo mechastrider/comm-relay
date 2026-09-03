@@ -78,6 +78,26 @@ const baseline = normalizeOverlayAppearanceDraft({
 const draftCopy = cloneOverlayAppearanceDraft(baseline);
 assert.equal(overlayDraftIsDirty(baseline, draftCopy), false);
 
+const surfaceOpacityDraft = cloneOverlayAppearanceDraft({
+  active_preset_id: "default",
+  presets: [{
+    id: "default",
+    name: "Default",
+    font_size_px: 18,
+    theme: "default",
+    surfaces: {
+      chat: { panel_opacity: 0 },
+      leaderboard: { font_size_px: 14, layout: "chips", panel_opacity: 0.65 },
+      alerts: { panel_opacity: 1 },
+    },
+  }],
+});
+assert.deepEqual(surfaceOpacityDraft.presets[0].surfaces, {
+  chat: { panel_opacity: 0 },
+  leaderboard: { font_size_px: 14, layout: "chips", panel_opacity: 0.65 },
+  alerts: { panel_opacity: 1 },
+});
+
 const dirtyDraft = cloneOverlayAppearanceDraft(baseline);
 dirtyDraft.max_messages = 25;
 assert.equal(overlayDraftIsDirty(baseline, dirtyDraft), true);

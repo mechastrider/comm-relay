@@ -35,7 +35,7 @@ OBS CEF is the critical runtime for `/overlay`, `/overlay/leaderboard`, `/overla
 - The local HTTP server remains unauthenticated under the existing localhost operator trust model; the change does not broaden network binding or remote access.
 - Submitted message text is untrusted transient input, bounded to a 280-code-point quote, rendered with text nodes, and excluded from SQLite, config, logs, diagnostics, crash reports, and errors.
 - Message matching never falls back to display name or text, avoiding cross-platform identity collisions.
-- Surface opacity changes only overlay chrome. It cannot create an opaque page background or request new browser/OS permissions.
+- Surface opacity changes only overlay chrome. Untouched legacy cockpit sources retain their prior theme glass, while an explicit surface value controls that surface. Neither path can create an opaque page background or request new browser/OS permissions.
 - No secret, OAuth token, proxy credential, or connector-specific payload is added to the public API or WebSocket feed.
 
 ## Not applicable areas

@@ -93,6 +93,10 @@ body.overlay-theme--dashboard .leaderboard-row {
   border: 0;
 }
 
+body.overlay-theme--dashboard.overlay-has-panel .leaderboard-row {
+  background: var(--overlay-panel-bg);
+}
+
 body.overlay-theme--dashboard .leaderboard-rank {
   color: var(--overlay-text);
 }
@@ -106,7 +110,7 @@ body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard {
     linear-gradient(var(--hud-cyan), var(--hud-cyan)) 14px 18px / 28px 3px no-repeat,
     linear-gradient(90deg, rgba(51, 222, 204, 0.12) 0 46px, transparent 46px),
     linear-gradient(90deg, rgba(53, 210, 208, 0.38) 0 1px, transparent 1px) 46px 0 / 1px 100% no-repeat,
-    var(--hud-glass);
+    var(--overlay-panel-bg);
   clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.5) inset,
@@ -135,7 +139,7 @@ body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard {
     linear-gradient(var(--rebels-gold), var(--rebels-gold)) 14px 18px / 28px 3px no-repeat,
     linear-gradient(90deg, rgba(247, 227, 106, 0.12) 0 46px, transparent 46px),
     linear-gradient(90deg, rgba(247, 227, 106, 0.38) 0 1px, transparent 1px) 46px 0 / 1px 100% no-repeat,
-    var(--rebels-glass);
+    var(--overlay-panel-bg);
 }
 
 body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard::before {
@@ -173,7 +177,7 @@ body.overlay-theme--cockpit-popups.leaderboard-layout--chips .leaderboard-row {
   border: 1px solid rgba(53, 210, 208, 0.4);
   background:
     linear-gradient(90deg, rgba(53, 210, 208, 0.18), transparent 34%),
-    var(--hud-glass-strong);
+    var(--overlay-panel-bg);
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 12px 100%, 0 calc(100% - 12px));
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.58) inset,
@@ -186,6 +190,6 @@ body.overlay-theme--g-rebels-popups.leaderboard-layout--chips .leaderboard-row {
   border: 1px solid rgba(247, 227, 106, 0.38);
   background:
     linear-gradient(90deg, rgba(247, 227, 106, 0.16), transparent 34%),
-    var(--rebels-glass);
+    var(--overlay-panel-bg);
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 12px 100%, 0 calc(100% - 12px));
 }

@@ -1,5 +1,5 @@
 import { createChatRender, safeImageURL, appendText } from '/shared/chat-render.js?v=12';
-import { createRewardControl, messageCanBeRewarded } from '/shared/reward-picker.js?v=1';
+import { createRewardControl, messageCanBeRewarded } from '/shared/reward-picker.js?v=4';
 import * as dom from './dom.js';
 import { state } from './state.js';
 import {
@@ -10,6 +10,14 @@ import { apiURL } from './api.js';
 import { showBanner } from './ui-shell.js';
 import { getMessageSoundSettings, playMessageSound } from './sound.js';
 import { t } from './i18n-ui.js';
+import { parseWorkspaceHash } from "./workspace-router.js";
+import { getLiveTab } from "./live-tabs.js";
+import { applyLiveLeaderboardFrame, cacheLiveLeaderboardFrame } from "./live-leaderboard.js";
+import { invalidateLiveStatistics } from "./live-statistics.js";
+
+function isActiveLiveTab(tab) {
+  return parseWorkspaceHash(window.location.hash) === "live" && getLiveTab() === tab;
+}
 
 export function getImagePreviewSettings() {
     const overlay = state.currentConfig && state.currentConfig.overlay;
@@ -418,6 +426,14 @@ export function handleWireMessage(wire) {
     }
     if (wire.type === "message_deleted") {
       removeMessageFromAdmin(wire.platform, wire.id);
+      return;
+    }
+    if (wire.type === "leaderboard") {
+      cacheLiveLeaderboardFrame(wire);
+      if (isActiveLiveTab("leaderboard")) {
+        applyLiveLeaderboardFrame(wire);
+      }
+      invalidateLiveStatistics({ active: isActiveLiveTab("statistics") });
       return;
     }
     if (wire.type !== "message") {

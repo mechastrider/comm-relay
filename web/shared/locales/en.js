@@ -371,6 +371,7 @@ export default {
   "obs.surfaceHint": "Only the message block can be opaque. Cockpit themes still draw their own HUD frame.",
   "obs.panelColor": "Panel color",
   "obs.panelOpacity": "Panel opacity",
+  "obs.panelOpacityHint": "Applies to the selected on-stream surface only. Enter a value from 0 to 1.",
   "obs.panelImage": "Panel image",
   "obs.panelImageFit": "Scale",
   "obs.panelImageFitCover": "Fill",
@@ -567,6 +568,7 @@ export default {
   "reward.loading": "Loading awards…",
   "reward.emptyCatalog": "Add award types in Audience → Awards.",
   "reward.grantFailed": "Could not grant the award.",
+  "reward.grantSucceeded": "{award} granted: +{points} points.",
 
   "dock.waiting": "Waiting for chat messages",
   "dock.delete": "Delete",

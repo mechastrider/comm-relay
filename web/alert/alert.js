@@ -2,19 +2,21 @@
 
 import {
   fontStack,
-  hexToRgba,
+  panelBackground,
   normalizePanelImageFit,
   normalizePanelImageScope,
   normalizePreviewBackground,
   overlayAssetURL,
-  overlayViewFromConfig,
-} from "/overlay/overlay-settings.js?v=4";
+  alertViewFromConfig,
+} from "/overlay/overlay-settings.js?v=8";
 import { createChatRender } from "/shared/chat-render.js?v=12";
 import { ensureAudioContext, scheduleAlertSound } from "./alert-sound.js";
+import { startSplashLifecycle } from "./alert-lifecycle.js?v=2";
+import { createAlertSplash } from "./alert-render.js?v=2";
+import { createAlertScheduler } from "./alert-scheduler.js?v=3";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;
-const MAX_QUEUE = 20;
 const DEFAULT_DURATION_MS = 5000;
 const OVERLAY_FONT_SIZE_MIN = 12;
 const OVERLAY_FONT_SIZE_MAX = 48;
@@ -38,23 +40,24 @@ const samplePreviewEnabled = params.get("preview") === "sample";
 const previewEnabled = params.has("preview");
 
 const root = document.getElementById("alert-root");
-let overlayView = overlayViewFromConfig({ overlay: null }, params);
+let overlayView = alertViewFromConfig({ overlay: null }, params);
 let overlayAssetsRevision = Date.now();
 let socket = null;
 let reconnectTimer = null;
 let reconnectDelayMs = INITIAL_RECONNECT_MS;
 let shouldRun = true;
 let audioCtx = null;
-let showing = null;
 let hideTimer = null;
-/** @type {Array<Record<string, unknown>>} */
-const queue = [];
+const scheduler = createAlertScheduler();
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const SAMPLE_ALERT = {
+  source: "award",
   name: "Nova",
   avatar_url: "",
-  text: "Good game, Nova!",
+  award_name: "Spotter",
+  points: 25,
+  message_text: "Невероятный фланг — that timing was perfect.",
   sound: "chime",
   duration_ms: 5000,
 };
@@ -63,17 +66,6 @@ const { userAccent } = createChatRender();
 function wsURL() {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return protocol + "//" + window.location.host + "/ws";
-}
-
-function safeImageURL(value) {
-  if (typeof value !== "string") {
-    return "";
-  }
-  const trimmed = value.trim();
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed;
-  }
-  return "";
 }
 
 function applyAppearance() {
@@ -93,7 +85,11 @@ function applyAppearance() {
   );
   document.documentElement.style.setProperty(
     "--overlay-panel-bg",
-    hexToRgba(style.panel_color, style.panel_opacity)
+    panelBackground(overlayView.theme, style)
+  );
+  document.documentElement.style.setProperty(
+    "--overlay-panel-opacity",
+    String(typeof style.panel_opacity === "number" ? style.panel_opacity : 0.58)
   );
   document.documentElement.style.setProperty(
     "--overlay-panel-image",
@@ -162,7 +158,7 @@ function applyServerOverlayConfig(serverOverlay) {
     return;
   }
   overlayAssetsRevision = Date.now();
-  overlayView = overlayViewFromConfig({ overlay: serverOverlay }, params);
+  overlayView = alertViewFromConfig({ overlay: serverOverlay }, params);
 }
 
 function clearSplash() {
@@ -173,33 +169,6 @@ function clearSplash() {
   if (root) {
     root.textContent = "";
   }
-  showing = null;
-}
-
-function renderAvatar(name, avatarURL) {
-  const safeURL = safeImageURL(avatarURL);
-  if (safeURL) {
-    const avatar = document.createElement("img");
-    avatar.className = "alert-avatar";
-    avatar.src = safeURL;
-    avatar.alt = "";
-    avatar.loading = "eager";
-    avatar.referrerPolicy = "no-referrer";
-    avatar.addEventListener(
-      "error",
-      function () {
-        avatar.replaceWith(renderAvatar(name, ""));
-      },
-      { once: true }
-    );
-    return avatar;
-  }
-
-  const placeholder = document.createElement("div");
-  placeholder.className = "alert-avatar alert-avatar--placeholder";
-  const initial = typeof name === "string" && name.trim() ? name.trim().charAt(0).toUpperCase() : "?";
-  placeholder.textContent = initial;
-  return placeholder;
 }
 
 function accentIdentity(name) {
@@ -224,30 +193,14 @@ function showSplash(alert) {
   }
 
   clearSplash();
-  showing = alert;
-
-  const splash = document.createElement("article");
-  splash.className = "alert-splash";
-  if (reducedMotion) {
-    splash.classList.add("alert-splash--reduced");
-  }
-
-  const name = typeof alert.name === "string" ? alert.name : "";
-  splash.style.setProperty("--message-accent", userAccent(accentIdentity(name)));
-
-  const accent = document.createElement("span");
-  accent.className = "alert-accent";
-  accent.setAttribute("aria-hidden", "true");
-
-  const text = document.createElement("p");
-  text.className = "alert-text";
-  text.textContent = typeof alert.text === "string" ? alert.text : "";
-
-  splash.append(renderAvatar(name, alert.avatar_url), accent, text);
+  const splash = createAlertSplash(document, alert, {
+    reducedMotion,
+    userAccent: function (name) {
+      return userAccent(accentIdentity(name));
+    },
+  });
 
   root.append(splash);
-  playSound(alert.sound);
-
   if (!reducedMotion) {
     window.requestAnimationFrame(function () {
       splash.classList.add("alert-splash--visible");
@@ -261,27 +214,28 @@ function showSplash(alert) {
       ? alert.duration_ms
       : DEFAULT_DURATION_MS;
 
-  if (samplePreviewEnabled) {
-    return;
-  }
-
-  hideTimer = window.setTimeout(function () {
-    clearSplash();
-    if (queue.length > 0) {
-      showSplash(queue.shift());
-    }
-  }, durationMs);
+  hideTimer = startSplashLifecycle({
+    playSound: function () {
+      return playSound(alert.sound);
+    },
+    durationMs,
+    keepVisible: samplePreviewEnabled,
+    setTimeout: window.setTimeout.bind(window),
+    onComplete: function () {
+      clearSplash();
+      const next = scheduler.completeVisible();
+      if (next) {
+        showSplash(next);
+      }
+    },
+  });
 }
 
 function enqueueAlert(alert) {
-  if (showing) {
-    if (queue.length >= MAX_QUEUE) {
-      queue.shift();
-    }
-    queue.push(alert);
-    return;
+  const next = scheduler.enqueue(alert);
+  if (next) {
+    showSplash(next);
   }
-  showSplash(alert);
 }
 
 function handleSocketMessage(event) {

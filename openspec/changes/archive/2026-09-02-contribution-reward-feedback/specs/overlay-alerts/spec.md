@@ -44,8 +44,12 @@ Command and award splashes SHALL use distinct variants in every supported overla
 
 ### Requirement: Alert chrome uses its surface opacity
 
-The alert page SHALL resolve panel opacity from `surfaces.alerts.panel_opacity`, falling back to the preset shared `style.panel_opacity`. It MUST apply that value to alert background/chrome rather than the whole document, text, avatar, or media. The page background MUST remain transparent outside preview.
+The alert page SHALL resolve panel opacity from `surfaces.alerts.panel_opacity`, normally falling back to the preset shared `style.panel_opacity`. When a legacy cockpit preset has shared zero and no alerts override, alert chrome SHALL retain that theme's historical glass color and alpha; an explicit alerts value, including zero, SHALL win. It MUST apply the resolved appearance to alert background/chrome rather than the whole document, text, avatar, or media. The page background MUST remain transparent outside preview.
 
 #### Scenario: Translucent alert chrome
 - **WHEN** the active preset has alert panel opacity `0.35`
 - **THEN** alert chrome uses 35 percent opacity while its text remains fully rendered and the page stays transparent
+
+#### Scenario: Untouched legacy cockpit alert
+- **WHEN** a cockpit preset has shared opacity `0` and no alerts opacity override
+- **THEN** alert chrome retains that theme's historical dark glass while the page outside it stays transparent

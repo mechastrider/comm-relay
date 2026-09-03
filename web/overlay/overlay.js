@@ -1,13 +1,18 @@
-import { appendText, createChatRender, safeImageURL } from "/shared/chat-render.js?v=12";
+import { appendText, createChatRender, createRewardSlot, safeImageURL, setRewardSlot } from "/shared/chat-render.js?v=13";
 import {
   fontStack,
-  hexToRgba,
+  panelBackground,
   normalizePanelImageFit,
   normalizePanelImageScope,
   normalizePreviewBackground,
   overlayAssetURL,
   overlayViewFromConfig
-} from "/overlay/overlay-settings.js?v=4";
+} from "/overlay/overlay-settings.js?v=8";
+import {
+  findRewardedEntry,
+  restartRewardHighlight,
+  rewardLabelText,
+} from "/overlay/reward-highlight.js?v=2";
 
 "use strict";
 
@@ -250,7 +255,11 @@ import {
     );
     document.documentElement.style.setProperty(
       "--overlay-panel-bg",
-      hexToRgba(style.panel_color, style.panel_opacity)
+      panelBackground(overlayView.theme, style)
+    );
+    document.documentElement.style.setProperty(
+      "--overlay-panel-opacity",
+      String(typeof style.panel_opacity === "number" ? style.panel_opacity : 0.58)
     );
     document.documentElement.style.setProperty(
       "--overlay-panel-image",
@@ -378,7 +387,7 @@ import {
   function initOverlay(listEl) {
   applyAppearance();
 
-  /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, messageKey: string }>} */
+  /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, rewardTimer: number | null, messageKey: string }>} */
   const entries = [];
   const renderedMessageIDs = new Set();
   let reconnectDelayMs = INITIAL_RECONNECT_MS;
@@ -427,6 +436,10 @@ import {
     if (entry.ttlTimer !== null) {
       window.clearTimeout(entry.ttlTimer);
       entry.ttlTimer = null;
+    }
+    if (entry.rewardTimer !== null) {
+      window.clearTimeout(entry.rewardTimer);
+      entry.rewardTimer = null;
     }
     if (entry.messageKey !== "") {
       renderedMessageIDs.delete(entry.messageKey);
@@ -620,7 +633,7 @@ import {
     el.appendChild(svg);
   }
 
-  function fillMessageRow(row, frame) {
+  function fillMessageRow(row, frame, reward) {
     const user = messageDisplayName(frame);
     const text = typeof frame.message === "string" ? frame.message : "";
 
@@ -653,6 +666,8 @@ import {
     identityEl.appendChild(platformEl);
     identityEl.appendChild(userEl);
 
+    const rewardSlot = createRewardSlot();
+
     const textEl = document.createElement("span");
     textEl.className = "message__text";
     appendMessageContent(textEl, frame, text);
@@ -661,12 +676,20 @@ import {
     row.appendChild(accentEl);
     row.appendChild(identityEl);
     row.appendChild(textEl);
+    row.appendChild(rewardSlot);
+    updateRewardFeedback(row, rewardSlot, reward);
+    return rewardSlot;
+  }
+
+  function updateRewardFeedback(row, rewardSlot, reward) {
+    setRewardSlot(rewardSlot, reward, rewardLabelText(reward));
+    row.classList.toggle("message--rewarded", Boolean(reward));
   }
 
   function restyleVisibleMessages() {
     entries.forEach(function (entry) {
       if (entry.frame) {
-        fillMessageRow(entry.el, entry.frame);
+        entry.rewardSlot = fillMessageRow(entry.el, entry.frame, entry.reward);
       }
     });
     trimToLimit();
@@ -699,7 +722,7 @@ import {
     }
 
     const row = document.createElement("div");
-    fillMessageRow(row, frame);
+    const rewardSlot = fillMessageRow(row, frame);
     listEl.appendChild(row);
 
     let ttlTimer = null;
@@ -713,11 +736,28 @@ import {
     entries.push({
       el: row,
       ttlTimer: ttlTimer,
+      rewardTimer: null,
+      reward: null,
+      rewardSlot: rewardSlot,
       messageKey: messageKey(frame),
       frame: frame,
     });
     trimToLimit();
     scrollToBottom();
+  }
+
+  function highlightRewardedMessage(alert) {
+    const entry = findRewardedEntry(entries, alert);
+    restartRewardHighlight(entry, alert, {
+      setTimeout: window.setTimeout,
+      clearTimeout: window.clearTimeout,
+      onStart: function (target, reward) {
+        updateRewardFeedback(target.el, target.rewardSlot, reward);
+      },
+      onEnd: function (target) {
+        updateRewardFeedback(target.el, target.rewardSlot, null);
+      },
+    });
   }
 
   function handleSocketMessage(event) {
@@ -738,6 +778,10 @@ import {
     }
     if (frame.type === "message_deleted") {
       removeMessage(frame);
+      return;
+    }
+    if (frame.type === "alert") {
+      highlightRewardedMessage(frame);
       return;
     }
     if (frame.type !== "message") {

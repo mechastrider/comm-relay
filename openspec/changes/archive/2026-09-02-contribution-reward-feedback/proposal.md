@@ -12,7 +12,7 @@ The change serves stream operators and viewers on Twitch, YouTube Live, and VK L
 - Highlight a rewarded chat card when it is still visible and render award alerts with award identity, points, author, and a short quote.
 - Replace alert FIFO with one non-preempting visible alert plus separate award and command waiting lanes; awards run first and stale commands expire.
 - Apply existing leaderboard WebSocket snapshots to the active Live Leaderboard and refresh active Statistics with debounce.
-- Store independent panel-opacity overrides for Chat, Leaderboard, and Alerts inside each overlay preset, initialized from the shared legacy value.
+- Store independent panel-opacity overrides for Chat, Leaderboard, and Alerts inside each overlay preset. Omitted values use the shared legacy value, except that untouched cockpit presets retain their historical theme glass until a surface receives an explicit override.
 - Add only workflow-adjacent UI feedback: successful grant state, clear selected states in Commands and Awards, and alignment of New stream with the Live toolbar.
 
 ## Capabilities
@@ -38,4 +38,4 @@ No Score/XP/Credits migration, activity policy, achievements, saved messages, cu
 
 ## Impact
 
-The localhost award action and WebSocket envelope gain optional fields. `config.json` receives additive preset fields with fallback defaults. SQLite schema, platform connectors, OS integration, packaging, and secrets are unchanged. Message text exists only in bounded in-memory/request/event payloads and is never added to logs or durable interaction history.
+The localhost award action and WebSocket envelope gain optional fields. `config.json` receives additive preset fields with fallback defaults and no eager rewrite; runtime compatibility preserves historical cockpit glass where shared zero was previously ignored by theme CSS. SQLite schema, platform connectors, OS integration, packaging, and secrets are unchanged. Message text exists only in bounded in-memory/request/event payloads and is never added to logs or durable interaction history.
