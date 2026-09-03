@@ -22,11 +22,11 @@
 > **Allowed fallout**: Shared upload helper, overlay CSS layouts, changelog.
 > **Blocked**: GIF/video/SVG alerts, media library page, ffmpeg, signing, publishing.
 
-- [ ] 2.1 Extend upload with `kind` `alert_image` / `alert_sound` (limits, sniff, dimensions, duration); keep panel 512 KiB behavior; serve audio from `GET /overlay/assets/{filename}`.
-- [ ] 2.2 Goose `sound_volume` default 70 and `layout` default `card`; create/update accept filenames, volume, layout; reject paths; `POST /api/overlay/assets/delete` only when unreferenced.
-- [ ] 2.3 Alert frames include optional media/layout/volume; overlay uses custom image else avatar, custom sound else built-in, volume, and layout classes; broken media does not stall the queue.
-- [ ] 2.4 Catalog editor: image upload/clear, custom sound + Play/Stop, volume, layout; height-capped scroll; EN/RU errors.
-- [ ] 2.5 Russian `[Unreleased]` bullets for streamer name, template variables, custom media, and layouts.
+- [x] 2.1 Extend upload with `kind` `alert_image` / `alert_sound` (limits, sniff, dimensions, duration); keep panel 512 KiB behavior; serve audio from `GET /overlay/assets/{filename}`.
+- [x] 2.2 Goose `sound_volume` default 70 and `layout` default `card`; create/update accept filenames, volume, layout; reject paths; `POST /api/overlay/assets/delete` only when unreferenced.
+- [x] 2.3 Alert frames include optional media/layout/volume; overlay uses custom image else avatar, custom sound else built-in, volume, and layout classes; broken media does not stall the queue.
+- [x] 2.4 Catalog editor: image upload/clear, custom sound + Play/Stop, volume, layout; height-capped scroll; EN/RU errors.
+- [x] 2.5 Russian `[Unreleased]` bullets for streamer name, template variables, custom media, and layouts.
 
 ## Gate: qa
 

@@ -14,7 +14,7 @@ func (s *Store) ListAwards() ([]AwardType, error) {
 	defer s.mu.Unlock()
 
 	rows, err := s.db.Query(`
-		SELECT id, name, points, splash_template, sound, duration_ms, image_asset, sound_file
+		SELECT id, name, points, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout
 		FROM award_types
 		ORDER BY name`)
 	if err != nil {
@@ -61,6 +61,8 @@ func scanAward(scanner interface {
 		&award.DurationMs,
 		&imageAsset,
 		&soundFile,
+		&award.SoundVolume,
+		&award.Layout,
 	)
 	if err != nil {
 		return AwardType{}, err
@@ -72,6 +74,8 @@ func scanAward(scanner interface {
 	if soundFile.Valid {
 		award.SoundFile = soundFile.String
 	}
+	award.SoundVolume = NormalizeCatalogSoundVolume(award.SoundVolume)
+	award.Layout = NormalizeCatalogLayout(award.Layout)
 
 	return award, nil
 }
@@ -84,6 +88,10 @@ type CreateAwardInput struct {
 	SplashTemplate string
 	Sound          string
 	DurationMs     int
+	ImageAsset     string
+	SoundFile      string
+	SoundVolume    int
+	Layout         string
 }
 
 func validateAwardPoints(points int) error {
@@ -108,6 +116,9 @@ func (s *Store) CreateAward(input CreateAwardInput) (*AwardType, error) {
 	if err := validateCatalogSound(input.Sound); err != nil {
 		return nil, err
 	}
+	if fields := validateAwardMediaFields(input.ImageAsset, input.SoundFile, input.SoundVolume, input.Layout); len(fields) > 0 {
+		return nil, catalogMediaValidationError(fields)
+	}
 
 	id := strings.TrimSpace(input.ID)
 	if id == "" {
@@ -115,19 +126,30 @@ func (s *Store) CreateAward(input CreateAwardInput) (*AwardType, error) {
 	}
 
 	durationMs := normalizeDurationMs(input.DurationMs)
+	imageAsset := strings.TrimSpace(input.ImageAsset)
+	soundFile := strings.TrimSpace(input.SoundFile)
+	soundVolume := NormalizeCatalogSoundVolume(input.SoundVolume)
+	layout := NormalizeCatalogLayout(input.Layout)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	_, err := s.db.Exec(`
-		INSERT INTO award_types (id, name, points, splash_template, sound, duration_ms)
-		VALUES (?, ?, ?, ?, ?, ?)`,
+		INSERT INTO award_types (
+			id, name, points, splash_template, sound, duration_ms,
+			image_asset, sound_file, sound_volume, layout
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		strings.TrimSpace(input.Name),
 		input.Points,
 		input.SplashTemplate,
 		input.Sound,
 		durationMs,
+		nullString(imageAsset),
+		nullString(soundFile),
+		soundVolume,
+		layout,
 	)
 	if err != nil {
 		return nil, errors.Errorf("insert award: %w", err)
@@ -144,6 +166,10 @@ type UpdateAwardInput struct {
 	SplashTemplate string
 	Sound          string
 	DurationMs     int
+	ImageAsset     string
+	SoundFile      string
+	SoundVolume    int
+	Layout         string
 }
 
 // UpdateAward updates an existing award type.
@@ -163,8 +189,15 @@ func (s *Store) UpdateAward(input UpdateAwardInput) (*AwardType, error) {
 	if err := validateCatalogSound(input.Sound); err != nil {
 		return nil, err
 	}
+	if fields := validateAwardMediaFields(input.ImageAsset, input.SoundFile, input.SoundVolume, input.Layout); len(fields) > 0 {
+		return nil, catalogMediaValidationError(fields)
+	}
 
 	durationMs := normalizeDurationMs(input.DurationMs)
+	imageAsset := strings.TrimSpace(input.ImageAsset)
+	soundFile := strings.TrimSpace(input.SoundFile)
+	soundVolume := NormalizeCatalogSoundVolume(input.SoundVolume)
+	layout := NormalizeCatalogLayout(input.Layout)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -175,13 +208,18 @@ func (s *Store) UpdateAward(input UpdateAwardInput) (*AwardType, error) {
 
 	result, err := s.db.Exec(`
 		UPDATE award_types
-		SET name = ?, points = ?, splash_template = ?, sound = ?, duration_ms = ?
+		SET name = ?, points = ?, splash_template = ?, sound = ?, duration_ms = ?,
+		    image_asset = ?, sound_file = ?, sound_volume = ?, layout = ?
 		WHERE id = ?`,
 		strings.TrimSpace(input.Name),
 		input.Points,
 		input.SplashTemplate,
 		input.Sound,
 		durationMs,
+		nullString(imageAsset),
+		nullString(soundFile),
+		soundVolume,
+		layout,
 		input.ID,
 	)
 	if err != nil {
@@ -222,7 +260,7 @@ func (s *Store) DeleteAward(id string) error {
 
 func (s *Store) getAwardLocked(id string) (*AwardType, error) {
 	row := s.db.QueryRow(`
-		SELECT id, name, points, splash_template, sound, duration_ms, image_asset, sound_file
+		SELECT id, name, points, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout
 		FROM award_types
 		WHERE id = ?`, id)
 

@@ -40,6 +40,8 @@ type Command struct {
 	DurationMs      int
 	ImageAsset      string
 	SoundFile       string
+	SoundVolume     int
+	Layout          string
 }
 
 // AwardType is a persisted operator award catalog entry.
@@ -52,6 +54,8 @@ type AwardType struct {
 	DurationMs     int
 	ImageAsset     string
 	SoundFile      string
+	SoundVolume    int
+	Layout         string
 }
 
 // ActivitySettings controls silent activity XP grants on counted chat lines.

@@ -51,7 +51,7 @@ test("builds an award hierarchy with text nodes and an optional quote", function
     avatar_url: "javascript:alert(1)",
   });
 
-  assert.equal(splash.className, "alert-splash alert-splash--award");
+  assert.equal(splash.className, "alert-splash alert-splash--award alert-splash--layout-card");
   assert.equal(byClass(splash, "alert-award-name").textContent, "Spotter");
   assert.equal(byClass(splash, "alert-award-viewer").textContent, "Nova");
   assert.equal(byClass(splash, "alert-points").textContent, "+25");
@@ -78,7 +78,7 @@ test("omits empty award fields and preserves the command presentation", function
     name: "Nova",
     text: "Good game, Nova!",
   });
-  assert.equal(command.className, "alert-splash alert-splash--command");
+  assert.equal(command.className, "alert-splash alert-splash--command alert-splash--layout-card");
   assert.equal(byClass(command, "alert-text").textContent, "Good game, Nova!");
 });
 
@@ -90,5 +90,7 @@ test("only permits http(s) avatars and keeps render-model values safe", function
     name: "Viewer",
     text: "legacy",
     avatarURL: "",
+    imageAsset: "",
+    layout: "card",
   });
 });

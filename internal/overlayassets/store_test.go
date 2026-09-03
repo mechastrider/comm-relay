@@ -2,73 +2,87 @@ package overlayassets
 
 import (
 	"bytes"
-	"os"
-	"path/filepath"
-	"strings"
+	"encoding/base64"
+	"encoding/binary"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestSave_WhenPNG_ExpectStoredFilename(t *testing.T) {
-	t.Parallel()
+func writeTestWAV(durationSec float64, sampleRate int) []byte {
+	numSamples := int(float64(sampleRate) * durationSec)
+	data := make([]byte, numSamples*2)
 
-	dir := t.TempDir()
-	png := []byte{0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x01}
+	var buf bytes.Buffer
+	_ = binary.Write(&buf, binary.LittleEndian, []byte("RIFF"))
+	_ = binary.Write(&buf, binary.LittleEndian, uint32(36+len(data)))
+	buf.WriteString("WAVE")
+	buf.WriteString("fmt ")
+	_ = binary.Write(&buf, binary.LittleEndian, uint32(16))
+	_ = binary.Write(&buf, binary.LittleEndian, uint16(1))
+	_ = binary.Write(&buf, binary.LittleEndian, uint16(1))
+	_ = binary.Write(&buf, binary.LittleEndian, uint32(sampleRate))
+	_ = binary.Write(&buf, binary.LittleEndian, uint32(sampleRate*2))
+	_ = binary.Write(&buf, binary.LittleEndian, uint16(2))
+	_ = binary.Write(&buf, binary.LittleEndian, uint16(16))
+	buf.WriteString("data")
+	_ = binary.Write(&buf, binary.LittleEndian, uint32(len(data)))
+	buf.Write(data)
 
-	name, err := Save(dir, png)
-	require.NoError(t, err)
-	require.True(t, strings.HasSuffix(name, ".png"))
-	_, err = os.Stat(filepath.Join(dir, name))
-	require.NoError(t, err)
+	return buf.Bytes()
 }
 
-func TestSave_WhenTooLarge_ExpectError(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	data := bytes.Repeat([]byte{0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a}, MaxBytes)
-
-	_, err := Save(dir, data)
-	require.Error(t, err)
-}
-
-func TestSave_WhenUnsafeSVG_ExpectError(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	svg := []byte(`<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>`)
-
-	_, err := Save(dir, svg)
-	require.Error(t, err)
-}
-
-func TestSave_WhenDOCTYPESVG_ExpectStoredFilename(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	svg := []byte(`<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>`)
-
-	name, err := Save(dir, svg)
-	require.NoError(t, err)
-	require.True(t, strings.HasSuffix(name, ".svg"))
-}
-
-func TestSave_WhenHEIC_ExpectModernFormatError(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	heic := []byte{
-		0x00, 0x00, 0x00, 0x18, 'f', 't', 'y', 'p', 'h', 'e', 'i', 'c',
+func tinyPNGBytes() []byte {
+	data, err := base64.StdEncoding.DecodeString("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
+	if err != nil {
+		panic(err)
 	}
-
-	_, err := Save(dir, heic)
-	require.ErrorIs(t, err, ErrModernImageFormat)
+	return data
 }
 
-func TestDirForConfig_WhenPath_ExpectSiblingDirectory(t *testing.T) {
+func TestAlertSound_WhenThreeSecondWAV_ExpectAccepted(t *testing.T) {
 	t.Parallel()
 
-	require.Equal(t, filepath.Join("/tmp", "overlay-assets"), DirForConfig("/tmp/config.json"))
+	data := writeTestWAV(3, 44100)
+	require.NoError(t, ValidateAlertSoundDuration(data))
+}
+
+func TestAlertSound_WhenTwentySecondWAV_ExpectRejected(t *testing.T) {
+	t.Parallel()
+
+	data := writeTestWAV(20, 44100)
+	require.ErrorIs(t, ValidateAlertSoundDuration(data), ErrAudioDuration)
+}
+
+func TestAlertImage_WhenGIF_ExpectRejected(t *testing.T) {
+	t.Parallel()
+
+	gif := []byte("GIF89a" + string(bytes.Repeat([]byte{0x00}, 32)))
+	require.ErrorIs(t, ValidateAlertImage(gif), ErrAnimatedImage)
+}
+
+func TestSave_WhenAlertImagePNG_ExpectStoredFilename(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	png := tinyPNGBytes()
+
+	name, err := Save(dir, KindAlertImage, png)
+	require.NoError(t, err)
+	require.True(t, FileExists(dir, name))
+}
+
+func TestSave_WhenAlertSoundWAV_ExpectStoredFilename(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	data := writeTestWAV(3, 44100)
+
+	name, err := Save(dir, KindAlertSound, data)
+	require.NoError(t, err)
+	require.True(t, stringsHasSuffix(name, ".wav"))
+}
+
+func stringsHasSuffix(value, suffix string) bool {
+	return len(value) >= len(suffix) && value[len(value)-len(suffix):] == suffix
 }

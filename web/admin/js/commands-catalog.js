@@ -11,6 +11,26 @@ import {
   previewStreamerName,
   renderSplashPreview,
 } from "./catalog-template.js";
+import { createCatalogMediaController } from "./catalog-media-ui.js";
+
+const commandMedia = createCatalogMediaController({
+  imagePreview: dom.commandImagePreview,
+  imageInput: dom.commandImageInput,
+  imageClear: dom.commandImageClear,
+  imageError: dom.commandImageError,
+  soundFileInput: dom.commandSoundFileInput,
+  soundFileClear: dom.commandSoundFileClear,
+  soundFileError: dom.commandSoundFileError,
+  soundVolumeInput: dom.commandSoundVolumeInput,
+  soundVolumeValue: dom.commandSoundVolumeValue,
+  soundVolumeError: dom.commandSoundVolumeError,
+  soundPlay: dom.commandSoundPlay,
+  soundStop: dom.commandSoundStop,
+  builtInSoundInput: dom.commandSoundInput,
+  layoutName: "command-layout",
+  layoutError: dom.commandLayoutError,
+});
+commandMedia.bind();
 
 const FETCH_TIMEOUT_MS = 15000;
 
@@ -49,6 +69,7 @@ function setFieldError(input, element, message) {
 function clearFieldErrors() {
   setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
   setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
+  commandMedia.clearFieldErrors();
 }
 
 function setButtonsDisabled(disabled) {
@@ -219,6 +240,7 @@ function fillEditorFromCommand(cmd) {
   if (dom.commandDurationInput) {
     dom.commandDurationInput.value = String(cmd.duration_ms != null ? cmd.duration_ms : 5000);
   }
+  commandMedia.fillFromRecord(cmd);
   updateCommandSplashPreview();
 }
 
@@ -230,6 +252,8 @@ function defaultNewCommand() {
     splash_template: "",
     sound: "",
     duration_ms: 5000,
+    sound_volume: 70,
+    layout: "card",
   };
 }
 
@@ -237,6 +261,7 @@ function selectCommand(id, isNew) {
   creatingNew = isNew;
   selectedCommandId = isNew ? null : id;
   clearFieldErrors();
+  commandMedia.stopPreview();
 
   if (isNew) {
     fillEditorFromCommand(defaultNewCommand());
@@ -254,14 +279,17 @@ function selectCommand(id, isNew) {
 }
 
 function readEditorPayload() {
-  return {
-    trigger: dom.commandTriggerInput ? dom.commandTriggerInput.value : "",
-    enabled: dom.commandEnabledInput ? dom.commandEnabledInput.checked : true,
-    cooldown_seconds: dom.commandCooldownInput ? Number(dom.commandCooldownInput.value) : 0,
-    splash_template: dom.commandSplashInput ? dom.commandSplashInput.value : "",
-    sound: dom.commandSoundInput ? dom.commandSoundInput.value : "",
-    duration_ms: dom.commandDurationInput ? Number(dom.commandDurationInput.value) : 5000,
-  };
+  return Object.assign(
+    {
+      trigger: dom.commandTriggerInput ? dom.commandTriggerInput.value : "",
+      enabled: dom.commandEnabledInput ? dom.commandEnabledInput.checked : true,
+      cooldown_seconds: dom.commandCooldownInput ? Number(dom.commandCooldownInput.value) : 0,
+      splash_template: dom.commandSplashInput ? dom.commandSplashInput.value : "",
+      sound: dom.commandSoundInput ? dom.commandSoundInput.value : "",
+      duration_ms: dom.commandDurationInput ? Number(dom.commandDurationInput.value) : 5000,
+    },
+    commandMedia.readPayload()
+  );
 }
 
 function applyFieldErrors(fields) {
@@ -274,6 +302,7 @@ function applyFieldErrors(fields) {
   if (fields.splash_template && dom.commandSplashError) {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, fields.splash_template);
   }
+  commandMedia.applyFieldErrors(fields);
 }
 
 async function fetchCommandsList() {

@@ -2,30 +2,55 @@ function text(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+const STORED_ASSET_RE = /^[a-z0-9][a-z0-9._-]{0,127}\.(png|jpe?g|webp|gif|svg|mp3|wav)$/i;
+
+export function safeStoredAssetFilename(value) {
+  const candidate = text(value);
+  if (!candidate) {
+    return "";
+  }
+  if (candidate.includes("..") || candidate.includes("://") || /[\\/]/.test(candidate)) {
+    return "";
+  }
+  return STORED_ASSET_RE.test(candidate) ? candidate : "";
+}
+
 export function safeImageURL(value) {
   const candidate = text(value);
   return candidate.startsWith("http://") || candidate.startsWith("https://") ? candidate : "";
 }
 
+export function normalizeAlertLayout(layout) {
+  const value = text(layout).toLowerCase();
+  if (value === "banner" || value === "fullscreen") {
+    return value;
+  }
+  return "card";
+}
+
 export function alertRenderModel(alert) {
   const name = text(alert && alert.name) || "Viewer";
   const points = Number(alert && alert.points);
+  const imageAsset = safeStoredAssetFilename(alert && alert.image_asset);
+  const base = {
+    layout: normalizeAlertLayout(alert && alert.layout),
+    imageAsset,
+    avatarURL: safeImageURL(alert && alert.avatar_url),
+  };
   if (alert && alert.source === "award") {
-    return {
+    return Object.assign(base, {
       kind: "award",
       awardName: text(alert.award_name) || "Award",
       name,
       points: Number.isFinite(points) && points > 0 ? "+" + String(points) : "",
       quote: text(alert.message_text),
-      avatarURL: safeImageURL(alert.avatar_url),
-    };
+    });
   }
-  return {
+  return Object.assign(base, {
     kind: "command",
     name,
     text: typeof (alert && alert.text) === "string" ? alert.text : "",
-    avatarURL: safeImageURL(alert && alert.avatar_url),
-  };
+  });
 }
 
 export function renderAvatar(documentRef, name, avatarURL) {
@@ -52,6 +77,25 @@ export function renderAvatar(documentRef, name, avatarURL) {
   return placeholder;
 }
 
+export function renderAlertPortrait(documentRef, name, imageURL, avatarURL) {
+  if (imageURL) {
+    const image = documentRef.createElement("img");
+    image.className = "alert-avatar alert-avatar--custom";
+    image.src = imageURL;
+    image.alt = "";
+    image.loading = "eager";
+    image.addEventListener(
+      "error",
+      function () {
+        image.replaceWith(renderAvatar(documentRef, name, avatarURL));
+      },
+      { once: true }
+    );
+    return image;
+  }
+  return renderAvatar(documentRef, name, avatarURL);
+}
+
 function appendTextElement(documentRef, parent, tagName, className, value) {
   const element = documentRef.createElement(tagName);
   element.className = className;
@@ -64,7 +108,8 @@ function appendTextElement(documentRef, parent, tagName, className, value) {
 export function createAlertSplash(documentRef, alert, options = {}) {
   const model = alertRenderModel(alert);
   const splash = documentRef.createElement("article");
-  splash.className = "alert-splash alert-splash--" + model.kind;
+  splash.className =
+    "alert-splash alert-splash--" + model.kind + " alert-splash--layout-" + model.layout;
   if (options.reducedMotion) {
     splash.classList.add("alert-splash--reduced");
   }
@@ -72,7 +117,11 @@ export function createAlertSplash(documentRef, alert, options = {}) {
     splash.style.setProperty("--message-accent", options.userAccent(model.name));
   }
 
-  splash.append(renderAvatar(documentRef, model.name, model.avatarURL));
+  const portraitURL =
+    model.imageAsset && typeof options.overlayAssetURL === "function"
+      ? options.overlayAssetURL(model.imageAsset)
+      : "";
+  splash.append(renderAlertPortrait(documentRef, model.name, portraitURL, model.avatarURL));
   const accent = documentRef.createElement("span");
   accent.className = "alert-accent";
   accent.setAttribute("aria-hidden", "true");

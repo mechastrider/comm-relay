@@ -54,7 +54,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	}
 
 	configHandler := newConfigHandler(opts.Store, opts.Hub)
-	overlayAssets := newOverlayAssetsHandler(opts.Store.Path())
+	overlayAssets := newOverlayAssetsHandler(opts.Store, opts.ViewerStore)
 	statusHandler := newStatusHandler(opts.Store, registry)
 	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt, opts.EmoteCache)
 	messagesHandler := newMessagesHandler(opts.History, opts.Hub)
@@ -84,6 +84,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("POST /api/config/update", configHandler.handleUpdate)
 	mux.HandleFunc("POST /api/overlay/activate", configHandler.handleOverlayActivate)
 	mux.HandleFunc("POST /api/overlay/assets/upload", overlayAssets.handleUpload)
+	mux.HandleFunc("POST /api/overlay/assets/delete", overlayAssets.handleDelete)
 	mux.HandleFunc("GET /api/status", statusHandler.handleGet)
 	mux.HandleFunc("GET /api/diagnostics", diagnosticsHandler.handleGet)
 	mux.HandleFunc("POST /api/youtube/oauth/start", youtubeOAuth.handleStartAPI)
