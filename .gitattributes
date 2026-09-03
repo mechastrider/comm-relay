@@ -1,1 +1,26 @@
+# Default: detect text, store LF in git, check out LF on every OS.
+# This overrides Git for Windows core.autocrlf for these paths.
+* text=auto eol=lf
+
+# Go (also covered by the default; kept explicit)
 *.go text eol=lf
+go.mod text eol=lf
+go.sum text eol=lf
+
+# Binaries — never convert
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.exe binary
+*.dll binary
+*.zip binary
+*.wasm binary
