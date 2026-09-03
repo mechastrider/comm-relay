@@ -496,6 +496,7 @@ export default {
   "audience.colPlatforms": "Платформы",
   "audience.colScore": "Очки",
   "audience.colMessages": "Сообщения",
+  "audience.sortViewer": "Сортировать по зрителю",
   "audience.sortScore": "Сортировать по очкам",
   "audience.sortMessages": "Сортировать по сообщениям",
   "audience.platformsEmpty": "Нет платформ",

@@ -19,6 +19,10 @@ assert.deepEqual(normalizeAudienceSort({ column: "messages", direction: "asc" })
   column: "messages",
   direction: "asc",
 });
+assert.deepEqual(normalizeAudienceSort({ column: "viewer", direction: "asc" }), {
+  column: "viewer",
+  direction: "asc",
+});
 assert.deepEqual(normalizeAudienceSort({ column: "invalid", direction: "sideways" }), {
   column: null,
   direction: "desc",
@@ -41,7 +45,12 @@ assert.deepEqual(nextAudienceSort({ column: "messages", direction: "desc" }, "sc
   direction: "desc",
 });
 
-assert.equal(audienceSortAriaValue({ column: null, direction: "desc" }, "score"), "none");
+assert.deepEqual(nextAudienceSort({ column: "viewer", direction: "asc" }, "viewer"), {
+  column: null,
+  direction: "desc",
+});
+
+assert.equal(audienceSortAriaValue({ column: "viewer", direction: "asc" }, "viewer"), "ascending");
 assert.equal(audienceSortAriaValue({ column: "score", direction: "desc" }, "score"), "descending");
 assert.equal(audienceSortAriaValue({ column: "score", direction: "asc" }, "score"), "ascending");
 
@@ -84,6 +93,24 @@ assert.deepEqual(viewerPlatformsList({ platforms: ["twitch", "youtube", "twitch"
 assert.deepEqual(viewerPlatformsList({ last_seen: { platform: "youtube" } }), ["youtube"]);
 assert.deepEqual(viewerPlatformsList({ last_seen: { platform: "" } }), []);
 assert.deepEqual(viewerPlatformsList({}), []);
+
+const namedViewers = [
+  { id: "b", display_name: "Bravo" },
+  { id: "a", display_name: "Alpha" },
+  { id: "c", display_name: "Charlie" },
+];
+assert.deepEqual(
+  sortAudienceViewers(namedViewers, { column: "viewer", direction: "asc" }, "session").map(function (viewer) {
+    return viewer.id;
+  }),
+  ["a", "b", "c"]
+);
+assert.deepEqual(
+  sortAudienceViewers(namedViewers, { column: "viewer", direction: "desc" }, "session").map(function (viewer) {
+    return viewer.id;
+  }),
+  ["c", "b", "a"]
+);
 
 const viewers = [
   {

@@ -58,31 +58,26 @@ function applyServerViewers(viewers) {
   viewersCache = sortAudienceViewers(serverOrderedViewers, audienceSort, currentPeriod);
 }
 
+function updateSortHeader(buttonId, column) {
+  const button = document.getElementById(buttonId);
+  if (!button) {
+    return;
+  }
+  const header = button.closest("th");
+  if (header) {
+    header.setAttribute("aria-sort", audienceSortAriaValue(audienceSort, column));
+  }
+  if (audienceSort.column === column) {
+    button.dataset.sortDirection = audienceSort.direction;
+  } else {
+    delete button.dataset.sortDirection;
+  }
+}
+
 function updateSortHeaders() {
-  const scoreButton = document.getElementById("audience-sort-score");
-  const messagesButton = document.getElementById("audience-sort-messages");
-  if (scoreButton) {
-    const scoreHeader = scoreButton.closest("th");
-    if (scoreHeader) {
-      scoreHeader.setAttribute("aria-sort", audienceSortAriaValue(audienceSort, "score"));
-    }
-    if (audienceSort.column === "score") {
-      scoreButton.dataset.sortDirection = audienceSort.direction;
-    } else {
-      delete scoreButton.dataset.sortDirection;
-    }
-  }
-  if (messagesButton) {
-    const messagesHeader = messagesButton.closest("th");
-    if (messagesHeader) {
-      messagesHeader.setAttribute("aria-sort", audienceSortAriaValue(audienceSort, "messages"));
-    }
-    if (audienceSort.column === "messages") {
-      messagesButton.dataset.sortDirection = audienceSort.direction;
-    } else {
-      delete messagesButton.dataset.sortDirection;
-    }
-  }
+  updateSortHeader("audience-sort-viewer", "viewer");
+  updateSortHeader("audience-sort-score", "score");
+  updateSortHeader("audience-sort-messages", "messages");
 }
 
 function handleSortClick(column) {
@@ -258,6 +253,9 @@ function renderViewersTable(viewers) {
     nameCell.scope = "row";
     nameCell.className = "audience-viewers-table__name";
 
+    const nameInner = document.createElement("div");
+    nameInner.className = "audience-viewers-table__name-inner";
+
     const nameButton = document.createElement("button");
     nameButton.type = "button";
     nameButton.className = "audience-viewers-table__name-button";
@@ -275,7 +273,8 @@ function renderViewersTable(viewers) {
     chevron.setAttribute("aria-hidden", "true");
     chevron.textContent = "›";
 
-    nameCell.append(nameButton, chevron);
+    nameInner.append(nameButton, chevron);
+    nameCell.append(nameInner);
 
     const platformCell = document.createElement("td");
     platformCell.className = "audience-viewers-table__platforms";
@@ -820,6 +819,12 @@ export function initAudienceViewers() {
   refreshAudienceSortState();
   updateSortHeaders();
 
+  const sortViewerButton = document.getElementById("audience-sort-viewer");
+  if (sortViewerButton) {
+    sortViewerButton.addEventListener("click", function () {
+      handleSortClick("viewer");
+    });
+  }
   const sortScoreButton = document.getElementById("audience-sort-score");
   if (sortScoreButton) {
     sortScoreButton.addEventListener("click", function () {

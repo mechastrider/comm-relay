@@ -4,7 +4,7 @@
 
 export const AUDIENCE_SORT_STORAGE_KEY = "commRelay.audienceSort";
 
-/** @typedef {"score"|"messages"} AudienceSortColumn */
+/** @typedef {"viewer"|"score"|"messages"} AudienceSortColumn */
 /** @typedef {"asc"|"desc"} AudienceSortDirection */
 /** @typedef {{ column: AudienceSortColumn|null, direction: AudienceSortDirection }} AudienceSortState */
 
@@ -20,7 +20,7 @@ export function normalizeAudienceSort(raw) {
   const column = value.column;
   const direction = value.direction;
   const normalizedColumn =
-    column === "score" || column === "messages" ? column : null;
+    column === "viewer" || column === "score" || column === "messages" ? column : null;
   const normalizedDirection = direction === "asc" ? "asc" : "desc";
   return {
     column: normalizedColumn,
@@ -127,6 +127,14 @@ export function viewerPlatformsList(viewer) {
 }
 
 /**
+ * @param {Record<string, unknown>} viewer
+ * @returns {string}
+ */
+function viewerSortKey(viewer) {
+  return String(viewer.display_name || "").trim().toLocaleLowerCase();
+}
+
+/**
  * @param {Array<Record<string, unknown>>} viewers
  * @param {AudienceSortState} sort
  * @param {"session"|"day"|"all"} period
@@ -141,6 +149,18 @@ export function sortAudienceViewers(viewers, sort, period) {
   const column = normalized.column;
   const direction = normalized.direction === "asc" ? 1 : -1;
   return viewers.slice().sort(function (left, right) {
+    if (column === "viewer") {
+      const nameCompare = viewerSortKey(left).localeCompare(viewerSortKey(right), undefined, {
+        sensitivity: "base",
+      });
+      if (nameCompare !== 0) {
+        return nameCompare * direction;
+      }
+      return String(left.id || "").localeCompare(String(right.id || ""), undefined, {
+        sensitivity: "base",
+      });
+    }
+
     const leftMetrics = viewerPeriodMetrics(left, period);
     const rightMetrics = viewerPeriodMetrics(right, period);
     const leftValue = column === "score" ? leftMetrics.score : leftMetrics.messages;

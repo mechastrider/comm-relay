@@ -134,6 +134,11 @@
   text-align: right;
 }
 
+.data-table td.data-table__numeric,
+.data-table th.data-table__numeric {
+  text-align: right;
+}
+
 .live-region-empty {
   position: static;
   display: block;

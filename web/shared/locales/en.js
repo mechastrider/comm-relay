@@ -496,6 +496,7 @@ export default {
   "audience.colPlatforms": "Platforms",
   "audience.colScore": "Score",
   "audience.colMessages": "Messages",
+  "audience.sortViewer": "Sort by viewer",
   "audience.sortScore": "Sort by score",
   "audience.sortMessages": "Sort by messages",
   "audience.platformsEmpty": "No platforms",

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=32">
+  <link rel="stylesheet" href="styles.css?v=44">
   <script>
     (function () {
       try {
@@ -248,21 +248,21 @@
                   <label for="viewers-search" data-i18n="viewers.searchLabel">Search viewers</label>
                   <input id="viewers-search" type="search" autocomplete="off" data-i18n-placeholder="viewers.searchPlaceholder" placeholder="Search by name or platform">
                 </div>
-                <div class="audience-toolbar__filters">
+                <div class="audience-toolbar__filters form__field">
                   <label for="audience-period" data-i18n="audience.periodLabel">Activity period</label>
                   <select id="audience-period" aria-describedby="audience-period-hint">
                     <option value="session" data-i18n="viewers.periodSession">Session</option>
                     <option value="day" data-i18n="viewers.periodDay">Day</option>
                     <option value="all" data-i18n="viewers.periodAll">All-time</option>
                   </select>
-                  <button id="audience-open-leaderboard" class="btn-physical btn-small" type="button" data-i18n="audience.openLeaderboard">Open leaderboard</button>
-                  <button id="refresh-viewers" type="button" class="icon-btn has-tooltip" data-i18n-aria-label="shell.refresh" aria-label="Refresh">
-                    <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                    <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
-                  </button>
                 </div>
               </div>
               <div class="audience-toolbar__actions">
+                <button id="audience-open-leaderboard" class="btn-physical btn-small" type="button" data-i18n="audience.openLeaderboard">Open leaderboard</button>
+                <button id="refresh-viewers" type="button" class="icon-btn icon-btn--compact has-tooltip" data-i18n-aria-label="shell.refresh" aria-label="Refresh">
+                  <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
+                </button>
                 <button id="audience-new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
                   <span data-i18n="stream.newStream">New stream</span>
                   <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
@@ -277,9 +277,17 @@
                 <div class="audience-table-body">
                   <table id="audience-viewers-table" class="data-table audience-viewers-table" data-i18n-aria-label="audience.tableCaption">
                     <caption class="visually-hidden" data-i18n="audience.tableCaption">Viewer directory</caption>
+                    <colgroup>
+                      <col class="audience-viewers-table__col-viewer">
+                      <col class="audience-viewers-table__col-platforms">
+                      <col class="audience-viewers-table__col-score">
+                      <col class="audience-viewers-table__col-messages">
+                    </colgroup>
                     <thead class="audience-viewers-table__head">
                       <tr>
-                        <th scope="col" data-i18n="audience.colViewer">Viewer</th>
+                        <th scope="col" class="audience-viewers-table__sortable" aria-sort="none">
+                          <button id="audience-sort-viewer" class="audience-sort-button" type="button" data-i18n="audience.colViewer" data-i18n-aria-label="audience.sortViewer">Viewer</button>
+                        </th>
                         <th scope="col" data-i18n="audience.colPlatforms">Platforms</th>
                         <th scope="col" class="data-table__numeric audience-viewers-table__sortable" aria-sort="none">
                           <button id="audience-sort-score" class="audience-sort-button" type="button" data-i18n="audience.colScore" data-i18n-aria-label="audience.sortScore">Score</button>
