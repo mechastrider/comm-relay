@@ -28,16 +28,16 @@
 
 ## Gate: qa
 
-- [ ] Q.1 Execute `qa_plan.md`; record matrix coverage, merged-viewer JSON, screenshots, and explicit skips.
-- [ ] Q.2 Run `npm ci`.
-- [ ] Q.3 Run `npm test`.
-- [ ] Q.4 Run `npm run test:i18n`.
-- [ ] Q.5 Run `npm run lint`.
-- [ ] Q.6 Run `go test ./...`.
-- [ ] Q.7 Run `golangci-lint run ./...`.
-- [ ] Q.8 Run `go build ./...`.
-- [ ] Q.9 Run `openspec validate audience-directory-follow-ups --strict`.
-- [ ] Q.10 Run `git diff --check`.
+- [x] Q.1 Execute `qa_plan.md`; record matrix coverage, merged-viewer JSON, screenshots, and explicit skips.
+- [x] Q.2 Run `npm ci`.
+- [x] Q.3 Run `npm test`.
+- [x] Q.4 Run `npm run test:i18n`.
+- [x] Q.5 Run `npm run lint`.
+- [x] Q.6 Run `go test ./...`.
+- [x] Q.7 Run `golangci-lint run ./...`.
+- [x] Q.8 Run `go build ./...`.
+- [x] Q.9 Run `openspec validate audience-directory-follow-ups --strict`.
+- [x] Q.10 Run `git diff --check`.
 
 ## Gate: review
 
@@ -46,5 +46,5 @@
 
 ## Gate: distribution-readiness
 
-- [ ] D.1 Confirm existing package names/contents besides embedded web/Go list JSON; do not sign, notarize, upload, or publish.
-- [ ] D.2 Packaged Wails Audience smoke on available OS; skip overlay/OBS.
+- [x] D.1 Confirm existing package names/contents besides embedded web/Go list JSON; do not sign, notarize, upload, or publish.
+- [x] D.2 Packaged Wails Audience smoke skipped on this Cloud Agent (no packaged WebView). Headless server + Chromium `/#audience` smoke recorded in `qa_evidence.md`; overlay/OBS skipped as out of scope.
