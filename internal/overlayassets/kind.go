@@ -1,6 +1,10 @@
 package overlayassets
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/muonsoft/errors"
+)
 
 // AssetKind selects upload validation rules for overlay assets.
 type AssetKind string
@@ -25,15 +29,20 @@ const (
 	MaxUploadBodyBytes = MaxAlertSoundBytes + 64<<10
 )
 
+// ErrInvalidKind is returned when an upload kind is present but not allowed.
+var ErrInvalidKind = errors.New("invalid asset kind")
+
 // ParseKind normalizes an upload kind query/form value.
-func ParseKind(raw string) AssetKind {
+func ParseKind(raw string) (AssetKind, error) {
 	switch strings.TrimSpace(strings.ToLower(raw)) {
+	case "", string(KindPanel):
+		return KindPanel, nil
 	case string(KindAlertImage):
-		return KindAlertImage
+		return KindAlertImage, nil
 	case string(KindAlertSound):
-		return KindAlertSound
+		return KindAlertSound, nil
 	default:
-		return KindPanel
+		return "", ErrInvalidKind
 	}
 }
 

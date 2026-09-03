@@ -44,7 +44,11 @@ func (h *overlayAssetsHandler) handleUpload(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	kind := overlayassets.ParseKind(r.FormValue("kind"))
+	kind, err := overlayassets.ParseKind(r.FormValue("kind"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "kind is not allowed")
+		return
+	}
 	limit := overlayassets.MaxPanelBytes
 	switch kind {
 	case overlayassets.KindAlertImage:

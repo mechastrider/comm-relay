@@ -54,6 +54,37 @@ func TestOverlayAssets_WhenPanelPNG_ExpectFilename(t *testing.T) {
 	require.True(t, strings.HasSuffix(name, ".png"))
 }
 
+func TestOverlayAssets_WhenEmptyKindPanelPNG_ExpectFilename(t *testing.T) {
+	t.Parallel()
+
+	handler := testHandler(t)
+	name := uploadOverlayAsset(t, handler, "", "icon.png", tinyPNG())
+	require.True(t, strings.HasSuffix(name, ".png"))
+}
+
+func TestOverlayAssets_WhenUnknownKind_ExpectBadRequest(t *testing.T) {
+	t.Parallel()
+
+	handler := testHandler(t)
+	for _, kind := range []string{"[object Object]", "alert-image"} {
+		var body bytes.Buffer
+		writer := multipart.NewWriter(&body)
+		require.NoError(t, writer.WriteField("kind", kind))
+		part, err := writer.CreateFormFile("file", "icon.png")
+		require.NoError(t, err)
+		_, err = part.Write(tinyPNG())
+		require.NoError(t, err)
+		require.NoError(t, writer.Close())
+
+		req := httptest.NewRequest(http.MethodPost, "/api/overlay/assets/upload", &body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusBadRequest, rec.Code, "kind=%q body=%s", kind, rec.Body.String())
+		require.Contains(t, rec.Body.String(), "kind is not allowed")
+	}
+}
+
 func TestOverlayAssets_WhenAlertImagePNG_ExpectFilename(t *testing.T) {
 	t.Parallel()
 

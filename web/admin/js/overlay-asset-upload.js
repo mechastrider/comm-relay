@@ -32,6 +32,19 @@ const KIND_LIMITS = {
   },
 };
 
+export function resolveOverlayUploadKind(kindOrOptions) {
+  if (kindOrOptions === undefined || kindOrOptions === null) {
+    return "panel";
+  }
+  if (typeof kindOrOptions === "string") {
+    return kindOrOptions;
+  }
+  if (typeof kindOrOptions === "object" && typeof kindOrOptions.kind === "string") {
+    return kindOrOptions.kind;
+  }
+  throw new Error(t("obs.assetUploadFailed"));
+}
+
 export function mapOverlayAssetUploadError(serverMessage, kind = "panel") {
   if (!serverMessage) {
     return t("obs.assetUploadFailed");
@@ -44,11 +57,15 @@ export function mapOverlayAssetUploadError(serverMessage, kind = "panel") {
   return serverMessage;
 }
 
-export async function uploadOverlayAsset(file, kind = "panel") {
+export async function uploadOverlayAsset(file, kindOrOptions = "panel") {
   if (!file) {
     throw new Error(t("obs.assetRequired"));
   }
-  const limits = KIND_LIMITS[kind] || KIND_LIMITS.panel;
+  const kind = resolveOverlayUploadKind(kindOrOptions);
+  const limits = KIND_LIMITS[kind];
+  if (!limits) {
+    throw new Error(t("obs.assetUploadFailed"));
+  }
   if (file.size > limits.bytes) {
     throw new Error(t(limits.errorKey, { max_kb: limits.maxKb }));
   }

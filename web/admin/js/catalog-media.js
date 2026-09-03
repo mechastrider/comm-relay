@@ -18,11 +18,11 @@ export {
 };
 
 export async function uploadCatalogImage(file) {
-  return uploadOverlayAsset(file, { kind: 'alert_image' });
+  return uploadOverlayAsset(file, 'alert_image');
 }
 
 export async function uploadCatalogSound(file) {
-  return uploadOverlayAsset(file, { kind: 'alert_sound' });
+  return uploadOverlayAsset(file, 'alert_sound');
 }
 
 export function stopCatalogPreview(state) {
