@@ -305,7 +305,13 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	if strings.TrimSpace(name) == "" {
 		name = userID
 	}
-	text := command.SubstituteTemplate(award.SplashTemplate, name, award.Points)
+	quote := trimAwardMessageText(request.MessageText)
+	text := command.SubstituteTemplate(award.SplashTemplate, command.TemplateVars{
+		Viewer:   name,
+		Streamer: cfg.StreamerDisplayName,
+		Points:   award.Points,
+		Message:  quote,
+	})
 	messageID := strings.TrimSpace(request.MessageID)
 	messagePlatform := ""
 	if messageID != "" {
@@ -314,7 +320,7 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	alertPayload, err := awardAlertWirePayload(award, name, result.AvatarURL, text, award.Points, now, awardAlertContext{
 		MessagePlatform: messagePlatform,
 		MessageID:       messageID,
-		MessageText:     trimAwardMessageText(request.MessageText),
+		MessageText:     quote,
 	})
 	if err != nil {
 		clog.Errorf(r.Context(), "award alert wire payload: %w", err)

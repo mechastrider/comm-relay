@@ -755,3 +755,37 @@ table.data-table.audience-viewers-table > tbody > tr > th {
     border-top: 1px solid var(--border);
   }
 }
+
+.catalog-template-vars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.catalog-template-chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-elevated, var(--bg));
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+}
+
+.catalog-template-chip:hover,
+.catalog-template-chip:focus-visible {
+  border-color: var(--accent, #3b82f6);
+  outline: none;
+}
+
+.catalog-template-preview {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+

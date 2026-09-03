@@ -8,6 +8,7 @@ type PublicConfig struct {
 	ActivityXP              int                 `json:"activity_xp"`
 	DayResetHour            int                 `json:"day_reset_hour"`
 	HideCommandMessages     bool                `json:"hide_command_messages"`
+	StreamerDisplayName     string              `json:"streamer_display_name"`
 	Network                 NetworkConfigPublic `json:"network"`
 	Twitch                  TwitchConfig        `json:"twitch"`
 	YouTube                 YouTubeConfigPublic `json:"youtube"`
@@ -26,6 +27,7 @@ func (c Config) Public() PublicConfig {
 		ActivityXP:              c.ActivityXP,
 		DayResetHour:            c.DayResetHour,
 		HideCommandMessages:     c.HideCommandMessages,
+		StreamerDisplayName:     c.StreamerDisplayName,
 		Network:                 c.Network.public(),
 		Twitch:                  c.Twitch,
 		YouTube:                 c.YouTube.public(),

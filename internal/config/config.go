@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/muonsoft/errors"
 )
@@ -21,6 +22,7 @@ type Config struct {
 	ActivityXP              int           `json:"activity_xp"`
 	DayResetHour            int           `json:"day_reset_hour"`
 	HideCommandMessages     bool          `json:"hide_command_messages"`
+	StreamerDisplayName     string        `json:"streamer_display_name"`
 	Network                 NetworkConfig `json:"network"`
 	Twitch                  TwitchConfig  `json:"twitch"`
 	YouTube                 YouTubeConfig `json:"youtube"`
@@ -137,6 +139,7 @@ func (c *Config) ApplyDefaults() {
 	c.Admin.applyDefaults()
 	c.Logging.applyDefaults()
 	c.YouTube.ApplyYouTubeDefaults()
+	c.StreamerDisplayName = strings.TrimSpace(c.StreamerDisplayName)
 }
 
 // ListenAddr returns the HTTP listen address for ServerPort.

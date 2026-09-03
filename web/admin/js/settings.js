@@ -281,6 +281,9 @@ export function applyConfig(config) {
     if (dom.hideCommandMessagesInput) {
       dom.hideCommandMessagesInput.checked = Boolean(config.hide_command_messages);
     }
+    if (dom.streamerDisplayNameInput) {
+      dom.streamerDisplayNameInput.value = String(config.streamer_display_name || "");
+    }
     const nextLocale = localeFromConfig(config);
     if (previousLocale !== nextLocale && state.recentMessageCache.length > 0) {
       renderRecentMessages(state.recentMessageCache, { force: true });
@@ -313,6 +316,9 @@ export function buildPayload() {
       hide_command_messages: dom.hideCommandMessagesInput
         ? dom.hideCommandMessagesInput.checked
         : false,
+      streamer_display_name: dom.streamerDisplayNameInput
+        ? dom.streamerDisplayNameInput.value.trim()
+        : "",
       network: {
         socks5: {
           address: dom.networkSocks5Address ? dom.networkSocks5Address.value.trim() : "",
@@ -377,6 +383,7 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
       activity_xp: latest.activity_xp,
       day_reset_hour: latest.day_reset_hour,
       hide_command_messages: Boolean(latest.hide_command_messages),
+      streamer_display_name: String(latest.streamer_display_name || "").trim(),
       network: {
         socks5: {
           address: socks5.address || "",
@@ -615,6 +622,15 @@ export function validateClient(payload, options) {
     ) {
       setFieldError("day_reset_hour", "Day reset hour must be between 0 and 23.");
       firstInvalid = firstInvalid || dom.dayResetHourInput;
+    }
+
+    const streamerName = String(payload.streamer_display_name || "");
+    if (Array.from(streamerName).length > 64) {
+      setFieldError(
+        "streamer_display_name",
+        "Streamer display name must be at most 64 characters."
+      );
+      firstInvalid = firstInvalid || dom.streamerDisplayNameInput;
     }
 
     if (firstInvalid) {

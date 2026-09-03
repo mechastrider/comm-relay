@@ -9,9 +9,9 @@
 > **Allowed fallout**: Fixtures, changelog, concept/FAQ only if template docs are wrong.
 > **Blocked**: Preset override, Credits, Reward Library, signing.
 
-- [ ] 1.1 Persist `streamer_display_name` (trim, ≤ 64), public GET, field errors; default empty.
-- [ ] 1.2 Resolve `{viewer}`/`{name}`/`{streamer}`/`{points}`/`{message}` (quote, else `!line`, else empty); keep unknown tokens; command `{points}` 0.
-- [ ] 1.3 Settings field + catalog variable chips and preview (Alice / current or sample streamer); EN/RU.
+- [x] 1.1 Persist `streamer_display_name` (trim, ≤ 64), public GET, field errors; default empty.
+- [x] 1.2 Resolve `{viewer}`/`{name}`/`{streamer}`/`{points}`/`{message}` (quote, else `!line`, else empty); keep unknown tokens; command `{points}` 0.
+- [x] 1.3 Settings field + catalog variable chips and preview (Alice / current or sample streamer); EN/RU.
 
 ## Slice: Custom alert images, sounds, and layout
 

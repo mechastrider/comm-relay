@@ -238,6 +238,8 @@ export const commandTriggerError = document.getElementById("command-trigger-erro
 export const commandEnabledInput = document.getElementById("command-enabled-input");
 export const commandCooldownInput = document.getElementById("command-cooldown-input");
 export const commandSplashInput = document.getElementById("command-splash-input");
+export const commandSplashVars = document.getElementById("command-splash-vars");
+export const commandSplashPreview = document.getElementById("command-splash-preview");
 export const commandSplashError = document.getElementById("command-splash-error");
 export const commandSoundInput = document.getElementById("command-sound-input");
 export const commandDurationInput = document.getElementById("command-duration-input");
@@ -256,6 +258,8 @@ export const awardNameError = document.getElementById("award-name-error");
 export const awardPointsInput = document.getElementById("award-points-input");
 export const awardPointsError = document.getElementById("award-points-error");
 export const awardSplashInput = document.getElementById("award-splash-input");
+export const awardSplashVars = document.getElementById("award-splash-vars");
+export const awardSplashPreview = document.getElementById("award-splash-preview");
 export const awardSplashError = document.getElementById("award-splash-error");
 export const awardSoundInput = document.getElementById("award-sound-input");
 export const awardDurationInput = document.getElementById("award-duration-input");
@@ -276,6 +280,7 @@ export const activityIntervalSecondsInput = document.getElementById("activity-in
 export const activitySessionLimitInput = document.getElementById("activity-session-limit");
 export const activityXPInput = document.getElementById("activity-xp");
 export const hideCommandMessagesInput = document.getElementById("hide-command-messages");
+export const streamerDisplayNameInput = document.getElementById("streamer-display-name");
 export const dayResetHourInput = document.getElementById("day-reset-hour");
 export const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
 export const messageSoundVolumeInput = document.getElementById("message-sound-volume");
@@ -317,6 +322,7 @@ export const fieldErrors = {
     activity_session_limit: document.getElementById("activity-session-limit-error"),
     activity_xp: document.getElementById("activity-xp-error"),
     day_reset_hour: document.getElementById("day-reset-hour-error"),
+    streamer_display_name: document.getElementById("streamer-display-name-error"),
   };
 
 export const fieldInputs = {
@@ -344,4 +350,5 @@ export const fieldInputs = {
     activity_session_limit: activitySessionLimitInput,
     activity_xp: activityXPInput,
     day_reset_hour: dayResetHourInput,
+    streamer_display_name: streamerDisplayNameInput,
   };

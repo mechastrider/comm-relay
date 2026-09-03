@@ -6,6 +6,11 @@ import { validateAwardPoints } from "./audience-helpers.js";
 import { parseAudienceHash } from "./audience-tabs.js";
 import { parseWorkspaceHash } from "./workspace-router.js";
 import { neighboringCatalogSelection } from "./catalog-selection.js";
+import {
+  bindSplashVariableChips,
+  previewStreamerName,
+  renderSplashPreview,
+} from "./catalog-template.js";
 
 const FETCH_TIMEOUT_MS = 15000;
 
@@ -184,6 +189,16 @@ function focusAwardCreate() {
   });
 }
 
+function updateAwardSplashPreview() {
+  const points = dom.awardPointsInput ? Number.parseInt(dom.awardPointsInput.value, 10) : 10;
+  renderSplashPreview(dom.awardSplashPreview, dom.awardSplashInput?.value || "", {
+    viewer: "Alice",
+    streamer: previewStreamerName(),
+    points: Number.isFinite(points) ? points : 10,
+    message: t("catalog.sampleMessage"),
+  });
+}
+
 function fillEditorFromAward(award) {
   if (!dom.awardsEditorForm) {
     return;
@@ -203,6 +218,7 @@ function fillEditorFromAward(award) {
   if (dom.awardDurationInput) {
     dom.awardDurationInput.value = String(award.duration_ms != null ? award.duration_ms : 5000);
   }
+  updateAwardSplashPreview();
 }
 
 function defaultNewAward() {
@@ -496,10 +512,14 @@ export function initAwardsCatalog() {
   });
   dom.awardPointsInput?.addEventListener("input", function () {
     setFieldError(dom.awardPointsInput, dom.awardPointsError, "");
+    updateAwardSplashPreview();
   });
   dom.awardSplashInput?.addEventListener("input", function () {
     setFieldError(dom.awardSplashInput, dom.awardSplashError, "");
+    updateAwardSplashPreview();
   });
+  bindSplashVariableChips(dom.awardSplashVars, dom.awardSplashInput, updateAwardSplashPreview);
+  document.addEventListener("admin-config-applied", updateAwardSplashPreview);
   if (dom.awardsDeleteButton) {
     dom.awardsDeleteButton.addEventListener("click", function () {
       if (!selectedAwardId) {

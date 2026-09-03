@@ -369,7 +369,9 @@
                     </div>
                     <div class="form__field">
                       <label for="command-splash-input" data-i18n="catalog.splashTemplate">Splash template</label>
+                      <div id="command-splash-vars" class="catalog-template-vars" role="group" data-i18n-aria-label="catalog.templateVariables" aria-label="Template variables"></div>
                       <input id="command-splash-input" type="text" autocomplete="off" required>
+                      <p id="command-splash-preview" class="catalog-template-preview" aria-live="polite"></p>
                       <p id="command-splash-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
@@ -432,7 +434,9 @@
                     </div>
                     <div class="form__field">
                       <label for="award-splash-input" data-i18n="catalog.splashTemplate">Splash template</label>
+                      <div id="award-splash-vars" class="catalog-template-vars" role="group" data-i18n-aria-label="catalog.templateVariables" aria-label="Template variables"></div>
                       <input id="award-splash-input" type="text" autocomplete="off" required>
+                      <p id="award-splash-preview" class="catalog-template-preview" aria-live="polite"></p>
                       <p id="award-splash-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
@@ -1880,6 +1884,12 @@
               <input id="day-reset-hour" name="day_reset_hour" type="number" min="0" max="23" step="1" inputmode="numeric">
               <p class="field-hint" data-i18n="iface.dayResetHourHint">Local hour when the stats day rolls over (0–23).</p>
               <p id="day-reset-hour-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="streamer-display-name" data-i18n="iface.streamerDisplayName">Streamer display name</label>
+              <input id="streamer-display-name" name="streamer_display_name" type="text" maxlength="64" autocomplete="name">
+              <p class="field-hint" data-i18n="iface.streamerDisplayNameHint">Used as {streamer} in command and award splash templates.</p>
+              <p id="streamer-display-name-error" class="field-error" role="alert" hidden></p>
             </div>
             <div class="form__field">
               <label class="checkbox" for="hide-command-messages">

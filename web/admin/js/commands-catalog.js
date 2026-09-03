@@ -6,6 +6,11 @@ import { validateCommandTrigger } from "./audience-helpers.js";
 import { parseAudienceHash } from "./audience-tabs.js";
 import { parseWorkspaceHash } from "./workspace-router.js";
 import { neighboringCatalogSelection } from "./catalog-selection.js";
+import {
+  bindSplashVariableChips,
+  previewStreamerName,
+  renderSplashPreview,
+} from "./catalog-template.js";
 
 const FETCH_TIMEOUT_MS = 15000;
 
@@ -183,6 +188,15 @@ function focusCommandCreate() {
   });
 }
 
+function updateCommandSplashPreview() {
+  renderSplashPreview(dom.commandSplashPreview, dom.commandSplashInput?.value || "", {
+    viewer: "Alice",
+    streamer: previewStreamerName(),
+    points: 0,
+    message: t("catalog.sampleCommandMessage"),
+  });
+}
+
 function fillEditorFromCommand(cmd) {
   if (!dom.commandsEditorForm) {
     return;
@@ -205,6 +219,7 @@ function fillEditorFromCommand(cmd) {
   if (dom.commandDurationInput) {
     dom.commandDurationInput.value = String(cmd.duration_ms != null ? cmd.duration_ms : 5000);
   }
+  updateCommandSplashPreview();
 }
 
 function defaultNewCommand() {
@@ -492,7 +507,10 @@ export function initCommandsCatalog() {
   });
   dom.commandSplashInput?.addEventListener("input", function () {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
+    updateCommandSplashPreview();
   });
+  bindSplashVariableChips(dom.commandSplashVars, dom.commandSplashInput, updateCommandSplashPreview);
+  document.addEventListener("admin-config-applied", updateCommandSplashPreview);
   if (dom.commandsDeleteButton) {
     dom.commandsDeleteButton.addEventListener("click", function () {
       if (!selectedCommandId) {

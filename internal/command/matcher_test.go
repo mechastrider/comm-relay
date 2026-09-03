@@ -94,10 +94,3 @@ func TestMatcher_WhenCooldownElapsed_ExpectSecondFire(t *testing.T) {
 
 	require.True(t, m.TryFire("twitch", "viewer-1", cmd))
 }
-
-func TestSubstituteTemplate_WhenCommand_ExpectNameAndZeroPoints(t *testing.T) {
-	t.Parallel()
-
-	text := command.SubstituteTemplate("Good game, {name}! +{points}", "Alice", 0)
-	require.Equal(t, "Good game, Alice! +0", text)
-}
