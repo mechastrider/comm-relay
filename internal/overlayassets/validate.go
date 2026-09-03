@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"image"
-	_ "image/jpeg"
-	_ "image/png"
+	_ "image/jpeg" // JPEG decoder for image.DecodeConfig
+	_ "image/png"  // PNG decoder for image.DecodeConfig
 
 	"github.com/muonsoft/errors"
-	_ "golang.org/x/image/webp"
+	_ "golang.org/x/image/webp" // WebP decoder for image.DecodeConfig
 )
 
 const (
