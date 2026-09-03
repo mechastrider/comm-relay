@@ -1,6 +1,6 @@
 # Roadmap — CommRelay
 
-Канон **реализованного** поведения: [`openspec/specs/`](../openspec/specs/). Продуктовый бриф (что уже есть и зачем): [`concept.md`](concept.md). Целевая модель интерактивов: [`Interactive System v1`](interactive-system-v1.md). Этот файл — **следующий горизонт**: куда растём и в каком порядке.
+Канон **реализованного** поведения: [`openspec/specs/`](../openspec/specs/). Продуктовый бриф (что уже есть и зачем): [`concept.md`](concept.md). **Нерешённые** продуктовые/UX-вопросы (ещё не в плане): [`open-questions.md`](open-questions.md). Целевая модель интерактивов: [`Interactive System v1`](interactive-system-v1.md). Этот файл — **следующий горизонт**: куда растём и в каком порядке.
 
 ---
 

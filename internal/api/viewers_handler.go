@@ -54,6 +54,7 @@ type viewerSummaryResponse struct {
 	DayScore            int                      `json:"day_score"`
 	LastSeenAt          string                   `json:"last_seen_at"`
 	LastSeen            lastSeenResponse         `json:"last_seen"`
+	Platforms           []string                 `json:"platforms"`
 	Identities          []viewerIdentityResponse `json:"identities,omitempty"`
 }
 
@@ -62,6 +63,11 @@ type viewersListResponse struct {
 }
 
 func viewerSummaryFromStore(viewer store.Viewer, includeIdentities bool) viewerSummaryResponse {
+	platforms := viewer.Platforms
+	if platforms == nil {
+		platforms = []string{}
+	}
+
 	resp := viewerSummaryResponse{
 		ID:                  viewer.ID,
 		DisplayName:         viewer.DisplayName,
@@ -78,6 +84,7 @@ func viewerSummaryFromStore(viewer store.Viewer, includeIdentities bool) viewerS
 			Username:  viewer.LastSeen.Username,
 			AvatarURL: viewer.LastSeen.AvatarURL,
 		},
+		Platforms: platforms,
 	}
 
 	if includeIdentities {
