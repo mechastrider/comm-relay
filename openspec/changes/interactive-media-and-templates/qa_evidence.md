@@ -14,7 +14,7 @@ Branch: `cursor/interactive-media-a5b9`
 | Command | Result |
 |---|---|
 | `npm ci` | **PASS** |
-| `npm test` | **PASS** — 98 tests, 0 failed |
+| `npm test` | **PASS** — 104 tests, 0 failed (includes FormData `kind` assertions) |
 | `npm run test:i18n` | **PASS** — 669 keys |
 | `npm run lint` | **PASS** — `eslint web/` |
 | `go test ./...` | **PASS** |
@@ -33,9 +33,9 @@ Branch: `cursor/interactive-media-a5b9`
 | `{message}` award quote | P0 | **PASS** | `internal/api/awards_grant_test.go` |
 | `{message}` command line | P0 | **PASS** | `internal/api/command_fire_test.go`; preview used `!gg` |
 | Empty streamer substitution | P0 | **PASS** | command template unit tests |
-| Alert PNG on `gg` | P0 | **PASS** | Upload 200 `asset_*.png`; editor thumbnail; GET `/overlay/assets/` |
+| Alert PNG on `gg` | P0 | **PASS** | Audience picker: 608 KiB PNG thumbnail (would fail panel 512 KiB); GET `/api/commands` `image_asset` `asset_*.png` |
 | Missing image avatar fallback | P0 | **PASS** | `web/alert/alert-media.test.js` |
-| Alert WAV/MP3 | P0 | **PASS** | 3 s WAV upload 200; GET `audio/wav` |
+| Alert WAV/MP3 | P0 | **PASS** | Audience picker: 3 s WAV, no type error; saved `sound_file` `asset_*.wav`; GET `audio/wav` |
 | Built-in + volume | P0 | **PASS** | overlay `playAlertAudio` tests; editor volume 55 |
 | GIF `alert_image` rejected | P0 | **PASS** | HTTP 400 `file type is not allowed` |
 | Path rejected | P0 | **PASS** | `image_asset` `C:\photos\gg.png` → 400 field error |
@@ -54,7 +54,7 @@ Branch: `cursor/interactive-media-a5b9`
 ## Manual smoke (D.2)
 
 - Settings streamer name Jake, save, field remains: **PASS**
-- Command `gg` custom red PNG thumbnail, WAV controls, volume 55, layout banner: **PASS**
+- Command `gg` 608 KiB PNG thumbnail, custom WAV saved (`asset_*.wav`), volume 55, layout banner: **PASS**
 - Award Joke layout radios including fullscreen: **PASS**
 - `/overlay/alert?preview=sample` shows Spotter / Nova splash: **PASS**
 - Live `!gg` with Twitch: **SKIP** (no connector)
@@ -66,3 +66,5 @@ Signing, GIF-as-supported, video, preset streamer override, Windows/macOS OBS, l
 ## Follow-up fixed during QA
 
 Admin catalog modules originally imported `../../alert/alert-render.js`, which 404s when served from `/js/` and blocked SPA hydration. Filename checks now live in `catalog-media-core.js`; built-in preview loads `/overlay/alert/alert-sound.js`.
+
+Catalog `uploadCatalogImage` / `uploadCatalogSound` passed `{ kind: '...' }` into `uploadOverlayAsset(file, kind)` which expects a string, so FormData sent `kind=[object Object]` and the server treated it as panel. WAV from the editor 400'd; PNG over 512 KiB was rejected. Callers now pass `'alert_image'` / `'alert_sound'`; unknown kinds return HTTP 400. Re-smoked on Chromium after the fix.
