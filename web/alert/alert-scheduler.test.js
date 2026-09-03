@@ -162,3 +162,47 @@ test("schedules unknown sources as commands and starts empty after reload", func
   const reloadedPage = createAlertScheduler({ now: () => 0 });
   assert.deepEqual(reloadedPage.snapshot(), { visible: null, awards: [], commands: [] });
 });
+
+test("clears the visible alert and both pending lanes for a global debug reset", function () {
+  const scheduler = createAlertScheduler({ now: () => 0 });
+  scheduler.enqueue(alert("visible"));
+  scheduler.enqueue(alert("award", "award"));
+  scheduler.enqueue(alert("command"));
+
+  scheduler.reset();
+
+  assert.deepEqual(scheduler.snapshot(), { visible: null, awards: [], commands: [] });
+});
+
+test("keeps the complete compact debug alert burst through command, award, command lifecycle", function () {
+  let clock = 0;
+  const burstDurationMs = 1_200;
+  const scheduler = createAlertScheduler({ now: () => clock });
+  const first = alert("burst-command-1", "command", {
+    duration_ms: burstDurationMs,
+    created_at: new Date(0).toISOString(),
+  });
+  const award = alert("burst-award", "award", {
+    duration_ms: burstDurationMs,
+    created_at: new Date(200).toISOString(),
+  });
+  const last = alert("burst-command-2", "command", {
+    duration_ms: burstDurationMs,
+    created_at: new Date(400).toISOString(),
+  });
+
+  // These are the server-owned burst frames at 0ms, 200ms, and 400ms.
+  assert.equal(scheduler.enqueue(first), first);
+  clock = 200;
+  assert.equal(scheduler.enqueue(award), null);
+  clock = 400;
+  assert.equal(scheduler.enqueue(last), null);
+
+  // Advance through the actual compact display duration of every visible splash.
+  clock = burstDurationMs;
+  assert.equal(scheduler.completeVisible(), award);
+  clock = 2 * burstDurationMs;
+  assert.equal(scheduler.completeVisible(), last);
+  clock = 3 * burstDurationMs;
+  assert.equal(scheduler.completeVisible(), null);
+});

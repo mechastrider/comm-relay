@@ -200,14 +200,6 @@ export function shouldDisableUseOnStream(visible, dirty, inFlight) {
 }
 
 /**
- * @param {number} presetCount
- * @returns {boolean}
- */
-export function shouldShowPresetCrudInPrimary(presetCount) {
-  return Number.isFinite(presetCount) && presetCount > 1;
-}
-
-/**
  * @param {{ origin: string, pathname: string, presetId?: string, followActive?: boolean }} options
  * @returns {string}
  */

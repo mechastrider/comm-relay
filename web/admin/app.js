@@ -9,7 +9,7 @@ import {
   showBanner,
 } from "./js/ui-shell.js";
 import { initOverlayPreview, updateOverlayPreviewScale } from "./js/overlay-preview.js";
-import { initOBSSetup } from "./js/obs-setup.js";
+import { initOBSSetup } from "./js/obs-setup.js?v=2";
 import { initOverlayAppearance, updatePresetIsland } from "./js/overlay-appearance.js";
 import { initConnectionsTabs } from "./js/connections.js";
 import { initSettingsDialogs } from "./js/dialogs.js";

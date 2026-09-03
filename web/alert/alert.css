@@ -14,7 +14,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(8px, 4vw, 24px);
   box-sizing: border-box;
   pointer-events: none;
 }
@@ -26,9 +28,15 @@ body {
   grid-template-areas: "avatar text";
   gap: 14px;
   align-items: center;
-  max-width: min(92vw, 560px);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: 100%;
   padding: 16px 18px;
   box-sizing: border-box;
+  overflow: hidden;
   opacity: 0;
   transform: translateY(12px) scale(0.98);
   transition:
@@ -76,8 +84,11 @@ body {
 .alert-content {
   grid-area: text;
   min-width: 0;
+  min-height: 0;
   display: grid;
+  align-content: center;
   gap: 3px;
+  overflow: hidden;
 }
 
 .alert-text,
@@ -204,7 +215,7 @@ body.overlay-theme--g-rebels-popups .alert-splash {
   grid-template-areas: "avatar accent text";
   align-items: start;
   gap: 4px 12px;
-  max-width: min(92vw, 640px);
+  max-width: none;
 }
 
 body.overlay-theme--cockpit-panel .alert-accent,
@@ -440,6 +451,101 @@ body.overlay-theme--g-rebels-popups .alert-award-name {
 
 body.overlay-theme--g-rebels-popups .alert-quote {
   border-left-color: var(--rebels-gold-muted);
+}
+
+@media (max-width: 480px) and (max-height: 220px) {
+  .alert-root {
+    padding: 6px;
+  }
+
+  .alert-splash {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .alert-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .alert-content {
+    align-content: start;
+    gap: 2px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 12px), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 12px), transparent 100%);
+  }
+
+  .alert-text,
+  .alert-award-name,
+  .alert-award-viewer,
+  .alert-quote {
+    font-size: clamp(13px, calc(var(--overlay-font-size) * 0.85), 16px);
+    line-height: 1.2;
+  }
+
+  .alert-award-name {
+    font-size: clamp(11px, calc(var(--overlay-font-size) * 0.68), 13px);
+  }
+
+  .alert-award-viewer {
+    font-size: clamp(14px, calc(var(--overlay-font-size) * 0.9), 17px);
+  }
+
+  .alert-quote {
+    padding-left: 0.5em;
+    font-size: clamp(12px, calc(var(--overlay-font-size) * 0.74), 14px);
+  }
+
+  body.overlay-theme--cockpit-panel .alert-splash,
+  body.overlay-theme--cockpit-popups .alert-splash,
+  body.overlay-theme--g-rebels-popups .alert-splash {
+    grid-template-columns: 28px 3px minmax(0, 1fr);
+    gap: 3px 8px;
+    min-height: 0;
+    padding: 10px 12px;
+  }
+
+  body.overlay-theme--cockpit-panel .alert-content,
+  body.overlay-theme--cockpit-popups .alert-content,
+  body.overlay-theme--g-rebels-popups .alert-content {
+    font-size: clamp(13px, calc(var(--overlay-font-size) * 0.85), 16px);
+    line-height: 1.2;
+  }
+
+  body.overlay-theme--cockpit-panel .alert-avatar,
+  body.overlay-theme--cockpit-popups .alert-avatar,
+  body.overlay-theme--g-rebels-popups .alert-avatar {
+    width: 28px;
+    height: 28px;
+    margin-top: 0;
+  }
+
+  body.overlay-theme--cockpit-panel .alert-splash {
+    padding: 30px 10px 12px 50px;
+    background:
+      linear-gradient(var(--hud-cyan), var(--hud-cyan)) 10px 13px / 22px 2px no-repeat,
+      linear-gradient(rgba(53, 210, 208, 0.42), rgba(53, 210, 208, 0.42)) 10px 50% / 18px 2px no-repeat,
+      linear-gradient(rgba(142, 216, 63, 0.48), rgba(142, 216, 63, 0.48)) 10px calc(100% - 15px) / 22px 2px no-repeat,
+      linear-gradient(90deg, rgba(51, 222, 204, 0.12) 0 38px, transparent 38px),
+      linear-gradient(90deg, rgba(53, 210, 208, 0.38) 0 1px, transparent 1px) 38px 0 / 1px 100% no-repeat,
+      linear-gradient(90deg, rgba(43, 191, 190, 0.14), transparent 34%),
+      var(--overlay-panel-bg);
+  }
+
+  body.overlay-theme--cockpit-panel .alert-splash::before {
+    left: 38px;
+    right: 10px;
+    padding: 9px 0 0 10px;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+  }
+
+  body.overlay-theme--cockpit-panel .alert-splash::after {
+    left: 48px;
+    right: 12px;
+    bottom: 7px;
+    height: 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

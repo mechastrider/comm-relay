@@ -68,6 +68,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher)
 	commandsHandler := newCommandsHandler(opts.ViewerStore)
 	awardsHandler := newAwardsHandler(opts.ViewerStore, opts.Hub, leaderboardPublisher, opts.Store)
+	overlayDebug := newOverlayDebugHandler(opts.Hub)
 
 	mux := http.NewServeMux()
 	instanceID := ""
@@ -76,6 +77,9 @@ func NewHandler(opts Options) (http.Handler, error) {
 	}
 	mux.HandleFunc("GET /health", handleHealth(instanceID))
 	mux.HandleFunc("GET /ws", opts.Hub.serveWS)
+	mux.HandleFunc("GET /ws/overlay-debug", opts.Hub.serveDebugWS)
+	mux.HandleFunc("POST /api/overlay-debug/scenario/fire", overlayDebug.handleFire)
+	mux.HandleFunc("POST /api/overlay-debug/session/reset", overlayDebug.handleReset)
 	mux.HandleFunc("GET /api/config", configHandler.handleGet)
 	mux.HandleFunc("POST /api/config/update", configHandler.handleUpdate)
 	mux.HandleFunc("POST /api/overlay/activate", configHandler.handleOverlayActivate)
@@ -108,6 +112,19 @@ func NewHandler(opts Options) (http.Handler, error) {
 		serveFSFile(w, r, static.dock, "index.html")
 	})
 	mux.HandleFunc("GET /overlay/assets/{filename}", overlayAssets.handleGet)
+	// Test pages deliberately reuse each production surface's assets while the
+	// browser-side path check selects the isolated debug WebSocket audience.
+	// Keep these routes before the production directory handlers so old builds
+	// fail closed with 404 instead of ever falling through to a live overlay.
+	mux.HandleFunc("GET /overlay/test/chat", func(w http.ResponseWriter, r *http.Request) {
+		serveFSFile(w, r, static.overlay, "index.html")
+	})
+	mux.HandleFunc("GET /overlay/test/leaderboard", func(w http.ResponseWriter, r *http.Request) {
+		serveFSFile(w, r, static.leaderboard, "index.html")
+	})
+	mux.HandleFunc("GET /overlay/test/alert", func(w http.ResponseWriter, r *http.Request) {
+		serveFSFile(w, r, static.alert, "index.html")
+	})
 	mux.Handle("GET /overlay/leaderboard/", http.StripPrefix("/overlay/leaderboard/", http.FileServer(http.FS(static.leaderboard))))
 	mux.HandleFunc("GET /overlay/leaderboard", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.leaderboard, "index.html")

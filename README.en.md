@@ -90,6 +90,15 @@ By default CommRelay listens on `127.0.0.1:17877`. The admin panel is available 
 
 If you changed the port in settings, update the URL in OBS.
 
+## Test an overlay without going live
+
+In **Studio → Test overlay**, the static preview remains the quick way to compare a theme, font, and backdrop. Test mode instead exercises message, reward, leaderboard, and alert timing without live chat or score changes.
+
+- A **stable test-only URL** can stay in a separate OBS Browser Source. It follows the active preset, receives test events only, and never displays live chat.
+- A **current-preview snapshot URL** adds unpublished draft appearance to that test-only path. Copy it again after changing the draft; the stable URL does not need recopying.
+- **Run**, **Replay**, and **Reset** use one shared local channel: an action from another Studio tab or OBS test source replaces the current sequence. Studio reports the connected receiver count; `0` is a successful run with no test source connected.
+- Make the final sound and autoplay check in OBS itself: Studio does not bypass browser autoplay policy. On an older CommRelay build, test-only paths return `404`; they never fall back to a live overlay.
+
 ## Message log in the OBS interface
 
 CommRelay can show a separate chat feed directly in the OBS interface. This panel is for the streamer: it does not appear on the scene and is not visible to viewers.

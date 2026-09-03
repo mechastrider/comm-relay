@@ -127,6 +127,12 @@ export function createAlertScheduler(options = {}) {
       return takeNext();
     },
 
+    reset() {
+      visible = null;
+      awards.splice(0, awards.length);
+      commands.splice(0, commands.length);
+    },
+
     snapshot() {
       removeExpiredCommands();
       return {

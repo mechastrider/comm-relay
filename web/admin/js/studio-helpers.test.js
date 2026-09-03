@@ -18,7 +18,6 @@ import {
   MESSAGE_TTL_CHIP_VALUES,
   shouldShowUseOnStream,
   shouldDisableUseOnStream,
-  shouldShowPresetCrudInPrimary,
   normalizeStudioSetupState,
   readStudioSetupState,
   writeStudioSetupState,
@@ -235,9 +234,5 @@ writeStudioSurfaceRailCollapsedPreference(dismissedStorage, true);
 assert.equal(readStudioSurfaceRailCollapsedPreference(dismissedStorage), true);
 writeStudioSurfaceRailCollapsedPreference(dismissedStorage, false);
 assert.equal(readStudioSurfaceRailCollapsedPreference(dismissedStorage), false);
-
-assert.equal(shouldShowPresetCrudInPrimary(1), false);
-assert.equal(shouldShowPresetCrudInPrimary(2), true);
-assert.equal(shouldShowPresetCrudInPrimary(0), false);
 
 console.log("studio-helpers OK");

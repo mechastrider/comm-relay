@@ -360,32 +360,9 @@
 }
 
 .icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 30px;
   height: 30px;
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--surface-dark);
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.icon-btn:hover {
-  color: var(--text);
-  border-color: var(--border-strong);
-}
-
-.icon-btn:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-
-.icon-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
 }
 
 .icon-btn__icon {
