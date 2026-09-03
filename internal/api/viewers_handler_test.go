@@ -161,6 +161,61 @@ func TestViewerIngest_WhenTwoMessages_ExpectStoreIncrementAndLeaderboardFrame(t 
 	t.Fatal("expected leaderboard frame with period=session")
 }
 
+func TestViewers_WhenList_ExpectPlatformsWithoutIdentities(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+
+	twitchID := seedViewer(t, env, "twitch", "1", "Alice")
+	youtubeID := seedViewer(t, env, "youtube", "2", "Bob")
+
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/viewers", nil))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	body := rec.Body.String()
+	require.Contains(t, body, `"platforms":`)
+	require.NotContains(t, body, `"identities"`)
+
+	var payload struct {
+		Viewers []struct {
+			ID        string   `json:"id"`
+			Platforms []string `json:"platforms"`
+		} `json:"viewers"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Len(t, payload.Viewers, 2)
+
+	byID := make(map[string][]string, len(payload.Viewers))
+	for _, viewer := range payload.Viewers {
+		require.NotNil(t, viewer.Platforms)
+		byID[viewer.ID] = viewer.Platforms
+	}
+
+	require.Equal(t, []string{"twitch"}, byID[twitchID])
+	require.Equal(t, []string{"youtube"}, byID[youtubeID])
+}
+
+func TestViewers_WhenGet_ExpectIdentities(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	id := seedViewer(t, env, "twitch", "42", "Alice")
+
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/viewers/get?id="+id, nil))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var payload struct {
+		Platforms  []string `json:"platforms"`
+		Identities []struct {
+			Platform string `json:"platform"`
+			UserID   string `json:"user_id"`
+		} `json:"identities"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.NotEmpty(t, payload.Identities)
+	require.Equal(t, "twitch", payload.Identities[0].Platform)
+	require.Equal(t, "42", payload.Identities[0].UserID)
+	require.NotNil(t, payload.Platforms)
+}
+
 func TestViewerIngest_WhenEmptyUserID_ExpectNoViewer(t *testing.T) {
 	b := bus.New(0)
 	env := newTestEnv(t, b)

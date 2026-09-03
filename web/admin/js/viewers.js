@@ -8,16 +8,23 @@ import { getLeaderboardPeriod, setLeaderboardPeriod } from "./live-leaderboard.j
 import { setLiveTab } from "./live-tabs.js";
 import {
   audienceEmptyKind,
-  formatViewerPlatforms,
+  audienceSortAriaValue,
+  nextAudienceSort,
+  readAudienceSort,
+  sortAudienceViewers,
   validateDisplayName,
   viewerPeriodMetrics,
+  viewerPlatformsList,
+  writeAudienceSort,
 } from "./audience-helpers.js";
+import { renderPlatformIcons } from "./platform-icon.js";
 
 const VIEWERS_FETCH_TIMEOUT_MS = 15000;
 const SEARCH_DEBOUNCE_MS = 250;
 const WIDE_LAYOUT_QUERY = "(min-width: 1024px)";
 
 let selectedViewerId = null;
+let serverOrderedViewers = [];
 let viewersCache = [];
 let searchDebounceTimer = null;
 let mergeInFlight = false;
@@ -31,6 +38,54 @@ let currentPeriod = "session";
 let focusReturnElement = null;
 let pendingMerge = null;
 let wideLayoutQuery = null;
+/** @type {import("./audience-helpers.js").AudienceSortState} */
+let audienceSort = { column: null, direction: "desc" };
+
+function audienceStorage() {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function refreshAudienceSortState() {
+  audienceSort = readAudienceSort(audienceStorage());
+}
+
+function applyServerViewers(viewers) {
+  serverOrderedViewers = Array.isArray(viewers) ? viewers : [];
+  viewersCache = sortAudienceViewers(serverOrderedViewers, audienceSort, currentPeriod);
+}
+
+function updateSortHeaders() {
+  const scoreButton = document.getElementById("audience-sort-score");
+  const messagesButton = document.getElementById("audience-sort-messages");
+  if (scoreButton) {
+    scoreButton.setAttribute("aria-sort", audienceSortAriaValue(audienceSort, "score"));
+    if (audienceSort.column === "score") {
+      scoreButton.dataset.sortDirection = audienceSort.direction;
+    } else {
+      delete scoreButton.dataset.sortDirection;
+    }
+  }
+  if (messagesButton) {
+    messagesButton.setAttribute("aria-sort", audienceSortAriaValue(audienceSort, "messages"));
+    if (audienceSort.column === "messages") {
+      messagesButton.dataset.sortDirection = audienceSort.direction;
+    } else {
+      delete messagesButton.dataset.sortDirection;
+    }
+  }
+}
+
+function handleSortClick(column) {
+  audienceSort = nextAudienceSort(audienceSort, column);
+  writeAudienceSort(audienceStorage(), audienceSort);
+  viewersCache = sortAudienceViewers(serverOrderedViewers, audienceSort, currentPeriod);
+  renderViewersTable(viewersCache);
+  updateSortHeaders();
+}
 
 function escapeText(value) {
   return String(value == null ? "" : value);
@@ -167,8 +222,6 @@ function renderViewersTable(viewers) {
   viewers.forEach(function (viewer) {
     const metrics = viewerPeriodMetrics(viewer, currentPeriod);
     const displayName = viewer.display_name || t("viewers.unnamed");
-    const platforms = formatViewerPlatforms(viewer, formatPlatformLabel);
-    const platformText = platforms || t("viewers.noIdentities");
 
     const row = document.createElement("tr");
     row.setAttribute("data-viewer-id", viewer.id);
@@ -177,13 +230,36 @@ function renderViewersTable(viewers) {
     const nameCell = document.createElement("th");
     nameCell.scope = "row";
     nameCell.className = "audience-viewers-table__name";
-    nameCell.textContent = displayName;
-    nameCell.title = displayName;
+
+    const nameButton = document.createElement("button");
+    nameButton.type = "button";
+    nameButton.className = "audience-viewers-table__name-button";
+    nameButton.textContent = displayName;
+    nameButton.title = displayName;
+    nameButton.addEventListener("click", function (event) {
+      event.stopPropagation();
+      openViewerDetail(viewer.id, nameButton).catch(function () {
+        showBanner("error", t("banner.cannotReach"));
+      });
+    });
+
+    const chevron = document.createElement("span");
+    chevron.className = "audience-viewers-table__chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.textContent = "›";
+
+    nameCell.append(nameButton, chevron);
 
     const platformCell = document.createElement("td");
     platformCell.className = "audience-viewers-table__platforms";
-    platformCell.textContent = platformText;
-    platformCell.title = platformText;
+    const platformHost = document.createElement("div");
+    renderPlatformIcons(
+      platformHost,
+      viewerPlatformsList(viewer),
+      formatPlatformLabel,
+      t("audience.platformsEmpty")
+    );
+    platformCell.append(platformHost);
 
     const scoreCell = document.createElement("td");
     scoreCell.className = "data-table__numeric";
@@ -193,28 +269,20 @@ function renderViewersTable(viewers) {
     messagesCell.className = "data-table__numeric";
     messagesCell.textContent = String(metrics.messages);
 
-    const actionCell = document.createElement("td");
-    actionCell.className = "audience-viewers-table__actions";
-    const detailButton = document.createElement("button");
-    detailButton.type = "button";
-    detailButton.className = "btn-physical btn-small";
-    detailButton.textContent = t("audience.detailAction");
-    detailButton.addEventListener("click", function () {
-      openViewerDetail(viewer.id, detailButton).catch(function () {
-        showBanner("error", t("banner.cannotReach"));
-      });
-    });
-    actionCell.append(detailButton);
-
-    row.append(nameCell, platformCell, scoreCell, messagesCell, actionCell);
+    row.append(nameCell, platformCell, scoreCell, messagesCell);
     row.addEventListener("keydown", handleTableRowKeydown);
-    row.addEventListener("dblclick", function () {
+    row.addEventListener("click", function (event) {
+      if (event.target.closest("button")) {
+        return;
+      }
       openViewerDetail(viewer.id, row).catch(function () {
         showBanner("error", t("banner.cannotReach"));
       });
     });
     dom.audienceViewersTableBody.append(row);
   });
+
+  updateSortHeaders();
 
   updateTableSelection(selectedViewerId);
 
@@ -573,7 +641,8 @@ export async function loadViewersList(query) {
     .then(function (payload) {
       listLoadError = false;
       listHasLoaded = true;
-      renderViewersTable((payload && payload.viewers) || []);
+      applyServerViewers((payload && payload.viewers) || []);
+      renderViewersTable(viewersCache);
     })
     .catch(function (err) {
       listLoadError = true;
@@ -672,7 +741,8 @@ export async function startNewStream() {
 }
 
 function rerenderTableForPeriod() {
-  if (viewersCache.length > 0) {
+  if (serverOrderedViewers.length > 0) {
+    viewersCache = sortAudienceViewers(serverOrderedViewers, audienceSort, currentPeriod);
     renderViewersTable(viewersCache);
   }
 }
@@ -716,6 +786,21 @@ function closeNewStreamPrompt() {
 
 export function initAudienceViewers() {
   syncPeriodFromSharedState();
+  refreshAudienceSortState();
+  updateSortHeaders();
+
+  const sortScoreButton = document.getElementById("audience-sort-score");
+  if (sortScoreButton) {
+    sortScoreButton.addEventListener("click", function () {
+      handleSortClick("score");
+    });
+  }
+  const sortMessagesButton = document.getElementById("audience-sort-messages");
+  if (sortMessagesButton) {
+    sortMessagesButton.addEventListener("click", function () {
+      handleSortClick("messages");
+    });
+  }
 
   if (dom.refreshViewers) {
     dom.refreshViewers.addEventListener("click", function () {
@@ -818,8 +903,12 @@ export function initAudienceViewers() {
 
   window.addEventListener("hashchange", ensureAudienceLoaded);
   window.addEventListener("admin-locale-applied", function () {
-    if (viewersCache.length > 0) {
+    refreshAudienceSortState();
+    if (serverOrderedViewers.length > 0) {
+      viewersCache = sortAudienceViewers(serverOrderedViewers, audienceSort, currentPeriod);
       renderViewersTable(viewersCache);
+    } else {
+      updateSortHeaders();
     }
   });
 

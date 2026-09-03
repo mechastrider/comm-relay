@@ -144,6 +144,10 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 		return nil, errors.Errorf("iterate viewers: %w", err)
 	}
 
+	if err := s.attachPlatformsLocked(viewers); err != nil {
+		return nil, errors.Errorf("attach viewer platforms: %w", err)
+	}
+
 	return viewers, nil
 }
 
@@ -190,6 +194,7 @@ func (s *Store) Get(id string, dayResetHour int, now time.Time) (*Viewer, error)
 	viewer.Identities = identities
 	viewer.DisplayName = effectiveDisplayName(viewer.DisplayNameOverride, identities)
 	viewer.LastSeen = latestIdentity(identities)
+	attachPlatformsFromIdentities(&viewer)
 
 	return &viewer, nil
 }

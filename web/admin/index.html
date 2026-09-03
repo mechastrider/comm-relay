@@ -261,6 +261,8 @@
                     <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
                   </button>
                 </div>
+              </div>
+              <div class="audience-toolbar__actions">
                 <button id="audience-new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
                   <span data-i18n="stream.newStream">New stream</span>
                   <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
@@ -275,13 +277,16 @@
                 <div class="audience-table-body">
                   <table id="audience-viewers-table" class="data-table audience-viewers-table" data-i18n-aria-label="audience.tableCaption">
                     <caption class="visually-hidden" data-i18n="audience.tableCaption">Viewer directory</caption>
-                    <thead>
+                    <thead class="audience-viewers-table__head">
                       <tr>
                         <th scope="col" data-i18n="audience.colViewer">Viewer</th>
                         <th scope="col" data-i18n="audience.colPlatforms">Platforms</th>
-                        <th scope="col" class="data-table__numeric" data-i18n="audience.colScore">Score</th>
-                        <th scope="col" class="data-table__numeric" data-i18n="audience.colMessages">Messages</th>
-                        <th scope="col" data-i18n="audience.colActions">Actions</th>
+                        <th scope="col" class="data-table__numeric">
+                          <button id="audience-sort-score" class="audience-sort-button" type="button" aria-sort="none" data-i18n="audience.colScore" data-i18n-aria-label="audience.sortScore">Score</button>
+                        </th>
+                        <th scope="col" class="data-table__numeric">
+                          <button id="audience-sort-messages" class="audience-sort-button" type="button" aria-sort="none" data-i18n="audience.colMessages" data-i18n-aria-label="audience.sortMessages">Messages</button>
+                        </th>
                       </tr>
                     </thead>
                     <tbody id="audience-viewers-table-body"></tbody>

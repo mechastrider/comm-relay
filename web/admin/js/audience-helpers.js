@@ -2,6 +2,156 @@
  * Pure helpers for the Audience workspace viewer table and empty states.
  */
 
+export const AUDIENCE_SORT_STORAGE_KEY = "commRelay.audienceSort";
+
+/** @typedef {"score"|"messages"} AudienceSortColumn */
+/** @typedef {"asc"|"desc"} AudienceSortDirection */
+/** @typedef {{ column: AudienceSortColumn|null, direction: AudienceSortDirection }} AudienceSortState */
+
+/**
+ * @param {unknown} raw
+ * @returns {AudienceSortState}
+ */
+export function normalizeAudienceSort(raw) {
+  if (!raw || typeof raw !== "object") {
+    return { column: null, direction: "desc" };
+  }
+  const value = /** @type {Record<string, unknown>} */ (raw);
+  const column = value.column;
+  const direction = value.direction;
+  const normalizedColumn =
+    column === "score" || column === "messages" ? column : null;
+  const normalizedDirection = direction === "asc" ? "asc" : "desc";
+  return {
+    column: normalizedColumn,
+    direction: normalizedDirection,
+  };
+}
+
+/**
+ * @param {Storage | null | undefined} storage
+ * @returns {AudienceSortState}
+ */
+export function readAudienceSort(storage) {
+  try {
+    if (!storage || typeof storage.getItem !== "function") {
+      return normalizeAudienceSort(null);
+    }
+    const raw = storage.getItem(AUDIENCE_SORT_STORAGE_KEY);
+    if (!raw) {
+      return normalizeAudienceSort(null);
+    }
+    return normalizeAudienceSort(JSON.parse(raw));
+  } catch {
+    return normalizeAudienceSort(null);
+  }
+}
+
+/**
+ * @param {Storage | null | undefined} storage
+ * @param {AudienceSortState} sort
+ * @returns {boolean}
+ */
+export function writeAudienceSort(storage, sort) {
+  try {
+    if (!storage || typeof storage.setItem !== "function") {
+      return false;
+    }
+    const normalized = normalizeAudienceSort(sort);
+    storage.setItem(AUDIENCE_SORT_STORAGE_KEY, JSON.stringify(normalized));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @param {AudienceSortState} current
+ * @param {AudienceSortColumn} column
+ * @returns {AudienceSortState}
+ */
+export function nextAudienceSort(current, column) {
+  const sort = normalizeAudienceSort(current);
+  if (sort.column !== column) {
+    return { column: column, direction: "desc" };
+  }
+  if (sort.direction === "desc") {
+    return { column: column, direction: "asc" };
+  }
+  return { column: null, direction: "desc" };
+}
+
+/**
+ * @param {AudienceSortState} sort
+ * @param {AudienceSortColumn} column
+ * @returns {"none"|"ascending"|"descending"}
+ */
+export function audienceSortAriaValue(sort, column) {
+  const normalized = normalizeAudienceSort(sort);
+  if (normalized.column !== column) {
+    return "none";
+  }
+  return normalized.direction === "asc" ? "ascending" : "descending";
+}
+
+/**
+ * @param {Record<string, unknown> | null | undefined} viewer
+ * @returns {string[]}
+ */
+export function viewerPlatformsList(viewer) {
+  const row = viewer || {};
+  const platforms = row.platforms;
+  if (Array.isArray(platforms)) {
+    const seen = new Set();
+    const result = [];
+    platforms.forEach(function (platform) {
+      const id = String(platform || "").toLowerCase();
+      if (!id || seen.has(id)) {
+        return;
+      }
+      seen.add(id);
+      result.push(id);
+    });
+    return result;
+  }
+
+  const lastSeen = row.last_seen;
+  const lastPlatform =
+    lastSeen && typeof lastSeen === "object"
+      ? String(/** @type {Record<string, unknown>} */ (lastSeen).platform || "").toLowerCase()
+      : "";
+  if (lastPlatform) {
+    return [lastPlatform];
+  }
+  return [];
+}
+
+/**
+ * @param {Array<Record<string, unknown>>} viewers
+ * @param {AudienceSortState} sort
+ * @param {"session"|"day"|"all"} period
+ * @returns {Array<Record<string, unknown>>}
+ */
+export function sortAudienceViewers(viewers, sort, period) {
+  const normalized = normalizeAudienceSort(sort);
+  if (!normalized.column || !Array.isArray(viewers) || viewers.length < 2) {
+    return Array.isArray(viewers) ? viewers.slice() : [];
+  }
+
+  const column = normalized.column;
+  const direction = normalized.direction === "asc" ? 1 : -1;
+  return viewers.slice().sort(function (left, right) {
+    const leftMetrics = viewerPeriodMetrics(left, period);
+    const rightMetrics = viewerPeriodMetrics(right, period);
+    const leftValue = column === "score" ? leftMetrics.score : leftMetrics.messages;
+    const rightValue = column === "score" ? rightMetrics.score : rightMetrics.messages;
+    if (leftValue === rightValue) {
+      return 0;
+    }
+    return leftValue < rightValue ? -direction : direction;
+  });
+}
+
 /**
  * @param {{ loading?: boolean, error?: boolean, query?: string, count?: number }} input
  * @returns {"loading"|"error"|"none"|"no-matches"|"ready"}
