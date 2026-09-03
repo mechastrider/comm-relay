@@ -12,7 +12,7 @@ import {
 } from "./catalog-media.js";
 
 async function playBuiltInPreview(state, sound, volume) {
-  const module = await import("/alert/alert-sound.js?v=2");
+  const module = await import("/overlay/alert/alert-sound.js?v=2");
   const ctx = await module.ensureAudioContext(state.previewCtx);
   state.previewCtx = ctx;
   module.playAlertTone(ctx, sound, ctx.currentTime, volume);

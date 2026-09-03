@@ -1,6 +1,18 @@
-import { safeStoredAssetFilename } from '../../alert/alert-render.js';
+const STORED_ASSET_RE = /^[a-z0-9][a-z0-9._-]{0,127}\.(png|jpe?g|webp|gif|svg|mp3|wav)$/i;
 
 export const CATALOG_LAYOUTS = ['card', 'banner', 'fullscreen'];
+
+/** Keep in sync with web/alert/alert-render.js — admin cannot import overlay URLs from /js/. */
+export function safeStoredAssetFilename(value) {
+  const candidate = typeof value === 'string' ? value.trim() : '';
+  if (!candidate) {
+    return '';
+  }
+  if (candidate.includes('..') || candidate.includes('://') || /[\\/]/.test(candidate)) {
+    return '';
+  }
+  return STORED_ASSET_RE.test(candidate) ? candidate : '';
+}
 
 export function createCatalogMediaState(overrides = {}) {
   return {
