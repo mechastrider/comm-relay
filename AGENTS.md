@@ -2,7 +2,7 @@
 
 This guide is for AI agents working on **CommRelay** — a local Go application that aggregates streaming chat (Twitch, YouTube, …) and feeds an OBS Browser Source overlay.
 
-Product brief: [`docs/concept.md`](docs/concept.md) (Russian). Next horizon: [`docs/roadmap.md`](docs/roadmap.md) (Russian). Canonical implemented behavior: [`openspec/specs/`](openspec/specs/).
+Product brief: [`docs/concept.md`](docs/concept.md) (Russian). Next horizon: [`docs/roadmap.md`](docs/roadmap.md) (Russian). Open product/UX questions (unresolved): [`docs/open-questions.md`](docs/open-questions.md) (Russian). Canonical implemented behavior: [`openspec/specs/`](openspec/specs/).
 
 ## Project Overview
 
@@ -26,7 +26,9 @@ comm-relay/
 ├── openspec/             # spec-driven planning (config, specs, changes)
 ├── docs/
 │   ├── concept.md
-│   └── roadmap.md
+│   ├── roadmap.md
+│   ├── open-questions.md   # unresolved product/UX questions (not a spec)
+│   └── research/           # deeper notes; may spawn open questions
 └── .agents/skills/
 ```
 
@@ -36,14 +38,18 @@ comm-relay/
 2. **Resilience**: auto-reconnect per connector; one connector failing must not crash the process.
 3. **Simple deployment**: single executable, Windows-friendly, minimal memory.
 4. **Logging**: `github.com/muonsoft/clog` (on `log/slog`) — Debug/Info/Warn/Error — see skill `golang-logging`.
-5. **Small, explicit changes**: match existing package layout; plan behavior changes as OpenSpec deltas; update `docs/concept.md` / `docs/roadmap.md` only when the product contract or horizon changes.
+5. **Small, explicit changes**: match existing package layout; plan behavior changes as OpenSpec deltas; update `docs/concept.md` / `docs/roadmap.md` only when the product contract or horizon changes; capture unresolved product/UX questions in `docs/open-questions.md` (see **Open questions** below) instead of coding or roadmap churn.
 6. **Changelog for user-visible work**: when a task changes **product behavior** a streamer or OBS operator would notice — config, API contract, admin/overlay/dock UX, connectors as experienced in the UI, or README/FAQ text that changes install, setup, or how to use the app — append concise Russian bullets to `CHANGELOG.md` under `## [Unreleased]` (skill `changelog`). **Skip** marketing and repo-only edits: promo/hero images, banners, screenshots, typos in README that do not change instructions, refactors, file/module splits, tests-only, lint, or internal agent/tooling — even if `web/admin`, `web/overlay`, or README files changed. Never erase or rewrite existing `## [X.Y.Z]` sections while editing Unreleased.
 
 ## Language Conventions
 
 - Code identifiers and Go comments: English.
 - Agent skills (`SKILL.md`), `AGENTS.md`, and OpenSpec artifacts: English.
-- `docs/concept.md` and `docs/roadmap.md` may stay in Russian as the product brief and next-horizon plan.
+- `docs/concept.md`, `docs/roadmap.md`, and `docs/open-questions.md` may stay in Russian as the product brief, next-horizon plan, and open-question inbox.
+
+## Open questions
+
+Unresolved product/UX decisions live in [`docs/open-questions.md`](docs/open-questions.md). **Workflow:** skill [`open-questions`](.agents/skills/open-questions/SKILL.md) — when to capture, triage, promote to roadmap/OpenSpec, and guardrails (no code without explicit human approval; no CHANGELOG entries).
 
 ## Agent Skills
 
@@ -93,6 +99,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 | `skill-authoring` | Editing or publishing skills in `muonsoft/skills` — hub vs consumer boundaries, `catalog.yaml`, `lint-hub` |
 | `task-delegation` | Delegating bounded coding slices; hub skill push/pull workflow |
 | `work-intake` | Default research-first entry point for an idea, symptom, question, or underspecified request; investigate the repo before asking and select the appropriate OpenSpec profile/tier |
+| `open-questions` | Unresolved product/UX decisions in `docs/open-questions.md` — capture, triage, promote to roadmap/OpenSpec; no implementation without explicit human approval |
 | `codex-orchestration` | Opt-in Codex-native workflow with Sol design/review, broad Terra slices, desktop-profile QA, and OpenSpec closeout |
 | `change-orchestration` | Opt-in Codex/Claude + Cursor workflow for a substantial change: parent-owned design, broad Composer slices, profile QA, fresh review, and closeout |
 | `openspec-propose` | Create a change and generate all planning artifacts in one step |
