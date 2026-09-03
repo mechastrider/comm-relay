@@ -171,11 +171,23 @@
   gap: var(--studio-section-gap);
   min-height: 0;
   overflow: auto;
-  padding: 0 var(--primitive-space-2) 0 0;
+  padding: 0;
 }
 
 .studio-inspector__body > .panel-intro {
-  margin: 0;
+  display: none;
+}
+
+.studio-inspector-mount .studio-inspector-essential {
+  gap: var(--primitive-space-2) var(--primitive-space-4);
+}
+
+.studio-inspector-mount .theme-picker {
+  margin-top: var(--primitive-space-1);
+}
+
+.studio-inspector-mount .theme-card__thumb {
+  height: 3.25rem;
 }
 
 .studio-inspector-essential {
@@ -594,12 +606,29 @@
   align-content: start;
   gap: 12px;
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: var(--amber-dim) var(--surface-dark);
+}
+
+.studio-add-to-obs-detail .obs-url-field,
+.studio-add-to-obs-detail .obs-url-row {
+  min-width: 0;
+}
+
+.studio-add-to-obs-detail .obs-url-row .has-tooltip > .ui-tooltip {
+  left: auto;
+  right: 0;
+  transform: translateY(-4px);
+}
+
+.studio-add-to-obs-detail .obs-url-row .has-tooltip:hover > .ui-tooltip,
+.studio-add-to-obs-detail .obs-url-row .has-tooltip:focus-visible > .ui-tooltip {
+  transform: translateY(0);
 }
 
 .studio-add-to-obs-detail::-webkit-scrollbar {
@@ -676,7 +705,6 @@
   overflow: auto;
   overscroll-behavior: contain;
   padding: var(--primitive-space-4);
-  scrollbar-gutter: stable;
 }
 
 .overlay-debug-panel__body > .form__field,

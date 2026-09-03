@@ -8,16 +8,23 @@ import { getLeaderboardPeriod, setLeaderboardPeriod } from "./live-leaderboard.j
 import { setLiveTab } from "./live-tabs.js";
 import {
   audienceEmptyKind,
-  formatViewerPlatforms,
+  audienceSortAriaValue,
+  nextAudienceSort,
+  readAudienceSort,
+  sortAudienceViewers,
   validateDisplayName,
   viewerPeriodMetrics,
+  viewerPlatformsList,
+  writeAudienceSort,
 } from "./audience-helpers.js";
+import { renderPlatformIcons } from "./platform-icon.js";
 
 const VIEWERS_FETCH_TIMEOUT_MS = 15000;
 const SEARCH_DEBOUNCE_MS = 250;
 const WIDE_LAYOUT_QUERY = "(min-width: 1024px)";
 
 let selectedViewerId = null;
+let serverOrderedViewers = [];
 let viewersCache = [];
 let searchDebounceTimer = null;
 let mergeInFlight = false;
@@ -31,6 +38,55 @@ let currentPeriod = "session";
 let focusReturnElement = null;
 let pendingMerge = null;
 let wideLayoutQuery = null;
+/** @type {import("./audience-helpers.js").AudienceSortState} */
+let audienceSort = { column: null, direction: "desc" };
+
+function audienceStorage() {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function refreshAudienceSortState() {
+  audienceSort = readAudienceSort(audienceStorage());
+}
+
+function applyServerViewers(viewers) {
+  serverOrderedViewers = Array.isArray(viewers) ? viewers : [];
+  viewersCache = sortAudienceViewers(serverOrderedViewers, audienceSort, currentPeriod);
+}
+
+function updateSortHeader(buttonId, column) {
+  const button = document.getElementById(buttonId);
+  if (!button) {
+    return;
+  }
+  const header = button.closest("th");
+  if (header) {
+    header.setAttribute("aria-sort", audienceSortAriaValue(audienceSort, column));
+  }
+  if (audienceSort.column === column) {
+    button.dataset.sortDirection = audienceSort.direction;
+  } else {
+    delete button.dataset.sortDirection;
+  }
+}
+
+function updateSortHeaders() {
+  updateSortHeader("audience-sort-viewer", "viewer");
+  updateSortHeader("audience-sort-score", "score");
+  updateSortHeader("audience-sort-messages", "messages");
+}
+
+function handleSortClick(column) {
+  audienceSort = nextAudienceSort(audienceSort, column);
+  writeAudienceSort(audienceStorage(), audienceSort);
+  viewersCache = sortAudienceViewers(serverOrderedViewers, audienceSort, currentPeriod);
+  renderViewersTable(viewersCache);
+  updateSortHeaders();
+}
 
 function escapeText(value) {
   return String(value == null ? "" : value);
@@ -149,6 +205,27 @@ function updateTableSelection(id) {
   });
 }
 
+function repairFocusReturnElement() {
+  if (!selectedViewerId || !focusReturnElement || focusReturnElement.isConnected) {
+    return;
+  }
+  const selectedRow = dom.audienceViewersTableBody
+    ? Array.from(
+      dom.audienceViewersTableBody.querySelectorAll("tr[data-viewer-id]")
+    ).find(function (row) {
+      return row.getAttribute("data-viewer-id") === selectedViewerId;
+    })
+    : null;
+  if (!selectedRow) {
+    focusReturnElement = null;
+    return;
+  }
+  const returnToRow = focusReturnElement.matches("tr[data-viewer-id]");
+  focusReturnElement = returnToRow
+    ? selectedRow
+    : selectedRow.querySelector(".audience-viewers-table__name-button") || selectedRow;
+}
+
 function renderViewersTable(viewers) {
   if (!dom.audienceViewersTableBody) {
     return;
@@ -167,8 +244,6 @@ function renderViewersTable(viewers) {
   viewers.forEach(function (viewer) {
     const metrics = viewerPeriodMetrics(viewer, currentPeriod);
     const displayName = viewer.display_name || t("viewers.unnamed");
-    const platforms = formatViewerPlatforms(viewer, formatPlatformLabel);
-    const platformText = platforms || t("viewers.noIdentities");
 
     const row = document.createElement("tr");
     row.setAttribute("data-viewer-id", viewer.id);
@@ -177,13 +252,40 @@ function renderViewersTable(viewers) {
     const nameCell = document.createElement("th");
     nameCell.scope = "row";
     nameCell.className = "audience-viewers-table__name";
-    nameCell.textContent = displayName;
-    nameCell.title = displayName;
+
+    const nameInner = document.createElement("div");
+    nameInner.className = "audience-viewers-table__name-inner";
+
+    const nameButton = document.createElement("button");
+    nameButton.type = "button";
+    nameButton.className = "audience-viewers-table__name-button";
+    nameButton.textContent = displayName;
+    nameButton.title = displayName;
+    nameButton.addEventListener("click", function (event) {
+      event.stopPropagation();
+      openViewerDetail(viewer.id, nameButton).catch(function () {
+        showBanner("error", t("banner.cannotReach"));
+      });
+    });
+
+    const chevron = document.createElement("span");
+    chevron.className = "audience-viewers-table__chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.textContent = "›";
+
+    nameInner.append(nameButton, chevron);
+    nameCell.append(nameInner);
 
     const platformCell = document.createElement("td");
     platformCell.className = "audience-viewers-table__platforms";
-    platformCell.textContent = platformText;
-    platformCell.title = platformText;
+    const platformHost = document.createElement("div");
+    renderPlatformIcons(
+      platformHost,
+      viewerPlatformsList(viewer),
+      formatPlatformLabel,
+      t("audience.platformsEmpty")
+    );
+    platformCell.append(platformHost);
 
     const scoreCell = document.createElement("td");
     scoreCell.className = "data-table__numeric";
@@ -193,22 +295,12 @@ function renderViewersTable(viewers) {
     messagesCell.className = "data-table__numeric";
     messagesCell.textContent = String(metrics.messages);
 
-    const actionCell = document.createElement("td");
-    actionCell.className = "audience-viewers-table__actions";
-    const detailButton = document.createElement("button");
-    detailButton.type = "button";
-    detailButton.className = "btn-physical btn-small";
-    detailButton.textContent = t("audience.detailAction");
-    detailButton.addEventListener("click", function () {
-      openViewerDetail(viewer.id, detailButton).catch(function () {
-        showBanner("error", t("banner.cannotReach"));
-      });
-    });
-    actionCell.append(detailButton);
-
-    row.append(nameCell, platformCell, scoreCell, messagesCell, actionCell);
+    row.append(nameCell, platformCell, scoreCell, messagesCell);
     row.addEventListener("keydown", handleTableRowKeydown);
-    row.addEventListener("dblclick", function () {
+    row.addEventListener("click", function (event) {
+      if (event.target.closest("button")) {
+        return;
+      }
       openViewerDetail(viewer.id, row).catch(function () {
         showBanner("error", t("banner.cannotReach"));
       });
@@ -216,7 +308,10 @@ function renderViewersTable(viewers) {
     dom.audienceViewersTableBody.append(row);
   });
 
+  updateSortHeaders();
+
   updateTableSelection(selectedViewerId);
+  repairFocusReturnElement();
 
   if (selectedViewerId && !viewers.some(function (viewer) {
     return viewer.id === selectedViewerId;
@@ -491,6 +586,7 @@ function handleTableRowKeydown(event) {
   if (!dom.audienceViewersTableBody) {
     return;
   }
+  const nameButton = event.target.closest(".audience-viewers-table__name-button");
   const rows = Array.from(dom.audienceViewersTableBody.querySelectorAll("tr[data-viewer-id]"));
   const currentIndex = rows.indexOf(event.currentTarget);
   if (currentIndex === -1) {
@@ -501,15 +597,17 @@ function handleTableRowKeydown(event) {
     event.preventDefault();
     const next = rows[currentIndex + 1];
     if (next) {
-      next.focus();
+      const nextNameButton = next.querySelector(".audience-viewers-table__name-button");
+      (nextNameButton || next).focus();
     }
   } else if (event.key === "ArrowUp") {
     event.preventDefault();
     const previous = rows[currentIndex - 1];
     if (previous) {
-      previous.focus();
+      const previousNameButton = previous.querySelector(".audience-viewers-table__name-button");
+      (previousNameButton || previous).focus();
     }
-  } else if (event.key === "Enter" || event.key === " ") {
+  } else if ((event.key === "Enter" || event.key === " ") && !nameButton) {
     event.preventDefault();
     const viewerId = event.currentTarget.getAttribute("data-viewer-id");
     if (viewerId) {
@@ -573,7 +671,8 @@ export async function loadViewersList(query) {
     .then(function (payload) {
       listLoadError = false;
       listHasLoaded = true;
-      renderViewersTable((payload && payload.viewers) || []);
+      applyServerViewers((payload && payload.viewers) || []);
+      renderViewersTable(viewersCache);
     })
     .catch(function (err) {
       listLoadError = true;
@@ -672,7 +771,8 @@ export async function startNewStream() {
 }
 
 function rerenderTableForPeriod() {
-  if (viewersCache.length > 0) {
+  if (serverOrderedViewers.length > 0) {
+    viewersCache = sortAudienceViewers(serverOrderedViewers, audienceSort, currentPeriod);
     renderViewersTable(viewersCache);
   }
 }
@@ -716,6 +816,27 @@ function closeNewStreamPrompt() {
 
 export function initAudienceViewers() {
   syncPeriodFromSharedState();
+  refreshAudienceSortState();
+  updateSortHeaders();
+
+  const sortViewerButton = document.getElementById("audience-sort-viewer");
+  if (sortViewerButton) {
+    sortViewerButton.addEventListener("click", function () {
+      handleSortClick("viewer");
+    });
+  }
+  const sortScoreButton = document.getElementById("audience-sort-score");
+  if (sortScoreButton) {
+    sortScoreButton.addEventListener("click", function () {
+      handleSortClick("score");
+    });
+  }
+  const sortMessagesButton = document.getElementById("audience-sort-messages");
+  if (sortMessagesButton) {
+    sortMessagesButton.addEventListener("click", function () {
+      handleSortClick("messages");
+    });
+  }
 
   if (dom.refreshViewers) {
     dom.refreshViewers.addEventListener("click", function () {
@@ -818,8 +939,12 @@ export function initAudienceViewers() {
 
   window.addEventListener("hashchange", ensureAudienceLoaded);
   window.addEventListener("admin-locale-applied", function () {
-    if (viewersCache.length > 0) {
+    refreshAudienceSortState();
+    if (serverOrderedViewers.length > 0) {
+      viewersCache = sortAudienceViewers(serverOrderedViewers, audienceSort, currentPeriod);
       renderViewersTable(viewersCache);
+    } else {
+      updateSortHeaders();
     }
   });
 
