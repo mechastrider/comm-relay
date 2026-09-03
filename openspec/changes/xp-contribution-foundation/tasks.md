@@ -38,17 +38,17 @@
 
 ## Gate: qa
 
-- [ ] Q.1 Execute `qa_plan.md`; record matrix coverage, migration fixture, and explicit skips.
-- [ ] Q.2 Run `npm ci`.
-- [ ] Q.3 Run `npm test`.
-- [ ] Q.4 Run `npm run test:i18n`.
-- [ ] Q.5 Run `npm run lint`.
-- [ ] Q.6 Run `go test ./...`.
-- [ ] Q.7 Run `go test -race ./internal/store/... ./internal/api/...`.
-- [ ] Q.8 Run `golangci-lint run ./...`.
-- [ ] Q.9 Run `go build ./...`.
-- [ ] Q.10 Run `openspec validate xp-contribution-foundation --strict`.
-- [ ] Q.11 Run `git diff --check`.
+- [x] Q.1 Execute `qa_plan.md`; record matrix coverage, migration fixture, and explicit skips.
+- [x] Q.2 Run `npm ci`.
+- [x] Q.3 Run `npm test`.
+- [x] Q.4 Run `npm run test:i18n`.
+- [x] Q.5 Run `npm run lint`.
+- [x] Q.6 Run `go test ./...`.
+- [x] Q.7 Run `go test -race ./internal/store/... ./internal/api/...`.
+- [x] Q.8 Run `golangci-lint run ./...`.
+- [x] Q.9 Run `go build ./...`.
+- [x] Q.10 Run `openspec validate xp-contribution-foundation --strict`.
+- [x] Q.11 Run `git diff --check`.
 
 ## Gate: review
 
@@ -57,5 +57,5 @@
 
 ## Gate: distribution-readiness
 
-- [ ] D.1 Confirm existing package names; migration/rollback note is in changelog; do not sign, notarize, upload, or publish.
-- [ ] D.2 Manual smoke: Settings activity, Audience XP, award grant, `/overlay/leaderboard` after reload (Windows or browser; OBS if available).
+- [x] D.1 Confirm existing package names; migration/rollback note is in changelog; do not sign, notarize, upload, or publish.
+- [x] D.2 Manual smoke: Settings activity, Audience XP, award grant, `/overlay/leaderboard` after reload (Windows or browser; OBS if available).

@@ -24,7 +24,7 @@ export default {
   "shell.sound": "Sound",
   "shell.soundHint": "Alert sound when a new chat message arrives.",
   "shell.interface": "Interface",
-  "shell.interfaceHint": "UI language and viewer scoring settings.",
+  "shell.interfaceHint": "UI language and viewer XP settings.",
   "shell.interfaceSettingsHint": "UI language, message sound, and rich chat options.",
   "shell.about": "About",
   "shell.aboutHint": "Version, privacy, and support links.",
