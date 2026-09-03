@@ -62,7 +62,10 @@ function updateSortHeaders() {
   const scoreButton = document.getElementById("audience-sort-score");
   const messagesButton = document.getElementById("audience-sort-messages");
   if (scoreButton) {
-    scoreButton.setAttribute("aria-sort", audienceSortAriaValue(audienceSort, "score"));
+    const scoreHeader = scoreButton.closest("th");
+    if (scoreHeader) {
+      scoreHeader.setAttribute("aria-sort", audienceSortAriaValue(audienceSort, "score"));
+    }
     if (audienceSort.column === "score") {
       scoreButton.dataset.sortDirection = audienceSort.direction;
     } else {
@@ -70,7 +73,10 @@ function updateSortHeaders() {
     }
   }
   if (messagesButton) {
-    messagesButton.setAttribute("aria-sort", audienceSortAriaValue(audienceSort, "messages"));
+    const messagesHeader = messagesButton.closest("th");
+    if (messagesHeader) {
+      messagesHeader.setAttribute("aria-sort", audienceSortAriaValue(audienceSort, "messages"));
+    }
     if (audienceSort.column === "messages") {
       messagesButton.dataset.sortDirection = audienceSort.direction;
     } else {

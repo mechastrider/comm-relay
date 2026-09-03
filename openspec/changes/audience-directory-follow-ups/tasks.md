@@ -41,8 +41,8 @@
 
 ## Gate: review
 
-- [ ] R.1 Fresh diff review; CRITICAL=0; affected checks green.
-- [ ] R.2 Confirm additive `platforms` only, no identities on the list, and no SQLite/`config.json` migration.
+- [x] R.1 Fresh diff review; CRITICAL=0; affected checks green.
+- [x] R.2 Confirm additive `platforms` only, no identities on the list, and no SQLite/`config.json` migration.
 
 ## Gate: distribution-readiness
 

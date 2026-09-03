@@ -93,6 +93,8 @@ export function appendPlatformIcon(container, platform, accessibleName) {
   const label = String(accessibleName || name || "").trim() || name;
 
   container.classList.add("platform-icon", "has-tooltip");
+  container.setAttribute("data-platform", name);
+  container.setAttribute("role", "img");
   container.replaceChildren();
   container.appendChild(createPlatformIconSVG(platform));
 
