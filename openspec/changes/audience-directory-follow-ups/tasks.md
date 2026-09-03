@@ -11,20 +11,20 @@
 
 ### Backend and protocol
 
-- [ ] 1.1 After `Store.List`, collapse unique platform ids (last-seen first, duplicates removed) and cover merged Twitch+YouTube, same-platform duplicates, and last-seen-first order in store tests.
-- [ ] 1.2 Serialize `platforms` as a JSON array on `GET /api/viewers` (empty `[]`, no `identities`) and assert `GET /api/viewers/get` still returns full identities.
+- [x] 1.1 After `Store.List`, collapse unique platform ids (last-seen first, duplicates removed) and cover merged Twitch+YouTube, same-platform duplicates, and last-seen-first order in store tests.
+- [x] 1.2 Serialize `platforms` as a JSON array on `GET /api/viewers` (empty `[]`, no `identities`) and assert `GET /api/viewers/get` still returns full identities.
 
 ### Frontend and UI
 
-- [ ] 1.3 Add client helpers for period-aware sort cycling (`none` → desc → asc → none), `commRelay.audienceSort` persistence with invalid fallback, and missing-`platforms` fallback to `last_seen.platform`; register any new test file in `package.json` `test`.
-- [ ] 1.4 Add a shared platform-icon helper (Twitch, YouTube, VK, unknown) with accessible name and tooltip, without importing overlay.js.
-- [ ] 1.5 Make Score and Messages sort buttons with a distinct header surface, visible direction, and `aria-sort`; reapply stored sort after fetch, search, and period change.
-- [ ] 1.6 Replace Actions with a name `<button>`, decorative `aria-hidden` chevron, and single-click row activation through existing `openViewerDetail`; keep Enter/Space and row arrow roving.
-- [ ] 1.7 Render unique platform icons (or a localized empty state) and move Audience New stream out of the filter group without changing Live confirmation.
+- [x] 1.3 Add client helpers for period-aware sort cycling (`none` → desc → asc → none), `commRelay.audienceSort` persistence with invalid fallback, and missing-`platforms` fallback to `last_seen.platform`; register any new test file in `package.json` `test`.
+- [x] 1.4 Add a shared platform-icon helper (Twitch, YouTube, VK, unknown) with accessible name and tooltip, without importing overlay.js.
+- [x] 1.5 Make Score and Messages sort buttons with a distinct header surface, visible direction, and `aria-sort`; reapply stored sort after fetch, search, and period change.
+- [x] 1.6 Replace Actions with a name `<button>`, decorative `aria-hidden` chevron, and single-click row activation through existing `openViewerDetail`; keep Enter/Space and row arrow roving.
+- [x] 1.7 Render unique platform icons (or a localized empty state) and move Audience New stream out of the filter group without changing Live confirmation.
 
 ### Documentation
 
-- [ ] 1.8 Append concise Russian `[Unreleased]` bullets for platforms, sort, and one-click cards; skip README/FAQ unless the table cannot be used from existing Audience copy.
+- [x] 1.8 Append concise Russian `[Unreleased]` bullets for platforms, sort, and one-click cards; skip README/FAQ unless the table cannot be used from existing Audience copy.
 
 ## Gate: qa
 
