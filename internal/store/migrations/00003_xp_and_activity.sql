@@ -32,6 +32,30 @@ ALTER TABLE interaction_events_new RENAME TO interaction_events;
 
 CREATE INDEX idx_interaction_events_viewer_created ON interaction_events(viewer_id, created_at);
 
+INSERT INTO award_types (id, name, points, splash_template, sound, duration_ms)
+SELECT 'spotter', 'Spotter', 25, 'Spotter for {name}! +{points}', 'ping', 5000
+WHERE NOT EXISTS (SELECT 1 FROM award_types WHERE id = 'spotter');
+
+INSERT INTO award_types (id, name, points, splash_template, sound, duration_ms)
+SELECT 'intel', 'Intel', 30, 'Intel for {name}! +{points}', 'chime', 5000
+WHERE NOT EXISTS (SELECT 1 FROM award_types WHERE id = 'intel');
+
+INSERT INTO award_types (id, name, points, splash_template, sound, duration_ms)
+SELECT 'expert', 'Expert', 40, 'Expert for {name}! +{points}', 'alert', 5000
+WHERE NOT EXISTS (SELECT 1 FROM award_types WHERE id = 'expert');
+
+INSERT INTO award_types (id, name, points, splash_template, sound, duration_ms)
+SELECT 'meme', 'Meme', 20, 'Meme for {name}! +{points}', 'soft', 5000
+WHERE NOT EXISTS (SELECT 1 FROM award_types WHERE id = 'meme');
+
+INSERT INTO award_types (id, name, points, splash_template, sound, duration_ms)
+SELECT 'clutch', 'Clutch Help', 50, 'Clutch Help for {name}! +{points}', 'alert', 5000
+WHERE NOT EXISTS (SELECT 1 FROM award_types WHERE id = 'clutch');
+
+INSERT INTO award_types (id, name, points, splash_template, sound, duration_ms)
+SELECT 'mvp', 'MVP', 100, 'MVP for {name}! +{points}', 'chime', 5000
+WHERE NOT EXISTS (SELECT 1 FROM award_types WHERE id = 'mvp');
+
 -- +goose Down
 DROP INDEX IF EXISTS idx_interaction_events_viewer_created;
 

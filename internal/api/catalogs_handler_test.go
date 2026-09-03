@@ -45,7 +45,7 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 		} `json:"awards"`
 	}
 	require.NoError(t, json.Unmarshal(awardsRec.Body.Bytes(), &awardsPayload))
-	require.Len(t, awardsPayload.Awards, 2)
+	require.Len(t, awardsPayload.Awards, 8)
 
 	ids := map[string]bool{}
 	for _, award := range awardsPayload.Awards {
@@ -53,6 +53,12 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 	}
 	require.True(t, ids["joke"])
 	require.True(t, ids["advice"])
+	require.True(t, ids["spotter"])
+	require.True(t, ids["intel"])
+	require.True(t, ids["expert"])
+	require.True(t, ids["meme"])
+	require.True(t, ids["clutch"])
+	require.True(t, ids["mvp"])
 }
 
 func TestCommands_WhenCreateLurk_ExpectListed(t *testing.T) {

@@ -34,7 +34,7 @@
 > **Allowed fallout**: Seed splash strings, catalog tests.
 > **Blocked**: Changing Joke/Advice values, Active as a picker type, media fields, signing, publishing.
 
-- [ ] 2.1 Insert missing seed ids (`spotter` 25, `intel` 30, `expert` 40, `meme` 20, `clutch` 50, `mvp` 100) with `{name}`/`{points}` templates; do not update existing rows; prove delete-stays-deleted.
+- [x] 2.1 Insert missing seed ids (`spotter` 25, `intel` 30, `expert` 40, `meme` 20, `clutch` 50, `mvp` 100) with `{name}`/`{points}` templates; do not update existing rows; prove delete-stays-deleted.
 
 ## Gate: qa
 
