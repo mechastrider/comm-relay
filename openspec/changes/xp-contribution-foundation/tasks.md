@@ -52,8 +52,8 @@
 
 ## Gate: review
 
-- [ ] R.1 Fresh diff review; CRITICAL=0; affected checks green.
-- [ ] R.2 Confirm no `score` on new HTTP/WS payloads, no Credits/levels, and activity never alerts.
+- [x] R.1 Fresh diff review; CRITICAL=0; affected checks green.
+- [x] R.2 Confirm no `score` on new HTTP/WS payloads, no Credits/levels, and activity never alerts.
 
 ## Gate: distribution-readiness
 

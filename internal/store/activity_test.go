@@ -190,25 +190,29 @@ func TestOpen_WhenPreMigrationScore42_ExpectXP42AfterMigrate(t *testing.T) {
 func TestMerge_WhenSameSession_ExpectActivityCountersCombined(t *testing.T) {
 	s, _ := openTestStore(t)
 	now := time.Date(2026, 9, 3, 12, 0, 0, 0, time.UTC)
-	activity := store.ActivitySettings{IntervalSeconds: 1, SessionLimit: 10, XP: 1}
+	activity := store.ActivitySettings{IntervalSeconds: 300, SessionLimit: 10, XP: 1}
 
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "twitch", UserID: "1", DisplayName: "A",
 	}, activity, testDayResetHour, now))
 	require.NoError(t, s.ApplyChat(store.ChatIdentity{
 		Platform: "youtube", UserID: "2", DisplayName: "B",
-	}, activity, testDayResetHour, now.Add(3*time.Second)))
-	require.NoError(t, s.ApplyChat(store.ChatIdentity{
-		Platform: "youtube", UserID: "2", DisplayName: "B",
-	}, activity, testDayResetHour, now.Add(6*time.Second)))
+	}, activity, testDayResetHour, now.Add(100*time.Millisecond)))
 
 	fromID := viewerID(t, s, "twitch", "1", testDayResetHour, now)
 	intoID := viewerID(t, s, "youtube", "2", testDayResetHour, now)
 	require.NoError(t, s.Merge(fromID, intoID, testDayResetHour, now.Add(10*time.Second)))
 
+	afterMerge := now.Add(300*time.Second + 50*time.Millisecond)
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "youtube", UserID: "2", DisplayName: "B",
+	}, activity, testDayResetHour, afterMerge))
+
 	target := getAt(t, s, intoID, testDayResetHour, now)
 	assert.Equal(t, 3, target.MessageCount)
-	assert.Equal(t, 3, target.XP)
+	assert.Equal(t, 2, target.XP)
+	assert.Equal(t, 3, target.SessionMessageCount)
+	assert.Equal(t, 2, target.SessionXP)
 }
 
 func splitGooseStatements(sqlText string) []string {

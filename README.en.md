@@ -23,7 +23,7 @@ You can see CommRelay in use on the author's streams:
 - Connects Twitch, YouTube Live Chat, and VK Live / VK Video.
 - Shows a unified transparent overlay for OBS: `http://127.0.0.1:17877/overlay`.
 - Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
-- Tracks viewer stats (score, messages, session/day/all-time) in a local `comm-relay.db` file next to `config.json` — no separate database server.
+- Tracks viewer stats (XP, messages, session/day/all-time) in a local `comm-relay.db` file next to `config.json` — no separate database server.
 - Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?period=session|day|all` (same theme as chat; without `preset` it follows the active preset).
 - Shows command banners on a separate OBS Browser Source: `http://127.0.0.1:17877/overlay/alert` (sound plays in that source; enable **Control audio via OBS** for stream audio).
 - Provides a local console with Live, Audience, Studio, and Settings workspaces: statuses, messages, viewers, command and award catalogs, overlay setup, and diagnostics.

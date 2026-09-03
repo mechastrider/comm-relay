@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/muonsoft/errors"
@@ -119,18 +120,36 @@ func (s *Store) sumAllTimeCountersLocked(tx *sql.Tx, fromID, intoID string) erro
 
 func (s *Store) sumSessionCountersLocked(tx *sql.Tx, fromID, intoID, sessionID string) error {
 	var messageCount, xp, activityGrants int
-	var lastActivityAt sql.NullString
+	var sourceLastActivity sql.NullString
 	err := tx.QueryRow(
 		`SELECT message_count, xp, activity_grants, last_activity_at
 		 FROM viewer_session_stats WHERE viewer_id = ? AND session_id = ?`,
 		fromID,
 		sessionID,
-	).Scan(&messageCount, &xp, &activityGrants, &lastActivityAt)
+	).Scan(&messageCount, &xp, &activityGrants, &sourceLastActivity)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil
 	}
 	if err != nil {
 		return errors.Errorf("load source session counters: %w", err)
+	}
+
+	var destLastActivity sql.NullString
+	err = tx.QueryRow(
+		`SELECT last_activity_at
+		 FROM viewer_session_stats WHERE viewer_id = ? AND session_id = ?`,
+		intoID,
+		sessionID,
+	).Scan(&destLastActivity)
+	if errors.Is(err, sql.ErrNoRows) {
+		destLastActivity = sql.NullString{}
+	} else if err != nil {
+		return errors.Errorf("load destination session activity timestamp: %w", err)
+	}
+
+	mergedLastActivity, err := laterActivityAt(destLastActivity, sourceLastActivity)
+	if err != nil {
+		return errors.Errorf("merge session last_activity_at: %w", err)
 	}
 
 	if _, err := tx.Exec(
@@ -140,23 +159,57 @@ func (s *Store) sumSessionCountersLocked(tx *sql.Tx, fromID, intoID, sessionID s
 		   message_count = message_count + excluded.message_count,
 		   xp = xp + excluded.xp,
 		   activity_grants = activity_grants + excluded.activity_grants,
-		   last_activity_at = CASE
-		     WHEN excluded.last_activity_at IS NULL THEN last_activity_at
-		     WHEN last_activity_at IS NULL THEN excluded.last_activity_at
-		     WHEN excluded.last_activity_at > last_activity_at THEN excluded.last_activity_at
-		     ELSE last_activity_at
-		   END`,
+		   last_activity_at = excluded.last_activity_at`,
 		intoID,
 		sessionID,
 		messageCount,
 		xp,
 		activityGrants,
-		lastActivityAt,
+		mergedLastActivity,
 	); err != nil {
 		return errors.Errorf("sum session counters: %w", err)
 	}
 
 	return nil
+}
+
+func laterActivityAt(a, b sql.NullString) (sql.NullString, error) {
+	ta, okA, err := activityAtTime(a)
+	if err != nil {
+		return sql.NullString{}, err
+	}
+	tb, okB, err := activityAtTime(b)
+	if err != nil {
+		return sql.NullString{}, err
+	}
+
+	switch {
+	case okA && okB:
+		if tb.After(ta) {
+			return b, nil
+		}
+
+		return a, nil
+	case okA:
+		return a, nil
+	case okB:
+		return b, nil
+	default:
+		return sql.NullString{}, nil
+	}
+}
+
+func activityAtTime(raw sql.NullString) (time.Time, bool, error) {
+	if !raw.Valid || strings.TrimSpace(raw.String) == "" {
+		return time.Time{}, false, nil
+	}
+
+	t, err := parseTime(raw.String)
+	if err != nil {
+		return time.Time{}, false, err
+	}
+
+	return t, true, nil
 }
 
 func (s *Store) sumDayCountersLocked(tx *sql.Tx, fromID, intoID, dayKey string) error {

@@ -8,7 +8,7 @@ import {
   writeCachedLocale,
   LOCALE_ENGLISH,
   LOCALE_RUSSIAN,
-} from "/shared/i18n.js?v=16";
+} from "/shared/i18n.js?v=17";
 import * as dom from "./dom.js";
 import { state } from "./state.js";
 import { renderAboutVersion } from "./about.js";
