@@ -55,9 +55,9 @@ func TestAwardGrant_WhenJokeToExistingViewer_ExpectXPAndAlert(t *testing.T) {
 
 	var viewer struct {
 		MessageCount int `json:"message_count"`
-		XP        int `json:"xp"`
-		SessionXP int `json:"session_xp"`
-		DayXP     int `json:"day_xp"`
+		XP           int `json:"xp"`
+		SessionXP    int `json:"session_xp"`
+		DayXP        int `json:"day_xp"`
 	}
 	require.NoError(t, json.Unmarshal(getRec.Body.Bytes(), &viewer))
 	require.Equal(t, 1, viewer.MessageCount)

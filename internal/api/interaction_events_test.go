@@ -121,7 +121,7 @@ func TestCommandFire_WhenUnseenIdentityBangGG_ExpectEventHasViewerID(t *testing.
 	var payload struct {
 		Viewers []struct {
 			MessageCount int `json:"message_count"`
-			XP        int `json:"xp"`
+			XP           int `json:"xp"`
 		} `json:"viewers"`
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))

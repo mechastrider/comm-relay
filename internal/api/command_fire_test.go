@@ -155,7 +155,7 @@ func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutXP(t *testing.T) {
 	var before struct {
 		Viewers []struct {
 			MessageCount int `json:"message_count"`
-			XP        int `json:"xp"`
+			XP           int `json:"xp"`
 		} `json:"viewers"`
 	}
 	require.NoError(t, json.Unmarshal(beforeRec.Body.Bytes(), &before))
@@ -180,7 +180,7 @@ func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutXP(t *testing.T) {
 		var payload struct {
 			Viewers []struct {
 				MessageCount int `json:"message_count"`
-				XP        int `json:"xp"`
+				XP           int `json:"xp"`
 			} `json:"viewers"`
 		}
 		if json.Unmarshal(rec.Body.Bytes(), &payload) != nil {

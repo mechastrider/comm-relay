@@ -146,14 +146,14 @@ func TestOpen_WhenPreMigrationScore42_ExpectXP42AfterMigrate(t *testing.T) {
 		if stmt == "" {
 			continue
 		}
-		_, err := db.Exec(stmt)
+		_, err = db.Exec(stmt)
 		require.NoError(t, err)
 	}
 	for _, stmt := range splitGooseStatements(string(migration02)) {
 		if stmt == "" {
 			continue
 		}
-		_, err := db.Exec(stmt)
+		_, err = db.Exec(stmt)
 		require.NoError(t, err)
 	}
 

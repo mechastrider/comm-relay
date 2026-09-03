@@ -13,11 +13,3 @@ func defaultActivity() store.ActivitySettings {
 func disabledActivity() store.ActivitySettings {
 	return store.ActivitySettings{}
 }
-
-func activityWith(xp int) store.ActivitySettings {
-	return store.ActivitySettings{
-		IntervalSeconds: 1,
-		SessionLimit:    100,
-		XP:              xp,
-	}
-}

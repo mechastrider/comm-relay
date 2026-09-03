@@ -230,14 +230,14 @@ func TestAwards_WhenUpgradedFrom00002_ExpectExtraSeedsWithoutRewritingJokeAdvice
 		if stmt == "" {
 			continue
 		}
-		_, err := db.Exec(stmt)
+		_, err = db.Exec(stmt)
 		require.NoError(t, err)
 	}
 	for _, stmt := range splitGooseStatements(string(migration02)) {
 		if stmt == "" {
 			continue
 		}
-		_, err := db.Exec(stmt)
+		_, err = db.Exec(stmt)
 		require.NoError(t, err)
 	}
 

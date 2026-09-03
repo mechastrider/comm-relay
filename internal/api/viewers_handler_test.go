@@ -64,9 +64,9 @@ func TestViewers_WhenStartSession_ExpectSessionCountersReset(t *testing.T) {
 
 	var before struct {
 		SessionMessageCount int `json:"session_message_count"`
-		SessionXP        int `json:"session_xp"`
+		SessionXP           int `json:"session_xp"`
 		MessageCount        int `json:"message_count"`
-		XP               int `json:"xp"`
+		XP                  int `json:"xp"`
 	}
 	require.NoError(t, json.Unmarshal(beforeRec.Body.Bytes(), &before))
 	require.Equal(t, 1, before.SessionMessageCount)
@@ -82,9 +82,9 @@ func TestViewers_WhenStartSession_ExpectSessionCountersReset(t *testing.T) {
 
 	var after struct {
 		SessionMessageCount int `json:"session_message_count"`
-		SessionXP        int `json:"session_xp"`
+		SessionXP           int `json:"session_xp"`
 		MessageCount        int `json:"message_count"`
-		XP               int `json:"xp"`
+		XP                  int `json:"xp"`
 	}
 	require.NoError(t, json.Unmarshal(afterRec.Body.Bytes(), &after))
 	require.Equal(t, 0, after.SessionMessageCount)
