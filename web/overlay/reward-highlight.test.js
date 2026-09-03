@@ -214,8 +214,9 @@ test("every chat theme has animated, non-color reward feedback with a static fal
   assert.match(css, /body\.overlay-theme--g-rebels-popups \.message--rewarded/);
   assert.match(
     css,
-    /\.message\.message--rewarded:not\(\.message--leaving\)\s*\{[^}]*animation:\s*message-reward-pulse/
+    /\.message\.message--rewarded:not\(\.message--leaving\)\s*\{[^}]*opacity:\s*1[^}]*animation:\s*message-reward-pulse/
   );
+  assert.match(css, /\.message--rewarded\s*\{[^}]*opacity:\s*1/);
   assert.match(css, /@keyframes message-reward-pulse/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(
