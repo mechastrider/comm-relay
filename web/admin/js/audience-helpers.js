@@ -4,7 +4,7 @@
 
 export const AUDIENCE_SORT_STORAGE_KEY = "commRelay.audienceSort";
 
-/** @typedef {"viewer"|"score"|"messages"} AudienceSortColumn */
+/** @typedef {"viewer"|"xp"|"messages"} AudienceSortColumn */
 /** @typedef {"asc"|"desc"} AudienceSortDirection */
 /** @typedef {{ column: AudienceSortColumn|null, direction: AudienceSortDirection }} AudienceSortState */
 
@@ -20,7 +20,11 @@ export function normalizeAudienceSort(raw) {
   const column = value.column;
   const direction = value.direction;
   const normalizedColumn =
-    column === "viewer" || column === "score" || column === "messages" ? column : null;
+    column === "viewer" || column === "xp" || column === "messages"
+      ? column
+      : column === "score"
+        ? "xp"
+        : null;
   const normalizedDirection = direction === "asc" ? "asc" : "desc";
   return {
     column: normalizedColumn,
@@ -163,8 +167,8 @@ export function sortAudienceViewers(viewers, sort, period) {
 
     const leftMetrics = viewerPeriodMetrics(left, period);
     const rightMetrics = viewerPeriodMetrics(right, period);
-    const leftValue = column === "score" ? leftMetrics.score : leftMetrics.messages;
-    const rightValue = column === "score" ? rightMetrics.score : rightMetrics.messages;
+    const leftValue = column === "xp" ? leftMetrics.xp : leftMetrics.messages;
+    const rightValue = column === "xp" ? rightMetrics.xp : rightMetrics.messages;
     if (leftValue === rightValue) {
       return 0;
     }
@@ -193,24 +197,24 @@ export function audienceEmptyKind(input) {
 /**
  * @param {Record<string, unknown> | null | undefined} viewer
  * @param {"session"|"day"|"all"} period
- * @returns {{ score: number, messages: number }}
+ * @returns {{ xp: number, messages: number }}
  */
 export function viewerPeriodMetrics(viewer, period) {
   const row = viewer || {};
   if (period === "day") {
     return {
-      score: Number(row.day_score) || 0,
+      xp: Number(row.day_xp) || 0,
       messages: Number(row.day_message_count) || 0,
     };
   }
   if (period === "all") {
     return {
-      score: Number(row.score) || 0,
+      xp: Number(row.xp) || 0,
       messages: Number(row.message_count) || 0,
     };
   }
   return {
-    score: Number(row.session_score) || 0,
+    xp: Number(row.session_xp) || 0,
     messages: Number(row.session_message_count) || 0,
   };
 }

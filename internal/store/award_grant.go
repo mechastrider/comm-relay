@@ -8,7 +8,7 @@ import (
 	"github.com/muonsoft/errors"
 )
 
-// ApplyAwardResult holds viewer identity details after a score-only award grant.
+// ApplyAwardResult holds viewer identity details after an XP-only award grant.
 type ApplyAwardResult struct {
 	ViewerID    string
 	Username    string
@@ -16,7 +16,7 @@ type ApplyAwardResult struct {
 	AvatarURL   string
 }
 
-// ApplyAward upserts the chat identity and adds points to all-time, session, and day score.
+// ApplyAward upserts the chat identity and adds points to all-time, session, and day XP.
 // Empty platform or user_id returns ErrInvalidIdentity. Message counts are not incremented.
 func (s *Store) ApplyAward(identity ChatIdentity, points int, dayResetHour int, now time.Time) (*ApplyAwardResult, error) {
 	if strings.TrimSpace(identity.UserID) == "" || strings.TrimSpace(identity.Platform) == "" {
@@ -58,17 +58,17 @@ func (s *Store) ApplyAward(identity ChatIdentity, points int, dayResetHour int, 
 
 	if _, execErr := tx.Exec(
 		`UPDATE viewers
-		 SET score = score + ?,
+		 SET xp = xp + ?,
 		     last_seen_at = ?
 		 WHERE id = ?`,
 		points,
 		seenAt,
 		viewerID,
 	); execErr != nil {
-		return nil, errors.Errorf("increment viewer score: %w", execErr)
+		return nil, errors.Errorf("increment viewer xp: %w", execErr)
 	}
 
-	if err = s.addPeriodScoreLocked(tx, viewerID, sessionID, dayKey, points); err != nil {
+	if err = s.addPeriodXPLocked(tx, viewerID, sessionID, dayKey, points); err != nil {
 		return nil, err
 	}
 
@@ -123,32 +123,4 @@ func (s *Store) mergeExistingIdentityLocked(tx *sql.Tx, identity ChatIdentity) (
 	}
 
 	return identity, nil
-}
-
-func (s *Store) addPeriodScoreLocked(tx *sql.Tx, viewerID, sessionID, dayKey string, points int) error {
-	if _, err := tx.Exec(
-		`INSERT INTO viewer_session_stats (viewer_id, session_id, message_count, score)
-		 VALUES (?, ?, 0, ?)
-		 ON CONFLICT(viewer_id, session_id) DO UPDATE SET
-		   score = score + excluded.score`,
-		viewerID,
-		sessionID,
-		points,
-	); err != nil {
-		return errors.Errorf("increment session score: %w", err)
-	}
-
-	if _, err := tx.Exec(
-		`INSERT INTO viewer_day_stats (viewer_id, day_key, message_count, score)
-		 VALUES (?, ?, 0, ?)
-		 ON CONFLICT(viewer_id, day_key) DO UPDATE SET
-		   score = score + excluded.score`,
-		viewerID,
-		dayKey,
-		points,
-	); err != nil {
-		return errors.Errorf("increment day score: %w", err)
-	}
-
-	return nil
 }

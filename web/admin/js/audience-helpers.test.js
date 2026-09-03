@@ -17,17 +17,17 @@ assert.equal(audienceEmptyKind({ count: 0, query: "alpha" }), "no-matches");
 assert.equal(audienceEmptyKind({ count: 3, query: "alpha" }), "ready");
 
 const viewer = {
-  session_score: 10,
+  session_xp: 10,
   session_message_count: 2,
-  day_score: 20,
+  day_xp: 20,
   day_message_count: 4,
-  score: 30,
+  xp: 30,
   message_count: 6,
 };
-assert.deepEqual(viewerPeriodMetrics(viewer, "session"), { score: 10, messages: 2 });
-assert.deepEqual(viewerPeriodMetrics(viewer, "day"), { score: 20, messages: 4 });
-assert.deepEqual(viewerPeriodMetrics(viewer, "all"), { score: 30, messages: 6 });
-assert.deepEqual(viewerPeriodMetrics(null, "session"), { score: 0, messages: 0 });
+assert.deepEqual(viewerPeriodMetrics(viewer, "session"), { xp: 10, messages: 2 });
+assert.deepEqual(viewerPeriodMetrics(viewer, "day"), { xp: 20, messages: 4 });
+assert.deepEqual(viewerPeriodMetrics(viewer, "all"), { xp: 30, messages: 6 });
+assert.deepEqual(viewerPeriodMetrics(null, "session"), { xp: 0, messages: 0 });
 
 const platforms = formatPlatformSummary(
   [

@@ -258,9 +258,19 @@ export function applyConfig(config) {
     if (dom.timeLocaleInput) {
       dom.timeLocaleInput.value = localeFromConfig(config);
     }
-    if (dom.pointsPerMessageInput) {
-      dom.pointsPerMessageInput.value = String(
-        typeof config.points_per_message === "number" ? config.points_per_message : 1
+    if (dom.activityIntervalSecondsInput) {
+      dom.activityIntervalSecondsInput.value = String(
+        typeof config.activity_interval_seconds === "number" ? config.activity_interval_seconds : 300
+      );
+    }
+    if (dom.activitySessionLimitInput) {
+      dom.activitySessionLimitInput.value = String(
+        typeof config.activity_session_limit === "number" ? config.activity_session_limit : 10
+      );
+    }
+    if (dom.activityXPInput) {
+      dom.activityXPInput.value = String(
+        typeof config.activity_xp === "number" ? config.activity_xp : 1
       );
     }
     if (dom.dayResetHourInput) {
@@ -290,9 +300,13 @@ export function buildPayload() {
         : state.currentConfig
           ? state.currentConfig.server_port
           : 17877,
-      points_per_message: dom.pointsPerMessageInput
-        ? Number.parseInt(dom.pointsPerMessageInput.value, 10)
-        : 1,
+      activity_interval_seconds: dom.activityIntervalSecondsInput
+        ? Number.parseInt(dom.activityIntervalSecondsInput.value, 10)
+        : 300,
+      activity_session_limit: dom.activitySessionLimitInput
+        ? Number.parseInt(dom.activitySessionLimitInput.value, 10)
+        : 10,
+      activity_xp: dom.activityXPInput ? Number.parseInt(dom.activityXPInput.value, 10) : 1,
       day_reset_hour: dom.dayResetHourInput
         ? Number.parseInt(dom.dayResetHourInput.value, 10)
         : 6,
@@ -358,7 +372,9 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
     const socks5 = network.socks5 || {};
     return {
       server_port: latest.server_port,
-      points_per_message: latest.points_per_message,
+      activity_interval_seconds: latest.activity_interval_seconds,
+      activity_session_limit: latest.activity_session_limit,
+      activity_xp: latest.activity_xp,
       day_reset_hour: latest.day_reset_hour,
       hide_command_messages: Boolean(latest.hide_command_messages),
       network: {
@@ -574,11 +590,22 @@ export function validateClient(payload, options) {
     }
 
     if (
-      !Number.isFinite(payload.points_per_message) ||
-      payload.points_per_message < 0
+      !Number.isFinite(payload.activity_interval_seconds) ||
+      payload.activity_interval_seconds < 0
     ) {
-      setFieldError("points_per_message", "Points per message must be 0 or greater.");
-      firstInvalid = firstInvalid || dom.pointsPerMessageInput;
+      setFieldError("activity_interval_seconds", "Activity interval must be 0 or greater.");
+      firstInvalid = firstInvalid || dom.activityIntervalSecondsInput;
+    }
+    if (
+      !Number.isFinite(payload.activity_session_limit) ||
+      payload.activity_session_limit < 0
+    ) {
+      setFieldError("activity_session_limit", "Activity session limit must be 0 or greater.");
+      firstInvalid = firstInvalid || dom.activitySessionLimitInput;
+    }
+    if (!Number.isFinite(payload.activity_xp) || payload.activity_xp < 0) {
+      setFieldError("activity_xp", "Activity XP must be 0 or greater.");
+      firstInvalid = firstInvalid || dom.activityXPInput;
     }
 
     if (

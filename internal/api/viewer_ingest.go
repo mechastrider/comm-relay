@@ -69,12 +69,16 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	}
 
 	cfg := v.cfgStore.Snapshot()
-	points := cfg.PointsPerMessage
+	activity := store.ActivitySettings{
+		IntervalSeconds: cfg.ActivityIntervalSeconds,
+		SessionLimit:    cfg.ActivitySessionLimit,
+		XP:              cfg.ActivityXP,
+	}
+
 	var matchedCmd *store.Command
 	if v.matcher != nil {
 		if cmd, ok := v.matcher.Lookup(msg.Message); ok {
 			matchedCmd = cmd
-			points = 0
 		}
 	}
 
@@ -89,7 +93,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		Username:    msg.Username,
 		DisplayName: msg.DisplayName,
 		AvatarURL:   msg.AvatarURL,
-	}, points, cfg.DayResetHour, now)
+	}, activity, cfg.DayResetHour, now)
 	if err != nil {
 		clog.Errorf(ctx, "apply chat to viewer store: %w", err)
 		return

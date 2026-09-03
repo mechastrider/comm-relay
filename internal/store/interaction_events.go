@@ -21,6 +21,8 @@ const (
 	InteractionEventCommand InteractionEventKind = "command"
 	// InteractionEventAward records a successful operator award grant.
 	InteractionEventAward InteractionEventKind = "award"
+	// InteractionEventActivity records a silent activity XP grant.
+	InteractionEventActivity InteractionEventKind = "activity"
 )
 
 // InteractionEvent is a persisted command fire or operator award grant.
@@ -118,6 +120,14 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 		}
 		if strings.TrimSpace(input.MessageID) != "" {
 			messageID = strings.TrimSpace(input.MessageID)
+		}
+	case InteractionEventActivity:
+		commandTrigger = nil
+		awardID = nil
+		messagePlatform = nil
+		messageID = nil
+		if points < 0 {
+			return errors.New("activity points must be non-negative")
 		}
 	default:
 		return errors.Errorf("unsupported interaction event kind %q", input.Kind)

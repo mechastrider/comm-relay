@@ -272,7 +272,9 @@ export const newStreamButton = document.getElementById("new-stream-button");
 export const newStreamPrompt = document.getElementById("new-stream-prompt");
 export const newStreamPromptCancel = document.getElementById("new-stream-prompt-cancel");
 export const newStreamPromptConfirm = document.getElementById("new-stream-prompt-confirm");
-export const pointsPerMessageInput = document.getElementById("points-per-message");
+export const activityIntervalSecondsInput = document.getElementById("activity-interval-seconds");
+export const activitySessionLimitInput = document.getElementById("activity-session-limit");
+export const activityXPInput = document.getElementById("activity-xp");
 export const hideCommandMessagesInput = document.getElementById("hide-command-messages");
 export const dayResetHourInput = document.getElementById("day-reset-hour");
 export const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
@@ -311,7 +313,9 @@ export const fieldErrors = {
     admin_message_sound_volume: document.getElementById("message-sound-volume-error"),
     admin_message_sound_sound: document.getElementById("message-sound-type-error"),
     admin_time_locale: document.getElementById("time-locale-error"),
-    points_per_message: document.getElementById("points-per-message-error"),
+    activity_interval_seconds: document.getElementById("activity-interval-seconds-error"),
+    activity_session_limit: document.getElementById("activity-session-limit-error"),
+    activity_xp: document.getElementById("activity-xp-error"),
     day_reset_hour: document.getElementById("day-reset-hour-error"),
   };
 
@@ -336,6 +340,8 @@ export const fieldInputs = {
     admin_message_sound_volume: messageSoundVolumeInput,
     admin_message_sound_sound: messageSoundTypeInput,
     admin_time_locale: timeLocaleInput,
-    points_per_message: pointsPerMessageInput,
+    activity_interval_seconds: activityIntervalSecondsInput,
+    activity_session_limit: activitySessionLimitInput,
+    activity_xp: activityXPInput,
     day_reset_hour: dayResetHourInput,
   };

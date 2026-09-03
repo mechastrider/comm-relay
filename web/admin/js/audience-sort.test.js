@@ -12,7 +12,7 @@ import {
 
 assert.deepEqual(normalizeAudienceSort(null), { column: null, direction: "desc" });
 assert.deepEqual(normalizeAudienceSort({ column: "score", direction: "desc" }), {
-  column: "score",
+  column: "xp",
   direction: "desc",
 });
 assert.deepEqual(normalizeAudienceSort({ column: "messages", direction: "asc" }), {
@@ -28,20 +28,20 @@ assert.deepEqual(normalizeAudienceSort({ column: "invalid", direction: "sideways
   direction: "desc",
 });
 
-assert.deepEqual(nextAudienceSort({ column: null, direction: "desc" }, "score"), {
-  column: "score",
+assert.deepEqual(nextAudienceSort({ column: null, direction: "desc" }, "xp"), {
+  column: "xp",
   direction: "desc",
 });
-assert.deepEqual(nextAudienceSort({ column: "score", direction: "desc" }, "score"), {
-  column: "score",
+assert.deepEqual(nextAudienceSort({ column: "xp", direction: "desc" }, "xp"), {
+  column: "xp",
   direction: "asc",
 });
-assert.deepEqual(nextAudienceSort({ column: "score", direction: "asc" }, "score"), {
+assert.deepEqual(nextAudienceSort({ column: "xp", direction: "asc" }, "xp"), {
   column: null,
   direction: "desc",
 });
-assert.deepEqual(nextAudienceSort({ column: "messages", direction: "desc" }, "score"), {
-  column: "score",
+assert.deepEqual(nextAudienceSort({ column: "messages", direction: "desc" }, "xp"), {
+  column: "xp",
   direction: "desc",
 });
 
@@ -51,8 +51,8 @@ assert.deepEqual(nextAudienceSort({ column: "viewer", direction: "asc" }, "viewe
 });
 
 assert.equal(audienceSortAriaValue({ column: "viewer", direction: "asc" }, "viewer"), "ascending");
-assert.equal(audienceSortAriaValue({ column: "score", direction: "desc" }, "score"), "descending");
-assert.equal(audienceSortAriaValue({ column: "score", direction: "asc" }, "score"), "ascending");
+assert.equal(audienceSortAriaValue({ column: "xp", direction: "desc" }, "xp"), "descending");
+assert.equal(audienceSortAriaValue({ column: "xp", direction: "asc" }, "xp"), "ascending");
 
 const stored = new Map();
 const storage = {
@@ -66,10 +66,10 @@ const storage = {
 
 stored.set(AUDIENCE_SORT_STORAGE_KEY, JSON.stringify({ column: "messages", direction: "desc" }));
 assert.deepEqual(readAudienceSort(storage), { column: "messages", direction: "desc" });
-assert.equal(writeAudienceSort(storage, { column: "score", direction: "asc" }), true);
+assert.equal(writeAudienceSort(storage, { column: "xp", direction: "asc" }), true);
 assert.equal(
   stored.get(AUDIENCE_SORT_STORAGE_KEY),
-  JSON.stringify({ column: "score", direction: "asc" })
+  JSON.stringify({ column: "xp", direction: "asc" })
 );
 
 const brokenStorage = {
@@ -81,7 +81,7 @@ const brokenStorage = {
   },
 };
 assert.deepEqual(readAudienceSort(brokenStorage), { column: null, direction: "desc" });
-assert.equal(writeAudienceSort(brokenStorage, { column: "score", direction: "desc" }), false);
+assert.equal(writeAudienceSort(brokenStorage, { column: "xp", direction: "desc" }), false);
 
 stored.set(AUDIENCE_SORT_STORAGE_KEY, "{not-json");
 assert.deepEqual(readAudienceSort(storage), { column: null, direction: "desc" });
@@ -115,7 +115,7 @@ assert.deepEqual(
 const viewers = [
   {
     id: "a",
-    session_score: 10,
+    session_xp: 10,
     session_message_count: 1,
     day_score: 0,
     day_message_count: 0,
@@ -124,7 +124,7 @@ const viewers = [
   },
   {
     id: "b",
-    session_score: 30,
+    session_xp: 30,
     session_message_count: 5,
     day_score: 0,
     day_message_count: 0,
@@ -132,7 +132,7 @@ const viewers = [
     message_count: 0,
   },
 ];
-const sortedDesc = sortAudienceViewers(viewers, { column: "score", direction: "desc" }, "session");
+const sortedDesc = sortAudienceViewers(viewers, { column: "xp", direction: "desc" }, "session");
 assert.deepEqual(
   sortedDesc.map(function (viewer) {
     return viewer.id;

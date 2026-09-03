@@ -54,17 +54,29 @@ type AwardType struct {
 	SoundFile      string
 }
 
+// ActivitySettings controls silent activity XP grants on counted chat lines.
+type ActivitySettings struct {
+	IntervalSeconds int
+	SessionLimit    int
+	XP              int
+}
+
+// Enabled reports whether activity XP grants are active.
+func (a ActivitySettings) Enabled() bool {
+	return a.IntervalSeconds > 0 && a.SessionLimit > 0 && a.XP > 0
+}
+
 // Viewer is a canonical viewer with period counters and linked identities.
 type Viewer struct {
 	ID                  string
 	DisplayName         string
 	DisplayNameOverride string
 	MessageCount        int
-	Score               int
+	XP                  int
 	SessionMessageCount int
-	SessionScore        int
+	SessionXP           int
 	DayMessageCount     int
-	DayScore            int
+	DayXP               int
 	LastSeenAt          time.Time
 	LastSeen            LastSeenIdentity
 	Platforms           []string

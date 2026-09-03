@@ -79,7 +79,9 @@ assert.equal(overlayDraftIsDirty(cleanResolved.nextBaseline, cleanResolved.nextD
 
 const serverConfig = {
   server_port: 17877,
-  points_per_message: 2,
+  activity_interval_seconds: 300,
+  activity_session_limit: 10,
+  activity_xp: 1,
   day_reset_hour: 8,
   network: { socks5: { address: "", username: "", password: "" } },
   twitch: { enabled: true, channel: "server" },
@@ -95,7 +97,7 @@ platformsDraft.twitch.channel = "draft-channel";
 assert.equal(settingsSectionDirty(platformsBaseline, platformsDraft, "platforms"), true);
 
 const unrelatedApplyConfig = JSON.parse(JSON.stringify(serverConfig));
-unrelatedApplyConfig.points_per_message = 9;
+unrelatedApplyConfig.activity_xp = 9;
 
 const plan = partitionSettingsSectionsForConfigApply(SETTINGS_EDITABLE_SECTIONS, ["platforms"]);
 assert.deepEqual(plan.restoreSections, ["platforms"]);

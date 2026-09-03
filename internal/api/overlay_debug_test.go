@@ -43,7 +43,7 @@ func TestOverlayDebugFire_WhenValidBoundaries_ExpectStartedAndProductionShapedFr
 	require.True(t, ok)
 	require.Len(t, entries, 3)
 	first := entries[0].(map[string]any)
-	require.Equal(t, float64(1000), first["score"])
+	require.Equal(t, float64(1000), first["xp"])
 
 	lowRec := httptest.NewRecorder()
 	handler.handleFire(lowRec, httptest.NewRequest(http.MethodPost, "/api/overlay-debug/scenario/fire", strings.NewReader(`{"scenario":"leaderboard_update","points":1}`)))
@@ -51,7 +51,7 @@ func TestOverlayDebugFire_WhenValidBoundaries_ExpectStartedAndProductionShapedFr
 	require.Equal(t, debugResetType, frameType(t, <-client.send))
 	lowFrame := decodeFrame(t, <-client.send)
 	lowEntries := lowFrame["entries"].([]any)
-	require.Equal(t, float64(1), lowEntries[0].(map[string]any)["score"])
+	require.Equal(t, float64(1), lowEntries[0].(map[string]any)["xp"])
 }
 
 func TestOverlayDebugFire_WhenInvalidInput_ExpectBadRequestAndNoFrames(t *testing.T) {
@@ -302,9 +302,9 @@ func TestOverlayDebugScenarioFrames_WhenLeaderboardIsOverridden_ExpectDeterminis
 	require.Equal(t, "session", frame["period"])
 	entries := frame["entries"].([]any)
 	require.Len(t, entries, 3)
-	require.Equal(t, map[string]any{"rank": float64(1), "display_name": "Rank One", "score": float64(321), "message_count": float64(12)}, entries[0])
-	require.Equal(t, map[string]any{"rank": float64(2), "display_name": "Overlay Pilot", "score": float64(75), "message_count": float64(9)}, entries[1])
-	require.Equal(t, map[string]any{"rank": float64(3), "display_name": "Chat Explorer", "score": float64(50), "message_count": float64(6)}, entries[2])
+	require.Equal(t, map[string]any{"rank": float64(1), "display_name": "Rank One", "xp": float64(321), "message_count": float64(12)}, entries[0])
+	require.Equal(t, map[string]any{"rank": float64(2), "display_name": "Overlay Pilot", "xp": float64(75), "message_count": float64(9)}, entries[1])
+	require.Equal(t, map[string]any{"rank": float64(3), "display_name": "Chat Explorer", "xp": float64(50), "message_count": float64(6)}, entries[2])
 }
 
 func TestOverlayDebugRunner_WhenReplacementOrResetOccurs_ExpectDelayedFramesCancelled(t *testing.T) {

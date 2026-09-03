@@ -32,11 +32,11 @@ const PREVIEW_BACKGROUND_CLASSES = [
 ];
 
 const SAMPLE_ENTRIES = [
-  { rank: 1, display_name: "Nova", score: 42, message_count: 18, avatar_url: "" },
-  { rank: 2, display_name: "Brick", score: 31, message_count: 14, avatar_url: "" },
-  { rank: 3, display_name: "Helix", score: 18, message_count: 9, avatar_url: "" },
-  { rank: 4, display_name: "Mira", score: 12, message_count: 6, avatar_url: "" },
-  { rank: 5, display_name: "Tor", score: 7, message_count: 4, avatar_url: "" },
+  { rank: 1, display_name: "Nova", xp: 42, message_count: 18, avatar_url: "" },
+  { rank: 2, display_name: "Brick", xp: 31, message_count: 14, avatar_url: "" },
+  { rank: 3, display_name: "Helix", xp: 18, message_count: 9, avatar_url: "" },
+  { rank: 4, display_name: "Mira", xp: 12, message_count: 6, avatar_url: "" },
+  { rank: 5, display_name: "Tor", xp: 7, message_count: 4, avatar_url: "" },
 ];
 
 const root = document.getElementById("leaderboard");
@@ -201,7 +201,7 @@ function renderEntries(entries) {
 
     const stats = document.createElement("span");
     stats.className = "leaderboard-stats";
-    stats.textContent = String(entry.score || 0) + " · " + String(entry.message_count || 0) + " msg";
+    stats.textContent = String(entry.xp || 0) + " · " + String(entry.message_count || 0) + " msg";
 
     body.append(nameRow, stats);
     item.append(rank, body);

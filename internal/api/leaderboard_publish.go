@@ -24,7 +24,7 @@ type wireLeaderboardEntry struct {
 	Rank         int    `json:"rank"`
 	DisplayName  string `json:"display_name"`
 	AvatarURL    string `json:"avatar_url,omitempty"`
-	Score        int    `json:"score"`
+	XP           int    `json:"xp"`
 	MessageCount int    `json:"message_count"`
 }
 
@@ -41,7 +41,7 @@ func leaderboardWirePayload(period string, entries []store.LeaderboardEntry) ([]
 			Rank:         entry.Rank,
 			DisplayName:  entry.DisplayName,
 			AvatarURL:    entry.AvatarURL,
-			Score:        entry.Score,
+			XP:           entry.XP,
 			MessageCount: entry.MessageCount,
 		})
 	}

@@ -138,12 +138,12 @@ func TestCommandFire_WhenCooldown_ExpectOneAlert(t *testing.T) {
 	}
 }
 
-func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutScore(t *testing.T) {
+func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutXP(t *testing.T) {
 	b := bus.New(0)
 	env := newTestEnv(t, b)
 
 	cfg := env.ConfigStore.Snapshot()
-	cfg.PointsPerMessage = 5
+	cfg.ActivityXP = 5
 	require.NoError(t, env.ConfigStore.Replace(cfg))
 
 	seedViewer(t, env, "twitch", "42", "Alice")
@@ -155,13 +155,13 @@ func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutScore(t *testing.T) {
 	var before struct {
 		Viewers []struct {
 			MessageCount int `json:"message_count"`
-			Score        int `json:"score"`
+			XP           int `json:"xp"`
 		} `json:"viewers"`
 	}
 	require.NoError(t, json.Unmarshal(beforeRec.Body.Bytes(), &before))
 	require.Len(t, before.Viewers, 1)
 	require.Equal(t, 1, before.Viewers[0].MessageCount)
-	require.Equal(t, 5, before.Viewers[0].Score)
+	require.Equal(t, 5, before.Viewers[0].XP)
 
 	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
 		ID:       "cmd-gg",
@@ -180,7 +180,7 @@ func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutScore(t *testing.T) {
 		var payload struct {
 			Viewers []struct {
 				MessageCount int `json:"message_count"`
-				Score        int `json:"score"`
+				XP           int `json:"xp"`
 			} `json:"viewers"`
 		}
 		if json.Unmarshal(rec.Body.Bytes(), &payload) != nil {
@@ -188,7 +188,7 @@ func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutScore(t *testing.T) {
 		}
 		return len(payload.Viewers) == 1 &&
 			payload.Viewers[0].MessageCount == 2 &&
-			payload.Viewers[0].Score == 5
+			payload.Viewers[0].XP == 5
 	}, 2*time.Second, 25*time.Millisecond)
 }
 

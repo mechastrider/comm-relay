@@ -136,7 +136,11 @@ func seedViewer(t *testing.T, env testEnv, platform, userID, displayName string)
 		Platform:    platform,
 		UserID:      userID,
 		DisplayName: displayName,
-	}, cfg.PointsPerMessage, cfg.DayResetHour, time.Now()))
+	}, store.ActivitySettings{
+		IntervalSeconds: cfg.ActivityIntervalSeconds,
+		SessionLimit:    cfg.ActivitySessionLimit,
+		XP:              cfg.ActivityXP,
+	}, cfg.DayResetHour, time.Now()))
 
 	rec := httptest.NewRecorder()
 	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/viewers", nil))
