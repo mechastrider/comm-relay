@@ -45,7 +45,7 @@
 ## Gate: review
 
 - [ ] R.1 Fresh diff review; CRITICAL=0; checks green.
-- [ ] R.2 Confirm no filesystem paths on the wire, no GIF/SVG alerts, no preset streamer override.
+- [x] R.2 Confirm no filesystem paths on the wire, no GIF/SVG alerts, no preset streamer override.
 
 ## Gate: distribution-readiness
 

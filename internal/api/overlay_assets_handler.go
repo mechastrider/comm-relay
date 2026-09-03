@@ -131,7 +131,13 @@ func (h *overlayAssetsHandler) handleDelete(w http.ResponseWriter, r *http.Reque
 	if h.configStore != nil {
 		cfg = h.configStore.Snapshot()
 	}
-	if overlayAssetReferenced(name, cfg, h.viewerStore) {
+	referenced, err := overlayAssetReferenced(name, cfg, h.viewerStore)
+	if err != nil {
+		clog.Errorf(ctx, "check overlay asset reference: %w", err)
+		writeError(w, http.StatusInternalServerError, "could not check overlay asset references")
+		return
+	}
+	if referenced {
 		writeError(w, http.StatusBadRequest, "overlay asset is still in use")
 		return
 	}

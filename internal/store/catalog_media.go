@@ -4,11 +4,17 @@ import (
 	"database/sql"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/muonsoft/errors"
 
 	"github.com/mechastrider/comm-relay/internal/config"
+)
+
+var (
+	catalogImageAssetExtRe = regexp.MustCompile(`(?i)\.(png|jpe?g|webp)$`)
+	catalogSoundFileExtRe  = regexp.MustCompile(`(?i)\.(mp3|wav)$`)
 )
 
 const (
@@ -48,8 +54,7 @@ func NormalizeCatalogLayout(layout string) string {
 	return defaultCatalogLayout
 }
 
-// ValidateCatalogMediaFilename reports whether a stored overlay asset filename is safe.
-func ValidateCatalogMediaFilename(field, value string) string {
+func validateCatalogAssetFilename(field, value string, extRe *regexp.Regexp) string {
 	trimmed := strings.TrimSpace(value)
 	if trimmed == "" {
 		return ""
@@ -72,10 +77,20 @@ func ValidateCatalogMediaFilename(field, value string) string {
 	if _, err := url.Parse(trimmed); err == nil && strings.Contains(trimmed, "://") {
 		return field + " must be a stored overlay asset filename"
 	}
-	if !config.ValidOverlayAssetName(trimmed) {
+	if !config.ValidOverlayAssetName(trimmed) || !extRe.MatchString(trimmed) {
 		return field + " must be a stored overlay asset filename"
 	}
 	return ""
+}
+
+// ValidateCatalogImageAssetFilename reports whether an alert image filename is safe.
+func ValidateCatalogImageAssetFilename(value string) string {
+	return validateCatalogAssetFilename("image_asset", value, catalogImageAssetExtRe)
+}
+
+// ValidateCatalogSoundFileFilename reports whether an alert sound filename is safe.
+func ValidateCatalogSoundFileFilename(value string) string {
+	return validateCatalogAssetFilename("sound_file", value, catalogSoundFileExtRe)
 }
 
 // ValidateCatalogSoundVolumeField validates a volume percentage.
@@ -107,10 +122,10 @@ func nullString(value string) sql.NullString {
 
 func validateCommandMediaFields(imageAsset, soundFile string, soundVolume int, layout string) map[string]string {
 	fields := map[string]string{}
-	if msg := ValidateCatalogMediaFilename("image_asset", imageAsset); msg != "" {
+	if msg := ValidateCatalogImageAssetFilename(imageAsset); msg != "" {
 		fields["image_asset"] = msg
 	}
-	if msg := ValidateCatalogMediaFilename("sound_file", soundFile); msg != "" {
+	if msg := ValidateCatalogSoundFileFilename(soundFile); msg != "" {
 		fields["sound_file"] = msg
 	}
 	if msg := ValidateCatalogSoundVolumeField(soundVolume); msg != "" {

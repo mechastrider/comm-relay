@@ -10,7 +10,7 @@ import {
   alertViewFromConfig,
 } from "/overlay/overlay-settings.js?v=8";
 import { createChatRender } from "/shared/chat-render.js?v=12";
-import { ensureAudioContext, playAlertAudio } from "./alert-sound.js";
+import { ensureAudioContext, playAlertAudio, stopCustomAlertSound } from "./alert-sound.js";
 import { startSplashLifecycle } from "./alert-lifecycle.js?v=2";
 import { createAlertSplash } from "./alert-render.js?v=2";
 import { createAlertScheduler } from "./alert-scheduler.js?v=4";
@@ -167,6 +167,7 @@ function clearSplash() {
     window.clearTimeout(hideTimer);
     hideTimer = null;
   }
+  stopCustomAlertSound();
   if (root) {
     root.textContent = "";
   }

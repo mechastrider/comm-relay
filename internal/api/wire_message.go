@@ -59,7 +59,7 @@ type wireAlert struct {
 	CreatedAt       string `json:"created_at"`
 	ImageAsset      string `json:"image_asset,omitempty"`
 	SoundFile       string `json:"sound_file,omitempty"`
-	SoundVolume     int    `json:"sound_volume,omitempty"`
+	SoundVolume     int    `json:"sound_volume"`
 	Layout          string `json:"layout,omitempty"`
 	Trigger         string `json:"trigger,omitempty"`
 	AwardID         string `json:"award_id,omitempty"`

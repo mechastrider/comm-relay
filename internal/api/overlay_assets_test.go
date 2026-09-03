@@ -2,18 +2,23 @@ package api
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/overlayassets"
 	"github.com/mechastrider/comm-relay/internal/store"
+
+	_ "modernc.org/sqlite"
 )
 
 func uploadOverlayAsset(t *testing.T, handler http.Handler, kind string, filename string, data []byte) string {
@@ -261,6 +266,78 @@ func TestAlertWire_WhenCustomMediaSet_ExpectFilenameAndNoBuiltInSound(t *testing
 	require.Equal(t, float64(55), wire["sound_volume"])
 	_, hasBuiltIn := wire["sound"]
 	require.False(t, hasBuiltIn)
+}
+
+func TestAlertWire_WhenSoundVolumeZero_ExpectSerializedZero(t *testing.T) {
+	t.Parallel()
+
+	cmd := &store.Command{
+		Trigger:     "gg",
+		Sound:       "chime",
+		DurationMs:  5000,
+		SoundVolume: 0,
+		Layout:      "card",
+	}
+	payload, err := alertWirePayload(cmd, bus.ChatMessage{
+		Username: "Nova",
+	}, "Muted alert", 0)
+	require.NoError(t, err)
+
+	var wire map[string]any
+	require.NoError(t, json.Unmarshal(payload, &wire))
+	require.Equal(t, float64(0), wire["sound_volume"])
+	require.Contains(t, string(payload), `"sound_volume":0`)
+}
+
+func TestCommands_WhenUpdateWithSVGImageAsset_ExpectFieldError(t *testing.T) {
+	t.Parallel()
+
+	handler := testHandler(t)
+	body := `{"id":"gg","trigger":"gg","enabled":true,"cooldown_seconds":30,"splash_template":"GG {name}","sound":"","duration_ms":5000,"image_asset":"asset_ab.svg"}`
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/commands/update", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	handler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	require.Contains(t, rec.Body.String(), "image_asset")
+}
+
+func TestOverlayAssets_WhenDeleteAndCatalogListingFails_ExpectInternalErrorAndFileRemains(t *testing.T) {
+	t.Parallel()
+
+	cfgStore := testConfigStore(t)
+	dbPath := filepath.Join(t.TempDir(), "comm-relay.db")
+	viewerStore, err := store.Open(dbPath)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = viewerStore.Close() })
+
+	assets := newOverlayAssetsHandler(cfgStore, viewerStore)
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /api/overlay/assets/delete", assets.handleDelete)
+	mux.HandleFunc("GET /overlay/assets/{filename}", assets.handleGet)
+
+	name, err := overlayassets.Save(
+		overlayassets.DirForConfig(cfgStore.Path()),
+		overlayassets.KindAlertImage,
+		tinyPNG(),
+	)
+	require.NoError(t, err)
+
+	rawDB, err := sql.Open("sqlite", "file:"+filepath.ToSlash(dbPath)+"?_pragma=busy_timeout(5000)")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = rawDB.Close() })
+	_, err = rawDB.Exec("DROP TABLE commands")
+	require.NoError(t, err)
+
+	deleteRec := httptest.NewRecorder()
+	deleteReq := httptest.NewRequest(http.MethodPost, "/api/overlay/assets/delete", strings.NewReader(`{"filename":"`+name+`"}`))
+	deleteReq.Header.Set("Content-Type", "application/json")
+	mux.ServeHTTP(deleteRec, deleteReq)
+	require.Equal(t, http.StatusInternalServerError, deleteRec.Code)
+
+	getRec := httptest.NewRecorder()
+	mux.ServeHTTP(getRec, httptest.NewRequest(http.MethodGet, "/overlay/assets/"+name, nil))
+	require.Equal(t, http.StatusOK, getRec.Code)
 }
 
 func writeTestWAV(durationSec float64, sampleRate int) []byte {

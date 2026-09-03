@@ -2,9 +2,10 @@ function text(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-const STORED_ASSET_RE = /^[a-z0-9][a-z0-9._-]{0,127}\.(png|jpe?g|webp|gif|svg|mp3|wav)$/i;
+const STORED_IMAGE_ASSET_RE = /^[a-z0-9][a-z0-9._-]{0,127}\.(png|jpe?g|webp)$/i;
+const STORED_SOUND_ASSET_RE = /^[a-z0-9][a-z0-9._-]{0,127}\.(mp3|wav)$/i;
 
-export function safeStoredAssetFilename(value) {
+function safeStoredFilename(value, pattern) {
   const candidate = text(value);
   if (!candidate) {
     return "";
@@ -12,7 +13,20 @@ export function safeStoredAssetFilename(value) {
   if (candidate.includes("..") || candidate.includes("://") || /[\\/]/.test(candidate)) {
     return "";
   }
-  return STORED_ASSET_RE.test(candidate) ? candidate : "";
+  return pattern.test(candidate) ? candidate : "";
+}
+
+export function safeStoredImageAssetFilename(value) {
+  return safeStoredFilename(value, STORED_IMAGE_ASSET_RE);
+}
+
+export function safeStoredSoundAssetFilename(value) {
+  return safeStoredFilename(value, STORED_SOUND_ASSET_RE);
+}
+
+/** @deprecated Use safeStoredImageAssetFilename for alert images. */
+export function safeStoredAssetFilename(value) {
+  return safeStoredImageAssetFilename(value);
 }
 
 export function safeImageURL(value) {
@@ -31,7 +45,7 @@ export function normalizeAlertLayout(layout) {
 export function alertRenderModel(alert) {
   const name = text(alert && alert.name) || "Viewer";
   const points = Number(alert && alert.points);
-  const imageAsset = safeStoredAssetFilename(alert && alert.image_asset);
+  const imageAsset = safeStoredImageAssetFilename(alert && alert.image_asset);
   const base = {
     layout: normalizeAlertLayout(alert && alert.layout),
     imageAsset,

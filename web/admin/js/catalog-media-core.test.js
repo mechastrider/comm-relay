@@ -44,5 +44,7 @@ test('catalogMediaPayload round-trips media fields', () => {
 
 test('overlayAssetPreviewURL only allows stored filenames', () => {
   assert.equal(overlayAssetPreviewURL('asset_x.png'), '/overlay/assets/asset_x.png');
+  assert.equal(overlayAssetPreviewURL('asset_x.mp3'), '/overlay/assets/asset_x.mp3');
+  assert.equal(overlayAssetPreviewURL('asset_x.gif'), '');
   assert.equal(overlayAssetPreviewURL('http://x'), '');
 });
