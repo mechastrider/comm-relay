@@ -21,12 +21,36 @@ The system SHALL persist award types in local SQLite as a list separate from cha
 - **WHEN** the operator updates Joke with a stored `sound_file` filename and `sound_volume` 50
 - **THEN** `GET /api/awards` returns those values and a later Joke grant plays that file at 50 percent
 
-### Requirement: First migrate seeds Joke and Advice
-On the migration that introduces award types, the system SHALL insert deletable seeds: Joke with `points` 10 and Advice with `points` 50, with splash templates that include `{viewer}` and `{points}`. Seeds MUST NOT be re-inserted on later startups.
+### Requirement: Locale-aware one-time starter awards
+On first initialization of a new local database, the system SHALL insert deletable starter award types with stable ids `joke` (10), `advice` (50), `spotter` (25), `intel` (30), `expert` (40), `meme` (20), `clutch` (50), and `mvp` (100). Display names and splash templates SHALL match the operator's configured `admin.time_locale` at initialization time (`ru-RU` or `en-GB`). Splash templates MUST include `{viewer}` and `{points}`. Award ids MUST remain stable across locales. After initialization completes, the catalog MUST be treated as ordinary user-owned data: changing `admin.time_locale`, editing rows, deleting seeds, or leaving an empty catalog MUST NOT cause automatic translation, restoration, or re-insertion. Existing databases that already contained starter awards before this behavior shipped MUST be adopted without modifying any award fields.
 
-#### Scenario: Fresh database
-- **WHEN** CommRelay starts against a database that just applied this migration
-- **THEN** Joke (+10) and Advice (+50) exist and both are deletable
+#### Scenario: Fresh Russian database
+- **WHEN** CommRelay opens a new database while `admin.time_locale` is `ru-RU`
+- **THEN** all eight starter awards exist with Russian display names and splash templates and are deletable
+
+#### Scenario: Fresh English database
+- **WHEN** CommRelay opens a new database while `admin.time_locale` is `en-GB`
+- **THEN** all eight starter awards exist with the existing English display names and splash templates
+
+#### Scenario: Delete seed
+- **WHEN** the operator deletes the seeded Joke award
+- **THEN** Reward pickers no longer offer Joke and a restart MUST NOT recreate it
+
+#### Scenario: Locale change after initialization
+- **WHEN** the operator changes `admin.time_locale` after the starter catalog was initialized
+- **THEN** existing award names and splash templates remain unchanged
+
+#### Scenario: Existing database adoption
+- **WHEN** CommRelay upgrades an installation that already had migration-era starter awards
+- **THEN** award ids, names, points, and splash templates are unchanged
+
+#### Scenario: Existing database has no bootstrap marker
+- **WHEN** CommRelay opens an already migrated database without starter-catalog bootstrap metadata
+- **THEN** the existing award catalog is adopted unchanged and marked initialized
+
+#### Scenario: Resume interrupted fresh-database bootstrap
+- **WHEN** a new database has a persisted pending starter locale but catalog initialization did not finish
+- **THEN** the next startup completes starter award initialization in the persisted locale
 
 ### Requirement: Operator can grant an award from a chat line
 `POST /api/awards/grant` SHALL accept `platform`, `user_id`, and `award_id`, plus optional `message_id` and `message_text` from the selected row. The system SHALL resolve the canonical viewer, add the award `points` to all-time, current-session, and current-day score, append one interaction event, and broadcast one award alert. Grant MUST require a non-empty `user_id`. Missing award id or unknown award SHALL fail with HTTP 400. Unknown identity MAY create the viewer the same way ingest does, then apply the award. The server MUST trim `message_text` and limit the transient quote to 280 Unicode code points before broadcast. It MUST NOT persist the quote. Missing source-message fields MUST NOT prevent a valid award grant.

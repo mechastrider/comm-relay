@@ -51,7 +51,7 @@ func New(opts Options) (*App, error) {
 		return nil, errors.Errorf("resolve viewer database path: %w", err)
 	}
 
-	viewerStore, err := store.Open(dbPath)
+	viewerStore, err := store.Open(dbPath, store.OpenOptions{TimeLocale: cfg.Admin.TimeLocale})
 	if err != nil {
 		return nil, errors.Errorf("open viewer store: %w", err)
 	}

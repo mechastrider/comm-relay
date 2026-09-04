@@ -104,7 +104,7 @@ func TestCommands_WhenDeleteSeedAndReopen_ExpectStillAbsent(t *testing.T) {
 	require.NoError(t, s.DeleteCommand("gg"))
 	require.NoError(t, s.Close())
 
-	reopened, err := store.Open(path)
+	reopened, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, reopened.Close())
@@ -176,7 +176,7 @@ func TestAwards_WhenDeleteSeedAndReopen_ExpectStillAbsent(t *testing.T) {
 	require.NoError(t, s.DeleteAward("joke"))
 	require.NoError(t, s.Close())
 
-	reopened, err := store.Open(path)
+	reopened, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, reopened.Close())
@@ -196,7 +196,7 @@ func TestAwards_WhenDeleteSpotterAndReopen_ExpectStillAbsent(t *testing.T) {
 	require.NoError(t, s.DeleteAward("spotter"))
 	require.NoError(t, s.Close())
 
-	reopened, err := store.Open(path)
+	reopened, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, reopened.Close())
@@ -254,7 +254,7 @@ func TestAwards_WhenUpgradedFrom00002_ExpectExtraSeedsWithoutRewritingJokeAdvice
 	require.NoError(t, err)
 	require.NoError(t, db.Close())
 
-	s, err := store.Open(path)
+	s, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, s.Close())

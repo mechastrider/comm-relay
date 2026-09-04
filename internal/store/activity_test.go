@@ -87,7 +87,7 @@ func TestApplyChat_WhenActivityXPZero_ExpectCountedLinesNeverAddXP(t *testing.T)
 func TestApplyChat_WhenStoreReopened_ExpectSessionActivityCountersPersist(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "comm-relay.db")
-	s, err := store.Open(path)
+	s, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 
 	now := time.Date(2026, 9, 3, 12, 0, 0, 0, time.UTC)
@@ -99,7 +99,7 @@ func TestApplyChat_WhenStoreReopened_ExpectSessionActivityCountersPersist(t *tes
 	}
 	require.NoError(t, s.Close())
 
-	reopened, err := store.Open(path)
+	reopened, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, reopened.Close()) })
 
@@ -178,7 +178,7 @@ func TestOpen_WhenPreMigrationScore42_ExpectXP42AfterMigrate(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, db.Close())
 
-	s, err := store.Open(path)
+	s, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, s.Close()) })
 

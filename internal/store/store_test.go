@@ -16,11 +16,15 @@ import (
 const testDayResetHour = 6
 
 func openTestStore(t *testing.T) (*store.Store, string) {
+	return openTestStoreWithLocale(t, "en-GB")
+}
+
+func openTestStoreWithLocale(t *testing.T, locale string) (*store.Store, string) {
 	t.Helper()
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "comm-relay.db")
-	s, err := store.Open(path)
+	s, err := store.Open(path, store.OpenOptions{TimeLocale: locale})
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, s.Close())
@@ -51,7 +55,7 @@ func TestOpen_WhenMissingDatabase_ExpectCreatedAndMigrated(t *testing.T) {
 	path := filepath.Join(dir, "comm-relay.db")
 
 	// Act
-	s, err := store.Open(path)
+	s, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, s.Close())
@@ -400,7 +404,7 @@ func TestList_WhenSearchByName_ExpectMatch(t *testing.T) {
 func TestOpenMigrateQuery_WhenIngestAfterUp_ExpectPersistedCounters(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "comm-relay.db")
-	s, err := store.Open(path)
+	s, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, s.Close())
@@ -415,7 +419,7 @@ func TestOpenMigrateQuery_WhenIngestAfterUp_ExpectPersistedCounters(t *testing.T
 	}, 5, testDayResetHour, now)
 	require.NoError(t, err)
 
-	s2, err := store.Open(path)
+	s2, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, s2.Close())

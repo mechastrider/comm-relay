@@ -127,7 +127,7 @@ func TestInteractionEvents_WhenReopenDatabase_ExpectAwardEventPersists(t *testin
 	path := filepath.Join(dir, "comm-relay.db")
 	now := time.Date(2026, 8, 29, 12, 0, 0, 0, time.UTC)
 
-	s, err := store.Open(path)
+	s, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	result, err := s.ApplyAward(store.ChatIdentity{
 		Platform: "twitch",
@@ -144,7 +144,7 @@ func TestInteractionEvents_WhenReopenDatabase_ExpectAwardEventPersists(t *testin
 	require.NoError(t, s.Close())
 
 	// Act
-	reopened, err := store.Open(path)
+	reopened, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, reopened.Close())
@@ -167,7 +167,7 @@ func TestInteractionEventSchema_WhenInspected_ExpectNoMessageBodyColumn(t *testi
 	// Arrange
 	dir := t.TempDir()
 	path := filepath.Join(dir, "comm-relay.db")
-	s, err := store.Open(path)
+	s, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, s.Close())

@@ -338,7 +338,7 @@ func TestOverlayAssets_WhenDeleteAndCatalogListingFails_ExpectInternalErrorAndFi
 
 	cfgStore := testConfigStore(t)
 	dbPath := filepath.Join(t.TempDir(), "comm-relay.db")
-	viewerStore, err := store.Open(dbPath)
+	viewerStore, err := store.Open(dbPath, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = viewerStore.Close() })
 
