@@ -1,7 +1,6 @@
 package command
 
 import (
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -107,12 +106,4 @@ func DisplayName(username, displayName string) string {
 	}
 
 	return username
-}
-
-// SubstituteTemplate replaces known placeholders in splash templates.
-func SubstituteTemplate(template, name string, points int) string {
-	text := strings.ReplaceAll(template, "{name}", name)
-	text = strings.ReplaceAll(text, "{points}", strconv.Itoa(points))
-
-	return text
 }

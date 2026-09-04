@@ -129,7 +129,12 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 
 	if v.hub != nil {
 		name := command.DisplayName(msg.Username, msg.DisplayName)
-		text := command.SubstituteTemplate(matchedCmd.SplashTemplate, name, 0)
+		text := command.SubstituteTemplate(matchedCmd.SplashTemplate, command.TemplateVars{
+			Viewer:   name,
+			Streamer: cfg.StreamerDisplayName,
+			Points:   0,
+			Message:  msg.Message,
+		})
 		alertPayload, alertErr := alertWirePayload(matchedCmd, msg, text, 0)
 		if alertErr != nil {
 			clog.Errorf(ctx, "alert wire payload: %w", alertErr)

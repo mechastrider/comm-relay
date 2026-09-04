@@ -10,7 +10,7 @@ import {
   alertViewFromConfig,
 } from "/overlay/overlay-settings.js?v=8";
 import { createChatRender } from "/shared/chat-render.js?v=12";
-import { ensureAudioContext, scheduleAlertSound } from "./alert-sound.js";
+import { ensureAudioContext, playAlertAudio, stopCustomAlertSound } from "./alert-sound.js";
 import { startSplashLifecycle } from "./alert-lifecycle.js?v=2";
 import { createAlertSplash } from "./alert-render.js?v=2";
 import { createAlertScheduler } from "./alert-scheduler.js?v=4";
@@ -167,6 +167,7 @@ function clearSplash() {
     window.clearTimeout(hideTimer);
     hideTimer = null;
   }
+  stopCustomAlertSound();
   if (root) {
     root.textContent = "";
   }
@@ -177,11 +178,16 @@ function accentIdentity(name) {
   return { user: display, username: display, display_name: display };
 }
 
-function playSound(sound) {
+function playSound(alert) {
+  const play = function (ctx) {
+    return playAlertAudio(ctx, alert, function (filename) {
+      return overlayAssetURL(filename, overlayAssetsRevision);
+    });
+  };
   ensureAudioContext(audioCtx)
     .then(function (ctx) {
       audioCtx = ctx;
-      scheduleAlertSound(ctx, sound);
+      return play(ctx);
     })
     .catch(function () {
       /* autoplay policy */
@@ -196,6 +202,9 @@ function showSplash(alert) {
   clearSplash();
   const splash = createAlertSplash(document, alert, {
     reducedMotion,
+    overlayAssetURL: function (filename) {
+      return overlayAssetURL(filename, overlayAssetsRevision);
+    },
     userAccent: function (name) {
       return userAccent(accentIdentity(name));
     },
@@ -217,7 +226,7 @@ function showSplash(alert) {
 
   hideTimer = startSplashLifecycle({
     playSound: function () {
-      return playSound(alert.sound);
+      return playSound(alert);
     },
     durationMs,
     keepVisible: samplePreviewEnabled,

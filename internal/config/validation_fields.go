@@ -5,6 +5,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/muonsoft/errors"
 )
@@ -25,8 +26,15 @@ func ValidationFields(err error) FieldErrors {
 	return nil
 }
 
+const maxStreamerDisplayNameCodePoints = 64
+
 func (c *Config) validateFields() error {
 	fields := FieldErrors{}
+
+	c.StreamerDisplayName = strings.TrimSpace(c.StreamerDisplayName)
+	if utf8.RuneCountInString(c.StreamerDisplayName) > maxStreamerDisplayNameCodePoints {
+		fields["streamer_display_name"] = "Streamer display name must be at most 64 characters."
+	}
 
 	if c.ServerPort < 1 || c.ServerPort > 65535 {
 		fields["server_port"] = "Port must be between 1 and 65535."

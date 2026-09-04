@@ -6,6 +6,31 @@ import { validateAwardPoints } from "./audience-helpers.js";
 import { parseAudienceHash } from "./audience-tabs.js";
 import { parseWorkspaceHash } from "./workspace-router.js";
 import { neighboringCatalogSelection } from "./catalog-selection.js";
+import {
+  bindSplashVariableChips,
+  previewStreamerName,
+  renderSplashPreview,
+} from "./catalog-template.js";
+import { createCatalogMediaController } from "./catalog-media-ui.js";
+
+const awardMedia = createCatalogMediaController({
+  imagePreview: dom.awardImagePreview,
+  imageInput: dom.awardImageInput,
+  imageClear: dom.awardImageClear,
+  imageError: dom.awardImageError,
+  soundFileInput: dom.awardSoundFileInput,
+  soundFileClear: dom.awardSoundFileClear,
+  soundFileError: dom.awardSoundFileError,
+  soundVolumeInput: dom.awardSoundVolumeInput,
+  soundVolumeValue: dom.awardSoundVolumeValue,
+  soundVolumeError: dom.awardSoundVolumeError,
+  soundPlay: dom.awardSoundPlay,
+  soundStop: dom.awardSoundStop,
+  builtInSoundInput: dom.awardSoundInput,
+  layoutName: "award-layout",
+  layoutError: dom.awardLayoutError,
+});
+awardMedia.bind();
 
 const FETCH_TIMEOUT_MS = 15000;
 
@@ -45,6 +70,7 @@ function clearFieldErrors() {
   setFieldError(dom.awardNameInput, dom.awardNameError, "");
   setFieldError(dom.awardPointsInput, dom.awardPointsError, "");
   setFieldError(dom.awardSplashInput, dom.awardSplashError, "");
+  awardMedia.clearFieldErrors();
 }
 
 function setButtonsDisabled(disabled) {
@@ -184,6 +210,16 @@ function focusAwardCreate() {
   });
 }
 
+function updateAwardSplashPreview() {
+  const points = dom.awardPointsInput ? Number.parseInt(dom.awardPointsInput.value, 10) : 10;
+  renderSplashPreview(dom.awardSplashPreview, dom.awardSplashInput?.value || "", {
+    viewer: "Alice",
+    streamer: previewStreamerName(),
+    points: Number.isFinite(points) ? points : 10,
+    message: t("catalog.sampleMessage"),
+  });
+}
+
 function fillEditorFromAward(award) {
   if (!dom.awardsEditorForm) {
     return;
@@ -203,6 +239,8 @@ function fillEditorFromAward(award) {
   if (dom.awardDurationInput) {
     dom.awardDurationInput.value = String(award.duration_ms != null ? award.duration_ms : 5000);
   }
+  awardMedia.fillFromRecord(award);
+  updateAwardSplashPreview();
 }
 
 function defaultNewAward() {
@@ -212,6 +250,8 @@ function defaultNewAward() {
     splash_template: "",
     sound: "",
     duration_ms: 5000,
+    sound_volume: 70,
+    layout: "card",
   };
 }
 
@@ -219,6 +259,7 @@ function selectAward(id, isNew) {
   creatingNew = isNew;
   selectedAwardId = isNew ? null : id;
   clearFieldErrors();
+  awardMedia.stopPreview();
 
   if (isNew) {
     fillEditorFromAward(defaultNewAward());
@@ -236,13 +277,16 @@ function selectAward(id, isNew) {
 }
 
 function readEditorPayload() {
-  return {
-    name: dom.awardNameInput ? dom.awardNameInput.value : "",
-    points: dom.awardPointsInput ? Number(dom.awardPointsInput.value) : 0,
-    splash_template: dom.awardSplashInput ? dom.awardSplashInput.value : "",
-    sound: dom.awardSoundInput ? dom.awardSoundInput.value : "",
-    duration_ms: dom.awardDurationInput ? Number(dom.awardDurationInput.value) : 5000,
-  };
+  return Object.assign(
+    {
+      name: dom.awardNameInput ? dom.awardNameInput.value : "",
+      points: dom.awardPointsInput ? Number(dom.awardPointsInput.value) : 0,
+      splash_template: dom.awardSplashInput ? dom.awardSplashInput.value : "",
+      sound: dom.awardSoundInput ? dom.awardSoundInput.value : "",
+      duration_ms: dom.awardDurationInput ? Number(dom.awardDurationInput.value) : 5000,
+    },
+    awardMedia.readPayload()
+  );
 }
 
 function applyFieldErrors(fields) {
@@ -258,6 +302,7 @@ function applyFieldErrors(fields) {
   if (fields.splash_template && dom.awardSplashError) {
     setFieldError(dom.awardSplashInput, dom.awardSplashError, fields.splash_template);
   }
+  awardMedia.applyFieldErrors(fields);
 }
 
 async function fetchAwardsList() {
@@ -496,10 +541,14 @@ export function initAwardsCatalog() {
   });
   dom.awardPointsInput?.addEventListener("input", function () {
     setFieldError(dom.awardPointsInput, dom.awardPointsError, "");
+    updateAwardSplashPreview();
   });
   dom.awardSplashInput?.addEventListener("input", function () {
     setFieldError(dom.awardSplashInput, dom.awardSplashError, "");
+    updateAwardSplashPreview();
   });
+  bindSplashVariableChips(dom.awardSplashVars, dom.awardSplashInput, updateAwardSplashPreview);
+  document.addEventListener("admin-config-applied", updateAwardSplashPreview);
   if (dom.awardsDeleteButton) {
     dom.awardsDeleteButton.addEventListener("click", function () {
       if (!selectedAwardId) {

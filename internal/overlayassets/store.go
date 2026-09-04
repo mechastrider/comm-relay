@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	// MaxBytes is the maximum accepted overlay asset size.
-	MaxBytes = 512 << 10
+	// MaxBytes is the maximum accepted panel overlay asset size.
+	MaxBytes = MaxPanelBytes
 )
 
 var (
@@ -36,16 +36,18 @@ func DirForConfig(configPath string) string {
 	return filepath.Join(filepath.Dir(configPath), "overlay-assets")
 }
 
-// Save writes a sniffed image into dir and returns the stored filename.
-func Save(dir string, data []byte) (string, error) {
+// Save writes a sniffed asset into dir and returns the stored filename.
+func Save(dir string, kind AssetKind, data []byte) (string, error) {
 	if len(data) == 0 {
 		return "", errEmptyAsset
 	}
-	if len(data) > MaxBytes {
-		return "", errors.Errorf("overlay asset exceeds %d bytes", MaxBytes)
+
+	limit := maxBytesForKind(kind)
+	if len(data) > limit {
+		return "", errors.Errorf("overlay asset exceeds %d bytes", limit)
 	}
 
-	ext, err := detectExt(data)
+	ext, err := detectExtForKind(kind, data)
 	if err != nil {
 		return "", err
 	}
@@ -70,6 +72,31 @@ func Save(dir string, data []byte) (string, error) {
 	return name, nil
 }
 
+// Delete removes a stored overlay asset when present.
+func Delete(dir, name string) error {
+	if !config.ValidOverlayAssetName(name) {
+		return errors.New("invalid overlay asset name")
+	}
+	path := filepath.Join(dir, filepath.Base(name))
+	if err := os.Remove(path); err != nil {
+		if os.IsNotExist(err) {
+			return errors.New("overlay asset not found")
+		}
+		return errors.Errorf("delete overlay asset: %w", err, errors.String("path", path))
+	}
+	return nil
+}
+
+// FileExists reports whether a safe stored filename is present in dir.
+func FileExists(dir, name string) bool {
+	if !config.ValidOverlayAssetName(name) {
+		return false
+	}
+	path := filepath.Join(dir, filepath.Base(name))
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
+}
+
 // ServeFile writes a stored overlay asset to w when name is safe and present.
 func ServeFile(w http.ResponseWriter, r *http.Request, dir, name string) {
 	if !config.ValidOverlayAssetName(name) {
@@ -78,6 +105,53 @@ func ServeFile(w http.ResponseWriter, r *http.Request, dir, name string) {
 	}
 	path := filepath.Join(dir, filepath.Base(name))
 	http.ServeFile(w, r, path)
+}
+
+func detectExtForKind(kind AssetKind, data []byte) (string, error) {
+	switch kind {
+	case KindAlertImage:
+		if err := ValidateAlertImage(data); err != nil {
+			return "", err
+		}
+		return detectStaticImageExt(data)
+	case KindAlertSound:
+		if err := ValidateAlertSoundDuration(data); err != nil {
+			return "", err
+		}
+		return detectAudioExt(data)
+	default:
+		return detectPanelExt(data)
+	}
+}
+
+func detectPanelExt(data []byte) (string, error) {
+	return detectExt(data)
+}
+
+func detectStaticImageExt(data []byte) (string, error) {
+	if len(data) >= 8 && bytes.Equal(data[:8], []byte{0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a}) {
+		return ".png", nil
+	}
+	if len(data) >= 3 && data[0] == 0xff && data[1] == 0xd8 && data[2] == 0xff {
+		return ".jpg", nil
+	}
+	if len(data) >= 12 && bytes.Equal(data[:4], []byte("RIFF")) && bytes.Equal(data[8:12], []byte("WEBP")) {
+		return ".webp", nil
+	}
+	if err := detectModernImageFormat(data); err != nil {
+		return "", err
+	}
+	return "", ErrUnsupportedType
+}
+
+func detectAudioExt(data []byte) (string, error) {
+	if len(data) >= 12 && bytes.Equal(data[0:4], []byte("RIFF")) && bytes.Equal(data[8:12], []byte("WAVE")) {
+		return ".wav", nil
+	}
+	if isMP3(data) {
+		return ".mp3", nil
+	}
+	return "", ErrUnsupportedType
 }
 
 func detectExt(data []byte) (string, error) {
@@ -147,14 +221,17 @@ func svgUnsafe(data []byte) bool {
 		bytes.Contains(lower, []byte("onerror="))
 }
 
-// ReadLimited copies r into memory with a hard MaxBytes cap.
-func ReadLimited(r io.Reader) ([]byte, error) {
-	data, err := io.ReadAll(io.LimitReader(r, MaxBytes+1))
+// ReadLimited copies r into memory with a hard maxBytes cap.
+func ReadLimited(r io.Reader, maxBytes int) ([]byte, error) {
+	if maxBytes < 1 {
+		maxBytes = MaxPanelBytes
+	}
+	data, err := io.ReadAll(io.LimitReader(r, int64(maxBytes)+1))
 	if err != nil {
 		return nil, errors.Errorf("read overlay asset: %w", err)
 	}
-	if len(data) > MaxBytes {
-		return nil, errors.Errorf("overlay asset exceeds %d bytes", MaxBytes)
+	if len(data) > maxBytes {
+		return nil, errors.Errorf("overlay asset exceeds %d bytes", maxBytes)
 	}
 	if !utf8.Valid(data) && looksLikeText(data) {
 		return nil, ErrUnsupportedType

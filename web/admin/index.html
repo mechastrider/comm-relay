@@ -369,7 +369,9 @@
                     </div>
                     <div class="form__field">
                       <label for="command-splash-input" data-i18n="catalog.splashTemplate">Splash template</label>
+                      <div id="command-splash-vars" class="catalog-template-vars" role="group" data-i18n-aria-label="catalog.templateVariables" aria-label="Template variables"></div>
                       <input id="command-splash-input" type="text" autocomplete="off" required>
+                      <p id="command-splash-preview" class="catalog-template-preview" aria-live="polite"></p>
                       <p id="command-splash-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
@@ -382,6 +384,50 @@
                         <option value="alert" data-i18n="sound.alert">Alert - quick double beep</option>
                       </select>
                     </div>
+                    <div class="form__field catalog-media-field">
+                      <span id="command-image-label" class="form__label" data-i18n="catalog.imageLabel">Alert image</span>
+                      <div class="catalog-media-row">
+                        <div id="command-image-preview" class="catalog-media-preview" aria-labelledby="command-image-label"></div>
+                        <div class="catalog-media-actions">
+                          <label class="btn-physical btn-small catalog-media-upload">
+                            <span data-i18n="catalog.upload">Upload</span>
+                            <input id="command-image-input" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="command-image-label">
+                          </label>
+                          <button id="command-image-clear" type="button" class="btn-physical btn-small" data-i18n="catalog.clear">Clear</button>
+                        </div>
+                      </div>
+                      <p id="command-image-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field catalog-media-field">
+                      <span id="command-sound-file-label" class="form__label" data-i18n="catalog.customSoundLabel">Custom sound file</span>
+                      <div class="catalog-media-actions">
+                        <label class="btn-physical btn-small catalog-media-upload">
+                          <span data-i18n="catalog.upload">Upload</span>
+                          <input id="command-sound-file-input" type="file" accept="audio/mpeg,audio/wav,.mp3,.wav" aria-labelledby="command-sound-file-label">
+                        </label>
+                        <button id="command-sound-file-clear" type="button" class="btn-physical btn-small" data-i18n="catalog.clear">Clear</button>
+                        <button id="command-sound-play" type="button" class="btn-physical btn-small" data-i18n="catalog.playSound">Play</button>
+                        <button id="command-sound-stop" type="button" class="btn-physical btn-small" data-i18n="catalog.stopSound">Stop</button>
+                      </div>
+                      <p id="command-sound-file-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="command-sound-volume-input" data-i18n="catalog.soundVolumeLabel">Sound volume</label>
+                      <div class="catalog-volume-row">
+                        <input id="command-sound-volume-input" type="range" min="0" max="100" step="1" value="70">
+                        <output id="command-sound-volume-value" for="command-sound-volume-input">70%</output>
+                      </div>
+                      <p id="command-sound-volume-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <fieldset class="form__field catalog-layout-field">
+                      <legend data-i18n="catalog.layoutLabel">Layout</legend>
+                      <div class="catalog-layout-group" role="radiogroup" aria-label="Alert layout">
+                        <label class="catalog-layout-option"><input type="radio" name="command-layout" value="card" checked> <span data-i18n="catalog.layoutCard">Card</span></label>
+                        <label class="catalog-layout-option"><input type="radio" name="command-layout" value="banner"> <span data-i18n="catalog.layoutBanner">Banner</span></label>
+                        <label class="catalog-layout-option"><input type="radio" name="command-layout" value="fullscreen"> <span data-i18n="catalog.layoutFullscreen">Fullscreen</span></label>
+                      </div>
+                      <p id="command-layout-error" class="field-error" role="alert" hidden></p>
+                    </fieldset>
                     <div class="form__field">
                       <label for="command-duration-input" data-i18n="catalog.durationLabel">Duration (ms)</label>
                       <input id="command-duration-input" type="number" min="1" step="1" value="5000" required>
@@ -432,7 +478,9 @@
                     </div>
                     <div class="form__field">
                       <label for="award-splash-input" data-i18n="catalog.splashTemplate">Splash template</label>
+                      <div id="award-splash-vars" class="catalog-template-vars" role="group" data-i18n-aria-label="catalog.templateVariables" aria-label="Template variables"></div>
                       <input id="award-splash-input" type="text" autocomplete="off" required>
+                      <p id="award-splash-preview" class="catalog-template-preview" aria-live="polite"></p>
                       <p id="award-splash-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
@@ -445,6 +493,50 @@
                         <option value="alert" data-i18n="sound.alert">Alert - quick double beep</option>
                       </select>
                     </div>
+                    <div class="form__field catalog-media-field">
+                      <span id="award-image-label" class="form__label" data-i18n="catalog.imageLabel">Alert image</span>
+                      <div class="catalog-media-row">
+                        <div id="award-image-preview" class="catalog-media-preview" aria-labelledby="award-image-label"></div>
+                        <div class="catalog-media-actions">
+                          <label class="btn-physical btn-small catalog-media-upload">
+                            <span data-i18n="catalog.upload">Upload</span>
+                            <input id="award-image-input" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="award-image-label">
+                          </label>
+                          <button id="award-image-clear" type="button" class="btn-physical btn-small" data-i18n="catalog.clear">Clear</button>
+                        </div>
+                      </div>
+                      <p id="award-image-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field catalog-media-field">
+                      <span id="award-sound-file-label" class="form__label" data-i18n="catalog.customSoundLabel">Custom sound file</span>
+                      <div class="catalog-media-actions">
+                        <label class="btn-physical btn-small catalog-media-upload">
+                          <span data-i18n="catalog.upload">Upload</span>
+                          <input id="award-sound-file-input" type="file" accept="audio/mpeg,audio/wav,.mp3,.wav" aria-labelledby="award-sound-file-label">
+                        </label>
+                        <button id="award-sound-file-clear" type="button" class="btn-physical btn-small" data-i18n="catalog.clear">Clear</button>
+                        <button id="award-sound-play" type="button" class="btn-physical btn-small" data-i18n="catalog.playSound">Play</button>
+                        <button id="award-sound-stop" type="button" class="btn-physical btn-small" data-i18n="catalog.stopSound">Stop</button>
+                      </div>
+                      <p id="award-sound-file-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="award-sound-volume-input" data-i18n="catalog.soundVolumeLabel">Sound volume</label>
+                      <div class="catalog-volume-row">
+                        <input id="award-sound-volume-input" type="range" min="0" max="100" step="1" value="70">
+                        <output id="award-sound-volume-value" for="award-sound-volume-input">70%</output>
+                      </div>
+                      <p id="award-sound-volume-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <fieldset class="form__field catalog-layout-field">
+                      <legend data-i18n="catalog.layoutLabel">Layout</legend>
+                      <div class="catalog-layout-group" role="radiogroup" aria-label="Alert layout">
+                        <label class="catalog-layout-option"><input type="radio" name="award-layout" value="card" checked> <span data-i18n="catalog.layoutCard">Card</span></label>
+                        <label class="catalog-layout-option"><input type="radio" name="award-layout" value="banner"> <span data-i18n="catalog.layoutBanner">Banner</span></label>
+                        <label class="catalog-layout-option"><input type="radio" name="award-layout" value="fullscreen"> <span data-i18n="catalog.layoutFullscreen">Fullscreen</span></label>
+                      </div>
+                      <p id="award-layout-error" class="field-error" role="alert" hidden></p>
+                    </fieldset>
                     <div class="form__field">
                       <label for="award-duration-input" data-i18n="catalog.durationLabel">Duration (ms)</label>
                       <input id="award-duration-input" type="number" min="1" step="1" value="5000" required>
@@ -1880,6 +1972,12 @@
               <input id="day-reset-hour" name="day_reset_hour" type="number" min="0" max="23" step="1" inputmode="numeric">
               <p class="field-hint" data-i18n="iface.dayResetHourHint">Local hour when the stats day rolls over (0–23).</p>
               <p id="day-reset-hour-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="streamer-display-name" data-i18n="iface.streamerDisplayName">Streamer display name</label>
+              <input id="streamer-display-name" name="streamer_display_name" type="text" maxlength="64" autocomplete="name">
+              <p class="field-hint" data-i18n="iface.streamerDisplayNameHint">Used as {streamer} in command and award splash templates.</p>
+              <p id="streamer-display-name-error" class="field-error" role="alert" hidden></p>
             </div>
             <div class="form__field">
               <label class="checkbox" for="hide-command-messages">

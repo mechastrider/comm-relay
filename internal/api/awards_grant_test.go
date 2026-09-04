@@ -93,6 +93,53 @@ func TestAwardGrant_WhenJokeToExistingViewer_ExpectXPAndAlert(t *testing.T) {
 	require.True(t, sawAlert, "expected award alert frame")
 }
 
+func TestAwardGrant_WhenTemplateHasMessage_ExpectResolvedQuote(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+	srv := httptest.NewServer(env.Handler)
+	t.Cleanup(srv.Close)
+
+	seedViewer(t, env, "twitch", "42", "Bob")
+
+	_, err := env.ViewerStore.UpdateAward(store.UpdateAwardInput{
+		ID:             "advice",
+		Name:           "Advice",
+		Points:         50,
+		SplashTemplate: "Advice for {name}: {message} +{points}",
+		Sound:          "chime",
+		DurationMs:     5000,
+	})
+	require.NoError(t, err)
+
+	conn, _, err := websocket.DefaultDialer.Dial("ws"+strings.TrimPrefix(srv.URL, "http")+"/ws", nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
+	time.Sleep(50 * time.Millisecond)
+
+	body, err := json.Marshal(map[string]string{
+		"platform":     "twitch",
+		"user_id":      "42",
+		"award_id":     "advice",
+		"message_text": "nice catch",
+	})
+	require.NoError(t, err)
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/awards/grant", strings.NewReader(string(body))))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var alert map[string]any
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
+		_, data, readErr := conn.ReadMessage()
+		if readErr != nil || json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
+			continue
+		}
+		break
+	}
+	require.Equal(t, "Advice for Bob: nice catch +50", alert["text"])
+}
+
 func TestAwardGrant_WhenMessageTextExceedsCodePointLimit_ExpectTransientBoundedQuote(t *testing.T) {
 	b := bus.New(0)
 	env := newTestEnv(t, b)

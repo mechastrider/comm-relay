@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/muonsoft/errors"
@@ -250,4 +251,33 @@ func TestValidate_WhenDayResetHourZero_ExpectValid(t *testing.T) {
 	cfg.DayResetHour = 0
 
 	require.NoError(t, cfg.Validate())
+}
+
+func TestValidate_WhenStreamerDisplayNameOverlong_ExpectFieldError(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.StreamerDisplayName = strings.Repeat("a", 65)
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	fields := ValidationFields(err)
+	require.Contains(t, fields, "streamer_display_name")
+}
+
+func TestApplyDefaults_WhenStreamerDisplayNameHasWhitespace_ExpectTrimmed(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.StreamerDisplayName = "  Jake  "
+	cfg.ApplyDefaults()
+
+	require.Equal(t, "Jake", cfg.StreamerDisplayName)
+}
+
+func TestPublic_WhenStreamerDisplayNameDefault_ExpectEmptyString(t *testing.T) {
+	t.Parallel()
+
+	public := Default().Public()
+	require.Equal(t, "", public.StreamerDisplayName)
 }

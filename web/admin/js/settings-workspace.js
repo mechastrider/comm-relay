@@ -147,6 +147,9 @@ function collectSectionValuesFromDOM(sectionId) {
       hide_command_messages: dom.hideCommandMessagesInput
         ? dom.hideCommandMessagesInput.checked
         : false,
+      streamer_display_name: dom.streamerDisplayNameInput
+        ? dom.streamerDisplayNameInput.value.trim()
+        : "",
     };
   }
 
@@ -285,6 +288,9 @@ function applySectionValuesToDOM(sectionId, values) {
     }
     if (dom.hideCommandMessagesInput) {
       dom.hideCommandMessagesInput.checked = Boolean(values.hide_command_messages);
+    }
+    if (dom.streamerDisplayNameInput) {
+      dom.streamerDisplayNameInput.value = String(values.streamer_display_name || "");
     }
     return;
   }
@@ -455,6 +461,14 @@ function validateSettingsSection(sectionId, payload) {
     ) {
       setFieldError("day_reset_hour", "Day reset hour must be between 0 and 23.");
       firstInvalid = firstInvalid || dom.dayResetHourInput;
+    }
+    const streamerName = String(payload.streamer_display_name || "");
+    if (Array.from(streamerName).length > 64) {
+      setFieldError(
+        "streamer_display_name",
+        "Streamer display name must be at most 64 characters."
+      );
+      firstInvalid = firstInvalid || dom.streamerDisplayNameInput;
     }
   }
 
