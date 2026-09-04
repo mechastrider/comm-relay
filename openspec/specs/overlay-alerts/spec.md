@@ -40,23 +40,65 @@ The alert client SHALL show exactly one splash at a time and MUST NOT replace or
 - **WHEN** all 20 pending items are awards and a command arrives
 - **THEN** the incoming command is discarded and no award is removed
 
-### Requirement: Splash content uses avatar, template text, and a built-in tone
-Each alert frame SHALL include `type` `"alert"`, viewer display `name`, `avatar_url` when known, resolved `text`, `points` (0 for command fires), `sound` (a built-in id or empty for silence), and `duration_ms`. The client SHALL render the avatar image when the URL is http(s), otherwise a nameless placeholder. Text SHALL be a text node (no `innerHTML`). Sound SHALL play in this page so OBS can capture it, using the same built-in tone set as admin message sound (`chime`, `ping`, `soft`, `alert`) or silence. Custom image and sound-file values MAY appear as null and MUST be ignored until a later change.
+### Requirement: Splash content uses avatar or custom media, template text, and sound
+Each alert frame SHALL include `type` `"alert"`, viewer display `name`, `avatar_url` when known, resolved `text`, `points` (0 for command fires), `sound` (a built-in id, empty for silence, or omitted when a custom file is used), `duration_ms`, `layout` (`card`, `banner`, or `fullscreen`; missing or unknown values SHALL use `fullscreen`), `sound_volume` (0–100; missing SHALL use 70), optional `image_asset`, optional `sound_file`, optional `image_fit` (`cover`, `contain`, `fill`, or `tile`; missing SHALL use `contain`), and optional `image_size_pct` (25–300; missing or zero SHALL use 100). When `image_asset` is a safe stored filename, the client SHALL render `/overlay/assets/{filename}` instead of the viewer avatar and SHALL apply `image_fit` to that element. When `image_asset` is absent, the client SHALL render the avatar image when the URL is http(s), otherwise a nameless placeholder. When `sound_file` is a safe stored filename, the client SHALL play `/overlay/assets/{filename}` at `sound_volume` and MUST NOT also play a built-in tone. Otherwise sound SHALL play in this page using the built-in tone set (`chime`, `ping`, `soft`, `alert`) or silence, at `sound_volume`. Text SHALL be a text node (no `innerHTML`).
 
 #### Scenario: Command splash
 - **WHEN** an alert frame for `!gg` arrives with a viewer avatar and text `Good game, Alice!`
 - **THEN** the page shows that avatar and text and plays the configured tone
 
 #### Scenario: Silence
-- **WHEN** `sound` is empty
+- **WHEN** `sound` is empty and `sound_file` is absent
 - **THEN** the splash is visual only
 
+#### Scenario: Custom image replaces avatar
+- **WHEN** a command alert includes `image_asset` `asset_ab12cd.png`
+- **THEN** the splash shows `/overlay/assets/asset_ab12cd.png` and does not show the viewer avatar
+
+#### Scenario: Custom sound
+- **WHEN** an alert includes `sound_file` `asset_ff00.mp3` and `sound_volume` 70
+- **THEN** the page plays that asset at 70 percent and does not play a built-in tone
+
 ### Requirement: Templates resolve on the server
-Splash templates MAY contain `{name}` and `{points}`. The server SHALL substitute the canonical or last-seen display name and the numeric points for that event before broadcast. Unknown placeholders SHALL be left unchanged. Command fires SHALL substitute `{points}` as 0.
+Splash templates MAY contain `{viewer}`, `{name}`, `{streamer}`, `{points}`, and `{message}`. The server SHALL substitute `{viewer}` and `{name}` with the canonical or last-seen display name, `{streamer}` with `streamer_display_name` (empty string when unset), `{points}` with the numeric points for that event, and `{message}` with the bounded award quote when present, otherwise the matched command line when the source is a command, otherwise empty. Unknown placeholders SHALL be left unchanged. Command fires SHALL substitute `{points}` as 0.
 
 #### Scenario: Award template
 - **WHEN** Advice is granted to a viewer whose display name is `Bob`
 - **THEN** the alert `text` contains `Bob` and `50`
+
+#### Scenario: Viewer alias
+- **WHEN** a template contains `{viewer}` and `{name}` and the viewer display name is `Alice`
+- **THEN** both placeholders become `Alice`
+
+#### Scenario: Streamer name
+- **WHEN** `streamer_display_name` is `Jake` and the template contains `Hi from {streamer}`
+- **THEN** the resolved alert text contains `Jake`
+
+#### Scenario: Award message placeholder
+- **WHEN** an award grant includes a bounded quote `nice catch` and the template contains `{message}`
+- **THEN** the resolved text contains `nice catch`
+
+### Requirement: Alert layout follows the catalog item
+The alert client SHALL apply `layout` `card` as compact content, `banner` as a wide strip using available width, and `fullscreen` as a splash using the Browser Source rectangle. The page background MUST remain transparent outside preview. Unknown layout values SHALL use `fullscreen`.
+
+#### Scenario: Banner command
+- **WHEN** a `!gg` alert arrives with `layout` `banner`
+- **THEN** the visible splash uses a wide banner composition rather than the compact card
+
+### Requirement: Alert portrait scale expands the layout column
+The alert client SHALL resolve a combined portrait scale from the active preset `surfaces.alerts.image_size_pct` (25–300; missing or zero SHALL use 100) multiplied by the alert frame `image_size_pct` when a custom `image_asset` is present (otherwise the item multiplier SHALL be 1). The portrait column SHALL grow with that scale and MUST push the accent bar and text area rather than overlapping them. In cockpit and popup themes the avatar grid track MUST NOT remain a fixed pixel width when scale is above 100 percent.
+
+#### Scenario: Preset enlarges portrait
+- **WHEN** the active preset stores `surfaces.alerts.image_size_pct` 150 and a sample or live alert is shown
+- **THEN** the portrait slot is larger than at 100 percent and the text block starts farther to the right
+
+#### Scenario: Item scale stacks on preset
+- **WHEN** the preset portrait scale is 150 percent and a command alert includes `image_size_pct` 200 with a custom image
+- **THEN** the effective portrait scale is 300 percent relative to the theme base size
+
+#### Scenario: Studio preview honors draft scale
+- **WHEN** Studio preview targets alerts with `preview=sample` and a valid `image_size_pct` query from the unpublished draft
+- **THEN** the fictitious splash reflects that preset portrait scale before Publish
 
 ### Requirement: Alert client reconnects without restoring old splashes
 After load, the alert page SHALL connect to `/ws` and MUST NOT replay historical alerts from HTTP. If the socket drops, it SHALL reconnect with the same backoff family as other overlays. Missed alerts during disconnect are not replayed.

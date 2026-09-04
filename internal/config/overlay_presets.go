@@ -17,6 +17,13 @@ const (
 	overlayPresetNameMax = 64
 )
 
+// Overlay alert portrait scale bounds (percent) for preset surfaces.alerts.image_size_pct.
+const (
+	OverlayAlertImageSizeMin     = 25
+	OverlayAlertImageSizeMax     = 300
+	OverlayAlertImageSizeDefault = 100
+)
+
 // Leaderboard layout values for overlay.presets[].surfaces.leaderboard.layout.
 const (
 	OverlayLeaderboardLayoutPanel = "panel"
@@ -58,6 +65,7 @@ type OverlayLeaderboardSurface struct {
 // OverlayAlertsSurface holds optional alert-only appearance overrides.
 type OverlayAlertsSurface struct {
 	PanelOpacity *float64 `json:"panel_opacity,omitempty"`
+	ImageSizePct int      `json:"image_size_pct,omitempty"`
 }
 
 func (p *OverlayPreset) applyDefaults() {
@@ -167,7 +175,22 @@ func (s OverlayChatSurface) validateFields(prefix string) FieldErrors {
 }
 
 func (s OverlayAlertsSurface) validateFields(prefix string) FieldErrors {
-	return validateSurfacePanelOpacity(prefix, s.PanelOpacity)
+	fields := validateSurfacePanelOpacity(prefix, s.PanelOpacity)
+	key := func(name string) string {
+		if prefix == "" {
+			return name
+		}
+		return prefix + "_" + name
+	}
+	if s.ImageSizePct != 0 &&
+		(s.ImageSizePct < OverlayAlertImageSizeMin || s.ImageSizePct > OverlayAlertImageSizeMax) {
+		fields[key("image_size_pct")] = fmt.Sprintf(
+			"Image size must be between %d%% and %d%%.",
+			OverlayAlertImageSizeMin,
+			OverlayAlertImageSizeMax,
+		)
+	}
+	return fields
 }
 
 func validateSurfacePanelOpacity(prefix string, opacity *float64) FieldErrors {
@@ -198,6 +221,21 @@ func resolvedSurfacePanelOpacity(fallback float64, override *float64) float64 {
 		return *override
 	}
 	return fallback
+}
+
+// AlertsImageSizePct returns the alert portrait scale for a preset.
+func (p OverlayPreset) AlertsImageSizePct() int {
+	sizePct := p.Surfaces.Alerts.ImageSizePct
+	if sizePct <= 0 {
+		return OverlayAlertImageSizeDefault
+	}
+	if sizePct < OverlayAlertImageSizeMin {
+		return OverlayAlertImageSizeMin
+	}
+	if sizePct > OverlayAlertImageSizeMax {
+		return OverlayAlertImageSizeMax
+	}
+	return sizePct
 }
 
 // LeaderboardFontSizePx returns the leaderboard font, inheriting the preset font when unset.

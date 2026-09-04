@@ -61,6 +61,8 @@ type wireAlert struct {
 	SoundFile       string `json:"sound_file,omitempty"`
 	SoundVolume     int    `json:"sound_volume"`
 	Layout          string `json:"layout,omitempty"`
+	ImageFit        string `json:"image_fit,omitempty"`
+	ImageSizePct    int    `json:"image_size_pct"`
 	Trigger         string `json:"trigger,omitempty"`
 	AwardID         string `json:"award_id,omitempty"`
 	AwardName       string `json:"award_name,omitempty"`
@@ -143,7 +145,9 @@ func alertWirePayload(cmd *store.Command, msg bus.ChatMessage, text string, poin
 		CreatedAt:  time.Now().UTC().Format(time.RFC3339Nano),
 		Trigger:    cmd.Trigger,
 	}
-	applyCatalogAlertMedia(&alert, cmd.ImageAsset, cmd.SoundFile, cmd.Sound, cmd.SoundVolume, cmd.Layout)
+	applyCatalogAlertMedia(
+		&alert, cmd.ImageAsset, cmd.SoundFile, cmd.Sound, cmd.SoundVolume, cmd.Layout, cmd.ImageFit, cmd.ImageSizePct,
+	)
 
 	data, err := json.Marshal(alert)
 	if err != nil {
@@ -181,7 +185,9 @@ func awardAlertWirePayload(
 		MessageID:       context.MessageID,
 		MessageText:     context.MessageText,
 	}
-	applyCatalogAlertMedia(&alert, award.ImageAsset, award.SoundFile, award.Sound, award.SoundVolume, award.Layout)
+	applyCatalogAlertMedia(
+		&alert, award.ImageAsset, award.SoundFile, award.Sound, award.SoundVolume, award.Layout, award.ImageFit, award.ImageSizePct,
+	)
 
 	data, err := json.Marshal(alert)
 	if err != nil {
@@ -191,7 +197,13 @@ func awardAlertWirePayload(
 	return data, nil
 }
 
-func applyCatalogAlertMedia(alert *wireAlert, imageAsset, soundFile, builtInSound string, soundVolume int, layout string) {
+func applyCatalogAlertMedia(
+	alert *wireAlert,
+	imageAsset, soundFile, builtInSound string,
+	soundVolume int,
+	layout, imageFit string,
+	imageSizePct int,
+) {
 	if imageAsset != "" {
 		alert.ImageAsset = imageAsset
 	}
@@ -202,4 +214,6 @@ func applyCatalogAlertMedia(alert *wireAlert, imageAsset, soundFile, builtInSoun
 	}
 	alert.SoundVolume = store.NormalizeCatalogSoundVolume(soundVolume)
 	alert.Layout = store.NormalizeCatalogLayout(layout)
+	alert.ImageFit = store.NormalizeCatalogImageFit(imageFit)
+	alert.ImageSizePct = store.NormalizeCatalogImageSizePct(imageSizePct)
 }

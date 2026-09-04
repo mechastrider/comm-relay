@@ -7,7 +7,7 @@ Lets the operator define award types and grant them from a live chat line in adm
 ## Requirements
 
 ### Requirement: Operator can manage an award-type catalog
-The system SHALL persist award types in local SQLite as a list separate from chat commands. Each award type SHALL have a unique id, display name, positive integer `points`, splash text template, built-in sound id or silence, optional reserved media fields that MAY be null, and splash duration. `GET /api/awards` SHALL list them. Mutations SHALL be `POST /api/awards/create`, `POST /api/awards/update`, and `POST /api/awards/delete` with identifiers in the JSON body. The operator MUST be able to delete any award type, including seeds.
+The system SHALL persist award types in local SQLite as a list separate from chat commands. Each award type SHALL have a unique id, display name, positive integer `points`, splash text template, built-in sound id or silence, optional `image_asset` and `sound_file` filenames that MAY be null, `sound_volume` 0–100 (default 70), `layout` of `card`, `banner`, or `fullscreen` (default `fullscreen`), optional `image_fit` of `cover`, `contain`, `fill`, or `tile` (default `contain`), optional `image_size_pct` 25–300 (default 100), and splash duration. `GET /api/awards` SHALL list these fields. Mutations SHALL be `POST /api/awards/create`, `POST /api/awards/update`, and `POST /api/awards/delete` with identifiers in the JSON body. Create and update SHALL accept the media, volume, layout, image-fit, and image-size fields. Empty media fields SHALL clear a previous file reference. The operator MUST be able to delete any award type, including seeds.
 
 #### Scenario: Create award
 - **WHEN** the operator creates an award named `Clutch` with 25 points
@@ -16,6 +16,10 @@ The system SHALL persist award types in local SQLite as a list separate from cha
 #### Scenario: Delete seed
 - **WHEN** the operator deletes the seeded Joke award
 - **THEN** Reward pickers no longer offer Joke and a restart MUST NOT recreate it
+
+#### Scenario: Save custom sound
+- **WHEN** the operator updates Joke with a stored `sound_file` filename and `sound_volume` 50
+- **THEN** `GET /api/awards` returns those values and a later Joke grant plays that file at 50 percent
 
 ### Requirement: First migrate seeds Joke and Advice
 On the migration that introduces award types, the system SHALL insert deletable seeds: Joke with `points` 10 and Advice with `points` 50, with splash templates that include `{name}` and `{points}`. Seeds MUST NOT be re-inserted on later startups.

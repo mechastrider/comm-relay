@@ -31,6 +31,8 @@ type commandResponse struct {
 	SoundFile       string `json:"sound_file,omitempty"`
 	SoundVolume     int    `json:"sound_volume"`
 	Layout          string `json:"layout"`
+	ImageFit        string `json:"image_fit"`
+	ImageSizePct    int    `json:"image_size_pct"`
 }
 
 type commandsListResponse struct {
@@ -55,6 +57,8 @@ func commandFromStore(cmd store.Command) commandResponse {
 	}
 	resp.SoundVolume = cmd.SoundVolume
 	resp.Layout = cmd.Layout
+	resp.ImageFit = cmd.ImageFit
+	resp.ImageSizePct = cmd.ImageSizePct
 
 	return resp
 }
@@ -92,6 +96,8 @@ type createCommandRequest struct {
 	SoundFile       string `json:"sound_file,omitempty"`
 	SoundVolume     *int   `json:"sound_volume,omitempty"`
 	Layout          string `json:"layout,omitempty"`
+	ImageFit        string `json:"image_fit,omitempty"`
+	ImageSizePct    *int   `json:"image_size_pct,omitempty"`
 }
 
 func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
@@ -120,6 +126,8 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		SoundFile:       request.SoundFile,
 		SoundVolume:     catalogSoundVolumeFromRequest(request.SoundVolume),
 		Layout:          request.Layout,
+		ImageFit:        request.ImageFit,
+		ImageSizePct:    catalogImageSizePctFromRequest(request.ImageSizePct),
 	})
 	if fields := store.CatalogMediaFields(err); len(fields) > 0 {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
@@ -158,6 +166,8 @@ type updateCommandRequest struct {
 	SoundFile       string `json:"sound_file,omitempty"`
 	SoundVolume     *int   `json:"sound_volume,omitempty"`
 	Layout          string `json:"layout,omitempty"`
+	ImageFit        string `json:"image_fit,omitempty"`
+	ImageSizePct    *int   `json:"image_size_pct,omitempty"`
 }
 
 func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
@@ -190,6 +200,8 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		SoundFile:       request.SoundFile,
 		SoundVolume:     catalogSoundVolumeFromRequest(request.SoundVolume),
 		Layout:          request.Layout,
+		ImageFit:        request.ImageFit,
+		ImageSizePct:    catalogImageSizePctFromRequest(request.ImageSizePct),
 	})
 	if fields := store.CatalogMediaFields(err); len(fields) > 0 {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)

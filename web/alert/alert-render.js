@@ -39,7 +39,46 @@ export function normalizeAlertLayout(layout) {
   if (value === "banner" || value === "fullscreen") {
     return value;
   }
-  return "card";
+  return "fullscreen";
+}
+
+const ALERT_IMAGE_FITS = new Set(["cover", "contain", "fill", "tile"]);
+
+export function normalizeAlertImageFit(fit) {
+  const value = text(fit).toLowerCase();
+  if (ALERT_IMAGE_FITS.has(value)) {
+    return value;
+  }
+  return "contain";
+}
+
+export function normalizeAlertImageSizePct(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return 100;
+  }
+  return Math.max(25, Math.min(300, Math.round(parsed)));
+}
+
+export function alertImageScaleFromSizePct(sizePct) {
+  return normalizeAlertImageSizePct(sizePct) / 100;
+}
+
+export function combinedAlertPortraitScale(presetScale, itemSizePct, hasCustomImage) {
+  const preset = Number.isFinite(presetScale) && presetScale > 0 ? presetScale : 1;
+  const item = hasCustomImage ? alertImageScaleFromSizePct(itemSizePct) : 1;
+  return preset * item;
+}
+
+export function alertImageFitObjectFit(fit) {
+  const normalized = normalizeAlertImageFit(fit);
+  if (normalized === "fill") {
+    return "fill";
+  }
+  if (normalized === "tile") {
+    return "contain";
+  }
+  return normalized;
 }
 
 export function alertRenderModel(alert) {
@@ -48,6 +87,8 @@ export function alertRenderModel(alert) {
   const imageAsset = safeStoredImageAssetFilename(alert && alert.image_asset);
   const base = {
     layout: normalizeAlertLayout(alert && alert.layout),
+    imageFit: normalizeAlertImageFit(alert && alert.image_fit),
+    imageSizePct: normalizeAlertImageSizePct(alert && alert.image_size_pct),
     imageAsset,
     avatarURL: safeImageURL(alert && alert.avatar_url),
   };
@@ -91,10 +132,12 @@ export function renderAvatar(documentRef, name, avatarURL) {
   return placeholder;
 }
 
-export function renderAlertPortrait(documentRef, name, imageURL, avatarURL) {
+export function renderAlertPortrait(documentRef, name, imageURL, avatarURL, imageFit) {
   if (imageURL) {
+    const fit = normalizeAlertImageFit(imageFit);
     const image = documentRef.createElement("img");
-    image.className = "alert-avatar alert-avatar--custom";
+    image.className = "alert-avatar alert-avatar--custom alert-image-fit--" + fit;
+    image.style.objectFit = alertImageFitObjectFit(fit);
     image.src = imageURL;
     image.alt = "";
     image.loading = "eager";
@@ -127,6 +170,15 @@ export function createAlertSplash(documentRef, alert, options = {}) {
   if (options.reducedMotion) {
     splash.classList.add("alert-splash--reduced");
   }
+  const portraitScale = combinedAlertPortraitScale(
+    options.presetImageScale,
+    model.imageSizePct,
+    Boolean(model.imageAsset)
+  );
+  splash.style.setProperty("--alert-portrait-scale", String(portraitScale));
+  if (model.imageAsset) {
+    splash.classList.add("alert-splash--has-custom-image");
+  }
   if (typeof options.userAccent === "function") {
     splash.style.setProperty("--message-accent", options.userAccent(model.name));
   }
@@ -135,7 +187,9 @@ export function createAlertSplash(documentRef, alert, options = {}) {
     model.imageAsset && typeof options.overlayAssetURL === "function"
       ? options.overlayAssetURL(model.imageAsset)
       : "";
-  splash.append(renderAlertPortrait(documentRef, model.name, portraitURL, model.avatarURL));
+  splash.append(
+    renderAlertPortrait(documentRef, model.name, portraitURL, model.avatarURL, model.imageFit)
+  );
   const accent = documentRef.createElement("span");
   accent.className = "alert-accent";
   accent.setAttribute("aria-hidden", "true");

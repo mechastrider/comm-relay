@@ -18,6 +18,11 @@ const commandMedia = createCatalogMediaController({
   imageInput: dom.commandImageInput,
   imageClear: dom.commandImageClear,
   imageError: dom.commandImageError,
+  imageFitInput: dom.commandImageFitInput,
+  imageFitError: dom.commandImageFitError,
+  imageSizeInput: dom.commandImageSizeInput,
+  imageSizeValue: dom.commandImageSizeValue,
+  imageSizeError: dom.commandImageSizeError,
   soundFileInput: dom.commandSoundFileInput,
   soundFileClear: dom.commandSoundFileClear,
   soundFileError: dom.commandSoundFileError,
@@ -253,7 +258,7 @@ function defaultNewCommand() {
     sound: "",
     duration_ms: 5000,
     sound_volume: 70,
-    layout: "card",
+    layout: "fullscreen",
   };
 }
 

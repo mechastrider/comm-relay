@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { alertRenderModel, createAlertSplash, safeImageURL } from "./alert-render.js";
+import {
+  alertRenderModel,
+  combinedAlertPortraitScale,
+  createAlertSplash,
+  safeImageURL,
+} from "./alert-render.js";
 
 class FakeElement {
   constructor(tagName) {
@@ -51,7 +56,7 @@ test("builds an award hierarchy with text nodes and an optional quote", function
     avatar_url: "javascript:alert(1)",
   });
 
-  assert.equal(splash.className, "alert-splash alert-splash--award alert-splash--layout-card");
+  assert.equal(splash.className, "alert-splash alert-splash--award alert-splash--layout-fullscreen");
   assert.equal(byClass(splash, "alert-award-name").textContent, "Spotter");
   assert.equal(byClass(splash, "alert-award-viewer").textContent, "Nova");
   assert.equal(byClass(splash, "alert-points").textContent, "+25");
@@ -78,7 +83,7 @@ test("omits empty award fields and preserves the command presentation", function
     name: "Nova",
     text: "Good game, Nova!",
   });
-  assert.equal(command.className, "alert-splash alert-splash--command alert-splash--layout-card");
+  assert.equal(command.className, "alert-splash alert-splash--command alert-splash--layout-fullscreen");
   assert.equal(byClass(command, "alert-text").textContent, "Good game, Nova!");
 });
 
@@ -91,6 +96,13 @@ test("only permits http(s) avatars and keeps render-model values safe", function
     text: "legacy",
     avatarURL: "",
     imageAsset: "",
-    layout: "card",
+    layout: "fullscreen",
+    imageFit: "contain",
+    imageSizePct: 100,
   });
+});
+
+test("combinedAlertPortraitScale multiplies preset and per-item size", function () {
+  assert.equal(combinedAlertPortraitScale(1.5, 200, true), 3);
+  assert.equal(combinedAlertPortraitScale(2, 100, false), 2);
 });

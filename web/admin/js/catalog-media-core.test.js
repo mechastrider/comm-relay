@@ -4,14 +4,21 @@ import {
   catalogMediaPayload,
   createCatalogMediaState,
   normalizeCatalogLayout,
+  normalizeCatalogImageSizePct,
   overlayAssetPreviewURL,
   readCatalogMediaFromRecord,
 } from './catalog-media-core.js';
 
-test('normalizeCatalogLayout defaults unknown to card', () => {
-  assert.equal(normalizeCatalogLayout(''), 'card');
+test('normalizeCatalogLayout defaults unknown to fullscreen', () => {
+  assert.equal(normalizeCatalogLayout(''), 'fullscreen');
   assert.equal(normalizeCatalogLayout('banner'), 'banner');
-  assert.equal(normalizeCatalogLayout('weird'), 'card');
+  assert.equal(normalizeCatalogLayout('weird'), 'fullscreen');
+});
+
+test('normalizeCatalogImageSizePct defaults unknown to 100', () => {
+  assert.equal(normalizeCatalogImageSizePct(''), 100);
+  assert.equal(normalizeCatalogImageSizePct('180'), 180);
+  assert.equal(normalizeCatalogImageSizePct('999'), 300);
 });
 
 test('readCatalogMediaFromRecord rejects unsafe filenames', () => {
@@ -39,6 +46,8 @@ test('catalogMediaPayload round-trips media fields', () => {
     sound_file: 'asset_cd.mp3',
     sound_volume: 55,
     layout: 'banner',
+    image_fit: 'contain',
+    image_size_pct: 100,
   });
 });
 

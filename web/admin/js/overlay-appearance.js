@@ -14,9 +14,11 @@ import {
   normalizeOpacitySurface,
   parsePanelOpacity,
   previewSurfacePanelOpacity,
+  withAlertsAppearance,
   withLeaderboardAppearance,
   withSurfacePanelOpacity,
 } from "./surface-opacity.js";
+import { normalizeCatalogImageSizePct } from "./catalog-media-core.js";
 import { OVERLAY_THEMES } from "./constants.js";
 import * as dom from "./dom.js";
 
@@ -167,8 +169,11 @@ export function syncStudioInspectorEssential(surface) {
   if (dom.studioEssentialPeriod) {
     dom.studioEssentialPeriod.hidden = current !== "leaderboard";
   }
+  if (dom.studioEssentialAlertsImageSize) {
+    dom.studioEssentialAlertsImageSize.hidden = current !== "alerts";
+  }
   if (dom.studioEssentialAlertsNote) {
-    dom.studioEssentialAlertsNote.hidden = current !== "alerts";
+    dom.studioEssentialAlertsNote.hidden = true;
   }
   if (dom.studioSelectedSurfaceHeading) {
     const headingKey =
@@ -246,12 +251,22 @@ function collectStyleFromForm(base) {
   };
 }
 
+function syncAlertsImageSizeLabel() {
+  if (!dom.overlayAlertsImageSize || !dom.overlayAlertsImageSizeValue) {
+    return;
+  }
+  const value = normalizeCatalogImageSizePct(dom.overlayAlertsImageSize.value);
+  dom.overlayAlertsImageSizeValue.textContent = String(value) + "%";
+}
+
 function collectSurfaces(base) {
   const chatFont = Number.parseInt(fieldValue("overlay-font-size", String((base && base.font_size_px) || 18)), 10);
   const rawFont = Number.parseInt(fieldValue("overlay-leaderboard-font-size", String(chatFont)), 10);
   const layout = fieldValue("overlay-leaderboard-layout", "panel") === "chips" ? "chips" : "panel";
+  const alertsImageSize = normalizeCatalogImageSizePct(fieldValue("overlay-alerts-image-size", "100"));
   const current = base && base.surfaces && typeof base.surfaces === "object" ? base.surfaces : {};
   let surfaces = withLeaderboardAppearance(current, rawFont, chatFont, layout);
+  surfaces = withAlertsAppearance(surfaces, alertsImageSize);
   const rawOpacity = panelOpacityTouched
     ? panelOpacityDrafts[opacityEditorSurface]
     : fieldValue("overlay-panel-opacity", "");
@@ -301,6 +316,13 @@ function normalizedSurfaceOverrides(raw, fontSizePx) {
       surfaces[surface] = Object.assign({}, surfaces[surface], { panel_opacity: value });
     }
   });
+  const alerts =
+    incoming.alerts && typeof incoming.alerts === "object" ? incoming.alerts : {};
+  if (typeof alerts.image_size_pct === "number" && alerts.image_size_pct >= 25) {
+    surfaces.alerts = Object.assign({}, surfaces.alerts, {
+      image_size_pct: normalizeCatalogImageSizePct(alerts.image_size_pct),
+    });
+  }
   return surfaces;
 }
 
@@ -443,6 +465,15 @@ function writeFormFromPreset(preset) {
   const leaderboard = normalizeLeaderboardSurface(preset.surfaces, preset.font_size_px || 18).leaderboard;
   setFieldValue("overlay-leaderboard-font-size", String(leaderboard.font_size_px));
   setFieldValue("overlay-leaderboard-layout", leaderboard.layout);
+  const alerts =
+    preset.surfaces && preset.surfaces.alerts && typeof preset.surfaces.alerts === "object"
+      ? preset.surfaces.alerts
+      : {};
+  setFieldValue(
+    "overlay-alerts-image-size",
+    String(normalizeCatalogImageSizePct(alerts.image_size_pct))
+  );
+  syncAlertsImageSizeLabel();
   updatePanelImagePreview(style.panel_image);
   syncThemeCards();
   syncDurationChips();
@@ -851,6 +882,11 @@ export function collectAppearanceQuery() {
     query.panel_image = style.panel_image;
     query.panel_image_fit = style.panel_image_fit;
     query.panel_image_scope = style.panel_image_scope;
+  }
+  if (selectedOpacitySurface() === "alerts") {
+    query.image_size_pct = String(
+      normalizeCatalogImageSizePct(fieldValue("overlay-alerts-image-size", "100"))
+    );
   }
   return query;
 }
@@ -1264,6 +1300,7 @@ export function initOverlayAppearance() {
     "overlay-leaderboard-font-size",
     "overlay-leaderboard-layout",
     "overlay-leaderboard-period",
+    "overlay-alerts-image-size",
   ].forEach(function (id) {
     const el = document.getElementById(id);
     if (el) {
@@ -1271,6 +1308,10 @@ export function initOverlayAppearance() {
       el.addEventListener("input", requestPreviewRefresh);
     }
   });
+  if (dom.overlayAlertsImageSize) {
+    dom.overlayAlertsImageSize.addEventListener("input", syncAlertsImageSizeLabel);
+    dom.overlayAlertsImageSize.addEventListener("change", syncAlertsImageSizeLabel);
+  }
 
   window.addEventListener("admin-locale-applied", function () {
     refreshThemeCardLabels();

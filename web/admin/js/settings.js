@@ -514,6 +514,24 @@ export function validateClient(payload, options) {
       return false;
     });
 
+    (payload.overlay.presets || []).some(function (preset) {
+      const alerts = preset && preset.surfaces && preset.surfaces.alerts;
+      const size = alerts && alerts.image_size_pct;
+      if (
+        size != null &&
+        size !== 0 &&
+        (!Number.isFinite(size) || size < 25 || size > 300)
+      ) {
+        setFieldError(
+          "overlay_alerts_image_size_pct",
+          "Image size must be between 25% and 300%."
+        );
+        firstInvalid = firstInvalid || dom.overlayAlertsImageSize;
+        return true;
+      }
+      return false;
+    });
+
     if (
       payload.overlay.display_mode !== "normal" &&
       payload.overlay.display_mode !== "compact"

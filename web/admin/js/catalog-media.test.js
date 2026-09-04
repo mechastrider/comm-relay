@@ -23,6 +23,8 @@ test('normalizes catalog media defaults and payload', function () {
     sound_file: 'asset_tone.wav',
     sound_volume: 42,
     layout: 'banner',
+    image_fit: 'contain',
+    image_size_pct: 100,
   });
-  assert.equal(normalizeCatalogLayout(''), 'card');
+  assert.equal(normalizeCatalogLayout(''), 'fullscreen');
 });

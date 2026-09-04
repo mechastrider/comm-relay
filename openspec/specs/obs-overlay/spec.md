@@ -147,7 +147,7 @@ A selectable overlay theme SHALL cover chat, leaderboard, and the alert splash s
 
 #### Scenario: Studio preview of alerts
 - **WHEN** Studio preview targets the alert surface with `preview=sample`
-- **THEN** the iframe shows a fictitious splash and MUST NOT consume live `/ws` `alert` frames as the only preview content
+- **THEN** the iframe shows a fictitious splash, reflects the draft preset `surfaces.alerts.image_size_pct` through the preview query when set, and MUST NOT consume live `/ws` `alert` frames as the only preview content
 
 ### Requirement: Visible rewarded messages receive transient feedback
 When the chat overlay receives an award alert with `message_platform` and `message_id`, it SHALL find a visible row only by that exact pair. A matching row SHALL show the award name or positive points and an emphasized border for 2.5 seconds. The overlay MUST NOT recreate an expired or removed row, and MUST NOT guess a match from viewer name or message text. Repeated awards MAY restart the feedback on the same visible row. Reduced-motion mode SHALL use static emphasis without pulsing movement.

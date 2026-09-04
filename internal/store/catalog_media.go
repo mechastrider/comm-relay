@@ -18,8 +18,12 @@ var (
 )
 
 const (
-	defaultCatalogSoundVolume = 70
-	defaultCatalogLayout      = "card"
+	defaultCatalogSoundVolume  = 70
+	defaultCatalogLayout       = "fullscreen"
+	defaultCatalogImageFit     = "contain"
+	defaultCatalogImageSizePct = 100
+	minCatalogImageSizePct     = 25
+	maxCatalogImageSizePct     = 300
 )
 
 // DefaultCatalogSoundVolume is the default alert sound volume for catalog items.
@@ -28,10 +32,23 @@ const DefaultCatalogSoundVolume = defaultCatalogSoundVolume
 // DefaultCatalogLayout is the default alert layout for catalog items.
 const DefaultCatalogLayout = defaultCatalogLayout
 
+// DefaultCatalogImageFit is the default alert image scale mode.
+const DefaultCatalogImageFit = defaultCatalogImageFit
+
+// DefaultCatalogImageSizePct is the default alert image size percentage.
+const DefaultCatalogImageSizePct = defaultCatalogImageSizePct
+
 var allowedCatalogLayouts = map[string]bool{
 	"card":       true,
 	"banner":     true,
 	"fullscreen": true,
+}
+
+var allowedCatalogImageFits = map[string]bool{
+	"cover":   true,
+	"contain": true,
+	"fill":    true,
+	"tile":    true,
 }
 
 // NormalizeCatalogSoundVolume clamps and defaults catalog alert volume.
@@ -52,6 +69,52 @@ func NormalizeCatalogLayout(layout string) string {
 		return value
 	}
 	return defaultCatalogLayout
+}
+
+// NormalizeCatalogImageFit returns a supported image scale mode.
+func NormalizeCatalogImageFit(fit string) string {
+	value := strings.TrimSpace(strings.ToLower(fit))
+	if allowedCatalogImageFits[value] {
+		return value
+	}
+	return defaultCatalogImageFit
+}
+
+// ValidateCatalogImageFitField validates an image scale mode.
+func ValidateCatalogImageFitField(fit string) string {
+	value := strings.TrimSpace(strings.ToLower(fit))
+	if value == "" {
+		return ""
+	}
+	if !allowedCatalogImageFits[value] {
+		return "choose cover, contain, fill, or tile"
+	}
+	return ""
+}
+
+// NormalizeCatalogImageSizePct clamps and defaults catalog alert image size.
+func NormalizeCatalogImageSizePct(sizePct int) int {
+	if sizePct <= 0 {
+		return defaultCatalogImageSizePct
+	}
+	if sizePct < minCatalogImageSizePct {
+		return minCatalogImageSizePct
+	}
+	if sizePct > maxCatalogImageSizePct {
+		return maxCatalogImageSizePct
+	}
+	return sizePct
+}
+
+// ValidateCatalogImageSizePctField validates image size percentage.
+func ValidateCatalogImageSizePctField(sizePct int) string {
+	if sizePct == 0 {
+		return ""
+	}
+	if sizePct < minCatalogImageSizePct || sizePct > maxCatalogImageSizePct {
+		return "image size must be between 25% and 300%"
+	}
+	return ""
 }
 
 func validateCatalogAssetFilename(field, value string, extRe *regexp.Regexp) string {
@@ -120,7 +183,11 @@ func nullString(value string) sql.NullString {
 	return sql.NullString{String: strings.TrimSpace(value), Valid: true}
 }
 
-func validateCommandMediaFields(imageAsset, soundFile string, soundVolume int, layout string) map[string]string {
+func validateCommandMediaFields(
+	imageAsset, soundFile string,
+	soundVolume, imageSizePct int,
+	layout, imageFit string,
+) map[string]string {
 	fields := map[string]string{}
 	if msg := ValidateCatalogImageAssetFilename(imageAsset); msg != "" {
 		fields["image_asset"] = msg
@@ -134,11 +201,21 @@ func validateCommandMediaFields(imageAsset, soundFile string, soundVolume int, l
 	if msg := ValidateCatalogLayoutField(layout); msg != "" {
 		fields["layout"] = msg
 	}
+	if msg := ValidateCatalogImageFitField(imageFit); msg != "" {
+		fields["image_fit"] = msg
+	}
+	if msg := ValidateCatalogImageSizePctField(imageSizePct); msg != "" {
+		fields["image_size_pct"] = msg
+	}
 	return fields
 }
 
-func validateAwardMediaFields(imageAsset, soundFile string, soundVolume int, layout string) map[string]string {
-	return validateCommandMediaFields(imageAsset, soundFile, soundVolume, layout)
+func validateAwardMediaFields(
+	imageAsset, soundFile string,
+	soundVolume, imageSizePct int,
+	layout, imageFit string,
+) map[string]string {
+	return validateCommandMediaFields(imageAsset, soundFile, soundVolume, imageSizePct, layout, imageFit)
 }
 
 type catalogMediaValidationErr struct {

@@ -6,6 +6,7 @@ import {
   isPanelOpacityDraft,
   parsePanelOpacity,
   previewSurfacePanelOpacity,
+  withAlertsAppearance,
   withLeaderboardAppearance,
   withSurfacePanelOpacity,
 } from "./surface-opacity.js";
@@ -118,4 +119,22 @@ test("leaderboard custom font to inherited clears the stored font without losing
     alerts: { panel_opacity: 1 },
   });
   assert.equal(initial.leaderboard.font_size_px, 14);
+});
+
+test("withAlertsAppearance stores only non-default image size", function () {
+  const initial = {
+    chat: { panel_opacity: 0.2 },
+    alerts: { panel_opacity: 0.4, image_size_pct: 180 },
+  };
+
+  const next = withAlertsAppearance(initial, 100);
+
+  assert.deepEqual(next, {
+    chat: { panel_opacity: 0.2 },
+    alerts: { panel_opacity: 0.4 },
+  });
+
+  const enlarged = withAlertsAppearance(initial, 200);
+  assert.equal(enlarged.alerts.image_size_pct, 200);
+  assert.equal(enlarged.alerts.panel_opacity, 0.4);
 });

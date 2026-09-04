@@ -73,7 +73,7 @@ The config store SHALL validate and persist a requested `overlay.active_preset_i
 - **THEN** the mutation is rejected and the stored config remains unchanged
 
 ### Requirement: Overlay presets may store per-surface overrides
-Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_size_px` SHALL be an integer 12–48 when present. `surfaces.leaderboard.layout` SHALL be `panel` or `chips` when present. Omitted leaderboard font SHALL inherit the preset `font_size_px`; omitted leaderboard layout SHALL default to `panel`. `surfaces.chat.panel_opacity`, `surfaces.leaderboard.panel_opacity`, and `surfaces.alerts.panel_opacity` SHALL each be a number from 0 through 1 when present. Omitted surface opacity SHALL normally inherit the preset shared `style.panel_opacity`. For a legacy `cockpit_panel`, `cockpit_popups`, or `g_rebels_popups` preset whose shared opacity is zero, omission SHALL instead preserve that theme's historical glass alpha; any explicit surface opacity, including zero, SHALL take precedence. Unknown surface keys MAY be ignored. Chat fields on the preset (`max_messages`, `message_ttl_seconds`, `font_size_px`, theme, style) SHALL remain the chat defaults. Page opacity MUST remain unsupported.
+Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_size_px` SHALL be an integer 12–48 when present. `surfaces.leaderboard.layout` SHALL be `panel` or `chips` when present. `surfaces.alerts.image_size_pct` SHALL be an integer 25–300 when present. Omitted leaderboard font SHALL inherit the preset `font_size_px`; omitted leaderboard layout SHALL default to `panel`; omitted alerts image size SHALL default to 100. `surfaces.chat.panel_opacity`, `surfaces.leaderboard.panel_opacity`, and `surfaces.alerts.panel_opacity` SHALL each be a number from 0 through 1 when present. Omitted surface opacity SHALL normally inherit the preset shared `style.panel_opacity`. For a legacy `cockpit_panel`, `cockpit_popups`, or `g_rebels_popups` preset whose shared opacity is zero, omission SHALL instead preserve that theme's historical glass alpha; any explicit surface opacity, including zero, SHALL take precedence. Unknown surface keys MAY be ignored. Chat fields on the preset (`max_messages`, `message_ttl_seconds`, `font_size_px`, theme, style) SHALL remain the chat defaults. Page opacity MUST remain unsupported.
 
 #### Scenario: Inherit font
 - **WHEN** a saved preset has `font_size_px` 18 and no `surfaces.leaderboard.font_size_px`
@@ -90,6 +90,10 @@ Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_
 #### Scenario: Invalid leaderboard font rejected
 - **WHEN** an update sets `surfaces.leaderboard.font_size_px` to 8
 - **THEN** the save is rejected with a field error on that font field
+
+#### Scenario: Invalid alerts image size rejected
+- **WHEN** an update sets `surfaces.alerts.image_size_pct` to 400
+- **THEN** the save is rejected with a field error on that image-size field
 
 #### Scenario: Legacy preset inherits shared opacity
 - **WHEN** a stored preset has shared panel opacity `0.58` and no surface opacity fields
@@ -125,3 +129,18 @@ Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_
 #### Scenario: Legacy file
 - **WHEN** an existing config omits `hide_command_messages`
 - **THEN** the store treats it as false without dropping other settings
+
+### Requirement: streamer_display_name is a persisted operator string
+`config.json` SHALL store `streamer_display_name` as a string, default empty. The value SHALL be trimmed. Length MUST be at most 64 Unicode code points. Omitted keys on load SHALL default to empty. Public `GET /api/config` SHALL include the field. Invalid non-string or overlong values SHALL be rejected with a field error. The field is installation-global; overlay presets MUST NOT override it.
+
+#### Scenario: First launch
+- **WHEN** CommRelay starts and `config.json` is absent
+- **THEN** public config includes `streamer_display_name` as an empty string
+
+#### Scenario: Save name
+- **WHEN** the operator saves `streamer_display_name` `Jake`
+- **THEN** `POST /api/config/update` persists `Jake` and later template resolution uses `Jake`
+
+#### Scenario: Too long
+- **WHEN** an update sets `streamer_display_name` longer than 64 Unicode code points
+- **THEN** the save is rejected with a field error on `streamer_display_name`

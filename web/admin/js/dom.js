@@ -78,6 +78,9 @@ export const studioEssentialFontChat = document.getElementById("studio-essential
 export const studioEssentialFontLeaderboard = document.getElementById("studio-essential-font-leaderboard");
 export const studioEssentialDuration = document.getElementById("studio-essential-duration");
 export const studioEssentialPeriod = document.getElementById("studio-essential-period");
+export const studioEssentialAlertsImageSize = document.getElementById("studio-essential-alerts-image-size");
+export const overlayAlertsImageSize = document.getElementById("overlay-alerts-image-size");
+export const overlayAlertsImageSizeValue = document.getElementById("overlay-alerts-image-size-value");
 export const overlayPreviewModeControl = document.getElementById("overlay-preview-mode-control");
 export const obsSetupTab = document.getElementById("obs-setup-tab");
 export const obsAppearanceTab = document.getElementById("obs-appearance-tab");
@@ -246,6 +249,11 @@ export const commandImagePreview = document.getElementById("command-image-previe
 export const commandImageInput = document.getElementById("command-image-input");
 export const commandImageClear = document.getElementById("command-image-clear");
 export const commandImageError = document.getElementById("command-image-error");
+export const commandImageFitInput = document.getElementById("command-image-fit-input");
+export const commandImageFitError = document.getElementById("command-image-fit-error");
+export const commandImageSizeInput = document.getElementById("command-image-size-input");
+export const commandImageSizeValue = document.getElementById("command-image-size-value");
+export const commandImageSizeError = document.getElementById("command-image-size-error");
 export const commandSoundFileInput = document.getElementById("command-sound-file-input");
 export const commandSoundFileClear = document.getElementById("command-sound-file-clear");
 export const commandSoundFileError = document.getElementById("command-sound-file-error");
@@ -279,6 +287,11 @@ export const awardImagePreview = document.getElementById("award-image-preview");
 export const awardImageInput = document.getElementById("award-image-input");
 export const awardImageClear = document.getElementById("award-image-clear");
 export const awardImageError = document.getElementById("award-image-error");
+export const awardImageFitInput = document.getElementById("award-image-fit-input");
+export const awardImageFitError = document.getElementById("award-image-fit-error");
+export const awardImageSizeInput = document.getElementById("award-image-size-input");
+export const awardImageSizeValue = document.getElementById("award-image-size-value");
+export const awardImageSizeError = document.getElementById("award-image-size-error");
 export const awardSoundFileInput = document.getElementById("award-sound-file-input");
 export const awardSoundFileClear = document.getElementById("award-sound-file-clear");
 export const awardSoundFileError = document.getElementById("award-sound-file-error");
@@ -334,6 +347,7 @@ export const fieldErrors = {
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
     overlay_font_size_px: document.getElementById("overlay-font-size-error"),
     overlay_leaderboard_font_size_px: document.getElementById("overlay-leaderboard-font-size-error"),
+    overlay_alerts_image_size_pct: document.getElementById("overlay-alerts-image-size-error"),
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity-error"),
     overlay_display_mode: document.getElementById("overlay-display-mode-error"),
     overlay_theme: document.getElementById("overlay-theme-error"),
@@ -362,6 +376,7 @@ export const fieldInputs = {
     overlay_message_ttl_seconds: overlayMessageTTL,
     overlay_font_size_px: overlayFontSize,
     overlay_leaderboard_font_size_px: overlayLeaderboardFontSize,
+    overlay_alerts_image_size_pct: overlayAlertsImageSize,
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity"),
     overlay_display_mode: overlayDisplayMode,
     overlay_theme: overlayTheme,

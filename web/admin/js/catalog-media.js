@@ -4,6 +4,9 @@ import {
   catalogMediaPayload,
   createCatalogMediaState,
   normalizeCatalogLayout,
+  normalizeCatalogImageFit,
+  normalizeCatalogImageSizePct,
+  catalogImageFitCSSValue,
   overlayAssetPreviewURL,
   readCatalogMediaFromRecord,
 } from './catalog-media-core.js';
@@ -13,6 +16,9 @@ export {
   catalogMediaPayload,
   createCatalogMediaState,
   normalizeCatalogLayout,
+  normalizeCatalogImageFit,
+  normalizeCatalogImageSizePct,
+  catalogImageFitCSSValue,
   overlayAssetPreviewURL,
   readCatalogMediaFromRecord,
 };

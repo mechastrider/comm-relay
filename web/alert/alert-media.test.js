@@ -5,6 +5,8 @@ import {
   alertRenderModel,
   createAlertSplash,
   normalizeAlertLayout,
+  normalizeAlertImageFit,
+  normalizeAlertImageSizePct,
   safeStoredAssetFilename,
   safeStoredImageAssetFilename,
   safeStoredSoundAssetFilename,
@@ -86,7 +88,11 @@ test("rejects remote filenames and normalizes layout", function () {
   assert.equal(safeStoredSoundAssetFilename("asset_ok.mp3"), "asset_ok.mp3");
   assert.equal(safeStoredSoundAssetFilename("asset_ok.png"), "");
   assert.equal(normalizeAlertLayout("fullscreen"), "fullscreen");
-  assert.equal(normalizeAlertLayout("grid"), "card");
+  assert.equal(normalizeAlertLayout("grid"), "fullscreen");
+  assert.equal(normalizeAlertImageFit("cover"), "cover");
+  assert.equal(normalizeAlertImageFit("weird"), "contain");
+  assert.equal(normalizeAlertImageSizePct(150), 150);
+  assert.equal(normalizeAlertImageSizePct(10), 25);
 });
 
 test("playAlertAudio uses custom file instead of built-in tone", async function () {

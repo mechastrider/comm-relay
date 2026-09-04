@@ -14,7 +14,7 @@ func (s *Store) ListAwards() ([]AwardType, error) {
 	defer s.mu.Unlock()
 
 	rows, err := s.db.Query(`
-		SELECT id, name, points, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout
+		SELECT id, name, points, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM award_types
 		ORDER BY name`)
 	if err != nil {
@@ -63,6 +63,8 @@ func scanAward(scanner interface {
 		&soundFile,
 		&award.SoundVolume,
 		&award.Layout,
+		&award.ImageFit,
+		&award.ImageSizePct,
 	)
 	if err != nil {
 		return AwardType{}, err
@@ -76,6 +78,8 @@ func scanAward(scanner interface {
 	}
 	award.SoundVolume = NormalizeCatalogSoundVolume(award.SoundVolume)
 	award.Layout = NormalizeCatalogLayout(award.Layout)
+	award.ImageFit = NormalizeCatalogImageFit(award.ImageFit)
+	award.ImageSizePct = NormalizeCatalogImageSizePct(award.ImageSizePct)
 
 	return award, nil
 }
@@ -92,6 +96,8 @@ type CreateAwardInput struct {
 	SoundFile      string
 	SoundVolume    int
 	Layout         string
+	ImageFit       string
+	ImageSizePct   int
 }
 
 func validateAwardPoints(points int) error {
@@ -116,7 +122,9 @@ func (s *Store) CreateAward(input CreateAwardInput) (*AwardType, error) {
 	if err := validateCatalogSound(input.Sound); err != nil {
 		return nil, err
 	}
-	if fields := validateAwardMediaFields(input.ImageAsset, input.SoundFile, input.SoundVolume, input.Layout); len(fields) > 0 {
+	if fields := validateAwardMediaFields(
+		input.ImageAsset, input.SoundFile, input.SoundVolume, input.ImageSizePct, input.Layout, input.ImageFit,
+	); len(fields) > 0 {
 		return nil, catalogMediaValidationError(fields)
 	}
 
@@ -130,6 +138,8 @@ func (s *Store) CreateAward(input CreateAwardInput) (*AwardType, error) {
 	soundFile := strings.TrimSpace(input.SoundFile)
 	soundVolume := NormalizeCatalogSoundVolume(input.SoundVolume)
 	layout := NormalizeCatalogLayout(input.Layout)
+	imageFit := NormalizeCatalogImageFit(input.ImageFit)
+	imageSizePct := NormalizeCatalogImageSizePct(input.ImageSizePct)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -137,9 +147,9 @@ func (s *Store) CreateAward(input CreateAwardInput) (*AwardType, error) {
 	_, err := s.db.Exec(`
 		INSERT INTO award_types (
 			id, name, points, splash_template, sound, duration_ms,
-			image_asset, sound_file, sound_volume, layout
+			image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		strings.TrimSpace(input.Name),
 		input.Points,
@@ -150,6 +160,8 @@ func (s *Store) CreateAward(input CreateAwardInput) (*AwardType, error) {
 		nullString(soundFile),
 		soundVolume,
 		layout,
+		imageFit,
+		imageSizePct,
 	)
 	if err != nil {
 		return nil, errors.Errorf("insert award: %w", err)
@@ -170,6 +182,8 @@ type UpdateAwardInput struct {
 	SoundFile      string
 	SoundVolume    int
 	Layout         string
+	ImageFit       string
+	ImageSizePct   int
 }
 
 // UpdateAward updates an existing award type.
@@ -189,7 +203,9 @@ func (s *Store) UpdateAward(input UpdateAwardInput) (*AwardType, error) {
 	if err := validateCatalogSound(input.Sound); err != nil {
 		return nil, err
 	}
-	if fields := validateAwardMediaFields(input.ImageAsset, input.SoundFile, input.SoundVolume, input.Layout); len(fields) > 0 {
+	if fields := validateAwardMediaFields(
+		input.ImageAsset, input.SoundFile, input.SoundVolume, input.ImageSizePct, input.Layout, input.ImageFit,
+	); len(fields) > 0 {
 		return nil, catalogMediaValidationError(fields)
 	}
 
@@ -198,6 +214,8 @@ func (s *Store) UpdateAward(input UpdateAwardInput) (*AwardType, error) {
 	soundFile := strings.TrimSpace(input.SoundFile)
 	soundVolume := NormalizeCatalogSoundVolume(input.SoundVolume)
 	layout := NormalizeCatalogLayout(input.Layout)
+	imageFit := NormalizeCatalogImageFit(input.ImageFit)
+	imageSizePct := NormalizeCatalogImageSizePct(input.ImageSizePct)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -209,7 +227,7 @@ func (s *Store) UpdateAward(input UpdateAwardInput) (*AwardType, error) {
 	result, err := s.db.Exec(`
 		UPDATE award_types
 		SET name = ?, points = ?, splash_template = ?, sound = ?, duration_ms = ?,
-		    image_asset = ?, sound_file = ?, sound_volume = ?, layout = ?
+		    image_asset = ?, sound_file = ?, sound_volume = ?, layout = ?, image_fit = ?, image_size_pct = ?
 		WHERE id = ?`,
 		strings.TrimSpace(input.Name),
 		input.Points,
@@ -220,6 +238,8 @@ func (s *Store) UpdateAward(input UpdateAwardInput) (*AwardType, error) {
 		nullString(soundFile),
 		soundVolume,
 		layout,
+		imageFit,
+		imageSizePct,
 		input.ID,
 	)
 	if err != nil {
@@ -260,7 +280,7 @@ func (s *Store) DeleteAward(id string) error {
 
 func (s *Store) getAwardLocked(id string) (*AwardType, error) {
 	row := s.db.QueryRow(`
-		SELECT id, name, points, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout
+		SELECT id, name, points, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM award_types
 		WHERE id = ?`, id)
 

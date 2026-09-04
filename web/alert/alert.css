@@ -1,5 +1,9 @@
 @import url("../overlay.css");
 
+:root {
+  --alert-portrait-column-base: 56px;
+}
+
 html,
 body {
   margin: 0;
@@ -23,6 +27,8 @@ body {
 
 .alert-splash {
   position: relative;
+  --alert-portrait-scale: 1;
+  --alert-portrait-size: calc(var(--alert-portrait-column-base) * var(--alert-portrait-scale, 1));
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-areas: "avatar text";
@@ -36,7 +42,7 @@ body {
   max-height: 100%;
   padding: 16px 18px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   opacity: 0;
   transform: translateY(12px) scale(0.98);
   transition:
@@ -56,8 +62,8 @@ body {
 
 .alert-avatar {
   grid-area: avatar;
-  width: 56px;
-  height: 56px;
+  width: var(--alert-portrait-size);
+  height: var(--alert-portrait-size);
   border-radius: 50%;
   object-fit: cover;
   flex: 0 0 auto;
@@ -211,11 +217,20 @@ body.overlay-theme--dashboard .alert-splash--award .alert-award-name {
 body.overlay-theme--cockpit-panel .alert-splash,
 body.overlay-theme--cockpit-popups .alert-splash,
 body.overlay-theme--g-rebels-popups .alert-splash {
-  grid-template-columns: 42px 5px minmax(0, 1fr);
+  grid-template-columns: auto var(--alert-accent-column-width, 5px) minmax(0, 1fr);
   grid-template-areas: "avatar accent text";
   align-items: start;
   gap: 4px 12px;
   max-width: none;
+}
+
+body.overlay-theme--cockpit-panel .alert-splash,
+body.overlay-theme--cockpit-popups .alert-splash {
+  --alert-portrait-column-base: 42px;
+}
+
+body.overlay-theme--g-rebels-popups .alert-splash {
+  --alert-portrait-column-base: 44px;
 }
 
 body.overlay-theme--cockpit-panel .alert-accent,
@@ -229,8 +244,8 @@ body.overlay-theme--cockpit-panel .alert-avatar,
 body.overlay-theme--cockpit-popups .alert-avatar,
 body.overlay-theme--g-rebels-popups .alert-avatar {
   display: block;
-  width: 42px;
-  height: 42px;
+  width: var(--alert-portrait-size);
+  height: var(--alert-portrait-size);
   margin-top: 2px;
   border: 1px solid color-mix(in srgb, var(--message-accent) 68%, #111);
   border-radius: 4px;
@@ -266,7 +281,9 @@ body.overlay-theme--cockpit-popups .alert-quote {
 }
 
 body.overlay-theme--cockpit-panel .alert-splash {
-  grid-template-columns: 34px 4px minmax(0, 1fr);
+  --alert-portrait-column-base: 34px;
+  --alert-accent-column-width: 4px;
+  grid-template-columns: auto var(--alert-accent-column-width) minmax(0, 1fr);
   min-height: 96px;
   padding: clamp(42px, 12vh, 52px) clamp(18px, 3vw, 24px) clamp(16px, 5vh, 22px) 72px;
   border: 1px solid rgba(83, 232, 226, 0.44);
@@ -319,8 +336,8 @@ body.overlay-theme--cockpit-panel .alert-splash::after {
 }
 
 body.overlay-theme--cockpit-panel .alert-avatar {
-  width: 34px;
-  height: 34px;
+  width: var(--alert-portrait-size);
+  height: var(--alert-portrait-size);
   margin-top: 0;
 }
 
@@ -420,8 +437,8 @@ body.overlay-theme--g-rebels-popups .alert-splash::after {
 }
 
 body.overlay-theme--g-rebels-popups .alert-avatar {
-  width: 44px;
-  height: 44px;
+  width: var(--alert-portrait-size);
+  height: var(--alert-portrait-size);
   margin-top: 5px;
   border-color: color-mix(in srgb, var(--message-accent) 56%, var(--rebels-gold));
   border-radius: 0;
@@ -464,8 +481,8 @@ body.overlay-theme--g-rebels-popups .alert-quote {
   }
 
   .alert-avatar {
-    width: 40px;
-    height: 40px;
+    width: var(--alert-portrait-size);
+    height: var(--alert-portrait-size);
   }
 
   .alert-content {
@@ -499,7 +516,8 @@ body.overlay-theme--g-rebels-popups .alert-quote {
   body.overlay-theme--cockpit-panel .alert-splash,
   body.overlay-theme--cockpit-popups .alert-splash,
   body.overlay-theme--g-rebels-popups .alert-splash {
-    grid-template-columns: 28px 3px minmax(0, 1fr);
+    --alert-portrait-column-base: 28px;
+    grid-template-columns: auto 3px minmax(0, 1fr);
     gap: 3px 8px;
     min-height: 0;
     padding: 10px 12px;
@@ -515,8 +533,8 @@ body.overlay-theme--g-rebels-popups .alert-quote {
   body.overlay-theme--cockpit-panel .alert-avatar,
   body.overlay-theme--cockpit-popups .alert-avatar,
   body.overlay-theme--g-rebels-popups .alert-avatar {
-    width: 28px;
-    height: 28px;
+    width: var(--alert-portrait-size);
+    height: var(--alert-portrait-size);
     margin-top: 0;
   }
 
@@ -578,7 +596,40 @@ body.overlay-theme--g-rebels-popups .alert-quote {
   max-height: 100%;
 }
 
+.alert-splash--layout-banner .alert-avatar--custom,
+.alert-splash--layout-fullscreen .alert-avatar--custom {
+  width: min(45%, calc(320px * var(--alert-portrait-scale, 1)));
+  height: min(100%, calc(320px * var(--alert-portrait-scale, 1)));
+  max-height: 100%;
+  border-radius: 8px;
+}
+
 .alert-avatar--custom {
-  object-fit: contain;
+  width: var(--alert-portrait-size);
+  height: var(--alert-portrait-size);
+  max-width: min(90%, calc(480px * var(--alert-portrait-scale, 1)));
+  max-height: min(90%, calc(480px * var(--alert-portrait-scale, 1)));
   background: rgba(0, 0, 0, 0.2);
+}
+
+body.overlay-theme--cockpit-panel .alert-avatar--custom,
+body.overlay-theme--cockpit-popups .alert-avatar--custom,
+body.overlay-theme--g-rebels-popups .alert-avatar--custom {
+  width: var(--alert-portrait-size);
+  height: var(--alert-portrait-size);
+  max-width: min(90%, calc(360px * var(--alert-portrait-scale, 1)));
+  max-height: min(90%, calc(360px * var(--alert-portrait-scale, 1)));
+}
+
+.alert-avatar--custom.alert-image-fit--cover {
+  object-fit: cover;
+}
+
+.alert-avatar--custom.alert-image-fit--contain,
+.alert-avatar--custom.alert-image-fit--tile {
+  object-fit: contain;
+}
+
+.alert-avatar--custom.alert-image-fit--fill {
+  object-fit: fill;
 }

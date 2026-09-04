@@ -267,7 +267,7 @@ func TestCommands_WhenMigrationApplied_ExpectDefaultVolumeAndLayout(t *testing.T
 	require.NotEmpty(t, payload.Commands)
 	for _, cmd := range payload.Commands {
 		require.Equal(t, 70, cmd.SoundVolume)
-		require.Equal(t, "card", cmd.Layout)
+		require.Equal(t, "fullscreen", cmd.Layout)
 	}
 }
 

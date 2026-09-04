@@ -70,6 +70,24 @@ export function withSurfacePanelOpacity(surfaces, surface, opacity) {
   return next;
 }
 
+export function withAlertsAppearance(surfaces, imageSizePct) {
+  const current = surfaces && typeof surfaces === "object" ? surfaces : {};
+  const next = {};
+  Object.keys(current).forEach(function (key) {
+    const value = current[key];
+    next[key] = value && typeof value === "object" ? Object.assign({}, value) : value;
+  });
+
+  const alerts = next.alerts && typeof next.alerts === "object" ? Object.assign({}, next.alerts) : {};
+  if (Number.isFinite(imageSizePct) && imageSizePct !== 100) {
+    alerts.image_size_pct = imageSizePct;
+  } else {
+    delete alerts.image_size_pct;
+  }
+  next.alerts = alerts;
+  return next;
+}
+
 // withLeaderboardAppearance stores only values that differ from leaderboard
 // inheritance/defaults while retaining opacity and other surface overrides.
 export function withLeaderboardAppearance(surfaces, fontSizePx, inheritedFontSizePx, layout) {

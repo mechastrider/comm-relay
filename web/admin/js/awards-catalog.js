@@ -18,6 +18,11 @@ const awardMedia = createCatalogMediaController({
   imageInput: dom.awardImageInput,
   imageClear: dom.awardImageClear,
   imageError: dom.awardImageError,
+  imageFitInput: dom.awardImageFitInput,
+  imageFitError: dom.awardImageFitError,
+  imageSizeInput: dom.awardImageSizeInput,
+  imageSizeValue: dom.awardImageSizeValue,
+  imageSizeError: dom.awardImageSizeError,
   soundFileInput: dom.awardSoundFileInput,
   soundFileClear: dom.awardSoundFileClear,
   soundFileError: dom.awardSoundFileError,
@@ -251,7 +256,7 @@ function defaultNewAward() {
     sound: "",
     duration_ms: 5000,
     sound_volume: 70,
-    layout: "card",
+    layout: "fullscreen",
   };
 }
 

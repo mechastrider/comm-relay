@@ -1,8 +1,11 @@
 import { t } from "./i18n-ui.js";
 import {
   catalogMediaPayload,
+  catalogImageFitCSSValue,
   createCatalogMediaState,
   normalizeCatalogLayout,
+  normalizeCatalogImageFit,
+  normalizeCatalogImageSizePct,
   overlayAssetPreviewURL,
   playCatalogPreview,
   readCatalogMediaFromRecord,
@@ -24,6 +27,11 @@ async function playBuiltInPreview(state, sound, volume) {
  * @param {HTMLInputElement | null} options.imageInput
  * @param {HTMLButtonElement | null} options.imageClear
  * @param {HTMLElement | null} options.imageError
+ * @param {HTMLSelectElement | null} options.imageFitInput
+ * @param {HTMLElement | null} options.imageFitError
+ * @param {HTMLInputElement | null} options.imageSizeInput
+ * @param {HTMLOutputElement | null} options.imageSizeValue
+ * @param {HTMLElement | null} options.imageSizeError
  * @param {HTMLInputElement | null} options.soundFileInput
  * @param {HTMLButtonElement | null} options.soundFileClear
  * @param {HTMLElement | null} options.soundFileError
@@ -64,6 +72,10 @@ export function createCatalogMediaController(options) {
     image.className = "catalog-media-preview__image";
     image.src = overlayAssetPreviewURL(state.imageAsset);
     image.alt = "";
+    image.style.objectFit = catalogImageFitCSSValue(state.imageFit);
+    const scale = normalizeCatalogImageSizePct(state.imageSizePct) / 100;
+    image.style.width = String(Math.round(72 * scale)) + "px";
+    image.style.height = String(Math.round(72 * scale)) + "px";
     options.imagePreview.append(image);
   }
 
@@ -77,7 +89,7 @@ export function createCatalogMediaController(options) {
     const selected = document.querySelector(
       'input[name="' + options.layoutName + '"]:checked'
     );
-    state.layout = normalizeCatalogLayout(selected ? selected.value : "card");
+    state.layout = normalizeCatalogLayout(selected ? selected.value : "fullscreen");
   }
 
   function writeLayoutToForm(layout) {
@@ -90,6 +102,40 @@ export function createCatalogMediaController(options) {
     }
   }
 
+  function updateImageSizeLabel() {
+    if (options.imageSizeValue) {
+      options.imageSizeValue.textContent = String(state.imageSizePct) + "%";
+    }
+  }
+
+  function writeImageSizeToForm(imageSizePct) {
+    const value = normalizeCatalogImageSizePct(imageSizePct);
+    state.imageSizePct = value;
+    if (options.imageSizeInput) {
+      options.imageSizeInput.value = String(value);
+    }
+    updateImageSizeLabel();
+  }
+
+  function readImageSizeFromForm() {
+    if (options.imageSizeInput) {
+      state.imageSizePct = normalizeCatalogImageSizePct(options.imageSizeInput.value);
+      updateImageSizeLabel();
+    }
+  }
+
+  function writeImageFitToForm(imageFit) {
+    if (options.imageFitInput) {
+      options.imageFitInput.value = normalizeCatalogImageFit(imageFit);
+    }
+  }
+
+  function readImageFitFromForm() {
+    if (options.imageFitInput) {
+      state.imageFit = normalizeCatalogImageFit(options.imageFitInput.value);
+    }
+  }
+
   function fillFromRecord(record) {
     stopCatalogPreview(state);
     state = Object.assign(createCatalogMediaState(), readCatalogMediaFromRecord(record));
@@ -97,6 +143,8 @@ export function createCatalogMediaController(options) {
       options.soundVolumeInput.value = String(state.soundVolume);
     }
     writeLayoutToForm(state.layout);
+    writeImageFitToForm(state.imageFit);
+    writeImageSizeToForm(state.imageSizePct);
     updateImagePreview();
     updateVolumeLabel();
     clearFieldErrors();
@@ -108,6 +156,8 @@ export function createCatalogMediaController(options) {
 
   function clearFieldErrors() {
     setFieldError(options.imageError, "");
+    setFieldError(options.imageFitError, "");
+    setFieldError(options.imageSizeError, "");
     setFieldError(options.soundFileError, "");
     setFieldError(options.soundVolumeError, "");
     setFieldError(options.layoutError, "");
@@ -119,6 +169,12 @@ export function createCatalogMediaController(options) {
     }
     if (fields.image_asset) {
       setFieldError(options.imageError, fields.image_asset);
+    }
+    if (fields.image_fit) {
+      setFieldError(options.imageFitError, fields.image_fit);
+    }
+    if (fields.image_size_pct) {
+      setFieldError(options.imageSizeError, fields.image_size_pct);
     }
     if (fields.sound_file) {
       setFieldError(options.soundFileError, fields.sound_file);
@@ -133,6 +189,8 @@ export function createCatalogMediaController(options) {
 
   function readPayload() {
     readLayoutFromForm();
+    readImageFitFromForm();
+    readImageSizeFromForm();
     if (options.soundVolumeInput) {
       state.soundVolume = Number(options.soundVolumeInput.value);
     }
@@ -181,6 +239,16 @@ export function createCatalogMediaController(options) {
       state.imageAsset = "";
       updateImagePreview();
       setFieldError(options.imageError, "");
+    });
+    options.imageFitInput?.addEventListener("change", function () {
+      readImageFitFromForm();
+      updateImagePreview();
+      setFieldError(options.imageFitError, "");
+    });
+    options.imageSizeInput?.addEventListener("input", function () {
+      readImageSizeFromForm();
+      updateImagePreview();
+      setFieldError(options.imageSizeError, "");
     });
     options.soundFileInput?.addEventListener("change", function () {
       const file = options.soundFileInput?.files?.[0];
