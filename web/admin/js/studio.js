@@ -12,6 +12,7 @@ import {
   shouldShowUseOnStream,
   writeStudioModePreference,
   writeStudioSurfaceRailCollapsedPreference,
+  syncStudioInspectorScrollInset,
 } from "./studio-helpers.js";
 import { resolveStudioDraftAfterConfigApply } from "./config-apply-restore.js";
 import {
@@ -318,12 +319,45 @@ function initStudioDiscardDialog() {
   }
 }
 
+function initStudioInspectorScrollInset() {
+  const body = document.querySelector(".studio-inspector-mount .studio-inspector__body");
+  if (!(body instanceof HTMLElement)) {
+    return;
+  }
+
+  const sync = function () {
+    syncStudioInspectorScrollInset(body);
+  };
+
+  sync();
+  window.addEventListener("resize", sync);
+
+  const resizeObserver = new ResizeObserver(sync);
+  resizeObserver.observe(body);
+
+  const mutationObserver = new MutationObserver(sync);
+  mutationObserver.observe(body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["hidden", "open", "class", "style"],
+  });
+
+  body.addEventListener("toggle", sync, true);
+
+  document.addEventListener("studio-overlay-changed", sync);
+  document.addEventListener("overlay-preview-surface-changed", sync);
+}
+
 function onStudioEnter() {
   resetStudioDraftFromConfig();
   updateStudioFollowCopy();
   updateStudioUseOnStream();
   mountOverlayPreview();
   maybeAutoOpenStudioAddToObs();
+  syncStudioInspectorScrollInset(
+    document.querySelector(".studio-inspector-mount .studio-inspector__body")
+  );
 }
 
 function onStudioLeave() {
@@ -452,6 +486,7 @@ export function initStudio() {
   initOverlayDebugPanel();
   initStudioAddToObs();
   initStudioDiscardDialog();
+  initStudioInspectorScrollInset();
   initStudioViewPreferences();
   interceptStudioNavigationClicks();
   interceptHashNavigation();

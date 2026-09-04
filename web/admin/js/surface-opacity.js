@@ -70,7 +70,7 @@ export function withSurfacePanelOpacity(surfaces, surface, opacity) {
   return next;
 }
 
-export function withAlertsAppearance(surfaces, imageSizePct) {
+export function withAlertsAppearance(surfaces, imageSizePct, fontSizePx, inheritedFontSizePx) {
   const current = surfaces && typeof surfaces === "object" ? surfaces : {};
   const next = {};
   Object.keys(current).forEach(function (key) {
@@ -83,6 +83,11 @@ export function withAlertsAppearance(surfaces, imageSizePct) {
     alerts.image_size_pct = imageSizePct;
   } else {
     delete alerts.image_size_pct;
+  }
+  if (Number.isFinite(fontSizePx) && fontSizePx !== inheritedFontSizePx) {
+    alerts.font_size_px = fontSizePx;
+  } else {
+    delete alerts.font_size_px;
   }
   next.alerts = alerts;
   return next;

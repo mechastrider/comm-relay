@@ -26,6 +26,8 @@ import {
   writeStudioModePreference,
   readStudioSurfaceRailCollapsedPreference,
   writeStudioSurfaceRailCollapsedPreference,
+  elementHasVerticalOverflow,
+  syncStudioInspectorScrollInset,
 } from "./studio-helpers.js";
 import { buildObsOverlayURL } from "./overlay-url.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
@@ -234,5 +236,31 @@ writeStudioSurfaceRailCollapsedPreference(dismissedStorage, true);
 assert.equal(readStudioSurfaceRailCollapsedPreference(dismissedStorage), true);
 writeStudioSurfaceRailCollapsedPreference(dismissedStorage, false);
 assert.equal(readStudioSurfaceRailCollapsedPreference(dismissedStorage), false);
+
+assert.equal(elementHasVerticalOverflow({ scrollHeight: 120, clientHeight: 100 }), true);
+assert.equal(elementHasVerticalOverflow({ scrollHeight: 100, clientHeight: 100 }), false);
+assert.equal(elementHasVerticalOverflow(null), false);
+
+const scrollInsetHost = {
+  scrollHeight: 120,
+  clientHeight: 100,
+  classList: {
+    toggled: /** @type {string[]} */ ([]),
+    toggle(className, force) {
+      const index = this.toggled.indexOf(className);
+      const next = force === undefined ? index < 0 : force;
+      if (next && index < 0) {
+        this.toggled.push(className);
+      } else if (!next && index >= 0) {
+        this.toggled.splice(index, 1);
+      }
+    },
+  },
+};
+syncStudioInspectorScrollInset(/** @type {HTMLElement} */ (scrollInsetHost));
+assert.deepEqual(scrollInsetHost.classList.toggled, ["studio-inspector__body--scrollable"]);
+scrollInsetHost.scrollHeight = 100;
+syncStudioInspectorScrollInset(/** @type {HTMLElement} */ (scrollInsetHost));
+assert.deepEqual(scrollInsetHost.classList.toggled, []);
 
 console.log("studio-helpers OK");

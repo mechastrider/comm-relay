@@ -127,14 +127,22 @@ test("withAlertsAppearance stores only non-default image size", function () {
     alerts: { panel_opacity: 0.4, image_size_pct: 180 },
   };
 
-  const next = withAlertsAppearance(initial, 100);
+  const next = withAlertsAppearance(initial, 100, 18, 18);
 
   assert.deepEqual(next, {
     chat: { panel_opacity: 0.2 },
     alerts: { panel_opacity: 0.4 },
   });
 
-  const enlarged = withAlertsAppearance(initial, 200);
+  const enlarged = withAlertsAppearance(initial, 200, 18, 18);
   assert.equal(enlarged.alerts.image_size_pct, 200);
   assert.equal(enlarged.alerts.panel_opacity, 0.4);
+});
+
+test("withAlertsAppearance stores only non-default font size", function () {
+  const initial = { alerts: { image_size_pct: 150 } };
+  const next = withAlertsAppearance(initial, 150, 24, 18);
+  assert.equal(next.alerts.font_size_px, 24);
+  const inherited = withAlertsAppearance(initial, 150, 18, 18);
+  assert.equal(inherited.alerts.font_size_px, undefined);
 });

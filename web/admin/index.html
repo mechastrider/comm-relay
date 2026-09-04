@@ -906,7 +906,7 @@
                         </select>
                       </div>
 
-                      <div id="studio-essential-alerts-image-size" class="form__field" hidden>
+                      <div id="studio-essential-alerts-image-size" class="form__field form__field--full" hidden>
                         <label for="overlay-alerts-image-size" data-i18n="obs.alertsImageSizeLabel">Alert image size</label>
                         <div class="catalog-volume-row">
                           <input id="overlay-alerts-image-size" type="range" min="25" max="300" step="5" value="100">
@@ -914,6 +914,13 @@
                         </div>
                         <p class="field-hint" data-i18n="obs.alertsImageSizeHint">Scales portrait and custom images for every alert in this preset. Per-command size in Audience stacks on top.</p>
                         <p id="overlay-alerts-image-size-error" class="field-error" role="alert" hidden></p>
+                      </div>
+
+                      <div id="studio-essential-font-alerts" class="form__field form__field--full" hidden>
+                        <label for="overlay-alerts-font-size" data-i18n="obs.alertsFontSize">Alert font size (px)</label>
+                        <input id="overlay-alerts-font-size" name="overlay_alerts_font_size_px" type="number" min="12" max="48" step="1">
+                        <p class="field-hint" data-i18n="obs.alertsFontSizeHint">12–48 px. Independent from chat so banners can stay larger or smaller.</p>
+                        <p id="overlay-alerts-font-size-error" class="field-error" role="alert" hidden></p>
                       </div>
 
                       <div id="studio-essential-alerts-note" class="studio-surface-note form__field form__field--full" hidden>

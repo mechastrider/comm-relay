@@ -64,6 +64,7 @@ type OverlayLeaderboardSurface struct {
 
 // OverlayAlertsSurface holds optional alert-only appearance overrides.
 type OverlayAlertsSurface struct {
+	FontSizePx   int      `json:"font_size_px,omitempty"`
 	PanelOpacity *float64 `json:"panel_opacity,omitempty"`
 	ImageSizePct int      `json:"image_size_pct,omitempty"`
 }
@@ -190,6 +191,13 @@ func (s OverlayAlertsSurface) validateFields(prefix string) FieldErrors {
 			OverlayAlertImageSizeMax,
 		)
 	}
+	if s.FontSizePx != 0 && (s.FontSizePx < OverlayFontSizeMin || s.FontSizePx > OverlayFontSizeMax) {
+		fields[key("font_size_px")] = fmt.Sprintf(
+			"Font size must be between %d and %d px.",
+			OverlayFontSizeMin,
+			OverlayFontSizeMax,
+		)
+	}
 	return fields
 }
 
@@ -236,6 +244,14 @@ func (p OverlayPreset) AlertsImageSizePct() int {
 		return OverlayAlertImageSizeMax
 	}
 	return sizePct
+}
+
+// AlertsFontSizePx returns the alert font, inheriting the preset font when unset.
+func (p OverlayPreset) AlertsFontSizePx() int {
+	if p.Surfaces.Alerts.FontSizePx >= OverlayFontSizeMin {
+		return p.Surfaces.Alerts.FontSizePx
+	}
+	return p.FontSizePx
 }
 
 // LeaderboardFontSizePx returns the leaderboard font, inheriting the preset font when unset.

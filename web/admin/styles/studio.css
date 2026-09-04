@@ -165,10 +165,14 @@
   background: transparent;
 }
 
+.studio-inspector-mount .studio-inspector__body.studio-inspector__body--scrollable {
+  padding-right: var(--primitive-space-3);
+}
+
 .studio-inspector__body {
   display: flex;
   flex-direction: column;
-  gap: var(--studio-section-gap);
+  gap: var(--primitive-space-6);
   min-height: 0;
   overflow: auto;
   padding: 0;
@@ -179,7 +183,8 @@
 }
 
 .studio-inspector-mount .studio-inspector-essential {
-  gap: var(--primitive-space-2) var(--primitive-space-4);
+  gap: var(--primitive-space-6) var(--primitive-space-4);
+  padding: 0;
 }
 
 .studio-inspector-mount .theme-picker {
@@ -193,12 +198,37 @@
 .studio-inspector-essential {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--primitive-space-3) var(--primitive-space-4);
+  gap: var(--primitive-space-6) var(--primitive-space-4);
 }
 
 .studio-inspector-essential .form__field--full,
 .studio-theme-field {
   grid-column: 1 / -1;
+}
+
+/* Full-width inspector rows stack hint + control; compact label min-height
+   is for 2-col alignment and leaves a dead band under short labels. */
+.studio-inspector-essential.form--compact .form__field--full > label,
+.studio-inspector-essential.form--compact .form__field--full > .field-label {
+  min-height: 0;
+}
+
+.studio-inspector-essential .form__field--full {
+  gap: 0.35rem;
+}
+
+.studio-inspector-essential .form__field--full + .form__field--full {
+  margin-top: var(--primitive-space-2);
+}
+
+.studio-inspector-essential .catalog-volume-row output {
+  flex: 0 0 auto;
+  min-width: 3.5ch;
+  text-align: right;
+}
+
+.studio-inspector-advanced.overlay-group {
+  margin-top: 0;
 }
 
 .studio-inspector-advanced > summary {
@@ -208,6 +238,7 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   margin-bottom: var(--primitive-space-2);
+  padding: var(--primitive-space-3) var(--primitive-space-5);
 }
 
 .studio-inspector-advanced[open] > summary {
@@ -215,7 +246,7 @@
 }
 
 .studio-inspector-advanced > .form {
-  gap: var(--primitive-space-7) var(--primitive-space-5);
+  gap: var(--primitive-space-6) var(--primitive-space-4);
   padding: 0 var(--primitive-space-5) var(--primitive-space-5);
 }
 
@@ -226,6 +257,14 @@
 
 .studio-inspector-advanced .overlay-group {
   margin-top: var(--primitive-space-2);
+}
+
+.studio-inspector-advanced .overlay-group > summary {
+  padding: var(--primitive-space-3) var(--primitive-space-5);
+}
+
+.studio-inspector-advanced .overlay-group > .field-hint {
+  padding: 0 var(--primitive-space-5) var(--primitive-space-3);
 }
 
 .studio-inspector-advanced .overlay-group > .form,

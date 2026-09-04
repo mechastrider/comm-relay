@@ -516,6 +516,24 @@ export function validateClient(payload, options) {
 
     (payload.overlay.presets || []).some(function (preset) {
       const alerts = preset && preset.surfaces && preset.surfaces.alerts;
+      const font = alerts && alerts.font_size_px;
+      if (
+        font != null &&
+        font !== 0 &&
+        (!Number.isFinite(font) || font < OVERLAY_FONT_SIZE_MIN || font > OVERLAY_FONT_SIZE_MAX)
+      ) {
+        setFieldError(
+          "overlay_alerts_font_size_px",
+          "Font size must be between " + OVERLAY_FONT_SIZE_MIN + " and " + OVERLAY_FONT_SIZE_MAX + " px."
+        );
+        firstInvalid = firstInvalid || dom.overlayAlertsFontSize;
+        return true;
+      }
+      return false;
+    });
+
+    (payload.overlay.presets || []).some(function (preset) {
+      const alerts = preset && preset.surfaces && preset.surfaces.alerts;
       const size = alerts && alerts.image_size_pct;
       if (
         size != null &&

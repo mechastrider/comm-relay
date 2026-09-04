@@ -13,7 +13,7 @@ import {
 import { createChatRender } from "/shared/chat-render.js?v=12";
 import { ensureAudioContext, playAlertAudio, stopCustomAlertSound } from "./alert-sound.js";
 import { startSplashLifecycle } from "./alert-lifecycle.js?v=2";
-import { createAlertSplash } from "./alert-render.js?v=5";
+import { createAlertSplash } from "./alert-render.js?v=6";
 import { createAlertScheduler } from "./alert-scheduler.js?v=4";
 import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.js?v=1";
 

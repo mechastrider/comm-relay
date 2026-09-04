@@ -204,7 +204,7 @@ The Studio preview SHALL let the operator choose a backdrop from white, checkerb
 - **THEN** the preview iframe loads the leaderboard page with `preview_background=checker`
 
 ### Requirement: Appearance studio previews the selected on-stream surface
-The Studio preview SHALL follow the single selected on-stream surface. Changing the surface MUST retarget the preview iframe and MUST show only settings that apply to that surface (chat queue/TTL/platform marker versus leaderboard period, font override, and layout versus alerts portrait image size). Preview messages, ranking rows, and alert splashes MUST be fictitious samples by default, not live chat, live viewer stats, or live `/ws` alert frames. A Replay control SHALL reload the sample for the selected surface.
+The Studio preview SHALL follow the single selected on-stream surface. Changing the surface MUST retarget the preview iframe and MUST show only settings that apply to that surface (chat queue/TTL/platform marker versus leaderboard period, font override, and layout versus alerts portrait image size and alert font override). Preview messages, ranking rows, and alert splashes MUST be fictitious samples by default, not live chat, live viewer stats, or live `/ws` alert frames. A Replay control SHALL reload the sample for the selected surface.
 
 #### Scenario: Switch to leaderboard preview
 - **WHEN** the operator selects Leaderboard

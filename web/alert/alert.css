@@ -73,9 +73,15 @@ body {
   display: grid;
   place-items: center;
   background: rgba(255, 255, 255, 0.12);
-  color: var(--overlay-text);
-  font-size: 1.4rem;
-  font-weight: 700;
+  color: color-mix(in srgb, var(--overlay-text) 72%, transparent);
+}
+
+.alert-avatar__placeholder-icon {
+  display: block;
+  width: 70%;
+  height: 70%;
+  margin: 0 auto;
+  opacity: 0.9;
 }
 
 .alert-accent {
@@ -259,7 +265,9 @@ body.overlay-theme--g-rebels-popups .alert-avatar {
 body.overlay-theme--cockpit-panel .alert-avatar--placeholder,
 body.overlay-theme--cockpit-popups .alert-avatar--placeholder,
 body.overlay-theme--g-rebels-popups .alert-avatar--placeholder {
-  font-size: 1.05rem;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--overlay-text) 78%, var(--message-accent));
 }
 
 body.overlay-theme--cockpit-panel .alert-content,

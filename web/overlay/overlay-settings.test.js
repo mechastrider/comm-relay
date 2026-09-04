@@ -352,6 +352,37 @@ test("alertViewFromConfig resolves preset alert image size and query override", 
   assert.equal(queried.image_size_pct, 200);
 });
 
+test("alertViewFromConfig resolves alerts font override", function () {
+  const view = alertViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [
+          {
+            id: "default",
+            theme: "default",
+            font_size_px: 18,
+            surfaces: { alerts: { font_size_px: 24 } },
+          },
+        ],
+      },
+    },
+    new URLSearchParams("")
+  );
+  assert.equal(view.font_size_px, 24);
+
+  const queried = alertViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [{ id: "default", theme: "default", font_size_px: 18 }],
+      },
+    },
+    new URLSearchParams("font_size_px=30")
+  );
+  assert.equal(queried.font_size_px, 30);
+});
+
 test("normalizeAlertImageSizePct defaults invalid values to 100", function () {
   assert.equal(normalizeAlertImageSizePct(""), 100);
   assert.equal(normalizeAlertImageSizePct(180), 180);

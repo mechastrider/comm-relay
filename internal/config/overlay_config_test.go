@@ -235,6 +235,30 @@ func TestValidate_WhenSurfacePanelOpacityOutOfRange_ExpectFieldError(t *testing.
 	require.Contains(t, ValidationFields(err), "overlay_preset_0_surfaces_alerts_panel_opacity")
 }
 
+func TestValidate_WhenAlertsFontOutOfRange_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].Surfaces.Alerts.FontSizePx = 8
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+	require.Contains(t, ValidationFields(err), "overlay_preset_0_surfaces_alerts_font_size_px")
+}
+
+func TestAlertsSurface_WhenFontOmitted_ExpectInheritsPresetFont(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].FontSizePx = 22
+	cfg.Overlay.Presets[0].Surfaces.Alerts.FontSizePx = 0
+	cfg.Overlay.EnsurePresets()
+
+	require.NoError(t, cfg.Validate())
+	require.Equal(t, 22, cfg.Overlay.Presets[0].AlertsFontSizePx())
+}
+
 func TestValidate_WhenAlertsImageSizeOutOfRange_ExpectFieldError(t *testing.T) {
 	t.Parallel()
 

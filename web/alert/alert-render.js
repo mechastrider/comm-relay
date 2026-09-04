@@ -108,6 +108,38 @@ export function alertRenderModel(alert) {
   });
 }
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function createAlertAvatarPlaceholderIcon(documentRef) {
+  const createSVG =
+    typeof documentRef.createElementNS === "function"
+      ? function (tagName) {
+          return documentRef.createElementNS(SVG_NS, tagName);
+        }
+      : function (tagName) {
+          return documentRef.createElement(tagName);
+        };
+
+  const svg = createSVG("svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("class", "alert-avatar__placeholder-icon");
+  svg.setAttribute("fill", "currentColor");
+
+  const head = createSVG("circle");
+  head.setAttribute("cx", "12");
+  head.setAttribute("cy", "9");
+  head.setAttribute("r", "4");
+  head.setAttribute("opacity", "0.92");
+
+  const shoulders = createSVG("path");
+  shoulders.setAttribute("d", "M5 20.5c.8-3.4 3.5-5.5 7-5.5s6.2 2.1 7 5.5");
+  shoulders.setAttribute("opacity", "0.92");
+
+  svg.append(head, shoulders);
+  return svg;
+}
+
 export function renderAvatar(documentRef, name, avatarURL) {
   if (avatarURL) {
     const avatar = documentRef.createElement("img");
@@ -128,7 +160,8 @@ export function renderAvatar(documentRef, name, avatarURL) {
 
   const placeholder = documentRef.createElement("div");
   placeholder.className = "alert-avatar alert-avatar--placeholder";
-  placeholder.textContent = name.charAt(0).toUpperCase();
+  placeholder.setAttribute("aria-hidden", "true");
+  placeholder.append(createAlertAvatarPlaceholderIcon(documentRef));
   return placeholder;
 }
 

@@ -73,7 +73,7 @@ The config store SHALL validate and persist a requested `overlay.active_preset_i
 - **THEN** the mutation is rejected and the stored config remains unchanged
 
 ### Requirement: Overlay presets may store per-surface overrides
-Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_size_px` SHALL be an integer 12–48 when present. `surfaces.leaderboard.layout` SHALL be `panel` or `chips` when present. `surfaces.alerts.image_size_pct` SHALL be an integer 25–300 when present. Omitted leaderboard font SHALL inherit the preset `font_size_px`; omitted leaderboard layout SHALL default to `panel`; omitted alerts image size SHALL default to 100. `surfaces.chat.panel_opacity`, `surfaces.leaderboard.panel_opacity`, and `surfaces.alerts.panel_opacity` SHALL each be a number from 0 through 1 when present. Omitted surface opacity SHALL normally inherit the preset shared `style.panel_opacity`. For a legacy `cockpit_panel`, `cockpit_popups`, or `g_rebels_popups` preset whose shared opacity is zero, omission SHALL instead preserve that theme's historical glass alpha; any explicit surface opacity, including zero, SHALL take precedence. Unknown surface keys MAY be ignored. Chat fields on the preset (`max_messages`, `message_ttl_seconds`, `font_size_px`, theme, style) SHALL remain the chat defaults. Page opacity MUST remain unsupported.
+Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_size_px` SHALL be an integer 12–48 when present. `surfaces.leaderboard.layout` SHALL be `panel` or `chips` when present. `surfaces.alerts.font_size_px` SHALL be an integer 12–48 when present. `surfaces.alerts.image_size_pct` SHALL be an integer 25–300 when present. Omitted leaderboard font SHALL inherit the preset `font_size_px`; omitted leaderboard layout SHALL default to `panel`; omitted alerts font SHALL inherit the preset `font_size_px`; omitted alerts image size SHALL default to 100. `surfaces.chat.panel_opacity`, `surfaces.leaderboard.panel_opacity`, and `surfaces.alerts.panel_opacity` SHALL each be a number from 0 through 1 when present. Omitted surface opacity SHALL normally inherit the preset shared `style.panel_opacity`. For a legacy `cockpit_panel`, `cockpit_popups`, or `g_rebels_popups` preset whose shared opacity is zero, omission SHALL instead preserve that theme's historical glass alpha; any explicit surface opacity, including zero, SHALL take precedence. Unknown surface keys MAY be ignored. Chat fields on the preset (`max_messages`, `message_ttl_seconds`, `font_size_px`, theme, style) SHALL remain the chat defaults. Page opacity MUST remain unsupported.
 
 #### Scenario: Inherit font
 - **WHEN** a saved preset has `font_size_px` 18 and no `surfaces.leaderboard.font_size_px`
@@ -89,6 +89,14 @@ Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_
 
 #### Scenario: Invalid leaderboard font rejected
 - **WHEN** an update sets `surfaces.leaderboard.font_size_px` to 8
+- **THEN** the save is rejected with a field error on that font field
+
+#### Scenario: Stored alerts font
+- **WHEN** a preset stores `surfaces.alerts.font_size_px` 24
+- **THEN** chat overlay keeps the preset `font_size_px` and `/overlay/alert` uses 24 px
+
+#### Scenario: Invalid alerts font rejected
+- **WHEN** an update sets `surfaces.alerts.font_size_px` to 8
 - **THEN** the save is rejected with a field error on that font field
 
 #### Scenario: Invalid alerts image size rejected

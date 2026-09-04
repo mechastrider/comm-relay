@@ -118,6 +118,13 @@ Command and award splashes SHALL use distinct variants in every supported overla
 - **WHEN** an award alert has no message text
 - **THEN** the award variant shows its name, viewer, and points without an empty quote container
 
+### Requirement: Alert typography follows its surface font
+The alert page SHALL resolve font size from `surfaces.alerts.font_size_px` when present (12–48), otherwise from the preset `font_size_px`. Query `font_size_px` SHALL override the resolved alert font when valid.
+
+#### Scenario: Stored alerts font
+- **WHEN** the active preset has `font_size_px` 18 and `surfaces.alerts.font_size_px` 28
+- **THEN** alert splash text renders at 28 px
+
 ### Requirement: Alert chrome uses its surface opacity
 The alert page SHALL resolve panel opacity from `surfaces.alerts.panel_opacity`, normally falling back to the preset shared `style.panel_opacity`. When a legacy cockpit preset has shared zero and no alerts override, alert chrome SHALL retain that theme's historical glass color and alpha; an explicit alerts value, including zero, SHALL win. It MUST apply the resolved appearance to alert background/chrome rather than the whole document, text, avatar, or media. The page background MUST remain transparent outside preview.
 

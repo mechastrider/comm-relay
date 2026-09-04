@@ -166,6 +166,9 @@ export function syncStudioInspectorEssential(surface) {
   if (dom.studioEssentialFontLeaderboard) {
     dom.studioEssentialFontLeaderboard.hidden = current !== "leaderboard";
   }
+  if (dom.studioEssentialFontAlerts) {
+    dom.studioEssentialFontAlerts.hidden = current !== "alerts";
+  }
   if (dom.studioEssentialPeriod) {
     dom.studioEssentialPeriod.hidden = current !== "leaderboard";
   }
@@ -264,9 +267,10 @@ function collectSurfaces(base) {
   const rawFont = Number.parseInt(fieldValue("overlay-leaderboard-font-size", String(chatFont)), 10);
   const layout = fieldValue("overlay-leaderboard-layout", "panel") === "chips" ? "chips" : "panel";
   const alertsImageSize = normalizeCatalogImageSizePct(fieldValue("overlay-alerts-image-size", "100"));
+  const rawAlertsFont = Number.parseInt(fieldValue("overlay-alerts-font-size", String(chatFont)), 10);
   const current = base && base.surfaces && typeof base.surfaces === "object" ? base.surfaces : {};
   let surfaces = withLeaderboardAppearance(current, rawFont, chatFont, layout);
-  surfaces = withAlertsAppearance(surfaces, alertsImageSize);
+  surfaces = withAlertsAppearance(surfaces, alertsImageSize, rawAlertsFont, chatFont);
   const rawOpacity = panelOpacityTouched
     ? panelOpacityDrafts[opacityEditorSurface]
     : fieldValue("overlay-panel-opacity", "");
@@ -305,9 +309,26 @@ function normalizeLeaderboardSurface(raw, fontSizePx) {
   };
 }
 
+function normalizeAlertsSurface(raw, fontSizePx) {
+  const incoming = raw && raw.alerts && typeof raw.alerts === "object" ? raw.alerts : {};
+  const font =
+    typeof incoming.font_size_px === "number" && incoming.font_size_px >= 12
+      ? incoming.font_size_px
+      : fontSizePx;
+  return {
+    alerts: {
+      font_size_px: font,
+    },
+  };
+}
+
 function normalizedSurfaceOverrides(raw, fontSizePx) {
   const incoming = raw && typeof raw === "object" ? raw : {};
-  const surfaces = normalizeLeaderboardSurface(incoming, fontSizePx);
+  const surfaces = Object.assign(
+    {},
+    normalizeLeaderboardSurface(incoming, fontSizePx),
+    normalizeAlertsSurface(incoming, fontSizePx)
+  );
   ["chat", "leaderboard", "alerts"].forEach(function (surface) {
     const value = incoming[surface] && typeof incoming[surface] === "object"
       ? incoming[surface].panel_opacity
@@ -469,6 +490,11 @@ function writeFormFromPreset(preset) {
     preset.surfaces && preset.surfaces.alerts && typeof preset.surfaces.alerts === "object"
       ? preset.surfaces.alerts
       : {};
+  const alertsFont =
+    typeof alerts.font_size_px === "number" && alerts.font_size_px >= 12
+      ? alerts.font_size_px
+      : preset.font_size_px || 18;
+  setFieldValue("overlay-alerts-font-size", String(alertsFont));
   setFieldValue(
     "overlay-alerts-image-size",
     String(normalizeCatalogImageSizePct(alerts.image_size_pct))
@@ -887,6 +913,11 @@ export function collectAppearanceQuery() {
     query.image_size_pct = String(
       normalizeCatalogImageSizePct(fieldValue("overlay-alerts-image-size", "100"))
     );
+    const chatFont = preset && typeof preset.font_size_px === "number" ? preset.font_size_px : 18;
+    const alertsFont = Number.parseInt(fieldValue("overlay-alerts-font-size", String(chatFont)), 10);
+    if (Number.isFinite(alertsFont) && alertsFont !== chatFont) {
+      query.font_size_px = String(alertsFont);
+    }
   }
   return query;
 }
@@ -1301,6 +1332,7 @@ export function initOverlayAppearance() {
     "overlay-leaderboard-layout",
     "overlay-leaderboard-period",
     "overlay-alerts-image-size",
+    "overlay-alerts-font-size",
   ].forEach(function (id) {
     const el = document.getElementById(id);
     if (el) {

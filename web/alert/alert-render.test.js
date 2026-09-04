@@ -25,12 +25,18 @@ class FakeElement {
 
   setAttribute(name, value) {
     this.attributes[name] = value;
+    if (name === "class") {
+      this.className = value;
+    }
   }
 
   addEventListener() {}
 }
 
-const fakeDocument = { createElement: (tagName) => new FakeElement(tagName) };
+const fakeDocument = {
+  createElement: (tagName) => new FakeElement(tagName),
+  createElementNS: (_namespace, tagName) => new FakeElement(tagName),
+};
 
 function byClass(element, className) {
   if (element.className.split(" ").includes(className)) {
@@ -61,7 +67,9 @@ test("builds an award hierarchy with text nodes and an optional quote", function
   assert.equal(byClass(splash, "alert-award-viewer").textContent, "Nova");
   assert.equal(byClass(splash, "alert-points").textContent, "+25");
   assert.equal(byClass(splash, "alert-quote").textContent, untrustedQuote);
-  assert.equal(byClass(splash, "alert-avatar--placeholder").textContent, "N");
+  const placeholder = byClass(splash, "alert-avatar--placeholder");
+  assert.equal(placeholder.textContent, "");
+  assert.ok(byClass(placeholder, "alert-avatar__placeholder-icon"));
   assert.equal(Object.hasOwn(byClass(splash, "alert-quote"), "innerHTML"), false);
 });
 

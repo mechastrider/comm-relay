@@ -361,7 +361,15 @@ export function alertViewFromConfig(config, params) {
   if (queried !== null) {
     imageSizePct = queried;
   }
-  return Object.assign({}, base, { image_size_pct: imageSizePct });
+  let fontSizePx =
+    typeof surface.font_size_px === "number" && surface.font_size_px >= OVERLAY_FONT_SIZE_MIN
+      ? surface.font_size_px
+      : base.font_size_px;
+  const queriedFont = queryIntInRange(query, "font_size_px", OVERLAY_FONT_SIZE_MIN, OVERLAY_FONT_SIZE_MAX);
+  if (queriedFont !== null) {
+    fontSizePx = queriedFont;
+  }
+  return Object.assign({}, base, { image_size_pct: imageSizePct, font_size_px: fontSizePx });
 }
 
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);

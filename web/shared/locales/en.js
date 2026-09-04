@@ -311,6 +311,8 @@ export default {
   "obs.leaderboardFontSizeHint": "12–48 px. Independent from chat so a narrow ranking can stay smaller.",
   "obs.alertsImageSizeLabel": "Alert image size",
   "obs.alertsImageSizeHint": "Scales portrait and custom images for every alert in this preset. Per-command size in Audience stacks on top.",
+  "obs.alertsFontSize": "Alert font size (px)",
+  "obs.alertsFontSizeHint": "12–48 px. Independent from chat so banners can stay larger or smaller.",
   "obs.leaderboardLayout": "Leaderboard layout",
   "obs.leaderboardLayoutPanel": "Panel",
   "obs.leaderboardLayoutChips": "Chips",

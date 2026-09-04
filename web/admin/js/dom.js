@@ -76,10 +76,12 @@ export const overlayThemePicker = document.getElementById("overlay-theme-picker"
 export const overlayDurationChips = document.getElementById("overlay-duration-chips");
 export const studioEssentialFontChat = document.getElementById("studio-essential-font-chat");
 export const studioEssentialFontLeaderboard = document.getElementById("studio-essential-font-leaderboard");
+export const studioEssentialFontAlerts = document.getElementById("studio-essential-font-alerts");
 export const studioEssentialDuration = document.getElementById("studio-essential-duration");
 export const studioEssentialPeriod = document.getElementById("studio-essential-period");
 export const studioEssentialAlertsImageSize = document.getElementById("studio-essential-alerts-image-size");
 export const overlayAlertsImageSize = document.getElementById("overlay-alerts-image-size");
+export const overlayAlertsFontSize = document.getElementById("overlay-alerts-font-size");
 export const overlayAlertsImageSizeValue = document.getElementById("overlay-alerts-image-size-value");
 export const overlayPreviewModeControl = document.getElementById("overlay-preview-mode-control");
 export const obsSetupTab = document.getElementById("obs-setup-tab");
@@ -347,6 +349,7 @@ export const fieldErrors = {
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
     overlay_font_size_px: document.getElementById("overlay-font-size-error"),
     overlay_leaderboard_font_size_px: document.getElementById("overlay-leaderboard-font-size-error"),
+    overlay_alerts_font_size_px: document.getElementById("overlay-alerts-font-size-error"),
     overlay_alerts_image_size_pct: document.getElementById("overlay-alerts-image-size-error"),
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity-error"),
     overlay_display_mode: document.getElementById("overlay-display-mode-error"),
@@ -376,6 +379,7 @@ export const fieldInputs = {
     overlay_message_ttl_seconds: overlayMessageTTL,
     overlay_font_size_px: overlayFontSize,
     overlay_leaderboard_font_size_px: overlayLeaderboardFontSize,
+    overlay_alerts_font_size_px: overlayAlertsFontSize,
     overlay_alerts_image_size_pct: overlayAlertsImageSize,
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity"),
     overlay_display_mode: overlayDisplayMode,

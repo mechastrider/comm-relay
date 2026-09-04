@@ -311,6 +311,8 @@ export default {
   "obs.leaderboardFontSizeHint": "12–48 px. Не зависит от чата, чтобы узкий рейтинг мог остаться мельче.",
   "obs.alertsImageSizeLabel": "Размер картинки в баннере",
   "obs.alertsImageSizeHint": "Масштабирует портрет и свои картинки для всех баннеров этого пресета. Размер в Audience для команды/награды умножается сверху.",
+  "obs.alertsFontSize": "Размер шрифта баннера (px)",
+  "obs.alertsFontSizeHint": "12–48 px. Не зависит от чата — баннер может быть крупнее или мельче.",
   "obs.leaderboardLayout": "Макет лидерборда",
   "obs.leaderboardLayoutPanel": "Панель",
   "obs.leaderboardLayoutChips": "Чипы",
