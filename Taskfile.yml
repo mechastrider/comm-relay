@@ -15,9 +15,62 @@ tasks:
       - go install github.com/air-verse/air@{{.AIR_VERSION}}
       - npm ci
 
+  data:sync:
+    desc: Copy desktop user data (config, DB, overlay-assets) into var/data for web:dev
+    cmds:
+      - task: data:sync:{{OS}}
+
+  data:sync:windows:
+    internal: true
+    platforms: [windows]
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-dev-data.ps1
+
+  data:sync:darwin:
+    internal: true
+    platforms: [darwin]
+    cmds:
+      - bash scripts/sync-dev-data.sh
+
+  data:sync:linux:
+    internal: true
+    platforms: [linux]
+    cmds:
+      - bash scripts/sync-dev-data.sh
+
+  data:ensure:
+    internal: true
+    desc: Seed var/data from desktop install when config is missing
+    cmds:
+      - task: data:ensure:{{OS}}
+
+  data:ensure:windows:
+    internal: true
+    platforms: [windows]
+    status:
+      - powershell -NoProfile -Command "if (Test-Path var/data/config.json) { exit 0 } else { exit 1 }"
+    cmds:
+      - task: data:sync
+
+  data:ensure:darwin:
+    internal: true
+    platforms: [darwin]
+    status:
+      - test -f var/data/config.json
+    cmds:
+      - task: data:sync
+
+  data:ensure:linux:
+    internal: true
+    platforms: [linux]
+    status:
+      - test -f var/data/config.json
+    cmds:
+      - task: data:sync
+
   web:dev:
     desc: Dev stack — Air (Go reload) + live reload for web/ at http://127.0.0.1:17878
-    deps: [tools:ensure-air, tools:ensure-node]
+    deps: [tools:ensure-air, tools:ensure-node, data:ensure]
     cmds:
       - task: web:dev:parallel
 
