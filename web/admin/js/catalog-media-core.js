@@ -68,7 +68,7 @@ export function catalogImageFitCSSValue(fit) {
     return 'fill';
   }
   if (normalized === 'tile') {
-    return 'contain';
+    return 'none';
   }
   return normalized;
 }

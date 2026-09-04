@@ -158,6 +158,7 @@ function renderAwardsList() {
     item.addEventListener("click", function () {
       selectAward(String(award.id || ""), false);
       focusAwardItem(String(award.id || ""));
+      revealAwardEditor();
     });
     item.addEventListener("keydown", function (event) {
       if (["ArrowUp", "ArrowDown", "Home", "End", "Enter", " "].indexOf(event.key) === -1) {
@@ -206,6 +207,18 @@ function focusAwardItem(id) {
     if (item instanceof HTMLElement) {
       item.focus();
     }
+  });
+}
+
+function revealAwardEditor() {
+  if (!window.matchMedia("(max-width: 1023px)").matches) {
+    return;
+  }
+  window.requestAnimationFrame(function () {
+    window.requestAnimationFrame(function () {
+      const editor = dom.awardsEditorForm?.closest(".audience-catalog-editor");
+      editor?.scrollIntoView({ block: "start" });
+    });
   });
 }
 
@@ -432,6 +445,7 @@ async function saveAward() {
 
     creatingNew = false;
     selectedAwardId = String(data.id || selectedAwardId || "");
+    awardMedia.commitSavedRecord(data);
     await loadAwardsCatalog();
     selectAward(selectedAwardId, false);
   } catch (err) {
@@ -488,6 +502,7 @@ async function deleteAward() {
 
     selectedAwardId = null;
     creatingNew = false;
+    awardMedia.releaseSavedAssets();
     closeDeletePrompt();
     await loadAwardsCatalog();
     syncEditorVisibility();
@@ -600,6 +615,8 @@ export function initAwardsCatalog() {
       loadAwardsCatalog().catch(function () {
         /* region handles error */
       });
+    } else {
+      awardMedia.abandonPendingUploads();
     }
   });
 

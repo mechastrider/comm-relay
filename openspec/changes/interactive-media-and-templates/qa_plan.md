@@ -18,6 +18,7 @@
 | `{message}` command | `!gg` | Resolved `{message}` is the `!gg` line | P0 |
 | Empty streamer | Unset name, `{streamer}` in template | Empty substitution, not leftover braces if empty string; unknown tokens still left | P0 |
 | Alert image | Upload PNG, save on `gg`, fire | Custom image, no avatar | P0 |
+| Card + tile image | Choose card, tile, 300%, fire | Card class preserved; image repeats without scaling or text overlap | P0 |
 | Missing image | Clear image | Avatar fallback | P0 |
 | Alert sound | Upload 3 s MP3, volume 70, fire | Custom file, no built-in | P0 |
 | Built-in + volume | No file, chime, volume 40 | Built-in at 40% | P0 |
@@ -25,7 +26,11 @@
 | Path rejected | `image_asset` `C:\\a.png` | 400 | P0 |
 | Layout banner/fullscreen | Set layout, fire, OBS sizes | Composition matches; page transparent | P0 |
 | In-use delete | Delete filename used by `gg` | 400, file remains | P0 |
+| Provisional cleanup | Upload, clear/replace/navigate without save | Unreferenced upload deleted; shared filename remains | P0 |
 | Editor chips/preview | Insert `{viewer}`, preview | Preview shows Alice / current streamer | P0 |
+| Narrow catalog selection | Select item by pointer at 375/768 px | Editor header and fields move into the viewport; no horizontal overflow | P0 |
+| Media field accessibility | Focus upload and trigger upload/API errors | Visible focus; control exposes `aria-invalid` and `aria-describedby` | P0 |
+| Media numeric bounds | POST volume outside 0–100 and image size outside 25–300 | 400 with field errors; values are not silently clamped | P0 |
 | Play in editor | Play custom file | Hear locally; overlay does not splash | P0 |
 | Panel upload unchanged | Studio panel PNG/SVG under 512 KiB | Still works | P0 |
 | Long RU template | Cyrillic + `{streamer}` | Wraps; text nodes only | P1 |

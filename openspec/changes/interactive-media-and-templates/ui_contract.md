@@ -52,7 +52,7 @@ Upload uses multipart `kind` `alert_image` or `alert_sound`. Save sends filename
 | error/retry | Show upload or field errors; keep last good filename |
 | offline/degraded | Existing catalog error; do not claim media saved |
 | permission denied | Not applicable; file input cancel leaves prior media |
-| interrupted/recovered | Unsaved uploads that were not saved on the item may orphan a file until delete |
+| interrupted/recovered | Clear, replacement, catalog navigation, and normal page unload request deletion of unsaved uploads; the server keeps any file still referenced elsewhere |
 
 ## View / Flow: On-stream layout
 

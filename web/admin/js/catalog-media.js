@@ -1,4 +1,4 @@
-import { uploadOverlayAsset } from './overlay-asset-upload.js';
+import { deleteOverlayAsset, uploadOverlayAsset } from './overlay-asset-upload.js';
 import {
   CATALOG_LAYOUTS,
   catalogMediaPayload,
@@ -29,6 +29,10 @@ export async function uploadCatalogImage(file) {
 
 export async function uploadCatalogSound(file) {
   return uploadOverlayAsset(file, 'alert_sound');
+}
+
+export async function deleteCatalogAsset(filename, options) {
+  return deleteOverlayAsset(filename, options);
 }
 
 export function stopCatalogPreview(state) {

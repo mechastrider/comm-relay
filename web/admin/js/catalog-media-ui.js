@@ -3,6 +3,7 @@ import {
   catalogMediaPayload,
   catalogImageFitCSSValue,
   createCatalogMediaState,
+  deleteCatalogAsset,
   normalizeCatalogLayout,
   normalizeCatalogImageFit,
   normalizeCatalogImageSizePct,
@@ -47,13 +48,71 @@ async function playBuiltInPreview(state, sound, volume) {
 export function createCatalogMediaController(options) {
   /** @type {ReturnType<typeof createCatalogMediaState>} */
   let state = createCatalogMediaState();
+  let persistedImageAsset = "";
+  let persistedSoundFile = "";
+  const provisionalAssets = new Set();
 
-  function setFieldError(element, message) {
+  function setFieldError(control, element, message) {
     if (!element) {
       return;
     }
     element.textContent = message || "";
     element.hidden = !message;
+    if (!control) {
+      return;
+    }
+    if (message) {
+      control.setAttribute("aria-invalid", "true");
+      if (element.id) {
+        control.setAttribute("aria-describedby", element.id);
+      }
+    } else {
+      control.removeAttribute("aria-invalid");
+      control.removeAttribute("aria-describedby");
+    }
+  }
+
+  function setLayoutError(message) {
+    const inputs = document.querySelectorAll('input[name="' + options.layoutName + '"]');
+    setFieldError(inputs[0] || null, options.layoutError, message);
+    inputs.forEach(function (input, index) {
+      if (index === 0) {
+        return;
+      }
+      if (message) {
+        input.setAttribute("aria-invalid", "true");
+        if (options.layoutError?.id) {
+          input.setAttribute("aria-describedby", options.layoutError.id);
+        }
+      } else {
+        input.removeAttribute("aria-invalid");
+        input.removeAttribute("aria-describedby");
+      }
+    });
+  }
+
+  function requestAssetCleanup(filename, cleanupOptions) {
+    if (!filename) {
+      return;
+    }
+    deleteCatalogAsset(filename, cleanupOptions).catch(function () {
+      // A shared or already-removed asset is safe to keep/ignore here.
+    });
+  }
+
+  function abandonProvisionalAsset(filename, cleanupOptions) {
+    if (!filename || !provisionalAssets.has(filename)) {
+      return;
+    }
+    provisionalAssets.delete(filename);
+    requestAssetCleanup(filename, cleanupOptions);
+  }
+
+  function abandonPendingUploads(cleanupOptions) {
+    Array.from(provisionalAssets).forEach(function (filename) {
+      provisionalAssets.delete(filename);
+      requestAssetCleanup(filename, cleanupOptions);
+    });
   }
 
   function updateImagePreview() {
@@ -68,11 +127,18 @@ export function createCatalogMediaController(options) {
       options.imagePreview.append(placeholder);
       return;
     }
-    const image = document.createElement("img");
+    const isTile = state.imageFit === "tile";
+    const image = document.createElement(isTile ? "div" : "img");
     image.className = "catalog-media-preview__image";
-    image.src = overlayAssetPreviewURL(state.imageAsset);
-    image.alt = "";
-    image.style.objectFit = catalogImageFitCSSValue(state.imageFit);
+    const imageURL = overlayAssetPreviewURL(state.imageAsset);
+    if (isTile) {
+      image.classList.add("catalog-media-preview__image--tile");
+      image.style.backgroundImage = 'url("' + imageURL + '")';
+    } else {
+      image.src = imageURL;
+      image.alt = "";
+      image.style.objectFit = catalogImageFitCSSValue(state.imageFit);
+    }
     const scale = normalizeCatalogImageSizePct(state.imageSizePct) / 100;
     image.style.width = String(Math.round(72 * scale)) + "px";
     image.style.height = String(Math.round(72 * scale)) + "px";
@@ -138,7 +204,11 @@ export function createCatalogMediaController(options) {
 
   function fillFromRecord(record) {
     stopCatalogPreview(state);
-    state = Object.assign(createCatalogMediaState(), readCatalogMediaFromRecord(record));
+    abandonPendingUploads();
+    const media = readCatalogMediaFromRecord(record);
+    persistedImageAsset = media.imageAsset;
+    persistedSoundFile = media.soundFile;
+    state = Object.assign(createCatalogMediaState(), media);
     if (options.soundVolumeInput) {
       options.soundVolumeInput.value = String(state.soundVolume);
     }
@@ -155,12 +225,12 @@ export function createCatalogMediaController(options) {
   }
 
   function clearFieldErrors() {
-    setFieldError(options.imageError, "");
-    setFieldError(options.imageFitError, "");
-    setFieldError(options.imageSizeError, "");
-    setFieldError(options.soundFileError, "");
-    setFieldError(options.soundVolumeError, "");
-    setFieldError(options.layoutError, "");
+    setFieldError(options.imageInput, options.imageError, "");
+    setFieldError(options.imageFitInput, options.imageFitError, "");
+    setFieldError(options.imageSizeInput, options.imageSizeError, "");
+    setFieldError(options.soundFileInput, options.soundFileError, "");
+    setFieldError(options.soundVolumeInput, options.soundVolumeError, "");
+    setLayoutError("");
   }
 
   function applyFieldErrors(fields) {
@@ -168,22 +238,22 @@ export function createCatalogMediaController(options) {
       return;
     }
     if (fields.image_asset) {
-      setFieldError(options.imageError, fields.image_asset);
+      setFieldError(options.imageInput, options.imageError, fields.image_asset);
     }
     if (fields.image_fit) {
-      setFieldError(options.imageFitError, fields.image_fit);
+      setFieldError(options.imageFitInput, options.imageFitError, fields.image_fit);
     }
     if (fields.image_size_pct) {
-      setFieldError(options.imageSizeError, fields.image_size_pct);
+      setFieldError(options.imageSizeInput, options.imageSizeError, fields.image_size_pct);
     }
     if (fields.sound_file) {
-      setFieldError(options.soundFileError, fields.sound_file);
+      setFieldError(options.soundFileInput, options.soundFileError, fields.sound_file);
     }
     if (fields.sound_volume) {
-      setFieldError(options.soundVolumeError, fields.sound_volume);
+      setFieldError(options.soundVolumeInput, options.soundVolumeError, fields.sound_volume);
     }
     if (fields.layout) {
-      setFieldError(options.layoutError, fields.layout);
+      setLayoutError(fields.layout);
     }
   }
 
@@ -198,13 +268,21 @@ export function createCatalogMediaController(options) {
   }
 
   async function handleImageUpload(file) {
-    setFieldError(options.imageError, "");
+    setFieldError(options.imageInput, options.imageError, "");
     try {
-      state.imageAsset = await uploadCatalogImage(file);
+      const previous = state.imageAsset;
+      const uploaded = await uploadCatalogImage(file);
+      state.imageAsset = uploaded;
+      if (uploaded !== persistedImageAsset) {
+        provisionalAssets.add(uploaded);
+      }
+      if (previous !== uploaded && previous !== persistedImageAsset) {
+        abandonProvisionalAsset(previous);
+      }
       updateImagePreview();
     } catch (err) {
       const message = err instanceof Error ? err.message : t("obs.assetUploadFailed");
-      setFieldError(options.imageError, message);
+      setFieldError(options.imageInput, options.imageError, message);
     } finally {
       if (options.imageInput) {
         options.imageInput.value = "";
@@ -213,12 +291,20 @@ export function createCatalogMediaController(options) {
   }
 
   async function handleSoundUpload(file) {
-    setFieldError(options.soundFileError, "");
+    setFieldError(options.soundFileInput, options.soundFileError, "");
     try {
-      state.soundFile = await uploadCatalogSound(file);
+      const previous = state.soundFile;
+      const uploaded = await uploadCatalogSound(file);
+      state.soundFile = uploaded;
+      if (uploaded !== persistedSoundFile) {
+        provisionalAssets.add(uploaded);
+      }
+      if (previous !== uploaded && previous !== persistedSoundFile) {
+        abandonProvisionalAsset(previous);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : t("obs.assetUploadFailed");
-      setFieldError(options.soundFileError, message);
+      setFieldError(options.soundFileInput, options.soundFileError, message);
     } finally {
       if (options.soundFileInput) {
         options.soundFileInput.value = "";
@@ -236,19 +322,20 @@ export function createCatalogMediaController(options) {
       }
     });
     options.imageClear?.addEventListener("click", function () {
+      abandonProvisionalAsset(state.imageAsset);
       state.imageAsset = "";
       updateImagePreview();
-      setFieldError(options.imageError, "");
+      setFieldError(options.imageInput, options.imageError, "");
     });
     options.imageFitInput?.addEventListener("change", function () {
       readImageFitFromForm();
       updateImagePreview();
-      setFieldError(options.imageFitError, "");
+      setFieldError(options.imageFitInput, options.imageFitError, "");
     });
     options.imageSizeInput?.addEventListener("input", function () {
       readImageSizeFromForm();
       updateImagePreview();
-      setFieldError(options.imageSizeError, "");
+      setFieldError(options.imageSizeInput, options.imageSizeError, "");
     });
     options.soundFileInput?.addEventListener("change", function () {
       const file = options.soundFileInput?.files?.[0];
@@ -260,13 +347,14 @@ export function createCatalogMediaController(options) {
     });
     options.soundFileClear?.addEventListener("click", function () {
       stopCatalogPreview(state);
+      abandonProvisionalAsset(state.soundFile);
       state.soundFile = "";
-      setFieldError(options.soundFileError, "");
+      setFieldError(options.soundFileInput, options.soundFileError, "");
     });
     options.soundVolumeInput?.addEventListener("input", function () {
       state.soundVolume = Number(options.soundVolumeInput?.value || 70);
       updateVolumeLabel();
-      setFieldError(options.soundVolumeError, "");
+      setFieldError(options.soundVolumeInput, options.soundVolumeError, "");
     });
     options.soundPlay?.addEventListener("click", function () {
       readLayoutFromForm();
@@ -283,9 +371,43 @@ export function createCatalogMediaController(options) {
     document.querySelectorAll('input[name="' + options.layoutName + '"]').forEach(function (input) {
       input.addEventListener("change", function () {
         readLayoutFromForm();
-        setFieldError(options.layoutError, "");
+        setLayoutError("");
       });
     });
+    window.addEventListener("beforeunload", function () {
+      abandonPendingUploads({ keepalive: true });
+    });
+  }
+
+  function commitSavedRecord(record) {
+    const media = readCatalogMediaFromRecord(record);
+    const previousImage = persistedImageAsset;
+    const previousSound = persistedSoundFile;
+
+    provisionalAssets.delete(media.imageAsset);
+    provisionalAssets.delete(media.soundFile);
+    persistedImageAsset = media.imageAsset;
+    persistedSoundFile = media.soundFile;
+
+    if (previousImage && previousImage !== persistedImageAsset) {
+      requestAssetCleanup(previousImage);
+    }
+    if (previousSound && previousSound !== persistedSoundFile) {
+      requestAssetCleanup(previousSound);
+    }
+    abandonPendingUploads();
+  }
+
+  function releaseSavedAssets() {
+    const image = persistedImageAsset;
+    const sound = persistedSoundFile;
+    persistedImageAsset = "";
+    persistedSoundFile = "";
+    requestAssetCleanup(image);
+    if (sound !== image) {
+      requestAssetCleanup(sound);
+    }
+    abandonPendingUploads();
   }
 
   return {
@@ -295,6 +417,9 @@ export function createCatalogMediaController(options) {
     readPayload,
     applyFieldErrors,
     clearFieldErrors,
+    commitSavedRecord,
+    releaseSavedAssets,
+    abandonPendingUploads,
     stopPreview: function () {
       stopCatalogPreview(state);
     },

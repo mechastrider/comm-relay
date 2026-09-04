@@ -47,6 +47,16 @@
 - [x] R.1 Fresh diff review; CRITICAL=0; checks green.
 - [x] R.2 Confirm no filesystem paths on the wire, no GIF/SVG alerts, no preset streamer override.
 
+## Review corrections
+
+- [x] R.3 Preserve valid `card` layout and implement real `tile` rendering in admin preview and `/overlay/alert`.
+- [x] R.4 Keep G-Rebels portrait sizing dynamic and restore splash clipping to the Browser Source safe rectangle.
+- [x] R.5 Reject out-of-range catalog volume and image-size API values with field errors.
+- [x] R.6 Clean up unreferenced provisional/replaced catalog media without deleting shared assets.
+- [x] R.7 Reveal the catalog editor after pointer selection on narrow layouts.
+- [x] R.8 Expose visible keyboard focus and associate catalog media errors with their controls.
+- [x] R.9 Add regression coverage and rerun all automated quality gates plus Playwright responsive smoke.
+
 ## Gate: distribution-readiness
 
 - [x] D.1 Existing package names; backup note includes `overlay-assets`; do not sign or publish.

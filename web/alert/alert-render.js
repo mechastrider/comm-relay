@@ -36,7 +36,7 @@ export function safeImageURL(value) {
 
 export function normalizeAlertLayout(layout) {
   const value = text(layout).toLowerCase();
-  if (value === "banner" || value === "fullscreen") {
+  if (value === "card" || value === "banner" || value === "fullscreen") {
     return value;
   }
   return "fullscreen";
@@ -76,7 +76,7 @@ export function alertImageFitObjectFit(fit) {
     return "fill";
   }
   if (normalized === "tile") {
-    return "contain";
+    return "none";
   }
   return normalized;
 }
@@ -135,6 +135,25 @@ export function renderAvatar(documentRef, name, avatarURL) {
 export function renderAlertPortrait(documentRef, name, imageURL, avatarURL, imageFit) {
   if (imageURL) {
     const fit = normalizeAlertImageFit(imageFit);
+    if (fit === "tile") {
+      const tile = documentRef.createElement("div");
+      tile.className = "alert-avatar alert-avatar--custom alert-image-fit--tile";
+      tile.style.backgroundImage = 'url("' + imageURL + '")';
+
+      const probe = documentRef.createElement("img");
+      probe.className = "alert-avatar__tile-probe";
+      probe.src = imageURL;
+      probe.alt = "";
+      probe.addEventListener(
+        "error",
+        function () {
+          tile.replaceWith(renderAvatar(documentRef, name, avatarURL));
+        },
+        { once: true }
+      );
+      tile.append(probe);
+      return tile;
+    }
     const image = documentRef.createElement("img");
     image.className = "alert-avatar alert-avatar--custom alert-image-fit--" + fit;
     image.style.objectFit = alertImageFitObjectFit(fit);

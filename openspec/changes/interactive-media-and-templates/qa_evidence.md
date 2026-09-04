@@ -68,3 +68,28 @@ Signing, GIF-as-supported, video, preset streamer override, Windows/macOS OBS, l
 Admin catalog modules originally imported `../../alert/alert-render.js`, which 404s when served from `/js/` and blocked SPA hydration. Filename checks now live in `catalog-media-core.js`; built-in preview loads `/overlay/alert/alert-sound.js`.
 
 Catalog `uploadCatalogImage` / `uploadCatalogSound` passed `{ kind: '...' }` into `uploadOverlayAsset(file, kind)` which expects a string, so FormData sent `kind=[object Object]` and the server treated it as panel. WAV from the editor 400'd; PNG over 512 KiB was rejected. Callers now pass `'alert_image'` / `'alert_sound'`; unknown kinds return HTTP 400. Re-smoked on Chromium after the fix.
+
+## Independent review corrections — 2026-09-04
+
+Branch: `feat/xp-and-interactive-media`
+
+| Check | Result |
+|---|---|
+| `npm test` | **PASS** — 35 test files, 0 failed |
+| `npm run test:i18n` | **PASS** |
+| `npm run lint` | **PASS** |
+| `go test ./...` | **PASS** |
+| `go test -race ./internal/api/... ./internal/overlayassets/... ./internal/command/...` | **PASS** |
+| `golangci-lint run ./...` | **PASS** — 0 issues |
+| `go build ./...` | **PASS** |
+| `openspec validate interactive-media-and-templates --strict` | **PASS** |
+| `git diff --check` | **PASS** |
+
+Playwright/Chromium responsive smoke:
+
+- 1440×900 Commands, 768×700 Commands, and 375×667 Awards: no page/console errors and no horizontal overflow.
+- Pointer selection at 375×667 reveals the Awards editor at `y=7.53`; its header ends at `y=119.53` and remains visible.
+- G-Rebels `card` alert with `tile` and 300% image size in a 480×300 Browser Source: card class preserved, `background-repeat: repeat`, portrait width `120.14px`, no portrait/text overlap, splash clipped with `overflow: hidden`, and the surface remains inside the viewport.
+- Browser-backed upload lifecycle: Clear removes an unreferenced upload; replacement removes the previous provisional file; leaving the catalog removes the remaining provisional file; each subsequent asset GET returned 404.
+- Rejected GIF upload reports the image-specific RU format hint and associates the visible error with the file input; keyboard focus on the upload control is visibly outlined.
+- Out-of-range `sound_volume` and `image_size_pct` POST values return HTTP 400 with field-specific messages instead of being silently clamped.

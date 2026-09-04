@@ -6,12 +6,12 @@ func catalogSoundVolumeFromRequest(value *int) int {
 	if value == nil {
 		return store.DefaultCatalogSoundVolume
 	}
-	return store.NormalizeCatalogSoundVolume(*value)
+	return *value
 }
 
 func catalogImageSizePctFromRequest(value *int) int {
 	if value == nil {
 		return store.DefaultCatalogImageSizePct
 	}
-	return store.NormalizeCatalogImageSizePct(*value)
+	return *value
 }

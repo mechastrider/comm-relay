@@ -55,7 +55,7 @@ test("compact alert rectangles preserve readable content and fade unavoidable ov
   assert.match(rules, /\.alert-content\s*\{[\s\S]*?align-content:\s*start/);
   assert.match(rules, /mask-image:\s*linear-gradient\(to bottom/);
   assert.match(rules, /font-size:\s*clamp\(13px,[^;]+16px\)/);
-  assert.match(rules, /overlay-theme--cockpit-panel[\s\S]*?grid-template-columns:\s*28px 3px minmax\(0, 1fr\)/);
+  assert.match(rules, /overlay-theme--cockpit-panel[\s\S]*?grid-template-columns:\s*auto 3px minmax\(0, 1fr\)/);
   assert.match(rules, /overlay-theme--cockpit-panel \.alert-splash\s*\{[\s\S]*?padding:\s*30px 10px 12px 50px/);
   ["cockpit-popups", "g-rebels-popups"].forEach(function (theme) {
     assert.match(rules, new RegExp("overlay-theme--" + theme.replace(/-/g, "\\-") + " \\.alert-splash"));

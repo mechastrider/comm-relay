@@ -32,8 +32,8 @@ Omitted → `""`.
 
 ## Atomicity / Concurrency / Locking
 
-- Upload writes the file first, then the editor save stores the filename. A crash between them may orphan a file; delete of unreferenced names is the cleanup.
-- Catalog update that clears media does not delete the file automatically.
+- Upload writes the file first, then the editor save stores the filename. The editor tracks provisional names and requests reference-safe cleanup on clear, replacement, navigation, and normal page unload. A crash between upload and cleanup may still orphan a file.
+- After a successful catalog update or item deletion, the editor requests cleanup of replaced names; the server refuses deletion while any command, award, or preset still references the file.
 - Delete asset checks preset panel image, command, and award references in one read, then removes the file.
 - Config save remains the existing atomic replace.
 

@@ -126,6 +126,24 @@ func TestCommands_WhenInvalidTrigger_ExpectFieldError(t *testing.T) {
 	require.Equal(t, "invalid trigger", payload.Fields["trigger"])
 }
 
+func TestCommands_WhenMediaNumbersOutOfRange_ExpectFieldErrors(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+
+	rec := httptest.NewRecorder()
+	body := `{"trigger":"badmedia","enabled":true,"cooldown_seconds":0,"splash_template":"bad","sound":"","duration_ms":5000,"sound_volume":101,"image_size_pct":301}`
+	req := httptest.NewRequest(http.MethodPost, "/api/commands/create", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	env.Handler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+
+	var payload struct {
+		Fields map[string]string `json:"fields"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Equal(t, "volume must be between 0 and 100", payload.Fields["sound_volume"])
+	require.Equal(t, "image size must be between 25% and 300%", payload.Fields["image_size_pct"])
+}
+
 func TestAwards_WhenCreateClutch_ExpectListed(t *testing.T) {
 	env := newTestEnv(t, bus.New(0))
 
@@ -173,4 +191,22 @@ func TestAwards_WhenInvalidPoints_ExpectFieldError(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
 	require.Equal(t, "points must be at least 1", payload.Fields["points"])
+}
+
+func TestAwards_WhenMediaNumbersOutOfRange_ExpectFieldErrors(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+
+	rec := httptest.NewRecorder()
+	body := `{"name":"Bad media","points":10,"splash_template":"bad","sound":"","duration_ms":5000,"sound_volume":-1,"image_size_pct":24}`
+	req := httptest.NewRequest(http.MethodPost, "/api/awards/create", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	env.Handler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+
+	var payload struct {
+		Fields map[string]string `json:"fields"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Equal(t, "volume must be between 0 and 100", payload.Fields["sound_volume"])
+	require.Equal(t, "image size must be between 25% and 300%", payload.Fields["image_size_pct"])
 }

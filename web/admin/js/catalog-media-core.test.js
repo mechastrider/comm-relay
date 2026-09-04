@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  catalogImageFitCSSValue,
   catalogMediaPayload,
   createCatalogMediaState,
   normalizeCatalogLayout,
@@ -19,6 +20,10 @@ test('normalizeCatalogImageSizePct defaults unknown to 100', () => {
   assert.equal(normalizeCatalogImageSizePct(''), 100);
   assert.equal(normalizeCatalogImageSizePct('180'), 180);
   assert.equal(normalizeCatalogImageSizePct('999'), 300);
+});
+
+test('tile uses a non-scaling object-fit fallback because the UI renders it as a background', () => {
+  assert.equal(catalogImageFitCSSValue('tile'), 'none');
 });
 
 test('readCatalogMediaFromRecord rejects unsafe filenames', () => {

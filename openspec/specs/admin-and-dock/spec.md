@@ -276,7 +276,7 @@ Audience SHALL offer Commands and Awards lists separate from the viewers people 
 - **THEN** seeded or operator-defined commands are listed and can be edited without leaving `/`
 
 ### Requirement: Catalog editors expose templates, media, and layout
-Command and award editors SHALL show the available template variables `{viewer}`, `{name}`, `{streamer}`, `{points}`, and `{message}`, insert the chosen variable into the splash field on activation, and show a preview that substitutes sample viewer `Alice`, the current `streamer_display_name` or a localized sample streamer name when empty, sample points, and a short sample message. Image upload SHALL use `kind` `alert_image` and offer a clear action. Sound SHALL keep the built-in select plus an optional custom file using `kind` `alert_sound`, a Play/Stop preview, and a volume control 0–100. Layout SHALL be a choice of card, banner, or fullscreen. Image fit SHALL be a choice of cover, contain, fill, or tile. Image size SHALL be a slider from 25–300 percent that scales the portrait area inside the alert frame. File inputs MUST remain keyboard reachable and labeled.
+Command and award editors SHALL show the available template variables `{viewer}`, `{name}`, `{streamer}`, `{points}`, and `{message}`, insert the chosen variable into the splash field on activation, and show a preview that substitutes sample viewer `Alice`, the current `streamer_display_name` or a localized sample streamer name when empty, sample points, and a short sample message. Image upload SHALL use `kind` `alert_image` and offer a clear action. Sound SHALL keep the built-in select plus an optional custom file using `kind` `alert_sound`, a Play/Stop preview, and a volume control 0–100. Layout SHALL be a choice of card, banner, or fullscreen. Image fit SHALL be a choice of cover, contain, fill, or tile. Image size SHALL be a slider from 25–300 percent that scales the portrait area inside the alert frame. File inputs MUST remain keyboard reachable and labeled, MUST expose a visible focus indicator, and dynamic field errors MUST be associated with their controls. Newly uploaded files SHALL be treated as provisional until save; clear, replacement, catalog navigation, normal page unload, and item deletion SHALL request reference-safe cleanup through the overlay-asset delete action. On a stacked narrow layout, pointer selection of a catalog item SHALL reveal the editor while list keyboard navigation SHALL retain focus in the list.
 
 #### Scenario: Insert viewer variable
 - **WHEN** the operator activates `{viewer}` in the command editor
@@ -285,6 +285,14 @@ Command and award editors SHALL show the available template variables `{viewer}`
 #### Scenario: Preview uses streamer name
 - **WHEN** `streamer_display_name` is `Jake` and the template contains `{streamer}`
 - **THEN** the editor preview contains `Jake`
+
+#### Scenario: Clear an unsaved upload
+- **WHEN** the operator uploads an image and clears it before saving the catalog item
+- **THEN** the editor requests deletion of the provisional filename and the server deletes it only when no other record references it
+
+#### Scenario: Select an award on a narrow screen
+- **WHEN** the operator uses a pointer to select an award while the catalog columns are stacked
+- **THEN** the editor header and fields are brought into the viewport
 
 ### Requirement: Audience table headers are a distinct sortable surface
 The Audience viewers table header SHALL use a distinct surface or edge from the body while keeping header text contrast. Score and Messages SHALL be sort buttons. The unsorted table SHALL keep the server last-activity order. The first activation of a numeric column SHALL sort that column descending for the selected period; a second activation SHALL sort ascending; a third SHALL restore last-activity order. The active column SHALL expose `aria-sort` (`ascending`, `descending`, or `none`). The selected column and direction SHALL persist in the current browser or WebView and MUST NOT be written to SQLite or `config.json`. An invalid stored preference SHALL fall back to last-activity order.

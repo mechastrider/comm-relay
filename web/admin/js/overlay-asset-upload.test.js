@@ -103,3 +103,45 @@ test('uploadOverlayAsset rejects unknown kinds before upload', async (t) => {
   await assert.rejects(() => uploadOverlayAsset(tinyFile(), 'banner'));
   assert.equal(fetchCalls, 0);
 });
+
+test('mapOverlayAssetUploadError describes formats for the selected catalog media kind', async (t) => {
+  installUploadMocks(t);
+  const { mapOverlayAssetUploadError } = await import('./overlay-asset-upload.js');
+  assert.equal(
+    mapOverlayAssetUploadError('file type is not allowed', 'alert_image'),
+    'catalog.assetImageTypeNotAllowed'
+  );
+  assert.equal(
+    mapOverlayAssetUploadError('file type is not allowed', 'alert_sound'),
+    'catalog.assetSoundTypeNotAllowed'
+  );
+  assert.equal(
+    mapOverlayAssetUploadError('file type is not allowed', 'panel'),
+    'obs.assetTypeNotAllowed'
+  );
+});
+
+test('deleteOverlayAsset uses the reference-safe POST action', async (t) => {
+  installUploadMocks(t);
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  let capturedURL = '';
+  let capturedOptions = null;
+  globalThis.fetch = async (url, options) => {
+    capturedURL = url;
+    capturedOptions = options;
+    return {
+      ok: true,
+      _payload: { deleted: true },
+    };
+  };
+
+  const { deleteOverlayAsset } = await import('./overlay-asset-upload.js');
+  assert.equal(await deleteOverlayAsset('asset_test.png', { keepalive: true }), true);
+  assert.equal(capturedURL, 'http://test/api/overlay/assets/delete');
+  assert.equal(capturedOptions.method, 'POST');
+  assert.equal(capturedOptions.keepalive, true);
+  assert.deepEqual(JSON.parse(capturedOptions.body), { filename: 'asset_test.png' });
+});

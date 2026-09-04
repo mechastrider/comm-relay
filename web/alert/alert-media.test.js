@@ -88,11 +88,37 @@ test("rejects remote filenames and normalizes layout", function () {
   assert.equal(safeStoredSoundAssetFilename("asset_ok.mp3"), "asset_ok.mp3");
   assert.equal(safeStoredSoundAssetFilename("asset_ok.png"), "");
   assert.equal(normalizeAlertLayout("fullscreen"), "fullscreen");
+  assert.equal(normalizeAlertLayout("card"), "card");
   assert.equal(normalizeAlertLayout("grid"), "fullscreen");
   assert.equal(normalizeAlertImageFit("cover"), "cover");
   assert.equal(normalizeAlertImageFit("weird"), "contain");
   assert.equal(normalizeAlertImageSizePct(150), 150);
   assert.equal(normalizeAlertImageSizePct(10), 25);
+});
+
+test("renders tile mode as a repeated background with an image probe", function () {
+  const splash = createAlertSplash(
+    fakeDocument,
+    {
+      source: "command",
+      name: "Nova",
+      text: "Tiles",
+      image_asset: "asset_tiles.png",
+      image_fit: "tile",
+      layout: "card",
+    },
+    {
+      overlayAssetURL: function (filename) {
+        return "/overlay/assets/" + filename;
+      },
+    }
+  );
+
+  assert.match(splash.className, /alert-splash--layout-card/);
+  const tile = splash.children[0];
+  assert.match(tile.className, /alert-image-fit--tile/);
+  assert.equal(tile.style.backgroundImage, 'url("/overlay/assets/asset_tiles.png")');
+  assert.equal(tile.children[0].src, "/overlay/assets/asset_tiles.png");
 });
 
 test("playAlertAudio uses custom file instead of built-in tone", async function () {

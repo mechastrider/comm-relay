@@ -8,7 +8,6 @@ export const OVERLAY_ALERT_SOUND_MAX_BYTES = 5 * 1024 * 1024;
 const SERVER_ERROR_KEYS = {
   "file is too large or invalid": "obs.assetTooLarge",
   "file is too large": "obs.assetTooLarge",
-  "file type is not allowed": "obs.assetTypeNotAllowed",
   "heic and avif are not supported; use png or jpeg": "obs.assetModernFormat",
   "image dimensions exceed the allowed limit": "catalog.assetImageDimensions",
   "audio duration must be between 1 and 15 seconds": "catalog.assetSoundDuration",
@@ -49,7 +48,17 @@ export function mapOverlayAssetUploadError(serverMessage, kind = "panel") {
   if (!serverMessage) {
     return t("obs.assetUploadFailed");
   }
-  const key = SERVER_ERROR_KEYS[String(serverMessage).toLowerCase()];
+  const normalizedMessage = String(serverMessage).toLowerCase();
+  if (normalizedMessage === "file type is not allowed") {
+    if (kind === "alert_image") {
+      return t("catalog.assetImageTypeNotAllowed");
+    }
+    if (kind === "alert_sound") {
+      return t("catalog.assetSoundTypeNotAllowed");
+    }
+    return t("obs.assetTypeNotAllowed");
+  }
+  const key = SERVER_ERROR_KEYS[normalizedMessage];
   if (key) {
     const limits = KIND_LIMITS[kind] || KIND_LIMITS.panel;
     return t(key, { max_kb: limits.maxKb });
@@ -82,4 +91,21 @@ export async function uploadOverlayAsset(file, kindOrOptions = "panel") {
     throw new Error(mapOverlayAssetUploadError(payload && payload.error, kind));
   }
   return payload.filename;
+}
+
+export async function deleteOverlayAsset(filename, options = {}) {
+  const response = await fetch(apiURL("/api/overlay/assets/delete"), {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ filename: String(filename || "") }),
+    keepalive: Boolean(options.keepalive),
+  });
+  const payload = await readJSON(response);
+  if (!response.ok) {
+    throw new Error((payload && payload.error) || t("catalog.deleteFailed"));
+  }
+  return Boolean(payload && payload.deleted);
 }

@@ -42,7 +42,7 @@ body {
   max-height: 100%;
   padding: 16px 18px;
   box-sizing: border-box;
-  overflow: visible;
+  overflow: hidden;
   opacity: 0;
   transform: translateY(12px) scale(0.98);
   transition:
@@ -385,7 +385,7 @@ body.overlay-theme--cockpit-popups .alert-splash::after {
 }
 
 body.overlay-theme--g-rebels-popups .alert-splash {
-  grid-template-columns: 44px 5px minmax(0, 1fr);
+  grid-template-columns: auto 5px minmax(0, 1fr);
   gap: 5px 13px;
   min-height: 82px;
   padding: 19px 22px 16px 18px;
@@ -625,9 +625,18 @@ body.overlay-theme--g-rebels-popups .alert-avatar--custom {
   object-fit: cover;
 }
 
-.alert-avatar--custom.alert-image-fit--contain,
-.alert-avatar--custom.alert-image-fit--tile {
+.alert-avatar--custom.alert-image-fit--contain {
   object-fit: contain;
+}
+
+.alert-avatar--custom.alert-image-fit--tile {
+  background-position: center;
+  background-repeat: repeat;
+  background-size: auto;
+}
+
+.alert-avatar__tile-probe {
+  display: none;
 }
 
 .alert-avatar--custom.alert-image-fit--fill {

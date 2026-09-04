@@ -753,6 +753,7 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   .audience-catalog-editor {
     border-left: none;
     border-top: 1px solid var(--border);
+    scroll-margin-block-start: var(--primitive-space-3);
   }
 }
 
@@ -814,6 +815,12 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   object-fit: cover;
 }
 
+.catalog-media-preview__image--tile {
+  background-position: center;
+  background-repeat: repeat;
+  background-size: auto;
+}
+
 .catalog-media-preview__placeholder {
   font-size: var(--primitive-font-size-xs);
   color: var(--text-muted);
@@ -838,6 +845,11 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.catalog-media-upload:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .catalog-volume-row {
@@ -872,4 +884,3 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   margin-bottom: 0.35rem;
   font-weight: 500;
 }
-

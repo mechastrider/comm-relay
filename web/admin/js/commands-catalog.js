@@ -157,6 +157,7 @@ function renderCommandsList() {
     item.addEventListener("click", function () {
       selectCommand(String(cmd.id || ""), false);
       focusCommandItem(String(cmd.id || ""));
+      revealCommandEditor();
     });
     item.addEventListener("keydown", function (event) {
       if (["ArrowUp", "ArrowDown", "Home", "End", "Enter", " "].indexOf(event.key) === -1) {
@@ -205,6 +206,18 @@ function focusCommandItem(id) {
     if (item instanceof HTMLElement) {
       item.focus();
     }
+  });
+}
+
+function revealCommandEditor() {
+  if (!window.matchMedia("(max-width: 1023px)").matches) {
+    return;
+  }
+  window.requestAnimationFrame(function () {
+    window.requestAnimationFrame(function () {
+      const editor = dom.commandsEditorForm?.closest(".audience-catalog-editor");
+      editor?.scrollIntoView({ block: "start" });
+    });
   });
 }
 
@@ -427,6 +440,7 @@ async function saveCommand() {
 
     creatingNew = false;
     selectedCommandId = String(data.id || selectedCommandId || "");
+    commandMedia.commitSavedRecord(data);
     await loadCommandsCatalog();
     selectCommand(selectedCommandId, false);
   } catch (err) {
@@ -483,6 +497,7 @@ async function deleteCommand() {
 
     selectedCommandId = null;
     creatingNew = false;
+    commandMedia.releaseSavedAssets();
     closeDeletePrompt();
     await loadCommandsCatalog();
     syncEditorVisibility();
@@ -591,6 +606,8 @@ export function initCommandsCatalog() {
       loadCommandsCatalog().catch(function () {
         /* region handles error */
       });
+    } else {
+      commandMedia.abandonPendingUploads();
     }
   });
 

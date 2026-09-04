@@ -62,7 +62,7 @@ Filenames must pass the existing overlay asset name rules. Reject path separator
 4. **Custom image replaces avatar; no dual portrait.** Simpler composition for OBS.
 5. **Custom sound replaces the built-in tone, with shared volume.** Mixing two sounds is worse on stream.
 6. **Layout is per catalog item, not a Studio-only preset.** Operators want `!gg` fullscreen and Joke as a card without another OBS source.
-7. **Explicit delete of unreferenced files, no silent GC.** Orphans are acceptable until the operator deletes.
+7. **Reference-safe cleanup for catalog uploads.** The editor tracks newly uploaded files until a successful catalog save. Clear, replacement, selection/navigation away, and item deletion request cleanup through the existing reference-aware delete endpoint; files shared by another preset or catalog item remain. A crash between upload and cleanup may still orphan a file, and no background GC is introduced.
 
 ## Risks / Trade-offs
 
