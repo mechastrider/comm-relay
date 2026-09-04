@@ -148,7 +148,7 @@ func TestAwards_WhenCreateClutch_ExpectListed(t *testing.T) {
 	env := newTestEnv(t, bus.New(0))
 
 	createRec := httptest.NewRecorder()
-	body := `{"name":"Clutch","points":25,"splash_template":"Clutch {name} +{points}","sound":"alert","duration_ms":5000}`
+	body := `{"name":"Clutch","points":25,"splash_template":"Clutch {viewer} +{points}","sound":"alert","duration_ms":5000}`
 	req := httptest.NewRequest(http.MethodPost, "/api/awards/create", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	env.Handler.ServeHTTP(createRec, req)

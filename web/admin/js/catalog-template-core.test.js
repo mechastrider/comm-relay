@@ -1,17 +1,21 @@
 import assert from "node:assert/strict";
 import {
   SPLASH_VARIABLES,
+  SPLASH_VARIABLE_TOOLTIP_I18N,
   substituteSplashTemplate,
   insertSplashVariable,
 } from "./catalog-template-core.js";
 
 assert.deepEqual(SPLASH_VARIABLES, [
   "{viewer}",
-  "{name}",
   "{streamer}",
   "{points}",
   "{message}",
 ]);
+
+SPLASH_VARIABLES.forEach(function (token) {
+  assert.ok(SPLASH_VARIABLE_TOOLTIP_I18N[token], `missing tooltip i18n for ${token}`);
+});
 
 assert.equal(
   substituteSplashTemplate("Hi {viewer} from {streamer}: {message} +{points}", {
@@ -24,7 +28,7 @@ assert.equal(
 );
 
 assert.equal(
-  substituteSplashTemplate("Advice for {name}: {message}", {
+  substituteSplashTemplate("Advice for {viewer}: {message}", {
     viewer: "Bob",
     message: "nice catch",
     points: 50,

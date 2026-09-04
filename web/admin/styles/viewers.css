@@ -776,6 +776,17 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   cursor: pointer;
 }
 
+.catalog-template-chip.has-tooltip > .ui-tooltip {
+  top: auto;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+}
+
+.catalog-template-chip.has-tooltip:hover > .ui-tooltip,
+.catalog-template-chip.has-tooltip:focus-visible > .ui-tooltip {
+  transform: translateX(-50%) translateY(0);
+}
+
 .catalog-template-chip:hover,
 .catalog-template-chip:focus-visible {
   border-color: var(--accent, #3b82f6);

@@ -1,7 +1,14 @@
+/** @type {Readonly<Record<string, string>>} */
+export const SPLASH_VARIABLE_TOOLTIP_I18N = Object.freeze({
+  "{viewer}": "catalog.variableViewer",
+  "{streamer}": "catalog.variableStreamer",
+  "{points}": "catalog.variablePoints",
+  "{message}": "catalog.variableMessage",
+});
+
 /** @type {readonly string[]} */
 export const SPLASH_VARIABLES = Object.freeze([
   "{viewer}",
-  "{name}",
   "{streamer}",
   "{points}",
   "{message}",
@@ -19,7 +26,6 @@ export function substituteSplashTemplate(template, vars) {
   const message = String(vars.message || "");
   let text = String(template || "");
   text = text.split("{viewer}").join(viewer);
-  text = text.split("{name}").join(viewer);
   text = text.split("{streamer}").join(streamer);
   text = text.split("{points}").join(points);
   text = text.split("{message}").join(message);

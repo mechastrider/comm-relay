@@ -221,7 +221,7 @@ func TestOverlayAssets_WhenDeleteInUseByCommand_ExpectBadRequest(t *testing.T) {
 	env := newTestEnv(t, bus.New(0))
 	name := uploadOverlayAsset(t, env.Handler, "alert_image", "gg.png", tinyPNG())
 
-	updateBody := `{"id":"gg","trigger":"gg","enabled":true,"cooldown_seconds":30,"splash_template":"GG {name}","sound":"","duration_ms":5000,"image_asset":"` + name + `"}`
+	updateBody := `{"id":"gg","trigger":"gg","enabled":true,"cooldown_seconds":30,"splash_template":"GG {viewer}","sound":"","duration_ms":5000,"image_asset":"` + name + `"}`
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/commands/update", strings.NewReader(updateBody))
 	req.Header.Set("Content-Type", "application/json")
@@ -239,7 +239,7 @@ func TestCommands_WhenUpdateWithUnsafeImageAsset_ExpectFieldError(t *testing.T) 
 	t.Parallel()
 
 	handler := testHandler(t)
-	body := `{"id":"gg","trigger":"gg","enabled":true,"cooldown_seconds":30,"splash_template":"GG {name}","sound":"","duration_ms":5000,"image_asset":"C:\\photos\\gg.png"}`
+	body := `{"id":"gg","trigger":"gg","enabled":true,"cooldown_seconds":30,"splash_template":"GG {viewer}","sound":"","duration_ms":5000,"image_asset":"C:\\photos\\gg.png"}`
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/commands/update", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -324,7 +324,7 @@ func TestCommands_WhenUpdateWithSVGImageAsset_ExpectFieldError(t *testing.T) {
 	t.Parallel()
 
 	handler := testHandler(t)
-	body := `{"id":"gg","trigger":"gg","enabled":true,"cooldown_seconds":30,"splash_template":"GG {name}","sound":"","duration_ms":5000,"image_asset":"asset_ab.svg"}`
+	body := `{"id":"gg","trigger":"gg","enabled":true,"cooldown_seconds":30,"splash_template":"GG {viewer}","sound":"","duration_ms":5000,"image_asset":"asset_ab.svg"}`
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/commands/update", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")

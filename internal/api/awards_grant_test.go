@@ -105,7 +105,7 @@ func TestAwardGrant_WhenTemplateHasMessage_ExpectResolvedQuote(t *testing.T) {
 		ID:             "advice",
 		Name:           "Advice",
 		Points:         50,
-		SplashTemplate: "Advice for {name}: {message} +{points}",
+		SplashTemplate: "Advice for {viewer}: {message} +{points}",
 		Sound:          "chime",
 		DurationMs:     5000,
 	})

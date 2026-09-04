@@ -17,7 +17,6 @@ type TemplateVars struct {
 // Unknown placeholders are left unchanged.
 func SubstituteTemplate(template string, vars TemplateVars) string {
 	text := strings.ReplaceAll(template, "{viewer}", vars.Viewer)
-	text = strings.ReplaceAll(text, "{name}", vars.Viewer)
 	text = strings.ReplaceAll(text, "{streamer}", vars.Streamer)
 	text = strings.ReplaceAll(text, "{points}", strconv.Itoa(vars.Points))
 	text = strings.ReplaceAll(text, "{message}", vars.Message)

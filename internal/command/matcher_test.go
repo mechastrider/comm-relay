@@ -77,7 +77,7 @@ func TestMatcher_WhenCooldownElapsed_ExpectSecondFire(t *testing.T) {
 		Trigger:         "gg",
 		Enabled:         true,
 		CooldownSeconds: 1,
-		SplashTemplate:  "Good game, {name}!",
+		SplashTemplate:  "Good game, {viewer}!",
 		Sound:           "chime",
 		DurationMs:      5000,
 	})

@@ -22,7 +22,7 @@ The system SHALL persist award types in local SQLite as a list separate from cha
 - **THEN** `GET /api/awards` returns those values and a later Joke grant plays that file at 50 percent
 
 ### Requirement: First migrate seeds Joke and Advice
-On the migration that introduces award types, the system SHALL insert deletable seeds: Joke with `points` 10 and Advice with `points` 50, with splash templates that include `{name}` and `{points}`. Seeds MUST NOT be re-inserted on later startups.
+On the migration that introduces award types, the system SHALL insert deletable seeds: Joke with `points` 10 and Advice with `points` 50, with splash templates that include `{viewer}` and `{points}`. Seeds MUST NOT be re-inserted on later startups.
 
 #### Scenario: Fresh database
 - **WHEN** CommRelay starts against a database that just applied this migration

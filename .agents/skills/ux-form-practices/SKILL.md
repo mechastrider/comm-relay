@@ -66,6 +66,19 @@ label.
 See [skill-authoring](../../../devtools/skill-authoring/SKILL.md) for what belongs
 in hub skills vs project docs.
 
+## Template variable chips
+
+Editors that expose splash-template placeholders (`{viewer}`, `{streamer}`, etc.)
+as insert chips **must** explain each variable on hover and keyboard focus.
+
+- One short tooltip per chip: what the variable means and what value the server
+  substitutes when the alert fires.
+- Localize tooltip copy in every supported locale; keep EN/RU parity in CommRelay.
+- Reuse the same hover/focus tooltip pattern as icon-only controls (`has-tooltip`
+  + child `role="tooltip"` in admin).
+- `aria-label` on the chip should name the insert action; append the same hint
+  text for screen readers so meaning is not hover-only.
+
 ## Numeric fields
 
 - `inputMode="decimal"` is only a hint — validate in code
@@ -85,5 +98,6 @@ Layout rules (height chain, `min-height: 0`, visible scrollbar): [web-constraine
 - [ ] Errors visible and associated with fields
 - [ ] API errors mapped to friendly text
 - [ ] Icon-only controls have hover/focus tooltips
+- [ ] Template variable chips explain substitution on hover/focus (localized)
 - [ ] Mobile: readable layout without horizontal scroll on primary actions
 - [ ] Overlay forms: last fields reachable by scrolling; footer not covering inputs

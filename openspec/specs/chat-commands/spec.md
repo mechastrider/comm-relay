@@ -33,7 +33,7 @@ The system SHALL persist chat commands in local SQLite (not `config.json`). Each
 - **THEN** the request fails with HTTP 400 and a field error on `image_asset`
 
 ### Requirement: First migrate seeds deletable gg and hi
-On the migration that introduces the commands table, the system SHALL insert enabled commands `gg` and `hi` with cooldown 30 seconds, score delta unused (commands never award score), default splash templates using `{name}`, and a built-in tone. Seeds MUST NOT be re-inserted on later startups.
+On the migration that introduces the commands table, the system SHALL insert enabled commands `gg` and `hi` with cooldown 30 seconds, score delta unused (commands never award score), default splash templates using `{viewer}`, and a built-in tone. Seeds MUST NOT be re-inserted on later startups.
 
 #### Scenario: Fresh database
 - **WHEN** CommRelay starts against a database that just applied this migration

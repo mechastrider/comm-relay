@@ -60,15 +60,15 @@ Each alert frame SHALL include `type` `"alert"`, viewer display `name`, `avatar_
 - **THEN** the page plays that asset at 70 percent and does not play a built-in tone
 
 ### Requirement: Templates resolve on the server
-Splash templates MAY contain `{viewer}`, `{name}`, `{streamer}`, `{points}`, and `{message}`. The server SHALL substitute `{viewer}` and `{name}` with the canonical or last-seen display name, `{streamer}` with `streamer_display_name` (empty string when unset), `{points}` with the numeric points for that event, and `{message}` with the bounded award quote when present, otherwise the matched command line when the source is a command, otherwise empty. Unknown placeholders SHALL be left unchanged. Command fires SHALL substitute `{points}` as 0.
+Splash templates MAY contain `{viewer}`, `{streamer}`, `{points}`, and `{message}`. The server SHALL substitute `{viewer}` with the canonical or last-seen display name, `{streamer}` with `streamer_display_name` (empty string when unset), `{points}` with the numeric points for that event, and `{message}` with the bounded award quote when present, otherwise the matched command line when the source is a command, otherwise empty. Unknown placeholders SHALL be left unchanged. Command fires SHALL substitute `{points}` as 0.
 
 #### Scenario: Award template
 - **WHEN** Advice is granted to a viewer whose display name is `Bob`
 - **THEN** the alert `text` contains `Bob` and `50`
 
-#### Scenario: Viewer alias
-- **WHEN** a template contains `{viewer}` and `{name}` and the viewer display name is `Alice`
-- **THEN** both placeholders become `Alice`
+#### Scenario: Viewer name
+- **WHEN** a template contains `{viewer}` and the viewer display name is `Alice`
+- **THEN** the placeholder becomes `Alice`
 
 #### Scenario: Streamer name
 - **WHEN** `streamer_display_name` is `Jake` and the template contains `Hi from {streamer}`

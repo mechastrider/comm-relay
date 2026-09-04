@@ -31,7 +31,7 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 	assert.Equal(t, "gg", gg.ID)
 	assert.True(t, gg.Enabled)
 	assert.Equal(t, 30, gg.CooldownSeconds)
-	assert.Equal(t, "Good game, {name}!", gg.SplashTemplate)
+	assert.Equal(t, "Good game, {viewer}!", gg.SplashTemplate)
 	assert.Equal(t, "chime", gg.Sound)
 	assert.Equal(t, 5000, gg.DurationMs)
 
@@ -52,49 +52,49 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 	joke := byID["joke"]
 	assert.Equal(t, "Joke", joke.Name)
 	assert.Equal(t, 10, joke.Points)
-	assert.Equal(t, "Joke for {name}! +{points}", joke.SplashTemplate)
+	assert.Equal(t, "Joke for {viewer}! +{points}", joke.SplashTemplate)
 	assert.Equal(t, "soft", joke.Sound)
 
 	advice := byID["advice"]
 	assert.Equal(t, "Advice", advice.Name)
 	assert.Equal(t, 50, advice.Points)
-	assert.Equal(t, "Advice for {name}! +{points}", advice.SplashTemplate)
+	assert.Equal(t, "Advice for {viewer}! +{points}", advice.SplashTemplate)
 	assert.Equal(t, "alert", advice.Sound)
 
 	spotter := byID["spotter"]
 	assert.Equal(t, "Spotter", spotter.Name)
 	assert.Equal(t, 25, spotter.Points)
-	assert.Equal(t, "Spotter for {name}! +{points}", spotter.SplashTemplate)
+	assert.Equal(t, "Spotter for {viewer}! +{points}", spotter.SplashTemplate)
 	assert.Equal(t, "ping", spotter.Sound)
 
 	intel := byID["intel"]
 	assert.Equal(t, "Intel", intel.Name)
 	assert.Equal(t, 30, intel.Points)
-	assert.Equal(t, "Intel for {name}! +{points}", intel.SplashTemplate)
+	assert.Equal(t, "Intel for {viewer}! +{points}", intel.SplashTemplate)
 	assert.Equal(t, "chime", intel.Sound)
 
 	expert := byID["expert"]
 	assert.Equal(t, "Expert", expert.Name)
 	assert.Equal(t, 40, expert.Points)
-	assert.Equal(t, "Expert for {name}! +{points}", expert.SplashTemplate)
+	assert.Equal(t, "Expert for {viewer}! +{points}", expert.SplashTemplate)
 	assert.Equal(t, "alert", expert.Sound)
 
 	meme := byID["meme"]
 	assert.Equal(t, "Meme", meme.Name)
 	assert.Equal(t, 20, meme.Points)
-	assert.Equal(t, "Meme for {name}! +{points}", meme.SplashTemplate)
+	assert.Equal(t, "Meme for {viewer}! +{points}", meme.SplashTemplate)
 	assert.Equal(t, "soft", meme.Sound)
 
 	clutch := byID["clutch"]
 	assert.Equal(t, "Clutch Help", clutch.Name)
 	assert.Equal(t, 50, clutch.Points)
-	assert.Equal(t, "Clutch Help for {name}! +{points}", clutch.SplashTemplate)
+	assert.Equal(t, "Clutch Help for {viewer}! +{points}", clutch.SplashTemplate)
 	assert.Equal(t, "alert", clutch.Sound)
 
 	mvp := byID["mvp"]
 	assert.Equal(t, "MVP", mvp.Name)
 	assert.Equal(t, 100, mvp.Points)
-	assert.Equal(t, "MVP for {name}! +{points}", mvp.SplashTemplate)
+	assert.Equal(t, "MVP for {viewer}! +{points}", mvp.SplashTemplate)
 	assert.Equal(t, "chime", mvp.Sound)
 }
 

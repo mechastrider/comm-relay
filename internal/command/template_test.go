@@ -6,22 +6,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSubstituteTemplate_WhenCommand_ExpectNameAndZeroPoints(t *testing.T) {
+func TestSubstituteTemplate_WhenCommand_ExpectViewerAndZeroPoints(t *testing.T) {
 	t.Parallel()
 
-	text := SubstituteTemplate("Good game, {name}! +{points}", TemplateVars{
+	text := SubstituteTemplate("Good game, {viewer}! +{points}", TemplateVars{
 		Viewer: "Alice",
 		Points: 0,
 	})
 	require.Equal(t, "Good game, Alice! +0", text)
 }
 
-func TestSubstituteTemplate_WhenViewerAlias_ExpectSameAsName(t *testing.T) {
+func TestSubstituteTemplate_WhenLegacyNameToken_ExpectUnchanged(t *testing.T) {
 	t.Parallel()
 
-	vars := TemplateVars{Viewer: "Alice"}
-	text := SubstituteTemplate("Hi {viewer} and {name}", vars)
-	require.Equal(t, "Hi Alice and Alice", text)
+	text := SubstituteTemplate("Hi {name}", TemplateVars{Viewer: "Alice"})
+	require.Equal(t, "Hi {name}", text)
 }
 
 func TestSubstituteTemplate_WhenStreamerEmpty_ExpectEmptyReplacement(t *testing.T) {
