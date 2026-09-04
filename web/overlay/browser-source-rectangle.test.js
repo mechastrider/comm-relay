@@ -5,6 +5,7 @@ import test from "node:test";
 const chatCSS = readFileSync(new URL("./overlay.css", import.meta.url), "utf8");
 const leaderboardCSS = readFileSync(new URL("../leaderboard/leaderboard.css", import.meta.url), "utf8");
 const alertCSS = readFileSync(new URL("../alert/alert.css", import.meta.url), "utf8");
+const alertEmblemCSS = readFileSync(new URL("../shared/alert-emblem.css", import.meta.url), "utf8");
 
 function block(source, selector) {
   const match = source.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*\\{([\\s\\S]*?)\\n}"));
@@ -60,4 +61,21 @@ test("compact alert rectangles preserve readable content and fade unavoidable ov
   ["cockpit-popups", "g-rebels-popups"].forEach(function (theme) {
     assert.match(rules, new RegExp("overlay-theme--" + theme.replace(/-/g, "\\-") + " \\.alert-splash"));
   });
+});
+
+test("built-in alert graphics follow every layout, theme, and motion mode", function () {
+  assert.match(alertEmblemCSS, /\.alert-emblem--command\s*\{/);
+  assert.match(alertEmblemCSS, /\.alert-emblem--award\s*\{/);
+
+  ["card", "banner", "fullscreen"].forEach(function (layout) {
+    assert.match(alertCSS, new RegExp("\\.alert-splash--layout-" + layout + "\\s*\\{"));
+  });
+
+  ["dashboard", "cockpit-panel", "cockpit-popups", "g-rebels-popups"].forEach(function (theme) {
+    assert.match(alertCSS, new RegExp("overlay-theme--" + theme.replace(/-/g, "\\-") + "[^{]*\\.alert-emblem"));
+  });
+
+  assert.match(alertCSS, /\.alert-splash \.alert-emblem\s*\{[\s\S]*?width:\s*var\(--alert-portrait-size\)/);
+  assert.match(alertCSS, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.alert-splash--visible \.alert-emblem\s*\{[\s\S]*?animation:\s*none/);
+  assert.match(alertCSS, /@media \(max-width: 480px\) and \(max-height: 220px\)[\s\S]*?--alert-portrait-column-base:\s*28px/);
 });

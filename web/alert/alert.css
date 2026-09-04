@@ -1,4 +1,5 @@
 @import url("../overlay.css");
+@import url("/shared/alert-emblem.css?v=1");
 
 :root {
   --alert-portrait-column-base: 56px;
@@ -67,6 +68,58 @@ body {
   border-radius: 50%;
   object-fit: cover;
   flex: 0 0 auto;
+}
+
+.alert-splash .alert-emblem {
+  grid-area: avatar;
+  width: var(--alert-portrait-size);
+  height: var(--alert-portrait-size);
+  flex: 0 0 auto;
+}
+
+.alert-splash--command .alert-emblem {
+  --alert-emblem-accent: var(--message-accent);
+}
+
+.alert-splash--award .alert-emblem {
+  --award-accent: color-mix(in srgb, var(--message-accent) 42%, #f4c95d);
+}
+
+.alert-splash--visible .alert-emblem--command {
+  animation: alert-command-signal-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.alert-splash--visible .alert-emblem--award {
+  animation: alert-award-medal-in 620ms cubic-bezier(0.18, 0.88, 0.24, 1.18) both;
+}
+
+@keyframes alert-command-signal-in {
+  from {
+    opacity: 0;
+    filter: brightness(1.8) blur(2px);
+    transform: translateX(-12%) scaleX(0.72);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
+@keyframes alert-award-medal-in {
+  0% {
+    opacity: 0;
+    filter: brightness(1.7);
+    transform: scale(0.58) rotate(-12deg);
+  }
+  68% {
+    opacity: 1;
+    transform: scale(1.06) rotate(2deg);
+  }
+  100% {
+    filter: none;
+    transform: none;
+  }
 }
 
 .alert-avatar--placeholder {
@@ -208,6 +261,14 @@ body.overlay-theme--dashboard .alert-splash {
   box-shadow: none;
 }
 
+body.overlay-theme--dashboard .alert-emblem--command {
+  --alert-emblem-accent: color-mix(in srgb, var(--message-accent) 72%, #62d5ff);
+}
+
+body.overlay-theme--dashboard .alert-emblem--award {
+  --award-accent: color-mix(in srgb, var(--message-accent) 34%, #ffd36e);
+}
+
 body.overlay-theme--dashboard.overlay-has-panel .alert-splash {
   background: var(--overlay-panel-bg);
 }
@@ -230,6 +291,17 @@ body.overlay-theme--g-rebels-popups .alert-splash {
   max-width: none;
 }
 
+body.overlay-theme--cockpit-panel .alert-emblem--command,
+body.overlay-theme--cockpit-popups .alert-emblem--command {
+  --alert-emblem-accent: var(--hud-cyan);
+  border-radius: 3px;
+}
+
+body.overlay-theme--cockpit-panel .alert-emblem--award,
+body.overlay-theme--cockpit-popups .alert-emblem--award {
+  --award-accent: color-mix(in srgb, var(--hud-cyan) 42%, #b7ef65);
+}
+
 body.overlay-theme--cockpit-panel .alert-splash,
 body.overlay-theme--cockpit-popups .alert-splash {
   --alert-portrait-column-base: 42px;
@@ -237,6 +309,17 @@ body.overlay-theme--cockpit-popups .alert-splash {
 
 body.overlay-theme--g-rebels-popups .alert-splash {
   --alert-portrait-column-base: 44px;
+}
+
+body.overlay-theme--g-rebels-popups .alert-emblem--command {
+  --alert-emblem-accent: color-mix(in srgb, var(--message-accent) 54%, var(--rebels-gold));
+  border-radius: 0;
+}
+
+body.overlay-theme--g-rebels-popups .alert-emblem--award {
+  --award-accent: var(--rebels-gold);
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
 }
 
 body.overlay-theme--cockpit-panel .alert-accent,
@@ -579,6 +662,10 @@ body.overlay-theme--g-rebels-popups .alert-quote {
   .alert-splash--visible {
     transition: none;
     transform: none;
+  }
+
+  .alert-splash--visible .alert-emblem {
+    animation: none;
   }
 }
 

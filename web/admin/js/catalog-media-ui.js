@@ -1,4 +1,5 @@
 import { t } from "./i18n-ui.js";
+import { createAlertEmblem } from "../../shared/alert-emblem.js";
 import {
   catalogMediaPayload,
   catalogImageFitCSSValue,
@@ -44,6 +45,8 @@ async function playBuiltInPreview(state, sound, volume) {
  * @param {HTMLSelectElement | null} options.builtInSoundInput
  * @param {string} options.layoutName
  * @param {HTMLElement | null} options.layoutError
+ * @param {"command" | "award"} options.graphicKind
+ * @param {(record: Record<string, unknown>) => {identifier?: string, label?: string}} options.graphicIdentity
  */
 export function createCatalogMediaController(options) {
   /** @type {ReturnType<typeof createCatalogMediaState>} */
@@ -51,6 +54,8 @@ export function createCatalogMediaController(options) {
   let persistedImageAsset = "";
   let persistedSoundFile = "";
   const provisionalAssets = new Set();
+  let graphicIdentifier = "";
+  let graphicLabel = "";
 
   function setFieldError(control, element, message) {
     if (!element) {
@@ -115,16 +120,29 @@ export function createCatalogMediaController(options) {
     });
   }
 
+  function renderBuiltInImagePreview() {
+    if (!options.imagePreview) {
+      return;
+    }
+    options.imagePreview.textContent = "";
+    const emblem = createAlertEmblem(document, {
+      kind: options.graphicKind,
+      identifier: graphicIdentifier,
+      label: graphicLabel,
+    });
+    const scale = normalizeCatalogImageSizePct(state.imageSizePct) / 100;
+    emblem.style.width = String(Math.round(72 * scale)) + "px";
+    emblem.style.height = String(Math.round(72 * scale)) + "px";
+    options.imagePreview.append(emblem);
+  }
+
   function updateImagePreview() {
     if (!options.imagePreview) {
       return;
     }
     options.imagePreview.textContent = "";
     if (!state.imageAsset) {
-      const placeholder = document.createElement("span");
-      placeholder.className = "catalog-media-preview__placeholder";
-      placeholder.textContent = t("catalog.imagePlaceholder");
-      options.imagePreview.append(placeholder);
+      renderBuiltInImagePreview();
       return;
     }
     const isTile = state.imageFit === "tile";
@@ -134,10 +152,17 @@ export function createCatalogMediaController(options) {
     if (isTile) {
       image.classList.add("catalog-media-preview__image--tile");
       image.style.backgroundImage = 'url("' + imageURL + '")';
+      const probe = document.createElement("img");
+      probe.className = "catalog-media-preview__tile-probe";
+      probe.src = imageURL;
+      probe.alt = "";
+      probe.addEventListener("error", renderBuiltInImagePreview, { once: true });
+      image.append(probe);
     } else {
       image.src = imageURL;
       image.alt = "";
       image.style.objectFit = catalogImageFitCSSValue(state.imageFit);
+      image.addEventListener("error", renderBuiltInImagePreview, { once: true });
     }
     const scale = normalizeCatalogImageSizePct(state.imageSizePct) / 100;
     image.style.width = String(Math.round(72 * scale)) + "px";
@@ -209,6 +234,10 @@ export function createCatalogMediaController(options) {
     persistedImageAsset = media.imageAsset;
     persistedSoundFile = media.soundFile;
     state = Object.assign(createCatalogMediaState(), media);
+    const identity =
+      typeof options.graphicIdentity === "function" ? options.graphicIdentity(record) || {} : {};
+    graphicIdentifier = String(identity.identifier || "");
+    graphicLabel = String(identity.label || graphicIdentifier);
     if (options.soundVolumeInput) {
       options.soundVolumeInput.value = String(state.soundVolume);
     }
@@ -222,6 +251,12 @@ export function createCatalogMediaController(options) {
 
   function reset() {
     fillFromRecord({});
+  }
+
+  function setGraphicIdentity(identifier, label) {
+    graphicIdentifier = String(identifier || "");
+    graphicLabel = String(label || graphicIdentifier);
+    updateImagePreview();
   }
 
   function clearFieldErrors() {
@@ -423,5 +458,6 @@ export function createCatalogMediaController(options) {
     stopPreview: function () {
       stopCatalogPreview(state);
     },
+    setGraphicIdentity,
   };
 }

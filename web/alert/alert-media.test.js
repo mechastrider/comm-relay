@@ -11,6 +11,7 @@ import {
   safeStoredImageAssetFilename,
   safeStoredSoundAssetFilename,
 } from "./alert-render.js";
+import { createAlertEmblem } from "../shared/alert-emblem.js";
 import { playAlertAudio, stopCustomAlertSound } from "./alert-sound.js";
 
 class FakeElement {
@@ -21,6 +22,7 @@ class FakeElement {
     this.textContent = "";
     this.src = "";
     this.attributes = {};
+    this.listeners = {};
     this.style = { setProperty: () => {} };
     this.classList = { add: () => {} };
   }
@@ -29,14 +31,24 @@ class FakeElement {
     this.children.push(...children);
   }
 
-  setAttribute() {}
-  addEventListener() {}
+  setAttribute(name, value) {
+    this.attributes[name] = String(value);
+    if (name === "class") {
+      this.className = String(value);
+    }
+  }
+  addEventListener(name, listener) {
+    this.listeners[name] = listener;
+  }
   replaceWith(node) {
     Object.assign(this, node);
   }
 }
 
-const fakeDocument = { createElement: (tagName) => new FakeElement(tagName) };
+const fakeDocument = {
+  createElement: (tagName) => new FakeElement(tagName),
+  createElementNS: (_namespace, tagName) => new FakeElement(tagName),
+};
 
 test("uses overlay asset URL for stored image filenames", function () {
   const model = alertRenderModel({
@@ -47,7 +59,6 @@ test("uses overlay asset URL for stored image filenames", function () {
     avatar_url: "https://example.test/avatar.png",
   });
   assert.equal(model.imageAsset, "asset_ab12cd34.png");
-  assert.equal(model.avatarURL, "https://example.test/avatar.png");
 
   const splash = createAlertSplash(
     fakeDocument,
@@ -62,6 +73,7 @@ test("uses overlay asset URL for stored image filenames", function () {
       overlayAssetURL: function (filename) {
         return "/overlay/assets/" + filename + "?v=1";
       },
+      createEmblem: createAlertEmblem,
     }
   );
   assert.match(splash.className, /alert-splash--layout-banner/);
@@ -69,16 +81,18 @@ test("uses overlay asset URL for stored image filenames", function () {
   assert.equal(image.src, "/overlay/assets/asset_ab12cd34.png?v=1");
 });
 
-test("falls back to avatar when custom image filename is unsafe", function () {
+test("falls back to a built-in emblem when custom image filename is unsafe", function () {
   const splash = createAlertSplash(fakeDocument, {
     source: "command",
+    trigger: "gg",
     name: "Nova",
     text: "GG",
     image_asset: "https://evil.test/x.png",
     avatar_url: "https://example.test/avatar.png",
-  });
-  const image = splash.children[0];
-  assert.equal(image.src, "https://example.test/avatar.png");
+  }, { createEmblem: createAlertEmblem });
+  const emblem = splash.children[0];
+  assert.match(emblem.className, /alert-emblem--command/);
+  assert.equal(emblem.attributes["data-emblem-symbol"], "flags");
 });
 
 test("rejects remote filenames and normalizes layout", function () {
@@ -111,6 +125,7 @@ test("renders tile mode as a repeated background with an image probe", function 
       overlayAssetURL: function (filename) {
         return "/overlay/assets/" + filename;
       },
+      createEmblem: createAlertEmblem,
     }
   );
 
@@ -119,6 +134,26 @@ test("renders tile mode as a repeated background with an image probe", function 
   assert.match(tile.className, /alert-image-fit--tile/);
   assert.equal(tile.style.backgroundImage, 'url("/overlay/assets/asset_tiles.png")');
   assert.equal(tile.children[0].src, "/overlay/assets/asset_tiles.png");
+});
+
+test("replaces a broken custom image with the matching built-in emblem", function () {
+  const splash = createAlertSplash(
+    fakeDocument,
+    {
+      source: "award",
+      award_id: "mvp",
+      award_name: "MVP",
+      image_asset: "asset_missing.png",
+    },
+    {
+      overlayAssetURL: (filename) => "/overlay/assets/" + filename,
+      createEmblem: createAlertEmblem,
+    }
+  );
+  const image = splash.children[0];
+  image.listeners.error();
+  assert.match(image.className, /alert-emblem--award/);
+  assert.equal(image.attributes["data-emblem-symbol"], "laurel-star");
 });
 
 test("playAlertAudio uses custom file instead of built-in tone", async function () {

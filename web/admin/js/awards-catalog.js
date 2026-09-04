@@ -34,6 +34,13 @@ const awardMedia = createCatalogMediaController({
   builtInSoundInput: dom.awardSoundInput,
   layoutName: "award-layout",
   layoutError: dom.awardLayoutError,
+  graphicKind: "award",
+  graphicIdentity: function (record) {
+    return {
+      identifier: String(record.id || record.name || ""),
+      label: String(record.name || ""),
+    };
+  },
 });
 awardMedia.bind();
 
@@ -558,6 +565,7 @@ export function initAwardsCatalog() {
   }
   dom.awardNameInput?.addEventListener("input", function () {
     setFieldError(dom.awardNameInput, dom.awardNameError, "");
+    awardMedia.setGraphicIdentity(selectedAwardId || dom.awardNameInput?.value || "", dom.awardNameInput?.value || "");
   });
   dom.awardPointsInput?.addEventListener("input", function () {
     setFieldError(dom.awardPointsInput, dom.awardPointsError, "");

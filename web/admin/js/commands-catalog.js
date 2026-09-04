@@ -34,6 +34,13 @@ const commandMedia = createCatalogMediaController({
   builtInSoundInput: dom.commandSoundInput,
   layoutName: "command-layout",
   layoutError: dom.commandLayoutError,
+  graphicKind: "command",
+  graphicIdentity: function (record) {
+    return {
+      identifier: String(record.trigger || record.id || ""),
+      label: String(record.trigger || ""),
+    };
+  },
 });
 commandMedia.bind();
 
@@ -553,6 +560,7 @@ export function initCommandsCatalog() {
   }
   dom.commandTriggerInput?.addEventListener("input", function () {
     setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
+    commandMedia.setGraphicIdentity(dom.commandTriggerInput?.value || "", dom.commandTriggerInput?.value || "");
   });
   dom.commandSplashInput?.addEventListener("input", function () {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, "");

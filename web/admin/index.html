@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=50">
+  <link rel="stylesheet" href="styles.css?v=51">
   <script>
     (function () {
       try {
@@ -396,6 +396,7 @@
                           <button id="command-image-clear" type="button" class="btn-physical btn-small" data-i18n="catalog.clear">Clear</button>
                         </div>
                       </div>
+                      <p class="field-hint" data-i18n="catalog.imageFallbackHint">Without a custom file, the built-in command graphic is used; Clear restores it.</p>
                       <p id="command-image-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
@@ -415,7 +416,7 @@
                         <input id="command-image-size-input" type="range" min="25" max="300" step="5" value="100">
                         <output id="command-image-size-value" for="command-image-size-input">100%</output>
                       </div>
-                      <p class="field-hint" data-i18n="catalog.imageSizeHint">Scales the image area inside the alert frame.</p>
+                      <p class="field-hint" data-i18n="catalog.imageSizeHint">Scales the built-in or uploaded graphic inside the alert frame.</p>
                       <p id="command-image-size-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field catalog-media-field">
@@ -525,6 +526,7 @@
                           <button id="award-image-clear" type="button" class="btn-physical btn-small" data-i18n="catalog.clear">Clear</button>
                         </div>
                       </div>
+                      <p class="field-hint" data-i18n="catalog.imageFallbackHint">Without a custom file, the built-in award graphic is used; Clear restores it.</p>
                       <p id="award-image-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
@@ -544,7 +546,7 @@
                         <input id="award-image-size-input" type="range" min="25" max="300" step="5" value="100">
                         <output id="award-image-size-value" for="award-image-size-input">100%</output>
                       </div>
-                      <p class="field-hint" data-i18n="catalog.imageSizeHint">Scales the image area inside the alert frame.</p>
+                      <p class="field-hint" data-i18n="catalog.imageSizeHint">Scales the built-in or uploaded graphic inside the alert frame.</p>
                       <p id="award-image-size-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field catalog-media-field">

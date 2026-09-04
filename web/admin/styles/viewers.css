@@ -832,6 +832,26 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   background-size: auto;
 }
 
+.catalog-media-preview__tile-probe {
+  display: none;
+}
+
+.catalog-media-preview .alert-emblem {
+  --alert-portrait-size: 72px;
+  width: 72px;
+  height: 72px;
+  border: 0;
+  box-shadow: none;
+}
+
+.catalog-media-preview .alert-emblem--command {
+  --alert-emblem-accent: var(--color-status-info, #55d6ff);
+}
+
+.catalog-media-preview .alert-emblem--award {
+  --award-accent: var(--amber);
+}
+
 .catalog-media-preview__placeholder {
   font-size: var(--primitive-font-size-xs);
   color: var(--text-muted);
