@@ -21,7 +21,7 @@ type LeaderboardEntry struct {
 
 // Leaderboard returns ranked visible viewers for the requested period.
 // period must be session, day, or all; invalid values use session.
-func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time.Time) ([]LeaderboardEntry, error) {
+func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time.Time, customAvatarsEnabled bool) ([]LeaderboardEntry, error) {
 	period = normalizeLeaderboardPeriod(period)
 	if limit <= 0 {
 		limit = defaultLeaderboardLimit
@@ -66,13 +66,23 @@ func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time
 	rank := 0
 	for rows.Next() {
 		var entry LeaderboardEntry
+		var customAvatar, platformAvatar string
 		if err := rows.Scan(
 			&entry.DisplayName,
-			&entry.AvatarURL,
+			&customAvatar,
+			&platformAvatar,
 			&entry.XP,
 			&entry.MessageCount,
 		); err != nil {
 			return nil, errors.Errorf("scan leaderboard row: %w", err)
+		}
+		resolved := ResolvePortraitURL(PortraitFields{
+			CustomAvatar: customAvatar,
+		}, customAvatarsEnabled)
+		if resolved != "" {
+			entry.AvatarURL = resolved
+		} else {
+			entry.AvatarURL = platformAvatar
 		}
 		rank++
 		entry.Rank = rank
@@ -137,6 +147,7 @@ COALESCE(
 const leaderboardSessionQuery = `
 SELECT
 	` + effectiveDisplayNameSQL + `,
+	TRIM(v.custom_avatar),
 	` + lastSeenAvatarSQL + `,
 	COALESCE(vss.xp, 0),
 	COALESCE(vss.message_count, 0)
@@ -150,6 +161,7 @@ LIMIT ?`
 const leaderboardDayQuery = `
 SELECT
 	` + effectiveDisplayNameSQL + `,
+	TRIM(v.custom_avatar),
 	` + lastSeenAvatarSQL + `,
 	COALESCE(vds.xp, 0),
 	COALESCE(vds.message_count, 0)
@@ -163,6 +175,7 @@ LIMIT ?`
 const leaderboardAllQuery = `
 SELECT
 	` + effectiveDisplayNameSQL + `,
+	TRIM(v.custom_avatar),
 	` + lastSeenAvatarSQL + `,
 	v.xp,
 	v.message_count

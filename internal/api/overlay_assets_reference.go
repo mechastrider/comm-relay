@@ -42,5 +42,13 @@ func overlayAssetReferenced(name string, cfg config.Config, viewerStore *store.S
 		}
 	}
 
+	inUse, err := viewerStore.OverlayAssetFilenameInUse(name)
+	if err != nil {
+		return false, errors.Errorf("check viewer portrait asset reference: %w", err)
+	}
+	if inUse {
+		return true, nil
+	}
+
 	return false, nil
 }

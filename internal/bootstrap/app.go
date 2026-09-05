@@ -93,6 +93,7 @@ func New(opts Options) (*App, error) {
 
 	history := api.NewMessageHistory(0)
 	history.SetViewerStore(viewerStore)
+	history.SetConfigStore(cfgStore)
 	statusRegistry := status.NewRegistry()
 	runtimeInfo := runtime.NewInfo()
 	emoteHTTP := emote.NewHTTPClient()

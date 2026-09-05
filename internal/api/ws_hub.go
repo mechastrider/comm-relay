@@ -66,7 +66,7 @@ func (h *Hub) Run(ctx context.Context) {
 }
 
 func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
-	msg = fillChatMessageAvatar(h.viewerStore, msg)
+	msg = fillChatMessageAvatar(h.viewerStore, h.cfgStore, msg)
 
 	var matchedCmd *store.Command
 	if h.matcher != nil {

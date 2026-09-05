@@ -77,6 +77,7 @@ func (a ActivitySettings) Enabled() bool {
 // Viewer is a canonical viewer with period counters and linked identities.
 type Viewer struct {
 	ID                  string
+	CustomAvatar        string
 	DisplayName         string
 	DisplayNameOverride string
 	MessageCount        int

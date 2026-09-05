@@ -23,7 +23,7 @@ func TestFillChatMessageAvatar_WhenCachePresent_ExpectLocalAssetURL(t *testing.T
 	}, store.ActivitySettings{}, 6, now))
 	require.NoError(t, viewerStore.SetAvatarCache("youtube", "UC1", "asset_abc123.png"))
 
-	filled := fillChatMessageAvatar(viewerStore, bus.ChatMessage{
+	filled := fillChatMessageAvatar(viewerStore, nil, bus.ChatMessage{
 		Platform: "youtube",
 		UserID:   "UC1",
 		Username: "Viewer",
@@ -49,6 +49,7 @@ func TestMessageHistory_WhenCachedPortrait_ExpectRecentIncludesLocalAsset(t *tes
 
 	history := NewMessageHistory(10)
 	history.SetViewerStore(viewerStore)
+	history.SetConfigStore(nil)
 	history.append(bus.ChatMessage{
 		Platform:  "youtube",
 		UserID:    "UC1",

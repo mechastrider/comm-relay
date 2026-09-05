@@ -281,6 +281,9 @@ export function applyConfig(config) {
     if (dom.hideCommandMessagesInput) {
       dom.hideCommandMessagesInput.checked = Boolean(config.hide_command_messages);
     }
+    if (dom.customAvatarsEnabledInput) {
+      dom.customAvatarsEnabledInput.checked = config.custom_avatars_enabled !== false;
+    }
     if (dom.streamerDisplayNameInput) {
       dom.streamerDisplayNameInput.value = String(config.streamer_display_name || "");
     }
@@ -316,6 +319,9 @@ export function buildPayload() {
       hide_command_messages: dom.hideCommandMessagesInput
         ? dom.hideCommandMessagesInput.checked
         : false,
+      custom_avatars_enabled: dom.customAvatarsEnabledInput
+        ? dom.customAvatarsEnabledInput.checked
+        : true,
       streamer_display_name: dom.streamerDisplayNameInput
         ? dom.streamerDisplayNameInput.value.trim()
         : "",
@@ -383,6 +389,7 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
       activity_xp: latest.activity_xp,
       day_reset_hour: latest.day_reset_hour,
       hide_command_messages: Boolean(latest.hide_command_messages),
+      custom_avatars_enabled: latest.custom_avatars_enabled !== false,
       streamer_display_name: String(latest.streamer_display_name || "").trim(),
       network: {
         socks5: {

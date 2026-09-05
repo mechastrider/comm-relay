@@ -147,7 +147,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 			Points:   0,
 			Message:  msg.Message,
 		})
-		alertMsg := fillChatMessageAvatar(v.viewerStore, msg)
+		alertMsg := fillChatMessageAvatar(v.viewerStore, v.cfgStore, msg)
 		alertPayload, alertErr := alertWirePayload(matchedCmd, alertMsg, text, 0)
 		if alertErr != nil {
 			clog.Errorf(ctx, "alert wire payload: %w", alertErr)

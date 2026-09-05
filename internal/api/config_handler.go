@@ -35,6 +35,10 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var incoming config.Config
+	if fields := config.ValidateIncomingJSONFields(body); len(fields) > 0 {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
+		return
+	}
 	if err := json.Unmarshal(body, &incoming); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid JSON")
 		return

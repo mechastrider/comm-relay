@@ -52,6 +52,7 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 	rows, err := s.db.Query(`
 		SELECT
 			v.id,
+			v.custom_avatar,
 			v.display_name,
 			v.message_count,
 			v.xp,
@@ -177,6 +178,7 @@ func (s *Store) Get(id string, dayResetHour int, now time.Time) (*Viewer, error)
 	row := s.db.QueryRow(`
 		SELECT
 			v.id,
+			v.custom_avatar,
 			v.display_name,
 			v.message_count,
 			v.xp,
@@ -256,7 +258,7 @@ func (s *Store) loadIdentitiesLocked(viewerID string) ([]Identity, error) {
 		identity.AvatarURL = ResolvePortraitURL(PortraitFields{
 			AvatarCache: avatarCache,
 			RemoteURL:   remoteAvatarURL,
-		})
+		}, false)
 		identities = append(identities, identity)
 	}
 	if err := rows.Err(); err != nil {
@@ -272,6 +274,7 @@ func scanViewerListRow(rows *sql.Rows) (Viewer, error) {
 	var lastSeenRaw string
 	if err := rows.Scan(
 		&viewer.ID,
+		&viewer.CustomAvatar,
 		&displayOverride,
 		&viewer.MessageCount,
 		&viewer.XP,
@@ -307,6 +310,7 @@ func scanViewerSummaryRow(row *sql.Row) (Viewer, error) {
 	var lastSeenRaw string
 	if err := row.Scan(
 		&viewer.ID,
+		&viewer.CustomAvatar,
 		&displayOverride,
 		&viewer.MessageCount,
 		&viewer.XP,

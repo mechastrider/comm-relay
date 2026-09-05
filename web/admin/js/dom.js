@@ -321,6 +321,7 @@ export const activityIntervalSecondsInput = document.getElementById("activity-in
 export const activitySessionLimitInput = document.getElementById("activity-session-limit");
 export const activityXPInput = document.getElementById("activity-xp");
 export const hideCommandMessagesInput = document.getElementById("hide-command-messages");
+export const customAvatarsEnabledInput = document.getElementById("custom-avatars-enabled");
 export const streamerDisplayNameInput = document.getElementById("streamer-display-name");
 export const dayResetHourInput = document.getElementById("day-reset-hour");
 export const messageSoundEnabledInput = document.getElementById("message-sound-enabled");

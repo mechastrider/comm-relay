@@ -16,7 +16,7 @@ func TestResolvePortraitURL_WhenCachePresent_ExpectLocalAssetURL(t *testing.T) {
 	url := store.ResolvePortraitURL(store.PortraitFields{
 		AvatarCache: "asset_deadbeef.png",
 		RemoteURL:   "https://example.com/remote.png",
-	})
+	}, true)
 	assert.Equal(t, "/overlay/assets/asset_deadbeef.png", url)
 }
 
@@ -25,14 +25,34 @@ func TestResolvePortraitURL_WhenCacheMissing_ExpectRemoteURL(t *testing.T) {
 
 	url := store.ResolvePortraitURL(store.PortraitFields{
 		RemoteURL: "https://example.com/remote.png",
-	})
+	}, true)
 	assert.Equal(t, "https://example.com/remote.png", url)
 }
 
 func TestResolvePortraitURL_WhenBothEmpty_ExpectEmpty(t *testing.T) {
 	t.Parallel()
 
-	assert.Empty(t, store.ResolvePortraitURL(store.PortraitFields{}))
+	assert.Empty(t, store.ResolvePortraitURL(store.PortraitFields{}, true))
+}
+
+func TestResolvePortraitURL_WhenCustomDisabled_ExpectCacheInstead(t *testing.T) {
+	t.Parallel()
+
+	url := store.ResolvePortraitURL(store.PortraitFields{
+		CustomAvatar: "asset_custom.png",
+		AvatarCache:  "asset_cache.png",
+	}, false)
+	assert.Equal(t, "/overlay/assets/asset_cache.png", url)
+}
+
+func TestResolvePortraitURL_WhenCustomEnabled_ExpectCustomOverridesCache(t *testing.T) {
+	t.Parallel()
+
+	url := store.ResolvePortraitURL(store.PortraitFields{
+		CustomAvatar: "asset_custom.png",
+		AvatarCache:  "asset_cache.png",
+	}, true)
+	assert.Equal(t, "/overlay/assets/asset_custom.png", url)
 }
 
 func TestSetAvatarCache_WhenIdentityExists_ExpectResolvedPortrait(t *testing.T) {
@@ -105,7 +125,7 @@ func TestLeaderboard_WhenAvatarCacheSet_ExpectLocalAssetURL(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, s.SetAvatarCache("youtube", "UC1", "asset_abc123.png"))
 
-	entries, err := s.Leaderboard("all", 20, testDayResetHour, now)
+	entries, err := s.Leaderboard("all", 20, testDayResetHour, now, true)
 	require.NoError(t, err)
 	require.Len(t, entries, 1)
 	assert.Equal(t, "/overlay/assets/asset_abc123.png", entries[0].AvatarURL)
@@ -120,6 +140,39 @@ func TestOpen_WhenFreshDatabase_ExpectAvatarCacheColumnUsable(t *testing.T) {
 		AvatarURL: "https://example.com/remote.png",
 	}, defaultActivity(), testDayResetHour, now))
 	require.NoError(t, s.SetAvatarCache("youtube", "UC-migrate", "asset_abc123.png"))
+}
+
+func TestCustomAvatar_WhenDisabled_ExpectLeaderboardUsesCache(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := fixedNow()
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform:    "youtube",
+		UserID:      "UC1",
+		DisplayName: "Top",
+		AvatarURL:   "https://example.com/remote.png",
+	}, defaultActivity(), testDayResetHour, now))
+	_, err := s.ApplyAward(store.ChatIdentity{
+		Platform:    "youtube",
+		UserID:      "UC1",
+		DisplayName: "Top",
+	}, 5, testDayResetHour, now)
+	require.NoError(t, err)
+	require.NoError(t, s.SetAvatarCache("youtube", "UC1", "asset_cache.png"))
+
+	viewerID, ok := s.ViewerIDForIdentity("youtube", "UC1")
+	require.True(t, ok)
+	_, err = s.SetCustomAvatar(viewerID, "asset_custom.png")
+	require.NoError(t, err)
+
+	enabled, err := s.Leaderboard("all", 20, testDayResetHour, now, true)
+	require.NoError(t, err)
+	require.Len(t, enabled, 1)
+	assert.Equal(t, "/overlay/assets/asset_custom.png", enabled[0].AvatarURL)
+
+	disabled, err := s.Leaderboard("all", 20, testDayResetHour, now, false)
+	require.NoError(t, err)
+	require.Len(t, disabled, 1)
+	assert.Equal(t, "/overlay/assets/asset_cache.png", disabled[0].AvatarURL)
 }
 
 func fixedNow() time.Time {

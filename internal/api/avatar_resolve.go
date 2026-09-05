@@ -4,11 +4,12 @@ import (
 	"strings"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
-// fillChatMessageAvatar sets AvatarURL from the identity portrait cache when the connector left it empty.
-func fillChatMessageAvatar(viewerStore *store.Store, msg bus.ChatMessage) bus.ChatMessage {
+// fillChatMessageAvatar sets AvatarURL from the canonical viewer portrait when the connector left it empty.
+func fillChatMessageAvatar(viewerStore *store.Store, cfgStore *config.Store, msg bus.ChatMessage) bus.ChatMessage {
 	if viewerStore == nil || strings.TrimSpace(msg.AvatarURL) != "" {
 		return msg
 	}
@@ -16,7 +17,12 @@ func fillChatMessageAvatar(viewerStore *store.Store, msg bus.ChatMessage) bus.Ch
 		return msg
 	}
 
-	resolved, err := viewerStore.ResolveIdentityPortraitURL(msg.Platform, msg.UserID)
+	customAvatarsEnabled := true
+	if cfgStore != nil {
+		customAvatarsEnabled = cfgStore.Snapshot().CustomAvatarsEnabled
+	}
+
+	resolved, err := viewerStore.ResolveCanonicalPortraitURL(msg.Platform, msg.UserID, customAvatarsEnabled)
 	if err != nil || resolved == "" {
 		return msg
 	}

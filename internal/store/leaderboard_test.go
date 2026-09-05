@@ -36,7 +36,7 @@ func TestLeaderboard_WhenSessionXP_ExpectOrderedByXPThenMessages(t *testing.T) {
 		Platform: "twitch", UserID: "3", DisplayName: "TieScore",
 	}, disabledActivity(), testDayResetHour, now.Add(time.Minute)))
 
-	entries, err := s.Leaderboard("session", 20, testDayResetHour, now.Add(time.Minute))
+	entries, err := s.Leaderboard("session", 20, testDayResetHour, now.Add(time.Minute), true)
 	require.NoError(t, err)
 	require.Len(t, entries, 3)
 	assert.Equal(t, 1, entries[0].Rank)
@@ -59,7 +59,7 @@ func TestLeaderboard_WhenInvalidPeriod_ExpectSession(t *testing.T) {
 	}, 2, testDayResetHour, now)
 	require.NoError(t, err)
 
-	entries, err := s.Leaderboard("week", 20, testDayResetHour, now)
+	entries, err := s.Leaderboard("week", 20, testDayResetHour, now, true)
 	require.NoError(t, err)
 	require.Len(t, entries, 1)
 	assert.Equal(t, 2, entries[0].XP)
@@ -73,7 +73,7 @@ func TestLeaderboard_WhenZeroXPAndZeroMessages_ExpectOmitted(t *testing.T) {
 	}, defaultActivity(), testDayResetHour, now))
 	require.NoError(t, s.StartSession(now.Add(time.Hour)))
 
-	entries, err := s.Leaderboard("session", 20, testDayResetHour, now.Add(time.Hour))
+	entries, err := s.Leaderboard("session", 20, testDayResetHour, now.Add(time.Hour), true)
 	require.NoError(t, err)
 	assert.Empty(t, entries)
 }
@@ -99,7 +99,7 @@ func TestLeaderboard_WhenHiddenMergeSource_ExpectOmitted(t *testing.T) {
 	intoID := viewerID(t, s, "youtube", "2", testDayResetHour, now)
 	require.NoError(t, s.Merge(fromID, intoID, testDayResetHour, now))
 
-	entries, err := s.Leaderboard("all", 20, testDayResetHour, now)
+	entries, err := s.Leaderboard("all", 20, testDayResetHour, now, true)
 	require.NoError(t, err)
 	require.Len(t, entries, 1)
 	assert.Equal(t, 5, entries[0].XP)
@@ -120,13 +120,13 @@ func TestLeaderboard_WhenAllPeriod_ExpectAllTimeCounters(t *testing.T) {
 		Platform: "twitch", UserID: "42", DisplayName: "Alice",
 	}, defaultActivity(), testDayResetHour, now.Add(2*time.Hour)))
 
-	allEntries, err := s.Leaderboard("all", 20, testDayResetHour, now.Add(2*time.Hour))
+	allEntries, err := s.Leaderboard("all", 20, testDayResetHour, now.Add(2*time.Hour), true)
 	require.NoError(t, err)
 	require.Len(t, allEntries, 1)
 	assert.Equal(t, 5, allEntries[0].XP)
 	assert.Equal(t, 2, allEntries[0].MessageCount)
 
-	sessionEntries, err := s.Leaderboard("session", 20, testDayResetHour, now.Add(2*time.Hour))
+	sessionEntries, err := s.Leaderboard("session", 20, testDayResetHour, now.Add(2*time.Hour), true)
 	require.NoError(t, err)
 	require.Len(t, sessionEntries, 1)
 	assert.Equal(t, 1, sessionEntries[0].XP)
@@ -141,7 +141,7 @@ func TestLeaderboard_WhenDisplayNameOverride_ExpectOverrideUsed(t *testing.T) {
 	id := viewerID(t, s, "twitch", "42", testDayResetHour, now)
 	require.NoError(t, s.UpdateDisplayName(id, "Commander"))
 
-	entries, err := s.Leaderboard("all", 20, testDayResetHour, now)
+	entries, err := s.Leaderboard("all", 20, testDayResetHour, now, true)
 	require.NoError(t, err)
 	require.Len(t, entries, 1)
 	assert.Equal(t, "Commander", entries[0].DisplayName)
@@ -156,7 +156,7 @@ func TestLeaderboard_WhenLimitZero_ExpectDefaultCap(t *testing.T) {
 		}, defaultActivity(), testDayResetHour, now))
 	}
 
-	entries, err := s.Leaderboard("all", 0, testDayResetHour, now)
+	entries, err := s.Leaderboard("all", 0, testDayResetHour, now, true)
 	require.NoError(t, err)
 	assert.Len(t, entries, 20)
 }

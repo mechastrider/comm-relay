@@ -19,10 +19,11 @@ type PortraitFields struct {
 }
 
 // ResolvePortraitURL returns the public portrait URL for overlay and API payloads.
-// Custom portraits are not implemented in slice 1; CustomAvatar is reserved for later.
-func ResolvePortraitURL(fields PortraitFields) string {
-	if custom := strings.TrimSpace(fields.CustomAvatar); custom != "" && config.ValidOverlayAssetName(custom) {
-		return overlayAssetURLPrefix + custom
+func ResolvePortraitURL(fields PortraitFields, customAvatarsEnabled bool) string {
+	if customAvatarsEnabled {
+		if custom := strings.TrimSpace(fields.CustomAvatar); custom != "" && config.ValidOverlayAssetName(custom) {
+			return overlayAssetURLPrefix + custom
+		}
 	}
 	if cache := strings.TrimSpace(fields.AvatarCache); cache != "" && config.ValidOverlayAssetName(cache) {
 		return overlayAssetURLPrefix + cache
@@ -31,6 +32,17 @@ func ResolvePortraitURL(fields PortraitFields) string {
 		return remote
 	}
 	return ""
+}
+
+// ViewerPortraitURL returns the resolved portrait for a canonical viewer.
+func ViewerPortraitURL(viewer Viewer, customAvatarsEnabled bool) string {
+	resolved := ResolvePortraitURL(PortraitFields{
+		CustomAvatar: viewer.CustomAvatar,
+	}, customAvatarsEnabled)
+	if resolved != "" {
+		return resolved
+	}
+	return strings.TrimSpace(viewer.LastSeen.AvatarURL)
 }
 
 // ResolveIdentityPortraitURL returns the resolved portrait URL for one platform identity.
@@ -42,7 +54,7 @@ func (s *Store) ResolveIdentityPortraitURL(platform, userID string) (string, err
 	if !found {
 		return "", nil
 	}
-	return ResolvePortraitURL(fields), nil
+	return ResolvePortraitURL(fields, false), nil
 }
 
 // AvatarFetchCandidate reports whether a remote portrait should be cached and the URL to fetch.

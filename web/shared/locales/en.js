@@ -462,6 +462,8 @@ export default {
   "iface.dayResetHourHint": "Local hour when the stats day rolls over (0–23).",
   "iface.hideCommandMessages": "Hide command lines in chat overlay",
   "iface.hideCommandMessagesHint": "When enabled, !commands still appear in admin and the dock, but not on /overlay.",
+  "iface.customAvatarsEnabled": "Show custom viewer portraits",
+  "iface.customAvatarsEnabledHint": "When off, Audience and overlays ignore uploaded faces and keep cached platform portraits.",
   "iface.streamerDisplayName": "Streamer display name",
   "iface.streamerDisplayNameHint": "Used as {streamer} in command and award splash templates.",
 
@@ -496,6 +498,13 @@ export default {
   "viewers.mergePickTarget": "Choose a viewer to merge into.",
   "viewers.mergeDone": "Viewers merged.",
   "viewers.nameRequired": "Display name cannot be empty.",
+  "viewers.portraitUpload": "Custom portrait",
+  "viewers.portraitClear": "Remove custom portrait",
+  "viewers.portraitUploadFailed": "Could not upload the portrait.",
+  "viewers.portraitClearFailed": "Could not remove the custom portrait.",
+  "viewers.portraitTypeNotAllowed": "Use a PNG, JPEG, or WebP image.",
+  "viewers.portraitTooLarge": "Portrait must be 512 KB or smaller.",
+  "viewers.portraitViewerMissing": "Viewer not found.",
 
   "audience.periodLabel": "Activity period",
   "audience.periodHint": "XP and message columns follow the selected period.",

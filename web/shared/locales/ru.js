@@ -462,6 +462,8 @@ export default {
   "iface.dayResetHourHint": "Локальный час, когда начинается новый статистический день (0–23).",
   "iface.hideCommandMessages": "Скрывать строки команд в оверлее чата",
   "iface.hideCommandMessagesHint": "Если включено, !команды видны в админке и dock, но не на /overlay.",
+  "iface.customAvatarsEnabled": "Показывать свои портреты зрителей",
+  "iface.customAvatarsEnabledHint": "Если выключено, Аудитория и оверлеи игнорируют загруженные лица и используют кэш платформы.",
   "iface.streamerDisplayName": "Имя стримера",
   "iface.streamerDisplayNameHint": "Подставляется как {streamer} в шаблоны баннеров команд и наград.",
 
@@ -496,6 +498,13 @@ export default {
   "viewers.mergePickTarget": "Выберите зрителя, в которого объединить.",
   "viewers.mergeDone": "Зрители объединены.",
   "viewers.nameRequired": "Отображаемое имя не может быть пустым.",
+  "viewers.portraitUpload": "Своё фото",
+  "viewers.portraitClear": "Убрать своё фото",
+  "viewers.portraitUploadFailed": "Не удалось загрузить портрет.",
+  "viewers.portraitClearFailed": "Не удалось убрать своё фото.",
+  "viewers.portraitTypeNotAllowed": "Используйте PNG, JPEG или WebP.",
+  "viewers.portraitTooLarge": "Портрет должен быть не больше 512 КБ.",
+  "viewers.portraitViewerMissing": "Зритель не найден.",
 
   "audience.periodLabel": "Период активности",
   "audience.periodHint": "Столбцы XP и сообщений соответствуют выбранному периоду.",

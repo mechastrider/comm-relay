@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -17,6 +18,7 @@ type MessageHistory struct {
 	messages    []bus.ChatMessage
 	capacity    int
 	viewerStore *store.Store
+	cfgStore    *config.Store
 }
 
 // NewMessageHistory creates a bounded in-memory message buffer.
@@ -34,6 +36,11 @@ func NewMessageHistory(capacity int) *MessageHistory {
 // SetViewerStore wires the viewer store used to resolve empty chat avatars.
 func (h *MessageHistory) SetViewerStore(viewerStore *store.Store) {
 	h.viewerStore = viewerStore
+}
+
+// SetConfigStore wires the config store used for custom portrait resolution.
+func (h *MessageHistory) SetConfigStore(cfgStore *config.Store) {
+	h.cfgStore = cfgStore
 }
 
 // Run subscribes to chat events until the context is cancelled.
@@ -58,7 +65,7 @@ func (h *MessageHistory) Run(ctx context.Context, b *bus.Bus) {
 }
 
 func (h *MessageHistory) append(msg bus.ChatMessage) {
-	msg = fillChatMessageAvatar(h.viewerStore, msg)
+	msg = fillChatMessageAvatar(h.viewerStore, h.cfgStore, msg)
 
 	h.mu.Lock()
 	defer h.mu.Unlock()

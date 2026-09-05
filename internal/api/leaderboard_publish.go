@@ -165,7 +165,7 @@ func (p *LeaderboardPublisher) flush() {
 	ctx := context.Background()
 
 	for _, period := range []string{"session", "day", "all"} {
-		entries, err := p.viewerStore.Leaderboard(period, leaderboardWireLimit, cfg.DayResetHour, now)
+		entries, err := p.viewerStore.Leaderboard(period, leaderboardWireLimit, cfg.DayResetHour, now, cfg.CustomAvatarsEnabled)
 		if err != nil {
 			clog.Errorf(ctx, "leaderboard snapshot %s: %w", period, err)
 			continue

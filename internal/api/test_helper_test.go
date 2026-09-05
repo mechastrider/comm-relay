@@ -55,6 +55,7 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 
 	history := NewMessageHistory(0)
 	history.SetViewerStore(viewerStore)
+	history.SetConfigStore(cfgStore)
 	publisher := NewLeaderboardPublisher(hub, viewerStore, cfgStore)
 	ingest := NewViewerIngest(viewerStore, cfgStore, publisher, matcher, hub, nil)
 
