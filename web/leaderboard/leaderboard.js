@@ -45,9 +45,32 @@ const previewEnabled = params.has("preview");
 const samplePreviewEnabled = previewEnabled;
 const debugTestEnabled = isOverlayDebugPage(window.location);
 
+function maxEntriesCap() {
+  const cap = overlayView.max_entries;
+  return Number.isFinite(cap) && cap > 0 ? cap : 5;
+}
+
+function entriesForDisplay(entries) {
+  return (entries || []).slice(0, maxEntriesCap());
+}
+
 function sampleEntriesForCap(maxEntries) {
   const cap = Number.isFinite(maxEntries) && maxEntries > 0 ? maxEntries : 5;
-  return SAMPLE_ENTRIES.slice(0, cap);
+  const rows = [];
+  for (let i = 0; i < cap; i++) {
+    if (i < SAMPLE_ENTRIES.length) {
+      rows.push(SAMPLE_ENTRIES[i]);
+      continue;
+    }
+    rows.push({
+      rank: i + 1,
+      display_name: "Sample " + String(i + 1),
+      xp: Math.max(1, SAMPLE_ENTRIES.length - i + 1),
+      message_count: Math.max(1, 3 - Math.floor(i / 3)),
+      avatar_url: "",
+    });
+  }
+  return rows;
 }
 
 function normalizePeriod(raw) {
@@ -200,7 +223,7 @@ function renderEntries(entries) {
   const list = document.createElement("ol");
   list.className = "leaderboard-list";
 
-  (entries || []).forEach(function (entry) {
+  entriesForDisplay(entries).forEach(function (entry) {
     const item = document.createElement("li");
     item.className = "leaderboard-row";
 
