@@ -688,27 +688,29 @@
                             </select>
                           </div>
 
-                          <div class="preview-control preview-control--size">
-                            <label for="overlay-preview-size" data-i18n="obs.sourceSize">Source size</label>
-                            <select id="overlay-preview-size">
-                              <option value="640x360">640 × 360</option>
-                              <option value="800x600">800 × 600</option>
-                              <option value="1280x720">1280 × 720</option>
-                              <option value="480x720">480 × 720</option>
-                              <option value="custom" data-i18n="obs.custom">Custom</option>
-                            </select>
-                          </div>
+                          <div class="preview-size-row">
+                            <div class="preview-control preview-control--size">
+                              <label for="overlay-preview-size" data-i18n="obs.sourceSize">Source size</label>
+                              <select id="overlay-preview-size">
+                                <option value="640x360">640 × 360</option>
+                                <option value="800x600">800 × 600</option>
+                                <option value="1280x720">1280 × 720</option>
+                                <option value="480x720">480 × 720</option>
+                                <option value="custom" data-i18n="obs.custom">Custom</option>
+                              </select>
+                            </div>
 
-                          <div class="preview-control preview-control--dimension">
-                            <label for="overlay-preview-width" data-i18n="obs.width">Width</label>
-                            <input id="overlay-preview-width" type="number" min="240" max="3840" step="1" inputmode="numeric" value="640">
-                          </div>
+                            <div class="preview-control preview-control--dimension">
+                              <label for="overlay-preview-width" data-i18n="obs.width">Width</label>
+                              <input id="overlay-preview-width" type="number" min="240" max="3840" step="1" inputmode="numeric" value="640">
+                            </div>
 
-                          <span class="preview-dimension-mark" aria-hidden="true">×</span>
+                            <span class="preview-dimension-mark" aria-hidden="true">×</span>
 
-                          <div class="preview-control preview-control--dimension">
-                            <label for="overlay-preview-height" data-i18n="obs.height">Height</label>
-                            <input id="overlay-preview-height" type="number" min="180" max="2160" step="1" inputmode="numeric" value="360">
+                            <div class="preview-control preview-control--dimension">
+                              <label for="overlay-preview-height" data-i18n="obs.height">Height</label>
+                              <input id="overlay-preview-height" type="number" min="180" max="2160" step="1" inputmode="numeric" value="360">
+                            </div>
                           </div>
 
                           <div class="preview-control">

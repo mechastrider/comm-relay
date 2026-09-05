@@ -499,7 +499,13 @@
 .studio-surface-rail--collapsed .studio-surface-list__label,
 .studio-surface-rail--collapsed .studio-surface-item__copy,
 .studio-surface-rail--collapsed .studio-add-to-obs-open__label {
+  flex: 0 0 0;
   max-width: 0;
+  max-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
   opacity: 0;
   transform: translateX(-6px);
   visibility: hidden;
@@ -577,6 +583,9 @@
   gap: 8px;
   width: 100%;
   margin-top: var(--primitive-space-3);
+  padding-inline: var(--primitive-space-3);
+  min-height: var(--control-min-height);
+  height: auto;
 }
 
 .studio-add-to-obs-open__icon {
@@ -586,13 +595,20 @@
 }
 
 .studio-add-to-obs-open__label {
-  max-width: 10rem;
-  overflow: hidden;
-  white-space: nowrap;
+  min-width: 0;
+  flex: 1 1 auto;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .studio-surface-rail--collapsed .studio-add-to-obs-open {
+  gap: 0;
+  width: 100%;
   min-width: 44px;
+  min-height: var(--control-min-height);
+  height: var(--control-min-height);
   padding-inline: 8px;
 }
 
@@ -834,14 +850,17 @@
 }
 
 .studio-preview-mount .overlay-preview-overflow__panel {
+  --studio-preview-overflow-inset: var(--primitive-space-5);
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
   z-index: 20;
-  width: min(22rem, calc(100vw - 2rem));
+  box-sizing: border-box;
+  width: min(24rem, calc(100vw - 2rem));
   max-height: min(70dvh, 30rem);
-  overflow: auto;
-  padding: var(--primitive-space-5);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--primitive-space-3) var(--studio-preview-overflow-inset) var(--studio-preview-overflow-inset);
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--surface-raised, #141418);
@@ -849,22 +868,89 @@
 }
 
 .studio-preview-mount .overlay-preview-overflow__panel .overlay-preview-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--primitive-space-5);
   margin: 0;
   padding: 0;
   border: 0;
+  background: transparent;
+  min-width: 0;
 }
 
-.studio-preview-mount .preview-control--full {
-  flex: 1 1 100%;
+.studio-preview-mount .overlay-preview-overflow__panel .preview-size-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(4.5rem, 5.25rem) auto minmax(4.5rem, 5.25rem);
+  gap: var(--primitive-space-2);
+  align-items: end;
+  min-width: 0;
+}
+
+.studio-preview-mount .overlay-preview-overflow__panel .preview-size-row .preview-control--size,
+.studio-preview-mount .overlay-preview-overflow__panel .preview-size-row .preview-control--dimension {
+  flex: initial;
+  min-width: 0;
+}
+
+.studio-preview-mount .overlay-preview-overflow__panel .preview-size-row .preview-dimension-mark {
+  align-self: end;
+  min-height: 34px;
+  line-height: 34px;
+}
+
+.studio-preview-mount .overlay-preview-overflow__panel .preview-control--full {
+  min-width: 0;
+}
+
+.studio-preview-mount .overlay-preview-overflow__panel .obs-url-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--primitive-space-2);
+  min-width: 0;
+}
+
+.studio-preview-mount .overlay-preview-overflow__panel .obs-url-row input {
+  box-sizing: border-box;
+  min-height: 34px;
+  height: 34px;
+  max-height: 34px;
+}
+
+.studio-preview-mount .overlay-preview-overflow__panel .obs-url-row .btn-physical.btn-small,
+.studio-preview-mount .overlay-preview-overflow__panel .obs-url-row .icon-btn.icon-btn--copy {
+  box-sizing: border-box;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  padding: 0;
+}
+
+.studio-preview-mount .overlay-preview-overflow__panel .obs-url-row .btn-physical.btn-small {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--primitive-space-3);
+  white-space: nowrap;
+}
+
+.studio-preview-mount .overlay-preview-overflow__panel .obs-url-row .icon-btn.icon-btn--copy {
+  flex-shrink: 0;
+}
+
+.studio-preview-mount .overlay-preview-overflow__panel .preview-control--full .button-secondary--small {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  box-sizing: border-box;
+  justify-content: center;
 }
 
 .studio-preview-mount .studio-url-pinned {
-  margin-top: var(--primitive-space-3);
-  padding-top: var(--primitive-space-5);
+  margin-top: var(--primitive-space-2);
+  padding-top: var(--primitive-space-4);
   border-top: 1px solid var(--border);
 }
 

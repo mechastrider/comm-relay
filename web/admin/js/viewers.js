@@ -2,7 +2,6 @@ import * as dom from "./dom.js";
 import { apiURL, readJSON, mapHTTPError } from "./api.js";
 import { showBanner } from "./ui-shell.js";
 import { t } from "./i18n-ui.js";
-import { parseWorkspaceHash } from "./workspace-router.js";
 import { setRegionState } from "./shell-state.js";
 import { getLeaderboardPeriod, setLeaderboardPeriod } from "./live-leaderboard.js";
 import { setLiveTab } from "./live-tabs.js";
@@ -98,8 +97,13 @@ function formatPlatformLabel(platform) {
   return translated === key ? escapeText(platform) : translated;
 }
 
+function isAudienceWorkspaceActive() {
+  const section = document.getElementById("workspace-audience");
+  return Boolean(section && !section.hidden);
+}
+
 function isAudienceVisible() {
-  return parseWorkspaceHash(window.location.hash) === "audience";
+  return isAudienceWorkspaceActive();
 }
 
 function currentSearchQuery() {
@@ -354,11 +358,46 @@ function syncInspectorVisibility() {
   if (!dom.audienceInspector) {
     return;
   }
+  if (!isAudienceVisible()) {
+    dom.audienceInspector.hidden = true;
+    return;
+  }
   if (isWideLayout()) {
     dom.audienceInspector.hidden = !selectedViewerId;
   } else {
     dom.audienceInspector.hidden = true;
   }
+}
+
+function hideViewerDetailShell() {
+  if (dom.audienceDetailSheet) {
+    dom.audienceDetailSheet.close();
+  }
+  if (dom.audienceInspector) {
+    dom.audienceInspector.hidden = true;
+  }
+}
+
+function enforceViewerDetailShellWhenHidden() {
+  if (isAudienceWorkspaceActive()) {
+    return;
+  }
+  hideViewerDetailShell();
+}
+
+function syncViewerDetailLayout() {
+  syncInspectorVisibility();
+  if (!isAudienceVisible()) {
+    hideViewerDetailShell();
+    return;
+  }
+  if (selectedViewerId) {
+    openViewerDetail(selectedViewerId, focusReturnElement).catch(function () {
+      showBanner("error", t("banner.cannotReach"));
+    });
+    return;
+  }
+  closeViewerDetail({ restoreFocus: false });
 }
 
 function clearDetailContainer() {
@@ -520,11 +559,15 @@ function renderViewerDetail(viewer) {
 }
 
 function openDetailShell() {
+  if (!isAudienceWorkspaceActive()) {
+    hideViewerDetailShell();
+    return;
+  }
   if (isWideLayout()) {
     if (dom.audienceInspector) {
       dom.audienceInspector.hidden = false;
     }
-    if (dom.audienceDetailSheet && dom.audienceDetailSheet.open) {
+    if (dom.audienceDetailSheet) {
       dom.audienceDetailSheet.close();
     }
     return;
@@ -564,7 +607,11 @@ async function openViewerDetail(id, trigger) {
 
   detailLoadInFlight = fetchJSON("/api/viewers/get?id=" + encodeURIComponent(id))
     .then(function (payload) {
+      if (!isAudienceWorkspaceActive() || selectedViewerId !== id) {
+        return;
+      }
       renderViewerDetail(payload);
+      openDetailShell();
       const surface = detailSurfaceElements();
       if (surface.container) {
         surface.container.focus();
@@ -801,6 +848,16 @@ function ensureAudienceLoaded() {
   }
 }
 
+/** @param {import("./workspace-router.js").WorkspaceId} workspaceId */
+export function handleAudienceWorkspaceChange(workspaceId) {
+  if (workspaceId !== "audience") {
+    hideViewerDetailShell();
+    return;
+  }
+  ensureAudienceLoaded();
+  syncViewerDetailLayout();
+}
+
 function openNewStreamPrompt() {
   if (!dom.newStreamPrompt) {
     return;
@@ -951,16 +1008,8 @@ export function initAudienceViewers() {
   if (!wideLayoutQuery) {
     wideLayoutQuery = window.matchMedia(WIDE_LAYOUT_QUERY);
   }
-  wideLayoutQuery.addEventListener("change", function () {
-    syncInspectorVisibility();
-    if (selectedViewerId) {
-      openViewerDetail(selectedViewerId, focusReturnElement).catch(function () {
-        showBanner("error", t("banner.cannotReach"));
-      });
-    } else {
-      closeViewerDetail({ restoreFocus: false });
-    }
-  });
+  wideLayoutQuery.addEventListener("change", syncViewerDetailLayout);
+  window.addEventListener("resize", enforceViewerDetailShellWhenHidden);
 
   syncInspectorVisibility();
   ensureAudienceLoaded();

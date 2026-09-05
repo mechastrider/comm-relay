@@ -589,12 +589,6 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   }
 }
 
-@media (min-width: 1024px) {
-  .audience-detail-sheet {
-    display: none;
-  }
-}
-
 @media (max-width: 390px) {
   .audience-table-body {
     overflow-x: auto;

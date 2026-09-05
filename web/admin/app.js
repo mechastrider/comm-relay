@@ -26,7 +26,11 @@ import {
   startYouTubeOAuth,
 } from "./js/settings.js";
 import { initStudio } from "./js/studio.js";
-import { initAudienceViewers, initNewStreamControl } from "./js/viewers.js";
+import {
+  handleAudienceWorkspaceChange,
+  initAudienceViewers,
+  initNewStreamControl,
+} from "./js/viewers.js";
 import { initAudienceTabs } from "./js/audience-tabs.js";
 import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js";
 import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js";
@@ -80,6 +84,7 @@ initWorkspaceRouter(document, t, {
   onWorkspaceChange: function (workspaceId) {
     handleSettingsWorkspaceChange(workspaceId);
     handleLiveWorkspaceChange(workspaceId);
+    handleAudienceWorkspaceChange(workspaceId);
   },
 });
 

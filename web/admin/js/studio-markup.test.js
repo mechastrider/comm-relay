@@ -16,6 +16,14 @@ assert.match(styles, /\.studio-surface-item\[aria-pressed="true"\]/);
 assert.match(markup, /id="overlay-panel-opacity"[^>]*aria-describedby="overlay-panel-opacity-hint"/);
 assert.match(markup, /id="overlay-panel-opacity-error"[^>]*role="alert"/);
 assert.match(styles, /border-left-color:\s*var\(--amber\)/);
+assert.doesNotMatch(
+  styles,
+  /\.studio-add-to-obs-open__label\s*\{[\s\S]*?max-width:\s*10rem/
+);
+assert.match(
+  styles,
+  /\.studio-surface-rail--collapsed \.studio-add-to-obs-open__label\s*\{[\s\S]*?max-height:\s*0/
+);
 
 assert.match(markup, /data-studio-mode="essentials"[^>]*aria-pressed="true"/);
 assert.match(markup, /data-studio-mode="all"[^>]*aria-pressed="false"/);
@@ -25,6 +33,19 @@ assert.match(markup, /data-studio-add-to-obs-action="later"/);
 assert.match(markup, /data-studio-add-to-obs-action="done"/);
 assert.match(markup, /id="studio-discard-dialog"[^>]*class="prompt-dialog studio-discard-dialog"/);
 assert.match(markup, /id="studio-discard-confirm"[^>]*class="btn-physical btn-danger"/);
+assert.match(markup, /class="preview-size-row"/);
+assert.match(
+  styles,
+  /\.studio-preview-mount \.overlay-preview-overflow__panel \.preview-size-row/
+);
+assert.match(
+  styles,
+  /--studio-preview-overflow-inset:\s*var\(--primitive-space-5\)/
+);
+assert.match(
+  styles,
+  /\.studio-preview-mount \.overlay-preview-overflow__panel \.obs-url-row \.icon-btn\.icon-btn--copy/
+);
 assert.match(markup, /id="studio-follow-url"[^>]*data-i18n-aria-label="obs\.followActivePreset"/);
 assert.doesNotMatch(markup, /<label for="studio-follow-url"/);
 assert.doesNotMatch(markup, /id="overlay-debug-toggle"/);
