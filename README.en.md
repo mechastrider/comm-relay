@@ -4,15 +4,18 @@
 
 [![CI](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml/badge.svg)](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/mechastrider/comm-relay?label=release)](https://github.com/mechastrider/comm-relay/releases) ![Go](https://img.shields.io/github/go-mod/go-version/mechastrider/comm-relay) [![License](https://img.shields.io/github/license/mechastrider/comm-relay)](LICENSE) ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue) ![OBS](https://img.shields.io/badge/OBS-Browser%20Source-9146FF?logo=obsstudio&logoColor=white) [![Wails](https://img.shields.io/badge/desktop-Wails%20v2-DF2C2C)](https://wails.io/) [![DonationAlerts](https://img.shields.io/badge/DonationAlerts-Поддержать-FD6535)](https://www.donationalerts.com/r/mechastrider)
 
-![CommRelay — local control panel, chat monitor, and OBS overlay](docs/images/poster.jpg)
+CommRelay is a local interactive system for livestreams. It brings Twitch, YouTube Live, and VK Live chat together, tracks viewer contribution, and sends chat, leaderboards, commands, and rewards to OBS — without a cloud relay server.
 
-CommRelay aggregates messages from Twitch, YouTube Live, and VK Live into a single local chat for OBS. The app runs on your computer, does not use a cloud relay server, and displays the overlay through a standard OBS Browser Source.
+Before **v0.5**, CommRelay was primarily a multichat app. Starting with v0.5, it is being rebuilt into a system where messages become stream events: viewers gain progress, commands trigger alerts, and the streamer can recognize contributions with rewards.
 
-First public release: **v0.1.0**. Change history is kept in [`CHANGELOG.md`](CHANGELOG.md).
+> [!WARNING]
+> The interactive system is experimental and under continuous development. Features, workflows, and the progression model may change significantly between releases. Check [`CHANGELOG.md`](CHANGELOG.md) and back up your user data before updating.
+
+![CommRelay — interactive livestream system: Live, Audience, Studio, and OBS overlay](docs/images/poster.jpg)
 
 ## See it in action
 
-You can see CommRelay in use on the author's streams:
+The best way to evaluate CommRelay is to see it running on the author's streams:
 
 - [Twitch — mechastrider](https://www.twitch.tv/mechastrider)
 - [VK Live — mechastrider](https://live.vkvideo.ru/mechastrider)
@@ -20,14 +23,14 @@ You can see CommRelay in use on the author's streams:
 
 ## Features
 
-- Connects Twitch, YouTube Live Chat, and VK Live / VK Video.
-- Shows a unified transparent overlay for OBS: `http://127.0.0.1:17877/overlay`.
-- Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
+- Combines Twitch, YouTube Live Chat, and VK Live / VK Video in one local feed.
 - Tracks viewer stats (XP, messages, session/day/all-time) in a local `comm-relay.db` file next to `config.json` — no separate database server.
+- Recognizes chat commands and lets the streamer grant viewer rewards from Live or the OBS message dock.
+- Sends transparent chat, leaderboard, and command/reward alert surfaces to OBS.
+- Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
 - Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?period=session|day|all` (same theme as chat; without `preset` it follows the active preset).
-- Shows command banners on a separate OBS Browser Source: `http://127.0.0.1:17877/overlay/alert` (sound plays in that source; enable **Control audio via OBS** for stream audio).
+- Shows command and reward alerts on a separate OBS Browser Source: `http://127.0.0.1:17877/overlay/alert` (sound plays in that source; enable **Control audio via OBS** for stream audio).
 - Provides a local console with Live, Audience, Studio, and Settings workspaces: statuses, messages, viewers, command and award catalogs, overlay setup, and diagnostics.
-- Lets the operator grant awards (**Reward**) from Live and the OBS message dock; points update the leaderboard immediately.
 - In **Settings → Data** you can hide `!command` lines in the chat overlay only — they remain visible in Live and the dock.
 - Supports Twitch emotes, FrankerFaceZ, BetterTTV, 7TV, and safe image previews.
 - Automatically reconnects connectors and stores settings locally in `config.json`.
@@ -40,9 +43,9 @@ Choose the archive for your system:
 
 | System | Release file | How to run |
 |--------|--------------|------------|
-| Windows 11, 64-bit | `CommRelay-v0.1.0-windows-amd64.zip` | Extract the archive and run `CommRelay.exe`. |
-| macOS, 64-bit | `CommRelay-v0.1.0-macos-universal.zip` | Extract the archive and open `CommRelay.app`. |
-| Linux, 64-bit | `CommRelay-v0.1.0-linux-amd64.tar.gz` | Extract the archive, make the file executable, and run `./CommRelay`. On first launch the app adds an icon to the menu on its own (Linux Mint, Ubuntu, etc.). |
+| Windows 11, 64-bit | `CommRelay-vX.Y.Z-windows-amd64.zip` | Extract the archive and run `CommRelay.exe`. |
+| macOS, 64-bit | `CommRelay-vX.Y.Z-macos-universal.zip` | Extract the archive and open `CommRelay.app`. |
+| Linux, 64-bit | `CommRelay-vX.Y.Z-linux-amd64.tar.gz` | Extract the archive, make the file executable, and run `./CommRelay`. On first launch the app adds an icon to the menu on its own (Linux Mint, Ubuntu, etc.). |
 
 Windows and macOS may warn that the app is not signed. This is expected for an early release: on macOS use **Open** from the Finder context menu; on Windows confirm launch via **More info** → **Run anyway**.
 
@@ -89,15 +92,6 @@ By default CommRelay listens on `127.0.0.1:17877`. The admin panel is available 
 6. Keep CommRelay running during the stream.
 
 If you changed the port in settings, update the URL in OBS.
-
-## Test an overlay without going live
-
-In **Studio → Test overlay**, the static preview remains the quick way to compare a theme, font, and backdrop. Test mode instead exercises message, reward, leaderboard, and alert timing without live chat or score changes.
-
-- A **stable test-only URL** can stay in a separate OBS Browser Source. It follows the active preset, receives test events only, and never displays live chat.
-- A **current-preview snapshot URL** adds unpublished draft appearance to that test-only path. Copy it again after changing the draft; the stable URL does not need recopying.
-- **Run**, **Replay**, and **Reset** use one shared local channel: an action from another Studio tab or OBS test source replaces the current sequence. Studio reports the connected receiver count; `0` is a successful run with no test source connected.
-- Make the final sound and autoplay check in OBS itself: Studio does not bypass browser autoplay policy. On an older CommRelay build, test-only paths return `404`; they never fall back to a live overlay.
 
 ## Message log in the OBS interface
 
@@ -209,133 +203,11 @@ More on typical overlay and OBS issues on Linux: [`docs/FAQ.en.md`](docs/FAQ.en.
 - **macOS won't open the app**: early builds are not signed; use **Open** from the Finder context menu.
 - **Linux won't launch the window**: install GTK/WebKit dependencies from the Linux section.
 
-## For developers
+## Documentation and development
 
-Requires **Go 1.26.3+** (version from `go.mod`). Admin, OBS dock, and overlay static assets are embedded in the binary; for local UI development you can override them with the `web/` folder via the `-web` flag.
-
-### Common commands
-
-Work the same on **Windows**, **Linux**, and **macOS** (in PowerShell, cmd, bash, or zsh):
-
-```bash
-go mod download
-go build ./...
-go test ./... -race
-```
-
-Linter as in CI (install once):
-
-```bash
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
-golangci-lint run ./...
-```
-
-### Headless server (main development loop)
-
-For backend, admin, and overlay it is more convenient to run the server without the desktop shell:
-
-```bash
-go run ./cmd/comm-relay-server -web ./web
-```
-
-By default listens on `127.0.0.1:17877`, creates `config.json` next to the working directory (in the release desktop build — in the user directory, see table above).
-
-| Flag | Purpose |
-|------|---------|
-| `-web ./web` | Override embedded static files with files from the repository |
-| `-config path` | Different `config.json` |
-| `-addr 127.0.0.1:port` | Override port from config |
-| `-debug` | Verbose logs |
-
-Build and run the binary without `go run`:
-
-| System | Build | Run |
-|--------|-------|-----|
-| Windows | `go build -o comm-relay.exe ./cmd/comm-relay-server` | `.\comm-relay.exe -web .\web` |
-| Linux / macOS | `go build -o comm-relay ./cmd/comm-relay-server` | `./comm-relay -web ./web` |
-
-Open `http://127.0.0.1:17877/` in a browser — changes in `web/` are visible after refreshing the page; Go rebuild is only needed for backend edits.
-
-### Desktop build (Wails)
-
-Release archives are the desktop app on [Wails v2](https://wails.io/). Build it when you need to test the window, tray icon, or packaging; for day-to-day UI and API development the headless server is enough.
-
-Install the CLI (once):
-
-```bash
-go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
-```
-
-Build from the repository root:
-
-```bash
-cd cmd/comm-relay-desktop
-wails build
-```
-
-The ready binary is in `cmd/comm-relay-desktop/build/bin/` (`CommRelay.exe`, `CommRelay`, or `CommRelay.app`).
-
-#### Windows
-
-- **Go 1.26.3+** and **WebView2** (usually already present on Windows 11).
-- No additional SDK for Wails is required.
-- Environment check: `wails doctor`.
-
-#### Linux (Ubuntu, Debian, Linux Mint, etc.)
-
-Packages for **building** the desktop app (separate from runtime dependencies in the “Linux dependencies” section above):
-
-```bash
-sudo apt update
-sudo apt install build-essential pkg-config \
-  libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev
-```
-
-If `libwebkit2gtk-4.1-dev` is unavailable, install the **WebKitGTK 4.1** equivalent from your distribution's repository.
-
-**OBS on Linux:** the **Browser** source and **Custom Browser Docks** are not available in all OBS builds from standard repositories. To test overlay and dock install OBS from the [official PPA](https://obsproject.com/kb/linux-installation) (`ppa:obsproject/obs-studio`) or Flatpak from Flathub. On Wayland OBS dock panels may be unavailable — if needed log into an **X11** session.
-
-#### macOS
-
-- **Go 1.26.3+** and **Xcode Command Line Tools** (`xcode-select --install`).
-- Build for the current machine: `wails build` in `cmd/comm-relay-desktop`.
-- Universal binary (as in CI): `wails build -platform darwin/universal`.
-- An unsigned local build may not open with a double click — **Open** from the Finder context menu or launch from the terminal.
-
-### Main URLs
-
-| URL | Purpose |
-|-----|---------|
-| `http://127.0.0.1:17877/` | Admin panel |
-| `http://127.0.0.1:17877/dock/messages` | Message log in the OBS interface |
-| `http://127.0.0.1:17877/overlay` | OBS Browser Source (chat) |
-| `http://127.0.0.1:17877/overlay/leaderboard` | OBS Browser Source (leaderboard) |
-| `http://127.0.0.1:17877/overlay/alert` | OBS Browser Source (command banner; sound via **Control audio via OBS**) |
-| `http://127.0.0.1:17877/health` | Health check |
-| `ws://127.0.0.1:17877/ws` | WebSocket with messages |
-
-Project structure and rules for agents: [`AGENTS.md`](AGENTS.md). More about the product: [`docs/concept.md`](docs/concept.md).
-
-## Releases
-
-The release workflow builds desktop archives for Windows, macOS, and Linux when a `v*.*.*` tag is published, and is also available manually via GitHub Actions.
-
-Before a release add user-facing changes to the **`## [Unreleased]`** section in [`CHANGELOG.md`](CHANGELOG.md). On publish the workflow automatically:
-
-1. checks that `[Unreleased]` has entries;
-2. moves them to `## [X.Y.Z] - YYYY-MM-DD`;
-3. creates an empty `[Unreleased]` section for the next cycle;
-4. commits the updated changelog to `main`;
-5. uses the new version section text for the GitHub Release.
-
-Example:
-
-```bash
-git tag v0.1.2
-git push origin v0.1.2
-```
-
-If the version section already exists in `CHANGELOG.md`, the workflow does not duplicate it and only publishes the release.
+- [Technical documentation for developers](docs/development.en.md) — local development, checks, Wails builds, and the release workflow.
+- [Product concept](docs/concept.md) and the [interactive-system roadmap](docs/roadmap.md).
+- [FAQ](docs/FAQ.en.md) — common OBS, overlay, and platform issues.
 
 ## Support and questions
 

@@ -4,32 +4,33 @@
 
 [![CI](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml/badge.svg)](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/mechastrider/comm-relay?label=release)](https://github.com/mechastrider/comm-relay/releases) ![Go](https://img.shields.io/github/go-mod/go-version/mechastrider/comm-relay) [![License](https://img.shields.io/github/license/mechastrider/comm-relay)](LICENSE) ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue) ![OBS](https://img.shields.io/badge/OBS-Browser%20Source-9146FF?logo=obsstudio&logoColor=white) [![Wails](https://img.shields.io/badge/desktop-Wails%20v2-DF2C2C)](https://wails.io/) [![DonationAlerts](https://img.shields.io/badge/DonationAlerts-Поддержать-FD6535)](https://www.donationalerts.com/r/mechastrider)
 
-![CommRelay — локальная панель управления, монитор чата и overlay для OBS](docs/images/poster.jpg)
+CommRelay — локальная интерактивная система для стримов. Она объединяет чат Twitch, YouTube Live и VK Live, помогает видеть вклад зрителей и выводит в OBS чат, лидерборд, команды и награды — без облачного relay-сервера.
 
-CommRelay собирает сообщения из Twitch, YouTube Live и VK Live в один локальный чат для OBS. Приложение запускается на вашем компьютере, не использует облачный relay-сервер и показывает overlay через обычный OBS Browser Source.
+До **v0.5** CommRelay был прежде всего мультичатом. Начиная с v0.5 приложение перерабатывается в систему, где сообщения становятся событиями стрима: зрители получают прогресс, команды запускают баннеры, а стример может отмечать вклад участников наградами.
 
-Первый публичный релиз: **v0.1.0**. История изменений ведётся в [CHANGELOG.md](CHANGELOG.md).
+> [!WARNING]
+> Интерактивная система находится в экспериментальном режиме, постоянно меняется и дорабатывается. Возможности, интерфейс и модель прогресса могут заметно меняться между релизами — перед обновлением проверяйте [CHANGELOG.md](CHANGELOG.md) и делайте резервную копию пользовательских данных.
 
-## В действии
+![CommRelay — интерактивная система стримов: Live, Audience, Studio и OBS overlay](docs/images/poster.jpg)
 
-CommRelay можно увидеть в работе на авторских стримах:
+## Посмотреть в действии
+
+Лучший способ оценить CommRelay — посмотреть, как система работает на авторских стримах:
 
 - [Twitch — mechastrider](https://www.twitch.tv/mechastrider)
 - [VK Live — mechastrider](https://live.vkvideo.ru/mechastrider)
 - [YouTube — @mechastrider](https://www.youtube.com/@mechastrider/streams)
 
-
-
 ## Что умеет
 
-- Подключает Twitch, YouTube Live Chat и VK Live / VK Video.
-- Показывает единый прозрачный overlay для OBS: `http://127.0.0.1:17877/overlay`.
-- Встраивает отдельный журнал сообщений в интерфейс OBS: `http://127.0.0.1:17877/dock/messages`.
+- Объединяет Twitch, YouTube Live Chat и VK Live / VK Video в одну локальную ленту.
 - Ведёт статистику зрителей (XP, сообщения, сессия/день/всё время) в локальной базе `comm-relay.db` рядом с `config.json` — отдельный сервер БД не нужен.
+- Распознаёт команды чата и позволяет стримеру выдавать награды зрителям прямо из Live или журнала OBS dock.
+- Выводит в OBS прозрачные поверхности чата, лидерборда и баннеров команд/наград.
+- Встраивает отдельный журнал сообщений в интерфейс OBS: `http://127.0.0.1:17877/dock/messages`.
 - Показывает прозрачный лидерборд для OBS: `http://127.0.0.1:17877/overlay/leaderboard?period=session|day|all` (та же тема, что у чата; без `preset` следует за активным пресетом).
-- Показывает баннеры команд на отдельном OBS Browser Source: `http://127.0.0.1:17877/overlay/alert` (звук в этом источнике; для эфира включите **Control audio via OBS**).
+- Показывает баннеры команд и наград на отдельном OBS Browser Source: `http://127.0.0.1:17877/overlay/alert` (звук в этом источнике; для эфира включите **Control audio via OBS**).
 - Даёт локальную панель с рабочими местами Live, Audience, Studio и Settings: статусы, сообщения, зрители, каталоги команд и наград, подготовка overlay и диагностика.
-- Позволяет выдавать награды (**Reward**) из Live и журнала OBS dock; очки обновляют лидерборд.
 - В **Settings → Данные** можно скрыть строки `!команд` только в overlay чата — в Live и dock они остаются.
 - Поддерживает Twitch emotes, FrankerFaceZ, BetterTTV, 7TV и безопасные превью картинок.
 - Автоматически переподключает коннекторы и хранит настройки локально в `config.json`.
@@ -45,9 +46,9 @@ CommRelay можно увидеть в работе на авторских ст
 
 | Система            | Файл релиза                            | Запуск                                                                                                                                                      |
 | ------------------ | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Windows 11, 64-bit | `CommRelay-v0.1.0-windows-amd64.zip`   | Распакуйте архив и запустите `CommRelay.exe`.                                                                                                               |
-| macOS, 64-bit      | `CommRelay-v0.1.0-macos-universal.zip` | Распакуйте архив и откройте `CommRelay.app`.                                                                                                                |
-| Linux, 64-bit      | `CommRelay-v0.1.0-linux-amd64.tar.gz`  | Распакуйте архив, сделайте файл исполняемым и запустите `./CommRelay`. При первом запуске приложение само добавит иконку в меню (Linux Mint, Ubuntu и др.). |
+| Windows 11, 64-bit | `CommRelay-vX.Y.Z-windows-amd64.zip`   | Распакуйте архив и запустите `CommRelay.exe`.                                                                                                               |
+| macOS, 64-bit      | `CommRelay-vX.Y.Z-macos-universal.zip` | Распакуйте архив и откройте `CommRelay.app`.                                                                                                                |
+| Linux, 64-bit      | `CommRelay-vX.Y.Z-linux-amd64.tar.gz`  | Распакуйте архив, сделайте файл исполняемым и запустите `./CommRelay`. При первом запуске приложение само добавит иконку в меню (Linux Mint, Ubuntu и др.). |
 
 
 Windows и macOS могут предупредить, что приложение не подписано. Это ожидаемо для раннего релиза: на macOS используйте **Open** через контекстное меню Finder, на Windows подтвердите запуск через **More info** → **Run anyway**.
@@ -215,145 +216,11 @@ OAuth не требуется. Укажите slug канала или URL `live
 
 
 
-## Для разработчиков
+## Документация и разработка
 
-Нужен **Go 1.26.3+** (версия из `go.mod`). Статика админки, OBS-дока и overlay встроена в бинарник; при локальной разработке UI её можно подменить папкой `web/` через флаг `-web`.
-
-### Общие команды
-
-Работают одинаково в **Windows**, **Linux** и **macOS** (в PowerShell, cmd, bash или zsh):
-
-```bash
-go mod download
-go build ./...
-go test ./... -race
-```
-
-Линтер как в CI (установка один раз):
-
-```bash
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
-golangci-lint run ./...
-```
-
-
-
-### Headless-сервер (основной цикл разработки)
-
-Для backend, админки и overlay удобнее запускать сервер без desktop-оболочки:
-
-```bash
-go run ./cmd/comm-relay-server -web ./web
-```
-
-По умолчанию слушает `127.0.0.1:17877`, создаёт `config.json` рядом с рабочей директорией (в релизной desktop-сборке — в пользовательском каталоге, см. таблицу выше).
-
-
-| Флаг                   | Назначение                                          |
-| ---------------------- | --------------------------------------------------- |
-| `-web ./web`           | Подменить встроенную статику файлами из репозитория |
-| `-config путь`         | Другой `config.json`                                |
-| `-addr 127.0.0.1:порт` | Переопределить порт из конфига                      |
-| `-debug`               | Подробные логи                                      |
-
-
-Собрать и запустить бинарник без `go run`:
-
-
-| Система       | Сборка                                               | Запуск                        |
-| ------------- | ---------------------------------------------------- | ----------------------------- |
-| Windows       | `go build -o comm-relay.exe ./cmd/comm-relay-server` | `.\comm-relay.exe -web .\web` |
-| Linux / macOS | `go build -o comm-relay ./cmd/comm-relay-server`     | `./comm-relay -web ./web`     |
-
-
-Откройте в браузере `http://127.0.0.1:17877/` — изменения в `web/` видны после обновления страницы, пересборка Go нужна только при правках backend.
-
-### Desktop-сборка (Wails)
-
-Релизные архивы — это desktop-приложение на [Wails v2](https://wails.io/). Собирайте его, когда нужно проверить окно, иконку в трее или упаковку; для ежедневной разработки UI и API достаточно headless-сервера.
-
-Установите CLI (один раз):
-
-```bash
-go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
-```
-
-Сборка из корня репозитория:
-
-```bash
-cd cmd/comm-relay-desktop
-wails build
-```
-
-Готовый бинарник — в `cmd/comm-relay-desktop/build/bin/` (`CommRelay.exe`, `CommRelay` или `CommRelay.app`).
-
-#### Windows
-
-- **Go 1.26.3+** и **WebView2** (на Windows 11 обычно уже есть).
-- Дополнительные SDK для Wails не нужны.
-- Проверка окружения: `wails doctor`.
-
-
-
-#### Linux (Ubuntu, Debian, Linux Mint и др.)
-
-Пакеты для **сборки** desktop (отдельно от runtime-зависимостей в разделе «Linux зависимости» выше):
-
-```bash
-sudo apt update
-sudo apt install build-essential pkg-config \
-  libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev
-```
-
-Если `libwebkit2gtk-4.1-dev` недоступен, установите эквивалент **WebKitGTK 4.1** из репозитория дистрибутива.
-
-**OBS на Linux:** источник **Browser** и **Custom Browser Docks** есть не во всех сборках OBS из стандартных репозиториев. Для теста overlay и dock установите OBS из [официального PPA](https://obsproject.com/kb/linux-installation) (`ppa:obsproject/obs-studio`) или Flatpak с Flathub. На Wayland док-панели OBS могут быть недоступны — при необходимости войдите в сессию **X11**.
-
-#### macOS
-
-- **Go 1.26.3+** и **Xcode Command Line Tools** (`xcode-select --install`).
-- Сборка под текущую машину: `wails build` в `cmd/comm-relay-desktop`.
-- Универсальный бинарник (как в CI): `wails build -platform darwin/universal`.
-- Неподписанная локальная сборка может не открываться двойным кликом — **Open** из контекстного меню Finder или запуск из терминала.
-
-
-
-### Основные URL
-
-
-| URL                                    | Назначение                        |
-| -------------------------------------- | --------------------------------- |
-| `http://127.0.0.1:17877/`              | Админка                           |
-| `http://127.0.0.1:17877/dock/messages` | Журнал сообщений в интерфейсе OBS |
-| `http://127.0.0.1:17877/overlay`       | OBS Browser Source (чат)          |
-| `http://127.0.0.1:17877/overlay/leaderboard` | OBS Browser Source (лидерборд) |
-| `http://127.0.0.1:17877/overlay/alert` | OBS Browser Source (баннер команды; звук — **Control audio via OBS**) |
-| `http://127.0.0.1:17877/health`        | Health check                      |
-| `ws://127.0.0.1:17877/ws`              | WebSocket с сообщениями           |
-
-
-Структура проекта и правила для агентов: [AGENTS.md](AGENTS.md). Подробнее о продукте: [docs/concept.md](docs/concept.md).
-
-## Релизы
-
-Release workflow собирает desktop-архивы для Windows, macOS и Linux при публикации тега `v*.*.*`, а также доступен вручную через GitHub Actions.
-
-Перед релизом добавляйте пользовательские изменения в секцию `## [Unreleased]` в [CHANGELOG.md](CHANGELOG.md). При публикации workflow сам:
-
-1. проверит, что в `[Unreleased]` есть записи;
-2. перенесёт их в `## [X.Y.Z] - YYYY-MM-DD`;
-3. создаст пустую секцию `[Unreleased]` для следующего цикла;
-4. закоммитит обновлённый changelog в `main`;
-5. возьмёт текст GitHub Release из новой версионной секции.
-
-Пример:
-
-```bash
-git tag v0.1.2
-git push origin v0.1.2
-```
-
-Если секция для версии уже есть в `CHANGELOG.md`, workflow не дублирует её и только публикует релиз.
+- [Техническая документация для разработчиков](docs/development.md) — локальный запуск, проверки, Wails-сборка и release workflow.
+- [Концепция продукта](docs/concept.md) и [roadmap интерактивной системы](docs/roadmap.md).
+- [FAQ](docs/FAQ.md) — типичные проблемы с OBS, overlay и платформами.
 
 ## Поддержка и вопросы
 
