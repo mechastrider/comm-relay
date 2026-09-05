@@ -54,7 +54,7 @@
 
 ## Gate: review
 
-- [ ] R.1 Fresh diff review; CRITICAL=0; affected checks green.
+- [x] R.1 Fresh diff review; CRITICAL=0; affected checks green.
 
 ## Gate: distribution-readiness
 
