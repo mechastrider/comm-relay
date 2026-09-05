@@ -22,6 +22,7 @@ type Config struct {
 	ActivityXP              int           `json:"activity_xp"`
 	DayResetHour            int           `json:"day_reset_hour"`
 	HideCommandMessages     bool          `json:"hide_command_messages"`
+	CustomAvatarsEnabled    bool          `json:"custom_avatars_enabled"`
 	StreamerDisplayName     string        `json:"streamer_display_name"`
 	Network                 NetworkConfig `json:"network"`
 	Twitch                  TwitchConfig  `json:"twitch"`
@@ -89,6 +90,7 @@ func Default() *Config {
 		ActivitySessionLimit:    10,
 		ActivityXP:              1,
 		DayResetHour:            6,
+		CustomAvatarsEnabled:    true,
 		Twitch: TwitchConfig{
 			Enabled: false,
 			Channel: "",
@@ -187,6 +189,9 @@ func Load(path string) (*Config, error) {
 	if !overlayEmotesPresent(data) {
 		cfg.Overlay.Emotes = defaultEmotes()
 	}
+	if !customAvatarsEnabledPresent(data) {
+		cfg.CustomAvatarsEnabled = true
+	}
 
 	if err := cfg.Validate(); err != nil {
 		return nil, err
@@ -219,6 +224,16 @@ func activitySettingsPresent(data []byte) bool {
 	return doc.ActivityIntervalSeconds != nil ||
 		doc.ActivitySessionLimit != nil ||
 		doc.ActivityXP != nil
+}
+
+func customAvatarsEnabledPresent(data []byte) bool {
+	var doc struct {
+		CustomAvatarsEnabled *json.RawMessage `json:"custom_avatars_enabled"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.CustomAvatarsEnabled != nil
 }
 
 func overlayPresetsPresent(data []byte) bool {

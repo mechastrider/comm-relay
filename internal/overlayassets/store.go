@@ -114,6 +114,11 @@ func detectExtForKind(kind AssetKind, data []byte) (string, error) {
 			return "", err
 		}
 		return detectStaticImageExt(data)
+	case KindViewerAvatar:
+		if err := ValidateViewerAvatar(data); err != nil {
+			return "", err
+		}
+		return detectStaticImageExt(data)
 	case KindAlertSound:
 		if err := ValidateAlertSoundDuration(data); err != nil {
 			return "", err

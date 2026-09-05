@@ -12,8 +12,10 @@ import (
 )
 
 const (
-	maxAlertImagePixels   = 16_000_000
-	maxAlertImageLongSide = 4096
+	maxAlertImagePixels     = 16_000_000
+	maxAlertImageLongSide   = 4096
+	maxViewerAvatarPixels   = 1_048_576
+	maxViewerAvatarLongSide = 1024
 )
 
 var (
@@ -54,6 +56,43 @@ func ValidateAlertImage(data []byte) error {
 		return ErrImageDimensions
 	}
 	if width > maxAlertImageLongSide || height > maxAlertImageLongSide {
+		return ErrImageDimensions
+	}
+
+	return nil
+}
+
+// ValidateViewerAvatar inspects static PNG, JPEG, or WebP bytes for cached viewer portraits.
+func ValidateViewerAvatar(data []byte) error {
+	if len(data) >= 6 && (bytes.HasPrefix(data, []byte("GIF87a")) || bytes.HasPrefix(data, []byte("GIF89a"))) {
+		return ErrAnimatedImage
+	}
+	if isSVG(trimAssetPrefix(data)) {
+		return ErrUnsupportedType
+	}
+	if isAnimatedWebP(data) {
+		return ErrAnimatedImage
+	}
+
+	cfg, format, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil {
+		return errors.Errorf("decode viewer avatar config: %w", err)
+	}
+	switch format {
+	case "png", "jpeg", "webp":
+	default:
+		return ErrUnsupportedType
+	}
+
+	width := cfg.Width
+	height := cfg.Height
+	if width <= 0 || height <= 0 {
+		return ErrUnsupportedType
+	}
+	if int64(width)*int64(height) > maxViewerAvatarPixels {
+		return ErrImageDimensions
+	}
+	if width > maxViewerAvatarLongSide || height > maxViewerAvatarLongSide {
 		return ErrImageDimensions
 	}
 

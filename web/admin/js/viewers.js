@@ -2,6 +2,7 @@ import * as dom from "./dom.js";
 import { apiURL, readJSON, mapHTTPError } from "./api.js";
 import { showBanner } from "./ui-shell.js";
 import { t } from "./i18n-ui.js";
+import { initialsForName } from "/shared/chat-render.js?v=17";
 import { setRegionState } from "./shell-state.js";
 import { getLeaderboardPeriod, setLeaderboardPeriod } from "./live-leaderboard.js";
 import { setLiveTab } from "./live-tabs.js";
@@ -36,6 +37,7 @@ let listLoadError = false;
 let currentPeriod = "session";
 let focusReturnElement = null;
 let pendingMerge = null;
+let portraitUploadInFlight = false;
 let wideLayoutQuery = null;
 /** @type {import("./audience-helpers.js").AudienceSortState} */
 let audienceSort = { column: null, direction: "desc" };
@@ -89,6 +91,87 @@ function handleSortClick(column) {
 
 function escapeText(value) {
   return String(value == null ? "" : value);
+}
+
+function portraitInitials(displayName) {
+  return initialsForName(displayName || t("viewers.unnamed"));
+}
+
+function showPortraitInitials(host, initials, baseClass) {
+  const fallback = document.createElement("span");
+  fallback.className = baseClass + "__initials";
+  fallback.setAttribute("aria-hidden", "true");
+  fallback.textContent = initials;
+  host.append(fallback);
+}
+
+function createPortraitElement(avatarURL, displayName, baseClass) {
+  const host = document.createElement("span");
+  host.className = baseClass;
+  const initials = portraitInitials(displayName);
+  const url = String(avatarURL || "").trim();
+
+  if (url) {
+    const img = document.createElement("img");
+    img.className = baseClass + "__img";
+    img.src = url;
+    img.alt = "";
+    img.setAttribute("aria-hidden", "true");
+    img.referrerPolicy = "no-referrer";
+    img.addEventListener("error", function () {
+      img.remove();
+      if (!host.querySelector("." + baseClass + "__initials")) {
+        showPortraitInitials(host, initials, baseClass);
+      }
+    });
+    host.append(img);
+  } else {
+    showPortraitInitials(host, initials, baseClass);
+  }
+
+  return host;
+}
+
+function mapViewerAvatarUploadError(serverMessage) {
+  if (!serverMessage) {
+    return t("viewers.portraitUploadFailed");
+  }
+  const normalized = String(serverMessage).toLowerCase();
+  if (normalized === "file type is not allowed") {
+    return t("viewers.portraitTypeNotAllowed");
+  }
+  if (normalized === "file is too large" || normalized === "file is too large or invalid") {
+    return t("viewers.portraitTooLarge");
+  }
+  if (normalized === "viewer not found") {
+    return t("viewers.portraitViewerMissing");
+  }
+  return serverMessage;
+}
+
+async function uploadViewerPortrait(viewerId, file) {
+  const form = new FormData();
+  form.append("id", viewerId);
+  form.append("file", file);
+  return fetchJSON("/api/viewers/avatar/upload", {
+    method: "POST",
+    body: form,
+  });
+}
+
+async function clearViewerPortrait(viewerId) {
+  return fetchJSON("/api/viewers/avatar/clear", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: viewerId }),
+  });
+}
+
+async function refreshViewerAfterPortraitChange(viewerId) {
+  await loadViewersList(currentSearchQuery());
+  if (selectedViewerId === viewerId) {
+    await openViewerDetail(viewerId, focusReturnElement);
+  }
 }
 
 function formatPlatformLabel(platform) {
@@ -260,6 +343,14 @@ function renderViewersTable(viewers) {
     const nameInner = document.createElement("div");
     nameInner.className = "audience-viewers-table__name-inner";
 
+    nameInner.append(
+      createPortraitElement(
+        viewer.avatar_url,
+        displayName,
+        "audience-viewers-table__portrait"
+      )
+    );
+
     const nameButton = document.createElement("button");
     nameButton.type = "button";
     nameButton.className = "audience-viewers-table__name-button";
@@ -430,6 +521,99 @@ function renderViewerDetail(viewer) {
     surface.loading.hidden = true;
   }
 
+  const portraitSection = document.createElement("div");
+  portraitSection.className = "audience-detail__portrait-section";
+
+  const portrait = createPortraitElement(
+    viewer.avatar_url,
+    viewer.display_name || t("viewers.unnamed"),
+    "audience-detail__portrait"
+  );
+  portraitSection.append(portrait);
+
+  const portraitField = document.createElement("div");
+  portraitField.className = "form__field audience-detail__portrait-field";
+  const portraitLabel = document.createElement("label");
+  const portraitInputId = "viewer-portrait-file";
+  portraitLabel.setAttribute("for", portraitInputId);
+  portraitLabel.textContent = t("viewers.portraitUpload");
+  const portraitInput = document.createElement("input");
+  portraitInput.id = portraitInputId;
+  portraitInput.type = "file";
+  portraitInput.accept = "image/png,image/jpeg,image/webp";
+  portraitInput.className = "audience-detail__portrait-input";
+  const portraitError = document.createElement("p");
+  portraitError.className = "field-error";
+  portraitError.id = "viewer-portrait-error";
+  portraitError.setAttribute("role", "alert");
+  portraitError.hidden = true;
+  const portraitActions = document.createElement("div");
+  portraitActions.className = "audience-detail__portrait-actions";
+
+  if (viewer.custom_avatar) {
+    const clearButton = document.createElement("button");
+    clearButton.type = "button";
+    clearButton.className = "btn-physical btn-small";
+    clearButton.textContent = t("viewers.portraitClear");
+    clearButton.addEventListener("click", function () {
+      if (portraitUploadInFlight) {
+        return;
+      }
+      portraitUploadInFlight = true;
+      portraitError.hidden = true;
+      portraitInput.disabled = true;
+      clearButton.disabled = true;
+      clearViewerPortrait(viewer.id)
+        .then(function () {
+          return refreshViewerAfterPortraitChange(viewer.id);
+        })
+        .catch(function (err) {
+          const message =
+            err instanceof Error && err.message
+              ? mapViewerAvatarUploadError(err.message)
+              : t("viewers.portraitClearFailed");
+          portraitError.textContent = message;
+          portraitError.hidden = false;
+        })
+        .finally(function () {
+          portraitUploadInFlight = false;
+          portraitInput.disabled = false;
+          clearButton.disabled = false;
+        });
+    });
+    portraitActions.append(clearButton);
+  }
+
+  portraitInput.addEventListener("change", function () {
+    const file = portraitInput.files && portraitInput.files[0];
+    portraitInput.value = "";
+    if (!file || portraitUploadInFlight) {
+      return;
+    }
+    portraitUploadInFlight = true;
+    portraitError.hidden = true;
+    portraitInput.disabled = true;
+    uploadViewerPortrait(viewer.id, file)
+      .then(function () {
+        return refreshViewerAfterPortraitChange(viewer.id);
+      })
+      .catch(function (err) {
+        const message =
+          err instanceof Error && err.message
+            ? mapViewerAvatarUploadError(err.message)
+            : t("viewers.portraitUploadFailed");
+        portraitError.textContent = message;
+        portraitError.hidden = false;
+      })
+      .finally(function () {
+        portraitUploadInFlight = false;
+        portraitInput.disabled = false;
+      });
+  });
+
+  portraitField.append(portraitLabel, portraitInput, portraitError, portraitActions);
+  portraitSection.append(portraitField);
+
   const title = document.createElement("h3");
   title.className = "audience-detail__title";
   title.textContent = viewer.display_name || t("viewers.unnamed");
@@ -499,6 +683,29 @@ function renderViewerDetail(viewer) {
   });
   nameField.append(nameLabel, nameInput, nameError, saveNameButton);
 
+  const hideField = document.createElement("div");
+  hideField.className = "form__field audience-detail__hide-field";
+  const hideLabel = document.createElement("label");
+  const hideInputId = "viewer-leaderboard-hidden";
+  hideLabel.setAttribute("for", hideInputId);
+  const hideCheckbox = document.createElement("input");
+  hideCheckbox.id = hideInputId;
+  hideCheckbox.type = "checkbox";
+  hideCheckbox.checked = Boolean(viewer.leaderboard_hidden);
+  hideLabel.append(hideCheckbox, document.createTextNode(" " + t("viewers.leaderboardHide")));
+  hideCheckbox.addEventListener("change", function () {
+    const nextHidden = hideCheckbox.checked;
+    hideCheckbox.disabled = true;
+    updateViewerLeaderboardHidden(viewer.id, nextHidden)
+      .catch(function () {
+        hideCheckbox.checked = !nextHidden;
+      })
+      .finally(function () {
+        hideCheckbox.disabled = false;
+      });
+  });
+  hideField.append(hideLabel);
+
   const identitiesHeading = document.createElement("h4");
   identitiesHeading.className = "audience-detail__subheading";
   identitiesHeading.textContent = t("viewers.identities");
@@ -555,7 +762,7 @@ function renderViewerDetail(viewer) {
   });
   mergeField.append(mergeLabel, mergeSelect, mergeButton);
 
-  container.append(title, stats, nameField, identitiesHeading, identities, mergeField);
+  container.append(portraitSection, title, stats, nameField, hideField, identitiesHeading, identities, mergeField);
 }
 
 function openDetailShell() {
@@ -743,6 +950,17 @@ async function updateViewerDisplayName(id, displayName) {
     body: JSON.stringify({ id: id, display_name: String(displayName || "").trim() }),
   });
   showBanner("success", t("viewers.nameSaved"));
+  await loadViewersList(currentSearchQuery());
+  await openViewerDetail(id, focusReturnElement);
+}
+
+async function updateViewerLeaderboardHidden(id, hidden) {
+  await fetchJSON("/api/viewers/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: id, leaderboard_hidden: hidden }),
+  });
+  showBanner("success", t("viewers.leaderboardHideSaved"));
   await loadViewersList(currentSearchQuery());
   await openViewerDetail(id, focusReturnElement);
 }

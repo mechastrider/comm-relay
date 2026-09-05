@@ -12,20 +12,31 @@ import (
 // ApplyChat upserts the chat identity, increments message counters, and may grant activity XP.
 // Empty platform or user_id is ignored without error.
 func (s *Store) ApplyChat(identity ChatIdentity, activity ActivitySettings, dayResetHour int, now time.Time) error {
+	_, err := s.ApplyChatResult(identity, activity, dayResetHour, now)
+	return err
+}
+
+// ApplyChatResult is like ApplyChat and returns a replaced avatar cache filename when the remote URL rotated.
+func (s *Store) ApplyChatResult(
+	identity ChatIdentity,
+	activity ActivitySettings,
+	dayResetHour int,
+	now time.Time,
+) (string, error) {
 	if strings.TrimSpace(identity.UserID) == "" || strings.TrimSpace(identity.Platform) == "" {
-		return nil
+		return "", nil
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if err := s.ensureOpenSessionLocked(now); err != nil {
-		return errors.Errorf("ensure open session: %w", err)
+		return "", errors.Errorf("ensure open session: %w", err)
 	}
 
 	sessionID, err := s.openSessionLocked()
 	if err != nil {
-		return errors.Errorf("lookup open session: %w", err)
+		return "", errors.Errorf("lookup open session: %w", err)
 	}
 
 	dayKey := DayKey(now, dayResetHour)
@@ -33,15 +44,15 @@ func (s *Store) ApplyChat(identity ChatIdentity, activity ActivitySettings, dayR
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		return errors.Errorf("begin transaction: %w", err)
+		return "", errors.Errorf("begin transaction: %w", err)
 	}
 	defer func() {
 		_ = tx.Rollback()
 	}()
 
-	viewerID, err := s.upsertIdentityLocked(tx, identity, seenAt, now)
+	viewerID, replacedCache, err := s.upsertIdentityLocked(tx, identity, seenAt, now)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if _, err := tx.Exec(
@@ -52,24 +63,24 @@ func (s *Store) ApplyChat(identity ChatIdentity, activity ActivitySettings, dayR
 		seenAt,
 		viewerID,
 	); err != nil {
-		return errors.Errorf("increment viewer message count: %w", err)
+		return "", errors.Errorf("increment viewer message count: %w", err)
 	}
 
 	if err := s.incrementMessageCountsLocked(tx, viewerID, sessionID, dayKey); err != nil {
-		return err
+		return "", err
 	}
 
 	if activity.Enabled() {
 		if err := s.maybeGrantActivityLocked(tx, viewerID, sessionID, dayKey, activity, now); err != nil {
-			return err
+			return "", err
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.Errorf("commit chat ingest: %w", err)
+		return "", errors.Errorf("commit chat ingest: %w", err)
 	}
 
-	return nil
+	return replacedCache, nil
 }
 
 func (s *Store) maybeGrantActivityLocked(
@@ -147,32 +158,39 @@ func (s *Store) maybeGrantActivityLocked(
 	return nil
 }
 
-func (s *Store) upsertIdentityLocked(tx *sql.Tx, identity ChatIdentity, seenAt string, now time.Time) (string, error) {
+func (s *Store) upsertIdentityLocked(tx *sql.Tx, identity ChatIdentity, seenAt string, now time.Time) (string, string, error) {
 	var viewerID string
+	var storedAvatarURL, storedAvatarCache string
 	err := tx.QueryRow(
-		`SELECT viewer_id FROM viewer_identities WHERE platform = ? AND user_id = ?`,
+		`SELECT viewer_id, avatar_url, avatar_cache FROM viewer_identities WHERE platform = ? AND user_id = ?`,
 		identity.Platform,
 		identity.UserID,
-	).Scan(&viewerID)
+	).Scan(&viewerID, &storedAvatarURL, &storedAvatarCache)
 	if err == nil {
+		avatarURLToStore, avatarCacheToStore, replacedCache := mergeIdentityAvatarFields(
+			storedAvatarURL,
+			storedAvatarCache,
+			identity.AvatarURL,
+		)
 		if _, updateErr := tx.Exec(
 			`UPDATE viewer_identities
-			 SET username = ?, display_name = ?, avatar_url = ?, last_seen_at = ?
+			 SET username = ?, display_name = ?, avatar_url = ?, avatar_cache = ?, last_seen_at = ?
 			 WHERE platform = ? AND user_id = ?`,
 			identity.Username,
 			identity.DisplayName,
-			identity.AvatarURL,
+			avatarURLToStore,
+			avatarCacheToStore,
 			seenAt,
 			identity.Platform,
 			identity.UserID,
 		); updateErr != nil {
-			return "", errors.Errorf("update viewer identity: %w", updateErr)
+			return "", "", errors.Errorf("update viewer identity: %w", updateErr)
 		}
 
-		return viewerID, nil
+		return viewerID, replacedCache, nil
 	}
 	if !errors.Is(err, sql.ErrNoRows) {
-		return "", errors.Errorf("lookup viewer identity: %w", err)
+		return "", "", errors.Errorf("lookup viewer identity: %w", err)
 	}
 
 	viewerID = uuid.NewString()
@@ -184,7 +202,7 @@ func (s *Store) upsertIdentityLocked(tx *sql.Tx, identity ChatIdentity, seenAt s
 		seenAt,
 		createdAt,
 	); err != nil {
-		return "", errors.Errorf("insert viewer: %w", err)
+		return "", "", errors.Errorf("insert viewer: %w", err)
 	}
 
 	if _, err := tx.Exec(
@@ -198,10 +216,22 @@ func (s *Store) upsertIdentityLocked(tx *sql.Tx, identity ChatIdentity, seenAt s
 		identity.AvatarURL,
 		seenAt,
 	); err != nil {
-		return "", errors.Errorf("insert viewer identity: %w", err)
+		return "", "", errors.Errorf("insert viewer identity: %w", err)
 	}
 
-	return viewerID, nil
+	return viewerID, "", nil
+}
+
+func mergeIdentityAvatarFields(storedURL, storedCache, incomingURL string) (avatarURL string, avatarCache string, replacedCache string) {
+	incomingURL = strings.TrimSpace(incomingURL)
+	if incomingURL == "" {
+		return storedURL, storedCache, ""
+	}
+	if incomingURL != strings.TrimSpace(storedURL) {
+		replacedCache = strings.TrimSpace(storedCache)
+		return incomingURL, "", replacedCache
+	}
+	return incomingURL, storedCache, ""
 }
 
 func (s *Store) incrementMessageCountsLocked(tx *sql.Tx, viewerID, sessionID, dayKey string) error {

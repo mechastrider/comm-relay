@@ -14,11 +14,15 @@ The system SHALL accept `GET /ws` WebSocket upgrades from local OBS and admin or
 - **THEN** the upgrade succeeds and the client is registered on the hub
 
 ### Requirement: Chat events use a stable wire envelope
-Each ingested chat message SHALL be broadcast as JSON with `type` `"message"`, `platform`, `user` (display name if present, otherwise username), `message`, and optional `id`, `username`, `display_name`, `avatar_url`, `badges`, `fragments`, and RFC3339 `timestamp`.
+Each ingested chat message SHALL be broadcast as JSON with `type` `"message"`, `platform`, `user` (display name if present, otherwise username), `message`, and optional `id`, `username`, `display_name`, `avatar_url`, `badges`, `fragments`, and RFC3339 `timestamp`. When the connector omits `avatar_url` but the canonical viewer has a resolved portrait, the hub SHALL set `avatar_url` to that resolved URL before broadcast. Resolved URLs MAY be `/overlay/assets/{filename}` for cached or custom files.
 
 #### Scenario: Display name present
 - **WHEN** a chat event has both username `alice` and display name `Alice`
 - **THEN** the wire payload `user` is `Alice` and `username` is `alice`
+
+#### Scenario: Empty Twitch avatar filled from cache
+- **WHEN** a Twitch line has no connector avatar and the viewer already has a cached or custom portrait
+- **THEN** the `message` frame includes `avatar_url` pointing at that local asset
 
 ### Requirement: Overlay settings are pushed after config save
 After a successful config update, the hub SHALL broadcast `{ "type": "overlay_settings", "overlay": <overlay config> }` so connected overlays apply appearance without reload.
@@ -35,7 +39,7 @@ When a message is deleted, the hub SHALL broadcast `{ "type": "message_deleted",
 - **THEN** every WebSocket client receives `type` `message_deleted` with `platform` `twitch` and `id` `abc`
 
 ### Requirement: Leaderboard snapshots are broadcast as a generic event
-When viewer session, day, or all-time XP changes (including after merge, a new stream, an award, or an activity grant), the hub SHALL broadcast JSON with `type` `"leaderboard"`, `period` (`session`, `day`, or `all`), and `entries` as the ranking rows for that period (`rank`, `display_name`, optional `avatar_url`, `xp`, `message_count`). Entries MUST NOT include `score`. Chat overlay and dock clients that do not handle this type MUST continue to process `message` and `message_deleted` frames.
+When viewer session, day, or all-time XP changes (including after merge, a new stream, an award, an activity grant, a leaderboard-hidden toggle, a custom portrait change, or a rank-cap change that requires a refresh), the hub SHALL broadcast JSON with `type` `"leaderboard"`, `period` (`session`, `day`, or `all`), and `entries` as the ranking rows for that period (`rank`, `display_name`, optional resolved `avatar_url`, `xp`, `message_count`). Entries MUST NOT include `score`. Entries MUST omit leaderboard-hidden viewers and MUST contain at most the resolved `max_entries`. Chat overlay and dock clients that do not handle this type MUST continue to process `message` and `message_deleted` frames.
 
 #### Scenario: Score changes
 - **WHEN** an award or activity grant increases a viewer's session XP
@@ -56,6 +60,10 @@ When viewer session, day, or all-time XP changes (including after merge, a new s
 #### Scenario: Counted line without activity
 - **WHEN** a counted chat message increases `message_count` but not XP
 - **THEN** connected WebSocket clients still receive `type` `leaderboard` with updated `message_count` for that period
+
+#### Scenario: Hide from ranking
+- **WHEN** the operator hides a ranked viewer
+- **THEN** the next `leaderboard` frames omit that viewer and re-rank the remaining rows
 
 ### Requirement: Slow clients do not stall the hub
 Each client SHALL have a bounded outbound queue (64 frames). If that queue is full, the hub SHALL drop the current frame for that client and continue broadcasting to others.

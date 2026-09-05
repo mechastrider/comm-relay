@@ -94,7 +94,7 @@ test("leaderboard chips to panel clears the stored layout without losing opacity
     alerts: { panel_opacity: 0.4 },
   };
 
-  const next = withLeaderboardAppearance(initial, 14, 18, "panel");
+  const next = withLeaderboardAppearance(initial, 14, 18, "panel", "", 5);
 
   assert.deepEqual(next, {
     chat: { panel_opacity: 0.2 },
@@ -111,7 +111,7 @@ test("leaderboard custom font to inherited clears the stored font without losing
     alerts: { panel_opacity: 1 },
   };
 
-  const next = withLeaderboardAppearance(initial, 18, 18, "chips");
+  const next = withLeaderboardAppearance(initial, 18, 18, "chips", "", 5);
 
   assert.deepEqual(next, {
     chat: { panel_opacity: 0 },

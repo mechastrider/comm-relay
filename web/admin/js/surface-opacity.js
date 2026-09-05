@@ -95,7 +95,14 @@ export function withAlertsAppearance(surfaces, imageSizePct, fontSizePx, inherit
 
 // withLeaderboardAppearance stores only values that differ from leaderboard
 // inheritance/defaults while retaining opacity and other surface overrides.
-export function withLeaderboardAppearance(surfaces, fontSizePx, inheritedFontSizePx, layout) {
+export function withLeaderboardAppearance(
+  surfaces,
+  fontSizePx,
+  inheritedFontSizePx,
+  layout,
+  title,
+  maxEntries
+) {
   const current = surfaces && typeof surfaces === "object" ? surfaces : {};
   const next = {};
   Object.keys(current).forEach(function (key) {
@@ -116,6 +123,18 @@ export function withLeaderboardAppearance(surfaces, fontSizePx, inheritedFontSiz
     leaderboard.layout = "chips";
   } else {
     delete leaderboard.layout;
+  }
+  const trimmedTitle = String(title || "").trim();
+  if (trimmedTitle !== "") {
+    leaderboard.title = trimmedTitle;
+  } else {
+    delete leaderboard.title;
+  }
+  const parsedMax = Number.parseInt(String(maxEntries), 10);
+  if (Number.isFinite(parsedMax) && parsedMax !== 5) {
+    leaderboard.max_entries = parsedMax;
+  } else {
+    delete leaderboard.max_entries;
   }
   next.leaderboard = leaderboard;
   return next;

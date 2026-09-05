@@ -285,6 +285,28 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   min-width: 0;
 }
 
+.audience-viewers-table__portrait {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: var(--primitive-font-size-xs);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.audience-viewers-table__portrait__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .audience-viewers-table__name-button {
   flex: 1 1 auto;
   min-width: 0;
@@ -468,6 +490,49 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 .audience-inspector__loading {
   margin: var(--primitive-space-4);
   color: var(--muted);
+}
+
+.audience-detail__portrait-section {
+  display: grid;
+  gap: var(--primitive-space-3);
+  margin-bottom: var(--primitive-space-3);
+}
+
+.audience-detail__portrait {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: var(--primitive-font-size-xl);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.audience-detail__portrait__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.audience-detail__portrait-field {
+  display: grid;
+  gap: var(--primitive-space-2);
+}
+
+.audience-detail__portrait-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--primitive-space-2);
+}
+
+.audience-detail-sheet__body .audience-detail__portrait-section,
+.audience-inspector__body .audience-detail__portrait-section {
+  padding-bottom: var(--primitive-space-2);
 }
 
 .audience-detail__title {

@@ -32,6 +32,9 @@ func testViewerStore(t *testing.T) *store.Store {
 	path := filepath.Join(t.TempDir(), "comm-relay.db")
 	s, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, s.Close())
+	})
 
 	return s
 }
@@ -54,8 +57,10 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 	require.NoError(t, err)
 
 	history := NewMessageHistory(0)
+	history.SetViewerStore(viewerStore)
+	history.SetConfigStore(cfgStore)
 	publisher := NewLeaderboardPublisher(hub, viewerStore, cfgStore)
-	ingest := NewViewerIngest(viewerStore, cfgStore, publisher, matcher, hub)
+	ingest := NewViewerIngest(viewerStore, cfgStore, publisher, matcher, hub, nil)
 
 	var wg sync.WaitGroup
 	wg.Add(3)

@@ -521,6 +521,25 @@ func readWebSocketFrame(t *testing.T, conn *websocket.Conn) map[string]any {
 	return decodeFrame(t, payload)
 }
 
+func readWebSocketFrameSkippingLeaderboard(t *testing.T, conn *websocket.Conn) map[string]any {
+	t.Helper()
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		_ = conn.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
+		_, payload, err := conn.ReadMessage()
+		if err != nil {
+			continue
+		}
+		frame := decodeFrame(t, payload)
+		if frame["type"] == wireLeaderboardType {
+			continue
+		}
+		return frame
+	}
+	t.Fatal("timed out waiting for non-leaderboard frame")
+	return nil
+}
+
 func assertNoWebSocketFrame(t *testing.T, conn *websocket.Conn) {
 	t.Helper()
 	require.NoError(t, conn.SetReadDeadline(time.Now().Add(100*time.Millisecond)))

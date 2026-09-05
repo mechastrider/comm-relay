@@ -88,7 +88,7 @@ The config store SHALL validate and persist a requested `overlay.active_preset_i
 - **THEN** the mutation is rejected and the stored config remains unchanged
 
 ### Requirement: Overlay presets may store per-surface overrides
-Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_size_px` SHALL be an integer 12–48 when present. `surfaces.leaderboard.layout` SHALL be `panel` or `chips` when present. `surfaces.alerts.font_size_px` SHALL be an integer 12–48 when present. `surfaces.alerts.image_size_pct` SHALL be an integer 25–300 when present. Omitted leaderboard font SHALL inherit the preset `font_size_px`; omitted leaderboard layout SHALL default to `panel`; omitted alerts font SHALL inherit the preset `font_size_px`; omitted alerts image size SHALL default to 100. `surfaces.chat.panel_opacity`, `surfaces.leaderboard.panel_opacity`, and `surfaces.alerts.panel_opacity` SHALL each be a number from 0 through 1 when present. Omitted surface opacity SHALL normally inherit the preset shared `style.panel_opacity`. For a legacy `cockpit_panel`, `cockpit_popups`, or `g_rebels_popups` preset whose shared opacity is zero, omission SHALL instead preserve that theme's historical glass alpha; any explicit surface opacity, including zero, SHALL take precedence. Unknown surface keys MAY be ignored. Chat fields on the preset (`max_messages`, `message_ttl_seconds`, `font_size_px`, theme, style) SHALL remain the chat defaults. Page opacity MUST remain unsupported.
+Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_size_px` SHALL be an integer 12–48 when present. `surfaces.leaderboard.layout` SHALL be `panel` or `chips` when present. `surfaces.leaderboard.title` SHALL be a string of at most 64 Unicode code points when present; omitted or blank SHALL mean no on-stream heading. `surfaces.leaderboard.max_entries` SHALL be an integer 1–20 when present; omitted SHALL default to 5. `surfaces.alerts.font_size_px` SHALL be an integer 12–48 when present. `surfaces.alerts.image_size_pct` SHALL be an integer 25–300 when present. Omitted leaderboard font SHALL inherit the preset `font_size_px`; omitted leaderboard layout SHALL default to `panel`; omitted alerts font SHALL inherit the preset `font_size_px`; omitted alerts image size SHALL default to 100. `surfaces.chat.panel_opacity`, `surfaces.leaderboard.panel_opacity`, and `surfaces.alerts.panel_opacity` SHALL each be a number from 0 through 1 when present. Omitted surface opacity SHALL normally inherit the preset shared `style.panel_opacity`. For a legacy `cockpit_panel`, `cockpit_popups`, or `g_rebels_popups` preset whose shared opacity is zero, omission SHALL instead preserve that theme's historical glass alpha; any explicit surface opacity, including zero, SHALL take precedence. Unknown surface keys MAY be ignored. Chat fields on the preset (`max_messages`, `message_ttl_seconds`, `font_size_px`, theme, style) SHALL remain the chat defaults. Page opacity MUST remain unsupported.
 
 #### Scenario: Inherit font
 - **WHEN** a saved preset has `font_size_px` 18 and no `surfaces.leaderboard.font_size_px`
@@ -142,6 +142,22 @@ Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_
 - **WHEN** the operator explicitly stores chat opacity `0` in that cockpit preset
 - **THEN** chat chrome becomes transparent while the omitted leaderboard and alerts surfaces retain their historical glass alpha
 
+#### Scenario: Default rank cap
+- **WHEN** a preset omits `surfaces.leaderboard.max_entries`
+- **THEN** leaderboard snapshots and `/overlay/leaderboard` show at most 5 rows
+
+#### Scenario: Stored title
+- **WHEN** a preset stores `surfaces.leaderboard.title` `Топ эфира`
+- **THEN** public config preserves that string and the leaderboard overlay shows it as the heading
+
+#### Scenario: Invalid rank cap rejected
+- **WHEN** an update sets `surfaces.leaderboard.max_entries` to 0
+- **THEN** the save is rejected with a field error on that field
+
+#### Scenario: Overlong title rejected
+- **WHEN** an update sets `surfaces.leaderboard.title` longer than 64 code points
+- **THEN** the save is rejected with a field error on that field
+
 ### Requirement: hide_command_messages is a persisted operator flag
 `config.json` SHALL store `hide_command_messages` as a boolean, default false. Omitted keys on load SHALL default to false. Public `GET /api/config` SHALL include the flag. Invalid non-boolean values SHALL be rejected with a field error.
 
@@ -167,3 +183,18 @@ Each overlay preset MAY include a `surfaces` object. `surfaces.leaderboard.font_
 #### Scenario: Too long
 - **WHEN** an update sets `streamer_display_name` longer than 64 Unicode code points
 - **THEN** the save is rejected with a field error on `streamer_display_name`
+
+### Requirement: custom_avatars_enabled is a persisted operator flag
+`config.json` SHALL store `custom_avatars_enabled` as a boolean, default true. Omitted keys on load SHALL default to true. Public `GET /api/config` SHALL include the flag. Invalid non-boolean values SHALL be rejected with a field error. The field is installation-global; overlay presets MUST NOT override it.
+
+#### Scenario: First launch
+- **WHEN** a new config file is created
+- **THEN** `custom_avatars_enabled` is true
+
+#### Scenario: Legacy file
+- **WHEN** an existing config omits `custom_avatars_enabled`
+- **THEN** the store treats it as true without dropping other settings
+
+#### Scenario: Disable custom portraits
+- **WHEN** the operator saves `custom_avatars_enabled` false
+- **THEN** resolved portraits ignore stored custom files until the flag is enabled again

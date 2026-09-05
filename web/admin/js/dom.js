@@ -70,12 +70,18 @@ export const overlayPreviewOverflowPanel = document.getElementById("overlay-prev
 export const overlayChatFields = document.getElementById("overlay-chat-fields");
 export const overlayLeaderboardFields = document.getElementById("overlay-leaderboard-fields");
 export const overlayLeaderboardFontSize = document.getElementById("overlay-leaderboard-font-size");
+export const overlayLeaderboardTitle = document.getElementById("overlay-leaderboard-title");
+export const overlayLeaderboardMaxEntries = document.getElementById("overlay-leaderboard-max-entries");
+export const overlayLeaderboardTitleAll = document.getElementById("overlay-leaderboard-title-all");
+export const overlayLeaderboardMaxEntriesAll = document.getElementById("overlay-leaderboard-max-entries-all");
 export const overlayLeaderboardLayout = document.getElementById("overlay-leaderboard-layout");
 export const overlayLeaderboardPeriod = document.getElementById("overlay-leaderboard-period");
 export const overlayThemePicker = document.getElementById("overlay-theme-picker");
 export const overlayDurationChips = document.getElementById("overlay-duration-chips");
 export const studioEssentialFontChat = document.getElementById("studio-essential-font-chat");
 export const studioEssentialFontLeaderboard = document.getElementById("studio-essential-font-leaderboard");
+export const studioEssentialLeaderboardTitle = document.getElementById("studio-essential-leaderboard-title");
+export const studioEssentialLeaderboardMaxEntries = document.getElementById("studio-essential-leaderboard-max-entries");
 export const studioEssentialFontAlerts = document.getElementById("studio-essential-font-alerts");
 export const studioEssentialDuration = document.getElementById("studio-essential-duration");
 export const studioEssentialPeriod = document.getElementById("studio-essential-period");
@@ -321,6 +327,7 @@ export const activityIntervalSecondsInput = document.getElementById("activity-in
 export const activitySessionLimitInput = document.getElementById("activity-session-limit");
 export const activityXPInput = document.getElementById("activity-xp");
 export const hideCommandMessagesInput = document.getElementById("hide-command-messages");
+export const customAvatarsEnabledInput = document.getElementById("custom-avatars-enabled");
 export const streamerDisplayNameInput = document.getElementById("streamer-display-name");
 export const dayResetHourInput = document.getElementById("day-reset-hour");
 export const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
@@ -349,6 +356,8 @@ export const fieldErrors = {
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
     overlay_font_size_px: document.getElementById("overlay-font-size-error"),
     overlay_leaderboard_font_size_px: document.getElementById("overlay-leaderboard-font-size-error"),
+    overlay_leaderboard_title: document.getElementById("overlay-leaderboard-title-error"),
+    overlay_leaderboard_max_entries: document.getElementById("overlay-leaderboard-max-entries-error"),
     overlay_alerts_font_size_px: document.getElementById("overlay-alerts-font-size-error"),
     overlay_alerts_image_size_pct: document.getElementById("overlay-alerts-image-size-error"),
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity-error"),
@@ -379,6 +388,8 @@ export const fieldInputs = {
     overlay_message_ttl_seconds: overlayMessageTTL,
     overlay_font_size_px: overlayFontSize,
     overlay_leaderboard_font_size_px: overlayLeaderboardFontSize,
+    overlay_leaderboard_title: overlayLeaderboardTitle,
+    overlay_leaderboard_max_entries: overlayLeaderboardMaxEntries,
     overlay_alerts_font_size_px: overlayAlertsFontSize,
     overlay_alerts_image_size_pct: overlayAlertsImageSize,
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity"),

@@ -30,6 +30,14 @@ const (
 	OverlayLeaderboardLayoutChips = "chips"
 )
 
+// Leaderboard title and rank cap for overlay.presets[].surfaces.leaderboard.
+const (
+	OverlayLeaderboardTitleMaxRunes     = 64
+	OverlayLeaderboardMaxEntriesMin     = 1
+	OverlayLeaderboardMaxEntriesMax     = 20
+	OverlayLeaderboardMaxEntriesDefault = 5
+)
+
 // OverlayPreset is a named overlay look for a scene or game.
 type OverlayPreset struct {
 	ID                string                `json:"id"`
@@ -59,6 +67,8 @@ type OverlayChatSurface struct {
 type OverlayLeaderboardSurface struct {
 	FontSizePx   int      `json:"font_size_px,omitempty"`
 	Layout       string   `json:"layout,omitempty"`
+	Title        string   `json:"title,omitempty"`
+	MaxEntries   *int     `json:"max_entries,omitempty"`
 	PanelOpacity *float64 `json:"panel_opacity,omitempty"`
 }
 
@@ -167,6 +177,21 @@ func (s OverlayLeaderboardSurface) validateFields(prefix string) FieldErrors {
 	default:
 		fields[key("layout")] = "Choose panel or chips layout."
 	}
+	if len([]rune(s.Title)) > OverlayLeaderboardTitleMaxRunes {
+		fields[key("title")] = fmt.Sprintf(
+			"Title must be at most %d characters.",
+			OverlayLeaderboardTitleMaxRunes,
+		)
+	}
+	if s.MaxEntries != nil {
+		if *s.MaxEntries < OverlayLeaderboardMaxEntriesMin || *s.MaxEntries > OverlayLeaderboardMaxEntriesMax {
+			fields[key("max_entries")] = fmt.Sprintf(
+				"Max entries must be between %d and %d.",
+				OverlayLeaderboardMaxEntriesMin,
+				OverlayLeaderboardMaxEntriesMax,
+			)
+		}
+	}
 	mergeFieldErrors(fields, validateSurfacePanelOpacity(prefix, s.PanelOpacity))
 	return fields
 }
@@ -268,6 +293,26 @@ func (p OverlayPreset) LeaderboardLayout() string {
 		return OverlayLeaderboardLayoutChips
 	}
 	return OverlayLeaderboardLayoutPanel
+}
+
+// LeaderboardTitle returns the trimmed on-stream heading, or empty when unset.
+func (p OverlayPreset) LeaderboardTitle() string {
+	return strings.TrimSpace(p.Surfaces.Leaderboard.Title)
+}
+
+// LeaderboardMaxEntries returns the resolved rank cap (default 5).
+func (p OverlayPreset) LeaderboardMaxEntries() int {
+	if p.Surfaces.Leaderboard.MaxEntries == nil {
+		return OverlayLeaderboardMaxEntriesDefault
+	}
+	entriesCap := *p.Surfaces.Leaderboard.MaxEntries
+	if entriesCap < OverlayLeaderboardMaxEntriesMin {
+		return OverlayLeaderboardMaxEntriesMin
+	}
+	if entriesCap > OverlayLeaderboardMaxEntriesMax {
+		return OverlayLeaderboardMaxEntriesMax
+	}
+	return entriesCap
 }
 
 // EnsurePresets migrates legacy flat overlay fields into presets when presets are absent.

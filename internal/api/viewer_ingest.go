@@ -15,11 +15,18 @@ import (
 
 // ViewerIngest applies chat messages to the viewer store and schedules leaderboard updates.
 type ViewerIngest struct {
-	viewerStore *store.Store
-	cfgStore    *config.Store
-	publisher   *LeaderboardPublisher
-	matcher     *command.Matcher
-	hub         *Hub
+	viewerStore  *store.Store
+	cfgStore     *config.Store
+	publisher    *LeaderboardPublisher
+	matcher      *command.Matcher
+	hub          *Hub
+	avatarWorker AvatarCacheEnqueuer
+}
+
+// AvatarCacheEnqueuer schedules asynchronous portrait cache fetches.
+type AvatarCacheEnqueuer interface {
+	Enqueue(platform, userID string)
+	DeleteOrphanedCache(filename string)
 }
 
 func newViewerIngest(
@@ -28,13 +35,15 @@ func newViewerIngest(
 	publisher *LeaderboardPublisher,
 	matcher *command.Matcher,
 	hub *Hub,
+	avatarWorker AvatarCacheEnqueuer,
 ) *ViewerIngest {
 	return &ViewerIngest{
-		viewerStore: viewerStore,
-		cfgStore:    cfgStore,
-		publisher:   publisher,
-		matcher:     matcher,
-		hub:         hub,
+		viewerStore:  viewerStore,
+		cfgStore:     cfgStore,
+		publisher:    publisher,
+		matcher:      matcher,
+		hub:          hub,
+		avatarWorker: avatarWorker,
 	}
 }
 
@@ -87,7 +96,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		now = time.Now()
 	}
 
-	err := v.viewerStore.ApplyChat(store.ChatIdentity{
+	replacedCache, err := v.viewerStore.ApplyChatResult(store.ChatIdentity{
 		Platform:    msg.Platform,
 		UserID:      msg.UserID,
 		Username:    msg.Username,
@@ -97,6 +106,13 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	if err != nil {
 		clog.Errorf(ctx, "apply chat to viewer store: %w", err)
 		return
+	}
+
+	if v.avatarWorker != nil {
+		if replacedCache != "" {
+			v.avatarWorker.DeleteOrphanedCache(replacedCache)
+		}
+		v.avatarWorker.Enqueue(msg.Platform, msg.UserID)
 	}
 
 	if v.publisher != nil {
@@ -135,7 +151,8 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 			Points:   0,
 			Message:  msg.Message,
 		})
-		alertPayload, alertErr := alertWirePayload(matchedCmd, msg, text, 0)
+		alertMsg := fillChatMessageAvatar(v.viewerStore, v.cfgStore, msg)
+		alertPayload, alertErr := alertWirePayload(matchedCmd, alertMsg, text, 0)
 		if alertErr != nil {
 			clog.Errorf(ctx, "alert wire payload: %w", alertErr)
 			return
