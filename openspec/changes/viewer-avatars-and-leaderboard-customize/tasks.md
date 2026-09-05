@@ -50,7 +50,7 @@
 
 ## Gate: qa
 
-- [ ] Q.1 Execute `qa_plan.md`; record matrix coverage and evidence.
+- [x] Q.1 Execute `qa_plan.md`; record matrix coverage and evidence.
 
 ## Gate: review
 
@@ -58,7 +58,7 @@
 
 ## Gate: distribution-readiness
 
-- [ ] D.1 Validate package/update readiness without signing or publishing.
+- [x] D.1 Validate package/update readiness without signing or publishing.
 
 ## Verification
 
