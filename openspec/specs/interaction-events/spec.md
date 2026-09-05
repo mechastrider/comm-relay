@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Records command fires and operator awards as append-only events so later achievements can be computed retrospectively.
+Records command fires, operator awards, and silent activity XP grants as append-only events so later achievements can be computed retrospectively.
 
 ## Requirements
 
@@ -38,6 +38,17 @@ Interaction events SHALL remain durable in SQLite and MAY store a source message
 #### Scenario: Grant without message reference
 - **WHEN** a valid award is granted without a stable message id
 - **THEN** the durable award event is still appended with null source-message fields
+
+### Requirement: Successful activity grants are logged
+When an activity grant succeeds, the system SHALL append an event with kind `activity`, `points` equal to `activity_xp`, canonical `viewer_id` when known, and a timestamp. The event MUST NOT include chat text. Activity grants that are skipped because of interval, session limit, or disabled settings MUST NOT be logged.
+
+#### Scenario: First activity grant
+- **WHEN** a known identity receives their first activity XP of the session
+- **THEN** an interaction event exists with kind `activity` and `points` equal to the configured `activity_xp`
+
+#### Scenario: Interval skip
+- **WHEN** a counted line is ignored for activity because the interval has not elapsed
+- **THEN** no new `activity` interaction event is appended
 
 ### Requirement: Merge does not delete historical events
 When two viewers are merged, existing events SHALL keep their original `viewer_id` or SHALL be rewritten to the surviving viewer. Either behavior MUST be documented in design; silent deletion of events is forbidden.

@@ -35,15 +35,27 @@ When a message is deleted, the hub SHALL broadcast `{ "type": "message_deleted",
 - **THEN** every WebSocket client receives `type` `message_deleted` with `platform` `twitch` and `id` `abc`
 
 ### Requirement: Leaderboard snapshots are broadcast as a generic event
-When viewer session, day, or all-time scores change (including after merge or a new stream), the hub SHALL broadcast JSON with `type` `"leaderboard"`, `period` (`session`, `day`, or `all`), and `entries` as the ranking rows for that period (`rank`, `display_name`, optional `avatar_url`, `score`, `message_count`). Chat overlay and dock clients that do not handle this type MUST continue to process `message` and `message_deleted` frames.
+When viewer session, day, or all-time XP changes (including after merge, a new stream, an award, or an activity grant), the hub SHALL broadcast JSON with `type` `"leaderboard"`, `period` (`session`, `day`, or `all`), and `entries` as the ranking rows for that period (`rank`, `display_name`, optional `avatar_url`, `xp`, `message_count`). Entries MUST NOT include `score`. Chat overlay and dock clients that do not handle this type MUST continue to process `message` and `message_deleted` frames.
 
 #### Scenario: Score changes
-- **WHEN** a counted chat message increases a viewer's session score
-- **THEN** connected WebSocket clients receive `type` `leaderboard` with `period` `session` and updated `entries`
+- **WHEN** an award or activity grant increases a viewer's session XP
+- **THEN** connected WebSocket clients receive `type` `leaderboard` with `period` `session` and updated `entries` that include `xp`
 
 #### Scenario: Unknown type is ignored by chat overlay
 - **WHEN** the chat overlay receives a `leaderboard` frame
 - **THEN** it does not treat the frame as a chat message row
+
+#### Scenario: Award changes XP
+- **WHEN** an award increases a viewer's session XP
+- **THEN** connected WebSocket clients receive `type` `leaderboard` with `period` `session` and updated `entries` that include `xp`
+
+#### Scenario: Activity grant
+- **WHEN** a silent activity grant increases a viewer's session XP
+- **THEN** connected WebSocket clients receive a matching `session` leaderboard frame and MUST NOT receive an `alert` frame for that grant
+
+#### Scenario: Counted line without activity
+- **WHEN** a counted chat message increases `message_count` but not XP
+- **THEN** connected WebSocket clients still receive `type` `leaderboard` with updated `message_count` for that period
 
 ### Requirement: Slow clients do not stall the hub
 Each client SHALL have a bounded outbound queue (64 frames). If that queue is full, the hub SHALL drop the current frame for that client and continue broadcasting to others.

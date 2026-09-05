@@ -18,9 +18,6 @@ test("familiar contextual actions use accessible inline icon controls", function
     "refresh-viewers",
     "settings-diagnostics-refresh",
     "overlay-preview-replay",
-    "overlay-debug-replay",
-    "overlay-debug-stable-copy",
-    "overlay-debug-snapshot-copy",
     "overlay-preset-add",
     "overlay-preset-rename",
     "overlay-preset-duplicate",
@@ -68,8 +65,6 @@ test("shared action buttons use raised and pressed states without flattening ove
 
 test("primary, reset, and workflow-specific actions keep visible labels", function () {
   [
-    "overlay-debug-run",
-    "overlay-debug-reset",
     "new-stream-button",
     "studio-compact-publish",
   ].forEach(function (id) {

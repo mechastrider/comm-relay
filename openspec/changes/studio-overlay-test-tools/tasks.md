@@ -1,5 +1,7 @@
 # Implementation Slices
 
+> **Статус (2026-09-05):** UI Studio (кнопка «Test overlay», панель сценариев) **скрыт** — backend и `/overlay/test/*` остаются. Техдолг и доработка: [OQ-002](../../docs/open-questions.md#oq-002-тестовые-сценарии-overlay--изоляция-ui-и-эфирные-источники-2026-09-05), [CR-023](../../docs/tasks/CR-023-overlay-test-tools-rework.md).
+
 ## Backend: Isolated overlay test delivery
 
 > **Outcome**: Typed Studio scenarios reach only the process-global dedicated debug audience through production-shaped frames, with deterministic cancellation and no product-state mutation.

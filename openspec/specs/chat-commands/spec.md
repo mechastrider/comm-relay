@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Lets the operator define chat commands that the server matches on ingested lines and turns into on-stream alerts, without awarding score.
+Lets the operator define chat commands that the server matches on ingested lines and turns into on-stream alerts, without awarding XP.
 
 ## Requirements
 
@@ -94,11 +94,11 @@ Each command SHALL have a cooldown in seconds (≥ 0). After a successful fire f
 - **THEN** a second alert is enqueued
 
 ### Requirement: Commands never change score
-Firing a command MUST NOT increment or decrement `score`. `message_count` SHALL still increment for a matched line that has a stable identity, same as ordinary chat.
+Firing a command MUST NOT increment or decrement `xp`. `message_count` SHALL still increment for a matched line that has a stable identity, same as ordinary chat. That counted line MAY still be eligible for a silent activity grant under viewer-stats rules.
 
 #### Scenario: Gg from a known viewer
-- **WHEN** a counted identity fires `!gg`
-- **THEN** that viewer's `message_count` increases and `score` is unchanged by the command
+- **WHEN** a counted identity fires `!gg` after already receiving activity XP this interval
+- **THEN** that viewer's `message_count` increases and `xp` is unchanged by the command fire itself
 
 ### Requirement: Overlay can hide command lines globally
 `hide_command_messages` SHALL be a global operator setting (default false). The server SHALL mark matched command lines on the WebSocket `message` frame (field `is_command` true). When the setting is true, `/overlay` MUST NOT render those lines. Admin and dock MUST still show them. Changing the setting SHALL apply to new lines without requiring a process restart.
