@@ -9,10 +9,10 @@
 > **Allowed fallout**: tests, fixtures, worker wiring in bootstrap
 > **Blocked**: Helix, chat-command avatars, UI upload (slice 2)
 
-- [ ] 1.1 Map YouTube API `ProfileImageUrl` into unified `avatar_url`; keep empty when missing.
-- [ ] 1.2 Goose: `viewer_identities.avatar_cache`; store helpers to record filename and resolve portrait URL.
-- [ ] 1.3 Bounded HTTPS fetch worker (SSRF-safe, sniff PNG/JPEG/WebP, size cap); enqueue on identity URL change only.
-- [ ] 1.4 After ingest, fill empty chat `avatar_url` from resolve(cache, remote) before `/ws` and history; leaderboard entries use the same resolve.
+- [x] 1.1 Map YouTube API `ProfileImageUrl` into unified `avatar_url`; keep empty when missing.
+- [x] 1.2 Goose: `viewer_identities.avatar_cache`; store helpers to record filename and resolve portrait URL.
+- [x] 1.3 Bounded HTTPS fetch worker (SSRF-safe, sniff PNG/JPEG/WebP, size cap); enqueue on identity URL change only.
+- [x] 1.4 After ingest, fill empty chat `avatar_url` from resolve(cache, remote) before `/ws` and history; leaderboard entries use the same resolve.
 
 ## 2. Slice: Custom portraits and Audience faces
 
