@@ -89,8 +89,9 @@ func NewViewerIngest(
 	publisher *LeaderboardPublisher,
 	matcher *command.Matcher,
 	hub *Hub,
+	avatarWorker AvatarCacheEnqueuer,
 ) *ViewerIngest {
-	return newViewerIngest(viewerStore, cfgStore, publisher, matcher, hub)
+	return newViewerIngest(viewerStore, cfgStore, publisher, matcher, hub, avatarWorker)
 }
 
 // Schedule debounces leaderboard broadcasts.

@@ -16,11 +16,15 @@ const (
 	KindAlertImage AssetKind = "alert_image"
 	// KindAlertSound is an alert sound (MP3/WAV up to 5 MiB, 1–15 s).
 	KindAlertSound AssetKind = "alert_sound"
+	// KindViewerAvatar is a cached viewer portrait (PNG/JPEG/WebP up to 512 KiB).
+	KindViewerAvatar AssetKind = "viewer_avatar"
 )
 
 const (
 	// MaxPanelBytes is the maximum accepted panel image size.
 	MaxPanelBytes = 512 << 10
+	// MaxViewerAvatarBytes is the maximum accepted cached viewer portrait size.
+	MaxViewerAvatarBytes = 512 << 10
 	// MaxAlertImageBytes is the maximum accepted alert image size.
 	MaxAlertImageBytes = 4 << 20
 	// MaxAlertSoundBytes is the maximum accepted alert sound size.
@@ -41,6 +45,8 @@ func ParseKind(raw string) (AssetKind, error) {
 		return KindAlertImage, nil
 	case string(KindAlertSound):
 		return KindAlertSound, nil
+	case string(KindViewerAvatar):
+		return KindViewerAvatar, nil
 	default:
 		return "", ErrInvalidKind
 	}
@@ -52,6 +58,8 @@ func maxBytesForKind(kind AssetKind) int {
 		return MaxAlertImageBytes
 	case KindAlertSound:
 		return MaxAlertSoundBytes
+	case KindViewerAvatar:
+		return MaxViewerAvatarBytes
 	default:
 		return MaxPanelBytes
 	}

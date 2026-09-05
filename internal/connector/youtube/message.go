@@ -31,6 +31,7 @@ func MapLiveChatMessage(item *youtube.LiveChatMessage) bus.ChatMessage {
 	if item.AuthorDetails != nil {
 		userID = item.AuthorDetails.ChannelId
 		displayName = strings.TrimSpace(item.AuthorDetails.DisplayName)
+		avatarURL = strings.TrimSpace(item.AuthorDetails.ProfileImageUrl)
 	}
 
 	message := ""

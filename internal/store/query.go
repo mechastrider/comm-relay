@@ -94,12 +94,24 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 				ORDER BY vi.last_seen_at DESC
 				LIMIT 1
 			), '') AS last_seen_username,
-			COALESCE((
-				SELECT vi.avatar_url FROM viewer_identities vi
-				WHERE vi.viewer_id = v.id
-				ORDER BY vi.last_seen_at DESC
-				LIMIT 1
-			), '') AS last_seen_avatar_url
+			COALESCE(
+				NULLIF((
+					SELECT CASE
+						WHEN TRIM(vi.avatar_cache) != '' THEN '`+overlayAssetURLPrefix+`' || vi.avatar_cache
+						ELSE NULL
+					END
+					FROM viewer_identities vi
+					WHERE vi.viewer_id = v.id
+					ORDER BY vi.last_seen_at DESC
+					LIMIT 1
+				), ''),
+				COALESCE((
+					SELECT vi.avatar_url FROM viewer_identities vi
+					WHERE vi.viewer_id = v.id
+					ORDER BY vi.last_seen_at DESC
+					LIMIT 1
+				), '')
+			) AS last_seen_avatar_url
 		FROM viewers v
 		LEFT JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
 		LEFT JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?
@@ -210,7 +222,7 @@ func listSearchPattern(q string) string {
 
 func (s *Store) loadIdentitiesLocked(viewerID string) ([]Identity, error) {
 	rows, err := s.db.Query(`
-		SELECT platform, user_id, username, display_name, avatar_url, last_seen_at
+		SELECT platform, user_id, username, display_name, avatar_url, avatar_cache, last_seen_at
 		FROM viewer_identities
 		WHERE viewer_id = ?
 		ORDER BY platform, user_id`, viewerID)
@@ -223,12 +235,14 @@ func (s *Store) loadIdentitiesLocked(viewerID string) ([]Identity, error) {
 	for rows.Next() {
 		var identity Identity
 		var lastSeenRaw string
+		var remoteAvatarURL, avatarCache string
 		if err := rows.Scan(
 			&identity.Platform,
 			&identity.UserID,
 			&identity.Username,
 			&identity.DisplayName,
-			&identity.AvatarURL,
+			&remoteAvatarURL,
+			&avatarCache,
 			&lastSeenRaw,
 		); err != nil {
 			return nil, errors.Errorf("scan identity: %w", err)
@@ -239,6 +253,10 @@ func (s *Store) loadIdentitiesLocked(viewerID string) ([]Identity, error) {
 			return nil, err
 		}
 		identity.LastSeenAt = lastSeen
+		identity.AvatarURL = ResolvePortraitURL(PortraitFields{
+			AvatarCache: avatarCache,
+			RemoteURL:   remoteAvatarURL,
+		})
 		identities = append(identities, identity)
 	}
 	if err := rows.Err(); err != nil {

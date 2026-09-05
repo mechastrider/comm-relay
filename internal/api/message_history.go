@@ -6,15 +6,17 @@ import (
 	"time"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 const defaultRecentMessageCapacity = 100
 
 // MessageHistory keeps the most recent chat messages for admin and OBS dock clients.
 type MessageHistory struct {
-	mu       sync.RWMutex
-	messages []bus.ChatMessage
-	capacity int
+	mu          sync.RWMutex
+	messages    []bus.ChatMessage
+	capacity    int
+	viewerStore *store.Store
 }
 
 // NewMessageHistory creates a bounded in-memory message buffer.
@@ -27,6 +29,11 @@ func NewMessageHistory(capacity int) *MessageHistory {
 		messages: make([]bus.ChatMessage, 0, capacity),
 		capacity: capacity,
 	}
+}
+
+// SetViewerStore wires the viewer store used to resolve empty chat avatars.
+func (h *MessageHistory) SetViewerStore(viewerStore *store.Store) {
+	h.viewerStore = viewerStore
 }
 
 // Run subscribes to chat events until the context is cancelled.
@@ -51,6 +58,8 @@ func (h *MessageHistory) Run(ctx context.Context, b *bus.Bus) {
 }
 
 func (h *MessageHistory) append(msg bus.ChatMessage) {
+	msg = fillChatMessageAvatar(h.viewerStore, msg)
+
 	h.mu.Lock()
 	defer h.mu.Unlock()
 

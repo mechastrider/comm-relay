@@ -15,11 +15,17 @@ import (
 
 // ViewerIngest applies chat messages to the viewer store and schedules leaderboard updates.
 type ViewerIngest struct {
-	viewerStore *store.Store
-	cfgStore    *config.Store
-	publisher   *LeaderboardPublisher
-	matcher     *command.Matcher
-	hub         *Hub
+	viewerStore  *store.Store
+	cfgStore     *config.Store
+	publisher    *LeaderboardPublisher
+	matcher      *command.Matcher
+	hub          *Hub
+	avatarWorker AvatarCacheEnqueuer
+}
+
+// AvatarCacheEnqueuer schedules asynchronous portrait cache fetches.
+type AvatarCacheEnqueuer interface {
+	Enqueue(platform, userID string)
 }
 
 func newViewerIngest(
@@ -28,13 +34,15 @@ func newViewerIngest(
 	publisher *LeaderboardPublisher,
 	matcher *command.Matcher,
 	hub *Hub,
+	avatarWorker AvatarCacheEnqueuer,
 ) *ViewerIngest {
 	return &ViewerIngest{
-		viewerStore: viewerStore,
-		cfgStore:    cfgStore,
-		publisher:   publisher,
-		matcher:     matcher,
-		hub:         hub,
+		viewerStore:  viewerStore,
+		cfgStore:     cfgStore,
+		publisher:    publisher,
+		matcher:      matcher,
+		hub:          hub,
+		avatarWorker: avatarWorker,
 	}
 }
 
@@ -99,6 +107,10 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		return
 	}
 
+	if v.avatarWorker != nil {
+		v.avatarWorker.Enqueue(msg.Platform, msg.UserID)
+	}
+
 	if v.publisher != nil {
 		v.publisher.Schedule()
 	}
@@ -135,7 +147,8 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 			Points:   0,
 			Message:  msg.Message,
 		})
-		alertPayload, alertErr := alertWirePayload(matchedCmd, msg, text, 0)
+		alertMsg := fillChatMessageAvatar(v.viewerStore, msg)
+		alertPayload, alertErr := alertWirePayload(matchedCmd, alertMsg, text, 0)
 		if alertErr != nil {
 			clog.Errorf(ctx, "alert wire payload: %w", alertErr)
 			return

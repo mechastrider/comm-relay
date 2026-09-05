@@ -149,19 +149,26 @@ func (s *Store) maybeGrantActivityLocked(
 
 func (s *Store) upsertIdentityLocked(tx *sql.Tx, identity ChatIdentity, seenAt string, now time.Time) (string, error) {
 	var viewerID string
+	var storedAvatarURL, storedAvatarCache string
 	err := tx.QueryRow(
-		`SELECT viewer_id FROM viewer_identities WHERE platform = ? AND user_id = ?`,
+		`SELECT viewer_id, avatar_url, avatar_cache FROM viewer_identities WHERE platform = ? AND user_id = ?`,
 		identity.Platform,
 		identity.UserID,
-	).Scan(&viewerID)
+	).Scan(&viewerID, &storedAvatarURL, &storedAvatarCache)
 	if err == nil {
+		avatarURLToStore, avatarCacheToStore := mergeIdentityAvatarFields(
+			storedAvatarURL,
+			storedAvatarCache,
+			identity.AvatarURL,
+		)
 		if _, updateErr := tx.Exec(
 			`UPDATE viewer_identities
-			 SET username = ?, display_name = ?, avatar_url = ?, last_seen_at = ?
+			 SET username = ?, display_name = ?, avatar_url = ?, avatar_cache = ?, last_seen_at = ?
 			 WHERE platform = ? AND user_id = ?`,
 			identity.Username,
 			identity.DisplayName,
-			identity.AvatarURL,
+			avatarURLToStore,
+			avatarCacheToStore,
 			seenAt,
 			identity.Platform,
 			identity.UserID,
@@ -202,6 +209,17 @@ func (s *Store) upsertIdentityLocked(tx *sql.Tx, identity ChatIdentity, seenAt s
 	}
 
 	return viewerID, nil
+}
+
+func mergeIdentityAvatarFields(storedURL, storedCache, incomingURL string) (avatarURL string, avatarCache string) {
+	incomingURL = strings.TrimSpace(incomingURL)
+	if incomingURL == "" {
+		return storedURL, storedCache
+	}
+	if incomingURL != strings.TrimSpace(storedURL) {
+		return incomingURL, ""
+	}
+	return incomingURL, storedCache
 }
 
 func (s *Store) incrementMessageCountsLocked(tx *sql.Tx, viewerID, sessionID, dayKey string) error {
