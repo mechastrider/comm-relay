@@ -23,9 +23,9 @@
 > **Allowed fallout**: list JSON `avatar_url` / `custom_avatar`, changelog later in docs slice
 > **Blocked**: leaderboard title/cap/hide (slice 3)
 
-- [ ] 2.1 `kind` `viewer_avatar` (512 KiB, 1024 px, no SVG/GIF); `POST /api/viewers/avatar/upload` and `/clear`; `viewers.custom_avatar`; resolve custom-over-cache when `custom_avatars_enabled`.
-- [ ] 2.2 Config `custom_avatars_enabled` default true; Settings checkbox; public GET includes the flag.
-- [ ] 2.3 Audience table portraits + card upload/clear; decorative images; constrained sheet layout; i18n keys.
+- [x] 2.1 `kind` `viewer_avatar` (512 KiB, 1024 px, no SVG/GIF); `POST /api/viewers/avatar/upload` and `/clear`; `viewers.custom_avatar`; resolve custom-over-cache when `custom_avatars_enabled`.
+- [x] 2.2 Config `custom_avatars_enabled` default true; Settings checkbox; public GET includes the flag.
+- [x] 2.3 Audience table portraits + card upload/clear; decorative images; constrained sheet layout; i18n keys.
 
 ## 3. Slice: Leaderboard title, rank cap, and hide
 
@@ -36,9 +36,9 @@
 > **Allowed fallout**: overlay_settings / leaderboard flush on hide and cap change
 > **Blocked**: show/hide automation modes, dock control panel
 
-- [ ] 3.1 `surfaces.leaderboard.title` (≤64) and `max_entries` (1–20, default 5); URL `limit` override; replace hard-coded 20.
-- [ ] 3.2 `viewers.leaderboard_hidden`; update API; leaderboard SQL omits and re-ranks; Audience card checkbox.
-- [ ] 3.3 Overlay heading (blank = none); Studio fields; Live leaderboard uses the same snapshot.
+- [x] 3.1 `surfaces.leaderboard.title` (≤64) and `max_entries` (1–20, default 5); URL `limit` override; replace hard-coded 20.
+- [x] 3.2 `viewers.leaderboard_hidden`; update API; leaderboard SQL omits and re-ranks; Audience card checkbox.
+- [x] 3.3 Overlay heading (blank = none); Studio fields; Live leaderboard uses the same snapshot.
 
 ## 4. Docs
 
@@ -46,7 +46,7 @@
 > **Skills**: `changelog`
 > **Blocked**: README unless install/setup steps actually change
 
-- [ ] 4.1 Russian `[Unreleased]` bullets: Audience faces, custom portrait + disable, cache, leaderboard title, default top-5, hide from ranking, Twitch-only limitation if needed.
+- [x] 4.1 Russian `[Unreleased]` bullets: Audience faces, custom portrait + disable, cache, leaderboard title, default top-5, hide from ranking, Twitch-only limitation if needed.
 
 ## Gate: qa
 
