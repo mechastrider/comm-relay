@@ -258,9 +258,19 @@ export function applyConfig(config) {
     if (dom.timeLocaleInput) {
       dom.timeLocaleInput.value = localeFromConfig(config);
     }
-    if (dom.pointsPerMessageInput) {
-      dom.pointsPerMessageInput.value = String(
-        typeof config.points_per_message === "number" ? config.points_per_message : 1
+    if (dom.activityIntervalSecondsInput) {
+      dom.activityIntervalSecondsInput.value = String(
+        typeof config.activity_interval_seconds === "number" ? config.activity_interval_seconds : 300
+      );
+    }
+    if (dom.activitySessionLimitInput) {
+      dom.activitySessionLimitInput.value = String(
+        typeof config.activity_session_limit === "number" ? config.activity_session_limit : 10
+      );
+    }
+    if (dom.activityXPInput) {
+      dom.activityXPInput.value = String(
+        typeof config.activity_xp === "number" ? config.activity_xp : 1
       );
     }
     if (dom.dayResetHourInput) {
@@ -270,6 +280,9 @@ export function applyConfig(config) {
     }
     if (dom.hideCommandMessagesInput) {
       dom.hideCommandMessagesInput.checked = Boolean(config.hide_command_messages);
+    }
+    if (dom.streamerDisplayNameInput) {
+      dom.streamerDisplayNameInput.value = String(config.streamer_display_name || "");
     }
     const nextLocale = localeFromConfig(config);
     if (previousLocale !== nextLocale && state.recentMessageCache.length > 0) {
@@ -290,15 +303,22 @@ export function buildPayload() {
         : state.currentConfig
           ? state.currentConfig.server_port
           : 17877,
-      points_per_message: dom.pointsPerMessageInput
-        ? Number.parseInt(dom.pointsPerMessageInput.value, 10)
-        : 1,
+      activity_interval_seconds: dom.activityIntervalSecondsInput
+        ? Number.parseInt(dom.activityIntervalSecondsInput.value, 10)
+        : 300,
+      activity_session_limit: dom.activitySessionLimitInput
+        ? Number.parseInt(dom.activitySessionLimitInput.value, 10)
+        : 10,
+      activity_xp: dom.activityXPInput ? Number.parseInt(dom.activityXPInput.value, 10) : 1,
       day_reset_hour: dom.dayResetHourInput
         ? Number.parseInt(dom.dayResetHourInput.value, 10)
         : 6,
       hide_command_messages: dom.hideCommandMessagesInput
         ? dom.hideCommandMessagesInput.checked
         : false,
+      streamer_display_name: dom.streamerDisplayNameInput
+        ? dom.streamerDisplayNameInput.value.trim()
+        : "",
       network: {
         socks5: {
           address: dom.networkSocks5Address ? dom.networkSocks5Address.value.trim() : "",
@@ -358,9 +378,12 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
     const socks5 = network.socks5 || {};
     return {
       server_port: latest.server_port,
-      points_per_message: latest.points_per_message,
+      activity_interval_seconds: latest.activity_interval_seconds,
+      activity_session_limit: latest.activity_session_limit,
+      activity_xp: latest.activity_xp,
       day_reset_hour: latest.day_reset_hour,
       hide_command_messages: Boolean(latest.hide_command_messages),
+      streamer_display_name: String(latest.streamer_display_name || "").trim(),
       network: {
         socks5: {
           address: socks5.address || "",
@@ -491,6 +514,42 @@ export function validateClient(payload, options) {
       return false;
     });
 
+    (payload.overlay.presets || []).some(function (preset) {
+      const alerts = preset && preset.surfaces && preset.surfaces.alerts;
+      const font = alerts && alerts.font_size_px;
+      if (
+        font != null &&
+        font !== 0 &&
+        (!Number.isFinite(font) || font < OVERLAY_FONT_SIZE_MIN || font > OVERLAY_FONT_SIZE_MAX)
+      ) {
+        setFieldError(
+          "overlay_alerts_font_size_px",
+          "Font size must be between " + OVERLAY_FONT_SIZE_MIN + " and " + OVERLAY_FONT_SIZE_MAX + " px."
+        );
+        firstInvalid = firstInvalid || dom.overlayAlertsFontSize;
+        return true;
+      }
+      return false;
+    });
+
+    (payload.overlay.presets || []).some(function (preset) {
+      const alerts = preset && preset.surfaces && preset.surfaces.alerts;
+      const size = alerts && alerts.image_size_pct;
+      if (
+        size != null &&
+        size !== 0 &&
+        (!Number.isFinite(size) || size < 25 || size > 300)
+      ) {
+        setFieldError(
+          "overlay_alerts_image_size_pct",
+          "Image size must be between 25% and 300%."
+        );
+        firstInvalid = firstInvalid || dom.overlayAlertsImageSize;
+        return true;
+      }
+      return false;
+    });
+
     if (
       payload.overlay.display_mode !== "normal" &&
       payload.overlay.display_mode !== "compact"
@@ -574,11 +633,22 @@ export function validateClient(payload, options) {
     }
 
     if (
-      !Number.isFinite(payload.points_per_message) ||
-      payload.points_per_message < 0
+      !Number.isFinite(payload.activity_interval_seconds) ||
+      payload.activity_interval_seconds < 0
     ) {
-      setFieldError("points_per_message", "Points per message must be 0 or greater.");
-      firstInvalid = firstInvalid || dom.pointsPerMessageInput;
+      setFieldError("activity_interval_seconds", "Activity interval must be 0 or greater.");
+      firstInvalid = firstInvalid || dom.activityIntervalSecondsInput;
+    }
+    if (
+      !Number.isFinite(payload.activity_session_limit) ||
+      payload.activity_session_limit < 0
+    ) {
+      setFieldError("activity_session_limit", "Activity session limit must be 0 or greater.");
+      firstInvalid = firstInvalid || dom.activitySessionLimitInput;
+    }
+    if (!Number.isFinite(payload.activity_xp) || payload.activity_xp < 0) {
+      setFieldError("activity_xp", "Activity XP must be 0 or greater.");
+      firstInvalid = firstInvalid || dom.activityXPInput;
     }
 
     if (
@@ -588,6 +658,15 @@ export function validateClient(payload, options) {
     ) {
       setFieldError("day_reset_hour", "Day reset hour must be between 0 and 23.");
       firstInvalid = firstInvalid || dom.dayResetHourInput;
+    }
+
+    const streamerName = String(payload.streamer_display_name || "");
+    if (Array.from(streamerName).length > 64) {
+      setFieldError(
+        "streamer_display_name",
+        "Streamer display name must be at most 64 characters."
+      );
+      firstInvalid = firstInvalid || dom.streamerDisplayNameInput;
     }
 
     if (firstInvalid) {

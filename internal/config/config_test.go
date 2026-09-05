@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/muonsoft/errors"
@@ -210,7 +211,9 @@ func TestLoad_WhenLegacyWithoutStatsFields_ExpectDefaults(t *testing.T) {
 	cfg, err := Load(path)
 	require.NoError(t, err)
 	require.Equal(t, 19000, cfg.ServerPort)
-	require.Equal(t, 1, cfg.PointsPerMessage)
+	require.Equal(t, 300, cfg.ActivityIntervalSeconds)
+	require.Equal(t, 10, cfg.ActivitySessionLimit)
+	require.Equal(t, 1, cfg.ActivityXP)
 	require.Equal(t, 6, cfg.DayResetHour)
 	require.True(t, cfg.Twitch.Enabled)
 	require.Equal(t, "streamer", cfg.Twitch.Channel)
@@ -229,16 +232,16 @@ func TestValidate_WhenDayResetHourOutOfRange_ExpectFieldError(t *testing.T) {
 	require.Contains(t, fields, "day_reset_hour")
 }
 
-func TestValidate_WhenNegativePointsPerMessage_ExpectFieldError(t *testing.T) {
+func TestValidate_WhenNegativeActivityXP_ExpectFieldError(t *testing.T) {
 	t.Parallel()
 
 	cfg := Default()
-	cfg.PointsPerMessage = -1
+	cfg.ActivityXP = -1
 
 	err := cfg.Validate()
 	require.Error(t, err)
 	fields := ValidationFields(err)
-	require.Contains(t, fields, "points_per_message")
+	require.Contains(t, fields, "activity_xp")
 }
 
 func TestValidate_WhenDayResetHourZero_ExpectValid(t *testing.T) {
@@ -248,4 +251,33 @@ func TestValidate_WhenDayResetHourZero_ExpectValid(t *testing.T) {
 	cfg.DayResetHour = 0
 
 	require.NoError(t, cfg.Validate())
+}
+
+func TestValidate_WhenStreamerDisplayNameOverlong_ExpectFieldError(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.StreamerDisplayName = strings.Repeat("a", 65)
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	fields := ValidationFields(err)
+	require.Contains(t, fields, "streamer_display_name")
+}
+
+func TestApplyDefaults_WhenStreamerDisplayNameHasWhitespace_ExpectTrimmed(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.StreamerDisplayName = "  Jake  "
+	cfg.ApplyDefaults()
+
+	require.Equal(t, "Jake", cfg.StreamerDisplayName)
+}
+
+func TestPublic_WhenStreamerDisplayNameDefault_ExpectEmptyString(t *testing.T) {
+	t.Parallel()
+
+	public := Default().Public()
+	require.Equal(t, "", public.StreamerDisplayName)
 }

@@ -128,9 +128,14 @@ export function extractSectionValuesFromConfig(config, sectionId) {
       };
     case "data":
       return {
-        points_per_message: typeof cfg.points_per_message === "number" ? cfg.points_per_message : 1,
+        activity_interval_seconds:
+          typeof cfg.activity_interval_seconds === "number" ? cfg.activity_interval_seconds : 300,
+        activity_session_limit:
+          typeof cfg.activity_session_limit === "number" ? cfg.activity_session_limit : 10,
+        activity_xp: typeof cfg.activity_xp === "number" ? cfg.activity_xp : 1,
         day_reset_hour: typeof cfg.day_reset_hour === "number" ? cfg.day_reset_hour : 6,
         hide_command_messages: Boolean(cfg.hide_command_messages),
+        streamer_display_name: String(cfg.streamer_display_name || "").trim(),
       };
     case "application": {
       const messageSound = asObject(admin.message_sound);
@@ -229,9 +234,12 @@ export function normalizeSectionValues(sectionId, values) {
 
   if (sectionId === "data") {
     return {
-      points_per_message: Number.parseInt(String(raw.points_per_message), 10),
+      activity_interval_seconds: Number.parseInt(String(raw.activity_interval_seconds), 10),
+      activity_session_limit: Number.parseInt(String(raw.activity_session_limit), 10),
+      activity_xp: Number.parseInt(String(raw.activity_xp), 10),
       day_reset_hour: Number.parseInt(String(raw.day_reset_hour), 10),
       hide_command_messages: Boolean(raw.hide_command_messages),
+      streamer_display_name: String(raw.streamer_display_name || "").trim(),
     };
   }
 
@@ -322,9 +330,12 @@ export function applySectionToConfig(basePayload, sectionId, sectionValues) {
 
   if (sectionId === "data") {
     const data = /** @type {ReturnType<typeof normalizeSectionValues>} */ (values);
-    next.points_per_message = data.points_per_message;
+    next.activity_interval_seconds = data.activity_interval_seconds;
+    next.activity_session_limit = data.activity_session_limit;
+    next.activity_xp = data.activity_xp;
     next.day_reset_hour = data.day_reset_hour;
     next.hide_command_messages = data.hide_command_messages;
+    next.streamer_display_name = data.streamer_display_name;
     return next;
   }
 

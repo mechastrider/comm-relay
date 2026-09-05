@@ -5,6 +5,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/muonsoft/errors"
 )
@@ -25,14 +26,27 @@ func ValidationFields(err error) FieldErrors {
 	return nil
 }
 
+const maxStreamerDisplayNameCodePoints = 64
+
 func (c *Config) validateFields() error {
 	fields := FieldErrors{}
+
+	c.StreamerDisplayName = strings.TrimSpace(c.StreamerDisplayName)
+	if utf8.RuneCountInString(c.StreamerDisplayName) > maxStreamerDisplayNameCodePoints {
+		fields["streamer_display_name"] = "Streamer display name must be at most 64 characters."
+	}
 
 	if c.ServerPort < 1 || c.ServerPort > 65535 {
 		fields["server_port"] = "Port must be between 1 and 65535."
 	}
-	if c.PointsPerMessage < 0 {
-		fields["points_per_message"] = "Points per message must be 0 or greater."
+	if c.ActivityIntervalSeconds < 0 {
+		fields["activity_interval_seconds"] = "Activity interval must be 0 or greater."
+	}
+	if c.ActivitySessionLimit < 0 {
+		fields["activity_session_limit"] = "Activity session limit must be 0 or greater."
+	}
+	if c.ActivityXP < 0 {
+		fields["activity_xp"] = "Activity XP must be 0 or greater."
 	}
 	if c.DayResetHour < 0 || c.DayResetHour > 23 {
 		fields["day_reset_hour"] = "Day reset hour must be between 0 and 23."

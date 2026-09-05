@@ -36,21 +36,21 @@ const populatedViewers = {
     {
       id: "v1",
       display_name: "Alpha",
-      session_score: 40,
+      session_xp: 40,
       session_message_count: 8,
-      day_score: 12,
+      day_xp: 12,
       day_message_count: 3,
-      score: 100,
+      xp: 100,
       message_count: 20,
     },
     {
       id: "v2",
       display_name: "Beta",
-      session_score: 25,
+      session_xp: 25,
       session_message_count: 5,
-      day_score: 25,
+      day_xp: 25,
       day_message_count: 5,
-      score: 80,
+      xp: 80,
       message_count: 16,
     },
   ],
@@ -59,8 +59,8 @@ const populatedViewers = {
 const populatedLeaderboard = {
   period: "session",
   entries: [
-    { rank: 1, display_name: "Alpha", score: 40, message_count: 8 },
-    { rank: 2, display_name: "Beta", score: 25, message_count: 5 },
+    { rank: 1, display_name: "Alpha", xp: 40, message_count: 8 },
+    { rank: 2, display_name: "Beta", xp: 25, message_count: 5 },
   ],
 };
 
@@ -77,9 +77,9 @@ assert.equal(populated.partialData, false);
 const tiedLeaderboard = {
   period: "session",
   entries: [
-    { rank: 1, display_name: "Alpha", score: 40, message_count: 8 },
-    { rank: 1, display_name: "Gamma", score: 40, message_count: 6 },
-    { rank: 3, display_name: "Beta", score: 25, message_count: 5 },
+    { rank: 1, display_name: "Alpha", xp: 40, message_count: 8 },
+    { rank: 1, display_name: "Gamma", xp: 40, message_count: 6 },
+    { rank: 3, display_name: "Beta", xp: 25, message_count: 5 },
   ],
 };
 const tied = summarizeLiveStatistics(populatedViewers, tiedLeaderboard);
@@ -89,7 +89,7 @@ assert.equal(tied.tiedTopCount, 2);
 const partialDay = summarizeLiveStatistics(
   {
     viewers: [
-      { id: "v1", display_name: "Solo", session_score: 5, session_message_count: 1 },
+      { id: "v1", display_name: "Solo", session_xp: 5, session_message_count: 1 },
     ],
   },
   { period: "day", entries: [] },
@@ -108,9 +108,9 @@ const staleSession = summarizeLiveStatistics(
         id: "v1",
         display_name: "Old",
         session_message_count: 0,
-        session_score: 0,
+        session_xp: 0,
         message_count: 20,
-        score: 100,
+        xp: 100,
       },
     ],
   },

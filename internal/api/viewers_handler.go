@@ -47,11 +47,11 @@ type viewerSummaryResponse struct {
 	ID                  string                   `json:"id"`
 	DisplayName         string                   `json:"display_name"`
 	MessageCount        int                      `json:"message_count"`
-	Score               int                      `json:"score"`
+	XP                  int                      `json:"xp"`
 	SessionMessageCount int                      `json:"session_message_count"`
-	SessionScore        int                      `json:"session_score"`
+	SessionXP           int                      `json:"session_xp"`
 	DayMessageCount     int                      `json:"day_message_count"`
-	DayScore            int                      `json:"day_score"`
+	DayXP               int                      `json:"day_xp"`
 	LastSeenAt          string                   `json:"last_seen_at"`
 	LastSeen            lastSeenResponse         `json:"last_seen"`
 	Platforms           []string                 `json:"platforms"`
@@ -72,11 +72,11 @@ func viewerSummaryFromStore(viewer store.Viewer, includeIdentities bool) viewerS
 		ID:                  viewer.ID,
 		DisplayName:         viewer.DisplayName,
 		MessageCount:        viewer.MessageCount,
-		Score:               viewer.Score,
+		XP:                  viewer.XP,
 		SessionMessageCount: viewer.SessionMessageCount,
-		SessionScore:        viewer.SessionScore,
+		SessionXP:           viewer.SessionXP,
 		DayMessageCount:     viewer.DayMessageCount,
-		DayScore:            viewer.DayScore,
+		DayXP:               viewer.DayXP,
 		LastSeenAt:          viewer.LastSeenAt.UTC().Format(time.RFC3339),
 		LastSeen: lastSeenResponse{
 			Platform:  viewer.LastSeen.Platform,
@@ -272,7 +272,7 @@ type leaderboardEntryResponse struct {
 	Rank         int    `json:"rank"`
 	DisplayName  string `json:"display_name"`
 	AvatarURL    string `json:"avatar_url,omitempty"`
-	Score        int    `json:"score"`
+	XP           int    `json:"xp"`
 	MessageCount int    `json:"message_count"`
 }
 
@@ -303,7 +303,7 @@ func (h *viewersHandler) handleLeaderboard(w http.ResponseWriter, r *http.Reques
 			Rank:         entry.Rank,
 			DisplayName:  entry.DisplayName,
 			AvatarURL:    entry.AvatarURL,
-			Score:        entry.Score,
+			XP:           entry.XP,
 			MessageCount: entry.MessageCount,
 		})
 	}

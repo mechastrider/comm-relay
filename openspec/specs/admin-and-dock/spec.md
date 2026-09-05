@@ -7,7 +7,7 @@ Gives the streamer a local admin console to connect platforms and style OBS, plu
 ## Requirements
 
 ### Requirement: Admin console manages live operation, audience, OBS setup, and settings
-The admin page at `/` SHALL provide persistent workspaces named Live, Audience, Studio, and Settings. Live SHALL contain current operational status and switchable Messages, Leaderboard, and current Statistics views, including the hot active-preset control. Audience SHALL provide the implemented viewer search, detail, merge, leaderboard, and stream-session workflows, plus command and award catalogs. Studio SHALL provide a surface-centric preview and appearance editor, Publish for overlay drafts, and Add to OBS for OBS source URLs including `/overlay/alert` and `/dock/messages`. Settings SHALL provide Twitch, YouTube, VK, network proxy, interface language, message sound, `hide_command_messages`, diagnostics, about information, and implemented data-management controls.
+The admin page at `/` SHALL provide persistent workspaces named Live, Audience, Studio, and Settings. Live SHALL contain current operational status and switchable Messages, Leaderboard, and current Statistics views, including the hot active-preset control. Audience SHALL provide the implemented viewer search, detail, merge, leaderboard, and stream-session workflows, plus command and award catalogs. Studio SHALL provide a surface-centric preview and appearance editor, Publish for overlay drafts, and Add to OBS for OBS source URLs including `/overlay/alert` and `/dock/messages`. Settings SHALL provide Twitch, YouTube, VK, network proxy, interface language, message sound, `hide_command_messages`, `streamer_display_name`, activity XP settings, diagnostics, about information, and implemented data-management controls.
 
 #### Scenario: Open admin without a route
 - **WHEN** the operator opens `/` without a recognized hash route
@@ -32,6 +32,14 @@ The admin page at `/` SHALL provide persistent workspaces named Live, Audience, 
 #### Scenario: Save connections
 - **WHEN** the operator enables Twitch with a channel and saves
 - **THEN** `POST /api/config/update` persists those settings and the Twitch connector picks them up without a process restart
+
+#### Scenario: Save activity settings
+- **WHEN** the operator sets activity interval 120, session limit 5, and activity XP 2 and saves
+- **THEN** `POST /api/config/update` persists those activity fields and they apply to new counted lines without a process restart
+
+#### Scenario: Save streamer name
+- **WHEN** the operator saves streamer display name `Jake` in Settings
+- **THEN** `POST /api/config/update` persists `streamer_display_name` `Jake`
 
 ### Requirement: Interface language is Russian or English
 Admin and dock SHALL share locale catalogs. The operator MAY choose Russian or English in Interface settings. Time display SHALL use a 24-hour clock (`ru-RU` or `en-GB`) without AM/PM.
@@ -85,6 +93,7 @@ The surface selector SHALL expose icon and text labels with a non-color selected
 - **WHEN** the operator selects the alerts surface
 - **THEN** the preview iframe loads `/overlay/alert` with `preview=sample` and a fictitious splash
 - **AND** the primary copy action copies the alert Follow-active URL
+- **AND** Studio essentials show the preset alert image size slider (25–300 percent) and hide chat-only queue fields
 
 #### Scenario: Dock is not a themed surface
 - **WHEN** the operator opens Studio's on-stream surface list
@@ -199,7 +208,7 @@ The Studio preview SHALL let the operator choose a backdrop from white, checkerb
 - **THEN** the preview iframe loads the leaderboard page with `preview_background=checker`
 
 ### Requirement: Appearance studio previews the selected on-stream surface
-The Studio preview SHALL follow the single selected on-stream surface. Changing the surface MUST retarget the preview iframe and MUST show only settings that apply to that surface (chat queue/TTL/platform marker versus leaderboard period, font override, and layout). Preview messages, ranking rows, and alert splashes MUST be fictitious samples by default, not live chat, live viewer stats, or live `/ws` alert frames. A Replay control SHALL reload the sample for the selected surface.
+The Studio preview SHALL follow the single selected on-stream surface. Changing the surface MUST retarget the preview iframe and MUST show only settings that apply to that surface (chat queue/TTL/platform marker versus leaderboard period, font override, and layout versus alerts portrait image size and alert font override). Preview messages, ranking rows, and alert splashes MUST be fictitious samples by default, not live chat, live viewer stats, or live `/ws` alert frames. A Replay control SHALL reload the sample for the selected surface.
 
 #### Scenario: Switch to leaderboard preview
 - **WHEN** the operator selects Leaderboard
@@ -264,22 +273,53 @@ Every workflow available before the redesign SHALL remain reachable from one of 
 - **THEN** each implemented pre-redesign workflow has a visible entry point and no mock-only command or splash control is presented as functional
 
 ### Requirement: Audience hosts two catalogs
-Audience SHALL offer Commands and Awards lists separate from the viewers people workspace. Each catalog SHALL support create, edit, enable (commands), cooldown (commands), points (awards), splash text, sound, and delete. Catalog editors MUST NOT appear in the dock.
+Audience SHALL offer Commands and Awards lists separate from the viewers people workspace. Each catalog SHALL support create, edit, enable (commands), cooldown (commands), points (awards), splash text, sound, custom image, custom sound file, volume, layout, image fit, image size, and delete. Catalog editors MUST NOT appear in the dock.
 
 #### Scenario: Open commands
 - **WHEN** the operator opens Audience Commands
 - **THEN** seeded or operator-defined commands are listed and can be edited without leaving `/`
 
+### Requirement: Catalog editors expose templates, media, and layout
+Command and award editors SHALL show the available template variables `{viewer}`, `{streamer}`, `{points}`, and `{message}`, insert the chosen variable into the splash field on activation, and show a preview that substitutes sample viewer `Alice`, the current `streamer_display_name` or a localized sample streamer name when empty, sample points, and a short sample message. The image area SHALL preview the effective alert graphic: the source-appropriate built-in emblem when no file is selected and the custom image after upload. Its localized helper text MUST explain that clearing a custom image restores the built-in graphic. Image upload SHALL use `kind` `alert_image` and offer a clear action. Sound SHALL keep the built-in select plus an optional custom file using `kind` `alert_sound`, a Play/Stop preview, and a volume control 0–100. Layout SHALL be a choice of card, banner, or fullscreen. Image fit SHALL be a choice of cover, contain, fill, or tile. Image size SHALL be a slider from 25–300 percent that scales the built-in or custom primary graphic inside the alert frame. File inputs MUST remain keyboard reachable and labeled, MUST expose a visible focus indicator, and dynamic field errors MUST be associated with their controls. Newly uploaded files SHALL be treated as provisional until save; clear, replacement, catalog navigation, normal page unload, and item deletion SHALL request reference-safe cleanup through the overlay-asset delete action. On a stacked narrow layout, pointer selection of a catalog item SHALL reveal the editor while list keyboard navigation SHALL retain focus in the list.
+
+#### Scenario: Insert viewer variable
+- **WHEN** the operator activates `{viewer}` in the command editor
+- **THEN** `{viewer}` is inserted into the splash template field
+
+#### Scenario: Preview uses streamer name
+- **WHEN** `streamer_display_name` is `Jake` and the template contains `{streamer}`
+- **THEN** the editor preview contains `Jake`
+
+#### Scenario: Command preview has no custom file
+- **WHEN** the operator edits command `gg` without an uploaded image
+- **THEN** the image area previews the stable `gg` built-in command signal
+
+#### Scenario: Award preview has no custom file
+- **WHEN** the operator edits award `spotter` without an uploaded image
+- **THEN** the image area previews the stable Spotter medal
+
+#### Scenario: Clear custom image
+- **WHEN** the operator clears a saved or provisional custom image
+- **THEN** the image area immediately returns to the effective built-in graphic
+
+#### Scenario: Clear an unsaved upload
+- **WHEN** the operator uploads an image and clears it before saving the catalog item
+- **THEN** the editor requests deletion of the provisional filename and the server deletes it only when no other record references it
+
+#### Scenario: Select an award on a narrow screen
+- **WHEN** the operator uses a pointer to select an award while the catalog columns are stacked
+- **THEN** the editor header and fields are brought into the viewport
+
 ### Requirement: Audience table headers are a distinct sortable surface
-The Audience viewers table header SHALL use a distinct surface or edge from the body while keeping header text contrast. Score and Messages SHALL be sort buttons. The unsorted table SHALL keep the server last-activity order. The first activation of a numeric column SHALL sort that column descending for the selected period; a second activation SHALL sort ascending; a third SHALL restore last-activity order. The active column SHALL expose `aria-sort` (`ascending`, `descending`, or `none`). The selected column and direction SHALL persist in the current browser or WebView and MUST NOT be written to SQLite or `config.json`. An invalid stored preference SHALL fall back to last-activity order.
+The Audience viewers table header SHALL use a distinct surface or edge from the body while keeping header text contrast. XP and Messages SHALL be sort buttons. The unsorted table SHALL keep the server last-activity order. The first activation of a numeric column SHALL sort that column descending for the selected period; a second activation SHALL sort ascending; a third SHALL restore last-activity order. The active column SHALL expose `aria-sort` (`ascending`, `descending`, or `none`). The selected column and direction SHALL persist in the current browser or WebView and MUST NOT be written to SQLite or `config.json`. An invalid stored preference SHALL fall back to last-activity order. A previously stored Score sort preference SHALL be treated as XP.
 
 #### Scenario: First sort by score
-- **WHEN** the operator activates Score while the table is in last-activity order
-- **THEN** rows are ordered by the selected period's score descending and Score reports `aria-sort` `descending`
+- **WHEN** the operator activates XP while the table is in last-activity order
+- **THEN** rows are ordered by the selected period's `xp` descending and XP reports `aria-sort` `descending`
 
 #### Scenario: Cycle back to activity
-- **WHEN** Score is already sorted ascending and the operator activates Score again
-- **THEN** rows return to last-activity order and Score reports `aria-sort` `none`
+- **WHEN** XP is already sorted ascending and the operator activates XP again
+- **THEN** rows return to last-activity order and XP reports `aria-sort` `none`
 
 #### Scenario: Restore sort preference
 - **WHEN** the operator sorted Messages descending, closed the console, and reopens Audience in the same browser or WebView
@@ -346,6 +386,17 @@ After a successful grant, Live and dock SHALL close the picker, restore the Rewa
 #### Scenario: Grant fails
 - **WHEN** the grant request fails
 - **THEN** the picker or row shows an error and the operator can retry without reloading
+
+### Requirement: Settings expose activity instead of points per message
+Settings SHALL offer integer fields for `activity_interval_seconds`, `activity_session_limit`, and `activity_xp` with the same validation as config-store. The operator-facing copy SHALL describe a silent per-viewer interval and session cap, not XP per chat line. The previous points-per-message control MUST NOT remain as the progress setting. Live Leaderboard, Statistics, viewer cards, and the dock MUST label the contribution value as XP.
+
+#### Scenario: Open settings
+- **WHEN** the operator opens Settings after this change
+- **THEN** activity interval, session limit, and activity XP are editable and points per message is not offered as the progress control
+
+#### Scenario: Viewer card
+- **WHEN** the operator opens a viewer card
+- **THEN** session, day, and all-time contribution values are labeled as XP
 
 ### Requirement: Catalog selection is persistent and distinguishable
 Commands and Awards lists SHALL show the currently edited item with a persistent selected state distinguishable from hover by more than color alone. The selected row SHALL use appropriate selection semantics and remain selected while its editor is open.

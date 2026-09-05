@@ -41,7 +41,9 @@ func assertUnrelatedConfigUnchanged(t *testing.T, before, after Config) {
 	t.Helper()
 
 	require.Equal(t, before.ServerPort, after.ServerPort)
-	require.Equal(t, before.PointsPerMessage, after.PointsPerMessage)
+	require.Equal(t, before.ActivityIntervalSeconds, after.ActivityIntervalSeconds)
+	require.Equal(t, before.ActivitySessionLimit, after.ActivitySessionLimit)
+	require.Equal(t, before.ActivityXP, after.ActivityXP)
 	require.Equal(t, before.DayResetHour, after.DayResetHour)
 	require.Equal(t, before.Network, after.Network)
 	require.Equal(t, before.Twitch, after.Twitch)

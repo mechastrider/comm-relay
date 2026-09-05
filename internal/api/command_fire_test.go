@@ -13,6 +13,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 func TestCommandFire_WhenBangGG_ExpectAlertAndIsCommand(t *testing.T) {
@@ -138,12 +139,12 @@ func TestCommandFire_WhenCooldown_ExpectOneAlert(t *testing.T) {
 	}
 }
 
-func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutScore(t *testing.T) {
+func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutXP(t *testing.T) {
 	b := bus.New(0)
 	env := newTestEnv(t, b)
 
 	cfg := env.ConfigStore.Snapshot()
-	cfg.PointsPerMessage = 5
+	cfg.ActivityXP = 5
 	require.NoError(t, env.ConfigStore.Replace(cfg))
 
 	seedViewer(t, env, "twitch", "42", "Alice")
@@ -155,13 +156,13 @@ func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutScore(t *testing.T) {
 	var before struct {
 		Viewers []struct {
 			MessageCount int `json:"message_count"`
-			Score        int `json:"score"`
+			XP           int `json:"xp"`
 		} `json:"viewers"`
 	}
 	require.NoError(t, json.Unmarshal(beforeRec.Body.Bytes(), &before))
 	require.Len(t, before.Viewers, 1)
 	require.Equal(t, 1, before.Viewers[0].MessageCount)
-	require.Equal(t, 5, before.Viewers[0].Score)
+	require.Equal(t, 5, before.Viewers[0].XP)
 
 	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
 		ID:       "cmd-gg",
@@ -180,7 +181,7 @@ func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutScore(t *testing.T) {
 		var payload struct {
 			Viewers []struct {
 				MessageCount int `json:"message_count"`
-				Score        int `json:"score"`
+				XP           int `json:"xp"`
 			} `json:"viewers"`
 		}
 		if json.Unmarshal(rec.Body.Bytes(), &payload) != nil {
@@ -188,7 +189,7 @@ func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutScore(t *testing.T) {
 		}
 		return len(payload.Viewers) == 1 &&
 			payload.Viewers[0].MessageCount == 2 &&
-			payload.Viewers[0].Score == 5
+			payload.Viewers[0].XP == 5
 	}, 2*time.Second, 25*time.Millisecond)
 }
 
@@ -261,6 +262,122 @@ func TestConfig_HideCommandMessagesDefault_ExpectFalse(t *testing.T) {
 	require.False(t, cfg.HideCommandMessages)
 	public := cfg.Public()
 	require.False(t, public.HideCommandMessages)
+}
+
+func TestConfig_WhenStreamerDisplayName_ExpectPublicAndPersisted(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+
+	getRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(getRec, httptest.NewRequest(http.MethodGet, "/api/config", nil))
+	require.Equal(t, http.StatusOK, getRec.Code)
+
+	var getPayload map[string]any
+	require.NoError(t, json.Unmarshal(getRec.Body.Bytes(), &getPayload))
+	require.Equal(t, "", getPayload["streamer_display_name"])
+
+	body := strings.NewReader(`{
+  "server_port": 17877,
+  "streamer_display_name": "  Jake  ",
+  "twitch": { "enabled": false, "channel": "" },
+  "youtube": { "enabled": false, "oauth": { "client_id": "" } },
+  "vk": { "enabled": false },
+  "overlay": { "max_messages": 30, "message_ttl_seconds": 20 }
+}`)
+	patchRec := httptest.NewRecorder()
+	patchReq := httptest.NewRequest(http.MethodPost, "/api/config/update", body)
+	patchReq.Header.Set("Content-Type", "application/json")
+	env.Handler.ServeHTTP(patchRec, patchReq)
+	require.Equal(t, http.StatusOK, patchRec.Code)
+
+	var patchPayload map[string]any
+	require.NoError(t, json.Unmarshal(patchRec.Body.Bytes(), &patchPayload))
+	require.Equal(t, "Jake", patchPayload["streamer_display_name"])
+}
+
+func TestConfig_WhenStreamerDisplayNameOverlong_ExpectFieldError(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+
+	overlong := strings.Repeat("a", 65)
+	body := strings.NewReader(`{
+  "server_port": 17877,
+  "streamer_display_name": "` + overlong + `",
+  "twitch": { "enabled": false, "channel": "" },
+  "youtube": { "enabled": false, "oauth": { "client_id": "" } },
+  "vk": { "enabled": false },
+  "overlay": { "max_messages": 30, "message_ttl_seconds": 20 }
+}`)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/config/update", body)
+	req.Header.Set("Content-Type", "application/json")
+	env.Handler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+
+	var payload map[string]any
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	fields, ok := payload["fields"].(map[string]any)
+	require.True(t, ok)
+	require.Contains(t, fields, "streamer_display_name")
+}
+
+func TestCommandFire_WhenTemplateHasStreamerAndMessage_ExpectResolved(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+
+	cfg := env.ConfigStore.Snapshot()
+	cfg.StreamerDisplayName = "Jake"
+	require.NoError(t, env.ConfigStore.Replace(cfg))
+
+	_, err := env.ViewerStore.UpdateCommand(store.UpdateCommandInput{
+		ID:             "gg",
+		Trigger:        "gg",
+		Enabled:        true,
+		SplashTemplate: "Hi {viewer} from {streamer}: {message}",
+		Sound:          "chime",
+		DurationMs:     5000,
+	})
+	require.NoError(t, err)
+
+	srv := httptest.NewServer(env.Handler)
+	t.Cleanup(srv.Close)
+
+	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
+
+	time.Sleep(50 * time.Millisecond)
+
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		ID:          "cmd-template-1",
+		Platform:    "twitch",
+		UserID:      "42",
+		Username:    "alice",
+		DisplayName: "Alice",
+		Message:     "  !GG  ",
+	})))
+
+	var sawAlert bool
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
+		_, data, readErr := conn.ReadMessage()
+		if readErr != nil {
+			continue
+		}
+		var frame map[string]any
+		if json.Unmarshal(data, &frame) != nil {
+			continue
+		}
+		if frame["type"] != "alert" {
+			continue
+		}
+		sawAlert = true
+		require.Equal(t, "Hi Alice from Jake:   !GG  ", frame["text"])
+		break
+	}
+	require.True(t, sawAlert, "expected alert frame with resolved template")
 }
 
 func TestRecentMessages_WhenHideCommandMessages_ExpectIsCommandOnRecent(t *testing.T) {

@@ -6,13 +6,15 @@ import {
   normalizePanelImageFit,
   normalizePanelImageScope,
   normalizePreviewBackground,
+  normalizeAlertImageSizePct,
   overlayAssetURL,
   alertViewFromConfig,
-} from "/overlay/overlay-settings.js?v=8";
+} from "/overlay/overlay-settings.js?v=9";
 import { createChatRender } from "/shared/chat-render.js?v=12";
-import { ensureAudioContext, scheduleAlertSound } from "./alert-sound.js";
+import { createAlertEmblem } from "/shared/alert-emblem.js?v=1";
+import { ensureAudioContext, playAlertAudio, stopCustomAlertSound } from "./alert-sound.js";
 import { startSplashLifecycle } from "./alert-lifecycle.js?v=2";
-import { createAlertSplash } from "./alert-render.js?v=2";
+import { createAlertSplash } from "./alert-render.js?v=7";
 import { createAlertScheduler } from "./alert-scheduler.js?v=4";
 import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.js?v=1";
 
@@ -55,6 +57,7 @@ const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matc
 
 const SAMPLE_ALERT = {
   source: "award",
+  award_id: "spotter",
   name: "Nova",
   avatar_url: "",
   award_name: "Spotter",
@@ -167,6 +170,7 @@ function clearSplash() {
     window.clearTimeout(hideTimer);
     hideTimer = null;
   }
+  stopCustomAlertSound();
   if (root) {
     root.textContent = "";
   }
@@ -177,11 +181,16 @@ function accentIdentity(name) {
   return { user: display, username: display, display_name: display };
 }
 
-function playSound(sound) {
+function playSound(alert) {
+  const play = function (ctx) {
+    return playAlertAudio(ctx, alert, function (filename) {
+      return overlayAssetURL(filename, overlayAssetsRevision);
+    });
+  };
   ensureAudioContext(audioCtx)
     .then(function (ctx) {
       audioCtx = ctx;
-      scheduleAlertSound(ctx, sound);
+      return play(ctx);
     })
     .catch(function () {
       /* autoplay policy */
@@ -196,9 +205,14 @@ function showSplash(alert) {
   clearSplash();
   const splash = createAlertSplash(document, alert, {
     reducedMotion,
+    presetImageScale: normalizeAlertImageSizePct(overlayView.image_size_pct) / 100,
+    overlayAssetURL: function (filename) {
+      return overlayAssetURL(filename, overlayAssetsRevision);
+    },
     userAccent: function (name) {
       return userAccent(accentIdentity(name));
     },
+    createEmblem: createAlertEmblem,
   });
 
   root.append(splash);
@@ -217,7 +231,7 @@ function showSplash(alert) {
 
   hideTimer = startSplashLifecycle({
     playSound: function () {
-      return playSound(alert.sound);
+      return playSound(alert);
     },
     durationMs,
     keepVisible: samplePreviewEnabled,

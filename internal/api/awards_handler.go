@@ -45,6 +45,10 @@ type awardResponse struct {
 	DurationMs     int    `json:"duration_ms"`
 	ImageAsset     string `json:"image_asset,omitempty"`
 	SoundFile      string `json:"sound_file,omitempty"`
+	SoundVolume    int    `json:"sound_volume"`
+	Layout         string `json:"layout"`
+	ImageFit       string `json:"image_fit"`
+	ImageSizePct   int    `json:"image_size_pct"`
 }
 
 type awardsListResponse struct {
@@ -66,6 +70,10 @@ func awardFromStore(award store.AwardType) awardResponse {
 	if award.SoundFile != "" {
 		resp.SoundFile = award.SoundFile
 	}
+	resp.SoundVolume = award.SoundVolume
+	resp.Layout = award.Layout
+	resp.ImageFit = award.ImageFit
+	resp.ImageSizePct = award.ImageSizePct
 
 	return resp
 }
@@ -98,6 +106,12 @@ type createAwardRequest struct {
 	SplashTemplate string `json:"splash_template"`
 	Sound          string `json:"sound"`
 	DurationMs     int    `json:"duration_ms"`
+	ImageAsset     string `json:"image_asset,omitempty"`
+	SoundFile      string `json:"sound_file,omitempty"`
+	SoundVolume    *int   `json:"sound_volume,omitempty"`
+	Layout         string `json:"layout,omitempty"`
+	ImageFit       string `json:"image_fit,omitempty"`
+	ImageSizePct   *int   `json:"image_size_pct,omitempty"`
 }
 
 func (h *awardsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +135,17 @@ func (h *awardsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		SplashTemplate: request.SplashTemplate,
 		Sound:          request.Sound,
 		DurationMs:     request.DurationMs,
+		ImageAsset:     request.ImageAsset,
+		SoundFile:      request.SoundFile,
+		SoundVolume:    catalogSoundVolumeFromRequest(request.SoundVolume),
+		Layout:         request.Layout,
+		ImageFit:       request.ImageFit,
+		ImageSizePct:   catalogImageSizePctFromRequest(request.ImageSizePct),
 	})
+	if fields := store.CatalogMediaFields(err); len(fields) > 0 {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
+		return
+	}
 	if errors.Is(err, store.ErrInvalidPoints) {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
 			"points": "points must be at least 1",
@@ -144,6 +168,12 @@ type updateAwardRequest struct {
 	SplashTemplate string `json:"splash_template"`
 	Sound          string `json:"sound"`
 	DurationMs     int    `json:"duration_ms"`
+	ImageAsset     string `json:"image_asset,omitempty"`
+	SoundFile      string `json:"sound_file,omitempty"`
+	SoundVolume    *int   `json:"sound_volume,omitempty"`
+	Layout         string `json:"layout,omitempty"`
+	ImageFit       string `json:"image_fit,omitempty"`
+	ImageSizePct   *int   `json:"image_size_pct,omitempty"`
 }
 
 func (h *awardsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
@@ -171,7 +201,17 @@ func (h *awardsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		SplashTemplate: request.SplashTemplate,
 		Sound:          request.Sound,
 		DurationMs:     request.DurationMs,
+		ImageAsset:     request.ImageAsset,
+		SoundFile:      request.SoundFile,
+		SoundVolume:    catalogSoundVolumeFromRequest(request.SoundVolume),
+		Layout:         request.Layout,
+		ImageFit:       request.ImageFit,
+		ImageSizePct:   catalogImageSizePctFromRequest(request.ImageSizePct),
 	})
+	if fields := store.CatalogMediaFields(err); len(fields) > 0 {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
+		return
+	}
 	if errors.Is(err, store.ErrAwardNotFound) {
 		writeError(w, http.StatusNotFound, "award not found")
 		return
@@ -305,7 +345,13 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	if strings.TrimSpace(name) == "" {
 		name = userID
 	}
-	text := command.SubstituteTemplate(award.SplashTemplate, name, award.Points)
+	quote := trimAwardMessageText(request.MessageText)
+	text := command.SubstituteTemplate(award.SplashTemplate, command.TemplateVars{
+		Viewer:   name,
+		Streamer: cfg.StreamerDisplayName,
+		Points:   award.Points,
+		Message:  quote,
+	})
 	messageID := strings.TrimSpace(request.MessageID)
 	messagePlatform := ""
 	if messageID != "" {
@@ -314,7 +360,7 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	alertPayload, err := awardAlertWirePayload(award, name, result.AvatarURL, text, award.Points, now, awardAlertContext{
 		MessagePlatform: messagePlatform,
 		MessageID:       messageID,
-		MessageText:     trimAwardMessageText(request.MessageText),
+		MessageText:     quote,
 	})
 	if err != nil {
 		clog.Errorf(r.Context(), "award alert wire payload: %w", err)

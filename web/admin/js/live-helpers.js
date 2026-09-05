@@ -33,11 +33,11 @@ export function nextActivePresetSelection(previousId, requestedId, ok) {
  * @property {string} [id]
  * @property {string} [display_name]
  * @property {number} [message_count]
- * @property {number} [score]
+ * @property {number} [xp]
  * @property {number} [session_message_count]
- * @property {number} [session_score]
+ * @property {number} [session_xp]
  * @property {number} [day_message_count]
- * @property {number} [day_score]
+ * @property {number} [day_xp]
  */
 
 /**
@@ -59,7 +59,7 @@ function viewerHasPeriodActivity(viewer, period) {
  * @typedef {object} LeaderboardEntry
  * @property {number} [rank]
  * @property {string} [display_name]
- * @property {number} [score]
+ * @property {number} [xp]
  * @property {number} [message_count]
  */
 
@@ -79,7 +79,7 @@ export function summarizeLiveStatistics(viewersPayload, leaderboardPayload, opti
     return viewerHasPeriodActivity(viewer, period);
   }).length;
   let totalMessages = 0;
-  let totalScore = 0;
+  let totalXP = 0;
   let hasDayFields = false;
 
   viewers.forEach(function (viewer) {
@@ -87,47 +87,43 @@ export function summarizeLiveStatistics(viewersPayload, leaderboardPayload, opti
       if (typeof viewer.day_message_count === "number") {
         totalMessages += viewer.day_message_count;
       }
-      if (typeof viewer.day_score === "number") {
-        totalScore += viewer.day_score;
+      if (typeof viewer.day_xp === "number") {
+        totalXP += viewer.day_xp;
         hasDayFields = true;
       }
     } else if (period === "all") {
       totalMessages += typeof viewer.message_count === "number" ? viewer.message_count : 0;
-      totalScore += typeof viewer.score === "number" ? viewer.score : 0;
+      totalXP += typeof viewer.xp === "number" ? viewer.xp : 0;
     } else {
       totalMessages += typeof viewer.session_message_count === "number" ? viewer.session_message_count : 0;
-      totalScore += typeof viewer.session_score === "number" ? viewer.session_score : 0;
+      totalXP += typeof viewer.session_xp === "number" ? viewer.session_xp : 0;
     }
-    if (typeof viewer.day_score === "number" || typeof viewer.day_message_count === "number") {
+    if (typeof viewer.day_xp === "number" || typeof viewer.day_message_count === "number") {
       hasDayFields = true;
     }
   });
 
-  let topScore = 0;
+  let topXP = 0;
   let topScorer = "";
   let tiedTopCount = 0;
 
   if (!leaderboardFailed && entries.length > 0) {
-    topScore = typeof entries[0].score === "number" ? entries[0].score : 0;
+    topXP = typeof entries[0].xp === "number" ? entries[0].xp : 0;
     topScorer = entries[0].display_name || "";
     tiedTopCount = entries.filter(function (entry) {
-      return (typeof entry.score === "number" ? entry.score : 0) === topScore;
+      return (typeof entry.xp === "number" ? entry.xp : 0) === topXP;
     }).length;
   } else if (viewers.length > 0) {
-    const scoreKey = period === "day"
-      ? "day_score"
-      : period === "all"
-        ? "score"
-        : "session_score";
+    const xpKey = period === "day" ? "day_xp" : period === "all" ? "xp" : "session_xp";
     const sorted = viewers.slice().sort(function (a, b) {
-      const aScore = typeof a[scoreKey] === "number" ? a[scoreKey] : 0;
-      const bScore = typeof b[scoreKey] === "number" ? b[scoreKey] : 0;
-      return bScore - aScore;
+      const aXP = typeof a[xpKey] === "number" ? a[xpKey] : 0;
+      const bXP = typeof b[xpKey] === "number" ? b[xpKey] : 0;
+      return bXP - aXP;
     });
-    topScore = typeof sorted[0][scoreKey] === "number" ? sorted[0][scoreKey] : 0;
+    topXP = typeof sorted[0][xpKey] === "number" ? sorted[0][xpKey] : 0;
     topScorer = sorted[0].display_name || "";
     tiedTopCount = sorted.filter(function (viewer) {
-      return (typeof viewer[scoreKey] === "number" ? viewer[scoreKey] : 0) === topScore;
+      return (typeof viewer[xpKey] === "number" ? viewer[xpKey] : 0) === topXP;
     }).length;
   }
 
@@ -137,8 +133,8 @@ export function summarizeLiveStatistics(viewersPayload, leaderboardPayload, opti
     period: period,
     uniqueViewers: uniqueViewers,
     totalMessages: totalMessages,
-    totalScore: totalScore,
-    topScore: topScore,
+    totalScore: totalXP,
+    topScore: topXP,
     topScorer: topScorer,
     tiedTopCount: tiedTopCount,
     hasDayFields: hasDayFields,

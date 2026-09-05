@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Lets the operator define chat commands that the server matches on ingested lines and turns into on-stream alerts, without awarding score.
+Lets the operator define chat commands that the server matches on ingested lines and turns into on-stream alerts, without awarding XP.
 
 ## Requirements
 
 ### Requirement: Operator can manage a command catalog
-The system SHALL persist chat commands in local SQLite (not `config.json`). Each command SHALL have a unique trigger slug, enabled flag, per-viewer cooldown seconds, splash text template, built-in sound id or silence, optional reserved media fields (`image_asset`, `sound_file`) that MAY be null, and splash duration. `GET /api/commands` SHALL list commands. Mutations SHALL be `POST /api/commands/create`, `POST /api/commands/update`, and `POST /api/commands/delete` with identifiers in the JSON body. The operator MUST be able to delete any command, including seeds.
+The system SHALL persist chat commands in local SQLite (not `config.json`). Each command SHALL have a unique trigger slug, enabled flag, per-viewer cooldown seconds, splash text template, built-in sound id or silence, optional `image_asset` and `sound_file` filenames that MAY be null, `sound_volume` 0–100 (default 70), `layout` of `card`, `banner`, or `fullscreen` (default `fullscreen`), optional `image_fit` of `cover`, `contain`, `fill`, or `tile` (default `contain`), optional `image_size_pct` 25–300 (default 100), and splash duration. `GET /api/commands` SHALL list these fields. Mutations SHALL be `POST /api/commands/create`, `POST /api/commands/update`, and `POST /api/commands/delete` with identifiers in the JSON body. Create and update SHALL accept the media, volume, layout, image-fit, and image-size fields. Empty media fields SHALL clear a previous file reference. The operator MUST be able to delete any command, including seeds.
 
 #### Scenario: Create command
 - **WHEN** the operator creates a command with trigger `lurk`
@@ -21,12 +21,47 @@ The system SHALL persist chat commands in local SQLite (not `config.json`). Each
 - **WHEN** the operator creates a second command with trigger `gg` while `gg` exists
 - **THEN** the request fails with HTTP 400 and a field error on the trigger
 
-### Requirement: First migrate seeds deletable gg and hi
-On the migration that introduces the commands table, the system SHALL insert enabled commands `gg` and `hi` with cooldown 30 seconds, score delta unused (commands never award score), default splash templates using `{name}`, and a built-in tone. Seeds MUST NOT be re-inserted on later startups.
+#### Scenario: Save custom image
+- **WHEN** the operator updates `gg` with a stored `image_asset` filename
+- **THEN** `GET /api/commands` returns that filename and a later `!gg` alert uses it
 
-#### Scenario: Fresh database
-- **WHEN** CommRelay starts against a database that just applied this migration
-- **THEN** the catalog contains `gg` and `hi` and both are deletable
+### Requirement: Command media filenames are stored assets only
+`image_asset` and `sound_file` SHALL be empty or a generated overlay-asset filename already stored beside `config.json`. The system MUST reject absolute paths, `..`, URLs, and names that fail the existing overlay asset name check.
+
+#### Scenario: Path rejected
+- **WHEN** create or update sets `image_asset` to `C:\\photos\\gg.png`
+- **THEN** the request fails with HTTP 400 and a field error on `image_asset`
+
+### Requirement: Locale-aware one-time starter commands
+On first initialization of a new local database, the system SHALL insert enabled deletable starter commands `gg` and `hi` with cooldown 30 seconds, default splash templates using `{viewer}`, and a built-in tone. Splash text SHALL match the operator's configured `admin.time_locale` at initialization time (`ru-RU` or `en-GB`). Command ids and triggers MUST remain `gg` and `hi` in every locale. After initialization completes, the catalog MUST be treated as ordinary user-owned data: changing `admin.time_locale`, editing rows, deleting seeds, or leaving an empty catalog MUST NOT cause automatic translation, restoration, or re-insertion. Existing databases that already contained starter commands before this behavior shipped MUST be adopted without modifying any command fields.
+
+#### Scenario: Fresh Russian database
+- **WHEN** CommRelay opens a new database while `admin.time_locale` is `ru-RU`
+- **THEN** the catalog contains `gg` and `hi` with Russian splash templates and both are deletable
+
+#### Scenario: Fresh English database
+- **WHEN** CommRelay opens a new database while `admin.time_locale` is `en-GB`
+- **THEN** the catalog contains `gg` and `hi` with the existing English splash templates and both are deletable
+
+#### Scenario: Delete seed
+- **WHEN** the operator deletes the seeded `gg` command
+- **THEN** `!gg` no longer matches and a process restart MUST NOT recreate it
+
+#### Scenario: Locale change after initialization
+- **WHEN** the operator changes `admin.time_locale` after the starter catalog was initialized
+- **THEN** existing command splash templates remain unchanged
+
+#### Scenario: Existing database adoption
+- **WHEN** CommRelay upgrades an installation that already had migration-era starter commands
+- **THEN** command ids, triggers, and splash templates are unchanged
+
+#### Scenario: Existing database has no bootstrap marker
+- **WHEN** CommRelay opens an already migrated database without starter-catalog bootstrap metadata
+- **THEN** the existing command catalog is adopted unchanged and marked initialized
+
+#### Scenario: Resume interrupted fresh-database bootstrap
+- **WHEN** a new database has a persisted pending starter locale but catalog initialization did not finish
+- **THEN** the next startup completes starter command initialization in the persisted locale
 
 ### Requirement: Server matches a whole bang command line
 The matcher SHALL trim surrounding whitespace, lowercase the line, and treat it as a command only when it starts with `!`. For this change the remainder after `!` MUST equal a command trigger exactly (no parameters, no extra words). Matching SHALL run on the server. Disabled commands MUST NOT match. Lines that are not commands SHALL pass through as ordinary chat.
@@ -59,11 +94,11 @@ Each command SHALL have a cooldown in seconds (≥ 0). After a successful fire f
 - **THEN** a second alert is enqueued
 
 ### Requirement: Commands never change score
-Firing a command MUST NOT increment or decrement `score`. `message_count` SHALL still increment for a matched line that has a stable identity, same as ordinary chat.
+Firing a command MUST NOT increment or decrement `xp`. `message_count` SHALL still increment for a matched line that has a stable identity, same as ordinary chat. That counted line MAY still be eligible for a silent activity grant under viewer-stats rules.
 
 #### Scenario: Gg from a known viewer
-- **WHEN** a counted identity fires `!gg`
-- **THEN** that viewer's `message_count` increases and `score` is unchanged by the command
+- **WHEN** a counted identity fires `!gg` after already receiving activity XP this interval
+- **THEN** that viewer's `message_count` increases and `xp` is unchanged by the command fire itself
 
 ### Requirement: Overlay can hide command lines globally
 `hide_command_messages` SHALL be a global operator setting (default false). The server SHALL mark matched command lines on the WebSocket `message` frame (field `is_command` true). When the setting is true, `/overlay` MUST NOT render those lines. Admin and dock MUST still show them. Changing the setting SHALL apply to new lines without requiring a process restart.

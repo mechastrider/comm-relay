@@ -6,6 +6,43 @@ import { validateAwardPoints } from "./audience-helpers.js";
 import { parseAudienceHash } from "./audience-tabs.js";
 import { parseWorkspaceHash } from "./workspace-router.js";
 import { neighboringCatalogSelection } from "./catalog-selection.js";
+import {
+  bindSplashVariableChips,
+  previewStreamerName,
+  renderSplashPreview,
+} from "./catalog-template.js";
+import { createCatalogMediaController } from "./catalog-media-ui.js";
+
+const awardMedia = createCatalogMediaController({
+  imagePreview: dom.awardImagePreview,
+  imageInput: dom.awardImageInput,
+  imageClear: dom.awardImageClear,
+  imageError: dom.awardImageError,
+  imageFitInput: dom.awardImageFitInput,
+  imageFitError: dom.awardImageFitError,
+  imageSizeInput: dom.awardImageSizeInput,
+  imageSizeValue: dom.awardImageSizeValue,
+  imageSizeError: dom.awardImageSizeError,
+  soundFileInput: dom.awardSoundFileInput,
+  soundFileClear: dom.awardSoundFileClear,
+  soundFileError: dom.awardSoundFileError,
+  soundVolumeInput: dom.awardSoundVolumeInput,
+  soundVolumeValue: dom.awardSoundVolumeValue,
+  soundVolumeError: dom.awardSoundVolumeError,
+  soundPlay: dom.awardSoundPlay,
+  soundStop: dom.awardSoundStop,
+  builtInSoundInput: dom.awardSoundInput,
+  layoutName: "award-layout",
+  layoutError: dom.awardLayoutError,
+  graphicKind: "award",
+  graphicIdentity: function (record) {
+    return {
+      identifier: String(record.id || record.name || ""),
+      label: String(record.name || ""),
+    };
+  },
+});
+awardMedia.bind();
 
 const FETCH_TIMEOUT_MS = 15000;
 
@@ -45,6 +82,7 @@ function clearFieldErrors() {
   setFieldError(dom.awardNameInput, dom.awardNameError, "");
   setFieldError(dom.awardPointsInput, dom.awardPointsError, "");
   setFieldError(dom.awardSplashInput, dom.awardSplashError, "");
+  awardMedia.clearFieldErrors();
 }
 
 function setButtonsDisabled(disabled) {
@@ -127,6 +165,7 @@ function renderAwardsList() {
     item.addEventListener("click", function () {
       selectAward(String(award.id || ""), false);
       focusAwardItem(String(award.id || ""));
+      revealAwardEditor();
     });
     item.addEventListener("keydown", function (event) {
       if (["ArrowUp", "ArrowDown", "Home", "End", "Enter", " "].indexOf(event.key) === -1) {
@@ -178,9 +217,31 @@ function focusAwardItem(id) {
   });
 }
 
+function revealAwardEditor() {
+  if (!window.matchMedia("(max-width: 1023px)").matches) {
+    return;
+  }
+  window.requestAnimationFrame(function () {
+    window.requestAnimationFrame(function () {
+      const editor = dom.awardsEditorForm?.closest(".audience-catalog-editor");
+      editor?.scrollIntoView({ block: "start" });
+    });
+  });
+}
+
 function focusAwardCreate() {
   window.requestAnimationFrame(function () {
     dom.awardsCreateButton?.focus();
+  });
+}
+
+function updateAwardSplashPreview() {
+  const points = dom.awardPointsInput ? Number.parseInt(dom.awardPointsInput.value, 10) : 10;
+  renderSplashPreview(dom.awardSplashPreview, dom.awardSplashInput?.value || "", {
+    viewer: "Alice",
+    streamer: previewStreamerName(),
+    points: Number.isFinite(points) ? points : 10,
+    message: t("catalog.sampleMessage"),
   });
 }
 
@@ -203,6 +264,8 @@ function fillEditorFromAward(award) {
   if (dom.awardDurationInput) {
     dom.awardDurationInput.value = String(award.duration_ms != null ? award.duration_ms : 5000);
   }
+  awardMedia.fillFromRecord(award);
+  updateAwardSplashPreview();
 }
 
 function defaultNewAward() {
@@ -212,6 +275,8 @@ function defaultNewAward() {
     splash_template: "",
     sound: "",
     duration_ms: 5000,
+    sound_volume: 70,
+    layout: "fullscreen",
   };
 }
 
@@ -219,6 +284,7 @@ function selectAward(id, isNew) {
   creatingNew = isNew;
   selectedAwardId = isNew ? null : id;
   clearFieldErrors();
+  awardMedia.stopPreview();
 
   if (isNew) {
     fillEditorFromAward(defaultNewAward());
@@ -236,13 +302,16 @@ function selectAward(id, isNew) {
 }
 
 function readEditorPayload() {
-  return {
-    name: dom.awardNameInput ? dom.awardNameInput.value : "",
-    points: dom.awardPointsInput ? Number(dom.awardPointsInput.value) : 0,
-    splash_template: dom.awardSplashInput ? dom.awardSplashInput.value : "",
-    sound: dom.awardSoundInput ? dom.awardSoundInput.value : "",
-    duration_ms: dom.awardDurationInput ? Number(dom.awardDurationInput.value) : 5000,
-  };
+  return Object.assign(
+    {
+      name: dom.awardNameInput ? dom.awardNameInput.value : "",
+      points: dom.awardPointsInput ? Number(dom.awardPointsInput.value) : 0,
+      splash_template: dom.awardSplashInput ? dom.awardSplashInput.value : "",
+      sound: dom.awardSoundInput ? dom.awardSoundInput.value : "",
+      duration_ms: dom.awardDurationInput ? Number(dom.awardDurationInput.value) : 5000,
+    },
+    awardMedia.readPayload()
+  );
 }
 
 function applyFieldErrors(fields) {
@@ -258,6 +327,7 @@ function applyFieldErrors(fields) {
   if (fields.splash_template && dom.awardSplashError) {
     setFieldError(dom.awardSplashInput, dom.awardSplashError, fields.splash_template);
   }
+  awardMedia.applyFieldErrors(fields);
 }
 
 async function fetchAwardsList() {
@@ -382,6 +452,7 @@ async function saveAward() {
 
     creatingNew = false;
     selectedAwardId = String(data.id || selectedAwardId || "");
+    awardMedia.commitSavedRecord(data);
     await loadAwardsCatalog();
     selectAward(selectedAwardId, false);
   } catch (err) {
@@ -438,6 +509,7 @@ async function deleteAward() {
 
     selectedAwardId = null;
     creatingNew = false;
+    awardMedia.releaseSavedAssets();
     closeDeletePrompt();
     await loadAwardsCatalog();
     syncEditorVisibility();
@@ -493,13 +565,18 @@ export function initAwardsCatalog() {
   }
   dom.awardNameInput?.addEventListener("input", function () {
     setFieldError(dom.awardNameInput, dom.awardNameError, "");
+    awardMedia.setGraphicIdentity(selectedAwardId || dom.awardNameInput?.value || "", dom.awardNameInput?.value || "");
   });
   dom.awardPointsInput?.addEventListener("input", function () {
     setFieldError(dom.awardPointsInput, dom.awardPointsError, "");
+    updateAwardSplashPreview();
   });
   dom.awardSplashInput?.addEventListener("input", function () {
     setFieldError(dom.awardSplashInput, dom.awardSplashError, "");
+    updateAwardSplashPreview();
   });
+  bindSplashVariableChips(dom.awardSplashVars, dom.awardSplashInput, updateAwardSplashPreview);
+  document.addEventListener("admin-config-applied", updateAwardSplashPreview);
   if (dom.awardsDeleteButton) {
     dom.awardsDeleteButton.addEventListener("click", function () {
       if (!selectedAwardId) {
@@ -546,6 +623,8 @@ export function initAwardsCatalog() {
       loadAwardsCatalog().catch(function () {
         /* region handles error */
       });
+    } else {
+      awardMedia.abandonPendingUploads();
     }
   });
 

@@ -45,7 +45,7 @@ assert.doesNotMatch(
   "Actions column must be removed from the Audience table"
 );
 assert.match(markup, /id="audience-sort-viewer"/, "Viewer sort button must exist");
-assert.match(markup, /id="audience-sort-score"/, "Score sort button must exist");
+assert.match(markup, /id="audience-sort-xp"/, "XP sort button must exist");
 assert.match(markup, /id="audience-sort-messages"/, "Messages sort button must exist");
 assert.match(
   markup,
@@ -121,12 +121,12 @@ assert.match(
 
 assert.match(
   styles,
-  /\.audience-detail__name-field input\[type="text"\],\s*\.audience-detail__merge select,\s*\.audience-detail__name-field > \.btn-physical,\s*\.audience-detail__merge > \.btn-physical\s*\{[\s\S]*?width:\s*100%/,
+  /\.audience-inspector__body \.audience-detail__name-field > \.btn-physical,\s*\.audience-inspector__body \.audience-detail__merge > \.btn-physical\s*\{[\s\S]*?width:\s*100%/,
   "Audience detail actions must span the same width as their form controls"
 );
 assert.match(
   styles,
-  /\.audience-inspector__header\s*\{[\s\S]*?padding:\s*0 var\(--audience-inspector-pad-x\)/,
+  /\.audience-inspector__header\s*\{[\s\S]*?padding:\s*0 var\(--audience-inspector-pad\)/,
   "Inspector header horizontal padding must match the card body"
 );
 assert.match(

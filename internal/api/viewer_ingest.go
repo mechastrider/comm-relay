@@ -69,12 +69,16 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	}
 
 	cfg := v.cfgStore.Snapshot()
-	points := cfg.PointsPerMessage
+	activity := store.ActivitySettings{
+		IntervalSeconds: cfg.ActivityIntervalSeconds,
+		SessionLimit:    cfg.ActivitySessionLimit,
+		XP:              cfg.ActivityXP,
+	}
+
 	var matchedCmd *store.Command
 	if v.matcher != nil {
 		if cmd, ok := v.matcher.Lookup(msg.Message); ok {
 			matchedCmd = cmd
-			points = 0
 		}
 	}
 
@@ -89,7 +93,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		Username:    msg.Username,
 		DisplayName: msg.DisplayName,
 		AvatarURL:   msg.AvatarURL,
-	}, points, cfg.DayResetHour, now)
+	}, activity, cfg.DayResetHour, now)
 	if err != nil {
 		clog.Errorf(ctx, "apply chat to viewer store: %w", err)
 		return
@@ -125,7 +129,12 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 
 	if v.hub != nil {
 		name := command.DisplayName(msg.Username, msg.DisplayName)
-		text := command.SubstituteTemplate(matchedCmd.SplashTemplate, name, 0)
+		text := command.SubstituteTemplate(matchedCmd.SplashTemplate, command.TemplateVars{
+			Viewer:   name,
+			Streamer: cfg.StreamerDisplayName,
+			Points:   0,
+			Message:  msg.Message,
+		})
 		alertPayload, alertErr := alertWirePayload(matchedCmd, msg, text, 0)
 		if alertErr != nil {
 			clog.Errorf(ctx, "alert wire payload: %w", alertErr)

@@ -13,9 +13,9 @@ assert.equal(leaderboardPeriodFrom("week"), null);
 
 const snapshots = createLeaderboardSnapshotCache();
 assert.equal(snapshots.remember({ period: "week", entries: [] }), null);
-snapshots.remember({ period: "session", entries: [{ display_name: "Old", score: 1 }] });
-snapshots.remember({ period: "day", entries: [{ display_name: "Day", score: 2 }] });
-snapshots.remember({ period: "session", entries: [{ display_name: "Newest", score: 3 }] });
+snapshots.remember({ period: "session", entries: [{ display_name: "Old", xp: 1 }] });
+snapshots.remember({ period: "day", entries: [{ display_name: "Day", xp: 2 }] });
+snapshots.remember({ period: "session", entries: [{ display_name: "Newest", xp: 3 }] });
 assert.equal(snapshots.get("session")?.entries[0].display_name, "Newest");
 assert.equal(snapshots.get("day")?.entries[0].display_name, "Day");
 assert.equal(snapshots.get("all"), null);
@@ -47,9 +47,9 @@ const completedHTTP = deferredHTTP.then(function (payload) {
     snapshots.remember(payload);
   }
 });
-snapshots.remember({ period: "session", entries: [{ display_name: "WebSocket newest", score: 4 }] });
+snapshots.remember({ period: "session", entries: [{ display_name: "WebSocket newest", xp: 4 }] });
 assert.equal(loadSequencer.invalidateForSnapshot("session"), true);
-resolveHTTP({ period: "session", entries: [{ display_name: "HTTP older", score: 3 }] });
+resolveHTTP({ period: "session", entries: [{ display_name: "HTTP older", xp: 3 }] });
 await completedHTTP;
 assert.equal(snapshots.get("session")?.entries[0].display_name, "WebSocket newest");
 assert.equal(snapshots.get("day")?.entries[0].display_name, "Day");

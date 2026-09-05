@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-	alertViewFromConfig,
+  alertViewFromConfig,
   applyQueryStyleOverrides,
   defaultStyleForTheme,
   hexToRgba,
   leaderboardViewFromConfig,
+  normalizeAlertImageSizePct,
   normalizeLeaderboardLayout,
   normalizePanelImageFit,
   normalizePanelImageScope,
@@ -318,4 +319,72 @@ test("leaderboardViewFromConfig ignores invalid theme and layout query", functio
   assert.equal(view.theme, "dashboard");
   assert.equal(view.layout, "chips");
   assert.equal(view.font_size_px, 20);
+});
+
+test("alertViewFromConfig resolves preset alert image size and query override", function () {
+  const view = alertViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [
+          {
+            id: "default",
+            theme: "cockpit_popups",
+            font_size_px: 18,
+            surfaces: { alerts: { image_size_pct: 150 } },
+          },
+        ],
+      },
+    },
+    new URLSearchParams("")
+  );
+  assert.equal(view.image_size_pct, 150);
+
+  const queried = alertViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [{ id: "default", theme: "default", font_size_px: 18 }],
+      },
+    },
+    new URLSearchParams("image_size_pct=200")
+  );
+  assert.equal(queried.image_size_pct, 200);
+});
+
+test("alertViewFromConfig resolves alerts font override", function () {
+  const view = alertViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [
+          {
+            id: "default",
+            theme: "default",
+            font_size_px: 18,
+            surfaces: { alerts: { font_size_px: 24 } },
+          },
+        ],
+      },
+    },
+    new URLSearchParams("")
+  );
+  assert.equal(view.font_size_px, 24);
+
+  const queried = alertViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [{ id: "default", theme: "default", font_size_px: 18 }],
+      },
+    },
+    new URLSearchParams("font_size_px=30")
+  );
+  assert.equal(queried.font_size_px, 30);
+});
+
+test("normalizeAlertImageSizePct defaults invalid values to 100", function () {
+  assert.equal(normalizeAlertImageSizePct(""), 100);
+  assert.equal(normalizeAlertImageSizePct(180), 180);
+  assert.equal(normalizeAlertImageSizePct(999), 300);
 });

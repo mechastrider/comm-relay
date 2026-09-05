@@ -80,6 +80,10 @@ func scanCommand(scanner interface {
 		&cmd.DurationMs,
 		&imageAsset,
 		&soundFile,
+		&cmd.SoundVolume,
+		&cmd.Layout,
+		&cmd.ImageFit,
+		&cmd.ImageSizePct,
 	)
 	if err != nil {
 		return Command{}, err
@@ -92,6 +96,10 @@ func scanCommand(scanner interface {
 	if soundFile.Valid {
 		cmd.SoundFile = soundFile.String
 	}
+	cmd.SoundVolume = NormalizeCatalogSoundVolume(cmd.SoundVolume)
+	cmd.Layout = NormalizeCatalogLayout(cmd.Layout)
+	cmd.ImageFit = NormalizeCatalogImageFit(cmd.ImageFit)
+	cmd.ImageSizePct = NormalizeCatalogImageSizePct(cmd.ImageSizePct)
 
 	return cmd, nil
 }
@@ -102,7 +110,7 @@ func (s *Store) ListCommands() ([]Command, error) {
 	defer s.mu.Unlock()
 
 	rows, err := s.db.Query(`
-		SELECT id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file
+		SELECT id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM commands
 		ORDER BY trigger`)
 	if err != nil {
@@ -131,7 +139,7 @@ func (s *Store) GetCommand(id string) (*Command, error) {
 	defer s.mu.Unlock()
 
 	row := s.db.QueryRow(`
-		SELECT id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file
+		SELECT id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM commands
 		WHERE id = ?`, id)
 
@@ -155,6 +163,12 @@ type CreateCommandInput struct {
 	SplashTemplate  string
 	Sound           string
 	DurationMs      int
+	ImageAsset      string
+	SoundFile       string
+	SoundVolume     int
+	Layout          string
+	ImageFit        string
+	ImageSizePct    int
 }
 
 // CreateCommand inserts a new command.
@@ -172,6 +186,11 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 	if err := validateCatalogSound(input.Sound); err != nil {
 		return nil, err
 	}
+	if fields := validateCommandMediaFields(
+		input.ImageAsset, input.SoundFile, input.SoundVolume, input.ImageSizePct, input.Layout, input.ImageFit,
+	); len(fields) > 0 {
+		return nil, catalogMediaValidationError(fields)
+	}
 
 	id := strings.TrimSpace(input.ID)
 	if id == "" {
@@ -183,13 +202,22 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 	if input.Enabled {
 		enabled = 1
 	}
+	imageAsset := strings.TrimSpace(input.ImageAsset)
+	soundFile := strings.TrimSpace(input.SoundFile)
+	soundVolume := NormalizeCatalogSoundVolume(input.SoundVolume)
+	layout := NormalizeCatalogLayout(input.Layout)
+	imageFit := NormalizeCatalogImageFit(input.ImageFit)
+	imageSizePct := NormalizeCatalogImageSizePct(input.ImageSizePct)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	_, err := s.db.Exec(`
-		INSERT INTO commands (id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		INSERT INTO commands (
+			id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms,
+			image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		trigger,
 		enabled,
@@ -197,6 +225,12 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 		input.SplashTemplate,
 		input.Sound,
 		durationMs,
+		nullString(imageAsset),
+		nullString(soundFile),
+		soundVolume,
+		layout,
+		imageFit,
+		imageSizePct,
 	)
 	if err != nil {
 		if isUniqueConstraint(err) {
@@ -217,6 +251,12 @@ type UpdateCommandInput struct {
 	SplashTemplate  string
 	Sound           string
 	DurationMs      int
+	ImageAsset      string
+	SoundFile       string
+	SoundVolume     int
+	Layout          string
+	ImageFit        string
+	ImageSizePct    int
 }
 
 // UpdateCommand updates an existing command.
@@ -238,12 +278,23 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 	if err := validateCatalogSound(input.Sound); err != nil {
 		return nil, err
 	}
+	if fields := validateCommandMediaFields(
+		input.ImageAsset, input.SoundFile, input.SoundVolume, input.ImageSizePct, input.Layout, input.ImageFit,
+	); len(fields) > 0 {
+		return nil, catalogMediaValidationError(fields)
+	}
 
 	durationMs := normalizeDurationMs(input.DurationMs)
 	enabled := 0
 	if input.Enabled {
 		enabled = 1
 	}
+	imageAsset := strings.TrimSpace(input.ImageAsset)
+	soundFile := strings.TrimSpace(input.SoundFile)
+	soundVolume := NormalizeCatalogSoundVolume(input.SoundVolume)
+	layout := NormalizeCatalogLayout(input.Layout)
+	imageFit := NormalizeCatalogImageFit(input.ImageFit)
+	imageSizePct := NormalizeCatalogImageSizePct(input.ImageSizePct)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -254,7 +305,8 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 
 	result, err := s.db.Exec(`
 		UPDATE commands
-		SET trigger = ?, enabled = ?, cooldown_seconds = ?, splash_template = ?, sound = ?, duration_ms = ?
+		SET trigger = ?, enabled = ?, cooldown_seconds = ?, splash_template = ?, sound = ?, duration_ms = ?,
+		    image_asset = ?, sound_file = ?, sound_volume = ?, layout = ?, image_fit = ?, image_size_pct = ?
 		WHERE id = ?`,
 		trigger,
 		enabled,
@@ -262,6 +314,12 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 		input.SplashTemplate,
 		input.Sound,
 		durationMs,
+		nullString(imageAsset),
+		nullString(soundFile),
+		soundVolume,
+		layout,
+		imageFit,
+		imageSizePct,
 		input.ID,
 	)
 	if err != nil {
@@ -305,7 +363,7 @@ func (s *Store) DeleteCommand(id string) error {
 
 func (s *Store) getCommandLocked(id string) (*Command, error) {
 	row := s.db.QueryRow(`
-		SELECT id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file
+		SELECT id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM commands
 		WHERE id = ?`, id)
 

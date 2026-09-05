@@ -6,6 +6,43 @@ import { validateCommandTrigger } from "./audience-helpers.js";
 import { parseAudienceHash } from "./audience-tabs.js";
 import { parseWorkspaceHash } from "./workspace-router.js";
 import { neighboringCatalogSelection } from "./catalog-selection.js";
+import {
+  bindSplashVariableChips,
+  previewStreamerName,
+  renderSplashPreview,
+} from "./catalog-template.js";
+import { createCatalogMediaController } from "./catalog-media-ui.js";
+
+const commandMedia = createCatalogMediaController({
+  imagePreview: dom.commandImagePreview,
+  imageInput: dom.commandImageInput,
+  imageClear: dom.commandImageClear,
+  imageError: dom.commandImageError,
+  imageFitInput: dom.commandImageFitInput,
+  imageFitError: dom.commandImageFitError,
+  imageSizeInput: dom.commandImageSizeInput,
+  imageSizeValue: dom.commandImageSizeValue,
+  imageSizeError: dom.commandImageSizeError,
+  soundFileInput: dom.commandSoundFileInput,
+  soundFileClear: dom.commandSoundFileClear,
+  soundFileError: dom.commandSoundFileError,
+  soundVolumeInput: dom.commandSoundVolumeInput,
+  soundVolumeValue: dom.commandSoundVolumeValue,
+  soundVolumeError: dom.commandSoundVolumeError,
+  soundPlay: dom.commandSoundPlay,
+  soundStop: dom.commandSoundStop,
+  builtInSoundInput: dom.commandSoundInput,
+  layoutName: "command-layout",
+  layoutError: dom.commandLayoutError,
+  graphicKind: "command",
+  graphicIdentity: function (record) {
+    return {
+      identifier: String(record.trigger || record.id || ""),
+      label: String(record.trigger || ""),
+    };
+  },
+});
+commandMedia.bind();
 
 const FETCH_TIMEOUT_MS = 15000;
 
@@ -44,6 +81,7 @@ function setFieldError(input, element, message) {
 function clearFieldErrors() {
   setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
   setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
+  commandMedia.clearFieldErrors();
 }
 
 function setButtonsDisabled(disabled) {
@@ -126,6 +164,7 @@ function renderCommandsList() {
     item.addEventListener("click", function () {
       selectCommand(String(cmd.id || ""), false);
       focusCommandItem(String(cmd.id || ""));
+      revealCommandEditor();
     });
     item.addEventListener("keydown", function (event) {
       if (["ArrowUp", "ArrowDown", "Home", "End", "Enter", " "].indexOf(event.key) === -1) {
@@ -177,9 +216,30 @@ function focusCommandItem(id) {
   });
 }
 
+function revealCommandEditor() {
+  if (!window.matchMedia("(max-width: 1023px)").matches) {
+    return;
+  }
+  window.requestAnimationFrame(function () {
+    window.requestAnimationFrame(function () {
+      const editor = dom.commandsEditorForm?.closest(".audience-catalog-editor");
+      editor?.scrollIntoView({ block: "start" });
+    });
+  });
+}
+
 function focusCommandCreate() {
   window.requestAnimationFrame(function () {
     dom.commandsCreateButton?.focus();
+  });
+}
+
+function updateCommandSplashPreview() {
+  renderSplashPreview(dom.commandSplashPreview, dom.commandSplashInput?.value || "", {
+    viewer: "Alice",
+    streamer: previewStreamerName(),
+    points: 0,
+    message: t("catalog.sampleCommandMessage"),
   });
 }
 
@@ -205,6 +265,8 @@ function fillEditorFromCommand(cmd) {
   if (dom.commandDurationInput) {
     dom.commandDurationInput.value = String(cmd.duration_ms != null ? cmd.duration_ms : 5000);
   }
+  commandMedia.fillFromRecord(cmd);
+  updateCommandSplashPreview();
 }
 
 function defaultNewCommand() {
@@ -215,6 +277,8 @@ function defaultNewCommand() {
     splash_template: "",
     sound: "",
     duration_ms: 5000,
+    sound_volume: 70,
+    layout: "fullscreen",
   };
 }
 
@@ -222,6 +286,7 @@ function selectCommand(id, isNew) {
   creatingNew = isNew;
   selectedCommandId = isNew ? null : id;
   clearFieldErrors();
+  commandMedia.stopPreview();
 
   if (isNew) {
     fillEditorFromCommand(defaultNewCommand());
@@ -239,14 +304,17 @@ function selectCommand(id, isNew) {
 }
 
 function readEditorPayload() {
-  return {
-    trigger: dom.commandTriggerInput ? dom.commandTriggerInput.value : "",
-    enabled: dom.commandEnabledInput ? dom.commandEnabledInput.checked : true,
-    cooldown_seconds: dom.commandCooldownInput ? Number(dom.commandCooldownInput.value) : 0,
-    splash_template: dom.commandSplashInput ? dom.commandSplashInput.value : "",
-    sound: dom.commandSoundInput ? dom.commandSoundInput.value : "",
-    duration_ms: dom.commandDurationInput ? Number(dom.commandDurationInput.value) : 5000,
-  };
+  return Object.assign(
+    {
+      trigger: dom.commandTriggerInput ? dom.commandTriggerInput.value : "",
+      enabled: dom.commandEnabledInput ? dom.commandEnabledInput.checked : true,
+      cooldown_seconds: dom.commandCooldownInput ? Number(dom.commandCooldownInput.value) : 0,
+      splash_template: dom.commandSplashInput ? dom.commandSplashInput.value : "",
+      sound: dom.commandSoundInput ? dom.commandSoundInput.value : "",
+      duration_ms: dom.commandDurationInput ? Number(dom.commandDurationInput.value) : 5000,
+    },
+    commandMedia.readPayload()
+  );
 }
 
 function applyFieldErrors(fields) {
@@ -259,6 +327,7 @@ function applyFieldErrors(fields) {
   if (fields.splash_template && dom.commandSplashError) {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, fields.splash_template);
   }
+  commandMedia.applyFieldErrors(fields);
 }
 
 async function fetchCommandsList() {
@@ -378,6 +447,7 @@ async function saveCommand() {
 
     creatingNew = false;
     selectedCommandId = String(data.id || selectedCommandId || "");
+    commandMedia.commitSavedRecord(data);
     await loadCommandsCatalog();
     selectCommand(selectedCommandId, false);
   } catch (err) {
@@ -434,6 +504,7 @@ async function deleteCommand() {
 
     selectedCommandId = null;
     creatingNew = false;
+    commandMedia.releaseSavedAssets();
     closeDeletePrompt();
     await loadCommandsCatalog();
     syncEditorVisibility();
@@ -489,10 +560,14 @@ export function initCommandsCatalog() {
   }
   dom.commandTriggerInput?.addEventListener("input", function () {
     setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
+    commandMedia.setGraphicIdentity(dom.commandTriggerInput?.value || "", dom.commandTriggerInput?.value || "");
   });
   dom.commandSplashInput?.addEventListener("input", function () {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
+    updateCommandSplashPreview();
   });
+  bindSplashVariableChips(dom.commandSplashVars, dom.commandSplashInput, updateCommandSplashPreview);
+  document.addEventListener("admin-config-applied", updateCommandSplashPreview);
   if (dom.commandsDeleteButton) {
     dom.commandsDeleteButton.addEventListener("click", function () {
       if (!selectedCommandId) {
@@ -539,6 +614,8 @@ export function initCommandsCatalog() {
       loadCommandsCatalog().catch(function () {
         /* region handles error */
       });
+    } else {
+      commandMedia.abandonPendingUploads();
     }
   });
 

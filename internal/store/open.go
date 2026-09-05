@@ -41,8 +41,19 @@ func sqliteDSN(path string) (string, error) {
 	return dsn, nil
 }
 
+// OpenOptions controls one-time store bootstrap behavior.
+type OpenOptions struct {
+	// TimeLocale is the operator interface locale (ru-RU or en-GB) used when
+	// initializing starter commands and awards on a new database file.
+	TimeLocale string
+}
+
+func resolvedOpenLocale(locale string) string {
+	return normalizeStarterLocale(locale)
+}
+
 // Open opens or creates the SQLite database at path, runs migrations, and ensures an open session.
-func Open(path string) (*Store, error) {
+func Open(path string, opts OpenOptions) (*Store, error) {
 	dsn, err := sqliteDSN(path)
 	if err != nil {
 		return nil, err
@@ -53,6 +64,22 @@ func Open(path string) (*Store, error) {
 		return nil, errors.Errorf("open sqlite database: %w", err)
 	}
 	db.SetMaxOpenConns(1)
+
+	gooseVersionBefore, err := currentGooseVersion(db)
+	if err != nil {
+		closeErr := db.Close()
+		if closeErr != nil {
+			return nil, errors.Errorf("read database version: %w (close database: %w)", err, closeErr)
+		}
+		return nil, errors.Errorf("read database version: %w", err)
+	}
+	if err := prepareStarterCatalogBootstrap(db, gooseVersionBefore, resolvedOpenLocale(opts.TimeLocale)); err != nil {
+		closeErr := db.Close()
+		if closeErr != nil {
+			return nil, errors.Errorf("prepare store bootstrap: %w (close database: %w)", err, closeErr)
+		}
+		return nil, errors.Errorf("prepare store bootstrap: %w", err)
+	}
 
 	var gooseDialectErr error
 	gooseInit.Do(func() {
@@ -86,6 +113,14 @@ func Open(path string) (*Store, error) {
 			return nil, errors.Errorf("ensure open session: %w (close database: %w)", err, closeErr)
 		}
 		return nil, errors.Errorf("ensure open session: %w", err)
+	}
+
+	if err := s.ensureStarterCatalogLocked(); err != nil {
+		closeErr := db.Close()
+		if closeErr != nil {
+			return nil, errors.Errorf("ensure starter catalog: %w (close database: %w)", err, closeErr)
+		}
+		return nil, errors.Errorf("ensure starter catalog: %w", err)
 	}
 
 	return s, nil

@@ -15,7 +15,7 @@ func openTestStore(t *testing.T) *store.Store {
 	t.Helper()
 
 	path := filepath.Join(t.TempDir(), "comm-relay.db")
-	s, err := store.Open(path)
+	s, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, s.Close()) })
 
@@ -77,7 +77,7 @@ func TestMatcher_WhenCooldownElapsed_ExpectSecondFire(t *testing.T) {
 		Trigger:         "gg",
 		Enabled:         true,
 		CooldownSeconds: 1,
-		SplashTemplate:  "Good game, {name}!",
+		SplashTemplate:  "Good game, {viewer}!",
 		Sound:           "chime",
 		DurationMs:      5000,
 	})
@@ -93,11 +93,4 @@ func TestMatcher_WhenCooldownElapsed_ExpectSecondFire(t *testing.T) {
 	time.Sleep(1100 * time.Millisecond)
 
 	require.True(t, m.TryFire("twitch", "viewer-1", cmd))
-}
-
-func TestSubstituteTemplate_WhenCommand_ExpectNameAndZeroPoints(t *testing.T) {
-	t.Parallel()
-
-	text := command.SubstituteTemplate("Good game, {name}! +{points}", "Alice", 0)
-	require.Equal(t, "Good game, Alice! +0", text)
 }

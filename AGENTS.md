@@ -204,7 +204,7 @@ Standard commands from the repo root (documented in **Completion Checklist** abo
 ### Running the server
 
 - Default listen address: `127.0.0.1:17877` (`server_port` in `config.json`, created on first run).
-- Dev run: `go run ./cmd/comm-relay-server` from repo root (uses `./web` and `./config.json`).
+- Dev run: `task web:dev` (Air + live reload; data in `var/data/`, seed with `task data:sync` from desktop `%AppData%\comm-relay` or `~/.config/comm-relay`). Plain server: `go run ./cmd/comm-relay-server -config ./var/data/config.json -web ./web`.
 - Desktop: `go build -tags wails -o comm-relay-desktop ./cmd/comm-relay-desktop` (needs Wails + platform WebView deps); config defaults to user config dir.
 - Overrides: `-addr` (listen), `-config`, `-web`, `-debug` — see `cmd/comm-relay-server/main.go`.
 - For a long-lived background process in Cloud Agent VMs, use **tmux** (see system shell instructions), e.g. session `comm-relay-dev` with `go run ./cmd/comm-relay-server` or a built binary.

@@ -1,0 +1,101 @@
+.alert-emblem {
+  --alert-emblem-accent: var(--message-accent, #55d6ff);
+  --alert-emblem-secondary: color-mix(in srgb, var(--alert-emblem-accent) 46%, #ffffff);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--alert-portrait-size, 72px);
+  height: var(--alert-portrait-size, 72px);
+  box-sizing: border-box;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--alert-emblem-secondary);
+  border: 1px solid color-mix(in srgb, var(--alert-emblem-accent) 68%, transparent);
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--alert-emblem-accent) 26%, transparent), transparent 58%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(5, 12, 22, 0.86));
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5) inset,
+    0 0 18px color-mix(in srgb, var(--alert-emblem-accent) 24%, transparent);
+}
+
+.alert-emblem::before {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--alert-emblem-secondary) 42%, transparent);
+  opacity: 0.72;
+}
+
+.alert-emblem--command {
+  border-radius: 8px;
+  clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%);
+}
+
+.alert-emblem--command::before {
+  border-radius: 5px;
+  clip-path: polygon(0 12%, 12% 0, 88% 0, 100% 12%, 100% 88%, 88% 100%, 12% 100%, 0 88%);
+}
+
+.alert-emblem--award {
+  --alert-emblem-accent: var(--award-accent, #f3c75f);
+  border-width: 2px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--alert-emblem-accent) 34%, transparent), transparent 54%),
+    conic-gradient(from 18deg, rgba(255, 255, 255, 0.12), rgba(7, 12, 22, 0.9), rgba(255, 255, 255, 0.08), rgba(7, 12, 22, 0.9));
+}
+
+.alert-emblem--award::before {
+  border-radius: 50%;
+}
+
+.alert-emblem__svg {
+  width: 68%;
+  height: 68%;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--alert-emblem-accent) 45%, transparent));
+}
+
+.alert-emblem__monogram {
+  position: absolute;
+  right: 8%;
+  bottom: 5%;
+  max-width: 58%;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(9px, calc(var(--alert-portrait-size, 72px) * 0.2), 20px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-overflow: clip;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.92);
+  white-space: nowrap;
+}
+
+.alert-emblem__orbit {
+  position: absolute;
+  inset: 12%;
+  pointer-events: none;
+  border-top: 2px solid color-mix(in srgb, var(--alert-emblem-secondary) 72%, transparent);
+  border-right: 2px solid transparent;
+  border-radius: 50%;
+  opacity: 0.54;
+  transform: rotate(calc(var(--alert-emblem-rotation, 0) * 1deg));
+}
+
+.alert-emblem--variant-1 {
+  --alert-emblem-rotation: 105;
+}
+
+.alert-emblem--variant-2 {
+  --alert-emblem-rotation: 220;
+}
+
+.alert-emblem--symbol-glitch .alert-emblem__svg {
+  filter:
+    drop-shadow(3px 0 0 color-mix(in srgb, #ff4f9a 46%, transparent))
+    drop-shadow(-3px 0 0 color-mix(in srgb, #57d9ff 46%, transparent));
+}

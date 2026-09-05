@@ -68,3 +68,20 @@
 
 **Связи:** archive changes выше; mockup с отдельной кнопкой pinned — [`mockups/studio-surface-centric.html`](mockups/studio-surface-centric.html).  
 **Продвижение:** OpenSpec change (admin-and-dock / Studio OBS URLs) после выбора варианта.
+
+### OQ-002: Тестовые сценарии overlay — изоляция, UI и эфирные источники (2026-09-05)
+
+**Статус:** `open`  
+**Контекст:** реализован change [`studio-overlay-test-tools`](../openspec/changes/studio-overlay-test-tools/) (отдельные `/overlay/test/*`, `/ws/overlay-debug`, API сценариев, панель в Studio). После обсуждения сомнения в модели: test-only URL неудобны, хочется проверять поведение в тех же Browser Source, что и в эфире. UI панели **временно убран** из `web/admin/index.html` (2026-09-05); backend и JS-модули оставлены.  
+**Вопрос:** оставляем ли изолированные test-only источники, переключаемся на прогон сценариев в **эфирные** overlay (`/overlay`, `/overlay/leaderboard`, `/overlay/alert`), или комбинируем (явный opt-in «на эфирный источник»)?  
+**Почему важно:** без решения висит недоделанная функция: код и маршруты есть, оператору из Studio недоступно; неясно, куда инвестировать доработку (QA, UX, безопасность эфира).  
+**Как сейчас:** API `/api/overlay-debug/*`, WebSocket `/ws/overlay-debug`, страницы `/overlay/test/*` работают при прямом обращении; панель Studio и кнопка «Test overlay» в разметке отсутствуют. Изоляция production/debug зафиксирована в [`openspec/changes/studio-overlay-test-tools/specs/overlay-debugging/spec.md`](../openspec/changes/studio-overlay-test-tools/specs/overlay-debugging/spec.md). Незакрытые пункты верификации: tasks 5.3–5.6 в том же change.  
+**Варианты:**
+
+1. **Fail-closed как сейчас** — вернуть UI; отдельные test-only URL в OBS; эфир не затрагивается.
+2. **Сценарии в эфирные overlay** — один Browser Source; риск смешения с live во время стрима; нужны guardrails (режим, предупреждение, только offline).
+3. **Гибрид** — по умолчанию test-only; опционально «отправить в подключённые production-источники» с явным подтверждением.
+4. **Откат** — удалить маршруты/API после периода; оставить только static sample preview в Studio.
+
+**Связи:** OpenSpec [`studio-overlay-test-tools`](../openspec/changes/studio-overlay-test-tools/); задача [CR-023](tasks/CR-023-overlay-test-tools-rework.md).  
+**Продвижение:** после выбора — обновить OpenSpec change (или новый delta), затем CR-023; при shipping — `CHANGELOG`, README, возврат или замена UI.

@@ -54,12 +54,12 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 			v.id,
 			v.display_name,
 			v.message_count,
-			v.score,
+			v.xp,
 			v.last_seen_at,
 			COALESCE(vss.message_count, 0),
-			COALESCE(vss.score, 0),
+			COALESCE(vss.xp, 0),
 			COALESCE(vds.message_count, 0),
-			COALESCE(vds.score, 0),
+			COALESCE(vds.xp, 0),
 			COALESCE(
 				NULLIF(v.display_name, ''),
 				(
@@ -167,12 +167,12 @@ func (s *Store) Get(id string, dayResetHour int, now time.Time) (*Viewer, error)
 			v.id,
 			v.display_name,
 			v.message_count,
-			v.score,
+			v.xp,
 			v.last_seen_at,
 			COALESCE(vss.message_count, 0),
-			COALESCE(vss.score, 0),
+			COALESCE(vss.xp, 0),
 			COALESCE(vds.message_count, 0),
-			COALESCE(vds.score, 0)
+			COALESCE(vds.xp, 0)
 		FROM viewers v
 		LEFT JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
 		LEFT JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?
@@ -256,12 +256,12 @@ func scanViewerListRow(rows *sql.Rows) (Viewer, error) {
 		&viewer.ID,
 		&displayOverride,
 		&viewer.MessageCount,
-		&viewer.Score,
+		&viewer.XP,
 		&lastSeenRaw,
 		&viewer.SessionMessageCount,
-		&viewer.SessionScore,
+		&viewer.SessionXP,
 		&viewer.DayMessageCount,
-		&viewer.DayScore,
+		&viewer.DayXP,
 		&viewer.DisplayName,
 		&viewer.LastSeen.Platform,
 		&viewer.LastSeen.UserID,
@@ -291,12 +291,12 @@ func scanViewerSummaryRow(row *sql.Row) (Viewer, error) {
 		&viewer.ID,
 		&displayOverride,
 		&viewer.MessageCount,
-		&viewer.Score,
+		&viewer.XP,
 		&lastSeenRaw,
 		&viewer.SessionMessageCount,
-		&viewer.SessionScore,
+		&viewer.SessionXP,
 		&viewer.DayMessageCount,
-		&viewer.DayScore,
+		&viewer.DayXP,
 	); err != nil {
 		return Viewer{}, err
 	}

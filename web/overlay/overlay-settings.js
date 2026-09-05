@@ -339,12 +339,56 @@ function markLegacyCockpitGlass(style, resolved, surface, theme, query, layout) 
 
 // alertViewFromConfig resolves alert chrome independently from chat and leaderboard.
 export function alertViewFromConfig(config, params) {
-  return surfaceViewFromConfig(config, params, "alerts");
+  const overlay = config && typeof config === "object" ? config.overlay : null;
+  const query = params && typeof params.get === "function" ? params : undefined;
+  const queryPreset = query ? query.get("preset") : params;
+  const resolved = resolvePreset(overlay, queryPreset);
+  const base = surfaceViewFromConfig(config, params, "alerts");
+  const surface =
+    resolved &&
+    resolved.surfaces &&
+    resolved.surfaces.alerts &&
+    typeof resolved.surfaces.alerts === "object"
+      ? resolved.surfaces.alerts
+      : {};
+  let imageSizePct = normalizeAlertImageSizePct(surface.image_size_pct);
+  const queried = queryIntInRange(
+    query,
+    "image_size_pct",
+    ALERT_IMAGE_SIZE_MIN,
+    ALERT_IMAGE_SIZE_MAX
+  );
+  if (queried !== null) {
+    imageSizePct = queried;
+  }
+  let fontSizePx =
+    typeof surface.font_size_px === "number" && surface.font_size_px >= OVERLAY_FONT_SIZE_MIN
+      ? surface.font_size_px
+      : base.font_size_px;
+  const queriedFont = queryIntInRange(query, "font_size_px", OVERLAY_FONT_SIZE_MIN, OVERLAY_FONT_SIZE_MAX);
+  if (queriedFont !== null) {
+    fontSizePx = queriedFont;
+  }
+  return Object.assign({}, base, { image_size_pct: imageSizePct, font_size_px: fontSizePx });
 }
 
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
 const OVERLAY_FONT_SIZE_MIN = 12;
 const OVERLAY_FONT_SIZE_MAX = 48;
+const ALERT_IMAGE_SIZE_MIN = 25;
+const ALERT_IMAGE_SIZE_MAX = 300;
+const ALERT_IMAGE_SIZE_DEFAULT = 100;
+
+export function normalizeAlertImageSizePct(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return ALERT_IMAGE_SIZE_DEFAULT;
+  }
+  return Math.max(
+    ALERT_IMAGE_SIZE_MIN,
+    Math.min(ALERT_IMAGE_SIZE_MAX, Math.round(parsed))
+  );
+}
 
 export function normalizeLeaderboardLayout(raw) {
   const value = String(raw || "").trim().toLowerCase();

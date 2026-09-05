@@ -60,7 +60,7 @@ function renderLeaderboardRows(entries) {
     const nameCell = document.createElement("td");
     nameCell.textContent = entry.display_name || t("viewers.unnamed");
     const scoreCell = document.createElement("td");
-    scoreCell.textContent = String(typeof entry.score === "number" ? entry.score : 0);
+    scoreCell.textContent = String(typeof entry.xp === "number" ? entry.xp : 0);
     scoreCell.className = "data-table__numeric";
     const messagesCell = document.createElement("td");
     messagesCell.textContent = String(typeof entry.message_count === "number" ? entry.message_count : 0);

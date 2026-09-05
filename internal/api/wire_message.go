@@ -53,10 +53,16 @@ type wireAlert struct {
 	AvatarURL       string `json:"avatar_url,omitempty"`
 	Text            string `json:"text"`
 	Points          int    `json:"points"`
-	Sound           string `json:"sound"`
+	Sound           string `json:"sound,omitempty"`
 	DurationMs      int    `json:"duration_ms"`
 	Source          string `json:"source"`
 	CreatedAt       string `json:"created_at"`
+	ImageAsset      string `json:"image_asset,omitempty"`
+	SoundFile       string `json:"sound_file,omitempty"`
+	SoundVolume     int    `json:"sound_volume"`
+	Layout          string `json:"layout,omitempty"`
+	ImageFit        string `json:"image_fit,omitempty"`
+	ImageSizePct    int    `json:"image_size_pct"`
 	Trigger         string `json:"trigger,omitempty"`
 	AwardID         string `json:"award_id,omitempty"`
 	AwardName       string `json:"award_name,omitempty"`
@@ -128,18 +134,22 @@ func alertWirePayload(cmd *store.Command, msg bus.ChatMessage, text string, poin
 		name = msg.DisplayName
 	}
 
-	data, err := json.Marshal(wireAlert{
+	alert := wireAlert{
 		Type:       wireAlertType,
 		Name:       name,
 		AvatarURL:  msg.AvatarURL,
 		Text:       text,
 		Points:     points,
-		Sound:      cmd.Sound,
 		DurationMs: cmd.DurationMs,
 		Source:     "command",
 		CreatedAt:  time.Now().UTC().Format(time.RFC3339Nano),
 		Trigger:    cmd.Trigger,
-	})
+	}
+	applyCatalogAlertMedia(
+		&alert, cmd.ImageAsset, cmd.SoundFile, cmd.Sound, cmd.SoundVolume, cmd.Layout, cmd.ImageFit, cmd.ImageSizePct,
+	)
+
+	data, err := json.Marshal(alert)
 	if err != nil {
 		return nil, errors.Errorf("marshal alert wire event: %w", err)
 	}
@@ -160,13 +170,12 @@ func awardAlertWirePayload(
 	createdAt time.Time,
 	context awardAlertContext,
 ) ([]byte, error) {
-	data, err := json.Marshal(wireAlert{
+	alert := wireAlert{
 		Type:            wireAlertType,
 		Name:            name,
 		AvatarURL:       avatarURL,
 		Text:            text,
 		Points:          points,
-		Sound:           award.Sound,
 		DurationMs:      award.DurationMs,
 		Source:          "award",
 		CreatedAt:       createdAt.UTC().Format(time.RFC3339Nano),
@@ -175,10 +184,36 @@ func awardAlertWirePayload(
 		MessagePlatform: context.MessagePlatform,
 		MessageID:       context.MessageID,
 		MessageText:     context.MessageText,
-	})
+	}
+	applyCatalogAlertMedia(
+		&alert, award.ImageAsset, award.SoundFile, award.Sound, award.SoundVolume, award.Layout, award.ImageFit, award.ImageSizePct,
+	)
+
+	data, err := json.Marshal(alert)
 	if err != nil {
 		return nil, errors.Errorf("marshal award alert wire event: %w", err)
 	}
 
 	return data, nil
+}
+
+func applyCatalogAlertMedia(
+	alert *wireAlert,
+	imageAsset, soundFile, builtInSound string,
+	soundVolume int,
+	layout, imageFit string,
+	imageSizePct int,
+) {
+	if imageAsset != "" {
+		alert.ImageAsset = imageAsset
+	}
+	if soundFile != "" {
+		alert.SoundFile = soundFile
+	} else if builtInSound != "" {
+		alert.Sound = builtInSound
+	}
+	alert.SoundVolume = store.NormalizeCatalogSoundVolume(soundVolume)
+	alert.Layout = store.NormalizeCatalogLayout(layout)
+	alert.ImageFit = store.NormalizeCatalogImageFit(imageFit)
+	alert.ImageSizePct = store.NormalizeCatalogImageSizePct(imageSizePct)
 }

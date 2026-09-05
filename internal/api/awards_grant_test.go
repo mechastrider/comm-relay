@@ -13,9 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
-func TestAwardGrant_WhenJokeToExistingViewer_ExpectScoreAndAlert(t *testing.T) {
+func TestAwardGrant_WhenJokeToExistingViewer_ExpectXPAndAlert(t *testing.T) {
 	b := bus.New(0)
 	env := newTestEnv(t, b)
 	srv := httptest.NewServer(env.Handler)
@@ -54,15 +55,15 @@ func TestAwardGrant_WhenJokeToExistingViewer_ExpectScoreAndAlert(t *testing.T) {
 
 	var viewer struct {
 		MessageCount int `json:"message_count"`
-		Score        int `json:"score"`
-		SessionScore int `json:"session_score"`
-		DayScore     int `json:"day_score"`
+		XP           int `json:"xp"`
+		SessionXP    int `json:"session_xp"`
+		DayXP        int `json:"day_xp"`
 	}
 	require.NoError(t, json.Unmarshal(getRec.Body.Bytes(), &viewer))
 	require.Equal(t, 1, viewer.MessageCount)
-	require.Equal(t, 11, viewer.Score)
-	require.Equal(t, 11, viewer.SessionScore)
-	require.Equal(t, 11, viewer.DayScore)
+	require.Equal(t, 11, viewer.XP)
+	require.Equal(t, 11, viewer.SessionXP)
+	require.Equal(t, 11, viewer.DayXP)
 
 	var sawAlert bool
 	deadline := time.Now().Add(2 * time.Second)
@@ -90,6 +91,53 @@ func TestAwardGrant_WhenJokeToExistingViewer_ExpectScoreAndAlert(t *testing.T) {
 		break
 	}
 	require.True(t, sawAlert, "expected award alert frame")
+}
+
+func TestAwardGrant_WhenTemplateHasMessage_ExpectResolvedQuote(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+	srv := httptest.NewServer(env.Handler)
+	t.Cleanup(srv.Close)
+
+	seedViewer(t, env, "twitch", "42", "Bob")
+
+	_, err := env.ViewerStore.UpdateAward(store.UpdateAwardInput{
+		ID:             "advice",
+		Name:           "Advice",
+		Points:         50,
+		SplashTemplate: "Advice for {viewer}: {message} +{points}",
+		Sound:          "chime",
+		DurationMs:     5000,
+	})
+	require.NoError(t, err)
+
+	conn, _, err := websocket.DefaultDialer.Dial("ws"+strings.TrimPrefix(srv.URL, "http")+"/ws", nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
+	time.Sleep(50 * time.Millisecond)
+
+	body, err := json.Marshal(map[string]string{
+		"platform":     "twitch",
+		"user_id":      "42",
+		"award_id":     "advice",
+		"message_text": "nice catch",
+	})
+	require.NoError(t, err)
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/awards/grant", strings.NewReader(string(body))))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var alert map[string]any
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
+		_, data, readErr := conn.ReadMessage()
+		if readErr != nil || json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
+			continue
+		}
+		break
+	}
+	require.Equal(t, "Advice for Bob: nice catch +50", alert["text"])
 }
 
 func TestAwardGrant_WhenMessageTextExceedsCodePointLimit_ExpectTransientBoundedQuote(t *testing.T) {
@@ -139,9 +187,16 @@ func TestAwardGrant_WhenMessageTextExceedsCodePointLimit_ExpectTransientBoundedQ
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &grantPayload))
 	events, err := env.ViewerStore.ListInteractionEventsByViewer(grantPayload.ViewerID)
 	require.NoError(t, err)
-	require.Len(t, events, 1)
-	require.Equal(t, "twitch", events[0].MessagePlatform)
-	require.Equal(t, "msg-42", events[0].MessageID)
+	var awardEvent *store.InteractionEvent
+	for i := range events {
+		if events[i].Kind == store.InteractionEventAward {
+			awardEvent = &events[i]
+			break
+		}
+	}
+	require.NotNil(t, awardEvent)
+	require.Equal(t, "twitch", awardEvent.MessagePlatform)
+	require.Equal(t, "msg-42", awardEvent.MessageID)
 }
 
 func TestAwardGrant_WhenNoMessageContext_ExpectGrantWithoutHighlightFields(t *testing.T) {
@@ -199,8 +254,15 @@ func TestAwardGrant_WhenQuoteIsProvided_ExpectNoDurableOrResponseQuote(t *testin
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &grantPayload))
 	events, err := env.ViewerStore.ListInteractionEventsByViewer(grantPayload.ViewerID)
 	require.NoError(t, err)
-	require.Len(t, events, 1)
-	persistedEvent, err := json.Marshal(events[0])
+	var awardEvent *store.InteractionEvent
+	for i := range events {
+		if events[i].Kind == store.InteractionEventAward {
+			awardEvent = &events[i]
+			break
+		}
+	}
+	require.NotNil(t, awardEvent)
+	persistedEvent, err := json.Marshal(awardEvent)
 	require.NoError(t, err)
 	require.NotContains(t, string(persistedEvent), quote)
 
@@ -248,7 +310,7 @@ func TestAwardGrant_WhenEmptyUserID_ExpectBadRequest(t *testing.T) {
 	getRec := httptest.NewRecorder()
 	env.Handler.ServeHTTP(getRec, httptest.NewRequest(http.MethodGet, "/api/viewers", nil))
 	require.Equal(t, http.StatusOK, getRec.Code)
-	require.Contains(t, getRec.Body.String(), `"score":1`)
+	require.Contains(t, getRec.Body.String(), `"xp":1`)
 }
 
 func TestAwardGrant_WhenUnknownAward_ExpectBadRequest(t *testing.T) {
@@ -266,7 +328,7 @@ func TestAwardGrant_WhenUnknownAward_ExpectBadRequest(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestAwardGrant_WhenJokeThenAdvice_ExpectTwoAlertsAndCumulativeScore(t *testing.T) {
+func TestAwardGrant_WhenJokeThenAdvice_ExpectTwoAlertsAndCumulativeXP(t *testing.T) {
 	b := bus.New(0)
 	env := newTestEnv(t, b)
 	srv := httptest.NewServer(env.Handler)
@@ -318,7 +380,7 @@ func TestAwardGrant_WhenJokeThenAdvice_ExpectTwoAlertsAndCumulativeScore(t *test
 	listRec := httptest.NewRecorder()
 	env.Handler.ServeHTTP(listRec, httptest.NewRequest(http.MethodGet, "/api/viewers", nil))
 	require.Equal(t, http.StatusOK, listRec.Code)
-	require.Contains(t, listRec.Body.String(), `"score":61`)
+	require.Contains(t, listRec.Body.String(), `"xp":61`)
 }
 
 func TestAwardGrant_WhenUnknownIdentity_ExpectViewerCreated(t *testing.T) {
@@ -338,7 +400,7 @@ func TestAwardGrant_WhenUnknownIdentity_ExpectViewerCreated(t *testing.T) {
 	env.Handler.ServeHTTP(listRec, httptest.NewRequest(http.MethodGet, "/api/viewers", nil))
 	require.Equal(t, http.StatusOK, listRec.Code)
 	require.Contains(t, listRec.Body.String(), `"user_id":"brand-new"`)
-	require.Contains(t, listRec.Body.String(), `"score":10`)
+	require.Contains(t, listRec.Body.String(), `"xp":10`)
 }
 
 func TestMessagesRecent_WhenPublishedChat_ExpectUserID(t *testing.T) {
@@ -409,7 +471,7 @@ func TestAwardGrant_WhenGranted_ExpectLeaderboardSnapshot(t *testing.T) {
 			if !ok {
 				continue
 			}
-			require.Equal(t, float64(11), first["score"])
+			require.Equal(t, float64(11), first["xp"])
 			return
 		}
 	}

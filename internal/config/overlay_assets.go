@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var overlayAssetNameRe = regexp.MustCompile(`(?i)^[a-z0-9][a-z0-9._-]{0,127}\.(png|jpe?g|webp|gif|svg)$`)
+var overlayAssetNameRe = regexp.MustCompile(`(?i)^[a-z0-9][a-z0-9._-]{0,127}\.(png|jpe?g|webp|gif|svg|mp3|wav)$`)
 
 // ValidOverlayAssetName reports whether name is a safe stored overlay asset filename.
 func ValidOverlayAssetName(name string) bool {

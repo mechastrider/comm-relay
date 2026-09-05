@@ -64,13 +64,13 @@ func TestViewers_WhenStartSession_ExpectSessionCountersReset(t *testing.T) {
 
 	var before struct {
 		SessionMessageCount int `json:"session_message_count"`
-		SessionScore        int `json:"session_score"`
+		SessionXP           int `json:"session_xp"`
 		MessageCount        int `json:"message_count"`
-		Score               int `json:"score"`
+		XP                  int `json:"xp"`
 	}
 	require.NoError(t, json.Unmarshal(beforeRec.Body.Bytes(), &before))
 	require.Equal(t, 1, before.SessionMessageCount)
-	require.Equal(t, 1, before.SessionScore)
+	require.Equal(t, 1, before.SessionXP)
 
 	startRec := httptest.NewRecorder()
 	env.Handler.ServeHTTP(startRec, httptest.NewRequest(http.MethodPost, "/api/sessions/start", nil))
@@ -82,15 +82,15 @@ func TestViewers_WhenStartSession_ExpectSessionCountersReset(t *testing.T) {
 
 	var after struct {
 		SessionMessageCount int `json:"session_message_count"`
-		SessionScore        int `json:"session_score"`
+		SessionXP           int `json:"session_xp"`
 		MessageCount        int `json:"message_count"`
-		Score               int `json:"score"`
+		XP                  int `json:"xp"`
 	}
 	require.NoError(t, json.Unmarshal(afterRec.Body.Bytes(), &after))
 	require.Equal(t, 0, after.SessionMessageCount)
-	require.Equal(t, 0, after.SessionScore)
+	require.Equal(t, 0, after.SessionXP)
 	require.Equal(t, before.MessageCount, after.MessageCount)
-	require.Equal(t, before.Score, after.Score)
+	require.Equal(t, before.XP, after.XP)
 }
 
 func TestLeaderboard_WhenInvalidPeriod_ExpectSession(t *testing.T) {

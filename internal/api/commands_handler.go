@@ -29,6 +29,10 @@ type commandResponse struct {
 	DurationMs      int    `json:"duration_ms"`
 	ImageAsset      string `json:"image_asset,omitempty"`
 	SoundFile       string `json:"sound_file,omitempty"`
+	SoundVolume     int    `json:"sound_volume"`
+	Layout          string `json:"layout"`
+	ImageFit        string `json:"image_fit"`
+	ImageSizePct    int    `json:"image_size_pct"`
 }
 
 type commandsListResponse struct {
@@ -51,6 +55,10 @@ func commandFromStore(cmd store.Command) commandResponse {
 	if cmd.SoundFile != "" {
 		resp.SoundFile = cmd.SoundFile
 	}
+	resp.SoundVolume = cmd.SoundVolume
+	resp.Layout = cmd.Layout
+	resp.ImageFit = cmd.ImageFit
+	resp.ImageSizePct = cmd.ImageSizePct
 
 	return resp
 }
@@ -84,6 +92,12 @@ type createCommandRequest struct {
 	SplashTemplate  string `json:"splash_template"`
 	Sound           string `json:"sound"`
 	DurationMs      int    `json:"duration_ms"`
+	ImageAsset      string `json:"image_asset,omitempty"`
+	SoundFile       string `json:"sound_file,omitempty"`
+	SoundVolume     *int   `json:"sound_volume,omitempty"`
+	Layout          string `json:"layout,omitempty"`
+	ImageFit        string `json:"image_fit,omitempty"`
+	ImageSizePct    *int   `json:"image_size_pct,omitempty"`
 }
 
 func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +122,17 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		SplashTemplate:  request.SplashTemplate,
 		Sound:           request.Sound,
 		DurationMs:      request.DurationMs,
+		ImageAsset:      request.ImageAsset,
+		SoundFile:       request.SoundFile,
+		SoundVolume:     catalogSoundVolumeFromRequest(request.SoundVolume),
+		Layout:          request.Layout,
+		ImageFit:        request.ImageFit,
+		ImageSizePct:    catalogImageSizePctFromRequest(request.ImageSizePct),
 	})
+	if fields := store.CatalogMediaFields(err); len(fields) > 0 {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
+		return
+	}
 	if errors.Is(err, store.ErrDuplicateTrigger) {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
 			"trigger": "trigger already exists",
@@ -138,6 +162,12 @@ type updateCommandRequest struct {
 	SplashTemplate  string `json:"splash_template"`
 	Sound           string `json:"sound"`
 	DurationMs      int    `json:"duration_ms"`
+	ImageAsset      string `json:"image_asset,omitempty"`
+	SoundFile       string `json:"sound_file,omitempty"`
+	SoundVolume     *int   `json:"sound_volume,omitempty"`
+	Layout          string `json:"layout,omitempty"`
+	ImageFit        string `json:"image_fit,omitempty"`
+	ImageSizePct    *int   `json:"image_size_pct,omitempty"`
 }
 
 func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +196,17 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		SplashTemplate:  request.SplashTemplate,
 		Sound:           request.Sound,
 		DurationMs:      request.DurationMs,
+		ImageAsset:      request.ImageAsset,
+		SoundFile:       request.SoundFile,
+		SoundVolume:     catalogSoundVolumeFromRequest(request.SoundVolume),
+		Layout:          request.Layout,
+		ImageFit:        request.ImageFit,
+		ImageSizePct:    catalogImageSizePctFromRequest(request.ImageSizePct),
 	})
+	if fields := store.CatalogMediaFields(err); len(fields) > 0 {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
+		return
+	}
 	if errors.Is(err, store.ErrCommandNotFound) {
 		writeError(w, http.StatusNotFound, "command not found")
 		return

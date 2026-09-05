@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=50">
+  <link rel="stylesheet" href="styles.css?v=51">
   <script>
     (function () {
       try {
@@ -156,17 +156,17 @@
             <span id="settings-state" class="settings-state" aria-live="polite" data-i18n="shell.loadingSettings">Loading settings</span>
             <button id="new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
               <span data-i18n="stream.newStream">New stream</span>
-              <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer XP and the session leaderboard. Day and all-time stay.</span>
             </button>
-            <button id="refresh-messages" type="button" class="icon-btn has-tooltip" data-i18n-aria-label="shell.refresh" aria-label="Refresh">
+            <button id="refresh-messages" type="button" class="icon-btn icon-btn--compact has-tooltip" data-i18n-aria-label="shell.refresh" aria-label="Refresh">
               <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
             </button>
-            <button id="refresh-leaderboard" type="button" class="icon-btn has-tooltip" hidden data-i18n-aria-label="shell.refresh" aria-label="Refresh">
+            <button id="refresh-leaderboard" type="button" class="icon-btn icon-btn--compact has-tooltip" hidden data-i18n-aria-label="shell.refresh" aria-label="Refresh">
               <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
             </button>
-            <button id="refresh-statistics" type="button" class="icon-btn has-tooltip" hidden data-i18n-aria-label="shell.refresh" aria-label="Refresh">
+            <button id="refresh-statistics" type="button" class="icon-btn icon-btn--compact has-tooltip" hidden data-i18n-aria-label="shell.refresh" aria-label="Refresh">
               <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0 2 5.3" stroke-linecap="round"></path><path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
               <span class="ui-tooltip" role="tooltip" data-i18n="shell.refresh">Refresh</span>
             </button>
@@ -265,10 +265,10 @@
                 </button>
                 <button id="audience-new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
                   <span data-i18n="stream.newStream">New stream</span>
-                  <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer scores and the session leaderboard. Day and all-time stay.</span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer XP and the session leaderboard. Day and all-time stay.</span>
                 </button>
               </div>
-              <p id="audience-period-hint" class="field-hint audience-toolbar__hint" data-i18n="audience.periodHint">Score and message columns follow the selected period.</p>
+              <p id="audience-period-hint" class="field-hint audience-toolbar__hint" data-i18n="audience.periodHint">XP and message columns follow the selected period.</p>
             </header>
 
             <div id="audience-layout" class="audience-layout">
@@ -290,7 +290,7 @@
                         </th>
                         <th scope="col" data-i18n="audience.colPlatforms">Platforms</th>
                         <th scope="col" class="data-table__numeric audience-viewers-table__sortable" aria-sort="none">
-                          <button id="audience-sort-score" class="audience-sort-button" type="button" data-i18n="audience.colScore" data-i18n-aria-label="audience.sortScore">Score</button>
+                          <button id="audience-sort-xp" class="audience-sort-button" type="button" data-i18n="audience.colXP" data-i18n-aria-label="audience.sortXP">XP</button>
                         </th>
                         <th scope="col" class="data-table__numeric audience-viewers-table__sortable" aria-sort="none">
                           <button id="audience-sort-messages" class="audience-sort-button" type="button" data-i18n="audience.colMessages" data-i18n-aria-label="audience.sortMessages">Messages</button>
@@ -369,7 +369,9 @@
                     </div>
                     <div class="form__field">
                       <label for="command-splash-input" data-i18n="catalog.splashTemplate">Splash template</label>
+                      <div id="command-splash-vars" class="catalog-template-vars" role="group" data-i18n-aria-label="catalog.templateVariables" aria-label="Template variables"></div>
                       <input id="command-splash-input" type="text" autocomplete="off" required>
+                      <p id="command-splash-preview" class="catalog-template-preview" aria-live="polite"></p>
                       <p id="command-splash-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
@@ -382,6 +384,71 @@
                         <option value="alert" data-i18n="sound.alert">Alert - quick double beep</option>
                       </select>
                     </div>
+                    <div class="form__field catalog-media-field">
+                      <span id="command-image-label" class="form__label" data-i18n="catalog.imageLabel">Alert image</span>
+                      <div class="catalog-media-row">
+                        <div id="command-image-preview" class="catalog-media-preview" aria-labelledby="command-image-label"></div>
+                        <div class="catalog-media-actions">
+                          <label class="btn-physical btn-small catalog-media-upload">
+                            <span data-i18n="catalog.upload">Upload</span>
+                            <input id="command-image-input" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="command-image-label">
+                          </label>
+                          <button id="command-image-clear" type="button" class="btn-physical btn-small" data-i18n="catalog.clear">Clear</button>
+                        </div>
+                      </div>
+                      <p class="field-hint" data-i18n="catalog.imageFallbackHint">Without a custom file, the built-in command graphic is used; Clear restores it.</p>
+                      <p id="command-image-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="command-image-fit-input" data-i18n="catalog.imageFitLabel">Image scale</label>
+                      <select id="command-image-fit-input" name="image_fit">
+                        <option value="cover" data-i18n="obs.panelImageFitCover">Fill</option>
+                        <option value="contain" selected data-i18n="obs.panelImageFitContain">Fit</option>
+                        <option value="fill" data-i18n="obs.panelImageFitFill">Stretch</option>
+                        <option value="tile" data-i18n="obs.panelImageFitTile">Tile</option>
+                      </select>
+                      <p class="field-hint" data-i18n="catalog.imageFitHint">How the alert image is scaled inside its frame on /overlay/alert.</p>
+                      <p id="command-image-fit-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="command-image-size-input" data-i18n="catalog.imageSizeLabel">Image size</label>
+                      <div class="catalog-volume-row">
+                        <input id="command-image-size-input" type="range" min="25" max="300" step="5" value="100">
+                        <output id="command-image-size-value" for="command-image-size-input">100%</output>
+                      </div>
+                      <p class="field-hint" data-i18n="catalog.imageSizeHint">Scales the built-in or uploaded graphic inside the alert frame.</p>
+                      <p id="command-image-size-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field catalog-media-field">
+                      <span id="command-sound-file-label" class="form__label" data-i18n="catalog.customSoundLabel">Custom sound file</span>
+                      <div class="catalog-media-actions">
+                        <label class="btn-physical btn-small catalog-media-upload">
+                          <span data-i18n="catalog.upload">Upload</span>
+                          <input id="command-sound-file-input" type="file" accept="audio/mpeg,audio/wav,.mp3,.wav" aria-labelledby="command-sound-file-label">
+                        </label>
+                        <button id="command-sound-file-clear" type="button" class="btn-physical btn-small" data-i18n="catalog.clear">Clear</button>
+                        <button id="command-sound-play" type="button" class="btn-physical btn-small" data-i18n="catalog.playSound">Play</button>
+                        <button id="command-sound-stop" type="button" class="btn-physical btn-small" data-i18n="catalog.stopSound">Stop</button>
+                      </div>
+                      <p id="command-sound-file-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="command-sound-volume-input" data-i18n="catalog.soundVolumeLabel">Sound volume</label>
+                      <div class="catalog-volume-row">
+                        <input id="command-sound-volume-input" type="range" min="0" max="100" step="1" value="70">
+                        <output id="command-sound-volume-value" for="command-sound-volume-input">70%</output>
+                      </div>
+                      <p id="command-sound-volume-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <fieldset class="form__field catalog-layout-field">
+                      <legend data-i18n="catalog.layoutLabel">Layout</legend>
+                      <div class="catalog-layout-group" role="radiogroup" aria-label="Alert layout">
+                        <label class="catalog-layout-option"><input type="radio" name="command-layout" value="card"> <span data-i18n="catalog.layoutCard">Card</span></label>
+                        <label class="catalog-layout-option"><input type="radio" name="command-layout" value="banner"> <span data-i18n="catalog.layoutBanner">Banner</span></label>
+                        <label class="catalog-layout-option"><input type="radio" name="command-layout" value="fullscreen" checked> <span data-i18n="catalog.layoutFullscreen">Fullscreen</span></label>
+                      </div>
+                      <p id="command-layout-error" class="field-error" role="alert" hidden></p>
+                    </fieldset>
                     <div class="form__field">
                       <label for="command-duration-input" data-i18n="catalog.durationLabel">Duration (ms)</label>
                       <input id="command-duration-input" type="number" min="1" step="1" value="5000" required>
@@ -432,7 +499,9 @@
                     </div>
                     <div class="form__field">
                       <label for="award-splash-input" data-i18n="catalog.splashTemplate">Splash template</label>
+                      <div id="award-splash-vars" class="catalog-template-vars" role="group" data-i18n-aria-label="catalog.templateVariables" aria-label="Template variables"></div>
                       <input id="award-splash-input" type="text" autocomplete="off" required>
+                      <p id="award-splash-preview" class="catalog-template-preview" aria-live="polite"></p>
                       <p id="award-splash-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
@@ -445,6 +514,71 @@
                         <option value="alert" data-i18n="sound.alert">Alert - quick double beep</option>
                       </select>
                     </div>
+                    <div class="form__field catalog-media-field">
+                      <span id="award-image-label" class="form__label" data-i18n="catalog.imageLabel">Alert image</span>
+                      <div class="catalog-media-row">
+                        <div id="award-image-preview" class="catalog-media-preview" aria-labelledby="award-image-label"></div>
+                        <div class="catalog-media-actions">
+                          <label class="btn-physical btn-small catalog-media-upload">
+                            <span data-i18n="catalog.upload">Upload</span>
+                            <input id="award-image-input" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="award-image-label">
+                          </label>
+                          <button id="award-image-clear" type="button" class="btn-physical btn-small" data-i18n="catalog.clear">Clear</button>
+                        </div>
+                      </div>
+                      <p class="field-hint" data-i18n="catalog.imageFallbackHint">Without a custom file, the built-in award graphic is used; Clear restores it.</p>
+                      <p id="award-image-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="award-image-fit-input" data-i18n="catalog.imageFitLabel">Image scale</label>
+                      <select id="award-image-fit-input" name="image_fit">
+                        <option value="cover" data-i18n="obs.panelImageFitCover">Fill</option>
+                        <option value="contain" selected data-i18n="obs.panelImageFitContain">Fit</option>
+                        <option value="fill" data-i18n="obs.panelImageFitFill">Stretch</option>
+                        <option value="tile" data-i18n="obs.panelImageFitTile">Tile</option>
+                      </select>
+                      <p class="field-hint" data-i18n="catalog.imageFitHint">How the alert image is scaled inside its frame on /overlay/alert.</p>
+                      <p id="award-image-fit-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="award-image-size-input" data-i18n="catalog.imageSizeLabel">Image size</label>
+                      <div class="catalog-volume-row">
+                        <input id="award-image-size-input" type="range" min="25" max="300" step="5" value="100">
+                        <output id="award-image-size-value" for="award-image-size-input">100%</output>
+                      </div>
+                      <p class="field-hint" data-i18n="catalog.imageSizeHint">Scales the built-in or uploaded graphic inside the alert frame.</p>
+                      <p id="award-image-size-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field catalog-media-field">
+                      <span id="award-sound-file-label" class="form__label" data-i18n="catalog.customSoundLabel">Custom sound file</span>
+                      <div class="catalog-media-actions">
+                        <label class="btn-physical btn-small catalog-media-upload">
+                          <span data-i18n="catalog.upload">Upload</span>
+                          <input id="award-sound-file-input" type="file" accept="audio/mpeg,audio/wav,.mp3,.wav" aria-labelledby="award-sound-file-label">
+                        </label>
+                        <button id="award-sound-file-clear" type="button" class="btn-physical btn-small" data-i18n="catalog.clear">Clear</button>
+                        <button id="award-sound-play" type="button" class="btn-physical btn-small" data-i18n="catalog.playSound">Play</button>
+                        <button id="award-sound-stop" type="button" class="btn-physical btn-small" data-i18n="catalog.stopSound">Stop</button>
+                      </div>
+                      <p id="award-sound-file-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
+                      <label for="award-sound-volume-input" data-i18n="catalog.soundVolumeLabel">Sound volume</label>
+                      <div class="catalog-volume-row">
+                        <input id="award-sound-volume-input" type="range" min="0" max="100" step="1" value="70">
+                        <output id="award-sound-volume-value" for="award-sound-volume-input">70%</output>
+                      </div>
+                      <p id="award-sound-volume-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <fieldset class="form__field catalog-layout-field">
+                      <legend data-i18n="catalog.layoutLabel">Layout</legend>
+                      <div class="catalog-layout-group" role="radiogroup" aria-label="Alert layout">
+                        <label class="catalog-layout-option"><input type="radio" name="award-layout" value="card"> <span data-i18n="catalog.layoutCard">Card</span></label>
+                        <label class="catalog-layout-option"><input type="radio" name="award-layout" value="banner"> <span data-i18n="catalog.layoutBanner">Banner</span></label>
+                        <label class="catalog-layout-option"><input type="radio" name="award-layout" value="fullscreen" checked> <span data-i18n="catalog.layoutFullscreen">Fullscreen</span></label>
+                      </div>
+                      <p id="award-layout-error" class="field-error" role="alert" hidden></p>
+                    </fieldset>
                     <div class="form__field">
                       <label for="award-duration-input" data-i18n="catalog.durationLabel">Duration (ms)</label>
                       <input id="award-duration-input" type="number" min="1" step="1" value="5000" required>
@@ -518,7 +652,6 @@
                       <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 1 0 2.3-5.7" stroke-linecap="round"></path><path d="M4 4v5h5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
                       <span class="ui-tooltip" role="tooltip" data-i18n="obs.replay">Replay</span>
                     </button>
-                    <button id="overlay-debug-toggle" class="btn-physical btn-small" type="button" aria-expanded="false" aria-controls="overlay-debug-panel" data-i18n="studio.debugOpen">Test overlay</button>
                     <div class="studio-copy-obs-link-wrap" data-studio-essential-only>
                       <input id="studio-follow-url-compact" class="visually-hidden" type="text" readonly tabindex="-1" aria-hidden="true" value="/overlay">
                       <button class="btn-physical btn-small studio-copy-obs-link" type="button" data-copy-obs-url="studio-follow-url-compact" data-copy-label="Overlay URL" data-i18n="studio.copyObsLink">Copy OBS link</button>
@@ -555,27 +688,29 @@
                             </select>
                           </div>
 
-                          <div class="preview-control preview-control--size">
-                            <label for="overlay-preview-size" data-i18n="obs.sourceSize">Source size</label>
-                            <select id="overlay-preview-size">
-                              <option value="640x360">640 × 360</option>
-                              <option value="800x600">800 × 600</option>
-                              <option value="1280x720">1280 × 720</option>
-                              <option value="480x720">480 × 720</option>
-                              <option value="custom" data-i18n="obs.custom">Custom</option>
-                            </select>
-                          </div>
+                          <div class="preview-size-row">
+                            <div class="preview-control preview-control--size">
+                              <label for="overlay-preview-size" data-i18n="obs.sourceSize">Source size</label>
+                              <select id="overlay-preview-size">
+                                <option value="640x360">640 × 360</option>
+                                <option value="800x600">800 × 600</option>
+                                <option value="1280x720">1280 × 720</option>
+                                <option value="480x720">480 × 720</option>
+                                <option value="custom" data-i18n="obs.custom">Custom</option>
+                              </select>
+                            </div>
 
-                          <div class="preview-control preview-control--dimension">
-                            <label for="overlay-preview-width" data-i18n="obs.width">Width</label>
-                            <input id="overlay-preview-width" type="number" min="240" max="3840" step="1" inputmode="numeric" value="640">
-                          </div>
+                            <div class="preview-control preview-control--dimension">
+                              <label for="overlay-preview-width" data-i18n="obs.width">Width</label>
+                              <input id="overlay-preview-width" type="number" min="240" max="3840" step="1" inputmode="numeric" value="640">
+                            </div>
 
-                          <span class="preview-dimension-mark" aria-hidden="true">×</span>
+                            <span class="preview-dimension-mark" aria-hidden="true">×</span>
 
-                          <div class="preview-control preview-control--dimension">
-                            <label for="overlay-preview-height" data-i18n="obs.height">Height</label>
-                            <input id="overlay-preview-height" type="number" min="180" max="2160" step="1" inputmode="numeric" value="360">
+                            <div class="preview-control preview-control--dimension">
+                              <label for="overlay-preview-height" data-i18n="obs.height">Height</label>
+                              <input id="overlay-preview-height" type="number" min="180" max="2160" step="1" inputmode="numeric" value="360">
+                            </div>
                           </div>
 
                           <div class="preview-control">
@@ -616,64 +751,6 @@
                 </div>
 
                 <p id="overlay-preview-note" class="overlay-preview-note" aria-live="polite" data-i18n="obs.previewNoteSample">Sample messages stay visible so you can compare themes. TTL is applied in Live chat and OBS.</p>
-                <section id="overlay-debug-panel" class="overlay-debug-panel" aria-labelledby="overlay-debug-heading" hidden>
-                  <div class="overlay-debug-panel__header">
-                    <div>
-                      <h4 id="overlay-debug-heading" tabindex="-1" data-i18n="studio.debugHeading">Test overlay</h4>
-                      <p data-i18n="studio.debugSharedChannel">Test-only sources share one global channel. Run, Replay, or Reset from another Studio tab also replaces this test.</p>
-                    </div>
-                    <button id="overlay-debug-close" class="btn-physical btn-small" type="button" data-i18n="studio.debugClose">Close</button>
-                  </div>
-                  <div class="overlay-debug-panel__body">
-                    <div class="form__field">
-                      <label for="overlay-debug-scenario" data-i18n="studio.debugScenarioLabel">Scenario</label>
-                      <select id="overlay-debug-scenario" aria-describedby="overlay-debug-scenario-error"></select>
-                      <p id="overlay-debug-scenario-error" class="field-error" role="alert" hidden></p>
-                    </div>
-                    <div class="form__field" data-overlay-debug-field="display_name">
-                      <label for="overlay-debug-display_name" data-i18n="studio.debugDisplayName">Display name</label>
-                      <input id="overlay-debug-display_name" type="text" maxlength="64" autocomplete="off" aria-describedby="overlay-debug-display_name-error">
-                      <p id="overlay-debug-display_name-error" class="field-error" role="alert" hidden></p>
-                    </div>
-                    <div class="form__field" data-overlay-debug-field="message">
-                      <label for="overlay-debug-message" data-i18n="studio.debugMessage">Message</label>
-                      <textarea id="overlay-debug-message" maxlength="500" rows="2" aria-describedby="overlay-debug-message-error"></textarea>
-                      <p id="overlay-debug-message-error" class="field-error" role="alert" hidden></p>
-                    </div>
-                    <div class="form__field" data-overlay-debug-field="label">
-                      <label for="overlay-debug-label" data-i18n="studio.debugLabel">Label</label>
-                      <input id="overlay-debug-label" type="text" maxlength="80" autocomplete="off" aria-describedby="overlay-debug-label-error">
-                      <p id="overlay-debug-label-error" class="field-error" role="alert" hidden></p>
-                    </div>
-                    <div class="form__field" data-overlay-debug-field="points">
-                      <label for="overlay-debug-points" data-i18n="studio.debugPoints">Points</label>
-                      <input id="overlay-debug-points" type="number" min="1" max="1000" step="1" inputmode="numeric" aria-describedby="overlay-debug-points-error">
-                      <p id="overlay-debug-points-error" class="field-error" role="alert" hidden></p>
-                    </div>
-                    <div class="overlay-debug-panel__actions">
-                      <button id="overlay-debug-run" class="btn-physical btn-start" type="button" data-i18n="studio.debugRun">Run</button>
-                      <button id="overlay-debug-replay" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="studio.debugReplay" aria-label="Replay last scenario" disabled>
-                        <svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 1 0 2.3-5.7" stroke-linecap="round"></path><path d="M4 4v5h5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                        <span class="ui-tooltip" role="tooltip" data-i18n="studio.debugReplay">Replay last scenario</span>
-                      </button>
-                      <button id="overlay-debug-reset" class="btn-physical" type="button" data-i18n="studio.debugResetAction">Reset</button>
-                      <button id="overlay-debug-retry" class="button-secondary button-secondary--small" type="button" hidden data-i18n="studio.debugRetry">Retry</button>
-                    </div>
-                    <p id="overlay-debug-status" class="overlay-debug-panel__status" role="status" aria-live="polite"></p>
-                    <div class="overlay-debug-panel__urls">
-                      <div class="form__field">
-                        <label for="overlay-debug-stable-url" data-i18n="studio.debugStableURL">Stable test-only OBS URL</label>
-                        <div class="obs-url-row"><input id="overlay-debug-stable-url" type="text" readonly><button id="overlay-debug-stable-copy" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.copyUrl" aria-label="Copy URL"><svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="9" y="9" width="13" height="13" rx="1.5"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-linecap="round"></path></svg><span class="ui-tooltip" role="tooltip" data-i18n="obs.copyUrl">Copy URL</span></button></div>
-                      </div>
-                      <div class="form__field">
-                        <label for="overlay-debug-snapshot-url" data-i18n="studio.debugSnapshotURL">Current preview snapshot URL</label>
-                        <div class="obs-url-row"><input id="overlay-debug-snapshot-url" type="text" readonly><button id="overlay-debug-snapshot-copy" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="obs.copyUrl" aria-label="Copy URL"><svg class="icon-btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="9" y="9" width="13" height="13" rx="1.5"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-linecap="round"></path></svg><span class="ui-tooltip" role="tooltip" data-i18n="obs.copyUrl">Copy URL</span></button></div>
-                        <p class="field-hint" data-i18n="studio.debugSnapshotHint">A snapshot keeps the current unpublished appearance. Copy it again after changing the draft.</p>
-                      </div>
-                    </div>
-                    <p class="field-hint" data-i18n="studio.debugTestOnly">Test only: these URLs never receive live events.</p>
-                  </div>
-                </section>
                 <p id="studio-copy-status" class="obs-copy-status" role="status" aria-live="polite"></p>
               </section>
             </div>
@@ -772,6 +849,23 @@
                           <option value="day" data-i18n="viewers.periodDay">Day</option>
                           <option value="all" data-i18n="viewers.periodAll">All-time</option>
                         </select>
+                      </div>
+
+                      <div id="studio-essential-alerts-image-size" class="form__field form__field--full" hidden>
+                        <label for="overlay-alerts-image-size" data-i18n="obs.alertsImageSizeLabel">Alert image size</label>
+                        <div class="catalog-volume-row">
+                          <input id="overlay-alerts-image-size" type="range" min="25" max="300" step="5" value="100">
+                          <output id="overlay-alerts-image-size-value" for="overlay-alerts-image-size">100%</output>
+                        </div>
+                        <p class="field-hint" data-i18n="obs.alertsImageSizeHint">Scales portrait and custom images for every alert in this preset. Per-command size in Audience stacks on top.</p>
+                        <p id="overlay-alerts-image-size-error" class="field-error" role="alert" hidden></p>
+                      </div>
+
+                      <div id="studio-essential-font-alerts" class="form__field form__field--full" hidden>
+                        <label for="overlay-alerts-font-size" data-i18n="obs.alertsFontSize">Alert font size (px)</label>
+                        <input id="overlay-alerts-font-size" name="overlay_alerts_font_size_px" type="number" min="12" max="48" step="1">
+                        <p class="field-hint" data-i18n="obs.alertsFontSizeHint">12–48 px. Independent from chat so banners can stay larger or smaller.</p>
+                        <p id="overlay-alerts-font-size-error" class="field-error" role="alert" hidden></p>
                       </div>
 
                       <div id="studio-essential-alerts-note" class="studio-surface-note form__field form__field--full" hidden>
@@ -1858,16 +1952,34 @@
 
           <div class="form form--compact">
             <div class="form__field">
-              <label for="points-per-message" data-i18n="iface.pointsPerMessage">Points per message</label>
-              <input id="points-per-message" name="points_per_message" type="number" min="0" step="1" inputmode="numeric">
-              <p class="field-hint" data-i18n="iface.pointsPerMessageHint">How many score points each counted chat line adds.</p>
-              <p id="points-per-message-error" class="field-error" role="alert" hidden></p>
+              <label for="activity-interval-seconds" data-i18n="iface.activityIntervalSeconds">Activity interval (seconds)</label>
+              <input id="activity-interval-seconds" name="activity_interval_seconds" type="number" min="0" step="1" inputmode="numeric">
+              <p class="field-hint" data-i18n="iface.activityIntervalSecondsHint">Silent XP grant: at most once per viewer per interval during the current stream. Set 0 to disable.</p>
+              <p id="activity-interval-seconds-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="activity-session-limit" data-i18n="iface.activitySessionLimit">Activity grants per stream</label>
+              <input id="activity-session-limit" name="activity_session_limit" type="number" min="0" step="1" inputmode="numeric">
+              <p class="field-hint" data-i18n="iface.activitySessionLimitHint">Maximum silent activity grants per viewer for the current stream session.</p>
+              <p id="activity-session-limit-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="activity-xp" data-i18n="iface.activityXP">XP per activity grant</label>
+              <input id="activity-xp" name="activity_xp" type="number" min="0" step="1" inputmode="numeric">
+              <p class="field-hint" data-i18n="iface.activityXPHint">XP added silently when a viewer becomes eligible. Chat lines alone no longer add unbounded XP.</p>
+              <p id="activity-xp-error" class="field-error" role="alert" hidden></p>
             </div>
             <div class="form__field">
               <label for="day-reset-hour" data-i18n="iface.dayResetHour">Day reset hour</label>
               <input id="day-reset-hour" name="day_reset_hour" type="number" min="0" max="23" step="1" inputmode="numeric">
               <p class="field-hint" data-i18n="iface.dayResetHourHint">Local hour when the stats day rolls over (0–23).</p>
               <p id="day-reset-hour-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="streamer-display-name" data-i18n="iface.streamerDisplayName">Streamer display name</label>
+              <input id="streamer-display-name" name="streamer_display_name" type="text" maxlength="64" autocomplete="name">
+              <p class="field-hint" data-i18n="iface.streamerDisplayNameHint">Used as {streamer} in command and award splash templates.</p>
+              <p id="streamer-display-name-error" class="field-error" role="alert" hidden></p>
             </div>
             <div class="form__field">
               <label class="checkbox" for="hide-command-messages">
@@ -1924,6 +2036,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=28"></script>
+  <script type="module" src="app.js?v=29"></script>
 </body>
 </html>

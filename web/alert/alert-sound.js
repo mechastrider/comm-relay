@@ -1,7 +1,11 @@
+import { safeStoredSoundAssetFilename } from "./alert-render.js";
+
 const ALERT_SOUND_TYPES = new Set(["chime", "ping", "soft", "alert"]);
 
+let activeCustomAlertAudio = null;
+
 function playTone(ctx, start, options) {
-  const peak = options.peak;
+  const peak = options.peak * (options.volumeScale || 1);
   const duration = options.duration;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -19,22 +23,31 @@ function playTone(ctx, start, options) {
   osc.stop(start + duration + 0.02);
 }
 
-export function playAlertTone(ctx, soundType, start) {
+export function normalizeAlertVolume(raw) {
+  const value = Number(raw);
+  if (!Number.isFinite(value)) {
+    return 70;
+  }
+  return Math.min(100, Math.max(0, value));
+}
+
+export function playAlertTone(ctx, soundType, start, volumePercent) {
   const peak = 0.18;
+  const volumeScale = normalizeAlertVolume(volumePercent) / 100;
 
   if (soundType === "ping") {
-    playTone(ctx, start, { freq: 1200, duration: 0.1, peak: peak });
+    playTone(ctx, start, { freq: 1200, duration: 0.1, peak: peak, volumeScale });
     return;
   }
 
   if (soundType === "soft") {
-    playTone(ctx, start, { freq: 440, duration: 0.16, peak: peak * 0.7, wave: "triangle" });
+    playTone(ctx, start, { freq: 440, duration: 0.16, peak: peak * 0.7, wave: "triangle", volumeScale });
     return;
   }
 
   if (soundType === "alert") {
-    playTone(ctx, start, { freq: 880, duration: 0.08, peak: peak });
-    playTone(ctx, start + 0.1, { freq: 880, duration: 0.08, peak: peak });
+    playTone(ctx, start, { freq: 880, duration: 0.08, peak: peak, volumeScale });
+    playTone(ctx, start + 0.1, { freq: 880, duration: 0.08, peak: peak, volumeScale });
     return;
   }
 
@@ -43,6 +56,7 @@ export function playAlertTone(ctx, soundType, start) {
     freqEnd: 660,
     duration: 0.14,
     peak: peak,
+    volumeScale,
   });
 }
 
@@ -70,10 +84,60 @@ export function ensureAudioContext(existing) {
   return Promise.resolve(ctx);
 }
 
-export function scheduleAlertSound(ctx, soundType) {
+export function scheduleAlertSound(ctx, soundType, volumePercent) {
   const normalized = normalizeAlertSound(soundType);
   if (!normalized || !ctx) {
     return;
   }
-  playAlertTone(ctx, normalized, ctx.currentTime);
+  playAlertTone(ctx, normalized, ctx.currentTime, volumePercent);
+}
+
+export function stopCustomAlertSound() {
+  if (!activeCustomAlertAudio) {
+    return;
+  }
+  try {
+    activeCustomAlertAudio.pause();
+    activeCustomAlertAudio.currentTime = 0;
+  } catch {
+    /* ignore */
+  }
+  activeCustomAlertAudio = null;
+}
+
+export function playCustomAlertSound(url, volumePercent) {
+  stopCustomAlertSound();
+  const audio = new Audio(url);
+  activeCustomAlertAudio = audio;
+  audio.volume = normalizeAlertVolume(volumePercent) / 100;
+  const playPromise = audio.play();
+  playPromise.catch(function () {
+    if (activeCustomAlertAudio === audio) {
+      activeCustomAlertAudio = null;
+    }
+  });
+  audio.addEventListener(
+    "ended",
+    function () {
+      if (activeCustomAlertAudio === audio) {
+        activeCustomAlertAudio = null;
+      }
+    },
+    { once: true }
+  );
+  return playPromise;
+}
+
+export function playAlertAudio(ctx, alert, overlayAssetURL) {
+  const soundFile = safeStoredSoundAssetFilename(alert && alert.sound_file);
+  const volume = normalizeAlertVolume(alert && alert.sound_volume);
+  if (soundFile && typeof overlayAssetURL === "function") {
+    return playCustomAlertSound(overlayAssetURL(soundFile), volume);
+  }
+  const builtIn = normalizeAlertSound(alert && alert.sound);
+  if (!builtIn) {
+    return Promise.resolve();
+  }
+  scheduleAlertSound(ctx, builtIn, volume);
+  return Promise.resolve();
 }

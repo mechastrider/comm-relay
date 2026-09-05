@@ -76,8 +76,13 @@ export const overlayThemePicker = document.getElementById("overlay-theme-picker"
 export const overlayDurationChips = document.getElementById("overlay-duration-chips");
 export const studioEssentialFontChat = document.getElementById("studio-essential-font-chat");
 export const studioEssentialFontLeaderboard = document.getElementById("studio-essential-font-leaderboard");
+export const studioEssentialFontAlerts = document.getElementById("studio-essential-font-alerts");
 export const studioEssentialDuration = document.getElementById("studio-essential-duration");
 export const studioEssentialPeriod = document.getElementById("studio-essential-period");
+export const studioEssentialAlertsImageSize = document.getElementById("studio-essential-alerts-image-size");
+export const overlayAlertsImageSize = document.getElementById("overlay-alerts-image-size");
+export const overlayAlertsFontSize = document.getElementById("overlay-alerts-font-size");
+export const overlayAlertsImageSizeValue = document.getElementById("overlay-alerts-image-size-value");
 export const overlayPreviewModeControl = document.getElementById("overlay-preview-mode-control");
 export const obsSetupTab = document.getElementById("obs-setup-tab");
 export const obsAppearanceTab = document.getElementById("obs-appearance-tab");
@@ -238,8 +243,28 @@ export const commandTriggerError = document.getElementById("command-trigger-erro
 export const commandEnabledInput = document.getElementById("command-enabled-input");
 export const commandCooldownInput = document.getElementById("command-cooldown-input");
 export const commandSplashInput = document.getElementById("command-splash-input");
+export const commandSplashVars = document.getElementById("command-splash-vars");
+export const commandSplashPreview = document.getElementById("command-splash-preview");
 export const commandSplashError = document.getElementById("command-splash-error");
 export const commandSoundInput = document.getElementById("command-sound-input");
+export const commandImagePreview = document.getElementById("command-image-preview");
+export const commandImageInput = document.getElementById("command-image-input");
+export const commandImageClear = document.getElementById("command-image-clear");
+export const commandImageError = document.getElementById("command-image-error");
+export const commandImageFitInput = document.getElementById("command-image-fit-input");
+export const commandImageFitError = document.getElementById("command-image-fit-error");
+export const commandImageSizeInput = document.getElementById("command-image-size-input");
+export const commandImageSizeValue = document.getElementById("command-image-size-value");
+export const commandImageSizeError = document.getElementById("command-image-size-error");
+export const commandSoundFileInput = document.getElementById("command-sound-file-input");
+export const commandSoundFileClear = document.getElementById("command-sound-file-clear");
+export const commandSoundFileError = document.getElementById("command-sound-file-error");
+export const commandSoundVolumeInput = document.getElementById("command-sound-volume-input");
+export const commandSoundVolumeValue = document.getElementById("command-sound-volume-value");
+export const commandSoundVolumeError = document.getElementById("command-sound-volume-error");
+export const commandSoundPlay = document.getElementById("command-sound-play");
+export const commandSoundStop = document.getElementById("command-sound-stop");
+export const commandLayoutError = document.getElementById("command-layout-error");
 export const commandDurationInput = document.getElementById("command-duration-input");
 export const awardsListRegion = document.getElementById("awards-list-region");
 export const awardsList = document.getElementById("awards-list");
@@ -256,8 +281,28 @@ export const awardNameError = document.getElementById("award-name-error");
 export const awardPointsInput = document.getElementById("award-points-input");
 export const awardPointsError = document.getElementById("award-points-error");
 export const awardSplashInput = document.getElementById("award-splash-input");
+export const awardSplashVars = document.getElementById("award-splash-vars");
+export const awardSplashPreview = document.getElementById("award-splash-preview");
 export const awardSplashError = document.getElementById("award-splash-error");
 export const awardSoundInput = document.getElementById("award-sound-input");
+export const awardImagePreview = document.getElementById("award-image-preview");
+export const awardImageInput = document.getElementById("award-image-input");
+export const awardImageClear = document.getElementById("award-image-clear");
+export const awardImageError = document.getElementById("award-image-error");
+export const awardImageFitInput = document.getElementById("award-image-fit-input");
+export const awardImageFitError = document.getElementById("award-image-fit-error");
+export const awardImageSizeInput = document.getElementById("award-image-size-input");
+export const awardImageSizeValue = document.getElementById("award-image-size-value");
+export const awardImageSizeError = document.getElementById("award-image-size-error");
+export const awardSoundFileInput = document.getElementById("award-sound-file-input");
+export const awardSoundFileClear = document.getElementById("award-sound-file-clear");
+export const awardSoundFileError = document.getElementById("award-sound-file-error");
+export const awardSoundVolumeInput = document.getElementById("award-sound-volume-input");
+export const awardSoundVolumeValue = document.getElementById("award-sound-volume-value");
+export const awardSoundVolumeError = document.getElementById("award-sound-volume-error");
+export const awardSoundPlay = document.getElementById("award-sound-play");
+export const awardSoundStop = document.getElementById("award-sound-stop");
+export const awardLayoutError = document.getElementById("award-layout-error");
 export const awardDurationInput = document.getElementById("award-duration-input");
 export const catalogDeletePrompt = document.getElementById("catalog-delete-prompt");
 export const catalogDeletePromptMessage = document.getElementById("catalog-delete-prompt-message");
@@ -272,8 +317,11 @@ export const newStreamButton = document.getElementById("new-stream-button");
 export const newStreamPrompt = document.getElementById("new-stream-prompt");
 export const newStreamPromptCancel = document.getElementById("new-stream-prompt-cancel");
 export const newStreamPromptConfirm = document.getElementById("new-stream-prompt-confirm");
-export const pointsPerMessageInput = document.getElementById("points-per-message");
+export const activityIntervalSecondsInput = document.getElementById("activity-interval-seconds");
+export const activitySessionLimitInput = document.getElementById("activity-session-limit");
+export const activityXPInput = document.getElementById("activity-xp");
 export const hideCommandMessagesInput = document.getElementById("hide-command-messages");
+export const streamerDisplayNameInput = document.getElementById("streamer-display-name");
 export const dayResetHourInput = document.getElementById("day-reset-hour");
 export const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
 export const messageSoundVolumeInput = document.getElementById("message-sound-volume");
@@ -301,6 +349,8 @@ export const fieldErrors = {
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
     overlay_font_size_px: document.getElementById("overlay-font-size-error"),
     overlay_leaderboard_font_size_px: document.getElementById("overlay-leaderboard-font-size-error"),
+    overlay_alerts_font_size_px: document.getElementById("overlay-alerts-font-size-error"),
+    overlay_alerts_image_size_pct: document.getElementById("overlay-alerts-image-size-error"),
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity-error"),
     overlay_display_mode: document.getElementById("overlay-display-mode-error"),
     overlay_theme: document.getElementById("overlay-theme-error"),
@@ -311,8 +361,11 @@ export const fieldErrors = {
     admin_message_sound_volume: document.getElementById("message-sound-volume-error"),
     admin_message_sound_sound: document.getElementById("message-sound-type-error"),
     admin_time_locale: document.getElementById("time-locale-error"),
-    points_per_message: document.getElementById("points-per-message-error"),
+    activity_interval_seconds: document.getElementById("activity-interval-seconds-error"),
+    activity_session_limit: document.getElementById("activity-session-limit-error"),
+    activity_xp: document.getElementById("activity-xp-error"),
     day_reset_hour: document.getElementById("day-reset-hour-error"),
+    streamer_display_name: document.getElementById("streamer-display-name-error"),
   };
 
 export const fieldInputs = {
@@ -326,6 +379,8 @@ export const fieldInputs = {
     overlay_message_ttl_seconds: overlayMessageTTL,
     overlay_font_size_px: overlayFontSize,
     overlay_leaderboard_font_size_px: overlayLeaderboardFontSize,
+    overlay_alerts_font_size_px: overlayAlertsFontSize,
+    overlay_alerts_image_size_pct: overlayAlertsImageSize,
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity"),
     overlay_display_mode: overlayDisplayMode,
     overlay_theme: overlayTheme,
@@ -336,6 +391,9 @@ export const fieldInputs = {
     admin_message_sound_volume: messageSoundVolumeInput,
     admin_message_sound_sound: messageSoundTypeInput,
     admin_time_locale: timeLocaleInput,
-    points_per_message: pointsPerMessageInput,
+    activity_interval_seconds: activityIntervalSecondsInput,
+    activity_session_limit: activitySessionLimitInput,
+    activity_xp: activityXPInput,
     day_reset_hour: dayResetHourInput,
+    streamer_display_name: streamerDisplayNameInput,
   };

@@ -92,7 +92,22 @@ function normalizePreset(preset) {
   const fontSizePx = typeof raw.font_size_px === "number" ? raw.font_size_px : 18;
   const leaderboardFont =
     typeof leaderboard.font_size_px === "number" ? leaderboard.font_size_px : fontSizePx;
+  const alerts =
+    surfaces.alerts && typeof surfaces.alerts === "object"
+      ? /** @type {Record<string, unknown>} */ (surfaces.alerts)
+      : {};
+  const alertsImageSizePct =
+    typeof alerts.image_size_pct === "number" ? alerts.image_size_pct : 100;
+  const alertsFont =
+    typeof alerts.font_size_px === "number" ? alerts.font_size_px : fontSizePx;
   const style = raw.style && typeof raw.style === "object" ? raw.style : {};
+  const alertsSurface = Object.assign({}, normalizeSurfaceOpacity(surfaces.alerts));
+  if (alertsImageSizePct !== 100) {
+    alertsSurface.image_size_pct = alertsImageSizePct;
+  }
+  if (alertsFont !== fontSizePx) {
+    alertsSurface.font_size_px = alertsFont;
+  }
   return {
     id: typeof raw.id === "string" ? raw.id : "",
     name: typeof raw.name === "string" ? raw.name : "",
@@ -108,7 +123,7 @@ function normalizePreset(preset) {
         font_size_px: leaderboardFont,
         layout: normalizeLayout(leaderboard.layout),
       }),
-      alerts: normalizeSurfaceOpacity(surfaces.alerts),
+      alerts: alertsSurface,
     },
   };
 }
@@ -450,4 +465,25 @@ export function buildFollowActiveURLForSurface(surface, options) {
     pathname: "/overlay",
     followActive: true,
   });
+}
+
+/**
+ * @param {Pick<HTMLElement, "scrollHeight" | "clientHeight"> | null | undefined} element
+ * @returns {boolean}
+ */
+export function elementHasVerticalOverflow(element) {
+  if (!element) {
+    return false;
+  }
+  return element.scrollHeight > element.clientHeight;
+}
+
+/**
+ * @param {HTMLElement | null | undefined} element
+ */
+export function syncStudioInspectorScrollInset(element) {
+  if (!element) {
+    return;
+  }
+  element.classList.toggle("studio-inspector__body--scrollable", elementHasVerticalOverflow(element));
 }

@@ -45,7 +45,7 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 		} `json:"awards"`
 	}
 	require.NoError(t, json.Unmarshal(awardsRec.Body.Bytes(), &awardsPayload))
-	require.Len(t, awardsPayload.Awards, 2)
+	require.Len(t, awardsPayload.Awards, 8)
 
 	ids := map[string]bool{}
 	for _, award := range awardsPayload.Awards {
@@ -53,6 +53,12 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 	}
 	require.True(t, ids["joke"])
 	require.True(t, ids["advice"])
+	require.True(t, ids["spotter"])
+	require.True(t, ids["intel"])
+	require.True(t, ids["expert"])
+	require.True(t, ids["meme"])
+	require.True(t, ids["clutch"])
+	require.True(t, ids["mvp"])
 }
 
 func TestCommands_WhenCreateLurk_ExpectListed(t *testing.T) {
@@ -120,11 +126,29 @@ func TestCommands_WhenInvalidTrigger_ExpectFieldError(t *testing.T) {
 	require.Equal(t, "invalid trigger", payload.Fields["trigger"])
 }
 
+func TestCommands_WhenMediaNumbersOutOfRange_ExpectFieldErrors(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+
+	rec := httptest.NewRecorder()
+	body := `{"trigger":"badmedia","enabled":true,"cooldown_seconds":0,"splash_template":"bad","sound":"","duration_ms":5000,"sound_volume":101,"image_size_pct":301}`
+	req := httptest.NewRequest(http.MethodPost, "/api/commands/create", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	env.Handler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+
+	var payload struct {
+		Fields map[string]string `json:"fields"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Equal(t, "volume must be between 0 and 100", payload.Fields["sound_volume"])
+	require.Equal(t, "image size must be between 25% and 300%", payload.Fields["image_size_pct"])
+}
+
 func TestAwards_WhenCreateClutch_ExpectListed(t *testing.T) {
 	env := newTestEnv(t, bus.New(0))
 
 	createRec := httptest.NewRecorder()
-	body := `{"name":"Clutch","points":25,"splash_template":"Clutch {name} +{points}","sound":"alert","duration_ms":5000}`
+	body := `{"name":"Clutch","points":25,"splash_template":"Clutch {viewer} +{points}","sound":"alert","duration_ms":5000}`
 	req := httptest.NewRequest(http.MethodPost, "/api/awards/create", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	env.Handler.ServeHTTP(createRec, req)
@@ -167,4 +191,22 @@ func TestAwards_WhenInvalidPoints_ExpectFieldError(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
 	require.Equal(t, "points must be at least 1", payload.Fields["points"])
+}
+
+func TestAwards_WhenMediaNumbersOutOfRange_ExpectFieldErrors(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+
+	rec := httptest.NewRecorder()
+	body := `{"name":"Bad media","points":10,"splash_template":"bad","sound":"","duration_ms":5000,"sound_volume":-1,"image_size_pct":24}`
+	req := httptest.NewRequest(http.MethodPost, "/api/awards/create", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	env.Handler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+
+	var payload struct {
+		Fields map[string]string `json:"fields"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Equal(t, "volume must be between 0 and 100", payload.Fields["sound_volume"])
+	require.Equal(t, "image size must be between 25% and 300%", payload.Fields["image_size_pct"])
 }
