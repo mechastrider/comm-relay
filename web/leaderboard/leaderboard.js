@@ -45,6 +45,11 @@ const previewEnabled = params.has("preview");
 const samplePreviewEnabled = previewEnabled;
 const debugTestEnabled = isOverlayDebugPage(window.location);
 
+function sampleEntriesForCap(maxEntries) {
+  const cap = Number.isFinite(maxEntries) && maxEntries > 0 ? maxEntries : 5;
+  return SAMPLE_ENTRIES.slice(0, cap);
+}
+
 function normalizePeriod(raw) {
   const value = String(raw || "").trim().toLowerCase();
   return LEADERBOARD_PERIODS.has(value) ? value : "session";
@@ -151,6 +156,27 @@ function applyAppearance() {
     document.documentElement.classList.add(previewClass);
     document.body.classList.add(previewClass);
   }
+  renderTitle();
+}
+
+function renderTitle() {
+  if (!root) {
+    return;
+  }
+  let heading = root.querySelector(".leaderboard-title");
+  const title = String(overlayView.title || "").trim();
+  if (!title) {
+    if (heading) {
+      heading.remove();
+    }
+    return;
+  }
+  if (!heading) {
+    heading = document.createElement("h1");
+    heading.className = "leaderboard-title";
+    root.insertBefore(heading, root.firstChild);
+  }
+  heading.textContent = title;
 }
 
 function applyServerOverlayConfig(serverOverlay) {
@@ -166,7 +192,11 @@ function renderEntries(entries) {
     return;
   }
 
-  root.textContent = "";
+  renderTitle();
+  const existingList = root.querySelector(".leaderboard-list");
+  if (existingList) {
+    existingList.remove();
+  }
   const list = document.createElement("ol");
   list.className = "leaderboard-list";
 
@@ -213,7 +243,13 @@ function renderEntries(entries) {
 
 async function loadSnapshot() {
   try {
-    const response = await fetch("/api/leaderboard?period=" + encodeURIComponent(period));
+    const limit = overlayView.max_entries || 5;
+    const response = await fetch(
+      "/api/leaderboard?period=" +
+        encodeURIComponent(period) +
+        "&limit=" +
+        encodeURIComponent(String(limit))
+    );
     if (!response.ok) {
       return;
     }
@@ -239,6 +275,9 @@ function handleSocketMessage(event) {
   if (frame.type === "overlay_settings") {
     applyServerOverlayConfig(frame.overlay);
     applyAppearance();
+    if (samplePreviewEnabled) {
+      renderEntries(sampleEntriesForCap(overlayView.max_entries));
+    }
     return;
   }
   if (samplePreviewEnabled) {
@@ -302,7 +341,7 @@ async function loadServerConfig() {
 async function start() {
   await loadServerConfig();
   if (samplePreviewEnabled) {
-    renderEntries(SAMPLE_ENTRIES);
+    renderEntries(sampleEntriesForCap(overlayView.max_entries));
     return;
   }
   if (!debugTestEnabled) {

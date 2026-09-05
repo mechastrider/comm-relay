@@ -683,6 +683,29 @@ function renderViewerDetail(viewer) {
   });
   nameField.append(nameLabel, nameInput, nameError, saveNameButton);
 
+  const hideField = document.createElement("div");
+  hideField.className = "form__field audience-detail__hide-field";
+  const hideLabel = document.createElement("label");
+  const hideInputId = "viewer-leaderboard-hidden";
+  hideLabel.setAttribute("for", hideInputId);
+  const hideCheckbox = document.createElement("input");
+  hideCheckbox.id = hideInputId;
+  hideCheckbox.type = "checkbox";
+  hideCheckbox.checked = Boolean(viewer.leaderboard_hidden);
+  hideLabel.append(hideCheckbox, document.createTextNode(" " + t("viewers.leaderboardHide")));
+  hideCheckbox.addEventListener("change", function () {
+    const nextHidden = hideCheckbox.checked;
+    hideCheckbox.disabled = true;
+    updateViewerLeaderboardHidden(viewer.id, nextHidden)
+      .catch(function () {
+        hideCheckbox.checked = !nextHidden;
+      })
+      .finally(function () {
+        hideCheckbox.disabled = false;
+      });
+  });
+  hideField.append(hideLabel);
+
   const identitiesHeading = document.createElement("h4");
   identitiesHeading.className = "audience-detail__subheading";
   identitiesHeading.textContent = t("viewers.identities");
@@ -739,7 +762,7 @@ function renderViewerDetail(viewer) {
   });
   mergeField.append(mergeLabel, mergeSelect, mergeButton);
 
-  container.append(portraitSection, title, stats, nameField, identitiesHeading, identities, mergeField);
+  container.append(portraitSection, title, stats, nameField, hideField, identitiesHeading, identities, mergeField);
 }
 
 function openDetailShell() {
@@ -927,6 +950,17 @@ async function updateViewerDisplayName(id, displayName) {
     body: JSON.stringify({ id: id, display_name: String(displayName || "").trim() }),
   });
   showBanner("success", t("viewers.nameSaved"));
+  await loadViewersList(currentSearchQuery());
+  await openViewerDetail(id, focusReturnElement);
+}
+
+async function updateViewerLeaderboardHidden(id, hidden) {
+  await fetchJSON("/api/viewers/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: id, leaderboard_hidden: hidden }),
+  });
+  showBanner("success", t("viewers.leaderboardHideSaved"));
   await loadViewersList(currentSearchQuery());
   await openViewerDetail(id, focusReturnElement);
 }

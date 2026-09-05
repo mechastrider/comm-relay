@@ -78,6 +78,7 @@ func (a ActivitySettings) Enabled() bool {
 type Viewer struct {
 	ID                  string
 	CustomAvatar        string
+	LeaderboardHidden   bool
 	DisplayName         string
 	DisplayNameOverride string
 	MessageCount        int

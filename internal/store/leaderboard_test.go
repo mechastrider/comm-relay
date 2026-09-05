@@ -158,5 +158,37 @@ func TestLeaderboard_WhenLimitZero_ExpectDefaultCap(t *testing.T) {
 
 	entries, err := s.Leaderboard("all", 0, testDayResetHour, now, true)
 	require.NoError(t, err)
-	assert.Len(t, entries, 20)
+	assert.Len(t, entries, 5)
+}
+
+func TestLeaderboard_WhenLeaderboardHidden_ExpectOmittedAndReranked(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Now()
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "twitch", UserID: "1", DisplayName: "Top",
+	}, disabledActivity(), testDayResetHour, now))
+	_, err := s.ApplyAward(store.ChatIdentity{
+		Platform: "twitch", UserID: "1", DisplayName: "Top",
+	}, 5, testDayResetHour, now)
+	require.NoError(t, err)
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "twitch", UserID: "2", DisplayName: "Second",
+	}, disabledActivity(), testDayResetHour, now))
+	_, err = s.ApplyAward(store.ChatIdentity{
+		Platform: "twitch", UserID: "2", DisplayName: "Second",
+	}, 3, testDayResetHour, now)
+	require.NoError(t, err)
+
+	topID := viewerID(t, s, "twitch", "1", testDayResetHour, now)
+	require.NoError(t, s.UpdateLeaderboardHidden(topID, true))
+
+	entries, err := s.Leaderboard("all", 20, testDayResetHour, now, true)
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+	assert.Equal(t, 1, entries[0].Rank)
+	assert.Equal(t, "Second", entries[0].DisplayName)
+
+	viewer, err := s.Get(topID, testDayResetHour, now)
+	require.NoError(t, err)
+	assert.True(t, viewer.LeaderboardHidden)
 }

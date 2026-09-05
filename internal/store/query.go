@@ -36,6 +36,26 @@ func (s *Store) UpdateDisplayName(id, name string) error {
 	return nil
 }
 
+// UpdateLeaderboardHidden sets whether a viewer is omitted from leaderboard rankings.
+func (s *Store) UpdateLeaderboardHidden(id string, hidden bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := loadVisibleViewer(s.db, id); err != nil {
+		return err
+	}
+
+	value := 0
+	if hidden {
+		value = 1
+	}
+	if _, err := s.db.Exec(`UPDATE viewers SET leaderboard_hidden = ? WHERE id = ?`, value, id); err != nil {
+		return errors.Errorf("set leaderboard hidden: %w", err)
+	}
+
+	return nil
+}
+
 // List returns visible viewers optionally filtered by query string.
 func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error) {
 	s.mu.Lock()
@@ -53,6 +73,7 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 		SELECT
 			v.id,
 			v.custom_avatar,
+			v.leaderboard_hidden,
 			v.display_name,
 			v.message_count,
 			v.xp,
@@ -179,6 +200,7 @@ func (s *Store) Get(id string, dayResetHour int, now time.Time) (*Viewer, error)
 		SELECT
 			v.id,
 			v.custom_avatar,
+			v.leaderboard_hidden,
 			v.display_name,
 			v.message_count,
 			v.xp,
@@ -272,9 +294,11 @@ func scanViewerListRow(rows *sql.Rows) (Viewer, error) {
 	var viewer Viewer
 	var displayOverride sql.NullString
 	var lastSeenRaw string
+	var leaderboardHidden int
 	if err := rows.Scan(
 		&viewer.ID,
 		&viewer.CustomAvatar,
+		&leaderboardHidden,
 		&displayOverride,
 		&viewer.MessageCount,
 		&viewer.XP,
@@ -300,6 +324,7 @@ func scanViewerListRow(rows *sql.Rows) (Viewer, error) {
 	if displayOverride.Valid {
 		viewer.DisplayNameOverride = displayOverride.String
 	}
+	viewer.LeaderboardHidden = leaderboardHidden != 0
 
 	return viewer, nil
 }
@@ -308,9 +333,11 @@ func scanViewerSummaryRow(row *sql.Row) (Viewer, error) {
 	var viewer Viewer
 	var displayOverride sql.NullString
 	var lastSeenRaw string
+	var leaderboardHidden int
 	if err := row.Scan(
 		&viewer.ID,
 		&viewer.CustomAvatar,
+		&leaderboardHidden,
 		&displayOverride,
 		&viewer.MessageCount,
 		&viewer.XP,
@@ -331,6 +358,7 @@ func scanViewerSummaryRow(row *sql.Row) (Viewer, error) {
 	if displayOverride.Valid {
 		viewer.DisplayNameOverride = displayOverride.String
 	}
+	viewer.LeaderboardHidden = leaderboardHidden != 0
 
 	return viewer, nil
 }

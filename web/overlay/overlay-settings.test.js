@@ -9,6 +9,7 @@ import {
   leaderboardViewFromConfig,
   normalizeAlertImageSizePct,
   normalizeLeaderboardLayout,
+  normalizeLeaderboardMaxEntries,
   normalizePanelImageFit,
   normalizePanelImageScope,
   panelOpacityQueryValue,
@@ -319,6 +320,46 @@ test("leaderboardViewFromConfig ignores invalid theme and layout query", functio
   assert.equal(view.theme, "dashboard");
   assert.equal(view.layout, "chips");
   assert.equal(view.font_size_px, 20);
+});
+
+test("leaderboardViewFromConfig resolves title and max_entries with limit override", function () {
+  const view = leaderboardViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [
+          {
+            id: "default",
+            theme: "default",
+            font_size_px: 18,
+            surfaces: { leaderboard: { title: "Top chatters", max_entries: 8 } },
+          },
+        ],
+      },
+    },
+    new URLSearchParams("limit=3")
+  );
+  assert.equal(view.title, "Top chatters");
+  assert.equal(view.max_entries, 3);
+});
+
+test("leaderboardViewFromConfig defaults max_entries to five when omitted", function () {
+  const view = leaderboardViewFromConfig(
+    {
+      overlay: {
+        presets: [{ id: "default", theme: "default", font_size_px: 18 }],
+      },
+    },
+    new URLSearchParams("")
+  );
+  assert.equal(view.max_entries, 5);
+  assert.equal(view.title, "");
+});
+
+test("normalizeLeaderboardMaxEntries clamps and defaults", function () {
+  assert.equal(normalizeLeaderboardMaxEntries(undefined), 5);
+  assert.equal(normalizeLeaderboardMaxEntries(3), 3);
+  assert.equal(normalizeLeaderboardMaxEntries(99), 20);
 });
 
 test("alertViewFromConfig resolves preset alert image size and query override", function () {

@@ -55,6 +55,9 @@ func (h *configHandler) handleOverlayActivate(w http.ResponseWriter, r *http.Req
 			h.hub.BroadcastDebug(payload)
 		}
 	}
+	if h.leaderboardPublisher != nil {
+		h.leaderboardPublisher.FlushNow()
+	}
 
 	writeJSON(w, http.StatusOK, saved.Public())
 }

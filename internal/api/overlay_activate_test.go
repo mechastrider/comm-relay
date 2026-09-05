@@ -256,7 +256,7 @@ func TestOverlayActivate_WhenValid_ExpectSettingsOnProductionAndDebugAudiencesOn
 	require.NoError(t, env.Bus.Publish(bus.ChatMessageReceived(bus.ChatMessage{
 		ID: "live-after-activate", Platform: "twitch", Username: "Live", Message: "production only",
 	})))
-	require.Equal(t, wireMessageType, readWebSocketFrame(t, production)["type"])
+	require.Equal(t, wireMessageType, readWebSocketFrameSkippingLeaderboard(t, production)["type"])
 	assertNoWebSocketFrame(t, debug)
 }
 

@@ -166,6 +166,12 @@ export function syncStudioInspectorEssential(surface) {
   if (dom.studioEssentialFontLeaderboard) {
     dom.studioEssentialFontLeaderboard.hidden = current !== "leaderboard";
   }
+  if (dom.studioEssentialLeaderboardTitle) {
+    dom.studioEssentialLeaderboardTitle.hidden = current !== "leaderboard";
+  }
+  if (dom.studioEssentialLeaderboardMaxEntries) {
+    dom.studioEssentialLeaderboardMaxEntries.hidden = current !== "leaderboard";
+  }
   if (dom.studioEssentialFontAlerts) {
     dom.studioEssentialFontAlerts.hidden = current !== "alerts";
   }
@@ -229,6 +235,52 @@ function setFieldValue(id, value) {
   el.value = value;
 }
 
+function setLeaderboardTitleFields(value) {
+  const next = String(value == null ? "" : value);
+  setFieldValue("overlay-leaderboard-title", next);
+  setFieldValue("overlay-leaderboard-title-all", next);
+}
+
+function setLeaderboardMaxEntriesFields(value) {
+  const next = String(value == null ? "5" : value);
+  setFieldValue("overlay-leaderboard-max-entries", next);
+  setFieldValue("overlay-leaderboard-max-entries-all", next);
+}
+
+function readLeaderboardTitleField() {
+  const primary = fieldValue("overlay-leaderboard-title", "");
+  if (primary !== "") {
+    return primary;
+  }
+  return fieldValue("overlay-leaderboard-title-all", "");
+}
+
+function readLeaderboardMaxEntriesField() {
+  const primary = fieldValue("overlay-leaderboard-max-entries", "");
+  if (primary !== "") {
+    return primary;
+  }
+  return fieldValue("overlay-leaderboard-max-entries-all", "5");
+}
+
+function syncLeaderboardTitleFields(sourceId) {
+  const value = fieldValue(sourceId, "");
+  if (sourceId === "overlay-leaderboard-title") {
+    setFieldValue("overlay-leaderboard-title-all", value);
+  } else {
+    setFieldValue("overlay-leaderboard-title", value);
+  }
+}
+
+function syncLeaderboardMaxEntriesFields(sourceId) {
+  const value = fieldValue(sourceId, "5");
+  if (sourceId === "overlay-leaderboard-max-entries") {
+    setFieldValue("overlay-leaderboard-max-entries-all", value);
+  } else {
+    setFieldValue("overlay-leaderboard-max-entries", value);
+  }
+}
+
 function collectStyleFromForm(base) {
   const lineHeight = Number.parseFloat(fieldValue("overlay-line-height", "1.35"));
   const textEdgeStrength = Number.parseInt(fieldValue("overlay-text-edge-strength", "2"), 10);
@@ -266,10 +318,12 @@ function collectSurfaces(base) {
   const chatFont = Number.parseInt(fieldValue("overlay-font-size", String((base && base.font_size_px) || 18)), 10);
   const rawFont = Number.parseInt(fieldValue("overlay-leaderboard-font-size", String(chatFont)), 10);
   const layout = fieldValue("overlay-leaderboard-layout", "panel") === "chips" ? "chips" : "panel";
+  const title = readLeaderboardTitleField();
+  const maxEntries = readLeaderboardMaxEntriesField();
   const alertsImageSize = normalizeCatalogImageSizePct(fieldValue("overlay-alerts-image-size", "100"));
   const rawAlertsFont = Number.parseInt(fieldValue("overlay-alerts-font-size", String(chatFont)), 10);
   const current = base && base.surfaces && typeof base.surfaces === "object" ? base.surfaces : {};
-  let surfaces = withLeaderboardAppearance(current, rawFont, chatFont, layout);
+  let surfaces = withLeaderboardAppearance(current, rawFont, chatFont, layout, title, maxEntries);
   surfaces = withAlertsAppearance(surfaces, alertsImageSize, rawAlertsFont, chatFont);
   const rawOpacity = panelOpacityTouched
     ? panelOpacityDrafts[opacityEditorSurface]
@@ -305,6 +359,11 @@ function normalizeLeaderboardSurface(raw, fontSizePx) {
     leaderboard: {
       font_size_px: font,
       layout: incoming.layout === "chips" ? "chips" : "panel",
+      title: typeof incoming.title === "string" ? incoming.title : "",
+      max_entries:
+        typeof incoming.max_entries === "number" && incoming.max_entries > 0
+          ? incoming.max_entries
+          : 5,
     },
   };
 }
@@ -485,6 +544,8 @@ function writeFormFromPreset(preset) {
   setFieldValue("overlay-border-radius", String(style.border_radius));
   const leaderboard = normalizeLeaderboardSurface(preset.surfaces, preset.font_size_px || 18).leaderboard;
   setFieldValue("overlay-leaderboard-font-size", String(leaderboard.font_size_px));
+  setLeaderboardTitleFields(leaderboard.title || "");
+  setLeaderboardMaxEntriesFields(leaderboard.max_entries || 5);
   setFieldValue("overlay-leaderboard-layout", leaderboard.layout);
   const alerts =
     preset.surfaces && preset.surfaces.alerts && typeof preset.surfaces.alerts === "object"
@@ -1192,6 +1253,28 @@ export function initOverlayAppearance() {
     return;
   }
   bound = true;
+  ["overlay-leaderboard-title", "overlay-leaderboard-title-all"].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("input", function () {
+        syncLeaderboardTitleFields(id);
+        requestPreviewRefresh();
+      });
+    }
+  });
+  ["overlay-leaderboard-max-entries", "overlay-leaderboard-max-entries-all"].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("input", function () {
+        syncLeaderboardMaxEntriesFields(id);
+        requestPreviewRefresh();
+      });
+      el.addEventListener("change", function () {
+        syncLeaderboardMaxEntriesFields(id);
+        requestPreviewRefresh();
+      });
+    }
+  });
   initPanelImageFitIcons();
   initThemePicker();
   initDurationChips();
@@ -1329,6 +1412,10 @@ export function initOverlayAppearance() {
     "overlay-border-color",
     "overlay-border-radius",
     "overlay-leaderboard-font-size",
+    "overlay-leaderboard-title",
+    "overlay-leaderboard-title-all",
+    "overlay-leaderboard-max-entries",
+    "overlay-leaderboard-max-entries-all",
     "overlay-leaderboard-layout",
     "overlay-leaderboard-period",
     "overlay-alerts-image-size",

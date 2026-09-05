@@ -12,12 +12,17 @@ import (
 )
 
 type configHandler struct {
-	store *config.Store
-	hub   *Hub
+	store                *config.Store
+	hub                  *Hub
+	leaderboardPublisher *LeaderboardPublisher
 }
 
-func newConfigHandler(store *config.Store, hub *Hub) *configHandler {
-	return &configHandler{store: store, hub: hub}
+func newConfigHandler(store *config.Store, hub *Hub, leaderboardPublisher *LeaderboardPublisher) *configHandler {
+	return &configHandler{
+		store:                store,
+		hub:                  hub,
+		leaderboardPublisher: leaderboardPublisher,
+	}
 }
 
 func (h *configHandler) handleGet(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +78,9 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 			h.hub.broadcast(payload)
 			h.hub.BroadcastDebug(payload)
 		}
+	}
+	if h.leaderboardPublisher != nil {
+		h.leaderboardPublisher.FlushNow()
 	}
 
 	writeJSON(w, http.StatusOK, saved.Public())

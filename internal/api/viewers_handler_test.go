@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -258,5 +259,62 @@ func TestViewerIngest_WhenEmptyUserID_ExpectNoViewer(t *testing.T) {
 		var frame map[string]any
 		require.NoError(t, json.Unmarshal(data, &frame))
 		require.NotEqual(t, "leaderboard", frame["type"])
+	}
+}
+
+func TestLeaderboard_WhenLimitQuery_ExpectCap(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	for i := range 6 {
+		id := seedViewer(t, env, "twitch", fmt.Sprintf("user-%d", i), "Viewer")
+		require.NotEmpty(t, id)
+	}
+
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/leaderboard?period=all&limit=2", nil))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var payload struct {
+		Entries []struct {
+			Rank int `json:"rank"`
+		} `json:"entries"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Len(t, payload.Entries, 2)
+	require.Equal(t, 1, payload.Entries[0].Rank)
+	require.Equal(t, 2, payload.Entries[1].Rank)
+}
+
+func TestViewers_WhenLeaderboardHidden_ExpectOmittedFromLeaderboardStillListed(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	id := seedViewer(t, env, "twitch", "42", "Alice")
+
+	updateRec := httptest.NewRecorder()
+	updateReq := httptest.NewRequest(http.MethodPost, "/api/viewers/update", strings.NewReader(`{"id":"`+id+`","leaderboard_hidden":true}`))
+	updateReq.Header.Set("Content-Type", "application/json")
+	env.Handler.ServeHTTP(updateRec, updateReq)
+	require.Equal(t, http.StatusOK, updateRec.Code)
+
+	listRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(listRec, httptest.NewRequest(http.MethodGet, "/api/viewers", nil))
+	require.Equal(t, http.StatusOK, listRec.Code)
+	require.Contains(t, listRec.Body.String(), id)
+
+	getRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(getRec, httptest.NewRequest(http.MethodGet, "/api/viewers/get?id="+id, nil))
+	require.Equal(t, http.StatusOK, getRec.Code)
+	require.Contains(t, getRec.Body.String(), `"leaderboard_hidden":true`)
+
+	leaderboardRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(leaderboardRec, httptest.NewRequest(http.MethodGet, "/api/leaderboard?period=all", nil))
+	require.Equal(t, http.StatusOK, leaderboardRec.Code)
+
+	var leaderboard struct {
+		Entries []struct {
+			DisplayName string `json:"display_name"`
+		} `json:"entries"`
+	}
+	require.NoError(t, json.Unmarshal(leaderboardRec.Body.Bytes(), &leaderboard))
+	for _, entry := range leaderboard.Entries {
+		require.NotEqual(t, "Alice", entry.DisplayName)
 	}
 }

@@ -92,6 +92,16 @@ function normalizePreset(preset) {
   const fontSizePx = typeof raw.font_size_px === "number" ? raw.font_size_px : 18;
   const leaderboardFont =
     typeof leaderboard.font_size_px === "number" ? leaderboard.font_size_px : fontSizePx;
+  const leaderboardSurface = Object.assign({}, normalizeSurfaceOpacity(leaderboard), {
+    font_size_px: leaderboardFont,
+    layout: normalizeLayout(leaderboard.layout),
+  });
+  if (typeof leaderboard.title === "string" && leaderboard.title.trim() !== "") {
+    leaderboardSurface.title = leaderboard.title.trim();
+  }
+  if (typeof leaderboard.max_entries === "number" && leaderboard.max_entries !== 5) {
+    leaderboardSurface.max_entries = leaderboard.max_entries;
+  }
   const alerts =
     surfaces.alerts && typeof surfaces.alerts === "object"
       ? /** @type {Record<string, unknown>} */ (surfaces.alerts)
@@ -119,10 +129,7 @@ function normalizePreset(preset) {
     style: style,
     surfaces: {
       chat: normalizeSurfaceOpacity(surfaces.chat),
-      leaderboard: Object.assign({}, normalizeSurfaceOpacity(leaderboard), {
-        font_size_px: leaderboardFont,
-        layout: normalizeLayout(leaderboard.layout),
-      }),
+      leaderboard: leaderboardSurface,
       alerts: alertsSurface,
     },
   };

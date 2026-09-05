@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -56,6 +57,7 @@ type viewerSummaryResponse struct {
 	DisplayName         string                   `json:"display_name"`
 	AvatarURL           string                   `json:"avatar_url,omitempty"`
 	CustomAvatar        string                   `json:"custom_avatar,omitempty"`
+	LeaderboardHidden   bool                     `json:"leaderboard_hidden,omitempty"`
 	MessageCount        int                      `json:"message_count"`
 	XP                  int                      `json:"xp"`
 	SessionMessageCount int                      `json:"session_message_count"`
@@ -82,6 +84,7 @@ func viewerSummaryFromStore(viewer store.Viewer, includeIdentities bool, customA
 		ID:                  viewer.ID,
 		DisplayName:         viewer.DisplayName,
 		AvatarURL:           store.ViewerPortraitURL(viewer, customAvatarsEnabled),
+		LeaderboardHidden:   viewer.LeaderboardHidden,
 		MessageCount:        viewer.MessageCount,
 		XP:                  viewer.XP,
 		SessionMessageCount: viewer.SessionMessageCount,
@@ -227,8 +230,9 @@ func (h *viewersHandler) handleMerge(w http.ResponseWriter, r *http.Request) {
 }
 
 type updateViewerRequest struct {
-	ID          string  `json:"id"`
-	DisplayName *string `json:"display_name"`
+	ID                string  `json:"id"`
+	DisplayName       *string `json:"display_name"`
+	LeaderboardHidden *bool   `json:"leaderboard_hidden"`
 }
 
 func (h *viewersHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
@@ -248,27 +252,59 @@ func (h *viewersHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "id is required")
 		return
 	}
-	if request.DisplayName == nil {
+	if request.DisplayName == nil && request.LeaderboardHidden == nil {
 		writeJSON(w, http.StatusOK, map[string]bool{"updated": true})
 		return
 	}
 
-	err := h.viewerStore.UpdateDisplayName(request.ID, *request.DisplayName)
-	if errors.Is(err, store.ErrNotFound) {
-		writeError(w, http.StatusNotFound, "viewer not found")
-		return
+	flushLeaderboard := false
+	if request.DisplayName != nil {
+		err := h.viewerStore.UpdateDisplayName(request.ID, *request.DisplayName)
+		if errors.Is(err, store.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "viewer not found")
+			return
+		}
+		if err != nil {
+			clog.Errorf(r.Context(), "update viewer display name: %w", err)
+			writeError(w, http.StatusInternalServerError, "failed to update viewer")
+			return
+		}
+		if h.publisher != nil {
+			h.publisher.Schedule()
+		}
 	}
-	if err != nil {
-		clog.Errorf(r.Context(), "update viewer display name: %w", err)
-		writeError(w, http.StatusInternalServerError, "failed to update viewer")
-		return
+	if request.LeaderboardHidden != nil {
+		err := h.viewerStore.UpdateLeaderboardHidden(request.ID, *request.LeaderboardHidden)
+		if errors.Is(err, store.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "viewer not found")
+			return
+		}
+		if err != nil {
+			clog.Errorf(r.Context(), "update viewer leaderboard hidden: %w", err)
+			writeError(w, http.StatusInternalServerError, "failed to update viewer")
+			return
+		}
+		flushLeaderboard = true
 	}
 
-	if h.publisher != nil {
-		h.publisher.Schedule()
+	if flushLeaderboard && h.publisher != nil {
+		h.publisher.FlushNow()
 	}
 
 	writeJSON(w, http.StatusOK, map[string]bool{"updated": true})
+}
+
+func resolvedLeaderboardLimit(cfg config.Config, queryLimit string) int {
+	limit := cfg.Overlay.ResolvedPreset(cfg.Overlay.ActivePresetID).LeaderboardMaxEntries()
+	raw := strings.TrimSpace(queryLimit)
+	if raw == "" {
+		return limit
+	}
+	parsed, err := strconv.Atoi(raw)
+	if err != nil || parsed < config.OverlayLeaderboardMaxEntriesMin || parsed > config.OverlayLeaderboardMaxEntriesMax {
+		return limit
+	}
+	return parsed
 }
 
 func (h *viewersHandler) handleStartSession(w http.ResponseWriter, r *http.Request) {
@@ -312,11 +348,10 @@ func (h *viewersHandler) handleLeaderboard(w http.ResponseWriter, r *http.Reques
 	period := storeNormalizePeriod(r.URL.Query().Get("period"))
 	dayResetHour, now := h.statsNow()
 
-	customAvatarsEnabled := true
-	if h.cfgStore != nil {
-		customAvatarsEnabled = h.cfgStore.Snapshot().CustomAvatarsEnabled
-	}
-	entries, err := h.viewerStore.Leaderboard(period, leaderboardWireLimit, dayResetHour, now, customAvatarsEnabled)
+	cfg := h.cfgStore.Snapshot()
+	customAvatarsEnabled := cfg.CustomAvatarsEnabled
+	limit := resolvedLeaderboardLimit(cfg, r.URL.Query().Get("limit"))
+	entries, err := h.viewerStore.Leaderboard(period, limit, dayResetHour, now, customAvatarsEnabled)
 	if err != nil {
 		clog.Errorf(r.Context(), "leaderboard %s: %w", period, err)
 		writeError(w, http.StatusInternalServerError, "failed to load leaderboard")

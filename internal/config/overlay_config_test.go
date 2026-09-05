@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/muonsoft/errors"
@@ -309,6 +310,60 @@ func TestLoad_WhenLegacyPresetHasOnlySharedOpacity_ExpectNoSurfaceOverrides(t *t
 	require.Equal(t, 0.35, preset.ChatPanelOpacity())
 	require.Equal(t, 0.35, preset.LeaderboardPanelOpacity())
 	require.Equal(t, 0.35, preset.AlertsPanelOpacity())
+}
+
+func TestValidate_WhenLeaderboardMaxEntriesInvalid_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	invalid := 0
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.MaxEntries = &invalid
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+	require.Contains(t, ValidationFields(err), "overlay_preset_0_surfaces_leaderboard_max_entries")
+}
+
+func TestValidate_WhenLeaderboardTitleTooLong_ExpectInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.Title = strings.Repeat("x", 65)
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrInvalidConfig))
+	require.Contains(t, ValidationFields(err), "overlay_preset_0_surfaces_leaderboard_title")
+}
+
+func TestLeaderboardSurface_WhenMaxEntriesOmitted_ExpectDefaultFive(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.EnsurePresets()
+
+	require.NoError(t, cfg.Validate())
+	require.Equal(t, 5, cfg.Overlay.Presets[0].LeaderboardMaxEntries())
+}
+
+func TestLeaderboardSurface_WhenStoredTitleAndCap_ExpectPublicJSON(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	maxEntries := 8
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.Title = "Top chatters"
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.MaxEntries = &maxEntries
+	cfg.Overlay.EnsurePresets()
+
+	require.NoError(t, cfg.Validate())
+	require.Equal(t, "Top chatters", cfg.Overlay.Presets[0].LeaderboardTitle())
+	require.Equal(t, 8, cfg.Overlay.Presets[0].LeaderboardMaxEntries())
+
+	data, err := json.Marshal(cfg.Public())
+	require.NoError(t, err)
+	require.Contains(t, string(data), `"title":"Top chatters"`)
+	require.Contains(t, string(data), `"max_entries":8`)
 }
 
 func TestLoad_WhenSurfacePanelOpacityHasMalformedType_ExpectError(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"github.com/muonsoft/errors"
 )
 
-const defaultLeaderboardLimit = 20
+const defaultLeaderboardLimit = 5
 
 // LeaderboardEntry is one ranked row for a leaderboard period.
 type LeaderboardEntry struct {
@@ -154,6 +154,7 @@ SELECT
 FROM viewers v
 INNER JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
 WHERE v.hidden = 0
+  AND v.leaderboard_hidden = 0
   AND (COALESCE(vss.xp, 0) > 0 OR COALESCE(vss.message_count, 0) > 0)
 ORDER BY COALESCE(vss.xp, 0) DESC, COALESCE(vss.message_count, 0) DESC
 LIMIT ?`
@@ -168,6 +169,7 @@ SELECT
 FROM viewers v
 INNER JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?
 WHERE v.hidden = 0
+  AND v.leaderboard_hidden = 0
   AND (COALESCE(vds.xp, 0) > 0 OR COALESCE(vds.message_count, 0) > 0)
 ORDER BY COALESCE(vds.xp, 0) DESC, COALESCE(vds.message_count, 0) DESC
 LIMIT ?`
@@ -181,6 +183,7 @@ SELECT
 	v.message_count
 FROM viewers v
 WHERE v.hidden = 0
+  AND v.leaderboard_hidden = 0
   AND (v.xp > 0 OR v.message_count > 0)
 ORDER BY v.xp DESC, v.message_count DESC
 LIMIT ?`

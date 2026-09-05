@@ -518,6 +518,28 @@ export function validateClient(payload, options) {
         firstInvalid = firstInvalid || dom.overlayLeaderboardFontSize;
         return true;
       }
+      const title = surface && surface.title;
+      if (title != null && Array.from(String(title)).length > 64) {
+        setFieldError(
+          "overlay_leaderboard_title",
+          "Title must be at most 64 characters."
+        );
+        firstInvalid = firstInvalid || dom.overlayLeaderboardTitle;
+        return true;
+      }
+      const maxEntries = surface && surface.max_entries;
+      if (
+        maxEntries != null &&
+        maxEntries !== 0 &&
+        (!Number.isFinite(maxEntries) || maxEntries < 1 || maxEntries > 20)
+      ) {
+        setFieldError(
+          "overlay_leaderboard_max_entries",
+          "Max entries must be between 1 and 20."
+        );
+        firstInvalid = firstInvalid || dom.overlayLeaderboardMaxEntries;
+        return true;
+      }
       return false;
     });
 
