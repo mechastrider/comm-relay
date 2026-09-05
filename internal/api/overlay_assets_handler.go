@@ -55,6 +55,8 @@ func (h *overlayAssetsHandler) handleUpload(w http.ResponseWriter, r *http.Reque
 		limit = overlayassets.MaxAlertImageBytes
 	case overlayassets.KindAlertSound:
 		limit = overlayassets.MaxAlertSoundBytes
+	case overlayassets.KindViewerAvatar:
+		limit = overlayassets.MaxViewerAvatarBytes
 	}
 
 	file, header, err := r.FormFile("file")

@@ -93,6 +93,56 @@ func TestAwardGrant_WhenJokeToExistingViewer_ExpectXPAndAlert(t *testing.T) {
 	require.True(t, sawAlert, "expected award alert frame")
 }
 
+func TestAwardGrant_WhenCachedPortrait_ExpectAlertUsesLocalAssetURL(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+	srv := httptest.NewServer(env.Handler)
+	t.Cleanup(srv.Close)
+
+	cfg := env.ConfigStore.Snapshot()
+	now := time.Date(2026, 8, 25, 12, 0, 0, 0, time.UTC)
+	require.NoError(t, env.ViewerStore.ApplyChat(store.ChatIdentity{
+		Platform:    "twitch",
+		UserID:      "42",
+		DisplayName: "Alice",
+		AvatarURL:   "https://example.com/remote.png",
+	}, store.ActivitySettings{
+		IntervalSeconds: cfg.ActivityIntervalSeconds,
+		SessionLimit:    cfg.ActivitySessionLimit,
+		XP:              cfg.ActivityXP,
+	}, cfg.DayResetHour, now))
+	require.NoError(t, env.ViewerStore.SetAvatarCache("twitch", "42", "asset_abc123.png"))
+
+	conn, _, err := websocket.DefaultDialer.Dial("ws"+strings.TrimPrefix(srv.URL, "http")+"/ws", nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
+	time.Sleep(50 * time.Millisecond)
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/awards/grant", strings.NewReader(`{
+		"platform":"twitch",
+		"user_id":"42",
+		"award_id":"joke"
+	}`))
+	req.Header.Set("Content-Type", "application/json")
+	env.Handler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var alert map[string]any
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
+		_, data, readErr := conn.ReadMessage()
+		if readErr != nil || json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
+			continue
+		}
+		break
+	}
+	require.Equal(t, "award", alert["source"])
+	require.Equal(t, "/overlay/assets/asset_abc123.png", alert["avatar_url"])
+	require.NotContains(t, alert, "image_asset")
+}
+
 func TestAwardGrant_WhenTemplateHasMessage_ExpectResolvedQuote(t *testing.T) {
 	b := bus.New(0)
 	env := newTestEnv(t, b)

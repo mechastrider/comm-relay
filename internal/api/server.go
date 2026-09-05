@@ -53,7 +53,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 		rt = runtime.NewInfo()
 	}
 
-	configHandler := newConfigHandler(opts.Store, opts.Hub)
+	configHandler := newConfigHandler(opts.Store, opts.Hub, nil)
 	overlayAssets := newOverlayAssetsHandler(opts.Store, opts.ViewerStore)
 	statusHandler := newStatusHandler(opts.Store, registry)
 	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt, opts.EmoteCache)
@@ -65,6 +65,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	if leaderboardPublisher == nil && opts.ViewerStore != nil {
 		leaderboardPublisher = newLeaderboardPublisher(opts.Hub, opts.ViewerStore, opts.Store)
 	}
+	configHandler.leaderboardPublisher = leaderboardPublisher
 	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher)
 	commandsHandler := newCommandsHandler(opts.ViewerStore)
 	awardsHandler := newAwardsHandler(opts.ViewerStore, opts.Hub, leaderboardPublisher, opts.Store)
@@ -97,6 +98,8 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /api/viewers/get", viewersHandler.handleGet)
 	mux.HandleFunc("POST /api/viewers/merge", viewersHandler.handleMerge)
 	mux.HandleFunc("POST /api/viewers/update", viewersHandler.handleUpdate)
+	mux.HandleFunc("POST /api/viewers/avatar/upload", viewersHandler.handleAvatarUpload)
+	mux.HandleFunc("POST /api/viewers/avatar/clear", viewersHandler.handleAvatarClear)
 	mux.HandleFunc("POST /api/sessions/start", viewersHandler.handleStartSession)
 	mux.HandleFunc("GET /api/leaderboard", viewersHandler.handleLeaderboard)
 	mux.HandleFunc("GET /api/commands", commandsHandler.handleList)

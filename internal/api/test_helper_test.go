@@ -54,8 +54,10 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 	require.NoError(t, err)
 
 	history := NewMessageHistory(0)
+	history.SetViewerStore(viewerStore)
+	history.SetConfigStore(cfgStore)
 	publisher := NewLeaderboardPublisher(hub, viewerStore, cfgStore)
-	ingest := NewViewerIngest(viewerStore, cfgStore, publisher, matcher, hub)
+	ingest := NewViewerIngest(viewerStore, cfgStore, publisher, matcher, hub, nil)
 
 	var wg sync.WaitGroup
 	wg.Add(3)

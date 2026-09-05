@@ -15,9 +15,8 @@ import (
 )
 
 const (
-	wireLeaderboardType  = "leaderboard"
-	leaderboardWireLimit = 20
-	leaderboardDebounce  = 150 * time.Millisecond
+	wireLeaderboardType = "leaderboard"
+	leaderboardDebounce = 150 * time.Millisecond
 )
 
 type wireLeaderboardEntry struct {
@@ -89,8 +88,9 @@ func NewViewerIngest(
 	publisher *LeaderboardPublisher,
 	matcher *command.Matcher,
 	hub *Hub,
+	avatarWorker AvatarCacheEnqueuer,
 ) *ViewerIngest {
-	return newViewerIngest(viewerStore, cfgStore, publisher, matcher, hub)
+	return newViewerIngest(viewerStore, cfgStore, publisher, matcher, hub, avatarWorker)
 }
 
 // Schedule debounces leaderboard broadcasts.
@@ -162,9 +162,10 @@ func (p *LeaderboardPublisher) flush() {
 	cfg := p.cfgStore.Snapshot()
 	now := time.Now()
 	ctx := context.Background()
+	limit := cfg.Overlay.ResolvedPreset(cfg.Overlay.ActivePresetID).LeaderboardMaxEntries()
 
 	for _, period := range []string{"session", "day", "all"} {
-		entries, err := p.viewerStore.Leaderboard(period, leaderboardWireLimit, cfg.DayResetHour, now)
+		entries, err := p.viewerStore.Leaderboard(period, limit, cfg.DayResetHour, now, cfg.CustomAvatarsEnabled)
 		if err != nil {
 			clog.Errorf(ctx, "leaderboard snapshot %s: %w", period, err)
 			continue

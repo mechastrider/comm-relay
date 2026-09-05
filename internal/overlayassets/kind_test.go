@@ -29,6 +29,14 @@ func TestParseKind_WhenAlertKinds_ExpectMatch(t *testing.T) {
 	require.Equal(t, KindAlertSound, kind)
 }
 
+func TestParseKind_WhenViewerAvatar_ExpectMatch(t *testing.T) {
+	t.Parallel()
+
+	kind, err := ParseKind("viewer_avatar")
+	require.NoError(t, err)
+	require.Equal(t, KindViewerAvatar, kind)
+}
+
 func TestParseKind_WhenUnknown_ExpectInvalidKind(t *testing.T) {
 	t.Parallel()
 

@@ -9,10 +9,10 @@
 > **Allowed fallout**: tests, fixtures, worker wiring in bootstrap
 > **Blocked**: Helix, chat-command avatars, UI upload (slice 2)
 
-- [ ] 1.1 Map YouTube API `ProfileImageUrl` into unified `avatar_url`; keep empty when missing.
-- [ ] 1.2 Goose: `viewer_identities.avatar_cache`; store helpers to record filename and resolve portrait URL.
-- [ ] 1.3 Bounded HTTPS fetch worker (SSRF-safe, sniff PNG/JPEG/WebP, size cap); enqueue on identity URL change only.
-- [ ] 1.4 After ingest, fill empty chat `avatar_url` from resolve(cache, remote) before `/ws` and history; leaderboard entries use the same resolve.
+- [x] 1.1 Map YouTube API `ProfileImageUrl` into unified `avatar_url`; keep empty when missing.
+- [x] 1.2 Goose: `viewer_identities.avatar_cache`; store helpers to record filename and resolve portrait URL.
+- [x] 1.3 Bounded HTTPS fetch worker (SSRF-safe, sniff PNG/JPEG/WebP, size cap); enqueue on identity URL change only.
+- [x] 1.4 After ingest, fill empty chat `avatar_url` from resolve(cache, remote) before `/ws` and history; leaderboard entries use the same resolve.
 
 ## 2. Slice: Custom portraits and Audience faces
 
@@ -23,9 +23,9 @@
 > **Allowed fallout**: list JSON `avatar_url` / `custom_avatar`, changelog later in docs slice
 > **Blocked**: leaderboard title/cap/hide (slice 3)
 
-- [ ] 2.1 `kind` `viewer_avatar` (512 KiB, 1024 px, no SVG/GIF); `POST /api/viewers/avatar/upload` and `/clear`; `viewers.custom_avatar`; resolve custom-over-cache when `custom_avatars_enabled`.
-- [ ] 2.2 Config `custom_avatars_enabled` default true; Settings checkbox; public GET includes the flag.
-- [ ] 2.3 Audience table portraits + card upload/clear; decorative images; constrained sheet layout; i18n keys.
+- [x] 2.1 `kind` `viewer_avatar` (512 KiB, 1024 px, no SVG/GIF); `POST /api/viewers/avatar/upload` and `/clear`; `viewers.custom_avatar`; resolve custom-over-cache when `custom_avatars_enabled`.
+- [x] 2.2 Config `custom_avatars_enabled` default true; Settings checkbox; public GET includes the flag.
+- [x] 2.3 Audience table portraits + card upload/clear; decorative images; constrained sheet layout; i18n keys.
 
 ## 3. Slice: Leaderboard title, rank cap, and hide
 
@@ -36,9 +36,9 @@
 > **Allowed fallout**: overlay_settings / leaderboard flush on hide and cap change
 > **Blocked**: show/hide automation modes, dock control panel
 
-- [ ] 3.1 `surfaces.leaderboard.title` (≤64) and `max_entries` (1–20, default 5); URL `limit` override; replace hard-coded 20.
-- [ ] 3.2 `viewers.leaderboard_hidden`; update API; leaderboard SQL omits and re-ranks; Audience card checkbox.
-- [ ] 3.3 Overlay heading (blank = none); Studio fields; Live leaderboard uses the same snapshot.
+- [x] 3.1 `surfaces.leaderboard.title` (≤64) and `max_entries` (1–20, default 5); URL `limit` override; replace hard-coded 20.
+- [x] 3.2 `viewers.leaderboard_hidden`; update API; leaderboard SQL omits and re-ranks; Audience card checkbox.
+- [x] 3.3 Overlay heading (blank = none); Studio fields; Live leaderboard uses the same snapshot.
 
 ## 4. Docs
 
@@ -46,19 +46,19 @@
 > **Skills**: `changelog`
 > **Blocked**: README unless install/setup steps actually change
 
-- [ ] 4.1 Russian `[Unreleased]` bullets: Audience faces, custom portrait + disable, cache, leaderboard title, default top-5, hide from ranking, Twitch-only limitation if needed.
+- [x] 4.1 Russian `[Unreleased]` bullets: Audience faces, custom portrait + disable, cache, leaderboard title, default top-5, hide from ranking, Twitch-only limitation if needed.
 
 ## Gate: qa
 
-- [ ] Q.1 Execute `qa_plan.md`; record matrix coverage and evidence.
+- [x] Q.1 Execute `qa_plan.md`; record matrix coverage and evidence.
 
 ## Gate: review
 
-- [ ] R.1 Fresh diff review; CRITICAL=0; affected checks green.
+- [x] R.1 Fresh diff review; CRITICAL=0; affected checks green.
 
 ## Gate: distribution-readiness
 
-- [ ] D.1 Validate package/update readiness without signing or publishing.
+- [x] D.1 Validate package/update readiness without signing or publishing.
 
 ## Verification
 

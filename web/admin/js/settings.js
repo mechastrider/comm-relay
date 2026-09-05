@@ -281,6 +281,9 @@ export function applyConfig(config) {
     if (dom.hideCommandMessagesInput) {
       dom.hideCommandMessagesInput.checked = Boolean(config.hide_command_messages);
     }
+    if (dom.customAvatarsEnabledInput) {
+      dom.customAvatarsEnabledInput.checked = config.custom_avatars_enabled !== false;
+    }
     if (dom.streamerDisplayNameInput) {
       dom.streamerDisplayNameInput.value = String(config.streamer_display_name || "");
     }
@@ -316,6 +319,9 @@ export function buildPayload() {
       hide_command_messages: dom.hideCommandMessagesInput
         ? dom.hideCommandMessagesInput.checked
         : false,
+      custom_avatars_enabled: dom.customAvatarsEnabledInput
+        ? dom.customAvatarsEnabledInput.checked
+        : true,
       streamer_display_name: dom.streamerDisplayNameInput
         ? dom.streamerDisplayNameInput.value.trim()
         : "",
@@ -383,6 +389,7 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
       activity_xp: latest.activity_xp,
       day_reset_hour: latest.day_reset_hour,
       hide_command_messages: Boolean(latest.hide_command_messages),
+      custom_avatars_enabled: latest.custom_avatars_enabled !== false,
       streamer_display_name: String(latest.streamer_display_name || "").trim(),
       network: {
         socks5: {
@@ -509,6 +516,28 @@ export function validateClient(payload, options) {
           "Font size must be between " + OVERLAY_FONT_SIZE_MIN + " and " + OVERLAY_FONT_SIZE_MAX + " px."
         );
         firstInvalid = firstInvalid || dom.overlayLeaderboardFontSize;
+        return true;
+      }
+      const title = surface && surface.title;
+      if (title != null && Array.from(String(title)).length > 64) {
+        setFieldError(
+          "overlay_leaderboard_title",
+          "Title must be at most 64 characters."
+        );
+        firstInvalid = firstInvalid || dom.overlayLeaderboardTitle;
+        return true;
+      }
+      const maxEntries = surface && surface.max_entries;
+      if (
+        maxEntries != null &&
+        maxEntries !== 0 &&
+        (!Number.isFinite(maxEntries) || maxEntries < 1 || maxEntries > 20)
+      ) {
+        setFieldError(
+          "overlay_leaderboard_max_entries",
+          "Max entries must be between 1 and 20."
+        );
+        firstInvalid = firstInvalid || dom.overlayLeaderboardMaxEntries;
         return true;
       }
       return false;

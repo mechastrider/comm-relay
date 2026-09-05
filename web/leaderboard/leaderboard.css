@@ -15,6 +15,15 @@
   overflow: hidden;
 }
 
+.leaderboard-title {
+  margin: 0 0 8px;
+  font-size: calc(var(--overlay-font-size) * 1.05);
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .leaderboard-list {
   margin: 0;
   padding: 0;
@@ -132,6 +141,12 @@ body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard::befo
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 2px;
+}
+
+body.overlay-theme--cockpit-panel.leaderboard-layout--panel .leaderboard:has(.leaderboard-title)::before,
+body.overlay-theme--cockpit-popups.leaderboard-layout--panel .leaderboard:has(.leaderboard-title)::before,
+body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard:has(.leaderboard-title)::before {
+  content: none;
 }
 
 body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard {

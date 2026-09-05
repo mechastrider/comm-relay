@@ -375,6 +375,10 @@ export function alertViewFromConfig(config, params) {
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
 const OVERLAY_FONT_SIZE_MIN = 12;
 const OVERLAY_FONT_SIZE_MAX = 48;
+const LEADERBOARD_MAX_ENTRIES_MIN = 1;
+const LEADERBOARD_MAX_ENTRIES_MAX = 20;
+const LEADERBOARD_MAX_ENTRIES_DEFAULT = 5;
+const LEADERBOARD_TITLE_MAX_RUNES = 64;
 const ALERT_IMAGE_SIZE_MIN = 25;
 const ALERT_IMAGE_SIZE_MAX = 300;
 const ALERT_IMAGE_SIZE_DEFAULT = 100;
@@ -393,6 +397,37 @@ export function normalizeAlertImageSizePct(value) {
 export function normalizeLeaderboardLayout(raw) {
   const value = String(raw || "").trim().toLowerCase();
   return LEADERBOARD_LAYOUTS.has(value) ? value : "panel";
+}
+
+export function normalizeLeaderboardTitle(raw) {
+  const value = String(raw || "").trim();
+  if (value === "") {
+    return "";
+  }
+  const runes = Array.from(value);
+  return runes.length > LEADERBOARD_TITLE_MAX_RUNES
+    ? runes.slice(0, LEADERBOARD_TITLE_MAX_RUNES).join("")
+    : value;
+}
+
+export function normalizeLeaderboardMaxEntries(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return LEADERBOARD_MAX_ENTRIES_DEFAULT;
+  }
+  return Math.max(
+    LEADERBOARD_MAX_ENTRIES_MIN,
+    Math.min(LEADERBOARD_MAX_ENTRIES_MAX, Math.round(parsed))
+  );
+}
+
+function resolvedLeaderboardMaxEntries(surface, query) {
+  let maxEntries = normalizeLeaderboardMaxEntries(surface.max_entries);
+  const queried = queryIntInRange(query, "limit", LEADERBOARD_MAX_ENTRIES_MIN, LEADERBOARD_MAX_ENTRIES_MAX);
+  if (queried !== null) {
+    maxEntries = queried;
+  }
+  return maxEntries;
 }
 
 function queryIntInRange(params, key, min, max) {
@@ -437,12 +472,16 @@ export function leaderboardViewFromConfig(config, params) {
     }
   }
   markLegacyCockpitGlass(style, resolved, "leaderboard", theme, query, layout);
+  const title = normalizeLeaderboardTitle(surface.title);
+  const maxEntries = resolvedLeaderboardMaxEntries(surface, query);
 
   return {
     font_size_px: fontSizePx,
     theme: normalizeTheme(theme),
     style: style,
     layout: layout,
+    title: title,
+    max_entries: maxEntries,
   };
 }
 

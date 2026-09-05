@@ -345,6 +345,12 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	if strings.TrimSpace(name) == "" {
 		name = userID
 	}
+	avatarURL := result.AvatarURL
+	if resolved, resolveErr := h.viewerStore.ResolveCanonicalPortraitURL(platform, userID, cfg.CustomAvatarsEnabled); resolveErr != nil {
+		clog.Errorf(r.Context(), "resolve award alert portrait: %w", resolveErr)
+	} else if resolved != "" {
+		avatarURL = resolved
+	}
 	quote := trimAwardMessageText(request.MessageText)
 	text := command.SubstituteTemplate(award.SplashTemplate, command.TemplateVars{
 		Viewer:   name,
@@ -357,7 +363,7 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	if messageID != "" {
 		messagePlatform = platform
 	}
-	alertPayload, err := awardAlertWirePayload(award, name, result.AvatarURL, text, award.Points, now, awardAlertContext{
+	alertPayload, err := awardAlertWirePayload(award, name, avatarURL, text, award.Points, now, awardAlertContext{
 		MessagePlatform: messagePlatform,
 		MessageID:       messageID,
 		MessageText:     quote,

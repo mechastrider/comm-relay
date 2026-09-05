@@ -832,6 +832,18 @@
                         <p class="field-hint" data-i18n="obs.leaderboardFontSizeHint">12–48 px. Independent from chat so a narrow ranking can stay smaller.</p>
                         <p id="overlay-leaderboard-font-size-error" class="field-error" role="alert" hidden></p>
                       </div>
+                      <div id="studio-essential-leaderboard-title" class="form__field" hidden>
+                        <label for="overlay-leaderboard-title" data-i18n="obs.leaderboardTitle">Leaderboard title</label>
+                        <input id="overlay-leaderboard-title" name="overlay_leaderboard_title" type="text" maxlength="64" autocomplete="off">
+                        <p class="field-hint" data-i18n="obs.leaderboardTitleHint">Leave blank to hide the on-stream heading.</p>
+                        <p id="overlay-leaderboard-title-error" class="field-error" role="alert" hidden></p>
+                      </div>
+                      <div id="studio-essential-leaderboard-max-entries" class="form__field" hidden>
+                        <label for="overlay-leaderboard-max-entries" data-i18n="obs.leaderboardMaxEntries">Max ranks shown</label>
+                        <input id="overlay-leaderboard-max-entries" name="overlay_leaderboard_max_entries" type="number" min="1" max="20" step="1">
+                        <p class="field-hint" data-i18n="obs.leaderboardMaxEntriesHint">1–20 viewers. Default is 5.</p>
+                        <p id="overlay-leaderboard-max-entries-error" class="field-error" role="alert" hidden></p>
+                      </div>
 
                       <div id="studio-essential-duration" class="form__field form__field--full overlay-chat-only">
                         <span id="overlay-duration-label" class="field-label" data-i18n="obs.messageDuration">How long messages stay</span>
@@ -917,6 +929,16 @@
                         </div>
 
                         <div id="overlay-leaderboard-fields" class="overlay-surface-fields" hidden>
+                          <div class="form__field">
+                            <label for="overlay-leaderboard-title-all" data-i18n="obs.leaderboardTitle">Leaderboard title</label>
+                            <input id="overlay-leaderboard-title-all" type="text" maxlength="64" autocomplete="off">
+                            <p class="field-hint" data-i18n="obs.leaderboardTitleHint">Leave blank to hide the on-stream heading.</p>
+                          </div>
+                          <div class="form__field">
+                            <label for="overlay-leaderboard-max-entries-all" data-i18n="obs.leaderboardMaxEntries">Max ranks shown</label>
+                            <input id="overlay-leaderboard-max-entries-all" type="number" min="1" max="20" step="1">
+                            <p class="field-hint" data-i18n="obs.leaderboardMaxEntriesHint">1–20 viewers. Default is 5.</p>
+                          </div>
                           <div class="form__field">
                             <label for="overlay-leaderboard-layout" data-i18n="obs.leaderboardLayout">Leaderboard layout</label>
                             <select id="overlay-leaderboard-layout">
@@ -1987,6 +2009,13 @@
                 <span data-i18n="iface.hideCommandMessages">Hide command lines in chat overlay</span>
               </label>
               <p class="field-hint" data-i18n="iface.hideCommandMessagesHint">When enabled, !commands still appear in admin and the dock, but not on /overlay.</p>
+            </div>
+            <div class="form__field">
+              <label class="checkbox" for="custom-avatars-enabled">
+                <input id="custom-avatars-enabled" name="custom_avatars_enabled" type="checkbox" checked>
+                <span data-i18n="iface.customAvatarsEnabled">Show custom viewer portraits</span>
+              </label>
+              <p class="field-hint" data-i18n="iface.customAvatarsEnabledHint">When off, Audience and overlays ignore uploaded faces and keep cached platform portraits.</p>
             </div>
           </div>
         </section>

@@ -147,6 +147,9 @@ function collectSectionValuesFromDOM(sectionId) {
       hide_command_messages: dom.hideCommandMessagesInput
         ? dom.hideCommandMessagesInput.checked
         : false,
+      custom_avatars_enabled: dom.customAvatarsEnabledInput
+        ? dom.customAvatarsEnabledInput.checked
+        : true,
       streamer_display_name: dom.streamerDisplayNameInput
         ? dom.streamerDisplayNameInput.value.trim()
         : "",
@@ -288,6 +291,9 @@ function applySectionValuesToDOM(sectionId, values) {
     }
     if (dom.hideCommandMessagesInput) {
       dom.hideCommandMessagesInput.checked = Boolean(values.hide_command_messages);
+    }
+    if (dom.customAvatarsEnabledInput) {
+      dom.customAvatarsEnabledInput.checked = values.custom_avatars_enabled !== false;
     }
     if (dom.streamerDisplayNameInput) {
       dom.streamerDisplayNameInput.value = String(values.streamer_display_name || "");

@@ -8,7 +8,7 @@ import (
 	"github.com/muonsoft/errors"
 )
 
-const defaultLeaderboardLimit = 20
+const defaultLeaderboardLimit = 5
 
 // LeaderboardEntry is one ranked row for a leaderboard period.
 type LeaderboardEntry struct {
@@ -21,7 +21,7 @@ type LeaderboardEntry struct {
 
 // Leaderboard returns ranked visible viewers for the requested period.
 // period must be session, day, or all; invalid values use session.
-func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time.Time) ([]LeaderboardEntry, error) {
+func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time.Time, customAvatarsEnabled bool) ([]LeaderboardEntry, error) {
 	period = normalizeLeaderboardPeriod(period)
 	if limit <= 0 {
 		limit = defaultLeaderboardLimit
@@ -66,13 +66,23 @@ func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time
 	rank := 0
 	for rows.Next() {
 		var entry LeaderboardEntry
+		var customAvatar, platformAvatar string
 		if err := rows.Scan(
 			&entry.DisplayName,
-			&entry.AvatarURL,
+			&customAvatar,
+			&platformAvatar,
 			&entry.XP,
 			&entry.MessageCount,
 		); err != nil {
 			return nil, errors.Errorf("scan leaderboard row: %w", err)
+		}
+		resolved := ResolvePortraitURL(PortraitFields{
+			CustomAvatar: customAvatar,
+		}, customAvatarsEnabled)
+		if resolved != "" {
+			entry.AvatarURL = resolved
+		} else {
+			entry.AvatarURL = platformAvatar
 		}
 		rank++
 		entry.Rank = rank
@@ -115,22 +125,36 @@ COALESCE(
 )`
 
 const lastSeenAvatarSQL = `
-COALESCE((
-	SELECT vi.avatar_url FROM viewer_identities vi
-	WHERE vi.viewer_id = v.id
-	ORDER BY vi.last_seen_at DESC
-	LIMIT 1
-), '')`
+COALESCE(
+	NULLIF((
+		SELECT CASE
+			WHEN TRIM(vi.avatar_cache) != '' THEN '` + overlayAssetURLPrefix + `' || vi.avatar_cache
+			ELSE NULL
+		END
+		FROM viewer_identities vi
+		WHERE vi.viewer_id = v.id
+		ORDER BY vi.last_seen_at DESC
+		LIMIT 1
+	), ''),
+	COALESCE((
+		SELECT vi.avatar_url FROM viewer_identities vi
+		WHERE vi.viewer_id = v.id
+		ORDER BY vi.last_seen_at DESC
+		LIMIT 1
+	), '')
+)`
 
 const leaderboardSessionQuery = `
 SELECT
 	` + effectiveDisplayNameSQL + `,
+	TRIM(v.custom_avatar),
 	` + lastSeenAvatarSQL + `,
 	COALESCE(vss.xp, 0),
 	COALESCE(vss.message_count, 0)
 FROM viewers v
 INNER JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
 WHERE v.hidden = 0
+  AND v.leaderboard_hidden = 0
   AND (COALESCE(vss.xp, 0) > 0 OR COALESCE(vss.message_count, 0) > 0)
 ORDER BY COALESCE(vss.xp, 0) DESC, COALESCE(vss.message_count, 0) DESC
 LIMIT ?`
@@ -138,12 +162,14 @@ LIMIT ?`
 const leaderboardDayQuery = `
 SELECT
 	` + effectiveDisplayNameSQL + `,
+	TRIM(v.custom_avatar),
 	` + lastSeenAvatarSQL + `,
 	COALESCE(vds.xp, 0),
 	COALESCE(vds.message_count, 0)
 FROM viewers v
 INNER JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?
 WHERE v.hidden = 0
+  AND v.leaderboard_hidden = 0
   AND (COALESCE(vds.xp, 0) > 0 OR COALESCE(vds.message_count, 0) > 0)
 ORDER BY COALESCE(vds.xp, 0) DESC, COALESCE(vds.message_count, 0) DESC
 LIMIT ?`
@@ -151,11 +177,13 @@ LIMIT ?`
 const leaderboardAllQuery = `
 SELECT
 	` + effectiveDisplayNameSQL + `,
+	TRIM(v.custom_avatar),
 	` + lastSeenAvatarSQL + `,
 	v.xp,
 	v.message_count
 FROM viewers v
 WHERE v.hidden = 0
+  AND v.leaderboard_hidden = 0
   AND (v.xp > 0 OR v.message_count > 0)
 ORDER BY v.xp DESC, v.message_count DESC
 LIMIT ?`

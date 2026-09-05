@@ -11,6 +11,7 @@ import (
 	"github.com/pior/runnable"
 
 	"github.com/mechastrider/comm-relay/internal/api"
+	"github.com/mechastrider/comm-relay/internal/avatarcache"
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
@@ -23,6 +24,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote/ffz"
 	"github.com/mechastrider/comm-relay/internal/emote/seventv"
 	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
+	"github.com/mechastrider/comm-relay/internal/overlayassets"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
@@ -90,6 +92,8 @@ func New(opts Options) (*App, error) {
 	}
 
 	history := api.NewMessageHistory(0)
+	history.SetViewerStore(viewerStore)
+	history.SetConfigStore(cfgStore)
 	statusRegistry := status.NewRegistry()
 	runtimeInfo := runtime.NewInfo()
 	emoteHTTP := emote.NewHTTPClient()
@@ -104,7 +108,8 @@ func New(opts Options) (*App, error) {
 	youtubeEmojiRefresher := ytemoji.NewRefresher(youtubeEmojiCatalog, emoteHTTP)
 
 	leaderboardPublisher := api.NewLeaderboardPublisher(hub, viewerStore, cfgStore)
-	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher, commandMatcher, hub)
+	avatarWorker := avatarcache.NewWorker(viewerStore, overlayassets.DirForConfig(opts.ConfigPath))
+	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher, commandMatcher, hub, avatarWorker)
 
 	handler, err := api.NewHandler(api.Options{
 		WebRoot:              webRoot,
@@ -158,6 +163,10 @@ func New(opts Options) (*App, error) {
 			youtubeEmojiRefresher.Run(ctx)
 			return nil
 		}).Name("youtube-emoji-refresh"),
+		runnable.Func(func(ctx context.Context) error {
+			avatarWorker.Run(ctx)
+			return nil
+		}).Name("avatar-cache"),
 	)
 
 	processes := []runnable.Runnable{
