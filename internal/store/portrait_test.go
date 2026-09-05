@@ -175,6 +175,85 @@ func TestCustomAvatar_WhenDisabled_ExpectLeaderboardUsesCache(t *testing.T) {
 	assert.Equal(t, "/overlay/assets/asset_cache.png", disabled[0].AvatarURL)
 }
 
+func TestResolveCanonicalPortraitURL_WhenMergedViewerLastSeenTwitch_ExpectYouTubeCache(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := fixedNow()
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform:  "youtube",
+		UserID:    "UC1",
+		AvatarURL: "https://example.com/youtube.png",
+	}, defaultActivity(), testDayResetHour, now))
+	require.NoError(t, s.SetAvatarCache("youtube", "UC1", "asset_youtube.png"))
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "twitch",
+		UserID:   "12345",
+	}, defaultActivity(), testDayResetHour, now.Add(time.Minute)))
+
+	fromID, ok := s.ViewerIDForIdentity("twitch", "12345")
+	require.True(t, ok)
+	intoID, ok := s.ViewerIDForIdentity("youtube", "UC1")
+	require.True(t, ok)
+	require.NoError(t, s.Merge(fromID, intoID, testDayResetHour, now.Add(2*time.Minute)))
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "twitch",
+		UserID:   "12345",
+	}, defaultActivity(), testDayResetHour, now.Add(3*time.Minute)))
+
+	resolved, err := s.ResolveCanonicalPortraitURL("twitch", "12345", true, "")
+	require.NoError(t, err)
+	assert.Equal(t, "/overlay/assets/asset_youtube.png", resolved)
+}
+
+func TestApplyChatResult_WhenRemoteURLRotates_ExpectReplacedCacheFilename(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := fixedNow()
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform:  "youtube",
+		UserID:    "UC1",
+		AvatarURL: "https://example.com/old.png",
+	}, defaultActivity(), testDayResetHour, now))
+	require.NoError(t, s.SetAvatarCache("youtube", "UC1", "asset_old.png"))
+
+	replaced, err := s.ApplyChatResult(store.ChatIdentity{
+		Platform:  "youtube",
+		UserID:    "UC1",
+		AvatarURL: "https://example.com/new.png",
+	}, defaultActivity(), testDayResetHour, now.Add(time.Minute))
+	require.NoError(t, err)
+	assert.Equal(t, "asset_old.png", replaced)
+}
+
+func TestSetAvatarCacheIfRemoteURL_WhenURLChanged_ExpectNotCommitted(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := fixedNow()
+	urlA := "https://example.com/a.png"
+	urlB := "https://example.com/b.png"
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform:  "youtube",
+		UserID:    "UC1",
+		AvatarURL: urlA,
+	}, defaultActivity(), testDayResetHour, now))
+
+	committed, err := s.SetAvatarCacheIfRemoteURL("youtube", "UC1", urlA, "asset_a.png")
+	require.NoError(t, err)
+	require.True(t, committed)
+
+	_, err = s.ApplyChatResult(store.ChatIdentity{
+		Platform:  "youtube",
+		UserID:    "UC1",
+		AvatarURL: urlB,
+	}, defaultActivity(), testDayResetHour, now.Add(time.Minute))
+	require.NoError(t, err)
+
+	committed, err = s.SetAvatarCacheIfRemoteURL("youtube", "UC1", urlA, "asset_stale.png")
+	require.NoError(t, err)
+	assert.False(t, committed)
+
+	cache, err := s.PortraitCacheFilename("youtube", "UC1")
+	require.NoError(t, err)
+	assert.Empty(t, cache)
+}
+
 func fixedNow() time.Time {
 	return time.Date(2026, 8, 25, 12, 0, 0, 0, time.UTC)
 }

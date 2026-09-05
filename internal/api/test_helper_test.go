@@ -32,6 +32,9 @@ func testViewerStore(t *testing.T) *store.Store {
 	path := filepath.Join(t.TempDir(), "comm-relay.db")
 	s, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, s.Close())
+	})
 
 	return s
 }

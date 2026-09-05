@@ -18,7 +18,7 @@ The leaderboard document at `/overlay/leaderboard` SHALL use a transparent page 
 - **THEN** the chat overlay document is served and does not embed the leaderboard ranking
 
 ### Requirement: Period query selects the ranking window
-The `period` query parameter SHALL accept `session`, `day`, or `all`. Missing or invalid values SHALL use `session`. Rows SHALL be canonical viewers ordered by `xp` descending for that period, then by `message_count` descending. Each row SHALL include rank, display name, optional avatar URL, `xp`, and `message_count`. Rows MUST NOT include `score`. Viewers with zero XP and zero messages in that period MAY be omitted. Visible ranking copy SHALL label the value as XP.
+The `period` query parameter SHALL accept `session`, `day`, or `all`. Missing or invalid values SHALL use `session`. Rows SHALL be canonical viewers who are not leaderboard-hidden, ordered by `xp` descending for that period, then by `message_count` descending. Each row SHALL include rank, display name, optional resolved `avatar_url`, `xp`, and `message_count`. Rows MUST NOT include `score`. Viewers with zero XP and zero messages in that period MAY be omitted. Visible ranking copy SHALL label the value as XP. The number of rows SHALL be at most the resolved `max_entries` (preset default 5, then a valid query `limit` 1–20 when present).
 
 #### Scenario: Session ranking
 - **WHEN** OBS loads `/overlay/leaderboard?period=session` after contribution in the current session
@@ -27,6 +27,18 @@ The `period` query parameter SHALL accept `session`, `day`, or `all`. Missing or
 #### Scenario: Invalid period
 - **WHEN** the URL has `period=week`
 - **THEN** the page uses session ranking
+
+#### Scenario: Default five rows
+- **WHEN** more than five eligible viewers have XP and the preset omits `max_entries`
+- **THEN** the overlay shows five rows ranked 1 through 5
+
+#### Scenario: Query limit
+- **WHEN** the URL has `limit=3` and at least three eligible viewers exist
+- **THEN** the overlay shows three rows
+
+#### Scenario: Hidden viewer omitted
+- **WHEN** a leaderboard-hidden viewer would otherwise rank in the window
+- **THEN** that viewer is absent and lower ranks move up
 
 ### Requirement: Leaderboard restores then follows live updates
 After load, the page SHALL fetch `GET /api/leaderboard` with the same period and then apply `/ws` frames with `type` `"leaderboard"` for that period. `GET /api/leaderboard` entries SHALL use `xp` and MUST NOT use `score`. Fetch failure MUST NOT prevent later WebSocket updates.
@@ -43,7 +55,7 @@ If the WebSocket drops, the leaderboard page SHALL reconnect with exponential ba
 - **THEN** the leaderboard attempts to reconnect without operator action
 
 ### Requirement: Leaderboard appearance follows the overlay preset
-The leaderboard page SHALL apply `overlay.presets` resolved by valid query `preset`, then `active_preset_id` when the query is missing or unknown, then the first preset: theme, shared style tokens, leaderboard font/layout, and leaderboard panel opacity. It SHALL resolve opacity from `surfaces.leaderboard.panel_opacity`, normally falling back to shared `style.panel_opacity`. When a legacy cockpit preset has shared zero and no leaderboard override, leaderboard chrome SHALL retain that theme's historical glass color and alpha; an explicit leaderboard value, including zero, SHALL win. Query `font_size_px` SHALL override leaderboard font when valid. Query `layout` SHALL override leaderboard layout when valid. Query `theme` SHALL override theme when it is a known theme id. Chat-only fields (`max_messages`, `message_ttl_seconds`, platform marker) MUST NOT change ranking behavior, and opacity MUST NOT be applied to the transparent page, ranking text, or avatars.
+The leaderboard page SHALL apply `overlay.presets` resolved by valid query `preset`, then `active_preset_id` when the query is missing or unknown, then the first preset: theme, shared style tokens, leaderboard font/layout, optional title, max entries, and leaderboard panel opacity. It SHALL resolve opacity from `surfaces.leaderboard.panel_opacity`, normally falling back to shared `style.panel_opacity`. When a legacy cockpit preset has shared zero and no leaderboard override, leaderboard chrome SHALL retain that theme's historical glass color and alpha; an explicit leaderboard value, including zero, SHALL win. Query `font_size_px` SHALL override leaderboard font when valid. Query `layout` SHALL override leaderboard layout when valid. Query `theme` SHALL override theme when it is a known theme id. Query `limit` SHALL override max entries when it is an integer 1–20. Chat-only fields (`max_messages`, `message_ttl_seconds`, platform marker) MUST NOT change ranking behavior, and opacity MUST NOT be applied to the transparent page, ranking text, or avatars.
 
 #### Scenario: Leaderboard opacity override
 - **WHEN** a preset has shared panel opacity `0.50` and leaderboard panel opacity `0.80`
@@ -69,6 +81,14 @@ The leaderboard page SHALL apply `overlay.presets` resolved by valid query `pres
 - **WHEN** the URL has `theme=not-a-theme`
 - **THEN** the leaderboard keeps the preset theme
 
+#### Scenario: Custom title
+- **WHEN** the resolved preset title is `Лидеры`
+- **THEN** `/overlay/leaderboard` shows that heading above the ranks
+
+#### Scenario: Blank title
+- **WHEN** the resolved title is empty
+- **THEN** the overlay shows ranks without a heading
+
 ### Requirement: Leaderboard layout is panel or chips
 Leaderboard layout SHALL be `panel` or `chips`. Missing or invalid stored/query values SHALL use `panel`. Panel SHALL render ranks inside one themed frame. Chips SHALL render each rank as a separate themed chip in the same visual language. Query `layout` SHALL override the stored layout when valid.
 
@@ -81,10 +101,10 @@ Leaderboard layout SHALL be `panel` or `chips`. Missing or invalid stored/query 
 - **THEN** each rank is a separate chip, not one shared frame
 
 ### Requirement: Leaderboard sample preview never uses live stats
-When the leaderboard URL includes `preview=sample` (or another preview flag equivalent to the chat overlay preview), the page SHALL render a built-in fictitious top-5 and MUST NOT fetch `GET /api/leaderboard` or apply live `leaderboard` WebSocket snapshots for display. `preview_background` SHALL use the same values as chat overlay preview (`white`, `checker`, `scene`, `dark`; legacy `busy` as `scene`). Without a preview query, `html` and `body` backgrounds MUST stay transparent and live ranking SHALL work as already specified.
+When the leaderboard URL includes `preview=sample` (or another preview flag equivalent to the chat overlay preview), the page SHALL render a built-in fictitious ranking whose row count matches the resolved `max_entries` (default 5) and MUST NOT fetch `GET /api/leaderboard` or apply live `leaderboard` WebSocket snapshots for display. `preview_background` SHALL use the same values as chat overlay preview (`white`, `checker`, `scene`, `dark`; legacy `busy` as `scene`). Without a preview query, `html` and `body` backgrounds MUST stay transparent and live ranking SHALL work as already specified.
 
 #### Scenario: Sample preview
-- **WHEN** `/overlay/leaderboard?preview=sample&preview_background=scene` loads
+- **WHEN** `/overlay/leaderboard?preview=sample&preview_background=scene` loads with default max entries
 - **THEN** a fictitious five-row ranking is shown and live viewer stats are not requested for that view
 
 #### Scenario: Live OBS leaderboard

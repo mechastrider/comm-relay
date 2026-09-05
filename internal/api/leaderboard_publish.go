@@ -159,12 +159,12 @@ func (p *LeaderboardPublisher) flush() {
 	p.mu.Unlock()
 	defer p.inflight.Done()
 
-	cfg := p.cfgStore.Snapshot()
 	now := time.Now()
 	ctx := context.Background()
-	limit := cfg.Overlay.ResolvedPreset(cfg.Overlay.ActivePresetID).LeaderboardMaxEntries()
+	limit := config.OverlayLeaderboardMaxEntriesMax
 
 	for _, period := range []string{"session", "day", "all"} {
+		cfg := p.cfgStore.Snapshot()
 		entries, err := p.viewerStore.Leaderboard(period, limit, cfg.DayResetHour, now, cfg.CustomAvatarsEnabled)
 		if err != nil {
 			clog.Errorf(ctx, "leaderboard snapshot %s: %w", period, err)

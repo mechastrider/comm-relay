@@ -24,10 +24,11 @@ func TestFillChatMessageAvatar_WhenCachePresent_ExpectLocalAssetURL(t *testing.T
 	require.NoError(t, viewerStore.SetAvatarCache("youtube", "UC1", "asset_abc123.png"))
 
 	filled := fillChatMessageAvatar(viewerStore, nil, bus.ChatMessage{
-		Platform: "youtube",
-		UserID:   "UC1",
-		Username: "Viewer",
-		Message:  "hello",
+		Platform:  "youtube",
+		UserID:    "UC1",
+		Username:  "Viewer",
+		Message:   "hello",
+		AvatarURL: "https://example.com/remote.png",
 	})
 	payload, err := chatMessageWirePayload(filled, false)
 	require.NoError(t, err)
@@ -55,6 +56,7 @@ func TestMessageHistory_WhenCachedPortrait_ExpectRecentIncludesLocalAsset(t *tes
 		UserID:    "UC1",
 		Username:  "Viewer",
 		Message:   "cached avatar line",
+		AvatarURL: "https://example.com/remote.png",
 		Timestamp: now,
 	})
 

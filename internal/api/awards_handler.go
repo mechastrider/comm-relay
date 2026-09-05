@@ -346,7 +346,7 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 		name = userID
 	}
 	avatarURL := result.AvatarURL
-	if resolved, resolveErr := h.viewerStore.ResolveCanonicalPortraitURL(platform, userID, cfg.CustomAvatarsEnabled); resolveErr != nil {
+	if resolved, resolveErr := h.viewerStore.ResolveCanonicalPortraitURL(platform, userID, cfg.CustomAvatarsEnabled, ""); resolveErr != nil {
 		clog.Errorf(r.Context(), "resolve award alert portrait: %w", resolveErr)
 	} else if resolved != "" {
 		avatarURL = resolved

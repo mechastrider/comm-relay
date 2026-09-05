@@ -124,25 +124,7 @@ COALESCE(
 	''
 )`
 
-const lastSeenAvatarSQL = `
-COALESCE(
-	NULLIF((
-		SELECT CASE
-			WHEN TRIM(vi.avatar_cache) != '' THEN '` + overlayAssetURLPrefix + `' || vi.avatar_cache
-			ELSE NULL
-		END
-		FROM viewer_identities vi
-		WHERE vi.viewer_id = v.id
-		ORDER BY vi.last_seen_at DESC
-		LIMIT 1
-	), ''),
-	COALESCE((
-		SELECT vi.avatar_url FROM viewer_identities vi
-		WHERE vi.viewer_id = v.id
-		ORDER BY vi.last_seen_at DESC
-		LIMIT 1
-	), '')
-)`
+const lastSeenAvatarSQL = CanonicalViewerPortraitSQL
 
 const leaderboardSessionQuery = `
 SELECT

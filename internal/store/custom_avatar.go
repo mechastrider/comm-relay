@@ -114,13 +114,20 @@ func (s *Store) OverlayAssetFilenameInUse(filename string) (bool, error) {
 }
 
 // ResolveCanonicalPortraitURL resolves a portrait for one platform identity using viewer custom, cache, then remote.
-func (s *Store) ResolveCanonicalPortraitURL(platform, userID string, customAvatarsEnabled bool) (string, error) {
+// incomingRemote is used when the connector supplied a URL that is not yet persisted.
+func (s *Store) ResolveCanonicalPortraitURL(
+	platform, userID string,
+	customAvatarsEnabled bool,
+	incomingRemote string,
+) (string, error) {
 	fields, found, err := s.canonicalPortraitFields(platform, userID)
 	if err != nil {
 		return "", err
 	}
 	if !found {
-		return "", nil
+		fields = PortraitFields{RemoteURL: strings.TrimSpace(incomingRemote)}
+	} else if strings.TrimSpace(fields.RemoteURL) == "" {
+		fields.RemoteURL = strings.TrimSpace(incomingRemote)
 	}
 	return ResolvePortraitURL(fields, customAvatarsEnabled), nil
 }
@@ -139,25 +146,51 @@ func (s *Store) canonicalPortraitFields(platform, userID string) (PortraitFields
 		return PortraitFields{}, false, errors.New("store closed")
 	}
 
-	var customAvatar, remoteURL, avatarCache string
+	var viewerID, customAvatar string
 	err := s.db.QueryRow(`
-		SELECT v.custom_avatar, vi.avatar_url, vi.avatar_cache
+		SELECT v.id, v.custom_avatar
 		FROM viewer_identities vi
 		INNER JOIN viewers v ON v.id = vi.viewer_id
 		WHERE vi.platform = ? AND vi.user_id = ?`,
 		platform,
 		userID,
-	).Scan(&customAvatar, &remoteURL, &avatarCache)
+	).Scan(&viewerID, &customAvatar)
 	if errors.Is(err, sql.ErrNoRows) {
 		return PortraitFields{}, false, nil
 	}
 	if err != nil {
-		return PortraitFields{}, false, errors.Errorf("load canonical portrait fields: %w", err)
+		return PortraitFields{}, false, errors.Errorf("load canonical viewer for portrait: %w", err)
 	}
 
-	return PortraitFields{
-		CustomAvatar: customAvatar,
-		AvatarCache:  avatarCache,
-		RemoteURL:    remoteURL,
-	}, true, nil
+	rows, err := s.db.Query(`
+		SELECT avatar_url, avatar_cache, last_seen_at
+		FROM viewer_identities
+		WHERE viewer_id = ?
+		ORDER BY last_seen_at DESC`,
+		viewerID,
+	)
+	if err != nil {
+		return PortraitFields{}, false, errors.Errorf("load viewer identities for portrait: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var identities []identityPortraitFields
+	for rows.Next() {
+		var identity identityPortraitFields
+		var lastSeenRaw string
+		if err := rows.Scan(&identity.RemoteURL, &identity.AvatarCache, &lastSeenRaw); err != nil {
+			return PortraitFields{}, false, errors.Errorf("scan viewer identity portrait: %w", err)
+		}
+		lastSeen, parseErr := parseTime(lastSeenRaw)
+		if parseErr != nil {
+			return PortraitFields{}, false, parseErr
+		}
+		identity.LastSeenAt = lastSeen
+		identities = append(identities, identity)
+	}
+	if err := rows.Err(); err != nil {
+		return PortraitFields{}, false, errors.Errorf("iterate viewer identities for portrait: %w", err)
+	}
+
+	return mergeViewerIdentityPortraits(customAvatar, identities), true, nil
 }

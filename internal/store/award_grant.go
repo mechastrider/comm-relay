@@ -51,7 +51,7 @@ func (s *Store) ApplyAward(identity ChatIdentity, points int, dayResetHour int, 
 		return nil, err
 	}
 
-	viewerID, err := s.upsertIdentityLocked(tx, identity, seenAt, now)
+	viewerID, _, err := s.upsertIdentityLocked(tx, identity, seenAt, now)
 	if err != nil {
 		return nil, err
 	}

@@ -26,6 +26,7 @@ type ViewerIngest struct {
 // AvatarCacheEnqueuer schedules asynchronous portrait cache fetches.
 type AvatarCacheEnqueuer interface {
 	Enqueue(platform, userID string)
+	DeleteOrphanedCache(filename string)
 }
 
 func newViewerIngest(
@@ -95,7 +96,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		now = time.Now()
 	}
 
-	err := v.viewerStore.ApplyChat(store.ChatIdentity{
+	replacedCache, err := v.viewerStore.ApplyChatResult(store.ChatIdentity{
 		Platform:    msg.Platform,
 		UserID:      msg.UserID,
 		Username:    msg.Username,
@@ -108,6 +109,9 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	}
 
 	if v.avatarWorker != nil {
+		if replacedCache != "" {
+			v.avatarWorker.DeleteOrphanedCache(replacedCache)
+		}
 		v.avatarWorker.Enqueue(msg.Platform, msg.UserID)
 	}
 

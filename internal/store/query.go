@@ -116,24 +116,7 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 				ORDER BY vi.last_seen_at DESC
 				LIMIT 1
 			), '') AS last_seen_username,
-			COALESCE(
-				NULLIF((
-					SELECT CASE
-						WHEN TRIM(vi.avatar_cache) != '' THEN '`+overlayAssetURLPrefix+`' || vi.avatar_cache
-						ELSE NULL
-					END
-					FROM viewer_identities vi
-					WHERE vi.viewer_id = v.id
-					ORDER BY vi.last_seen_at DESC
-					LIMIT 1
-				), ''),
-				COALESCE((
-					SELECT vi.avatar_url FROM viewer_identities vi
-					WHERE vi.viewer_id = v.id
-					ORDER BY vi.last_seen_at DESC
-					LIMIT 1
-				), '')
-			) AS last_seen_avatar_url
+			COALESCE(`+CanonicalViewerPortraitSQL+`, '') AS last_seen_avatar_url
 		FROM viewers v
 		LEFT JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
 		LEFT JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?

@@ -3,6 +3,7 @@ package avatarcache
 import (
 	"context"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
@@ -62,10 +63,22 @@ func readAvatarBody(body io.Reader, maxBytes int) ([]byte, error) {
 	return data, nil
 }
 
-// NewHTTPClient returns a client that re-validates every redirect target.
+// NewHTTPClient returns a client that re-validates every redirect target and resolved IP.
 func NewHTTPClient(timeout time.Duration) *http.Client {
+	dialer := &net.Dialer{Timeout: timeout}
+	transport := &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			dialAddr, err := publicDialAddr(ctx, net.DefaultResolver, addr)
+			if err != nil {
+				return nil, err
+			}
+			return dialer.DialContext(ctx, network, dialAddr)
+		},
+	}
+
 	return &http.Client{
-		Timeout: timeout,
+		Timeout:   timeout,
+		Transport: transport,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= maxRedirects {
 				return errors.New("avatar fetch exceeded redirect limit")
@@ -76,4 +89,47 @@ func NewHTTPClient(timeout time.Duration) *http.Client {
 			return nil
 		},
 	}
+}
+
+// PublicDialAddr resolves addr to a public IP target suitable for avatar fetching.
+func PublicDialAddr(ctx context.Context, resolver ipAddrResolver, addr string) (string, error) {
+	return publicDialAddr(ctx, resolver, addr)
+}
+
+type ipAddrResolver interface {
+	LookupIPAddr(ctx context.Context, host string) ([]net.IPAddr, error)
+}
+
+func publicDialAddr(ctx context.Context, resolver ipAddrResolver, addr string) (string, error) {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return "", errors.Errorf("parse avatar fetch address: %w", err)
+	}
+
+	if ip := net.ParseIP(host); ip != nil {
+		if !isPublicIP(ip) {
+			return "", errors.New("avatar fetch address is not public")
+		}
+		return addr, nil
+	}
+
+	ips, err := resolver.LookupIPAddr(ctx, host)
+	if err != nil {
+		return "", errors.Errorf("resolve avatar fetch host: %w", err)
+	}
+	if len(ips) == 0 {
+		return "", errors.New("avatar fetch host resolved to no addresses")
+	}
+
+	var targetIP string
+	for _, resolved := range ips {
+		if !isPublicIP(resolved.IP) {
+			return "", errors.New("avatar fetch host resolved to private address")
+		}
+		if targetIP == "" {
+			targetIP = resolved.IP.String()
+		}
+	}
+
+	return net.JoinHostPort(targetIP, port), nil
 }
