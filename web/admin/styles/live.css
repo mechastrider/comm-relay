@@ -54,6 +54,40 @@
 
 .live-toolbar-actions {
   flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--primitive-space-2);
+}
+
+.live-toolbar-actions > .settings-state,
+.live-toolbar-actions > .btn-small,
+.live-toolbar-actions > .icon-btn--compact {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-min-height);
+  min-height: var(--control-min-height);
+  max-height: var(--control-min-height);
+}
+
+.live-toolbar-actions > .settings-state {
+  padding-block: 0;
+  padding-inline: 9px;
+}
+
+.live-toolbar-actions > .icon-btn--compact {
+  width: var(--control-min-height);
+  min-width: var(--control-min-height);
+  padding: 2px;
+  overflow: visible;
+}
+
+.live-toolbar-actions > .icon-btn--compact .icon-btn__icon {
+  display: block;
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 .live-tab-panels {
