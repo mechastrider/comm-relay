@@ -21,6 +21,7 @@ func newCommandsHandler(viewerStore *store.Store) *commandsHandler {
 
 type commandResponse struct {
 	ID              string `json:"id"`
+	Action          string `json:"action"`
 	Trigger         string `json:"trigger"`
 	Enabled         bool   `json:"enabled"`
 	CooldownSeconds int    `json:"cooldown_seconds"`
@@ -42,6 +43,7 @@ type commandsListResponse struct {
 func commandFromStore(cmd store.Command) commandResponse {
 	resp := commandResponse{
 		ID:              cmd.ID,
+		Action:          cmd.Action,
 		Trigger:         cmd.Trigger,
 		Enabled:         cmd.Enabled,
 		CooldownSeconds: cmd.CooldownSeconds,
@@ -86,6 +88,7 @@ func (h *commandsHandler) handleList(w http.ResponseWriter, r *http.Request) {
 
 type createCommandRequest struct {
 	ID              string `json:"id"`
+	Action          string `json:"action,omitempty"`
 	Trigger         string `json:"trigger"`
 	Enabled         bool   `json:"enabled"`
 	CooldownSeconds int    `json:"cooldown_seconds"`
@@ -116,6 +119,7 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	cmd, err := h.viewerStore.CreateCommand(store.CreateCommandInput{
 		ID:              request.ID,
+		Action:          request.Action,
 		Trigger:         request.Trigger,
 		Enabled:         request.Enabled,
 		CooldownSeconds: request.CooldownSeconds,
@@ -145,6 +149,12 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	if errors.Is(err, store.ErrInvalidCommandAction) {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
+			"action": "choose alert or show leaderboard",
+		})
+		return
+	}
 	if err != nil {
 		clog.Errorf(r.Context(), "create command: %w", err)
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -156,6 +166,7 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 type updateCommandRequest struct {
 	ID              string `json:"id"`
+	Action          string `json:"action,omitempty"`
 	Trigger         string `json:"trigger"`
 	Enabled         bool   `json:"enabled"`
 	CooldownSeconds int    `json:"cooldown_seconds"`
@@ -190,6 +201,7 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 
 	cmd, err := h.viewerStore.UpdateCommand(store.UpdateCommandInput{
 		ID:              request.ID,
+		Action:          request.Action,
 		Trigger:         request.Trigger,
 		Enabled:         request.Enabled,
 		CooldownSeconds: request.CooldownSeconds,
@@ -220,6 +232,12 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	if errors.Is(err, store.ErrInvalidTrigger) {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
 			"trigger": "invalid trigger",
+		})
+		return
+	}
+	if errors.Is(err, store.ErrInvalidCommandAction) {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
+			"action": "choose alert or show leaderboard",
 		})
 		return
 	}

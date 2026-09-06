@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -341,6 +343,32 @@ func TestAwardGrant_WhenRejectedWithQuote_ExpectErrorDTODoesNotEchoQuote(t *test
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 	require.NotContains(t, rec.Body.String(), quote)
 	require.NotContains(t, rec.Body.String(), "message_text")
+}
+
+func TestAwardGrant_WhenAutomaticVisibilityEnabled_ExpectDelayedLeaderboardRequest(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	_, err := env.ViewerStore.UpdateAward(store.UpdateAwardInput{
+		ID:             "joke",
+		Name:           "Joke",
+		Points:         10,
+		SplashTemplate: "Joke for {viewer}!",
+		Sound:          "soft",
+		DurationMs:     1,
+	})
+	require.NoError(t, err)
+
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(
+		http.MethodPost,
+		"/api/awards/grant",
+		strings.NewReader(`{"platform":"twitch","user_id":"visibility-viewer","award_id":"joke"}`),
+	))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	require.Eventually(t, func() bool {
+		got, snapshotErr := env.Visibility.Snapshot(context.Background())
+		return snapshotErr == nil && got.State == leaderboard.StateTimed && got.Reason == leaderboard.ReasonAward
+	}, time.Second, time.Millisecond)
 }
 
 func TestAwardGrant_WhenEmptyUserID_ExpectBadRequest(t *testing.T) {

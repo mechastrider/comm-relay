@@ -54,11 +54,7 @@ func TestWebSocket_WhenChatPublished_ExpectJSONMessage(t *testing.T) {
 	})))
 
 	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
-	_, data, err := conn.ReadMessage()
-	require.NoError(t, err)
-
-	var frame map[string]any
-	require.NoError(t, json.Unmarshal(data, &frame))
+	frame := readWebSocketFrameSkippingLeaderboard(t, conn)
 	require.Equal(t, "message", frame["type"])
 	require.Equal(t, "twitch", frame["platform"])
 	require.Equal(t, "overlay-1", frame["id"])
@@ -90,8 +86,8 @@ func TestWebSocket_WhenMessageDeleted_ExpectDeletionEvent(t *testing.T) {
 	})))
 
 	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
-	_, _, err = conn.ReadMessage()
-	require.NoError(t, err)
+	frame := readWebSocketFrameSkippingLeaderboard(t, conn)
+	require.Equal(t, wireMessageType, frame["type"])
 
 	require.Eventually(t, func() bool {
 		response, requestErr := http.Get(srv.URL + "/api/messages/recent")
@@ -119,9 +115,9 @@ func TestWebSocket_WhenMessageDeleted_ExpectDeletionEvent(t *testing.T) {
 	_, data, err := conn.ReadMessage()
 	require.NoError(t, err)
 
-	var frame map[string]any
-	require.NoError(t, json.Unmarshal(data, &frame))
-	require.Equal(t, "message_deleted", frame["type"])
-	require.Equal(t, "youtube", frame["platform"])
-	require.Equal(t, "delete-1", frame["id"])
+	var deletionFrame map[string]any
+	require.NoError(t, json.Unmarshal(data, &deletionFrame))
+	require.Equal(t, "message_deleted", deletionFrame["type"])
+	require.Equal(t, "youtube", deletionFrame["platform"])
+	require.Equal(t, "delete-1", deletionFrame["id"])
 }

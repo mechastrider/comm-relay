@@ -12,6 +12,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -20,6 +21,7 @@ type awardsHandler struct {
 	hub                  *Hub
 	leaderboardPublisher *LeaderboardPublisher
 	configStore          *config.Store
+	visibility           *leaderboard.Controller
 }
 
 func newAwardsHandler(
@@ -27,12 +29,14 @@ func newAwardsHandler(
 	hub *Hub,
 	leaderboardPublisher *LeaderboardPublisher,
 	configStore *config.Store,
+	visibility *leaderboard.Controller,
 ) *awardsHandler {
 	return &awardsHandler{
 		viewerStore:          viewerStore,
 		hub:                  hub,
 		leaderboardPublisher: leaderboardPublisher,
 		configStore:          configStore,
+		visibility:           visibility,
 	}
 }
 
@@ -375,6 +379,17 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.hub.Broadcast(alertPayload)
+	if h.visibility != nil {
+		delay := time.Duration(award.DurationMs) * time.Millisecond
+		switch {
+		case cfg.LeaderboardVisibility.ShowOnAward:
+			h.visibility.Schedule(leaderboard.ReasonAward, delay)
+		case result.MeaningfulRankChange && cfg.LeaderboardVisibility.ShowOnRankChange:
+			h.visibility.Schedule(leaderboard.ReasonRankChange, delay)
+		default:
+			h.visibility.MarkDirty()
+		}
+	}
 	if h.leaderboardPublisher != nil {
 		h.leaderboardPublisher.Schedule()
 	}

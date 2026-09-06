@@ -53,6 +53,51 @@ func TestLoad_WhenValidFile_ExpectParsed(t *testing.T) {
 	require.Equal(t, "streamer", cfg.Twitch.Channel)
 	require.Equal(t, 10, cfg.Overlay.MaxMessages)
 	require.Equal(t, OverlayThemeDefault, cfg.Overlay.Theme)
+	require.Equal(t, LeaderboardVisibilityPolicyAlways, cfg.LeaderboardVisibility.Policy)
+}
+
+func TestLoad_WhenMissingFile_ExpectAutomaticLeaderboardVisibilityDefaults(t *testing.T) {
+	t.Parallel()
+
+	cfg, err := Load(filepath.Join(t.TempDir(), "config.json"))
+	require.NoError(t, err)
+	require.Equal(t, defaultLeaderboardVisibility(), cfg.LeaderboardVisibility)
+	require.Equal(t, cfg.LeaderboardVisibility, cfg.Public().LeaderboardVisibility)
+}
+
+func TestLoad_WhenLegacyFileOmitsLeaderboardVisibility_ExpectAlwaysPolicy(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "config.json")
+	require.NoError(t, os.WriteFile(path, []byte(`{
+  "server_port": 17877,
+  "overlay": { "max_messages": 30, "message_ttl_seconds": 20 }
+}`), 0o644))
+
+	cfg, err := Load(path)
+	require.NoError(t, err)
+	require.Equal(t, LeaderboardVisibilityPolicyAlways, cfg.LeaderboardVisibility.Policy)
+	require.Equal(t, 15, cfg.LeaderboardVisibility.DisplaySeconds)
+	require.True(t, cfg.LeaderboardVisibility.ShowOnAward)
+	require.True(t, cfg.LeaderboardVisibility.ShowOnRankChange)
+}
+
+func TestValidate_WhenLeaderboardVisibilityInvalid_ExpectFieldErrors(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.LeaderboardVisibility.Policy = "sometimes"
+	cfg.LeaderboardVisibility.DisplaySeconds = 2
+	cfg.LeaderboardVisibility.CooldownSeconds = 3601
+	cfg.LeaderboardVisibility.DirtyIntervalSeconds = 59
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	fields := ValidationFields(err)
+	require.Contains(t, fields, "leaderboard_visibility_policy")
+	require.Contains(t, fields, "leaderboard_visibility_display_seconds")
+	require.Contains(t, fields, "leaderboard_visibility_cooldown_seconds")
+	require.Contains(t, fields, "leaderboard_visibility_dirty_interval_seconds")
 }
 
 func TestLoad_WhenInvalidJSON_ExpectError(t *testing.T) {

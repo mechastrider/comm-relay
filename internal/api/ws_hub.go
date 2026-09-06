@@ -10,6 +10,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -25,6 +26,7 @@ type Hub struct {
 	matcher      *command.Matcher
 	cfgStore     *config.Store
 	viewerStore  *store.Store
+	visibility   *leaderboard.Controller
 }
 
 // NewHub creates a WebSocket hub bound to the shared event bus.
@@ -56,13 +58,30 @@ func (h *Hub) Run(ctx context.Context) {
 			if !ok {
 				return
 			}
-			if ev.Type != bus.EventChatMessageReceived {
-				continue
+			switch ev.Type {
+			case bus.EventChatMessageReceived:
+				h.handleChatMessage(ctx, ev.Message)
+			case bus.EventLeaderboardVisibilityChanged:
+				h.handleLeaderboardVisibility(ctx, ev.LeaderboardVisibility)
 			}
-
-			h.handleChatMessage(ctx, ev.Message)
 		}
 	}
+}
+
+func (h *Hub) handleLeaderboardVisibility(ctx context.Context, snapshot leaderboard.Snapshot) {
+	payload, err := leaderboardVisibilityWirePayload(snapshot)
+	if err != nil {
+		clog.Errorf(ctx, "leaderboard visibility wire payload: %w", err)
+		return
+	}
+	h.broadcast(payload)
+}
+
+// SetLeaderboardVisibility supplies authoritative snapshots for new production clients.
+func (h *Hub) SetLeaderboardVisibility(controller *leaderboard.Controller) {
+	h.mu.Lock()
+	h.visibility = controller
+	h.mu.Unlock()
 }
 
 func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
@@ -86,6 +105,22 @@ func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
 }
 
 func (h *Hub) register(c *wsClient) {
+	var visibility *leaderboard.Controller
+	if !c.debug {
+		h.mu.Lock()
+		visibility = h.visibility
+		h.mu.Unlock()
+		if visibility != nil {
+			ctx := c.ctx
+			if ctx == nil {
+				ctx = context.Background()
+			}
+			// Reconcile deadlines before queuing the reconnect snapshot. A
+			// transition racing this call is still delivered by broadcast.
+			_, _ = visibility.Snapshot(ctx)
+		}
+	}
+
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -101,6 +136,15 @@ func (h *Hub) register(c *wsClient) {
 	}
 
 	h.clients[c] = struct{}{}
+	if visibility != nil {
+		payload, err := leaderboardVisibilityWirePayload(visibility.Current())
+		if err == nil {
+			select {
+			case c.send <- payload:
+			default:
+			}
+		}
+	}
 }
 
 func (h *Hub) unregister(c *wsClient) {

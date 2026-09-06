@@ -2,7 +2,7 @@ import * as dom from './dom.js';
 import { state } from './state.js';
 import { BANNER_SUCCESS_DISMISS_MS } from './constants.js';
 import { t } from './i18n-ui.js';
-import { translateFieldError } from '/shared/i18n.js?v=17';
+import { translateFieldError } from '/shared/i18n.js?v=18';
 
 function translateFieldErrorMessage(fieldKey, serverMessage) {
   return translateFieldError(fieldKey, serverMessage);

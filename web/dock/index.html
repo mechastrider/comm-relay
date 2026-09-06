@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/shared/reward-picker.css?v=2">
     <link rel="stylesheet" href="/shared/tooltip.css?v=21">
-    <link rel="stylesheet" href="/dock/messages/messages.css?v=13">
+    <link rel="stylesheet" href="/dock/messages/messages.css?v=14">
     <script>
       (function () {
         try {
@@ -23,10 +23,32 @@
     </script>
   </head>
   <body>
-    <main id="message-panel" class="message-panel">
-      <ol id="messages" class="message-list" aria-live="polite" aria-relevant="additions"></ol>
-      <p id="empty-state" class="empty-state">Waiting for chat messages</p>
-    </main>
-    <script type="module" src="/dock/messages/messages.js?v=17"></script>
+    <div class="dock-shell">
+      <header class="leaderboard-toolbar" aria-labelledby="leaderboard-toolbar-title">
+        <div class="leaderboard-toolbar__topline">
+          <strong id="leaderboard-toolbar-title" data-i18n="dock.leaderboard">Leaderboard</strong>
+          <span class="leaderboard-toolbar__state">
+            <span id="leaderboard-visibility-status" class="leaderboard-toolbar__status" role="status" aria-live="polite"></span>
+            <span id="leaderboard-visibility-countdown" class="leaderboard-toolbar__countdown" role="timer" aria-live="off"></span>
+          </span>
+        </div>
+        <label class="leaderboard-toolbar__preset">
+          <span data-i18n="dock.preset">Preset</span>
+          <select id="leaderboard-preset" aria-label="Preset"></select>
+        </label>
+        <div class="leaderboard-toolbar__actions">
+          <button type="button" data-leaderboard-action="show" data-i18n="dock.show">Show</button>
+          <button type="button" data-leaderboard-action="pin" data-i18n="dock.pin">Pin</button>
+          <button type="button" data-leaderboard-action="resume" data-i18n="dock.resume">Auto</button>
+          <button type="button" data-leaderboard-action="hide" data-i18n="dock.hide">Hide</button>
+        </div>
+        <p id="leaderboard-toolbar-error" class="leaderboard-toolbar__error" role="alert" hidden></p>
+      </header>
+      <main id="message-panel" class="message-panel">
+        <ol id="messages" class="message-list" aria-live="polite" aria-relevant="additions"></ol>
+        <p id="empty-state" class="empty-state">Waiting for chat messages</p>
+      </main>
+    </div>
+    <script type="module" src="/dock/messages/messages.js?v=18"></script>
   </body>
 </html>

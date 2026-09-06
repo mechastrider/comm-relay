@@ -52,3 +52,12 @@
 ## Evidence and Explicit Skips
 
 Attach command/race output, migration fixture results, API/WS payload captures, and Windows OBS screenshots for hidden/timed/pinned plus narrow-dock states. Record versions and any unavailable macOS/Linux OBS matrix cells. Remote access, OBS source-eye automation, connector authentication, signing, publishing, and alert-backlog coordination beyond the triggering alert's own delay are explicit skips.
+
+## Execution Evidence — 2026-09-06
+
+- Environment: Linux 5.15 x86_64, Go 1.26.3, Node 24.15.0, npm 11.12.1, and the repository-pinned golangci-lint 2.12.2.
+- Automated coverage passed: `go test ./...`, `go test -race ./...`, `golangci-lint run ./...`, `npm test` (40 tests), `npm run lint`, and `npm run test:i18n`.
+- Deterministic tests cover policy startup, deadlines and extension, cooldown/dirty fallback, manual precedence, suspend-style clock advance, delayed awards, shutdown, XP/top-three classification, message-only silence, command action/cooldown/event behavior, API errors, production/debug WebSocket isolation, and reconnect snapshots.
+- Migration evidence passed from a version-12 fixture through 00013, including down/up preservation and the legacy `alert` default; unknown stored actions fail closed.
+- Headless local smoke passed with a fresh config/database: migration 1→13, health, hidden automatic startup, timed manual show with an absolute deadline, dock/leaderboard URLs, clean shutdown, and hidden automatic state after restart.
+- Not available in this environment: Windows/macOS packaged Wails and OBS CEF runs, real OBS source screenshots, 200% zoom visual inspection, and copied-data downgrade with an older binary. These cells remain manual release QA and keep Q.1 open.

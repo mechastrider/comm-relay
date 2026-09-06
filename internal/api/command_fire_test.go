@@ -13,6 +13,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -191,6 +192,74 @@ func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutXP(t *testing.T) {
 			payload.Viewers[0].MessageCount == 2 &&
 			payload.Viewers[0].XP == 5
 	}, 2*time.Second, 25*time.Millisecond)
+}
+
+func TestCommandFire_WhenShowLeaderboardAction_ExpectTimedStateNoAlertAndOneEvent(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+	cfg := env.ConfigStore.Snapshot()
+	cfg.ActivityXP = 0
+	require.NoError(t, env.ConfigStore.Replace(cfg))
+	_, err := env.ViewerStore.CreateCommand(store.CreateCommandInput{
+		Action:          store.CommandActionShowLeaderboard,
+		Trigger:         "leaderboard",
+		Enabled:         true,
+		CooldownSeconds: 180,
+	})
+	require.NoError(t, err)
+
+	client := &wsClient{hub: env.Hub, send: make(chan []byte, ClientSendBuffer)}
+	env.Hub.register(client)
+	<-client.send // initial visibility snapshot
+	t.Cleanup(func() { env.Hub.unregister(client) })
+
+	publish := func(id string) {
+		require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+			ID:          id,
+			Platform:    "twitch",
+			UserID:      "42",
+			DisplayName: "Alice",
+			Message:     "  !LEADERBOARD  ",
+		})))
+	}
+	publish("leaderboard-command-1")
+	require.Eventually(t, func() bool {
+		return env.Visibility.Current().State == leaderboard.StateTimed &&
+			env.Visibility.Current().Reason == leaderboard.ReasonCommand
+	}, time.Second, time.Millisecond)
+	firstDeadline := env.Visibility.Current().VisibleUntil
+	require.NotNil(t, firstDeadline)
+
+	publish("leaderboard-command-2")
+	require.Eventually(t, func() bool {
+		viewerID, ok := env.ViewerStore.ViewerIDForIdentity("twitch", "42")
+		if !ok {
+			return false
+		}
+		viewer, getErr := env.ViewerStore.Get(viewerID, cfg.DayResetHour, time.Now())
+		return getErr == nil && viewer.MessageCount == 2
+	}, time.Second, time.Millisecond)
+	require.Equal(t, *firstDeadline, *env.Visibility.Current().VisibleUntil)
+
+	for len(client.send) > 0 {
+		var frame map[string]any
+		require.NoError(t, json.Unmarshal(<-client.send, &frame))
+		require.NotEqual(t, "alert", frame["type"])
+	}
+	viewerID, ok := env.ViewerStore.ViewerIDForIdentity("twitch", "42")
+	require.True(t, ok)
+	events, err := env.ViewerStore.ListInteractionEventsByViewer(viewerID)
+	require.NoError(t, err)
+	var commandEvents int
+	for _, event := range events {
+		if event.Kind == store.InteractionEventCommand {
+			commandEvents++
+		}
+	}
+	require.Equal(t, 1, commandEvents)
+	viewer, err := env.ViewerStore.Get(viewerID, cfg.DayResetHour, time.Now())
+	require.NoError(t, err)
+	require.Zero(t, viewer.XP)
 }
 
 func TestConfig_WhenHideCommandMessages_ExpectPublicAndOverlaySettings(t *testing.T) {

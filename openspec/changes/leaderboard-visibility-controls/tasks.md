@@ -9,10 +9,10 @@
 > **Allowed fallout**: fake clock, typed commands/events, focused config/bootstrap tests
 > **Blocked**: OBS scene control, persistence of runtime overrides, remote access
 
-- [ ] 1.1 Add presence-aware global visibility config, validation, public DTO fields, fresh automatic defaults, and legacy always-visible fallback.
-- [ ] 1.2 Implement the single-owner controller with bounded input, one reusable timer, absolute deadlines, manual show/hide/pin/resume, and policy re-evaluation.
-- [ ] 1.3 Add deterministic fake-clock tests for startup, extension/expiry, cooldown, dirty interval, pin precedence, resume, suspend-style clock advance, and cancellation.
-- [ ] 1.4 Register the controller as a cancellable runnable and expose typed snapshot/transition events without blocking shutdown or producers.
+- [x] 1.1 Add presence-aware global visibility config, validation, public DTO fields, fresh automatic defaults, and legacy always-visible fallback.
+- [x] 1.2 Implement the single-owner controller with bounded input, one reusable timer, absolute deadlines, manual show/hide/pin/resume, and policy re-evaluation.
+- [x] 1.3 Add deterministic fake-clock tests for startup, extension/expiry, cooldown, dirty interval, pin precedence, resume, suspend-style clock advance, and cancellation.
+- [x] 1.4 Register the controller as a cancellable runnable and expose typed snapshot/transition events without blocking shutdown or producers.
 
 ## Slice: `Trigger only on meaningful activity`
 
@@ -23,9 +23,9 @@
 > **Allowed fallout**: rank snapshot helpers, award-delay fixtures, interaction tests
 > **Blocked**: XP formula/order changes, exact alert-backlog coordination, message-count triggers
 
-- [ ] 2.1 Emit an award visibility request after that award's configured duration and cancel pending delay on shutdown.
-- [ ] 2.2 Compare XP mutation results to detect leader or ordered top-three membership changes and mark other XP changes dirty.
-- [ ] 2.3 Prove message-count-only updates do not trigger or dirty, eligible timed triggers extend from newest event, and pinned state ignores triggers.
+- [x] 2.1 Emit an award visibility request after that award's configured duration and cancel pending delay on shutdown.
+- [x] 2.2 Compare XP mutation results to detect leader or ordered top-three membership changes and mark other XP changes dirty.
+- [x] 2.3 Prove message-count-only updates do not trigger or dirty, eligible timed triggers extend from newest event, and pinned state ignores triggers.
 
 ## Slice: `Expose compatible localhost state and actions`
 
@@ -36,10 +36,10 @@
 > **Allowed fallout**: handler DTOs, hub snapshot provider, browser transition styles/tests
 > **Blocked**: REST-style mutations, debug-feed leakage, changing leaderboard snapshot fields
 
-- [ ] 3.1 Add `GET /api/leaderboard/visibility` and the four POST-action routes with bounded JSON input and UI-safe errors.
-- [ ] 3.2 Broadcast/snapshot `leaderboard_visibility` through the normal bounded production client queue while excluding overlay-debug clients.
-- [ ] 3.3 Make `/overlay/leaderboard` follow hidden/timed/pinned frames with transparent-page and reduced-motion behavior; keep preview/debug pages independent.
-- [ ] 3.4 Add handler, router-guard, multi-client reconnect, old-client-ignore, debug-isolation, and controller-unavailable tests.
+- [x] 3.1 Add `GET /api/leaderboard/visibility` and the four POST-action routes with bounded JSON input and UI-safe errors.
+- [x] 3.2 Broadcast/snapshot `leaderboard_visibility` through the normal bounded production client queue while excluding overlay-debug clients.
+- [x] 3.3 Make `/overlay/leaderboard` follow hidden/timed/pinned frames with transparent-page and reduced-motion behavior; keep preview/debug pages independent.
+- [x] 3.4 Add handler, router-guard, multi-client reconnect, old-client-ignore, debug-isolation, and controller-unavailable tests.
 
 ## Slice: `Let viewer commands request the board`
 
@@ -50,10 +50,10 @@
 > **Allowed fallout**: migration fixtures, API DTOs, catalog tests
 > **Blocked**: seeded `!leaderboard`, command parameters, score changes, editing migrations 00001–00012
 
-- [ ] 4.1 Add reversible migration `00013_commands_action.sql` with non-null default `alert` and version-12 up/down fixtures.
-- [ ] 4.2 Thread validated `alert|show_leaderboard` action through command store, public API, create/update compatibility, and starter rows.
-- [ ] 4.3 Dispatch exact enabled command matches to alert or timed visibility while preserving message counting, per-viewer cooldown, no XP, and one interaction event.
-- [ ] 4.4 Cover existing alerts, show-without-alert, whitespace/case, disabled/unknown/parameterized lines, both cooldowns, and no auto-seed.
+- [x] 4.1 Add reversible migration `00013_commands_action.sql` with non-null default `alert` and version-12 up/down fixtures.
+- [x] 4.2 Thread validated `alert|show_leaderboard` action through command store, public API, create/update compatibility, and starter rows.
+- [x] 4.3 Dispatch exact enabled command matches to alert or timed visibility while preserving message counting, per-viewer cooldown, no XP, and one interaction event.
+- [x] 4.4 Cover existing alerts, show-without-alert, whitespace/case, disabled/unknown/parameterized lines, both cooldowns, and no auto-seed.
 
 ## Slice: `Operate policy, commands, and on-air state from the UI`
 
@@ -64,11 +64,11 @@
 > **Allowed fallout**: dock DOM/CSS split, pure countdown/state helpers, frontend tests
 > **Blocked**: themed operator chrome, global Studio Publish coupling, alert queue inspector
 
-- [ ] 5.1 Add the global policy/timing/trigger Settings section with conditional help, retained disabled values, field errors, and immediate runtime update after Save.
-- [ ] 5.2 Add Alert/Show leaderboard action editing and catalog distinction while requiring/sending only fields relevant to the selected action.
-- [ ] 5.3 Restructure the dock into pinned toolbar plus independently scrolling messages; add state/countdown, Show, Pin/Resume, Hide, and active-preset controls.
-- [ ] 5.4 Implement initial GET plus WS recovery, per-action busy/error behavior, authoritative countdown reconciliation, and message-scroll preservation.
-- [ ] 5.5 Add EN/RU copy and tests for settings serialization, action forms, 300px markup/layout contract, accessible names/tooltips, live-region transitions, and i18n parity.
+- [x] 5.1 Add the global policy/timing/trigger Settings section with conditional help, retained disabled values, field errors, and immediate runtime update after Save.
+- [x] 5.2 Add Alert/Show leaderboard action editing and catalog distinction while requiring/sending only fields relevant to the selected action.
+- [x] 5.3 Restructure the dock into pinned toolbar plus independently scrolling messages; add state/countdown, Show, Pin/Resume, Hide, and active-preset controls.
+- [x] 5.4 Implement initial GET plus WS recovery, per-action busy/error behavior, authoritative countdown reconciliation, and message-scroll preservation.
+- [x] 5.5 Add EN/RU copy and tests for settings serialization, action forms, 300px markup/layout contract, accessible names/tooltips, live-region transitions, and i18n parity.
 
 ## Slice: `Document and release visibility control`
 
@@ -79,16 +79,16 @@
 > **Allowed fallout**: troubleshooting and upgrade/rollback notes
 > **Blocked**: roadmap commitments for alert queues, release versioning, publishing
 
-- [ ] 6.1 Update the product concept and Russian/English operator documentation with policy semantics, defaults, command setup, localhost controls, and compatibility notes.
-- [ ] 6.2 Add a concise Russian `[Unreleased]` bullet without changing released sections.
+- [x] 6.1 Update the product concept and Russian/English operator documentation with policy semantics, defaults, command setup, localhost controls, and compatibility notes.
+- [x] 6.2 Add a concise Russian `[Unreleased]` bullet without changing released sections.
 
 ## Gate: verification
 
-- [ ] V.1 Run `gofmt` and `goimports` on touched Go files.
-- [ ] V.2 Run `go test ./...` and `go test -race ./...`.
-- [ ] V.3 Run `golangci-lint run ./...`.
-- [ ] V.4 Run `npm ci`, `npm test`, `npm run lint`, and `npm run test:i18n`.
-- [ ] V.5 Run `openspec validate leaderboard-visibility-controls --strict` and confirm implementation matches every delta and contract.
+- [x] V.1 Run `gofmt` and `goimports` on touched Go files.
+- [x] V.2 Run `go test ./...` and `go test -race ./...`.
+- [x] V.3 Run `golangci-lint run ./...`.
+- [x] V.4 Run `npm ci`, `npm test`, `npm run lint`, and `npm run test:i18n`.
+- [x] V.5 Run `openspec validate leaderboard-visibility-controls --strict` and confirm implementation matches every delta and contract.
 
 ## Gate: qa
 
@@ -96,7 +96,7 @@
 
 ## Gate: review
 
-- [ ] R.1 Obtain a fresh diff review; resolve every CRITICAL finding and rerun affected checks.
+- [x] R.1 Obtain a fresh diff review; resolve every CRITICAL finding and rerun affected checks.
 
 ## Gate: distribution-readiness
 

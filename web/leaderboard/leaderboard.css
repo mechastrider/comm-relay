@@ -20,6 +20,16 @@
   box-sizing: border-box;
   overflow: hidden;
   font-size: var(--leaderboard-font-size);
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+body.leaderboard-visibility--pending .leaderboard,
+body.leaderboard-visibility--hidden .leaderboard {
+  opacity: 0;
+  transform: translateY(calc(8px * var(--leaderboard-scale)));
+  pointer-events: none;
 }
 
 .leaderboard-title {
@@ -251,5 +261,6 @@ body.leaderboard-density--compact .leaderboard-avatar {
   .leaderboard-row {
     animation: none !important;
     transition: none !important;
+    transform: none !important;
   }
 }

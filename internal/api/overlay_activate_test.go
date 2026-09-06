@@ -81,6 +81,7 @@ func readOverlaySettingsEventually(t *testing.T, conn *websocket.Conn, activePre
 		if err != nil {
 			return false
 		}
+		frame = nil
 		if json.Unmarshal(data, &frame) != nil {
 			return false
 		}

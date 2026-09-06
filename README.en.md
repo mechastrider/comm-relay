@@ -102,7 +102,7 @@ CommRelay can show a separate chat feed directly in the OBS interface. This pane
 3. Enter a name, for example `CommRelay Messages`, and paste the copied URL.
 4. Click **Apply**, then place the new panel in a convenient part of the OBS interface.
 
-The panel shows messages only: on open it restores up to the last 100 entries, then receives new ones in real time. If you scrolled the log up, new messages do not reset the position; to restore auto-scroll, scroll the feed to the bottom. The **Delete** button removes an entry from local history, the admin panel, the dock, and the active overlay. The **Reward** button grants an award from the **Audience** catalog — same as in Live.
+A pinned leaderboard toolbar sits above the log. It shows the authoritative on-air state and countdown, provides **Show**, **Pin**, **Auto**, and **Hide**, and can switch the active appearance preset. The message body restores up to the last 100 entries and scrolls independently: new messages do not reset your position when you have scrolled up. **Delete** removes an entry from local history, the admin panel, the dock, and the active overlay. **Reward** grants an award from the **Audience** catalog — same as in Live.
 
 If the CommRelay port was changed, replace `17877` in the URL. The app must stay running during the stream. To show messages to viewers, continue using a separate **Browser** source with the `/overlay` URL.
 
@@ -122,6 +122,10 @@ Open **Studio** in the CommRelay control panel.
 | **Preview** | The surface list on the left switches the preview (**Chat / Leaderboard / Alerts**); the leaderboard preview always shows a fictitious top-5. Preview backdrop (white, checkerboard, game footage, black) is in **Preview options** (⋯). |
 
 ### Leaderboard size and content
+
+Choose the global policy in **Settings → Data → Leaderboard visibility**: **Always visible**, **Automatic**, or **On request**. A fresh config defaults to a 15-second display, 300-second cooldown, 900-second changed-board reminder, and triggers after rewards or top-three changes. On request still accepts dock actions and Audience commands whose action is **Show leaderboard**; that command uses the global duration and creates no alert. An older config without the visibility block keeps the previous always-visible behavior. Manual dock pin/hide state resets when CommRelay restarts. Page visibility does not toggle the OBS source-eye control.
+
+For localhost diagnostics, use `GET /api/leaderboard/visibility` and JSON `{}` with `POST /api/leaderboard/show`, `/hide`, `/pin`, or `/resume`. These control the production page, not Studio presets or OBS source visibility.
 
 In **Automatic** mode, Browser Source width controls the shared scale of text, portraits, spacing, and chrome, while height controls how many complete ranking rows fit. For example, a `320×180` source produces a compact composition with a few ranks; `640×360` produces a larger composition and, when height permits, more rows. Partial rows and scrollbars are never shown. **Maximum ranks** remains an upper limit (default 5).
 

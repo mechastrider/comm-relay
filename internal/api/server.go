@@ -8,6 +8,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
+	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
@@ -15,15 +16,16 @@ import (
 // Options configures the HTTP handler.
 type Options struct {
 	// WebRoot overrides embedded static assets with files from disk (for local UI dev).
-	WebRoot              string
-	Hub                  *Hub
-	Store                *config.Store
-	ViewerStore          *store.Store
-	LeaderboardPublisher *LeaderboardPublisher
-	History              *MessageHistory
-	Registry             *status.Registry
-	Runtime              *runtime.Info
-	EmoteCache           *emote.Cache
+	WebRoot               string
+	Hub                   *Hub
+	Store                 *config.Store
+	ViewerStore           *store.Store
+	LeaderboardPublisher  *LeaderboardPublisher
+	History               *MessageHistory
+	Registry              *status.Registry
+	Runtime               *runtime.Info
+	EmoteCache            *emote.Cache
+	LeaderboardVisibility *leaderboard.Controller
 }
 
 // NewHandler returns the root HTTP handler for CommRelay.
@@ -54,6 +56,8 @@ func NewHandler(opts Options) (http.Handler, error) {
 	}
 
 	configHandler := newConfigHandler(opts.Store, opts.Hub, nil)
+	configHandler.leaderboardVisibility = opts.LeaderboardVisibility
+	opts.Hub.SetLeaderboardVisibility(opts.LeaderboardVisibility)
 	overlayAssets := newOverlayAssetsHandler(opts.Store, opts.ViewerStore)
 	statusHandler := newStatusHandler(opts.Store, registry)
 	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt, opts.EmoteCache)
@@ -68,8 +72,9 @@ func NewHandler(opts Options) (http.Handler, error) {
 	configHandler.leaderboardPublisher = leaderboardPublisher
 	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher)
 	commandsHandler := newCommandsHandler(opts.ViewerStore)
-	awardsHandler := newAwardsHandler(opts.ViewerStore, opts.Hub, leaderboardPublisher, opts.Store)
+	awardsHandler := newAwardsHandler(opts.ViewerStore, opts.Hub, leaderboardPublisher, opts.Store, opts.LeaderboardVisibility)
 	overlayDebug := newOverlayDebugHandler(opts.Hub)
+	visibilityHandler := &leaderboardVisibilityHandler{controller: opts.LeaderboardVisibility}
 
 	mux := http.NewServeMux()
 	instanceID := ""
@@ -102,6 +107,11 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("POST /api/viewers/avatar/clear", viewersHandler.handleAvatarClear)
 	mux.HandleFunc("POST /api/sessions/start", viewersHandler.handleStartSession)
 	mux.HandleFunc("GET /api/leaderboard", viewersHandler.handleLeaderboard)
+	mux.HandleFunc("GET /api/leaderboard/visibility", visibilityHandler.handleGet)
+	mux.HandleFunc("POST /api/leaderboard/show", visibilityHandler.handleShow)
+	mux.HandleFunc("POST /api/leaderboard/hide", visibilityHandler.handleHide)
+	mux.HandleFunc("POST /api/leaderboard/pin", visibilityHandler.handlePin)
+	mux.HandleFunc("POST /api/leaderboard/resume", visibilityHandler.handleResume)
 	mux.HandleFunc("GET /api/commands", commandsHandler.handleList)
 	mux.HandleFunc("POST /api/commands/create", commandsHandler.handleCreate)
 	mux.HandleFunc("POST /api/commands/update", commandsHandler.handleUpdate)

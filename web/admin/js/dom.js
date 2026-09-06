@@ -250,6 +250,10 @@ export const commandsDeleteButton = document.getElementById("commands-delete-but
 export const commandTriggerInput = document.getElementById("command-trigger-input");
 export const commandTriggerError = document.getElementById("command-trigger-error");
 export const commandEnabledInput = document.getElementById("command-enabled-input");
+export const commandActionInput = document.getElementById("command-action-input");
+export const commandActionHint = document.getElementById("command-action-hint");
+export const commandActionError = document.getElementById("command-action-error");
+export const commandAlertFields = document.getElementById("command-alert-fields");
 export const commandCooldownInput = document.getElementById("command-cooldown-input");
 export const commandSplashInput = document.getElementById("command-splash-input");
 export const commandSplashVars = document.getElementById("command-splash-vars");
@@ -333,6 +337,13 @@ export const hideCommandMessagesInput = document.getElementById("hide-command-me
 export const customAvatarsEnabledInput = document.getElementById("custom-avatars-enabled");
 export const streamerDisplayNameInput = document.getElementById("streamer-display-name");
 export const dayResetHourInput = document.getElementById("day-reset-hour");
+export const leaderboardVisibilityPolicyInput = document.getElementById("leaderboard-visibility-policy");
+export const leaderboardVisibilityPolicyHint = document.getElementById("leaderboard-visibility-policy-hint");
+export const leaderboardVisibilityDisplaySecondsInput = document.getElementById("leaderboard-visibility-display-seconds");
+export const leaderboardVisibilityCooldownSecondsInput = document.getElementById("leaderboard-visibility-cooldown-seconds");
+export const leaderboardVisibilityDirtyIntervalSecondsInput = document.getElementById("leaderboard-visibility-dirty-interval-seconds");
+export const leaderboardVisibilityShowOnAwardInput = document.getElementById("leaderboard-visibility-show-on-award");
+export const leaderboardVisibilityShowOnRankChangeInput = document.getElementById("leaderboard-visibility-show-on-rank-change");
 export const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
 export const messageSoundVolumeInput = document.getElementById("message-sound-volume");
 export const messageSoundVolumeLabel = document.getElementById("message-sound-volume-label");
@@ -378,6 +389,10 @@ export const fieldErrors = {
     activity_interval_seconds: document.getElementById("activity-interval-seconds-error"),
     activity_session_limit: document.getElementById("activity-session-limit-error"),
     activity_xp: document.getElementById("activity-xp-error"),
+    leaderboard_visibility_policy: document.getElementById("leaderboard-visibility-policy-error"),
+    leaderboard_visibility_display_seconds: document.getElementById("leaderboard-visibility-display-seconds-error"),
+    leaderboard_visibility_cooldown_seconds: document.getElementById("leaderboard-visibility-cooldown-seconds-error"),
+    leaderboard_visibility_dirty_interval_seconds: document.getElementById("leaderboard-visibility-dirty-interval-seconds-error"),
     day_reset_hour: document.getElementById("day-reset-hour-error"),
     streamer_display_name: document.getElementById("streamer-display-name-error"),
   };

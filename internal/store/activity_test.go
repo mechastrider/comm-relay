@@ -84,6 +84,23 @@ func TestApplyChat_WhenActivityXPZero_ExpectCountedLinesNeverAddXP(t *testing.T)
 	assert.Equal(t, 0, viewer.XP)
 }
 
+func TestApplyChatMutationResult_WhenMessageCountOnly_ExpectNoXPMutationOrRankChange(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Date(2026, 9, 3, 12, 0, 0, 0, time.UTC)
+	activity := store.ActivitySettings{IntervalSeconds: 300, SessionLimit: 10, XP: 1}
+	identity := store.ChatIdentity{Platform: "twitch", UserID: "42", DisplayName: "Alice"}
+
+	first, err := s.ApplyChatMutationResult(identity, activity, testDayResetHour, now)
+	require.NoError(t, err)
+	require.True(t, first.XPChanged)
+	require.True(t, first.MeaningfulRankChange)
+
+	second, err := s.ApplyChatMutationResult(identity, activity, testDayResetHour, now.Add(30*time.Second))
+	require.NoError(t, err)
+	require.False(t, second.XPChanged)
+	require.False(t, second.MeaningfulRankChange)
+}
+
 func TestApplyChat_WhenStoreReopened_ExpectSessionActivityCountersPersist(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "comm-relay.db")

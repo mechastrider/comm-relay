@@ -15,22 +15,61 @@ var ErrInvalidConfig = errors.New("invalid config")
 
 // Config holds application settings persisted in config.json.
 type Config struct {
-	ServerPort              int           `json:"server_port"`
-	PointsPerMessage        int           `json:"points_per_message,omitempty"`
-	ActivityIntervalSeconds int           `json:"activity_interval_seconds"`
-	ActivitySessionLimit    int           `json:"activity_session_limit"`
-	ActivityXP              int           `json:"activity_xp"`
-	DayResetHour            int           `json:"day_reset_hour"`
-	HideCommandMessages     bool          `json:"hide_command_messages"`
-	CustomAvatarsEnabled    bool          `json:"custom_avatars_enabled"`
-	StreamerDisplayName     string        `json:"streamer_display_name"`
-	Network                 NetworkConfig `json:"network"`
-	Twitch                  TwitchConfig  `json:"twitch"`
-	YouTube                 YouTubeConfig `json:"youtube"`
-	VK                      VKConfig      `json:"vk"`
-	Overlay                 OverlayConfig `json:"overlay"`
-	Admin                   AdminConfig   `json:"admin"`
-	Logging                 LoggingConfig `json:"logging"`
+	ServerPort              int                         `json:"server_port"`
+	PointsPerMessage        int                         `json:"points_per_message,omitempty"`
+	ActivityIntervalSeconds int                         `json:"activity_interval_seconds"`
+	ActivitySessionLimit    int                         `json:"activity_session_limit"`
+	ActivityXP              int                         `json:"activity_xp"`
+	DayResetHour            int                         `json:"day_reset_hour"`
+	HideCommandMessages     bool                        `json:"hide_command_messages"`
+	CustomAvatarsEnabled    bool                        `json:"custom_avatars_enabled"`
+	StreamerDisplayName     string                      `json:"streamer_display_name"`
+	LeaderboardVisibility   LeaderboardVisibilityConfig `json:"leaderboard_visibility"`
+	Network                 NetworkConfig               `json:"network"`
+	Twitch                  TwitchConfig                `json:"twitch"`
+	YouTube                 YouTubeConfig               `json:"youtube"`
+	VK                      VKConfig                    `json:"vk"`
+	Overlay                 OverlayConfig               `json:"overlay"`
+	Admin                   AdminConfig                 `json:"admin"`
+	Logging                 LoggingConfig               `json:"logging"`
+}
+
+// Leaderboard visibility policies.
+const (
+	LeaderboardVisibilityPolicyAlways    = "always"
+	LeaderboardVisibilityPolicyAutomatic = "automatic"
+	LeaderboardVisibilityPolicyOnRequest = "on_request"
+
+	LeaderboardVisibilityDisplaySecondsDefault       = 15
+	LeaderboardVisibilityCooldownSecondsDefault      = 300
+	LeaderboardVisibilityDirtyIntervalSecondsDefault = 900
+)
+
+// LeaderboardVisibilityConfig controls the global production leaderboard lifecycle.
+type LeaderboardVisibilityConfig struct {
+	Policy               string `json:"policy"`
+	DisplaySeconds       int    `json:"display_seconds"`
+	CooldownSeconds      int    `json:"cooldown_seconds"`
+	DirtyIntervalSeconds int    `json:"dirty_interval_seconds"`
+	ShowOnAward          bool   `json:"show_on_award"`
+	ShowOnRankChange     bool   `json:"show_on_rank_change"`
+}
+
+func defaultLeaderboardVisibility() LeaderboardVisibilityConfig {
+	return LeaderboardVisibilityConfig{
+		Policy:               LeaderboardVisibilityPolicyAutomatic,
+		DisplaySeconds:       LeaderboardVisibilityDisplaySecondsDefault,
+		CooldownSeconds:      LeaderboardVisibilityCooldownSecondsDefault,
+		DirtyIntervalSeconds: LeaderboardVisibilityDirtyIntervalSecondsDefault,
+		ShowOnAward:          true,
+		ShowOnRankChange:     true,
+	}
+}
+
+func legacyLeaderboardVisibility() LeaderboardVisibilityConfig {
+	cfg := defaultLeaderboardVisibility()
+	cfg.Policy = LeaderboardVisibilityPolicyAlways
+	return cfg
 }
 
 // TwitchConfig holds Twitch connector settings.
@@ -91,6 +130,7 @@ func Default() *Config {
 		ActivityXP:              1,
 		DayResetHour:            6,
 		CustomAvatarsEnabled:    true,
+		LeaderboardVisibility:   defaultLeaderboardVisibility(),
 		Twitch: TwitchConfig{
 			Enabled: false,
 			Channel: "",
@@ -126,6 +166,9 @@ func Default() *Config {
 // ApplyDefaults fills in settings omitted from older config.json files.
 func (c *Config) ApplyDefaults() {
 	def := Default()
+	if c.LeaderboardVisibility.Policy == "" {
+		c.LeaderboardVisibility = def.LeaderboardVisibility
+	}
 	if c.Overlay.FontSizePx < 1 {
 		c.Overlay.FontSizePx = def.Overlay.FontSizePx
 	}
@@ -192,12 +235,25 @@ func Load(path string) (*Config, error) {
 	if !customAvatarsEnabledPresent(data) {
 		cfg.CustomAvatarsEnabled = true
 	}
+	if !leaderboardVisibilityPresent(data) {
+		cfg.LeaderboardVisibility = legacyLeaderboardVisibility()
+	}
 
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
+}
+
+func leaderboardVisibilityPresent(data []byte) bool {
+	var doc struct {
+		LeaderboardVisibility *json.RawMessage `json:"leaderboard_visibility"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.LeaderboardVisibility != nil
 }
 
 func overlayEmotesPresent(data []byte) bool {

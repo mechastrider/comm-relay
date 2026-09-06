@@ -86,6 +86,7 @@ export function extractSectionValuesFromConfig(config, sectionId) {
   const youtube = asObject(cfg.youtube);
   const oauth = asObject(youtube.oauth);
   const vk = asObject(cfg.vk);
+  const leaderboardVisibility = asObject(cfg.leaderboard_visibility);
 
   switch (sectionId) {
     case "platforms":
@@ -137,6 +138,22 @@ export function extractSectionValuesFromConfig(config, sectionId) {
         hide_command_messages: Boolean(cfg.hide_command_messages),
         custom_avatars_enabled: cfg.custom_avatars_enabled !== false,
         streamer_display_name: String(cfg.streamer_display_name || "").trim(),
+        leaderboard_visibility: {
+          policy: ["always", "automatic", "on_request"].includes(String(leaderboardVisibility.policy))
+            ? String(leaderboardVisibility.policy)
+            : "automatic",
+          display_seconds: typeof leaderboardVisibility.display_seconds === "number"
+            ? leaderboardVisibility.display_seconds
+            : 15,
+          cooldown_seconds: typeof leaderboardVisibility.cooldown_seconds === "number"
+            ? leaderboardVisibility.cooldown_seconds
+            : 300,
+          dirty_interval_seconds: typeof leaderboardVisibility.dirty_interval_seconds === "number"
+            ? leaderboardVisibility.dirty_interval_seconds
+            : 900,
+          show_on_award: leaderboardVisibility.show_on_award !== false,
+          show_on_rank_change: leaderboardVisibility.show_on_rank_change !== false,
+        },
       };
     case "application": {
       const messageSound = asObject(admin.message_sound);
@@ -234,6 +251,7 @@ export function normalizeSectionValues(sectionId, values) {
   }
 
   if (sectionId === "data") {
+    const leaderboardVisibility = asObject(raw.leaderboard_visibility);
     return {
       activity_interval_seconds: Number.parseInt(String(raw.activity_interval_seconds), 10),
       activity_session_limit: Number.parseInt(String(raw.activity_session_limit), 10),
@@ -242,6 +260,16 @@ export function normalizeSectionValues(sectionId, values) {
       hide_command_messages: Boolean(raw.hide_command_messages),
       custom_avatars_enabled: raw.custom_avatars_enabled !== false,
       streamer_display_name: String(raw.streamer_display_name || "").trim(),
+      leaderboard_visibility: {
+        policy: ["always", "automatic", "on_request"].includes(String(leaderboardVisibility.policy))
+          ? String(leaderboardVisibility.policy)
+          : "automatic",
+        display_seconds: Number.parseInt(String(leaderboardVisibility.display_seconds), 10),
+        cooldown_seconds: Number.parseInt(String(leaderboardVisibility.cooldown_seconds), 10),
+        dirty_interval_seconds: Number.parseInt(String(leaderboardVisibility.dirty_interval_seconds), 10),
+        show_on_award: Boolean(leaderboardVisibility.show_on_award),
+        show_on_rank_change: Boolean(leaderboardVisibility.show_on_rank_change),
+      },
     };
   }
 
@@ -339,6 +367,7 @@ export function applySectionToConfig(basePayload, sectionId, sectionValues) {
     next.hide_command_messages = data.hide_command_messages;
     next.custom_avatars_enabled = data.custom_avatars_enabled;
     next.streamer_display_name = data.streamer_display_name;
+    next.leaderboard_visibility = data.leaderboard_visibility;
     return next;
   }
 

@@ -24,6 +24,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote/ffz"
 	"github.com/mechastrider/comm-relay/internal/emote/seventv"
 	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
+	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/overlayassets"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/mechastrider/comm-relay/internal/store"
@@ -90,6 +91,14 @@ func New(opts Options) (*App, error) {
 	if err != nil {
 		return nil, errors.Errorf("create websocket hub: %w", err)
 	}
+	visibilityController, err := leaderboard.NewController(cfgStore, func(snapshot leaderboard.Snapshot) {
+		if publishErr := eventBus.Publish(bus.LeaderboardVisibilityChanged(snapshot)); publishErr != nil && !errors.Is(publishErr, bus.ErrClosed) {
+			clog.Errorf(context.Background(), "publish leaderboard visibility: %w", publishErr)
+		}
+	})
+	if err != nil {
+		return nil, errors.Errorf("create leaderboard visibility controller: %w", err)
+	}
 
 	history := api.NewMessageHistory(0)
 	history.SetViewerStore(viewerStore)
@@ -109,18 +118,19 @@ func New(opts Options) (*App, error) {
 
 	leaderboardPublisher := api.NewLeaderboardPublisher(hub, viewerStore, cfgStore)
 	avatarWorker := avatarcache.NewWorker(viewerStore, overlayassets.DirForConfig(opts.ConfigPath))
-	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher, commandMatcher, hub, avatarWorker)
+	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher, commandMatcher, hub, avatarWorker, visibilityController)
 
 	handler, err := api.NewHandler(api.Options{
-		WebRoot:              webRoot,
-		Hub:                  hub,
-		Store:                cfgStore,
-		ViewerStore:          viewerStore,
-		LeaderboardPublisher: leaderboardPublisher,
-		History:              history,
-		Registry:             statusRegistry,
-		Runtime:              runtimeInfo,
-		EmoteCache:           emoteCache,
+		WebRoot:               webRoot,
+		Hub:                   hub,
+		Store:                 cfgStore,
+		ViewerStore:           viewerStore,
+		LeaderboardPublisher:  leaderboardPublisher,
+		History:               history,
+		Registry:              statusRegistry,
+		Runtime:               runtimeInfo,
+		EmoteCache:            emoteCache,
+		LeaderboardVisibility: visibilityController,
 	})
 	if err != nil {
 		return nil, errors.Errorf("create handler: %w", err)
@@ -134,6 +144,7 @@ func New(opts Options) (*App, error) {
 
 	mgr := runnable.Manager().ShutdownTimeout(10 * time.Second)
 	mgr.RegisterService(
+		runnable.Func(visibilityController.Run).Name("leaderboard-visibility"),
 		runnable.Func(func(ctx context.Context) error {
 			hub.Run(ctx)
 			return nil

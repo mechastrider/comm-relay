@@ -32,6 +32,12 @@ Add a concise Russian `[Unreleased]` bullet describing automatic/on-request mode
 
 This plan does not authorize signing, notarization, upload, or release.
 
+## Readiness Evidence — 2026-09-06
+
+- The headless server built and started on Linux x86_64 with fresh data; health, current dock/leaderboard URLs, migration 1→13, clean shutdown, and restart-reset visibility semantics passed.
+- Automated migration tests cover a version-12 database and reversible 00013 down/up behavior.
+- Packaged Wails startup on the Windows/macOS matrix and copied-data downgrade using an older binary were not available here, so D.1 remains open for release-environment smoke.
+
 ## Not applicable
 
 No installer packaging, signing identity, notarization entitlement, update channel, remote port exposure, OBS plugin, or artifact naming change.

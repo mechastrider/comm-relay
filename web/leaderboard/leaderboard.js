@@ -18,6 +18,10 @@ import {
   leaderboardFontSizeForWidth,
   shouldRenderMessageCount,
 } from "./leaderboard-fit.js?v=1";
+import {
+  isProductionLeaderboard,
+  parseLeaderboardVisibility,
+} from "./leaderboard-visibility.js?v=1";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;
@@ -52,6 +56,7 @@ const params = new URLSearchParams(window.location.search);
 const previewEnabled = params.has("preview");
 const samplePreviewEnabled = isLeaderboardSamplePreview(params);
 const debugTestEnabled = isOverlayDebugPage(window.location);
+const productionVisibilityEnabled = isProductionLeaderboard({ previewEnabled, debugTestEnabled });
 
 function maxEntriesCap() {
   const cap = overlayView.max_entries;
@@ -99,6 +104,25 @@ let layoutFrame = null;
 let resizeObserver = null;
 let visibleRowCount = 0;
 const responsiveSizingAvailable = typeof ResizeObserver === "function";
+
+function applyLeaderboardVisibility(frame) {
+  if (!productionVisibilityEnabled) {
+    return;
+  }
+  const visibility = parseLeaderboardVisibility(frame);
+  if (!visibility) {
+    return;
+  }
+  document.body.classList.remove("leaderboard-visibility--pending");
+  document.body.classList.toggle("leaderboard-visibility--hidden", !visibility.visible);
+  document.body.classList.toggle("leaderboard-visibility--timed", visibility.state === "timed");
+  document.body.classList.toggle("leaderboard-visibility--pinned", visibility.state === "pinned");
+  if (root) {
+    root.setAttribute("aria-hidden", visibility.visible ? "false" : "true");
+    root.dataset.visibilityState = visibility.state;
+    root.dataset.visibilityReason = visibility.reason;
+  }
+}
 
 function wsURL() {
   return overlayWebSocketURL(window.location);
@@ -440,6 +464,10 @@ function handleSocketMessage(event) {
     }
     return;
   }
+  if (frame.type === "leaderboard_visibility") {
+    applyLeaderboardVisibility(frame);
+    return;
+  }
   if (samplePreviewEnabled) {
     return;
   }
@@ -499,6 +527,11 @@ async function loadServerConfig() {
 }
 
 async function start() {
+  if (!productionVisibilityEnabled) {
+    document.body.classList.remove("leaderboard-visibility--pending", "leaderboard-visibility--hidden");
+  } else {
+    document.body.classList.add("leaderboard-visibility--hidden");
+  }
   if (responsiveSizingAvailable && root) {
     resizeObserver = new ResizeObserver(scheduleLayout);
     resizeObserver.observe(root);

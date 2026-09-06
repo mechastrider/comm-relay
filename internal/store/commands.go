@@ -21,6 +21,25 @@ var allowedCatalogSounds = map[string]bool{
 
 const defaultCatalogDurationMs = 5000
 
+// Supported command actions.
+const (
+	CommandActionAlert           = "alert"
+	CommandActionShowLeaderboard = "show_leaderboard"
+)
+
+func normalizeCommandAction(action string) (string, error) {
+	action = strings.TrimSpace(strings.ToLower(action))
+	if action == "" {
+		return CommandActionAlert, nil
+	}
+	switch action {
+	case CommandActionAlert, CommandActionShowLeaderboard:
+		return action, nil
+	default:
+		return "", ErrInvalidCommandAction
+	}
+}
+
 func normalizeCommandTrigger(trigger string) string {
 	return strings.TrimSpace(strings.ToLower(trigger))
 }
@@ -72,6 +91,7 @@ func scanCommand(scanner interface {
 
 	err := scanner.Scan(
 		&cmd.ID,
+		&cmd.Action,
 		&cmd.Trigger,
 		&enabled,
 		&cmd.CooldownSeconds,
@@ -90,6 +110,10 @@ func scanCommand(scanner interface {
 	}
 
 	cmd.Enabled = enabled != 0
+	cmd.Action, err = normalizeCommandAction(cmd.Action)
+	if err != nil {
+		return Command{}, err
+	}
 	if imageAsset.Valid {
 		cmd.ImageAsset = imageAsset.String
 	}
@@ -110,7 +134,7 @@ func (s *Store) ListCommands() ([]Command, error) {
 	defer s.mu.Unlock()
 
 	rows, err := s.db.Query(`
-		SELECT id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
+		SELECT id, action, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM commands
 		ORDER BY trigger`)
 	if err != nil {
@@ -139,7 +163,7 @@ func (s *Store) GetCommand(id string) (*Command, error) {
 	defer s.mu.Unlock()
 
 	row := s.db.QueryRow(`
-		SELECT id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
+		SELECT id, action, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM commands
 		WHERE id = ?`, id)
 
@@ -157,6 +181,7 @@ func (s *Store) GetCommand(id string) (*Command, error) {
 // CreateCommandInput is the payload for CreateCommand.
 type CreateCommandInput struct {
 	ID              string
+	Action          string
 	Trigger         string
 	Enabled         bool
 	CooldownSeconds int
@@ -173,23 +198,41 @@ type CreateCommandInput struct {
 
 // CreateCommand inserts a new command.
 func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
-	trigger := normalizeCommandTrigger(input.Trigger)
-	if err := validateCommandTrigger(trigger); err != nil {
+	action, err := normalizeCommandAction(input.Action)
+	if err != nil {
 		return nil, err
 	}
-	if strings.TrimSpace(input.SplashTemplate) == "" {
+	trigger := normalizeCommandTrigger(input.Trigger)
+	if validationErr := validateCommandTrigger(trigger); validationErr != nil {
+		return nil, validationErr
+	}
+	if action == CommandActionAlert && strings.TrimSpace(input.SplashTemplate) == "" {
 		return nil, errors.New("splash template is required")
 	}
 	if input.CooldownSeconds < 0 {
 		return nil, errors.New("cooldown must be non-negative")
 	}
-	if err := validateCatalogSound(input.Sound); err != nil {
-		return nil, err
+	if action == CommandActionAlert {
+		if validationErr := validateCatalogSound(input.Sound); validationErr != nil {
+			return nil, validationErr
+		}
+	} else {
+		input.SplashTemplate = ""
+		input.Sound = ""
+		input.DurationMs = defaultCatalogDurationMs
+		input.ImageAsset = ""
+		input.SoundFile = ""
+		input.SoundVolume = DefaultCatalogSoundVolume
+		input.Layout = DefaultCatalogLayout
+		input.ImageFit = DefaultCatalogImageFit
+		input.ImageSizePct = DefaultCatalogImageSizePct
 	}
-	if fields := validateCommandMediaFields(
-		input.ImageAsset, input.SoundFile, input.SoundVolume, input.ImageSizePct, input.Layout, input.ImageFit,
-	); len(fields) > 0 {
-		return nil, catalogMediaValidationError(fields)
+	if action == CommandActionAlert {
+		if fields := validateCommandMediaFields(
+			input.ImageAsset, input.SoundFile, input.SoundVolume, input.ImageSizePct, input.Layout, input.ImageFit,
+		); len(fields) > 0 {
+			return nil, catalogMediaValidationError(fields)
+		}
 	}
 
 	id := strings.TrimSpace(input.ID)
@@ -212,13 +255,14 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, err := s.db.Exec(`
+	_, err = s.db.Exec(`
 		INSERT INTO commands (
-			id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms,
+			id, action, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms,
 			image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
+		action,
 		trigger,
 		enabled,
 		input.CooldownSeconds,
@@ -245,6 +289,7 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 // UpdateCommandInput is the payload for UpdateCommand.
 type UpdateCommandInput struct {
 	ID              string
+	Action          string
 	Trigger         string
 	Enabled         bool
 	CooldownSeconds int
@@ -265,23 +310,29 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 		return nil, ErrCommandNotFound
 	}
 
-	trigger := normalizeCommandTrigger(input.Trigger)
-	if err := validateCommandTrigger(trigger); err != nil {
+	action, err := normalizeCommandAction(input.Action)
+	if err != nil {
 		return nil, err
 	}
-	if strings.TrimSpace(input.SplashTemplate) == "" {
+	trigger := normalizeCommandTrigger(input.Trigger)
+	if validationErr := validateCommandTrigger(trigger); validationErr != nil {
+		return nil, validationErr
+	}
+	if action == CommandActionAlert && strings.TrimSpace(input.SplashTemplate) == "" {
 		return nil, errors.New("splash template is required")
 	}
 	if input.CooldownSeconds < 0 {
 		return nil, errors.New("cooldown must be non-negative")
 	}
-	if err := validateCatalogSound(input.Sound); err != nil {
-		return nil, err
-	}
-	if fields := validateCommandMediaFields(
-		input.ImageAsset, input.SoundFile, input.SoundVolume, input.ImageSizePct, input.Layout, input.ImageFit,
-	); len(fields) > 0 {
-		return nil, catalogMediaValidationError(fields)
+	if action == CommandActionAlert {
+		if validationErr := validateCatalogSound(input.Sound); validationErr != nil {
+			return nil, validationErr
+		}
+		if fields := validateCommandMediaFields(
+			input.ImageAsset, input.SoundFile, input.SoundVolume, input.ImageSizePct, input.Layout, input.ImageFit,
+		); len(fields) > 0 {
+			return nil, catalogMediaValidationError(fields)
+		}
 	}
 
 	durationMs := normalizeDurationMs(input.DurationMs)
@@ -299,15 +350,35 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, err := s.getCommandLocked(input.ID); err != nil {
+	existing, err := s.getCommandLocked(input.ID)
+	if err != nil {
 		return nil, err
+	}
+	if action == CommandActionShowLeaderboard {
+		input.SplashTemplate = existing.SplashTemplate
+		input.Sound = existing.Sound
+		input.DurationMs = existing.DurationMs
+		input.ImageAsset = existing.ImageAsset
+		input.SoundFile = existing.SoundFile
+		input.SoundVolume = existing.SoundVolume
+		input.Layout = existing.Layout
+		input.ImageFit = existing.ImageFit
+		input.ImageSizePct = existing.ImageSizePct
+		durationMs = existing.DurationMs
+		imageAsset = existing.ImageAsset
+		soundFile = existing.SoundFile
+		soundVolume = existing.SoundVolume
+		layout = existing.Layout
+		imageFit = existing.ImageFit
+		imageSizePct = existing.ImageSizePct
 	}
 
 	result, err := s.db.Exec(`
 		UPDATE commands
-		SET trigger = ?, enabled = ?, cooldown_seconds = ?, splash_template = ?, sound = ?, duration_ms = ?,
+		SET action = ?, trigger = ?, enabled = ?, cooldown_seconds = ?, splash_template = ?, sound = ?, duration_ms = ?,
 		    image_asset = ?, sound_file = ?, sound_volume = ?, layout = ?, image_fit = ?, image_size_pct = ?
 		WHERE id = ?`,
+		action,
 		trigger,
 		enabled,
 		input.CooldownSeconds,
@@ -363,7 +434,7 @@ func (s *Store) DeleteCommand(id string) error {
 
 func (s *Store) getCommandLocked(id string) (*Command, error) {
 	row := s.db.QueryRow(`
-		SELECT id, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
+		SELECT id, action, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM commands
 		WHERE id = ?`, id)
 
