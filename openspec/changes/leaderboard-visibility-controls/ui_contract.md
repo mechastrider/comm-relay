@@ -38,11 +38,11 @@ Numeric fields preserve edit strings, accept only bounded integers, and save thr
 
 ### Layout and Components
 
-A compact fixed toolbar sits above a separately scrollable message body. It contains active-preset selection, a text state indicator, optional countdown, and Show, Pin/Resume, Hide actions. At narrow width it may use icons only when each has a localized accessible name and hover/focus tooltip. The toolbar is operator chrome and never adopts overlay themes.
+A compact fixed toolbar sits above a separately scrollable message body. It contains active-preset selection, a text state indicator, and an optional countdown. In Always mode it shows one native labelled switch, “Show leaderboard”. In Automatic and On request it shows “Show for N s”, a pressed-state “Pin” toggle, and “Hide”. The Pin toggle uses Pin when turning on and Resume when turning off; Show is disabled while pinned, while Hide stays available. There is no standalone Auto/Resume action. At narrow width controls wrap without losing their visible labels. The toolbar is operator chrome and never adopts overlay themes.
 
 ### Data / Forms / Actions
 
-Initial state comes from `GET /api/leaderboard/visibility`; later state comes from `/ws`. Actions use the dedicated POST routes and remain busy independently. Preset changes reuse `POST /api/overlay/activate`. The countdown is derived from server `visible_until`; its expiration display never substitutes for the authoritative hidden frame.
+Initial state comes from `GET /api/leaderboard/visibility`; later state comes from `/ws`. The configured Show duration comes from public config and defaults to 15 seconds if unavailable. Controls map to the dedicated POST routes and remain busy independently; switch/toggle state is always rendered back from the authoritative response or frame. Preset changes reuse `POST /api/overlay/activate`. The countdown is derived from server `visible_until`; its expiration display never substitutes for the authoritative policy-baseline frame.
 
 ### States and Recovery
 

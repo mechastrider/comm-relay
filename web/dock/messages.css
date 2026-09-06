@@ -38,11 +38,16 @@ body {
 
 .leaderboard-toolbar__topline,
 .leaderboard-toolbar__preset,
-.leaderboard-toolbar__actions {
+.leaderboard-toolbar__actions,
+.leaderboard-toolbar__always-actions {
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
+}
+
+.leaderboard-toolbar [hidden] {
+  display: none;
 }
 
 .leaderboard-toolbar__topline {
@@ -70,6 +75,76 @@ body {
   font: inherit;
 }
 
+.leaderboard-toolbar button[aria-pressed="true"] {
+  border-color: #d4a017;
+  background: #3b321d;
+  color: #ffe4a0;
+}
+
+.leaderboard-toolbar__switch {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 32px;
+  gap: 8px;
+  padding: 4px 7px;
+  border: 1px solid #44444c;
+  border-radius: 3px;
+  background: #242429;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.leaderboard-toolbar__switch input {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 18px;
+  margin: 0;
+  appearance: none;
+  border: 1px solid #60606a;
+  border-radius: 999px;
+  background: #111115;
+  cursor: inherit;
+}
+
+.leaderboard-toolbar__switch input::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #94949d;
+  content: "";
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.leaderboard-toolbar__switch input:checked {
+  border-color: #d4a017;
+  background: #3b321d;
+}
+
+.leaderboard-toolbar__switch input:checked::after {
+  background: #ffd36a;
+  transform: translateX(16px);
+}
+
+.leaderboard-toolbar__switch:has(input:focus-visible) {
+  border-color: #d4a017;
+  outline: 2px solid rgba(212, 160, 23, 0.35);
+  outline-offset: 1px;
+}
+
+.leaderboard-toolbar__switch:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.leaderboard-toolbar__switch:has(input[aria-busy="true"]:disabled) {
+  cursor: wait;
+}
+
 .leaderboard-toolbar select {
   min-width: 0;
   width: 100%;
@@ -93,8 +168,13 @@ body {
 
 .leaderboard-toolbar button:disabled,
 .leaderboard-toolbar select:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.55;
+}
+
+.leaderboard-toolbar button[aria-busy="true"]:disabled,
+.leaderboard-toolbar select[aria-busy="true"]:disabled {
+  cursor: wait;
 }
 
 .leaderboard-toolbar__error {

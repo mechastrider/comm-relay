@@ -69,6 +69,8 @@
 - [x] 5.3 Restructure the dock into pinned toolbar plus independently scrolling messages; add state/countdown, Show, Pin/Resume, Hide, and active-preset controls.
 - [x] 5.4 Implement initial GET plus WS recovery, per-action busy/error behavior, authoritative countdown reconciliation, and message-scroll preservation.
 - [x] 5.5 Add EN/RU copy and tests for settings serialization, action forms, 300px markup/layout contract, accessible names/tooltips, live-region transitions, and i18n parity.
+- [x] 5.6 Replace the dock's generic Show/Pin/Auto/Hide row with the policy-specific Always switch or timed Show/Pin toggle/Hide controls, retaining authoritative busy/error recovery and narrow-width accessibility.
+- [x] 5.7 Make non-Always Hide clear transient overrides without indefinitely blocking later commands or automatic triggers, and add controller/frontend regression coverage.
 
 ## Slice: `Document and release visibility control`
 

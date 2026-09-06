@@ -386,17 +386,18 @@ function renderEntries(entries) {
     rank.className = "leaderboard-rank";
     rank.textContent = String(entry.rank || "");
 
+    const avatar = document.createElement(entry.avatar_url ? "img" : "span");
+    avatar.className = "leaderboard-avatar";
     if (entry.avatar_url) {
-      const avatar = document.createElement("img");
-      avatar.className = "leaderboard-avatar";
       avatar.src = entry.avatar_url;
       avatar.alt = "";
       avatar.loading = "lazy";
       avatar.referrerPolicy = "no-referrer";
-      item.append(avatar);
     } else {
-      item.classList.add("leaderboard-row--without-avatar");
+      avatar.classList.add("leaderboard-avatar--placeholder");
+      avatar.setAttribute("aria-hidden", "true");
     }
+    item.append(avatar);
 
     const name = document.createElement("span");
     name.className = "leaderboard-name";

@@ -32,8 +32,21 @@ const fakeDocument = {
 test("maps starter command and award identifiers to semantic symbols", function () {
   assert.equal(alertEmblemModel("command", "GG", "gg").symbol, "flags");
   assert.equal(alertEmblemModel("command", "hi", "hi").symbol, "broadcast");
+  assert.equal(alertEmblemModel("award", "like", "Streamer Like").symbol, "thumbs-spark");
   assert.equal(alertEmblemModel("award", "spotter", "Spotter").symbol, "reticle");
   assert.equal(alertEmblemModel("award", "mvp", "MVP").symbol, "laurel-star");
+});
+
+test("builds the decorative Streamer Like thumbs-up and sparkle", function () {
+  const emblem = createAlertEmblem(fakeDocument, {
+    kind: "award",
+    identifier: "like",
+    label: "Streamer Like",
+  });
+  assert.equal(emblem.attributes["aria-hidden"], "true");
+  assert.equal(emblem.attributes["data-emblem-symbol"], "thumbs-spark");
+  assert.equal(emblem.children[0].attributes["aria-hidden"], "true");
+  assert.equal(emblem.children[0].children.length, 3);
 });
 
 test("keeps generic emblem selection and monogram stable", function () {

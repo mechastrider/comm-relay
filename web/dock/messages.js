@@ -4,8 +4,9 @@ import { setLocale, t } from "/shared/i18n.js?v=18";
 import {
   normalizeVisibilitySnapshot,
   presetOptions,
+  visibilityControlState,
   visibilitySecondsRemaining,
-} from "/dock/messages/leaderboard-controls.js?v=1";
+} from "/dock/messages/leaderboard-controls.js?v=2";
 
 "use strict";
 
@@ -21,7 +22,13 @@ import {
   const visibilityStatus = document.getElementById("leaderboard-visibility-status");
   const visibilityCountdown = document.getElementById("leaderboard-visibility-countdown");
   const toolbarError = document.getElementById("leaderboard-toolbar-error");
-  const visibilityButtons = Array.from(document.querySelectorAll("[data-leaderboard-action]"));
+  const alwaysActions = document.getElementById("leaderboard-always-actions");
+  const alwaysVisibleSwitch = document.getElementById("leaderboard-always-visible");
+  const timedActions = document.getElementById("leaderboard-timed-actions");
+  const showButton = document.getElementById("leaderboard-show");
+  const showLabel = document.getElementById("leaderboard-show-label");
+  const pinButton = document.getElementById("leaderboard-pin");
+  const hideButton = document.getElementById("leaderboard-hide");
 
   let messages = [];
   let socket = null;
@@ -29,6 +36,7 @@ import {
   let reconnectDelayMs = INITIAL_RECONNECT_MS;
   let shouldRun = true;
   let visibilitySnapshot = null;
+  let visibilityDisplaySeconds = 15;
   const visibilityActionsInFlight = new Set();
   let presetRequestInFlight = false;
   let previewSettings = {
@@ -60,6 +68,7 @@ import {
     });
     presetSelect?.setAttribute("aria-label", t("dock.preset"));
     renderVisibilityStatus();
+    renderVisibilityControls();
   }
 
   function refreshTimeLocale(locale) {
@@ -98,9 +107,12 @@ import {
       return;
     }
     if (visibilitySnapshot.state === "pinned") {
-      setNodeText(visibilityStatus, t("dock.visibilityPinned"));
+      setNodeText(visibilityStatus, t(visibilitySnapshot.policy === "always"
+        ? "dock.visibilityAlways"
+        : "dock.visibilityPinned"));
       if (visibilityCountdown) {
         setNodeText(visibilityCountdown, "");
+        visibilityCountdown.removeAttribute("aria-label");
       }
       return;
     }
@@ -116,6 +128,41 @@ import {
     setNodeText(visibilityStatus, t("dock.visibilityHidden"));
     if (visibilityCountdown) {
       setNodeText(visibilityCountdown, "");
+      visibilityCountdown.removeAttribute("aria-label");
+    }
+  }
+
+  function renderVisibilityControls() {
+    const controls = visibilityControlState(visibilitySnapshot, visibilityDisplaySeconds);
+    const available = visibilitySnapshot !== null;
+    const alwaysMode = controls.mode === "always";
+
+    if (alwaysActions) {
+      alwaysActions.hidden = !alwaysMode;
+    }
+    if (timedActions) {
+      timedActions.hidden = alwaysMode;
+    }
+    if (alwaysVisibleSwitch) {
+      alwaysVisibleSwitch.checked = controls.alwaysChecked;
+      alwaysVisibleSwitch.disabled = !available ||
+        visibilityActionsInFlight.has("hide") || visibilityActionsInFlight.has("resume");
+      alwaysVisibleSwitch.setAttribute("aria-busy", alwaysVisibleSwitch.disabled && available ? "true" : "false");
+    }
+    setNodeText(showLabel, t("dock.showFor", { seconds: controls.displaySeconds }));
+    if (showButton) {
+      showButton.disabled = !available || controls.showDisabled || visibilityActionsInFlight.has("show");
+      showButton.setAttribute("aria-busy", visibilityActionsInFlight.has("show") ? "true" : "false");
+    }
+    if (pinButton) {
+      const pinBusy = visibilityActionsInFlight.has("pin") || visibilityActionsInFlight.has("resume");
+      pinButton.disabled = !available || pinBusy;
+      pinButton.setAttribute("aria-pressed", controls.pinPressed ? "true" : "false");
+      pinButton.setAttribute("aria-busy", pinBusy ? "true" : "false");
+    }
+    if (hideButton) {
+      hideButton.disabled = !available || controls.hideDisabled || visibilityActionsInFlight.has("hide");
+      hideButton.setAttribute("aria-busy", visibilityActionsInFlight.has("hide") ? "true" : "false");
     }
   }
 
@@ -126,6 +173,7 @@ import {
     }
     visibilitySnapshot = next;
     renderVisibilityStatus();
+    renderVisibilityControls();
   }
 
   function setVisibilityBusy(action, busy) {
@@ -134,13 +182,7 @@ import {
     } else {
       visibilityActionsInFlight.delete(action);
     }
-    const button = visibilityButtons.find(function (candidate) {
-      return candidate.dataset.leaderboardAction === action;
-    });
-    if (button) {
-      button.disabled = busy;
-      button.setAttribute("aria-busy", busy ? "true" : "false");
-    }
+    renderVisibilityControls();
   }
 
   async function loadVisibility() {
@@ -193,6 +235,9 @@ import {
     });
     presetSelect.value = options.activeId;
     presetSelect.disabled = presetRequestInFlight || options.presets.length === 0;
+    const duration = config && config.leaderboard_visibility && config.leaderboard_visibility.display_seconds;
+    visibilityDisplaySeconds = Number.isInteger(duration) ? duration : 15;
+    renderVisibilityControls();
   }
 
   async function activatePreset(presetId) {
@@ -566,10 +611,20 @@ import {
     }
   });
 
-  visibilityButtons.forEach(function (button) {
-    button.addEventListener("click", function () {
-      runVisibilityAction(button.dataset.leaderboardAction || "");
-    });
+  alwaysVisibleSwitch?.addEventListener("change", function () {
+    const controls = visibilityControlState(visibilitySnapshot, visibilityDisplaySeconds);
+    alwaysVisibleSwitch.checked = controls.alwaysChecked;
+    runVisibilityAction(controls.alwaysAction);
+  });
+  showButton?.addEventListener("click", function () {
+    runVisibilityAction("show");
+  });
+  pinButton?.addEventListener("click", function () {
+    const controls = visibilityControlState(visibilitySnapshot, visibilityDisplaySeconds);
+    runVisibilityAction(controls.pinAction);
+  });
+  hideButton?.addEventListener("click", function () {
+    runVisibilityAction("hide");
   });
   presetSelect?.addEventListener("change", function () {
     activatePreset(presetSelect.value);

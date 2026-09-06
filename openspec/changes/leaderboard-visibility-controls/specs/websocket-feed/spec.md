@@ -13,7 +13,7 @@ The production `/ws` feed SHALL broadcast `leaderboard_visibility` frames contai
 
 #### Scenario: Timer expires
 - **WHEN** the authoritative deadline expires
-- **THEN** clients receive state `hidden`, visible false, null deadline, and the applicable policy reason
+- **THEN** clients receive the configured policy baseline with a null deadline and the applicable policy reason: hidden for `automatic` or `on_request`, pinned and visible for `always`
 
 #### Scenario: Unrelated client
 - **WHEN** chat overlay or dock message rendering receives a visibility frame

@@ -458,7 +458,7 @@ func TestAwardGrant_WhenJokeThenAdvice_ExpectTwoAlertsAndCumulativeXP(t *testing
 	listRec := httptest.NewRecorder()
 	env.Handler.ServeHTTP(listRec, httptest.NewRequest(http.MethodGet, "/api/viewers", nil))
 	require.Equal(t, http.StatusOK, listRec.Code)
-	require.Contains(t, listRec.Body.String(), `"xp":61`)
+	require.Contains(t, listRec.Body.String(), `"xp":36`)
 }
 
 func TestAwardGrant_WhenUnknownIdentity_ExpectViewerCreated(t *testing.T) {

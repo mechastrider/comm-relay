@@ -13,12 +13,12 @@
 | Spec/UI/platform ref | Steps/check | Expected | P0/P1 |
 |----------------------|-------------|----------|-------|
 | Policy startup | Start fresh config and legacy config under each policy | Fresh install is automatic/hidden; legacy omission remains always-visible; on-request starts hidden | P0 |
-| Authoritative timing | Connect two boards and dock, show for 5 seconds, reconnect one client, let expire | All use one absolute deadline and receive the same hidden transition | P0 |
-| Manual override | Show, extend, pin, hide, and resume under every policy and during cooldown | Manual actions follow precedence; pin survives triggers but not restart; resume immediately re-evaluates policy | P0 |
+| Authoritative timing | Connect two boards and dock, show for 5 seconds, reconnect one client, let expire under every policy | All use one absolute deadline and receive the same policy baseline: hidden outside Always, pinned in Always | P0 |
+| Manual override | Show, extend, pin, hide, and resume under every policy and during cooldown | Always-hide persists until resumed; other hides clear pin/show and only gate automatic triggers through cooldown; pin survives triggers but not restart | P0 |
 | Automatic triggers | Award with duration, leader change, ordered top-three membership change, lower-rank XP, message-only update | Eligible events trigger/extend correctly; dirty interval is fallback; messages do not dirty | P0 |
 | Command action | Create `show_leaderboard`, exercise case/whitespace, extra words, per-viewer cooldown, and visibility cooldown | Exactly one timed request and command event occur on a match; no alert frame is emitted | P0 |
 | API and WS contracts | Call read/action routes with valid, invalid, malformed, and unavailable-controller inputs; connect production/debug WS | Status/errors are UI-safe; only production receives the dedicated snapshot/frame; leaderboard data stays unchanged | P0 |
-| Dock toolbar | Operate at 300px and 200% zoom with long EN/RU labels and an active scrolling message list | Toolbar stays pinned/keyboard usable; messages retain independent scrolling; failures keep last state | P0 |
+| Dock toolbar | Switch among policies and operate at 300px and 200% zoom with long EN/RU labels and an active scrolling message list | Always shows one labelled switch; other policies show timed Show, Pin toggle, and Hide with no Auto button; pinned disables Show but not Hide; toolbar stays pinned/keyboard usable and failures keep last state | P0 |
 | Accessibility/motion | Keyboard through settings/editor/dock; inspect names, focus, live region; enable reduced motion | No color-only state, countdown does not announce each tick, and board transitions respect reduced motion | P0 |
 | Suspend/reconnect | Suspend past a deadline or simulate clock advance, then reconnect | Expired state resolves hidden; UI recomputes from server snapshot | P1 |
 
@@ -61,3 +61,9 @@ Attach command/race output, migration fixture results, API/WS payload captures, 
 - Migration evidence passed from a version-12 fixture through 00013, including down/up preservation and the legacy `alert` default; unknown stored actions fail closed.
 - Headless local smoke passed with a fresh config/database: migration 1→13, health, hidden automatic startup, timed manual show with an absolute deadline, dock/leaderboard URLs, clean shutdown, and hidden automatic state after restart.
 - Not available in this environment: Windows/macOS packaged Wails and OBS CEF runs, real OBS source screenshots, 200% zoom visual inspection, and copied-data downgrade with an older binary. These cells remain manual release QA and keep Q.1 open.
+
+## Follow-up Evidence — 2026-09-06 (policy-specific dock controls)
+
+- Windows automated checks passed: targeted controller tests, the focused API test, `npm test` (144 tests), `npm run lint`, i18n parity, `git diff --check`, and strict OpenSpec validation.
+- New deterministic coverage verifies Always switch actions, Automatic/On-request control presentation, Pin toggle behavior, absence of a standalone Auto/Resume control, non-Always Hide recovery, and Always timed-expiry baseline.
+- The repository-wide Go run hit the existing Windows TempDir cleanup race in `TestAwardGrant_WhenJokeToExistingViewer_ExpectXPAndAlert`; its focused rerun passed. Race testing was unavailable because this Windows Go environment has CGO disabled. `golangci-lint` remains blocked by three pre-existing findings in `var/import-jake-pack/main.go`.

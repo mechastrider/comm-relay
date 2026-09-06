@@ -1,8 +1,10 @@
+# Leaderboard Visibility
+
 ## Purpose
 
 Coordinate when the production OBS leaderboard is visible without requiring the streamer to toggle an OBS source during the broadcast.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Leaderboard visibility follows one global policy
 The system SHALL support global policies `always`, `automatic`, and `on_request`. `always` SHALL keep production leaderboard surfaces visible unless a runtime manual override is active. `automatic` SHALL begin hidden and allow configured award, meaningful rank-change, dirty-interval, command, and manual triggers. `on_request` SHALL begin hidden and allow only command and manual triggers. Preview and dedicated debug leaderboard pages MUST ignore production visibility state.

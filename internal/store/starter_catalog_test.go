@@ -33,16 +33,22 @@ func TestStarterCatalog_WhenFreshRussianDatabase_ExpectLocalizedSeeds(t *testing
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 8)
+	require.Len(t, awards, 9)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
 		byID[award.ID] = award
 	}
 
+	assert.Equal(t, "Лайк от стримера", byID["like"].Name)
+	assert.Equal(t, 5, byID["like"].Points)
+	assert.Equal(t, "Лайк от стримера для {viewer}! +{points}", byID["like"].SplashTemplate)
+	assert.Equal(t, "soft", byID["like"].Sound)
+	assert.Equal(t, 5000, byID["like"].DurationMs)
 	assert.Equal(t, "Шутка", byID["joke"].Name)
 	assert.Equal(t, "Шутка для {viewer}! +{points}", byID["joke"].SplashTemplate)
 	assert.Equal(t, "Совет", byID["advice"].Name)
+	assert.Equal(t, 25, byID["advice"].Points)
 	assert.Equal(t, "Совет для {viewer}! +{points}", byID["advice"].SplashTemplate)
 	assert.Equal(t, "Зоркий глаз", byID["spotter"].Name)
 	assert.Equal(t, "Зоркий глаз: {viewer}! +{points}", byID["spotter"].SplashTemplate)
@@ -75,16 +81,22 @@ func TestStarterCatalog_WhenFreshEnglishDatabase_ExpectEnglishSeeds(t *testing.T
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 8)
+	require.Len(t, awards, 9)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
 		byID[award.ID] = award
 	}
 
+	assert.Equal(t, "Streamer Like", byID["like"].Name)
+	assert.Equal(t, 5, byID["like"].Points)
+	assert.Equal(t, "Streamer Like for {viewer}! +{points}", byID["like"].SplashTemplate)
+	assert.Equal(t, "soft", byID["like"].Sound)
+	assert.Equal(t, 5000, byID["like"].DurationMs)
 	assert.Equal(t, "Joke", byID["joke"].Name)
 	assert.Equal(t, "Joke for {viewer}! +{points}", byID["joke"].SplashTemplate)
 	assert.Equal(t, "Advice", byID["advice"].Name)
+	assert.Equal(t, 25, byID["advice"].Points)
 	assert.Equal(t, "Clutch Help", byID["clutch"].Name)
 	assert.Equal(t, "Clutch Help for {viewer}! +{points}", byID["clutch"].SplashTemplate)
 }
@@ -170,7 +182,9 @@ func TestStarterCatalog_WhenUpgradedExistingDatabase_ExpectCatalogUnchanged(t *t
 	assert.Equal(t, "Joke", byID["joke"].Name)
 	assert.Equal(t, "Joke for {viewer}! +{points}", byID["joke"].SplashTemplate)
 	assert.Equal(t, "Advice", byID["advice"].Name)
+	assert.Equal(t, 50, byID["advice"].Points)
 	assert.Equal(t, "Advice for {viewer}! +{points}", byID["advice"].SplashTemplate)
+	assert.NotContains(t, byID, "like")
 }
 
 func TestStarterCatalog_WhenLocaleChangesAfterInit_ExpectNoRetranslation(t *testing.T) {
@@ -286,7 +300,11 @@ func TestStarterCatalog_WhenBootstrapStateMissingFromMigratedDatabase_ExpectCata
 	require.NoError(t, err)
 	_, err = db.Exec(`DELETE FROM commands WHERE id = 'gg'`)
 	require.NoError(t, err)
+	_, err = db.Exec(`DELETE FROM award_types WHERE id = 'like'`)
+	require.NoError(t, err)
 	_, err = db.Exec(`UPDATE award_types SET name = 'Custom joke' WHERE id = 'joke'`)
+	require.NoError(t, err)
+	_, err = db.Exec(`UPDATE award_types SET points = 77 WHERE id = 'advice'`)
 	require.NoError(t, err)
 	require.NoError(t, db.Close())
 
@@ -309,6 +327,8 @@ func TestStarterCatalog_WhenBootstrapStateMissingFromMigratedDatabase_ExpectCata
 		byID[award.ID] = award
 	}
 	assert.Equal(t, "Custom joke", byID["joke"].Name)
+	assert.Equal(t, 77, byID["advice"].Points)
+	assert.NotContains(t, byID, "like")
 }
 
 func TestStarterCatalog_WhenBootstrapInterruptedAfterMigrations_ExpectPersistedLocaleUsed(t *testing.T) {
@@ -344,6 +364,9 @@ func TestStarterCatalog_WhenBootstrapInterruptedAfterMigrations_ExpectPersistedL
 		byID[award.ID] = award
 	}
 	assert.Equal(t, "Шутка", byID["joke"].Name)
+	assert.Equal(t, "Лайк от стримера", byID["like"].Name)
+	assert.Equal(t, 5, byID["like"].Points)
+	assert.Equal(t, 25, byID["advice"].Points)
 }
 
 func TestStarterCatalog_WhenUnsupportedLocale_ExpectRussianFallback(t *testing.T) {

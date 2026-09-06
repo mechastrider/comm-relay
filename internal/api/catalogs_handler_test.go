@@ -47,12 +47,13 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 		} `json:"awards"`
 	}
 	require.NoError(t, json.Unmarshal(awardsRec.Body.Bytes(), &awardsPayload))
-	require.Len(t, awardsPayload.Awards, 8)
+	require.Len(t, awardsPayload.Awards, 9)
 
 	ids := map[string]bool{}
 	for _, award := range awardsPayload.Awards {
 		ids[award.ID] = true
 	}
+	require.True(t, ids["like"])
 	require.True(t, ids["joke"])
 	require.True(t, ids["advice"])
 	require.True(t, ids["spotter"])

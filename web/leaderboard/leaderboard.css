@@ -66,10 +66,6 @@ body.leaderboard-visibility--hidden .leaderboard {
   display: none;
 }
 
-.leaderboard-row--without-avatar {
-  grid-template-columns: calc(2.2em) minmax(0, 1fr) max-content;
-}
-
 .leaderboard-rank {
   font-size: 1.1em;
   font-weight: 800;

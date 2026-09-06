@@ -22,6 +22,30 @@ export function visibilitySecondsRemaining(snapshot, nowMs) {
   return Math.max(0, Math.ceil((Date.parse(snapshot.visible_until) - nowMs) / 1000));
 }
 
+export function visibilityControlState(snapshot, displaySeconds) {
+  const state = snapshot && ["hidden", "timed", "pinned"].includes(snapshot.state)
+    ? snapshot.state
+    : "hidden";
+  const policy = snapshot && ["always", "automatic", "on_request"].includes(snapshot.policy)
+    ? snapshot.policy
+    : "automatic";
+  const duration = Number.isInteger(displaySeconds) && displaySeconds >= 5 && displaySeconds <= 60
+    ? displaySeconds
+    : 15;
+  const pinned = state === "pinned";
+
+  return {
+    mode: policy === "always" ? "always" : "timed",
+    displaySeconds: duration,
+    alwaysChecked: state !== "hidden",
+    alwaysAction: state === "hidden" ? "resume" : "hide",
+    showDisabled: pinned,
+    pinPressed: pinned,
+    pinAction: pinned ? "resume" : "pin",
+    hideDisabled: state === "hidden",
+  };
+}
+
 export function presetOptions(config) {
   const overlay = config && typeof config.overlay === "object" ? config.overlay : {};
   const presets = Array.isArray(overlay.presets) ? overlay.presets : [];

@@ -184,7 +184,10 @@ func (s *Store) applyStarterCatalogLocked(locale string) error {
 			) VALUES (?, ?, ?, ?, ?, ?)
 			ON CONFLICT(id) DO UPDATE SET
 				name = excluded.name,
-				splash_template = excluded.splash_template`,
+				points = excluded.points,
+				splash_template = excluded.splash_template,
+				sound = excluded.sound,
+				duration_ms = excluded.duration_ms`,
 			award.ID,
 			award.Name,
 			award.Points,

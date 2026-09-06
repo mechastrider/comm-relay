@@ -11,8 +11,8 @@ Streamers operating CommRelay through the local admin, Wails shell, or `/dock/me
 - Add global leaderboard policies: `always`, `automatic`, and `on_request`.
 - Add a server-authoritative runtime state: hidden, timed, or pinned, synchronized to all production leaderboard clients.
 - In automatic mode, show for 15 seconds after configured award or meaningful rank-change triggers; use a five-minute cooldown and a dirty-only 15-minute fallback interval.
-- Add POST-action controls to show, hide, pin, and resume policy behavior.
-- Add a compact unthemed toolbar above the OBS message dock with visibility status, countdown, controls, and active-preset selection.
+- Add POST-action controls to show, hide, pin, and resume policy behavior; keep `resume` as the internal/API action that clears an override.
+- Add a compact unthemed toolbar above the OBS message dock with visibility status, countdown, policy-specific controls, and active-preset selection: one visibility switch in `always`, and timed Show, Pin toggle, and Hide in `automatic` or `on_request`.
 - Extend operator-defined commands with an action kind so a configurable command can show the leaderboard without also creating a splash alert.
 
 ## Capabilities

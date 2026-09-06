@@ -12,7 +12,7 @@ Expose localhost-only read and POST-action controls for authoritative leaderboar
 - **THEN** the read returns its current absolute deadline
 
 ### Requirement: Leaderboard visibility mutations use POST actions
-The API SHALL provide `POST /api/leaderboard/show`, `/api/leaderboard/hide`, `/api/leaderboard/pin`, and `/api/leaderboard/resume`. Show MAY accept `duration_seconds`; omitted duration SHALL use config and an out-of-range duration SHALL return HTTP 400. Successful actions SHALL return the resulting visibility state and broadcast it. Malformed JSON or controller failure SHALL use existing UI-safe error conventions.
+The API SHALL provide `POST /api/leaderboard/show`, `/api/leaderboard/hide`, `/api/leaderboard/pin`, and `/api/leaderboard/resume`. Show MAY accept `duration_seconds`; omitted duration SHALL use config and an out-of-range duration SHALL return HTTP 400. Resume SHALL remain available for compatibility and for UI toggles that clear a manual hide or pin, even though the dock does not expose a standalone Resume control. Successful actions SHALL return the resulting visibility state and broadcast it. Malformed JSON or controller failure SHALL use existing UI-safe error conventions.
 
 #### Scenario: Show with configured duration
 - **WHEN** the dock posts an empty object to `/api/leaderboard/show`

@@ -7,23 +7,35 @@ Lets the operator define chat commands that the server matches on ingested lines
 ## Requirements
 
 ### Requirement: Operator can manage a command catalog
-The system SHALL persist chat commands in local SQLite (not `config.json`). Each command SHALL have a unique trigger slug, enabled flag, per-viewer cooldown seconds, splash text template, built-in sound id or silence, optional `image_asset` and `sound_file` filenames that MAY be null, `sound_volume` 0–100 (default 70), `layout` of `card`, `banner`, or `fullscreen` (default `fullscreen`), optional `image_fit` of `cover`, `contain`, `fill`, or `tile` (default `contain`), optional `image_size_pct` 25–300 (default 100), and splash duration. `GET /api/commands` SHALL list these fields. Mutations SHALL be `POST /api/commands/create`, `POST /api/commands/update`, and `POST /api/commands/delete` with identifiers in the JSON body. Create and update SHALL accept the media, volume, layout, image-fit, and image-size fields. Empty media fields SHALL clear a previous file reference. The operator MUST be able to delete any command, including seeds.
+The system SHALL persist chat commands in local SQLite. Each command SHALL have a unique trigger slug, enabled flag, per-viewer cooldown seconds, and `action` of `alert` or `show_leaderboard`. Alert commands SHALL retain the current required splash template, sound, duration, optional media, volume, layout, image-fit, and image-size fields. Show-leaderboard commands SHALL require no splash presentation and SHALL use global leaderboard display duration. `GET /api/commands` and existing POST-action mutations SHALL expose and accept `action`; omitted action SHALL mean `alert` for backward compatibility. Empty media fields SHALL continue to clear alert assets. The operator MUST be able to delete any command.
+
+#### Scenario: Existing alert command
+- **WHEN** an existing command row is read after upgrade
+- **THEN** its action is `alert` and its splash behavior is unchanged
+
+#### Scenario: Create alert command
+- **WHEN** the operator creates an alert command with trigger `lurk`
+- **THEN** `GET /api/commands` includes its action and current splash, media, sound, layout, image, and duration fields
 
 #### Scenario: Create command
-- **WHEN** the operator creates a command with trigger `lurk`
-- **THEN** `GET /api/commands` includes that command and chat line `!lurk` can match it after save
+- **WHEN** the operator creates an alert command with trigger `lurk`
+- **THEN** `GET /api/commands` includes it and chat line `!lurk` can match it after save
 
 #### Scenario: Delete seed
 - **WHEN** the operator deletes the seeded `gg` command
 - **THEN** `!gg` no longer matches and a process restart MUST NOT recreate it
 
-#### Scenario: Duplicate trigger rejected
-- **WHEN** the operator creates a second command with trigger `gg` while `gg` exists
-- **THEN** the request fails with HTTP 400 and a field error on the trigger
-
 #### Scenario: Save custom image
-- **WHEN** the operator updates `gg` with a stored `image_asset` filename
-- **THEN** `GET /api/commands` returns that filename and a later `!gg` alert uses it
+- **WHEN** the operator updates an alert command with a stored `image_asset` filename
+- **THEN** `GET /api/commands` returns that filename and a later match uses it
+
+#### Scenario: Create leaderboard action
+- **WHEN** the operator creates trigger `leaderboard` with action `show_leaderboard`
+- **THEN** `GET /api/commands` returns that action and does not require splash presentation fields
+
+#### Scenario: Duplicate trigger rejected
+- **WHEN** the operator creates another command using an existing trigger
+- **THEN** the request fails with HTTP 400 and a field error on trigger regardless of action
 
 ### Requirement: Command media filenames are stored assets only
 `image_asset` and `sound_file` SHALL be empty or a generated overlay-asset filename already stored beside `config.json`. The system MUST reject absolute paths, `..`, URLs, and names that fail the existing overlay asset name check.
@@ -64,23 +76,35 @@ On first initialization of a new local database, the system SHALL insert enabled
 - **THEN** the next startup completes starter command initialization in the persisted locale
 
 ### Requirement: Server matches a whole bang command line
-The matcher SHALL trim surrounding whitespace, lowercase the line, and treat it as a command only when it starts with `!`. For this change the remainder after `!` MUST equal a command trigger exactly (no parameters, no extra words). Matching SHALL run on the server. Disabled commands MUST NOT match. Lines that are not commands SHALL pass through as ordinary chat.
+The matcher SHALL retain whole-line, trimmed, lowercase bang-command parsing and exact trigger lookup. After enabled-command and per-viewer cooldown checks, an `alert` action SHALL enqueue its current splash, while `show_leaderboard` SHALL request leaderboard display with reason `command` and MUST NOT enqueue an alert. Unknown, disabled, parameterized, or non-bang lines SHALL retain current ordinary-chat behavior.
+
+#### Scenario: Viewer requests leaderboard
+- **WHEN** enabled `show_leaderboard` trigger `leaderboard` matches `  !LEADERBOARD  ` outside cooldown
+- **THEN** visibility is requested once and no alert frame is emitted
 
 #### Scenario: Bang gg
-- **WHEN** a viewer sends `  !GG  ` and command `gg` is enabled
-- **THEN** the server treats it as command `gg` and enqueues an alert
+- **WHEN** a viewer sends `  !GG  ` and alert command `gg` is enabled
+- **THEN** the server treats it as command `gg` and enqueues its alert
 
 #### Scenario: Missing bang
-- **WHEN** a viewer sends `gg`
-- **THEN** the line is ordinary chat and MUST NOT fire the command
+- **WHEN** a viewer sends `leaderboard`
+- **THEN** the line remains ordinary chat and no command action fires
 
 #### Scenario: Extra words
-- **WHEN** a viewer sends `!gg please`
-- **THEN** the line is ordinary chat and MUST NOT fire the command
+- **WHEN** the viewer sends `!leaderboard please`
+- **THEN** the line remains ordinary chat and no leaderboard request occurs
 
 #### Scenario: Unknown bang
-- **WHEN** a viewer sends `!foo` and no command `foo` exists
-- **THEN** the line is ordinary chat
+- **WHEN** the viewer sends `!unknown` and no such trigger exists
+- **THEN** the line remains ordinary chat
+
+#### Scenario: Disabled command
+- **WHEN** the viewer sends an exact trigger for a disabled command
+- **THEN** the line remains ordinary chat and no action fires
+
+#### Scenario: Request during visibility cooldown
+- **WHEN** a valid viewer command fires while automatic triggers are cooling down
+- **THEN** the command request bypasses the visibility cooldown but consumes its own per-viewer command cooldown
 
 ### Requirement: Per-viewer cooldown is configurable
 Each command SHALL have a cooldown in seconds (≥ 0). After a successful fire for a viewer identity, further matches of that command by the same identity SHALL be ignored until the cooldown elapses. Cooldown 0 SHALL mean no cooldown. A suppressed match MUST NOT enqueue an alert, MUST NOT write an interaction event, and MUST NOT reply on the streaming platform.

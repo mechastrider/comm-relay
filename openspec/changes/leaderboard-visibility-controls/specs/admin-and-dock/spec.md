@@ -16,15 +16,23 @@ Settings SHALL expose policy, display duration, cooldown, dirty interval, award 
 - **THEN** the UI explains that dock actions and configured viewer commands may show the board while automatic triggers do not
 
 ### Requirement: Message dock provides compact leaderboard controls
-`/dock/messages` SHALL retain the message log and add a small pinned operator toolbar above its scrollable message body. The toolbar SHALL show current policy/state and a live countdown for timed state, plus Show, Pin or Resume, and Hide controls. It SHALL also expose the existing active-preset selection using `POST /api/overlay/activate`. The toolbar MUST remain unthemed, keyboard usable, localized in English and Russian, and usable at narrow dock widths without covering the last message.
+`/dock/messages` SHALL retain the message log and add a small pinned operator toolbar above its scrollable message body. The toolbar SHALL show current policy/state and a live countdown for timed state. Under `always`, it SHALL expose one labelled visibility switch whose on state clears the manual hidden override and whose off state hides the board. Under `automatic` and `on_request`, it SHALL expose Show for the configured duration, a pressed-state Pin toggle, and Hide; Show SHALL be disabled while pinned, turning Pin off SHALL Resume policy behavior, and Hide SHALL remain available while pinned. No standalone Auto or Resume control SHALL be shown. The toolbar SHALL also expose the existing active-preset selection using `POST /api/overlay/activate`. It MUST remain unthemed, keyboard usable, localized in English and Russian, and usable at narrow dock widths without covering the last message.
 
 #### Scenario: Timed state in dock
 - **WHEN** the board is visible for another 12 seconds
 - **THEN** the dock status announces timed visibility and updates an accessible countdown without moving message scroll position
 
-#### Scenario: Pin then resume
-- **WHEN** the operator pins the board and later selects Resume automatic behavior
-- **THEN** both actions report progress in context and the status follows authoritative responses or WebSocket frames
+#### Scenario: Toggle pin
+- **WHEN** the operator pins the board and later turns the Pin toggle off
+- **THEN** the dock sends Pin then Resume, reports progress in context, and follows authoritative responses or WebSocket frames
+
+#### Scenario: Always policy switch
+- **WHEN** policy is `always` and the operator turns off the labelled visibility switch
+- **THEN** the board remains hidden until the operator turns the same switch on or the process restarts
+
+#### Scenario: Hide stays available while pinned
+- **WHEN** the board is pinned under `automatic` or `on_request`
+- **THEN** Show is disabled, Pin is announced as pressed, and Hide remains available as the direct hide action
 
 #### Scenario: Failed control
 - **WHEN** a dock visibility request fails

@@ -43,12 +43,19 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 8)
+	require.Len(t, awards, 9)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
 		byID[award.ID] = award
 	}
+
+	like := byID["like"]
+	assert.Equal(t, "Streamer Like", like.Name)
+	assert.Equal(t, 5, like.Points)
+	assert.Equal(t, "Streamer Like for {viewer}! +{points}", like.SplashTemplate)
+	assert.Equal(t, "soft", like.Sound)
+	assert.Equal(t, 5000, like.DurationMs)
 
 	joke := byID["joke"]
 	assert.Equal(t, "Joke", joke.Name)
@@ -58,7 +65,7 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 
 	advice := byID["advice"]
 	assert.Equal(t, "Advice", advice.Name)
-	assert.Equal(t, 50, advice.Points)
+	assert.Equal(t, 25, advice.Points)
 	assert.Equal(t, "Advice for {viewer}! +{points}", advice.SplashTemplate)
 	assert.Equal(t, "alert", advice.Sound)
 

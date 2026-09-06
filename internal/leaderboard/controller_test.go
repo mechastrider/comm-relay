@@ -204,6 +204,53 @@ func TestController_WhenAlwaysManuallyHiddenThenResumed_ExpectVisiblePolicyState
 	require.Equal(t, ReasonPolicy, resumed.Reason)
 }
 
+func TestController_WhenAutomaticPinnedThenHidden_ExpectTriggersAfterCooldown(t *testing.T) {
+	controller, clock, _, _ := startController(t, config.LeaderboardVisibilityPolicyAutomatic, func(cfg *config.LeaderboardVisibilityConfig) {
+		cfg.CooldownSeconds = 10
+	})
+
+	pinned, err := controller.Pin(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, StatePinned, pinned.State)
+	hidden, err := controller.Hide(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, StateHidden, hidden.State)
+
+	require.True(t, controller.SubmitTrigger(ReasonRankChange))
+	require.Equal(t, StateHidden, snapshot(t, controller).State)
+	clock.Advance(10 * time.Second)
+	require.True(t, controller.SubmitTrigger(ReasonRankChange))
+	require.Equal(t, StateTimed, snapshot(t, controller).State)
+}
+
+func TestController_WhenOnRequestPinnedThenHidden_ExpectLaterCommandWithoutResume(t *testing.T) {
+	controller, _, _, _ := startController(t, config.LeaderboardVisibilityPolicyOnRequest, nil)
+
+	_, err := controller.Pin(context.Background())
+	require.NoError(t, err)
+	hidden, err := controller.Hide(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, StateHidden, hidden.State)
+
+	shown, err := controller.Request(context.Background(), ReasonCommand)
+	require.NoError(t, err)
+	require.Equal(t, StateTimed, shown.State)
+	require.Equal(t, ReasonCommand, shown.Reason)
+}
+
+func TestController_WhenManualShowExpiresUnderAlways_ExpectVisiblePolicyState(t *testing.T) {
+	controller, clock, _, _ := startController(t, config.LeaderboardVisibilityPolicyAlways, nil)
+
+	shown, err := controller.Show(context.Background(), 5*time.Second)
+	require.NoError(t, err)
+	require.Equal(t, StateTimed, shown.State)
+	clock.Advance(5 * time.Second)
+
+	got := snapshot(t, controller)
+	require.Equal(t, StatePinned, got.State)
+	require.Equal(t, ReasonPolicy, got.Reason)
+}
+
 func TestController_WhenClockAdvancesPastDeadline_ExpectHidden(t *testing.T) {
 	controller, clock, _, _ := startController(t, config.LeaderboardVisibilityPolicyOnRequest, nil)
 
@@ -252,8 +299,6 @@ func TestController_WhenCanceled_ExpectPromptStopAndUnavailableCalls(t *testing.
 func TestController_WhenCommandRequestedDuringCooldown_ExpectTimedDisplay(t *testing.T) {
 	controller, _, _, _ := startController(t, config.LeaderboardVisibilityPolicyOnRequest, nil)
 	_, err := controller.Hide(context.Background())
-	require.NoError(t, err)
-	_, err = controller.Resume(context.Background())
 	require.NoError(t, err)
 
 	got, err := controller.Request(context.Background(), ReasonCommand)

@@ -241,7 +241,7 @@ func (c *Controller) Show(ctx context.Context, duration time.Duration) (Snapshot
 	return c.call(ctx, controllerCommand{kind: commandShow, duration: duration})
 }
 
-// Hide applies a manual hidden override and starts automatic cooldown.
+// Hide enters hidden state, retaining an override only for the always-visible policy, and starts cooldown.
 func (c *Controller) Hide(ctx context.Context) (Snapshot, error) {
 	return c.call(ctx, controllerCommand{kind: commandHide})
 }
@@ -335,8 +335,13 @@ func (c *Controller) handleCommand(cmd controllerCommand) {
 		c.override = overrideShow
 		c.enterTimed(now, duration, ReasonManual, false)
 	case commandHide:
-		c.override = overrideHide
-		c.cooldownUntil = now.Add(time.Duration(c.currentConfig().CooldownSeconds) * time.Second)
+		cfg := c.currentConfig()
+		if cfg.Policy == config.LeaderboardVisibilityPolicyAlways {
+			c.override = overrideHide
+		} else {
+			c.override = overrideNone
+		}
+		c.cooldownUntil = now.Add(time.Duration(cfg.CooldownSeconds) * time.Second)
 		c.enterHidden(ReasonManual)
 	case commandPin:
 		c.override = overridePin

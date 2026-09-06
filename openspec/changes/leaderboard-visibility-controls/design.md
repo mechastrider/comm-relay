@@ -43,10 +43,11 @@ All control routes remain localhost HTTP and use bounded JSON. Durations and enu
 3. **Server owns deadlines.** Client-local timers were rejected because multiple OBS sources and dock would drift and reconnect inconsistently.
 4. **Three policies, composable triggers.** Always, automatic, and on-request describe baseline behavior; awards, rank changes, interval, command, and manual controls are causes, not competing modes.
 5. **Meaningful automatic change is XP-driven leader/top-three change.** Other XP changes set dirty; message-only changes do neither. This keeps XP central and prevents chat volume from causing noise.
-6. **Manual actions bypass automatic cooldown.** Operator intent wins; Hide starts cooldown, Pin is runtime-only, and Resume re-evaluates policy.
-7. **Award delay uses the triggering alert duration.** This avoids overlap in the common single-alert case without duplicating the page-local alert queue. Full queue acknowledgement is deferred.
-8. **Command action column.** Extending the user-owned catalog reuses trigger uniqueness and per-viewer cooldown without reserving `!leaderboard`. Existing rows default to `alert`; no seed is added.
-9. **Existing installs default always; new installs automatic.** Presence-aware config loading prevents an upgrade from unexpectedly hiding a current source.
+6. **Policy-specific dock controls over the same four API actions.** `always` uses one labelled visibility switch (`hide` when off, `resume` when on). `automatic` and `on_request` use timed Show, a Pin toggle (`pin`/`resume`), and Hide; no standalone Auto/Resume button is shown. Show is unavailable while pinned, but Hide remains an emergency action. This makes the baseline policy understandable without removing the compatible localhost API.
+7. **Hide is persistent only for the always-visible baseline.** Under `always`, Hide remains an override until Resume. Under `automatic` and `on_request`, Hide clears pin/show overrides and starts cooldown without indefinitely blocking later triggers; on-request commands can therefore show again later. Manual Show and Pin bypass cooldown.
+8. **Award delay uses the triggering alert duration.** This avoids overlap in the common single-alert case without duplicating the page-local alert queue. Full queue acknowledgement is deferred.
+9. **Command action column.** Extending the user-owned catalog reuses trigger uniqueness and per-viewer cooldown without reserving `!leaderboard`. Existing rows default to `alert`; no seed is added.
+10. **Existing installs default always; new installs automatic.** Presence-aware config loading prevents an upgrade from unexpectedly hiding a current source.
 
 ## Risks / Trade-offs
 
