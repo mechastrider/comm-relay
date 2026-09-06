@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import {
+  normalizeVisibilitySnapshot,
+  presetOptions,
+  visibilitySecondsRemaining,
+} from "../dock/leaderboard-controls.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -20,3 +25,15 @@ for (const key of enKeys) {
 }
 
 console.log("i18n parity OK (" + String(enKeys.length) + " keys)");
+
+const snapshot = normalizeVisibilitySnapshot({
+  state: "timed",
+  visible_until: "2026-09-06T12:00:10Z",
+  policy: "automatic",
+});
+assert.equal(visibilitySecondsRemaining(snapshot, Date.parse("2026-09-06T12:00:01Z")), 9);
+assert.equal(normalizeVisibilitySnapshot({ state: "pinned" }).visible_until, null);
+assert.deepEqual(
+  presetOptions({ overlay: { active_preset_id: "night", presets: [{ id: "night", name: "Night" }] } }),
+  { activeId: "night", presets: [{ id: "night", name: "Night" }] }
+);

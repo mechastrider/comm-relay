@@ -187,6 +187,71 @@ export function validateSocks5Address(address) {
     return Number.isFinite(port) && port >= 1 && port <= 65535;
   }
 
+function leaderboardVisibilityFromConfig(config) {
+    const visibility =
+      config && config.leaderboard_visibility && typeof config.leaderboard_visibility === "object"
+        ? config.leaderboard_visibility
+        : {};
+    return {
+      policy: ["always", "automatic", "on_request"].includes(String(visibility.policy))
+        ? String(visibility.policy)
+        : "automatic",
+      display_seconds:
+        typeof visibility.display_seconds === "number" ? visibility.display_seconds : 15,
+      cooldown_seconds:
+        typeof visibility.cooldown_seconds === "number" ? visibility.cooldown_seconds : 300,
+      dirty_interval_seconds:
+        typeof visibility.dirty_interval_seconds === "number"
+          ? visibility.dirty_interval_seconds
+          : 900,
+      show_on_award: visibility.show_on_award !== false,
+      show_on_rank_change: visibility.show_on_rank_change !== false,
+    };
+  }
+
+function applyLeaderboardVisibilityFromConfig(config) {
+    const visibility = leaderboardVisibilityFromConfig(config);
+    if (dom.leaderboardVisibilityPolicyInput) {
+      dom.leaderboardVisibilityPolicyInput.value = visibility.policy;
+    }
+    if (dom.leaderboardVisibilityDisplaySecondsInput) {
+      dom.leaderboardVisibilityDisplaySecondsInput.value = String(visibility.display_seconds);
+    }
+    if (dom.leaderboardVisibilityCooldownSecondsInput) {
+      dom.leaderboardVisibilityCooldownSecondsInput.value = String(visibility.cooldown_seconds);
+    }
+    if (dom.leaderboardVisibilityDirtyIntervalSecondsInput) {
+      dom.leaderboardVisibilityDirtyIntervalSecondsInput.value = String(
+        visibility.dirty_interval_seconds
+      );
+    }
+    if (dom.leaderboardVisibilityShowOnAwardInput) {
+      dom.leaderboardVisibilityShowOnAwardInput.checked = visibility.show_on_award;
+    }
+    if (dom.leaderboardVisibilityShowOnRankChangeInput) {
+      dom.leaderboardVisibilityShowOnRankChangeInput.checked = visibility.show_on_rank_change;
+    }
+    syncLeaderboardVisibilityControlsUI();
+  }
+
+export function syncLeaderboardVisibilityControlsUI() {
+    const policy = dom.leaderboardVisibilityPolicyInput?.value || "automatic";
+    const automatic = policy === "automatic";
+    document.querySelectorAll("[data-leaderboard-automatic-control] input").forEach(function (input) {
+      if (input instanceof HTMLInputElement) {
+        input.disabled = !automatic;
+      }
+    });
+    if (dom.leaderboardVisibilityPolicyHint) {
+      const key = policy === "on_request"
+        ? "leaderboardVisibility.onRequestHint"
+        : policy === "always"
+          ? "leaderboardVisibility.alwaysHint"
+          : "leaderboardVisibility.automaticHint";
+      dom.leaderboardVisibilityPolicyHint.textContent = t(key);
+    }
+  }
+
 export function applyConfig(config) {
     const previousLocale = state.currentConfig && state.currentConfig.admin
       ? state.currentConfig.admin.time_locale
@@ -287,6 +352,7 @@ export function applyConfig(config) {
     if (dom.streamerDisplayNameInput) {
       dom.streamerDisplayNameInput.value = String(config.streamer_display_name || "");
     }
+    applyLeaderboardVisibilityFromConfig(config);
     const nextLocale = localeFromConfig(config);
     if (previousLocale !== nextLocale && state.recentMessageCache.length > 0) {
       renderRecentMessages(state.recentMessageCache, { force: true });
@@ -325,6 +391,26 @@ export function buildPayload() {
       streamer_display_name: dom.streamerDisplayNameInput
         ? dom.streamerDisplayNameInput.value.trim()
         : "",
+      leaderboard_visibility: {
+        policy: dom.leaderboardVisibilityPolicyInput
+          ? dom.leaderboardVisibilityPolicyInput.value
+          : leaderboardVisibilityFromConfig(state.currentConfig || {}).policy,
+        display_seconds: dom.leaderboardVisibilityDisplaySecondsInput
+          ? Number.parseInt(dom.leaderboardVisibilityDisplaySecondsInput.value, 10)
+          : leaderboardVisibilityFromConfig(state.currentConfig || {}).display_seconds,
+        cooldown_seconds: dom.leaderboardVisibilityCooldownSecondsInput
+          ? Number.parseInt(dom.leaderboardVisibilityCooldownSecondsInput.value, 10)
+          : leaderboardVisibilityFromConfig(state.currentConfig || {}).cooldown_seconds,
+        dirty_interval_seconds: dom.leaderboardVisibilityDirtyIntervalSecondsInput
+          ? Number.parseInt(dom.leaderboardVisibilityDirtyIntervalSecondsInput.value, 10)
+          : leaderboardVisibilityFromConfig(state.currentConfig || {}).dirty_interval_seconds,
+        show_on_award: dom.leaderboardVisibilityShowOnAwardInput
+          ? dom.leaderboardVisibilityShowOnAwardInput.checked
+          : leaderboardVisibilityFromConfig(state.currentConfig || {}).show_on_award,
+        show_on_rank_change: dom.leaderboardVisibilityShowOnRankChangeInput
+          ? dom.leaderboardVisibilityShowOnRankChangeInput.checked
+          : leaderboardVisibilityFromConfig(state.currentConfig || {}).show_on_rank_change,
+      },
       network: {
         socks5: {
           address: dom.networkSocks5Address ? dom.networkSocks5Address.value.trim() : "",
@@ -363,6 +449,9 @@ export function buildPayload() {
           : "ru-RU",
         message_sound: getMessageSoundSettings(),
       },
+      logging: state.currentConfig && state.currentConfig.logging
+        ? state.currentConfig.logging
+        : {},
     };
   }
 
@@ -391,6 +480,7 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
       hide_command_messages: Boolean(latest.hide_command_messages),
       custom_avatars_enabled: latest.custom_avatars_enabled !== false,
       streamer_display_name: String(latest.streamer_display_name || "").trim(),
+      leaderboard_visibility: leaderboardVisibilityFromConfig(latest),
       network: {
         socks5: {
           address: socks5.address || "",
@@ -423,6 +513,7 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
         image_previews: overlay.image_previews || {},
       }),
       admin: latest.admin || {},
+      logging: latest.logging || {},
     };
   }
 
@@ -505,24 +596,40 @@ export function validateClient(payload, options) {
 
     (payload.overlay.presets || []).some(function (preset) {
       const surface = preset && preset.surfaces && preset.surfaces.leaderboard;
+      const sizingMode = surface && surface.sizing_mode;
+      if (sizingMode != null && sizingMode !== "auto" && sizingMode !== "fixed") {
+        setFieldError("overlay_leaderboard_sizing_mode", t("validation.leaderboardSizingMode"));
+        firstInvalid = firstInvalid || dom.overlayLeaderboardSizingMode;
+        return true;
+      }
       const font = surface && surface.font_size_px;
       if (
         font != null &&
-        font !== 0 &&
-        (!Number.isFinite(font) || font < OVERLAY_FONT_SIZE_MIN || font > OVERLAY_FONT_SIZE_MAX)
+        (!Number.isInteger(font) || font < OVERLAY_FONT_SIZE_MIN || font > OVERLAY_FONT_SIZE_MAX)
       ) {
         setFieldError(
           "overlay_leaderboard_font_size_px",
-          "Font size must be between " + OVERLAY_FONT_SIZE_MIN + " and " + OVERLAY_FONT_SIZE_MAX + " px."
+          t("validation.leaderboardFontSize")
         );
         firstInvalid = firstInvalid || dom.overlayLeaderboardFontSize;
         return true;
       }
       const title = surface && surface.title;
+      const titleMode = surface && surface.title_mode;
+      if (titleMode != null && titleMode !== "theme" && titleMode !== "custom" && titleMode !== "hidden") {
+        setFieldError("overlay_leaderboard_title_mode", t("validation.leaderboardTitleMode"));
+        firstInvalid = firstInvalid || dom.overlayLeaderboardTitleMode;
+        return true;
+      }
+      if (titleMode === "custom" && String(title || "").trim() === "") {
+        setFieldError("overlay_leaderboard_title", t("validation.leaderboardCustomTitleRequired"));
+        firstInvalid = firstInvalid || dom.overlayLeaderboardTitle;
+        return true;
+      }
       if (title != null && Array.from(String(title)).length > 64) {
         setFieldError(
           "overlay_leaderboard_title",
-          "Title must be at most 64 characters."
+          t("validation.leaderboardTitleMax")
         );
         firstInvalid = firstInvalid || dom.overlayLeaderboardTitle;
         return true;
@@ -530,14 +637,13 @@ export function validateClient(payload, options) {
       const maxEntries = surface && surface.max_entries;
       if (
         maxEntries != null &&
-        maxEntries !== 0 &&
-        (!Number.isFinite(maxEntries) || maxEntries < 1 || maxEntries > 20)
+        (!Number.isInteger(maxEntries) || maxEntries < 1 || maxEntries > 20)
       ) {
         setFieldError(
           "overlay_leaderboard_max_entries",
-          "Max entries must be between 1 and 20."
+          t("validation.leaderboardMaxEntries")
         );
-        firstInvalid = firstInvalid || dom.overlayLeaderboardMaxEntries;
+        firstInvalid = firstInvalid || dom.overlayLeaderboardMaxEntriesAll;
         return true;
       }
       return false;

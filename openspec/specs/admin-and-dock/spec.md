@@ -442,12 +442,81 @@ Settings SHALL offer a boolean control for `custom_avatars_enabled`, saved throu
 - **THEN** a viewer with both custom and cached files is shown with the cached platform portrait
 
 ### Requirement: Studio leaderboard inspector edits title and rank cap
-When the selected Studio surface is leaderboard, the inspector SHALL include a title field (`surfaces.leaderboard.title`) and a max-entries field (`surfaces.leaderboard.max_entries`, integer 1–20, default 5). Both SHALL persist with Publish like other leaderboard surface fields. A blank title SHALL preview as no heading. The Essentials view MAY show these fields; they MUST remain in All settings. Live Messages, dock, and overlay chat SHALL render `avatar_url` from `/ws` the same way as today, including local `/overlay/assets/` URLs.
+When the selected Studio surface is leaderboard, Essentials SHALL expose sizing as Automatic or Fixed, title as From theme, Custom, or Hidden, and whether message count is shown. Custom title input SHALL appear only when Custom is selected. Fixed font size and `max_entries` (integer 1–20, default 5) SHALL remain reachable in All settings; `max_entries` MUST be labelled as a maximum because source height may show fewer complete rows. All fields SHALL update the existing draft preview and persist only through Publish. Live Messages, dock, and overlay chat SHALL remain unchanged.
+
+#### Scenario: Automatic sizing preview
+- **WHEN** the operator selects Automatic and resizes the leaderboard preview
+- **THEN** the preview scales the composition from width and changes the number of complete rows from height without publishing
+
+#### Scenario: Custom themed title
+- **WHEN** the operator selects Custom, enters `Топ эфира`, and publishes
+- **THEN** the preview and live leaderboard use that text in the selected theme's title slot
 
 #### Scenario: Set overlay heading
-- **WHEN** the operator types `Топ эфира` as the leaderboard title and publishes
-- **THEN** the Studio leaderboard preview and `/overlay/leaderboard` show that heading
+- **WHEN** the operator selects Custom, types `Топ эфира`, and publishes
+- **THEN** the Studio preview and `/overlay/leaderboard` show that text in the same theme-owned title slot
+
+#### Scenario: Hide secondary metric
+- **WHEN** the operator leaves message count disabled
+- **THEN** the preview shows XP-first rows without message counts
+
+#### Scenario: Maximum rank cap
+- **WHEN** max entries is 5 and the preview has room for eight rows
+- **THEN** no more than five rows are shown
 
 #### Scenario: Cap at three
 - **WHEN** the operator sets max entries to 3 and publishes
-- **THEN** the preview and live ranking show at most three rows
+- **THEN** the preview and live ranking show at most three complete rows
+
+#### Scenario: Fixed compatibility controls
+- **WHEN** the operator selects Fixed in All settings
+- **THEN** a labelled 12–48 px field is available with inline validation and is associated with its error text
+
+### Requirement: Settings configure global leaderboard visibility
+Settings SHALL expose policy, display duration, cooldown, dirty interval, award trigger, and meaningful rank-change trigger as one global leaderboard behavior section. The UI SHALL explain that the policy applies to every production leaderboard source and is independent from Studio appearance presets. Trigger controls that cannot affect the selected policy MAY be disabled but MUST retain their saved values. Saving SHALL use the existing config update and field-error behavior.
+
+#### Scenario: Choose automatic behavior
+- **WHEN** the operator selects Automatic, enables award and rank-change triggers, and saves
+- **THEN** public config and runtime policy update without publishing a Studio appearance draft
+
+#### Scenario: Choose on request
+- **WHEN** the operator selects On request
+- **THEN** the UI explains that dock actions and configured viewer commands may show the board while automatic triggers do not
+
+### Requirement: Message dock provides compact leaderboard controls
+`/dock/messages` SHALL retain the message log and add a small pinned operator toolbar above its scrollable message body. The toolbar SHALL show current policy/state and a live countdown for timed state. Under `always`, it SHALL expose one labelled visibility switch whose on state clears the manual hidden override and whose off state hides the board. Under `automatic` and `on_request`, it SHALL expose Show for the configured duration, a pressed-state Pin toggle, and Hide; Show SHALL be disabled while pinned, turning Pin off SHALL Resume policy behavior, and Hide SHALL remain available while pinned. No standalone Auto or Resume control SHALL be shown. The toolbar SHALL also expose the existing active-preset selection using `POST /api/overlay/activate`. It MUST remain unthemed, keyboard usable, localized in English and Russian, and usable at narrow dock widths without covering the last message.
+
+#### Scenario: Timed state in dock
+- **WHEN** the board is visible for another 12 seconds
+- **THEN** the dock status announces timed visibility and updates an accessible countdown without moving message scroll position
+
+#### Scenario: Toggle pin
+- **WHEN** the operator pins the board and later turns the Pin toggle off
+- **THEN** the dock sends Pin then Resume, reports progress in context, and follows authoritative responses or WebSocket frames
+
+#### Scenario: Always policy switch
+- **WHEN** policy is `always` and the operator turns off the labelled visibility switch
+- **THEN** the board remains hidden until the operator turns the same switch on or the process restarts
+
+#### Scenario: Hide stays available while pinned
+- **WHEN** the board is pinned under `automatic` or `on_request`
+- **THEN** Show is disabled, Pin is announced as pressed, and Hide remains available as the direct hide action
+
+#### Scenario: Failed control
+- **WHEN** a dock visibility request fails
+- **THEN** controls leave the prior authoritative state visible and offer a localized retry-safe error
+
+#### Scenario: Narrow dock
+- **WHEN** the dock is 300 CSS pixels wide
+- **THEN** controls wrap or compact without horizontal scrolling and icon-only variants have hover/focus tooltips and accessible names
+
+### Requirement: Command editor supports leaderboard actions
+The Audience command editor SHALL let the operator choose Alert or Show leaderboard. Alert SHALL retain all current splash, media, sound, and duration fields. Show leaderboard SHALL keep trigger, enabled, and per-viewer cooldown controls, hide irrelevant alert presentation fields, and explain that the command shows the board for its configured global display duration. No leaderboard command SHALL be created automatically.
+
+#### Scenario: Create leaderboard command
+- **WHEN** the operator creates enabled trigger `leaderboard` with action Show leaderboard and a 180-second cooldown
+- **THEN** the saved catalog row is distinguishable from alert commands and `!leaderboard` can request the board
+
+#### Scenario: Switch action without losing clarity
+- **WHEN** the operator changes an alert command to Show leaderboard
+- **THEN** irrelevant fields are no longer required and the visible form describes the new effect before save

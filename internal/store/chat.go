@@ -12,7 +12,7 @@ import (
 // ApplyChat upserts the chat identity, increments message counters, and may grant activity XP.
 // Empty platform or user_id is ignored without error.
 func (s *Store) ApplyChat(identity ChatIdentity, activity ActivitySettings, dayResetHour int, now time.Time) error {
-	_, err := s.ApplyChatResult(identity, activity, dayResetHour, now)
+	_, err := s.ApplyChatMutationResult(identity, activity, dayResetHour, now)
 	return err
 }
 
@@ -23,20 +23,38 @@ func (s *Store) ApplyChatResult(
 	dayResetHour int,
 	now time.Time,
 ) (string, error) {
+	result, err := s.ApplyChatMutationResult(identity, activity, dayResetHour, now)
+	return result.ReplacedAvatarCache, err
+}
+
+// ChatMutationResult describes the observable effects of one counted chat line.
+type ChatMutationResult struct {
+	ReplacedAvatarCache  string
+	XPChanged            bool
+	MeaningfulRankChange bool
+}
+
+// ApplyChatMutationResult applies chat and reports whether XP and ordered top-three membership changed.
+func (s *Store) ApplyChatMutationResult(
+	identity ChatIdentity,
+	activity ActivitySettings,
+	dayResetHour int,
+	now time.Time,
+) (ChatMutationResult, error) {
 	if strings.TrimSpace(identity.UserID) == "" || strings.TrimSpace(identity.Platform) == "" {
-		return "", nil
+		return ChatMutationResult{}, nil
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if err := s.ensureOpenSessionLocked(now); err != nil {
-		return "", errors.Errorf("ensure open session: %w", err)
+		return ChatMutationResult{}, errors.Errorf("ensure open session: %w", err)
 	}
 
 	sessionID, err := s.openSessionLocked()
 	if err != nil {
-		return "", errors.Errorf("lookup open session: %w", err)
+		return ChatMutationResult{}, errors.Errorf("lookup open session: %w", err)
 	}
 
 	dayKey := DayKey(now, dayResetHour)
@@ -44,7 +62,7 @@ func (s *Store) ApplyChatResult(
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		return "", errors.Errorf("begin transaction: %w", err)
+		return ChatMutationResult{}, errors.Errorf("begin transaction: %w", err)
 	}
 	defer func() {
 		_ = tx.Rollback()
@@ -52,43 +70,71 @@ func (s *Store) ApplyChatResult(
 
 	viewerID, replacedCache, err := s.upsertIdentityLocked(tx, identity, seenAt, now)
 	if err != nil {
-		return "", err
+		return ChatMutationResult{}, err
 	}
 
-	if _, err := tx.Exec(
+	xpChanged := false
+	var beforeRanks topThreeSnapshot
+	if activity.Enabled() {
+		xpChanged, err = s.activityGrantEligibleLocked(tx, viewerID, sessionID, activity, now)
+		if err != nil {
+			return ChatMutationResult{}, err
+		}
+		if xpChanged {
+			beforeRanks, err = captureTopThree(tx, sessionID, dayKey)
+			if err != nil {
+				return ChatMutationResult{}, err
+			}
+		}
+	}
+
+	if _, execErr := tx.Exec(
 		`UPDATE viewers
 		 SET message_count = message_count + 1,
 		     last_seen_at = ?
 		 WHERE id = ?`,
 		seenAt,
 		viewerID,
-	); err != nil {
-		return "", errors.Errorf("increment viewer message count: %w", err)
+	); execErr != nil {
+		return ChatMutationResult{}, errors.Errorf("increment viewer message count: %w", execErr)
 	}
 
-	if err := s.incrementMessageCountsLocked(tx, viewerID, sessionID, dayKey); err != nil {
-		return "", err
+	if countErr := s.incrementMessageCountsLocked(tx, viewerID, sessionID, dayKey); countErr != nil {
+		return ChatMutationResult{}, countErr
 	}
 
-	if activity.Enabled() {
-		if err := s.maybeGrantActivityLocked(tx, viewerID, sessionID, dayKey, activity, now); err != nil {
-			return "", err
+	if xpChanged {
+		if err := s.grantActivityLocked(tx, viewerID, sessionID, dayKey, activity, now); err != nil {
+			return ChatMutationResult{}, err
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
-		return "", errors.Errorf("commit chat ingest: %w", err)
+	meaningfulRankChange := false
+	if xpChanged {
+		afterRanks, rankErr := captureTopThree(tx, sessionID, dayKey)
+		if rankErr != nil {
+			return ChatMutationResult{}, rankErr
+		}
+		meaningfulRankChange = topThreeChanged(beforeRanks, afterRanks)
 	}
 
-	return replacedCache, nil
+	if err := tx.Commit(); err != nil {
+		return ChatMutationResult{}, errors.Errorf("commit chat ingest: %w", err)
+	}
+
+	return ChatMutationResult{
+		ReplacedAvatarCache:  replacedCache,
+		XPChanged:            xpChanged,
+		MeaningfulRankChange: meaningfulRankChange,
+	}, nil
 }
 
-func (s *Store) maybeGrantActivityLocked(
+func (s *Store) activityGrantEligibleLocked(
 	tx *sql.Tx,
-	viewerID, sessionID, dayKey string,
+	viewerID, sessionID string,
 	activity ActivitySettings,
 	now time.Time,
-) error {
+) (bool, error) {
 	var activityGrants int
 	var lastActivityRaw sql.NullString
 	err := tx.QueryRow(
@@ -99,26 +145,35 @@ func (s *Store) maybeGrantActivityLocked(
 		sessionID,
 	).Scan(&activityGrants, &lastActivityRaw)
 	if errors.Is(err, sql.ErrNoRows) {
-		return errors.New("session stats missing after message increment")
+		return true, nil
 	}
 	if err != nil {
-		return errors.Errorf("load session activity counters: %w", err)
+		return false, errors.Errorf("load session activity counters: %w", err)
 	}
 
 	if activityGrants >= activity.SessionLimit {
-		return nil
+		return false, nil
 	}
 
 	if lastActivityRaw.Valid && strings.TrimSpace(lastActivityRaw.String) != "" {
 		lastActivity, parseErr := parseTime(lastActivityRaw.String)
 		if parseErr != nil {
-			return parseErr
+			return false, parseErr
 		}
 		if now.Sub(lastActivity) < time.Duration(activity.IntervalSeconds)*time.Second {
-			return nil
+			return false, nil
 		}
 	}
 
+	return true, nil
+}
+
+func (s *Store) grantActivityLocked(
+	tx *sql.Tx,
+	viewerID, sessionID, dayKey string,
+	activity ActivitySettings,
+	now time.Time,
+) error {
 	if _, err := tx.Exec(
 		`UPDATE viewers
 		 SET xp = xp + ?

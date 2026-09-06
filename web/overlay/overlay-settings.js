@@ -373,6 +373,8 @@ export function alertViewFromConfig(config, params) {
 }
 
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
+const LEADERBOARD_SIZING_MODES = new Set(["auto", "fixed"]);
+const LEADERBOARD_TITLE_MODES = new Set(["theme", "custom", "hidden"]);
 const OVERLAY_FONT_SIZE_MIN = 12;
 const OVERLAY_FONT_SIZE_MAX = 48;
 const LEADERBOARD_MAX_ENTRIES_MIN = 1;
@@ -397,6 +399,48 @@ export function normalizeAlertImageSizePct(value) {
 export function normalizeLeaderboardLayout(raw) {
   const value = String(raw || "").trim().toLowerCase();
   return LEADERBOARD_LAYOUTS.has(value) ? value : "panel";
+}
+
+export function resolveLeaderboardSizingMode(surface, hasFixedQuery) {
+  if (hasFixedQuery) {
+    return "fixed";
+  }
+  const raw = String(surface && surface.sizing_mode || "").trim().toLowerCase();
+  if (LEADERBOARD_SIZING_MODES.has(raw)) {
+    return raw;
+  }
+  return surface && typeof surface.font_size_px === "number" ? "fixed" : "auto";
+}
+
+export function resolveLeaderboardTitleMode(surface) {
+  const raw = String(surface && surface.title_mode || "").trim().toLowerCase();
+  if (LEADERBOARD_TITLE_MODES.has(raw)) {
+    return raw;
+  }
+  return normalizeLeaderboardTitle(surface && surface.title) ? "custom" : "theme";
+}
+
+export function defaultLeaderboardTitle(theme, layout) {
+  const normalizedTheme = normalizeTheme(theme);
+  const normalizedLayout = normalizeLeaderboardLayout(layout);
+  if (
+    normalizedLayout === "panel" &&
+    ["cockpit_panel", "cockpit_popups", "g_rebels_popups"].includes(normalizedTheme)
+  ) {
+    return "COMMRELAY RANKING";
+  }
+  return "";
+}
+
+export function resolveLeaderboardTitle(surface, theme, layout) {
+  const mode = resolveLeaderboardTitleMode(surface);
+  if (mode === "hidden") {
+    return { mode: mode, text: "" };
+  }
+  if (mode === "custom") {
+    return { mode: mode, text: normalizeLeaderboardTitle(surface && surface.title) };
+  }
+  return { mode: mode, text: defaultLeaderboardTitle(theme, layout) };
 }
 
 export function normalizeLeaderboardTitle(raw) {
@@ -450,16 +494,36 @@ export function leaderboardViewFromConfig(config, params) {
   const merged = mergeStyle(theme, resolved && resolved.style);
   merged.panel_opacity = surfaceOpacity(resolved, "leaderboard", merged.panel_opacity);
   const style = applyQueryStyleOverrides(merged, query);
-  const surface =
+  const storedSurface =
     resolved && resolved.surfaces && resolved.surfaces.leaderboard && typeof resolved.surfaces.leaderboard === "object"
       ? resolved.surfaces.leaderboard
       : {};
+  const samplePreview = query && String(query.get("preview") || "").trim().toLowerCase() === "sample";
+  const surface = Object.assign({}, storedSurface);
+  if (samplePreview && query.has("sizing_mode") && LEADERBOARD_SIZING_MODES.has(query.get("sizing_mode"))) {
+    surface.sizing_mode = query.get("sizing_mode");
+  }
+  if (samplePreview && query.has("title_mode") && LEADERBOARD_TITLE_MODES.has(query.get("title_mode"))) {
+    surface.title_mode = query.get("title_mode");
+  }
+  if (samplePreview && query.has("title")) {
+    surface.title = normalizeLeaderboardTitle(query.get("title"));
+  }
+  if (samplePreview && query.has("show_message_count")) {
+    surface.show_message_count = ["1", "true"].includes(String(query.get("show_message_count")).toLowerCase());
+  }
   let fontSizePx =
     typeof surface.font_size_px === "number" && surface.font_size_px >= OVERLAY_FONT_SIZE_MIN
       ? surface.font_size_px
       : resolved && typeof resolved.font_size_px === "number"
         ? resolved.font_size_px
         : 18;
+  if (samplePreview) {
+    const previewBaseFont = queryIntInRange(query, "base_font_size_px", OVERLAY_FONT_SIZE_MIN, OVERLAY_FONT_SIZE_MAX);
+    if (previewBaseFont !== null) {
+      fontSizePx = previewBaseFont;
+    }
+  }
   const queriedFont = queryIntInRange(query, "font_size_px", OVERLAY_FONT_SIZE_MIN, OVERLAY_FONT_SIZE_MAX);
   if (queriedFont !== null) {
     fontSizePx = queriedFont;
@@ -472,15 +536,19 @@ export function leaderboardViewFromConfig(config, params) {
     }
   }
   markLegacyCockpitGlass(style, resolved, "leaderboard", theme, query, layout);
-  const title = normalizeLeaderboardTitle(surface.title);
+  const sizingMode = resolveLeaderboardSizingMode(surface, queriedFont !== null);
+  const title = resolveLeaderboardTitle(surface, theme, layout);
   const maxEntries = resolvedLeaderboardMaxEntries(surface, query);
 
   return {
     font_size_px: fontSizePx,
+    sizing_mode: sizingMode,
     theme: normalizeTheme(theme),
     style: style,
     layout: layout,
-    title: title,
+    title_mode: title.mode,
+    title: title.text,
+    show_message_count: surface.show_message_count === true,
     max_entries: maxEntries,
   };
 }

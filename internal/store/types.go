@@ -32,6 +32,7 @@ type LastSeenIdentity struct {
 // Command is a persisted chat command catalog entry.
 type Command struct {
 	ID              string
+	Action          string
 	Trigger         string
 	Enabled         bool
 	CooldownSeconds int

@@ -1,6 +1,12 @@
 import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
 import { createRewardControl, messageCanBeRewarded } from "/shared/reward-picker.js?v=4";
-import { setLocale, t } from "/shared/i18n.js?v=17";
+import { setLocale, t } from "/shared/i18n.js?v=18";
+import {
+  normalizeVisibilitySnapshot,
+  presetOptions,
+  visibilityControlState,
+  visibilitySecondsRemaining,
+} from "/dock/messages/leaderboard-controls.js?v=2";
 
 "use strict";
 
@@ -12,12 +18,27 @@ import { setLocale, t } from "/shared/i18n.js?v=17";
   const panel = document.getElementById("message-panel");
   const list = document.getElementById("messages");
   const emptyState = document.getElementById("empty-state");
+  const presetSelect = document.getElementById("leaderboard-preset");
+  const visibilityStatus = document.getElementById("leaderboard-visibility-status");
+  const visibilityCountdown = document.getElementById("leaderboard-visibility-countdown");
+  const toolbarError = document.getElementById("leaderboard-toolbar-error");
+  const alwaysActions = document.getElementById("leaderboard-always-actions");
+  const alwaysVisibleSwitch = document.getElementById("leaderboard-always-visible");
+  const timedActions = document.getElementById("leaderboard-timed-actions");
+  const showButton = document.getElementById("leaderboard-show");
+  const showLabel = document.getElementById("leaderboard-show-label");
+  const pinButton = document.getElementById("leaderboard-pin");
+  const hideButton = document.getElementById("leaderboard-hide");
 
   let messages = [];
   let socket = null;
   let reconnectTimer = null;
   let reconnectDelayMs = INITIAL_RECONNECT_MS;
   let shouldRun = true;
+  let visibilitySnapshot = null;
+  let visibilityDisplaySeconds = 15;
+  const visibilityActionsInFlight = new Set();
+  let presetRequestInFlight = false;
   let previewSettings = {
     enabled: false,
     allowed_hosts: [],
@@ -39,6 +60,15 @@ import { setLocale, t } from "/shared/i18n.js?v=17";
     if (emptyState) {
       emptyState.textContent = t("dock.waiting");
     }
+    document.querySelectorAll("[data-i18n]").forEach(function (element) {
+      const key = element.getAttribute("data-i18n");
+      if (key) {
+        element.textContent = t(key);
+      }
+    });
+    presetSelect?.setAttribute("aria-label", t("dock.preset"));
+    renderVisibilityStatus();
+    renderVisibilityControls();
   }
 
   function refreshTimeLocale(locale) {
@@ -50,6 +80,193 @@ import { setLocale, t } from "/shared/i18n.js?v=17";
   let timeLocale = "ru-RU";
   applyDockLocale(timeLocale);
   let timeFormatter = createTimeFormatter(timeLocale);
+
+  function showToolbarError(message) {
+    if (!toolbarError) {
+      return;
+    }
+    toolbarError.textContent = message || "";
+    toolbarError.hidden = !message;
+  }
+
+  function setNodeText(node, value) {
+    if (node && node.textContent !== value) {
+      node.textContent = value;
+    }
+  }
+
+  function renderVisibilityStatus() {
+    if (!visibilityStatus) {
+      return;
+    }
+    if (!visibilitySnapshot) {
+      setNodeText(visibilityStatus, t("dock.visibilityUnavailable"));
+      if (visibilityCountdown) {
+        setNodeText(visibilityCountdown, "");
+      }
+      return;
+    }
+    if (visibilitySnapshot.state === "pinned") {
+      setNodeText(visibilityStatus, t(visibilitySnapshot.policy === "always"
+        ? "dock.visibilityAlways"
+        : "dock.visibilityPinned"));
+      if (visibilityCountdown) {
+        setNodeText(visibilityCountdown, "");
+        visibilityCountdown.removeAttribute("aria-label");
+      }
+      return;
+    }
+    if (visibilitySnapshot.state === "timed") {
+      const seconds = visibilitySecondsRemaining(visibilitySnapshot, Date.now());
+      setNodeText(visibilityStatus, t("dock.visibilityTimed"));
+      if (visibilityCountdown) {
+        setNodeText(visibilityCountdown, " · " + t("dock.secondsRemaining", { seconds: seconds }));
+        visibilityCountdown.setAttribute("aria-label", t("dock.secondsRemaining", { seconds: seconds }));
+      }
+      return;
+    }
+    setNodeText(visibilityStatus, t("dock.visibilityHidden"));
+    if (visibilityCountdown) {
+      setNodeText(visibilityCountdown, "");
+      visibilityCountdown.removeAttribute("aria-label");
+    }
+  }
+
+  function renderVisibilityControls() {
+    const controls = visibilityControlState(visibilitySnapshot, visibilityDisplaySeconds);
+    const available = visibilitySnapshot !== null;
+    const alwaysMode = controls.mode === "always";
+
+    if (alwaysActions) {
+      alwaysActions.hidden = !alwaysMode;
+    }
+    if (timedActions) {
+      timedActions.hidden = alwaysMode;
+    }
+    if (alwaysVisibleSwitch) {
+      alwaysVisibleSwitch.checked = controls.alwaysChecked;
+      alwaysVisibleSwitch.disabled = !available ||
+        visibilityActionsInFlight.has("hide") || visibilityActionsInFlight.has("resume");
+      alwaysVisibleSwitch.setAttribute("aria-busy", alwaysVisibleSwitch.disabled && available ? "true" : "false");
+    }
+    setNodeText(showLabel, t("dock.showFor", { seconds: controls.displaySeconds }));
+    if (showButton) {
+      showButton.disabled = !available || controls.showDisabled || visibilityActionsInFlight.has("show");
+      showButton.setAttribute("aria-busy", visibilityActionsInFlight.has("show") ? "true" : "false");
+    }
+    if (pinButton) {
+      const pinBusy = visibilityActionsInFlight.has("pin") || visibilityActionsInFlight.has("resume");
+      pinButton.disabled = !available || pinBusy;
+      pinButton.setAttribute("aria-pressed", controls.pinPressed ? "true" : "false");
+      pinButton.setAttribute("aria-busy", pinBusy ? "true" : "false");
+    }
+    if (hideButton) {
+      hideButton.disabled = !available || controls.hideDisabled || visibilityActionsInFlight.has("hide");
+      hideButton.setAttribute("aria-busy", visibilityActionsInFlight.has("hide") ? "true" : "false");
+    }
+  }
+
+  function setVisibilitySnapshot(value) {
+    const next = normalizeVisibilitySnapshot(value);
+    if (!next) {
+      return;
+    }
+    visibilitySnapshot = next;
+    renderVisibilityStatus();
+    renderVisibilityControls();
+  }
+
+  function setVisibilityBusy(action, busy) {
+    if (busy) {
+      visibilityActionsInFlight.add(action);
+    } else {
+      visibilityActionsInFlight.delete(action);
+    }
+    renderVisibilityControls();
+  }
+
+  async function loadVisibility() {
+    try {
+      const response = await fetch("/api/leaderboard/visibility", { headers: { Accept: "application/json" } });
+      if (!response.ok) {
+        throw new Error("visibility unavailable");
+      }
+      setVisibilitySnapshot(await response.json());
+      showToolbarError("");
+    } catch {
+      renderVisibilityStatus();
+    }
+  }
+
+  async function runVisibilityAction(action) {
+    if (visibilityActionsInFlight.has(action)) {
+      return;
+    }
+    setVisibilityBusy(action, true);
+    showToolbarError("");
+    try {
+      const response = await fetch("/api/leaderboard/" + action, {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: "{}",
+      });
+      if (!response.ok) {
+        throw new Error("action failed");
+      }
+      setVisibilitySnapshot(await response.json());
+    } catch {
+      showToolbarError(t("dock.actionFailed"));
+    } finally {
+      setVisibilityBusy(action, false);
+    }
+  }
+
+  function renderPresets(config) {
+    if (!presetSelect) {
+      return;
+    }
+    const options = presetOptions(config);
+    presetSelect.textContent = "";
+    options.presets.forEach(function (preset) {
+      const option = document.createElement("option");
+      option.value = preset.id;
+      option.textContent = preset.name;
+      presetSelect.append(option);
+    });
+    presetSelect.value = options.activeId;
+    presetSelect.disabled = presetRequestInFlight || options.presets.length === 0;
+    const duration = config && config.leaderboard_visibility && config.leaderboard_visibility.display_seconds;
+    visibilityDisplaySeconds = Number.isInteger(duration) ? duration : 15;
+    renderVisibilityControls();
+  }
+
+  async function activatePreset(presetId) {
+    if (!presetSelect || presetRequestInFlight || presetId === "") {
+      return;
+    }
+    presetRequestInFlight = true;
+    presetSelect.disabled = true;
+    presetSelect.setAttribute("aria-busy", "true");
+    showToolbarError("");
+    try {
+      const response = await fetch("/api/overlay/activate", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ preset_id: presetId }),
+      });
+      if (!response.ok) {
+        throw new Error("preset failed");
+      }
+      renderPresets(await response.json());
+    } catch {
+      showToolbarError(t("dock.presetFailed"));
+      await loadDisplaySettings();
+    } finally {
+      presetRequestInFlight = false;
+      presetSelect.disabled = presetSelect.options.length === 0;
+      presetSelect.setAttribute("aria-busy", "false");
+    }
+  }
 
   function imagePreviewHostAllowed(hostname) {
     const host = hostname.trim().toLowerCase();
@@ -312,6 +529,7 @@ import { setLocale, t } from "/shared/i18n.js?v=17";
         return;
       }
       const payload = await response.json();
+      renderPresets(payload);
       const settings = payload && payload.overlay && payload.overlay.image_previews;
       if (settings && typeof settings === "object") {
         previewSettings = settings;
@@ -356,6 +574,7 @@ import { setLocale, t } from "/shared/i18n.js?v=17";
     nextSocket.addEventListener("open", function () {
       reconnectDelayMs = INITIAL_RECONNECT_MS;
       loadRecentMessages();
+      loadVisibility();
     });
     nextSocket.addEventListener("message", function (event) {
       try {
@@ -364,6 +583,10 @@ import { setLocale, t } from "/shared/i18n.js?v=17";
           removeMessage(wire.platform, wire.id);
         } else if (wire && wire.type === "message") {
           mergeMessages([wireToMessage(wire)]);
+        } else if (wire && wire.type === "leaderboard_visibility") {
+          setVisibilitySnapshot(wire);
+        } else if (wire && wire.type === "overlay_settings") {
+          loadDisplaySettings();
         }
       } catch {
         /* Ignore malformed frames and keep listening. */
@@ -388,5 +611,25 @@ import { setLocale, t } from "/shared/i18n.js?v=17";
     }
   });
 
+  alwaysVisibleSwitch?.addEventListener("change", function () {
+    const controls = visibilityControlState(visibilitySnapshot, visibilityDisplaySeconds);
+    alwaysVisibleSwitch.checked = controls.alwaysChecked;
+    runVisibilityAction(controls.alwaysAction);
+  });
+  showButton?.addEventListener("click", function () {
+    runVisibilityAction("show");
+  });
+  pinButton?.addEventListener("click", function () {
+    const controls = visibilityControlState(visibilitySnapshot, visibilityDisplaySeconds);
+    runVisibilityAction(controls.pinAction);
+  });
+  hideButton?.addEventListener("click", function () {
+    runVisibilityAction("hide");
+  });
+  presetSelect?.addEventListener("change", function () {
+    activatePreset(presetSelect.value);
+  });
+  window.setInterval(renderVisibilityStatus, 1000);
+
   renderMessages(true);
-  Promise.all([loadDisplaySettings(), loadRecentMessages()]).finally(connectWebSocket);
+  Promise.all([loadDisplaySettings(), loadRecentMessages(), loadVisibility()]).finally(connectWebSocket);

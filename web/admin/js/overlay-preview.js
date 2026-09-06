@@ -208,22 +208,22 @@ export function buildOverlayPreviewURL(previewMode) {
         "layout",
         normalizeLeaderboardLayout(dom.overlayLeaderboardLayout && dom.overlayLeaderboardLayout.value)
       );
-      url.searchParams.set(
-        "font_size_px",
-        String(
-          overlayPreviewNumber(
-            dom.overlayLeaderboardFontSize,
-            OVERLAY_FONT_SIZE_MIN,
-            OVERLAY_FONT_SIZE_MAX,
-            overlayPreviewNumber(
-              dom.overlayFontSize,
-              OVERLAY_FONT_SIZE_MIN,
-              OVERLAY_FONT_SIZE_MAX,
-              typeof persistedOverlay.font_size_px === "number" ? persistedOverlay.font_size_px : 18
-            )
-          )
+      const sizingMode = dom.overlayLeaderboardSizingMode && dom.overlayLeaderboardSizingMode.value === "fixed"
+        ? "fixed"
+        : "auto";
+      const leaderboardFont = overlayPreviewNumber(
+        dom.overlayLeaderboardFontSize,
+        OVERLAY_FONT_SIZE_MIN,
+        OVERLAY_FONT_SIZE_MAX,
+        overlayPreviewNumber(
+          dom.overlayFontSize,
+          OVERLAY_FONT_SIZE_MIN,
+          OVERLAY_FONT_SIZE_MAX,
+          typeof persistedOverlay.font_size_px === "number" ? persistedOverlay.font_size_px : 18
         )
       );
+      url.searchParams.set("sizing_mode", sizingMode);
+      url.searchParams.set(sizingMode === "fixed" ? "font_size_px" : "base_font_size_px", String(leaderboardFont));
     } else {
       url.searchParams.set(
         "max_messages",

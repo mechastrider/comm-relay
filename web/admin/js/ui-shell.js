@@ -2,7 +2,7 @@ import * as dom from './dom.js';
 import { state } from './state.js';
 import { BANNER_SUCCESS_DISMISS_MS } from './constants.js';
 import { t } from './i18n-ui.js';
-import { translateFieldError } from '/shared/i18n.js?v=17';
+import { translateFieldError } from '/shared/i18n.js?v=18';
 
 function translateFieldErrorMessage(fieldKey, serverMessage) {
   return translateFieldError(fieldKey, serverMessage);
@@ -121,9 +121,10 @@ export function applyServerFieldErrors(fields) {
       if (typeof message !== "string" || message === "") {
         return;
       }
-      setFieldError(key, translateFieldErrorMessage(key, message));
-      if (!firstInvalid && dom.fieldInputs[key]) {
-        firstInvalid = dom.fieldInputs[key];
+      const fieldKey = normalizeServerFieldKey(key);
+      setFieldError(fieldKey, translateFieldErrorMessage(fieldKey, message));
+      if (!firstInvalid && dom.fieldInputs[fieldKey]) {
+        firstInvalid = dom.fieldInputs[fieldKey];
       }
     });
     return firstInvalid;
@@ -136,6 +137,11 @@ function restoreFieldHint(input) {
     return;
   }
   input.removeAttribute("aria-describedby");
+}
+
+export function normalizeServerFieldKey(key) {
+  const match = String(key || "").match(/^overlay_preset_\d+_surfaces_(leaderboard|alerts)_(.+)$/);
+  return match ? "overlay_" + match[1] + "_" + match[2] : key;
 }
 
 export function setFieldError(field, message) {

@@ -51,6 +51,21 @@ func (c *Config) validateFields() error {
 	if c.DayResetHour < 0 || c.DayResetHour > 23 {
 		fields["day_reset_hour"] = "Day reset hour must be between 0 and 23."
 	}
+	switch c.LeaderboardVisibility.Policy {
+	case LeaderboardVisibilityPolicyAlways, LeaderboardVisibilityPolicyAutomatic, LeaderboardVisibilityPolicyOnRequest:
+	default:
+		fields["leaderboard_visibility_policy"] = "Choose always, automatic, or on request."
+	}
+	if c.LeaderboardVisibility.DisplaySeconds < 5 || c.LeaderboardVisibility.DisplaySeconds > 60 {
+		fields["leaderboard_visibility_display_seconds"] = "Display duration must be between 5 and 60 seconds."
+	}
+	if c.LeaderboardVisibility.CooldownSeconds < 0 || c.LeaderboardVisibility.CooldownSeconds > 3600 {
+		fields["leaderboard_visibility_cooldown_seconds"] = "Cooldown must be between 0 and 3600 seconds."
+	}
+	dirtyInterval := c.LeaderboardVisibility.DirtyIntervalSeconds
+	if dirtyInterval != 0 && (dirtyInterval < 60 || dirtyInterval > 3600) {
+		fields["leaderboard_visibility_dirty_interval_seconds"] = "Dirty interval must be 0 or between 60 and 3600 seconds."
+	}
 	if c.Overlay.MaxMessages < 1 {
 		fields["overlay_max_messages"] = "Enter at least 1 message."
 	}

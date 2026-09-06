@@ -10,6 +10,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -21,6 +22,7 @@ type ViewerIngest struct {
 	matcher      *command.Matcher
 	hub          *Hub
 	avatarWorker AvatarCacheEnqueuer
+	visibility   *leaderboard.Controller
 }
 
 // AvatarCacheEnqueuer schedules asynchronous portrait cache fetches.
@@ -36,6 +38,7 @@ func newViewerIngest(
 	matcher *command.Matcher,
 	hub *Hub,
 	avatarWorker AvatarCacheEnqueuer,
+	visibility *leaderboard.Controller,
 ) *ViewerIngest {
 	return &ViewerIngest{
 		viewerStore:  viewerStore,
@@ -44,6 +47,7 @@ func newViewerIngest(
 		matcher:      matcher,
 		hub:          hub,
 		avatarWorker: avatarWorker,
+		visibility:   visibility,
 	}
 }
 
@@ -96,7 +100,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		now = time.Now()
 	}
 
-	replacedCache, err := v.viewerStore.ApplyChatResult(store.ChatIdentity{
+	result, err := v.viewerStore.ApplyChatMutationResult(store.ChatIdentity{
 		Platform:    msg.Platform,
 		UserID:      msg.UserID,
 		Username:    msg.Username,
@@ -109,14 +113,21 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	}
 
 	if v.avatarWorker != nil {
-		if replacedCache != "" {
-			v.avatarWorker.DeleteOrphanedCache(replacedCache)
+		if result.ReplacedAvatarCache != "" {
+			v.avatarWorker.DeleteOrphanedCache(result.ReplacedAvatarCache)
 		}
 		v.avatarWorker.Enqueue(msg.Platform, msg.UserID)
 	}
 
 	if v.publisher != nil {
 		v.publisher.Schedule()
+	}
+	if result.XPChanged && v.visibility != nil {
+		if result.MeaningfulRankChange {
+			v.visibility.SubmitTrigger(leaderboard.ReasonRankChange)
+		} else {
+			v.visibility.MarkDirty()
+		}
 	}
 
 	if matchedCmd == nil || v.matcher == nil {
@@ -141,6 +152,16 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	}
 	if err := v.viewerStore.AppendInteractionEvent(event); err != nil {
 		clog.Errorf(ctx, "append command interaction event: %w", err)
+	}
+	if matchedCmd.Action == store.CommandActionShowLeaderboard {
+		if v.visibility == nil {
+			clog.Errorf(ctx, "show leaderboard command: visibility controller unavailable")
+			return
+		}
+		if _, err := v.visibility.Request(ctx, leaderboard.ReasonCommand); err != nil {
+			clog.Errorf(ctx, "show leaderboard command: %w", err)
+		}
+		return
 	}
 
 	if v.hub != nil {

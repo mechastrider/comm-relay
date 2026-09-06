@@ -10,6 +10,18 @@ import {
   overlayAssetURL,
 } from "../overlay-settings.js?v=8";
 import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.js?v=1";
+import {
+  completeRowsThatFit,
+  fontSizeToFitFirstRow,
+  isCompactLeaderboard,
+  isLeaderboardSamplePreview,
+  leaderboardFontSizeForWidth,
+  shouldRenderMessageCount,
+} from "./leaderboard-fit.js?v=1";
+import {
+  isProductionLeaderboard,
+  parseLeaderboardVisibility,
+} from "./leaderboard-visibility.js?v=1";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;
@@ -42,8 +54,9 @@ const SAMPLE_ENTRIES = [
 const root = document.getElementById("leaderboard");
 const params = new URLSearchParams(window.location.search);
 const previewEnabled = params.has("preview");
-const samplePreviewEnabled = previewEnabled;
+const samplePreviewEnabled = isLeaderboardSamplePreview(params);
 const debugTestEnabled = isOverlayDebugPage(window.location);
+const productionVisibilityEnabled = isProductionLeaderboard({ previewEnabled, debugTestEnabled });
 
 function maxEntriesCap() {
   const cap = overlayView.max_entries;
@@ -86,6 +99,30 @@ let socket = null;
 let reconnectTimer = null;
 let reconnectDelayMs = INITIAL_RECONNECT_MS;
 let shouldRun = true;
+let latestEntries = [];
+let layoutFrame = null;
+let resizeObserver = null;
+let visibleRowCount = 0;
+const responsiveSizingAvailable = typeof ResizeObserver === "function";
+
+function applyLeaderboardVisibility(frame) {
+  if (!productionVisibilityEnabled) {
+    return;
+  }
+  const visibility = parseLeaderboardVisibility(frame);
+  if (!visibility) {
+    return;
+  }
+  document.body.classList.remove("leaderboard-visibility--pending");
+  document.body.classList.toggle("leaderboard-visibility--hidden", !visibility.visible);
+  document.body.classList.toggle("leaderboard-visibility--timed", visibility.state === "timed");
+  document.body.classList.toggle("leaderboard-visibility--pinned", visibility.state === "pinned");
+  if (root) {
+    root.setAttribute("aria-hidden", visibility.visible ? "false" : "true");
+    root.dataset.visibilityState = visibility.state;
+    root.dataset.visibilityReason = visibility.reason;
+  }
+}
 
 function wsURL() {
   return overlayWebSocketURL(window.location);
@@ -97,10 +134,7 @@ function escapeText(value) {
 
 function applyAppearance() {
   const style = overlayView.style || {};
-  const fontSize = overlayView.font_size_px;
-  const size =
-    fontSize >= OVERLAY_FONT_SIZE_MIN && fontSize <= OVERLAY_FONT_SIZE_MAX ? fontSize : 18;
-  document.documentElement.style.setProperty("--overlay-font-size", String(size) + "px");
+  document.documentElement.style.setProperty("--overlay-font-size", resolvedBaseFontSize() + "px");
   document.documentElement.style.setProperty(
     "--overlay-line-height",
     String(style.line_height || 1.35)
@@ -180,6 +214,12 @@ function applyAppearance() {
     document.body.classList.add(previewClass);
   }
   renderTitle();
+  scheduleLayout();
+}
+
+function resolvedBaseFontSize() {
+  const fontSize = overlayView.font_size_px;
+  return fontSize >= OVERLAY_FONT_SIZE_MIN && fontSize <= OVERLAY_FONT_SIZE_MAX ? fontSize : 18;
 }
 
 function renderTitle() {
@@ -202,6 +242,120 @@ function renderTitle() {
   heading.textContent = title;
 }
 
+function localizedMessageCount(value) {
+  const count = Number(value) || 0;
+  const locale = String(navigator.language || document.documentElement.lang || "en").toLowerCase();
+  return locale.startsWith("ru") ? String(count) + " сообщ." : String(count) + " messages";
+}
+
+function setLeaderboardFontSize(fontSizePx) {
+  document.documentElement.style.setProperty("--leaderboard-font-size", String(fontSizePx) + "px");
+  document.documentElement.style.setProperty("--leaderboard-scale", String(fontSizePx / 18));
+}
+
+function numericStyle(style, property) {
+  const value = Number.parseFloat(style.getPropertyValue(property));
+  return Number.isFinite(value) ? value : 0;
+}
+
+function layoutRows(allowAutoShrink) {
+  if (!root) {
+    return;
+  }
+  const rows = Array.from(root.querySelectorAll(".leaderboard-row"));
+  rows.forEach(function (row) {
+    row.hidden = false;
+  });
+
+  const width = root.clientWidth || window.innerWidth;
+  const sizingMode = responsiveSizingAvailable ? overlayView.sizing_mode : "fixed";
+  const fontSize = leaderboardFontSizeForWidth({
+    sizingMode: sizingMode,
+    baseFontSizePx: resolvedBaseFontSize(),
+    width: width,
+    layout: overlayView.layout,
+  });
+  setLeaderboardFontSize(fontSize);
+
+  const compact = isCompactLeaderboard(width, fontSize);
+  document.body.classList.toggle("leaderboard-density--compact", compact);
+  document.body.classList.toggle(
+    "leaderboard-show-messages",
+    shouldRenderMessageCount(overlayView.show_message_count, compact)
+  );
+
+  const rootStyle = window.getComputedStyle(root);
+  const availableHeight = Math.max(
+    0,
+    root.clientHeight - numericStyle(rootStyle, "padding-top") - numericStyle(rootStyle, "padding-bottom")
+  );
+  const title = root.querySelector(".leaderboard-title");
+  let titleHeight = 0;
+  if (title) {
+    const titleStyle = window.getComputedStyle(title);
+    titleHeight = title.getBoundingClientRect().height + numericStyle(titleStyle, "margin-bottom");
+  }
+  const list = root.querySelector(".leaderboard-list");
+  const listStyle = list ? window.getComputedStyle(list) : null;
+  const rowGap = listStyle ? numericStyle(listStyle, "row-gap") : 0;
+  const rowHeights = rows.map(function (row) {
+    return row.getBoundingClientRect().height;
+  });
+  let count = completeRowsThatFit({
+    availableHeight: availableHeight,
+    titleHeight: titleHeight,
+    rowHeights: rowHeights,
+    rowGap: rowGap,
+    maxEntries: maxEntriesCap(),
+    previousCount: visibleRowCount,
+    hysteresisPx: 2,
+  });
+
+  if (allowAutoShrink && sizingMode === "auto" && count === 0 && rowHeights.length > 0) {
+    const smaller = fontSizeToFitFirstRow({
+      sizingMode: "auto",
+      fontSizePx: fontSize,
+      availableHeight: availableHeight,
+      requiredHeight: titleHeight + rowHeights[0],
+    });
+    if (smaller < fontSize) {
+      setLeaderboardFontSize(smaller);
+      const adjustedTitleHeight = title
+        ? title.getBoundingClientRect().height + numericStyle(window.getComputedStyle(title), "margin-bottom")
+        : 0;
+      const adjustedRowHeights = rows.map(function (row) {
+        return row.getBoundingClientRect().height;
+      });
+      count = completeRowsThatFit({
+        availableHeight: availableHeight,
+        titleHeight: adjustedTitleHeight,
+        rowHeights: adjustedRowHeights,
+        rowGap: list ? numericStyle(window.getComputedStyle(list), "row-gap") : 0,
+        maxEntries: maxEntriesCap(),
+        previousCount: visibleRowCount,
+        hysteresisPx: 2,
+      });
+    }
+  }
+
+  visibleRowCount = count;
+  rows.forEach(function (row, index) {
+    row.hidden = index >= count;
+  });
+  root.dataset.visibleRows = String(count);
+  root.dataset.sizingMode = sizingMode;
+}
+
+function scheduleLayout() {
+  if (layoutFrame !== null) {
+    return;
+  }
+  layoutFrame = window.requestAnimationFrame(function () {
+    layoutFrame = null;
+    layoutRows(true);
+  });
+}
+
 function applyServerOverlayConfig(serverOverlay) {
   if (!serverOverlay || typeof serverOverlay !== "object") {
     return;
@@ -215,6 +369,7 @@ function renderEntries(entries) {
     return;
   }
 
+  latestEntries = entriesForDisplay(entries);
   renderTitle();
   const existingList = root.querySelector(".leaderboard-list");
   if (existingList) {
@@ -223,7 +378,7 @@ function renderEntries(entries) {
   const list = document.createElement("ol");
   list.className = "leaderboard-list";
 
-  entriesForDisplay(entries).forEach(function (entry) {
+  latestEntries.forEach(function (entry) {
     const item = document.createElement("li");
     item.className = "leaderboard-row";
 
@@ -231,37 +386,41 @@ function renderEntries(entries) {
     rank.className = "leaderboard-rank";
     rank.textContent = String(entry.rank || "");
 
-    const body = document.createElement("div");
-    body.className = "leaderboard-body";
-
-    const nameRow = document.createElement("div");
-    nameRow.className = "leaderboard-name-row";
-
+    const avatar = document.createElement(entry.avatar_url ? "img" : "span");
+    avatar.className = "leaderboard-avatar";
     if (entry.avatar_url) {
-      const avatar = document.createElement("img");
-      avatar.className = "leaderboard-avatar";
       avatar.src = entry.avatar_url;
       avatar.alt = "";
       avatar.loading = "lazy";
       avatar.referrerPolicy = "no-referrer";
-      nameRow.append(avatar);
+    } else {
+      avatar.classList.add("leaderboard-avatar--placeholder");
+      avatar.setAttribute("aria-hidden", "true");
     }
+    item.append(avatar);
 
     const name = document.createElement("span");
     name.className = "leaderboard-name";
     name.textContent = escapeText(entry.display_name || "—");
-    nameRow.append(name);
 
-    const stats = document.createElement("span");
-    stats.className = "leaderboard-stats";
-    stats.textContent = String(entry.xp || 0) + " · " + String(entry.message_count || 0) + " msg";
+    const metrics = document.createElement("span");
+    metrics.className = "leaderboard-metrics";
 
-    body.append(nameRow, stats);
-    item.append(rank, body);
+    const xp = document.createElement("span");
+    xp.className = "leaderboard-xp";
+    xp.textContent = String(entry.xp || 0) + " XP";
+
+    const messages = document.createElement("span");
+    messages.className = "leaderboard-messages";
+    messages.textContent = localizedMessageCount(entry.message_count);
+
+    metrics.append(xp, messages);
+    item.append(rank, name, metrics);
     list.append(item);
   });
 
   root.append(list);
+  scheduleLayout();
 }
 
 async function loadSnapshot() {
@@ -300,7 +459,14 @@ function handleSocketMessage(event) {
     applyAppearance();
     if (samplePreviewEnabled) {
       renderEntries(sampleEntriesForCap(overlayView.max_entries));
+    } else {
+      renderEntries(latestEntries);
+      void loadSnapshot();
     }
+    return;
+  }
+  if (frame.type === "leaderboard_visibility") {
+    applyLeaderboardVisibility(frame);
     return;
   }
   if (samplePreviewEnabled) {
@@ -362,6 +528,16 @@ async function loadServerConfig() {
 }
 
 async function start() {
+  if (!productionVisibilityEnabled) {
+    document.body.classList.remove("leaderboard-visibility--pending", "leaderboard-visibility--hidden");
+  } else {
+    document.body.classList.add("leaderboard-visibility--hidden");
+  }
+  if (responsiveSizingAvailable && root) {
+    resizeObserver = new ResizeObserver(scheduleLayout);
+    resizeObserver.observe(root);
+  }
+  window.addEventListener("resize", scheduleLayout);
   await loadServerConfig();
   if (samplePreviewEnabled) {
     renderEntries(sampleEntriesForCap(overlayView.max_entries));
@@ -383,4 +559,11 @@ window.addEventListener("beforeunload", function () {
   if (socket) {
     socket.close();
   }
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+  }
+  if (layoutFrame !== null) {
+    window.cancelAnimationFrame(layoutFrame);
+  }
+  window.removeEventListener("resize", scheduleLayout);
 });

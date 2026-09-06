@@ -1,5 +1,5 @@
 import { appendText } from '/shared/chat-render.js?v=12';
-import { translatePlatformState } from '/shared/i18n.js?v=17';
+import { translatePlatformState } from '/shared/i18n.js?v=18';
 import * as dom from './dom.js';
 import { state } from './state.js';
 import { PROVIDER_LABELS } from './constants.js';

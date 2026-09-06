@@ -80,3 +80,32 @@ func TestApplyAward_WhenDuplicateGrants_ExpectCumulativeScore(t *testing.T) {
 	assert.Equal(t, 1, viewer.MessageCount)
 	assert.Equal(t, 61, viewer.XP)
 }
+
+func TestApplyAward_WhenXPChangesOutsideThenInsideTopThree_ExpectMeaningfulFlag(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Date(2026, 3, 15, 12, 0, 0, 0, time.UTC)
+	viewers := []struct {
+		id     string
+		points int
+	}{
+		{id: "one", points: 100},
+		{id: "two", points: 90},
+		{id: "three", points: 80},
+		{id: "four", points: 10},
+	}
+	for index, viewer := range viewers {
+		_, err := s.ApplyAward(store.ChatIdentity{
+			Platform: "twitch",
+			UserID:   viewer.id,
+		}, viewer.points, testDayResetHour, now.Add(time.Duration(index)*time.Second))
+		require.NoError(t, err)
+	}
+
+	lower, err := s.ApplyAward(store.ChatIdentity{Platform: "twitch", UserID: "four"}, 5, testDayResetHour, now.Add(time.Minute))
+	require.NoError(t, err)
+	require.False(t, lower.MeaningfulRankChange)
+
+	newLeader, err := s.ApplyAward(store.ChatIdentity{Platform: "twitch", UserID: "four"}, 100, testDayResetHour, now.Add(2*time.Minute))
+	require.NoError(t, err)
+	require.True(t, newLeader.MeaningfulRankChange)
+}

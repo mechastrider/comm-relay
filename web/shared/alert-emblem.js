@@ -6,6 +6,7 @@ const COMMAND_SYMBOLS = Object.freeze({
 });
 
 const AWARD_SYMBOLS = Object.freeze({
+  like: "thumbs-spark",
   joke: "joke",
   advice: "compass",
   spotter: "reticle",
@@ -29,6 +30,11 @@ const SYMBOL_SHAPES = Object.freeze({
   broadcast: [
     ["circle", { cx: "32", cy: "32", r: "4", fill: "currentColor", stroke: "none" }],
     ["path", { d: "M23 23a13 13 0 0 0 0 18M41 23a13 13 0 0 1 0 18M16 16a23 23 0 0 0 0 32M48 16a23 23 0 0 1 0 32" }],
+  ],
+  "thumbs-spark": [
+    ["path", { d: "M24 52h19c3 0 5-2 6-5l4-14c1-4-2-7-6-7H37v-9c0-3-2-5-5-5l-8 17Z" }],
+    ["rect", { x: "10", y: "28", width: "14", height: "25", rx: "3" }],
+    ["path", { d: "M50 7c0 5 3 8 8 8-5 0-8 3-8 8 0-5-3-8-8-8 5 0 8-3 8-8Z" }],
   ],
   joke: [
     ["path", { d: "M13 22c7-7 31-7 38 0l-3 21c-8 8-24 8-32 0Z" }],

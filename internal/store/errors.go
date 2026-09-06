@@ -15,6 +15,8 @@ var (
 	ErrDuplicateTrigger = errors.New("duplicate trigger")
 	// ErrInvalidTrigger is returned when a command trigger fails slug validation.
 	ErrInvalidTrigger = errors.New("invalid trigger")
+	// ErrInvalidCommandAction is returned when a command action is unsupported.
+	ErrInvalidCommandAction = errors.New("invalid command action")
 	// ErrInvalidPoints is returned when award points are below one.
 	ErrInvalidPoints = errors.New("invalid points")
 	// ErrInvalidIdentity is returned when platform or user_id is empty for award grants.

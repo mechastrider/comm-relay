@@ -29,6 +29,7 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 	gg, ok := triggers["gg"]
 	require.True(t, ok)
 	assert.Equal(t, "gg", gg.ID)
+	assert.Equal(t, store.CommandActionAlert, gg.Action)
 	assert.True(t, gg.Enabled)
 	assert.Equal(t, 30, gg.CooldownSeconds)
 	assert.Equal(t, "Good game, {viewer}!", gg.SplashTemplate)
@@ -42,12 +43,19 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 8)
+	require.Len(t, awards, 9)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
 		byID[award.ID] = award
 	}
+
+	like := byID["like"]
+	assert.Equal(t, "Streamer Like", like.Name)
+	assert.Equal(t, 5, like.Points)
+	assert.Equal(t, "Streamer Like for {viewer}! +{points}", like.SplashTemplate)
+	assert.Equal(t, "soft", like.Sound)
+	assert.Equal(t, 5000, like.DurationMs)
 
 	joke := byID["joke"]
 	assert.Equal(t, "Joke", joke.Name)
@@ -57,7 +65,7 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 
 	advice := byID["advice"]
 	assert.Equal(t, "Advice", advice.Name)
-	assert.Equal(t, 50, advice.Points)
+	assert.Equal(t, 25, advice.Points)
 	assert.Equal(t, "Advice for {viewer}! +{points}", advice.SplashTemplate)
 	assert.Equal(t, "alert", advice.Sound)
 
@@ -96,6 +104,55 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 	assert.Equal(t, 100, mvp.Points)
 	assert.Equal(t, "MVP for {viewer}! +{points}", mvp.SplashTemplate)
 	assert.Equal(t, "chime", mvp.Sound)
+}
+
+func TestCommands_WhenCreateShowLeaderboard_ExpectNoAlertPresentationRequired(t *testing.T) {
+	s, _ := openTestStore(t)
+
+	created, err := s.CreateCommand(store.CreateCommandInput{
+		Action:          store.CommandActionShowLeaderboard,
+		Trigger:         "leaderboard",
+		Enabled:         true,
+		CooldownSeconds: 180,
+	})
+	require.NoError(t, err)
+	require.Equal(t, store.CommandActionShowLeaderboard, created.Action)
+	require.Equal(t, "leaderboard", created.Trigger)
+	require.Equal(t, 180, created.CooldownSeconds)
+
+	loaded, err := s.GetCommand(created.ID)
+	require.NoError(t, err)
+	require.Equal(t, store.CommandActionShowLeaderboard, loaded.Action)
+}
+
+func TestCommands_WhenSwitchAlertToShowLeaderboard_ExpectPresentationRetained(t *testing.T) {
+	s, _ := openTestStore(t)
+	existing, err := s.GetCommand("gg")
+	require.NoError(t, err)
+
+	updated, err := s.UpdateCommand(store.UpdateCommandInput{
+		ID:              existing.ID,
+		Action:          store.CommandActionShowLeaderboard,
+		Trigger:         existing.Trigger,
+		Enabled:         existing.Enabled,
+		CooldownSeconds: existing.CooldownSeconds,
+	})
+	require.NoError(t, err)
+	require.Equal(t, store.CommandActionShowLeaderboard, updated.Action)
+	require.Equal(t, existing.SplashTemplate, updated.SplashTemplate)
+	require.Equal(t, existing.Sound, updated.Sound)
+	require.Equal(t, existing.DurationMs, updated.DurationMs)
+}
+
+func TestCommands_WhenActionInvalid_ExpectError(t *testing.T) {
+	s, _ := openTestStore(t)
+	_, err := s.CreateCommand(store.CreateCommandInput{
+		Action:          "launch_missiles",
+		Trigger:         "nope",
+		Enabled:         true,
+		CooldownSeconds: 0,
+	})
+	require.ErrorIs(t, err, store.ErrInvalidCommandAction)
 }
 
 func TestCommands_WhenDeleteSeedAndReopen_ExpectStillAbsent(t *testing.T) {

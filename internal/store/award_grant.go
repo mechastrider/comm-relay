@@ -10,10 +10,11 @@ import (
 
 // ApplyAwardResult holds viewer identity details after an XP-only award grant.
 type ApplyAwardResult struct {
-	ViewerID    string
-	Username    string
-	DisplayName string
-	AvatarURL   string
+	ViewerID             string
+	Username             string
+	DisplayName          string
+	AvatarURL            string
+	MeaningfulRankChange bool
 }
 
 // ApplyAward upserts the chat identity and adds points to all-time, session, and day XP.
@@ -45,6 +46,11 @@ func (s *Store) ApplyAward(identity ChatIdentity, points int, dayResetHour int, 
 	defer func() {
 		_ = tx.Rollback()
 	}()
+
+	beforeRanks, err := captureTopThree(tx, sessionID, dayKey)
+	if err != nil {
+		return nil, err
+	}
 
 	identity, err = s.mergeExistingIdentityLocked(tx, identity)
 	if err != nil {
@@ -84,15 +90,22 @@ func (s *Store) ApplyAward(identity ChatIdentity, points int, dayResetHour int, 
 		return nil, errors.Errorf("load viewer identity: %w", err)
 	}
 
+	afterRanks, err := captureTopThree(tx, sessionID, dayKey)
+	if err != nil {
+		return nil, err
+	}
+	meaningfulRankChange := topThreeChanged(beforeRanks, afterRanks)
+
 	if err := tx.Commit(); err != nil {
 		return nil, errors.Errorf("commit award grant: %w", err)
 	}
 
 	return &ApplyAwardResult{
-		ViewerID:    viewerID,
-		Username:    username,
-		DisplayName: displayName,
-		AvatarURL:   avatarURL,
+		ViewerID:             viewerID,
+		Username:             username,
+		DisplayName:          displayName,
+		AvatarURL:            avatarURL,
+		MeaningfulRankChange: meaningfulRankChange,
 	}, nil
 }
 

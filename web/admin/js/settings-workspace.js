@@ -24,6 +24,7 @@ import {
   validateSocks5Address,
   proxyRequired,
   loadStatus,
+  syncLeaderboardVisibilityControlsUI,
 } from "./settings.js";
 import { getMessageSoundSettings } from "./sound.js";
 import {
@@ -153,6 +154,26 @@ function collectSectionValuesFromDOM(sectionId) {
       streamer_display_name: dom.streamerDisplayNameInput
         ? dom.streamerDisplayNameInput.value.trim()
         : "",
+      leaderboard_visibility: {
+        policy: dom.leaderboardVisibilityPolicyInput
+          ? dom.leaderboardVisibilityPolicyInput.value
+          : "automatic",
+        display_seconds: dom.leaderboardVisibilityDisplaySecondsInput
+          ? Number.parseInt(dom.leaderboardVisibilityDisplaySecondsInput.value, 10)
+          : 15,
+        cooldown_seconds: dom.leaderboardVisibilityCooldownSecondsInput
+          ? Number.parseInt(dom.leaderboardVisibilityCooldownSecondsInput.value, 10)
+          : 300,
+        dirty_interval_seconds: dom.leaderboardVisibilityDirtyIntervalSecondsInput
+          ? Number.parseInt(dom.leaderboardVisibilityDirtyIntervalSecondsInput.value, 10)
+          : 900,
+        show_on_award: dom.leaderboardVisibilityShowOnAwardInput
+          ? dom.leaderboardVisibilityShowOnAwardInput.checked
+          : true,
+        show_on_rank_change: dom.leaderboardVisibilityShowOnRankChangeInput
+          ? dom.leaderboardVisibilityShowOnRankChangeInput.checked
+          : true,
+      },
     };
   }
 
@@ -177,6 +198,7 @@ function resetSectionBaseline(sectionId) {
   const config = state.currentConfig || {};
   sectionBaselines.set(sectionId, extractSectionValuesFromConfig(config, sectionId));
   sectionDrafts.delete(sectionId);
+  applySectionBaselineToDOM(sectionId);
   renderSectionChrome(sectionId);
 }
 
@@ -298,6 +320,31 @@ function applySectionValuesToDOM(sectionId, values) {
     if (dom.streamerDisplayNameInput) {
       dom.streamerDisplayNameInput.value = String(values.streamer_display_name || "");
     }
+    const visibility = /** @type {Record<string, unknown>} */ (
+      values.leaderboard_visibility || {}
+    );
+    if (dom.leaderboardVisibilityPolicyInput) {
+      dom.leaderboardVisibilityPolicyInput.value = String(visibility.policy || "automatic");
+    }
+    if (dom.leaderboardVisibilityDisplaySecondsInput) {
+      dom.leaderboardVisibilityDisplaySecondsInput.value = String(visibility.display_seconds ?? 15);
+    }
+    if (dom.leaderboardVisibilityCooldownSecondsInput) {
+      dom.leaderboardVisibilityCooldownSecondsInput.value = String(visibility.cooldown_seconds ?? 300);
+    }
+    if (dom.leaderboardVisibilityDirtyIntervalSecondsInput) {
+      dom.leaderboardVisibilityDirtyIntervalSecondsInput.value = String(
+        visibility.dirty_interval_seconds ?? 900
+      );
+    }
+    if (dom.leaderboardVisibilityShowOnAwardInput) {
+      dom.leaderboardVisibilityShowOnAwardInput.checked = visibility.show_on_award !== false;
+    }
+    if (dom.leaderboardVisibilityShowOnRankChangeInput) {
+      dom.leaderboardVisibilityShowOnRankChangeInput.checked =
+        visibility.show_on_rank_change !== false;
+    }
+    updateLeaderboardVisibilitySettingsUI();
     return;
   }
 
@@ -351,6 +398,10 @@ function applySectionValuesToDOM(sectionId, values) {
       typeof previews.max_per_message === "number" ? previews.max_per_message : 1
     );
   }
+}
+
+function updateLeaderboardVisibilitySettingsUI() {
+  syncLeaderboardVisibilityControlsUI();
 }
 
 /**
@@ -475,6 +526,25 @@ function validateSettingsSection(sectionId, payload) {
         "Streamer display name must be at most 64 characters."
       );
       firstInvalid = firstInvalid || dom.streamerDisplayNameInput;
+    }
+    const visibility = /** @type {Record<string, unknown>} */ (
+      payload.leaderboard_visibility || {}
+    );
+    if (!["always", "automatic", "on_request"].includes(String(visibility.policy))) {
+      setFieldError("leaderboard_visibility_policy", "Choose a visibility policy.");
+      firstInvalid = firstInvalid || dom.leaderboardVisibilityPolicyInput;
+    }
+    if (!Number.isFinite(visibility.display_seconds) || visibility.display_seconds < 5 || visibility.display_seconds > 60) {
+      setFieldError("leaderboard_visibility_display_seconds", "Display duration must be between 5 and 60 seconds.");
+      firstInvalid = firstInvalid || dom.leaderboardVisibilityDisplaySecondsInput;
+    }
+    if (!Number.isFinite(visibility.cooldown_seconds) || visibility.cooldown_seconds < 0 || visibility.cooldown_seconds > 3600) {
+      setFieldError("leaderboard_visibility_cooldown_seconds", "Cooldown must be between 0 and 3600 seconds.");
+      firstInvalid = firstInvalid || dom.leaderboardVisibilityCooldownSecondsInput;
+    }
+    if (!Number.isFinite(visibility.dirty_interval_seconds) || (visibility.dirty_interval_seconds !== 0 && (visibility.dirty_interval_seconds < 60 || visibility.dirty_interval_seconds > 3600))) {
+      setFieldError("leaderboard_visibility_dirty_interval_seconds", "Use 0 or a value between 60 and 3600 seconds.");
+      firstInvalid = firstInvalid || dom.leaderboardVisibilityDirtyIntervalSecondsInput;
     }
   }
 
@@ -849,12 +919,16 @@ function mountNetworkSection(mount) {
 
 function mountDataSection(mount) {
   const viewerStats = document.getElementById("viewer-stats-panel");
+  const leaderboardVisibility = document.getElementById("leaderboard-visibility-panel");
   if (!viewerStats) {
     return;
   }
   const wrapper = document.createElement("div");
   wrapper.className = "settings-section__body";
   wrapper.appendChild(viewerStats);
+  if (leaderboardVisibility) {
+    wrapper.appendChild(leaderboardVisibility);
+  }
   mountEditableSection("data", mount, wrapper);
 }
 
@@ -957,6 +1031,9 @@ function bindSectionInputHandlers() {
     notifySectionInput(sectionId);
     if (sectionId === "platforms" && event.target === dom.youtubeConnectionMode) {
       updateYouTubeConnectionModeUI();
+    }
+    if (sectionId === "data" && event.target === dom.leaderboardVisibilityPolicyInput) {
+      updateLeaderboardVisibilitySettingsUI();
     }
   });
 }
@@ -1068,6 +1145,7 @@ export function initSettingsWorkspace() {
   });
 
   window.addEventListener("admin-locale-applied", function () {
+    updateLeaderboardVisibilitySettingsUI();
     renderAllSectionChrome();
   });
 

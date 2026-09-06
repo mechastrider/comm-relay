@@ -43,11 +43,7 @@ func TestPrototypeSmoke_WhenMessagePublished_ExpectWebSocketAndRecentAPI(t *test
 	require.NoError(t, b.Publish(bus.ChatMessageReceived(msg)))
 
 	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
-	_, data, err := conn.ReadMessage()
-	require.NoError(t, err)
-
-	var frame map[string]any
-	require.NoError(t, json.Unmarshal(data, &frame))
+	frame := readWebSocketFrameSkippingLeaderboard(t, conn)
 	require.Equal(t, "message", frame["type"])
 	require.Equal(t, "twitch", frame["platform"])
 	require.Equal(t, "prototype-smoke-1", frame["id"])

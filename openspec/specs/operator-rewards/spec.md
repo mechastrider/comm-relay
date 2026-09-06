@@ -22,15 +22,19 @@ The system SHALL persist award types in local SQLite as a list separate from cha
 - **THEN** `GET /api/awards` returns those values and a later Joke grant plays that file at 50 percent
 
 ### Requirement: Locale-aware one-time starter awards
-On first initialization of a new local database, the system SHALL insert deletable starter award types with stable ids `joke` (10), `advice` (50), `spotter` (25), `intel` (30), `expert` (40), `meme` (20), `clutch` (50), and `mvp` (100). Display names and splash templates SHALL match the operator's configured `admin.time_locale` at initialization time (`ru-RU` or `en-GB`). Splash templates MUST include `{viewer}` and `{points}`. Award ids MUST remain stable across locales. After initialization completes, the catalog MUST be treated as ordinary user-owned data: changing `admin.time_locale`, editing rows, deleting seeds, or leaving an empty catalog MUST NOT cause automatic translation, restoration, or re-insertion. Existing databases that already contained starter awards before this behavior shipped MUST be adopted without modifying any award fields.
+On first initialization of a new local database, the system SHALL insert deletable starter award types with stable ids `like` (5), `joke` (10), `advice` (25), `spotter` (25), `intel` (30), `expert` (40), `meme` (20), `clutch` (50), and `mvp` (100). The `like` award SHALL be named `Лайк от стримера` for `ru-RU` and `Streamer Like` for `en-GB`. All display names and splash templates SHALL match the operator's configured `admin.time_locale` at initialization time (`ru-RU` or `en-GB`). Splash templates MUST include `{viewer}` and `{points}`. Award ids MUST remain stable across locales. After initialization completes, the catalog MUST be treated as ordinary user-owned data: changing `admin.time_locale`, editing rows, deleting seeds, or leaving an empty catalog MUST NOT cause automatic translation, restoration, re-insertion, or points changes. Existing databases that already contained starter awards before this behavior shipped MUST be adopted without adding `like` or modifying any award fields.
 
 #### Scenario: Fresh Russian database
 - **WHEN** CommRelay opens a new database while `admin.time_locale` is `ru-RU`
-- **THEN** all eight starter awards exist with Russian display names and splash templates and are deletable
+- **THEN** all nine starter awards exist with Russian display names and splash templates and are deletable
+- **AND** `like` is named `Лайк от стримера`, grants 5 points, uses the `soft` sound, and displays for 5000 milliseconds
+- **AND** `advice` grants 25 points
 
 #### Scenario: Fresh English database
 - **WHEN** CommRelay opens a new database while `admin.time_locale` is `en-GB`
-- **THEN** all eight starter awards exist with the existing English display names and splash templates
+- **THEN** all nine starter awards exist with English display names and splash templates
+- **AND** `like` is named `Streamer Like`, grants 5 points, uses the `soft` sound, and displays for 5000 milliseconds
+- **AND** `advice` grants 25 points
 
 #### Scenario: Delete seed
 - **WHEN** the operator deletes the seeded Joke award
@@ -43,6 +47,7 @@ On first initialization of a new local database, the system SHALL insert deletab
 #### Scenario: Existing database adoption
 - **WHEN** CommRelay upgrades an installation that already had migration-era starter awards
 - **THEN** award ids, names, points, and splash templates are unchanged
+- **AND** the `like` award is not inserted automatically
 
 #### Scenario: Existing database has no bootstrap marker
 - **WHEN** CommRelay opens an already migrated database without starter-catalog bootstrap metadata
@@ -91,8 +96,8 @@ On first initialization of a new local database, the system SHALL insert deletab
 The system MUST NOT reject a second grant because the same message `id` was already rewarded. Each successful grant SHALL add XP and enqueue another alert.
 
 #### Scenario: Joke then advice
-- **WHEN** the operator grants Joke and then Advice on the same message
-- **THEN** XP increases by 10 then by 50 and two alerts are queued in order
+- **WHEN** the operator grants the fresh-catalog Joke and then Advice on the same message
+- **THEN** XP increases by 10 then by 25 and two alerts are queued in order
 
 ### Requirement: Reward controls appear on lines with a stable identity
 Admin Live messages and `/dock/messages` SHALL offer a Reward control when the line has a non-empty `platform` and `user_id`. The control SHALL open a short picker of award types (not one button per type on the row). Choosing a type SHALL call `POST /api/awards/grant`. Lines without `user_id` MUST NOT show Reward. The dock MUST NOT offer command or award catalog editing.

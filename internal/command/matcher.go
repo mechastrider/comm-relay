@@ -73,7 +73,7 @@ func (m *Matcher) Lookup(line string) (*store.Command, bool) {
 	return nil, false
 }
 
-// TryFire consumes cooldown and returns true when the command may fire an alert.
+// TryFire consumes cooldown and returns true when the command may perform its configured action.
 func (m *Matcher) TryFire(platform, userID string, cmd *store.Command) bool {
 	if m == nil || cmd == nil {
 		return false

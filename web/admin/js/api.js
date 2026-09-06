@@ -1,4 +1,4 @@
-import { t } from "/shared/i18n.js?v=17";
+import { t } from "/shared/i18n.js?v=18";
 
 export function apiURL(path) {
   return window.location.origin + path;

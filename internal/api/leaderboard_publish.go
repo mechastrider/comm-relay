@@ -11,6 +11,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -89,8 +90,9 @@ func NewViewerIngest(
 	matcher *command.Matcher,
 	hub *Hub,
 	avatarWorker AvatarCacheEnqueuer,
+	visibility *leaderboard.Controller,
 ) *ViewerIngest {
-	return newViewerIngest(viewerStore, cfgStore, publisher, matcher, hub, avatarWorker)
+	return newViewerIngest(viewerStore, cfgStore, publisher, matcher, hub, avatarWorker, visibility)
 }
 
 // Schedule debounces leaderboard broadcasts.

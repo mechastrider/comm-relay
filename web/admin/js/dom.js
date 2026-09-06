@@ -70,9 +70,12 @@ export const overlayPreviewOverflowPanel = document.getElementById("overlay-prev
 export const overlayChatFields = document.getElementById("overlay-chat-fields");
 export const overlayLeaderboardFields = document.getElementById("overlay-leaderboard-fields");
 export const overlayLeaderboardFontSize = document.getElementById("overlay-leaderboard-font-size");
+export const overlayLeaderboardSizingMode = document.getElementById("overlay-leaderboard-sizing-mode");
+export const overlayLeaderboardFixedField = document.getElementById("overlay-leaderboard-fixed-field");
+export const overlayLeaderboardTitleMode = document.getElementById("overlay-leaderboard-title-mode");
+export const overlayLeaderboardCustomTitleField = document.getElementById("overlay-leaderboard-custom-title-field");
 export const overlayLeaderboardTitle = document.getElementById("overlay-leaderboard-title");
-export const overlayLeaderboardMaxEntries = document.getElementById("overlay-leaderboard-max-entries");
-export const overlayLeaderboardTitleAll = document.getElementById("overlay-leaderboard-title-all");
+export const overlayLeaderboardShowMessageCount = document.getElementById("overlay-leaderboard-show-message-count");
 export const overlayLeaderboardMaxEntriesAll = document.getElementById("overlay-leaderboard-max-entries-all");
 export const overlayLeaderboardLayout = document.getElementById("overlay-leaderboard-layout");
 export const overlayLeaderboardPeriod = document.getElementById("overlay-leaderboard-period");
@@ -81,7 +84,7 @@ export const overlayDurationChips = document.getElementById("overlay-duration-ch
 export const studioEssentialFontChat = document.getElementById("studio-essential-font-chat");
 export const studioEssentialFontLeaderboard = document.getElementById("studio-essential-font-leaderboard");
 export const studioEssentialLeaderboardTitle = document.getElementById("studio-essential-leaderboard-title");
-export const studioEssentialLeaderboardMaxEntries = document.getElementById("studio-essential-leaderboard-max-entries");
+export const studioEssentialLeaderboardMessages = document.getElementById("studio-essential-leaderboard-messages");
 export const studioEssentialFontAlerts = document.getElementById("studio-essential-font-alerts");
 export const studioEssentialDuration = document.getElementById("studio-essential-duration");
 export const studioEssentialPeriod = document.getElementById("studio-essential-period");
@@ -247,6 +250,10 @@ export const commandsDeleteButton = document.getElementById("commands-delete-but
 export const commandTriggerInput = document.getElementById("command-trigger-input");
 export const commandTriggerError = document.getElementById("command-trigger-error");
 export const commandEnabledInput = document.getElementById("command-enabled-input");
+export const commandActionInput = document.getElementById("command-action-input");
+export const commandActionHint = document.getElementById("command-action-hint");
+export const commandActionError = document.getElementById("command-action-error");
+export const commandAlertFields = document.getElementById("command-alert-fields");
 export const commandCooldownInput = document.getElementById("command-cooldown-input");
 export const commandSplashInput = document.getElementById("command-splash-input");
 export const commandSplashVars = document.getElementById("command-splash-vars");
@@ -330,6 +337,13 @@ export const hideCommandMessagesInput = document.getElementById("hide-command-me
 export const customAvatarsEnabledInput = document.getElementById("custom-avatars-enabled");
 export const streamerDisplayNameInput = document.getElementById("streamer-display-name");
 export const dayResetHourInput = document.getElementById("day-reset-hour");
+export const leaderboardVisibilityPolicyInput = document.getElementById("leaderboard-visibility-policy");
+export const leaderboardVisibilityPolicyHint = document.getElementById("leaderboard-visibility-policy-hint");
+export const leaderboardVisibilityDisplaySecondsInput = document.getElementById("leaderboard-visibility-display-seconds");
+export const leaderboardVisibilityCooldownSecondsInput = document.getElementById("leaderboard-visibility-cooldown-seconds");
+export const leaderboardVisibilityDirtyIntervalSecondsInput = document.getElementById("leaderboard-visibility-dirty-interval-seconds");
+export const leaderboardVisibilityShowOnAwardInput = document.getElementById("leaderboard-visibility-show-on-award");
+export const leaderboardVisibilityShowOnRankChangeInput = document.getElementById("leaderboard-visibility-show-on-rank-change");
 export const messageSoundEnabledInput = document.getElementById("message-sound-enabled");
 export const messageSoundVolumeInput = document.getElementById("message-sound-volume");
 export const messageSoundVolumeLabel = document.getElementById("message-sound-volume-label");
@@ -356,6 +370,8 @@ export const fieldErrors = {
     overlay_message_ttl_seconds: document.getElementById("overlay-message-ttl-error"),
     overlay_font_size_px: document.getElementById("overlay-font-size-error"),
     overlay_leaderboard_font_size_px: document.getElementById("overlay-leaderboard-font-size-error"),
+    overlay_leaderboard_sizing_mode: document.getElementById("overlay-leaderboard-sizing-mode-error"),
+    overlay_leaderboard_title_mode: document.getElementById("overlay-leaderboard-title-mode-error"),
     overlay_leaderboard_title: document.getElementById("overlay-leaderboard-title-error"),
     overlay_leaderboard_max_entries: document.getElementById("overlay-leaderboard-max-entries-error"),
     overlay_alerts_font_size_px: document.getElementById("overlay-alerts-font-size-error"),
@@ -373,6 +389,10 @@ export const fieldErrors = {
     activity_interval_seconds: document.getElementById("activity-interval-seconds-error"),
     activity_session_limit: document.getElementById("activity-session-limit-error"),
     activity_xp: document.getElementById("activity-xp-error"),
+    leaderboard_visibility_policy: document.getElementById("leaderboard-visibility-policy-error"),
+    leaderboard_visibility_display_seconds: document.getElementById("leaderboard-visibility-display-seconds-error"),
+    leaderboard_visibility_cooldown_seconds: document.getElementById("leaderboard-visibility-cooldown-seconds-error"),
+    leaderboard_visibility_dirty_interval_seconds: document.getElementById("leaderboard-visibility-dirty-interval-seconds-error"),
     day_reset_hour: document.getElementById("day-reset-hour-error"),
     streamer_display_name: document.getElementById("streamer-display-name-error"),
   };
@@ -388,8 +408,10 @@ export const fieldInputs = {
     overlay_message_ttl_seconds: overlayMessageTTL,
     overlay_font_size_px: overlayFontSize,
     overlay_leaderboard_font_size_px: overlayLeaderboardFontSize,
+    overlay_leaderboard_sizing_mode: overlayLeaderboardSizingMode,
+    overlay_leaderboard_title_mode: overlayLeaderboardTitleMode,
     overlay_leaderboard_title: overlayLeaderboardTitle,
-    overlay_leaderboard_max_entries: overlayLeaderboardMaxEntries,
+    overlay_leaderboard_max_entries: overlayLeaderboardMaxEntriesAll,
     overlay_alerts_font_size_px: overlayAlertsFontSize,
     overlay_alerts_image_size_pct: overlayAlertsImageSize,
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity"),

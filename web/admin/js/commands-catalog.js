@@ -12,6 +12,11 @@ import {
   renderSplashPreview,
 } from "./catalog-template.js";
 import { createCatalogMediaController } from "./catalog-media-ui.js";
+import {
+  buildCommandPayload,
+  commandUsesAlertPresentation,
+  normalizeCommandAction,
+} from "./command-action.js";
 
 const commandMedia = createCatalogMediaController({
   imagePreview: dom.commandImagePreview,
@@ -80,6 +85,7 @@ function setFieldError(input, element, message) {
 
 function clearFieldErrors() {
   setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
+  setFieldError(dom.commandActionInput, dom.commandActionError, "");
   setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
   commandMedia.clearFieldErrors();
 }
@@ -158,7 +164,11 @@ function renderCommandsList() {
 
     const meta = document.createElement("span");
     meta.className = "audience-catalog-items__meta";
-    meta.textContent = cmd.enabled ? t("commands.enabledShort") : t("commands.disabledShort");
+    const actionKey = normalizeCommandAction(cmd.action) === "show_leaderboard"
+      ? "commands.actionLeaderboardShort"
+      : "commands.actionAlertShort";
+    meta.textContent = t(actionKey) + " · " +
+      (cmd.enabled ? t("commands.enabledShort") : t("commands.disabledShort"));
 
     item.append(trigger, meta);
     item.addEventListener("click", function () {
@@ -253,6 +263,9 @@ function fillEditorFromCommand(cmd) {
   if (dom.commandEnabledInput) {
     dom.commandEnabledInput.checked = Boolean(cmd.enabled);
   }
+  if (dom.commandActionInput) {
+    dom.commandActionInput.value = normalizeCommandAction(cmd.action);
+  }
   if (dom.commandCooldownInput) {
     dom.commandCooldownInput.value = String(cmd.cooldown_seconds != null ? cmd.cooldown_seconds : 30);
   }
@@ -266,6 +279,7 @@ function fillEditorFromCommand(cmd) {
     dom.commandDurationInput.value = String(cmd.duration_ms != null ? cmd.duration_ms : 5000);
   }
   commandMedia.fillFromRecord(cmd);
+  updateCommandActionUI();
   updateCommandSplashPreview();
 }
 
@@ -273,6 +287,7 @@ function defaultNewCommand() {
   return {
     trigger: "",
     enabled: true,
+    action: "alert",
     cooldown_seconds: 30,
     splash_template: "",
     sound: "",
@@ -304,17 +319,37 @@ function selectCommand(id, isNew) {
 }
 
 function readEditorPayload() {
-  return Object.assign(
+  return buildCommandPayload(
     {
       trigger: dom.commandTriggerInput ? dom.commandTriggerInput.value : "",
       enabled: dom.commandEnabledInput ? dom.commandEnabledInput.checked : true,
+      action: dom.commandActionInput ? dom.commandActionInput.value : "alert",
       cooldown_seconds: dom.commandCooldownInput ? Number(dom.commandCooldownInput.value) : 0,
+    },
+    Object.assign({
       splash_template: dom.commandSplashInput ? dom.commandSplashInput.value : "",
       sound: dom.commandSoundInput ? dom.commandSoundInput.value : "",
       duration_ms: dom.commandDurationInput ? Number(dom.commandDurationInput.value) : 5000,
-    },
-    commandMedia.readPayload()
+    }, commandMedia.readPayload())
   );
+}
+
+function updateCommandActionUI() {
+  const usesAlert = commandUsesAlertPresentation(dom.commandActionInput?.value);
+  if (dom.commandAlertFields) {
+    dom.commandAlertFields.hidden = !usesAlert;
+  }
+  if (dom.commandSplashInput) {
+    dom.commandSplashInput.required = usesAlert;
+  }
+  if (dom.commandDurationInput) {
+    dom.commandDurationInput.required = usesAlert;
+  }
+  if (dom.commandActionHint) {
+    dom.commandActionHint.textContent = usesAlert
+      ? t("commands.actionAlertHint")
+      : t("commands.actionLeaderboardHint");
+  }
 }
 
 function applyFieldErrors(fields) {
@@ -323,6 +358,9 @@ function applyFieldErrors(fields) {
   }
   if (fields.trigger && dom.commandTriggerError) {
     setFieldError(dom.commandTriggerInput, dom.commandTriggerError, fields.trigger);
+  }
+  if (fields.action && dom.commandActionError) {
+    setFieldError(dom.commandActionInput, dom.commandActionError, fields.action);
   }
   if (fields.splash_template && dom.commandSplashError) {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, fields.splash_template);
@@ -412,7 +450,7 @@ async function saveCommand() {
     dom.commandTriggerInput?.focus();
     return;
   }
-  if (String(payload.splash_template || "").trim() === "") {
+  if (payload.action === "alert" && String(payload.splash_template || "").trim() === "") {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, t("catalog.splashRequired"));
     dom.commandSplashInput?.focus();
     return;
@@ -562,6 +600,7 @@ export function initCommandsCatalog() {
     setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
     commandMedia.setGraphicIdentity(dom.commandTriggerInput?.value || "", dom.commandTriggerInput?.value || "");
   });
+  dom.commandActionInput?.addEventListener("change", updateCommandActionUI);
   dom.commandSplashInput?.addEventListener("input", function () {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
     updateCommandSplashPreview();
@@ -621,6 +660,7 @@ export function initCommandsCatalog() {
 
   window.addEventListener("admin-locale-applied", function () {
     renderCommandsList();
+    updateCommandActionUI();
   });
 
   syncEditorVisibility();

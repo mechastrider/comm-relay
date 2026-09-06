@@ -428,7 +428,7 @@ func TestOverlayDebugRoutes_WhenProductionAndDebugSocketsConnect_ExpectBidirecti
 	require.NoError(t, env.Bus.Publish(bus.ChatMessageReceived(bus.ChatMessage{
 		ID: "live-1", Platform: "twitch", Username: "Live", Message: "production only",
 	})))
-	productionFrame := readWebSocketFrame(t, production)
+	productionFrame := readWebSocketFrameSkippingLeaderboard(t, production)
 	require.Equal(t, wireMessageType, productionFrame["type"])
 	require.Equal(t, "live-1", productionFrame["id"])
 	assertNoWebSocketFrame(t, debug)
@@ -531,7 +531,7 @@ func readWebSocketFrameSkippingLeaderboard(t *testing.T, conn *websocket.Conn) m
 			continue
 		}
 		frame := decodeFrame(t, payload)
-		if frame["type"] == wireLeaderboardType {
+		if frame["type"] == wireLeaderboardType || frame["type"] == wireLeaderboardVisibilityType {
 			continue
 		}
 		return frame

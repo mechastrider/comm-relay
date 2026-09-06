@@ -22,6 +22,7 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 	var payload struct {
 		Commands []struct {
 			ID      string `json:"id"`
+			Action  string `json:"action"`
 			Trigger string `json:"trigger"`
 		} `json:"commands"`
 	}
@@ -31,6 +32,7 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 	triggers := map[string]bool{}
 	for _, cmd := range payload.Commands {
 		triggers[cmd.Trigger] = true
+		require.Equal(t, "alert", cmd.Action)
 	}
 	require.True(t, triggers["gg"])
 	require.True(t, triggers["hi"])
@@ -45,12 +47,13 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 		} `json:"awards"`
 	}
 	require.NoError(t, json.Unmarshal(awardsRec.Body.Bytes(), &awardsPayload))
-	require.Len(t, awardsPayload.Awards, 8)
+	require.Len(t, awardsPayload.Awards, 9)
 
 	ids := map[string]bool{}
 	for _, award := range awardsPayload.Awards {
 		ids[award.ID] = true
 	}
+	require.True(t, ids["like"])
 	require.True(t, ids["joke"])
 	require.True(t, ids["advice"])
 	require.True(t, ids["spotter"])
@@ -59,6 +62,31 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 	require.True(t, ids["meme"])
 	require.True(t, ids["clutch"])
 	require.True(t, ids["mvp"])
+}
+
+func TestCommands_WhenCreateShowLeaderboard_ExpectActionWithoutPresentation(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(
+		http.MethodPost,
+		"/api/commands/create",
+		strings.NewReader(`{"action":"show_leaderboard","trigger":"leaderboard","enabled":true,"cooldown_seconds":180}`),
+	))
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Contains(t, rec.Body.String(), `"action":"show_leaderboard"`)
+	require.Contains(t, rec.Body.String(), `"trigger":"leaderboard"`)
+}
+
+func TestCommands_WhenActionInvalid_ExpectActionFieldError(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(
+		http.MethodPost,
+		"/api/commands/create",
+		strings.NewReader(`{"action":"other","trigger":"leaderboard","enabled":true,"cooldown_seconds":180}`),
+	))
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	require.Contains(t, rec.Body.String(), `"action"`)
 }
 
 func TestCommands_WhenCreateLurk_ExpectListed(t *testing.T) {

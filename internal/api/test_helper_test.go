@@ -15,6 +15,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -24,6 +25,8 @@ type testEnv struct {
 	ViewerStore *store.Store
 	ConfigStore *config.Store
 	Matcher     *command.Matcher
+	Visibility  *leaderboard.Controller
+	Hub         *Hub
 }
 
 func testViewerStore(t *testing.T) *store.Store {
@@ -60,10 +63,20 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 	history.SetViewerStore(viewerStore)
 	history.SetConfigStore(cfgStore)
 	publisher := NewLeaderboardPublisher(hub, viewerStore, cfgStore)
-	ingest := NewViewerIngest(viewerStore, cfgStore, publisher, matcher, hub, nil)
+	visibility, err := leaderboard.NewController(cfgStore, func(snapshot leaderboard.Snapshot) {
+		_ = b.Publish(bus.LeaderboardVisibilityChanged(snapshot))
+	})
+	require.NoError(t, err)
+	ingest := NewViewerIngest(viewerStore, cfgStore, publisher, matcher, hub, nil, visibility)
 
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(4)
+	go func() {
+		defer wg.Done()
+		if runErr := visibility.Run(ctx); runErr != nil {
+			t.Errorf("run leaderboard visibility controller: %v", runErr)
+		}
+	}()
 	go func() {
 		defer wg.Done()
 		hub.Run(ctx)
@@ -80,6 +93,10 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 	require.Eventually(t, func() bool {
 		return b.SubscriberCount() >= 3
 	}, time.Second, 5*time.Millisecond)
+	require.Eventually(t, func() bool {
+		_, snapshotErr := visibility.Snapshot(context.Background())
+		return snapshotErr == nil
+	}, time.Second, time.Millisecond)
 
 	t.Cleanup(func() {
 		cancel()
@@ -98,11 +115,12 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 	})
 
 	handler, err := NewHandler(Options{
-		Hub:                  hub,
-		Store:                cfgStore,
-		ViewerStore:          viewerStore,
-		LeaderboardPublisher: publisher,
-		History:              history,
+		Hub:                   hub,
+		Store:                 cfgStore,
+		ViewerStore:           viewerStore,
+		LeaderboardPublisher:  publisher,
+		LeaderboardVisibility: visibility,
+		History:               history,
 	})
 	require.NoError(t, err)
 
@@ -112,6 +130,8 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 		ViewerStore: viewerStore,
 		ConfigStore: cfgStore,
 		Matcher:     matcher,
+		Visibility:  visibility,
+		Hub:         hub,
 	}
 }
 

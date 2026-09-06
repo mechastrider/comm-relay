@@ -4,6 +4,7 @@ import test from "node:test";
 
 const chatCSS = readFileSync(new URL("./overlay.css", import.meta.url), "utf8");
 const leaderboardCSS = readFileSync(new URL("../leaderboard/leaderboard.css", import.meta.url), "utf8");
+const leaderboardJS = readFileSync(new URL("../leaderboard/leaderboard.js", import.meta.url), "utf8");
 const alertCSS = readFileSync(new URL("../alert/alert.css", import.meta.url), "utf8");
 const alertEmblemCSS = readFileSync(new URL("../shared/alert-emblem.css", import.meta.url), "utf8");
 
@@ -27,6 +28,12 @@ test("chat and leaderboard roots fill a Browser Source rectangle without stretch
   });
   assert.match(leaderboardCSS, /leaderboard-layout--panel/);
   assert.match(leaderboardCSS, /leaderboard-layout--chips/);
+});
+
+test("leaderboard rows keep one avatar column when a portrait is missing", function () {
+  assert.match(leaderboardJS, /document\.createElement\(entry\.avatar_url \? "img" : "span"\)/);
+  assert.match(leaderboardJS, /avatar\.className = "leaderboard-avatar"/);
+  assert.doesNotMatch(leaderboardCSS, /leaderboard-row--without-avatar/);
 });
 
 test("every alert theme uses the available safe rectangle instead of a narrow card", function () {

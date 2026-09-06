@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
 import {
   SETTINGS_SECTIONS,
   SETTINGS_EDITABLE_SECTIONS,
@@ -12,6 +14,30 @@ import {
   applySectionToConfig,
   proxyRequiredForPayload,
 } from "./settings-helpers.js";
+import {
+  buildCommandPayload,
+  commandUsesAlertPresentation,
+  normalizeCommandAction,
+} from "./command-action.js";
+
+test("command action helpers preserve alerts and strip leaderboard presentation", function () {
+  assert.equal(normalizeCommandAction(undefined), "alert");
+  assert.equal(commandUsesAlertPresentation("alert"), true);
+  assert.deepEqual(
+    buildCommandPayload(
+      { trigger: "leaders", enabled: true, action: "show_leaderboard", cooldown_seconds: 30 },
+      { splash_template: "unused", duration_ms: 5000 }
+    ),
+    { trigger: "leaders", enabled: true, action: "show_leaderboard", cooldown_seconds: 30 }
+  );
+  assert.equal(
+    buildCommandPayload(
+      { trigger: "hello", enabled: true, action: "alert", cooldown_seconds: 10 },
+      { splash_template: "Hi" }
+    ).splash_template,
+    "Hi"
+  );
+});
 
 assert.deepEqual(SETTINGS_SECTIONS, [
   "platforms",
@@ -91,6 +117,29 @@ assert.equal(withData.activity_xp, 3);
 assert.equal(withData.day_reset_hour, 12);
 assert.equal(withData.twitch.channel, "tester");
 
+const visibilityData = normalizeSectionValues("data", {
+  activity_interval_seconds: 120,
+  activity_session_limit: 5,
+  activity_xp: 3,
+  day_reset_hour: 12,
+  leaderboard_visibility: {
+    policy: "on_request",
+    display_seconds: 20,
+    cooldown_seconds: 180,
+    dirty_interval_seconds: 0,
+    show_on_award: true,
+    show_on_rank_change: false,
+  },
+});
+assert.deepEqual(visibilityData.leaderboard_visibility, {
+  policy: "on_request",
+  display_seconds: 20,
+  cooldown_seconds: 180,
+  dirty_interval_seconds: 0,
+  show_on_award: true,
+  show_on_rank_change: false,
+});
+
 const appValues = normalizeSectionValues("application", extractSectionValuesFromConfig(serverConfig, "application"));
 appValues.admin.time_locale = "ru-RU";
 const withApp = applySectionToConfig(basePayload, "application", appValues);
@@ -99,5 +148,18 @@ assert.equal(withApp.overlay.emotes.ffz, false);
 
 assert.equal(proxyRequiredForPayload({ youtube: { use_proxy: true } }), true);
 assert.equal(proxyRequiredForPayload({ youtube: { use_proxy: false }, vk: { use_proxy: false } }), false);
+
+const adminMarkup = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const dockMarkup = readFileSync(new URL("../../dock/index.html", import.meta.url), "utf8");
+const dockStyles = readFileSync(new URL("../../dock/messages.css", import.meta.url), "utf8");
+assert.match(adminMarkup, /id="leaderboard-visibility-policy"/);
+assert.match(adminMarkup, /id="command-action-input"/);
+assert.match(adminMarkup, /id="command-alert-fields"/);
+assert.ok(dockMarkup.indexOf("leaderboard-toolbar") < dockMarkup.indexOf("message-panel"));
+assert.match(dockMarkup, /aria-live="polite"/);
+assert.match(dockMarkup, /role="timer" aria-live="off"/);
+assert.match(dockMarkup, /data-leaderboard-action="show"/);
+assert.match(dockStyles, /grid-template-rows:\s*auto minmax\(0, 1fr\)/);
+assert.match(dockStyles, /@media \(max-width: 320px\)/);
 
 console.log("settings-helpers OK");

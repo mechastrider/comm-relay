@@ -95,8 +95,9 @@ func russianStarterCommands() []starterCommandSeed {
 
 func englishStarterAwards() []starterAwardSeed {
 	return []starterAwardSeed{
+		{ID: "like", Name: "Streamer Like", Points: 5, SplashTemplate: "Streamer Like for {viewer}! +{points}", Sound: "soft", DurationMs: 5000},
 		{ID: "joke", Name: "Joke", Points: 10, SplashTemplate: "Joke for {viewer}! +{points}", Sound: "soft", DurationMs: 5000},
-		{ID: "advice", Name: "Advice", Points: 50, SplashTemplate: "Advice for {viewer}! +{points}", Sound: "alert", DurationMs: 5000},
+		{ID: "advice", Name: "Advice", Points: 25, SplashTemplate: "Advice for {viewer}! +{points}", Sound: "alert", DurationMs: 5000},
 		{ID: "spotter", Name: "Spotter", Points: 25, SplashTemplate: "Spotter for {viewer}! +{points}", Sound: "ping", DurationMs: 5000},
 		{ID: "intel", Name: "Intel", Points: 30, SplashTemplate: "Intel for {viewer}! +{points}", Sound: "chime", DurationMs: 5000},
 		{ID: "expert", Name: "Expert", Points: 40, SplashTemplate: "Expert for {viewer}! +{points}", Sound: "alert", DurationMs: 5000},
@@ -108,8 +109,9 @@ func englishStarterAwards() []starterAwardSeed {
 
 func russianStarterAwards() []starterAwardSeed {
 	return []starterAwardSeed{
+		{ID: "like", Name: "Лайк от стримера", Points: 5, SplashTemplate: "Лайк от стримера для {viewer}! +{points}", Sound: "soft", DurationMs: 5000},
 		{ID: "joke", Name: "Шутка", Points: 10, SplashTemplate: "Шутка для {viewer}! +{points}", Sound: "soft", DurationMs: 5000},
-		{ID: "advice", Name: "Совет", Points: 50, SplashTemplate: "Совет для {viewer}! +{points}", Sound: "alert", DurationMs: 5000},
+		{ID: "advice", Name: "Совет", Points: 25, SplashTemplate: "Совет для {viewer}! +{points}", Sound: "alert", DurationMs: 5000},
 		{ID: "spotter", Name: "Зоркий глаз", Points: 25, SplashTemplate: "Зоркий глаз: {viewer}! +{points}", Sound: "ping", DurationMs: 5000},
 		{ID: "intel", Name: "Информация", Points: 30, SplashTemplate: "Информация от {viewer}! +{points}", Sound: "chime", DurationMs: 5000},
 		{ID: "expert", Name: "Эксперт", Points: 40, SplashTemplate: "Эксперт: {viewer}! +{points}", Sound: "alert", DurationMs: 5000},

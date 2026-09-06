@@ -9,12 +9,14 @@ import (
 	"github.com/muonsoft/errors"
 
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/leaderboard"
 )
 
 type configHandler struct {
-	store                *config.Store
-	hub                  *Hub
-	leaderboardPublisher *LeaderboardPublisher
+	store                 *config.Store
+	hub                   *Hub
+	leaderboardPublisher  *LeaderboardPublisher
+	leaderboardVisibility *leaderboard.Controller
 }
 
 func newConfigHandler(store *config.Store, hub *Hub, leaderboardPublisher *LeaderboardPublisher) *configHandler {
@@ -53,6 +55,12 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	incoming.MergeYouTubeOAuthFrom(prev)
 	incoming.MergeNetworkSOCKS5From(prev)
 	incoming.MergeOverlayPresetsFrom(prev, overlayPresetsPresent(body))
+	if !leaderboardVisibilityPresent(body) {
+		incoming.LeaderboardVisibility = prev.LeaderboardVisibility
+	}
+	if !loggingPresent(body) {
+		incoming.Logging = prev.Logging
+	}
 	incoming.ApplyDefaults()
 
 	if err := h.store.Replace(incoming); err != nil {
@@ -82,6 +90,11 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	if h.leaderboardPublisher != nil {
 		h.leaderboardPublisher.FlushNow()
 	}
+	if h.leaderboardVisibility != nil {
+		if _, err := h.leaderboardVisibility.PolicyChanged(ctx); err != nil {
+			clog.Errorf(ctx, "apply leaderboard visibility settings: %w", err)
+		}
+	}
 
 	writeJSON(w, http.StatusOK, saved.Public())
 }
@@ -96,4 +109,24 @@ func overlayPresetsPresent(data []byte) bool {
 		return false
 	}
 	return doc.Overlay != nil && doc.Overlay.Presets != nil
+}
+
+func leaderboardVisibilityPresent(data []byte) bool {
+	var doc struct {
+		LeaderboardVisibility *json.RawMessage `json:"leaderboard_visibility"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.LeaderboardVisibility != nil
+}
+
+func loggingPresent(data []byte) bool {
+	var doc struct {
+		Logging *json.RawMessage `json:"logging"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.Logging != nil
 }
