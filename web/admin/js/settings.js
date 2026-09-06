@@ -505,24 +505,40 @@ export function validateClient(payload, options) {
 
     (payload.overlay.presets || []).some(function (preset) {
       const surface = preset && preset.surfaces && preset.surfaces.leaderboard;
+      const sizingMode = surface && surface.sizing_mode;
+      if (sizingMode != null && sizingMode !== "auto" && sizingMode !== "fixed") {
+        setFieldError("overlay_leaderboard_sizing_mode", t("validation.leaderboardSizingMode"));
+        firstInvalid = firstInvalid || dom.overlayLeaderboardSizingMode;
+        return true;
+      }
       const font = surface && surface.font_size_px;
       if (
         font != null &&
-        font !== 0 &&
-        (!Number.isFinite(font) || font < OVERLAY_FONT_SIZE_MIN || font > OVERLAY_FONT_SIZE_MAX)
+        (!Number.isInteger(font) || font < OVERLAY_FONT_SIZE_MIN || font > OVERLAY_FONT_SIZE_MAX)
       ) {
         setFieldError(
           "overlay_leaderboard_font_size_px",
-          "Font size must be between " + OVERLAY_FONT_SIZE_MIN + " and " + OVERLAY_FONT_SIZE_MAX + " px."
+          t("validation.leaderboardFontSize")
         );
         firstInvalid = firstInvalid || dom.overlayLeaderboardFontSize;
         return true;
       }
       const title = surface && surface.title;
+      const titleMode = surface && surface.title_mode;
+      if (titleMode != null && titleMode !== "theme" && titleMode !== "custom" && titleMode !== "hidden") {
+        setFieldError("overlay_leaderboard_title_mode", t("validation.leaderboardTitleMode"));
+        firstInvalid = firstInvalid || dom.overlayLeaderboardTitleMode;
+        return true;
+      }
+      if (titleMode === "custom" && String(title || "").trim() === "") {
+        setFieldError("overlay_leaderboard_title", t("validation.leaderboardCustomTitleRequired"));
+        firstInvalid = firstInvalid || dom.overlayLeaderboardTitle;
+        return true;
+      }
       if (title != null && Array.from(String(title)).length > 64) {
         setFieldError(
           "overlay_leaderboard_title",
-          "Title must be at most 64 characters."
+          t("validation.leaderboardTitleMax")
         );
         firstInvalid = firstInvalid || dom.overlayLeaderboardTitle;
         return true;
@@ -530,14 +546,13 @@ export function validateClient(payload, options) {
       const maxEntries = surface && surface.max_entries;
       if (
         maxEntries != null &&
-        maxEntries !== 0 &&
-        (!Number.isFinite(maxEntries) || maxEntries < 1 || maxEntries > 20)
+        (!Number.isInteger(maxEntries) || maxEntries < 1 || maxEntries > 20)
       ) {
         setFieldError(
           "overlay_leaderboard_max_entries",
-          "Max entries must be between 1 and 20."
+          t("validation.leaderboardMaxEntries")
         );
-        firstInvalid = firstInvalid || dom.overlayLeaderboardMaxEntries;
+        firstInvalid = firstInvalid || dom.overlayLeaderboardMaxEntriesAll;
         return true;
       }
       return false;

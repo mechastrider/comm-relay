@@ -99,6 +99,45 @@ assert.deepEqual(surfaceOpacityDraft.presets[0].surfaces, {
   alerts: { panel_opacity: 1 },
 });
 
+const leaderboardPresentationDraft = cloneOverlayAppearanceDraft({
+  active_preset_id: "default",
+  presets: [{
+    id: "default",
+    name: "Default",
+    font_size_px: 18,
+    theme: "default",
+    surfaces: {
+      leaderboard: {
+        sizing_mode: "auto",
+        title_mode: "hidden",
+        show_message_count: true,
+        max_entries: 8,
+      },
+    },
+  }],
+});
+assert.deepEqual(leaderboardPresentationDraft.presets[0].surfaces.leaderboard, {
+  sizing_mode: "auto",
+  title_mode: "hidden",
+  show_message_count: true,
+  max_entries: 8,
+});
+
+const legacyLeaderboardDraft = cloneOverlayAppearanceDraft({
+  active_preset_id: "default",
+  presets: [{
+    id: "default",
+    name: "Default",
+    font_size_px: 18,
+    theme: "default",
+    surfaces: { leaderboard: { font_size_px: 14, title: "Legacy" } },
+  }],
+});
+assert.deepEqual(legacyLeaderboardDraft.presets[0].surfaces.leaderboard, {
+  font_size_px: 14,
+  title: "Legacy",
+});
+
 const dirtyDraft = cloneOverlayAppearanceDraft(baseline);
 dirtyDraft.max_messages = 25;
 assert.equal(overlayDraftIsDirty(baseline, dirtyDraft), true);

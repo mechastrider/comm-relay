@@ -43,6 +43,17 @@
   min-width: 0;
 }
 
+.conditional-field {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+  min-width: 0;
+}
+
+.conditional-field[hidden] {
+  display: none;
+}
+
 .form__field--full {
   grid-column: 1 / -1;
 }

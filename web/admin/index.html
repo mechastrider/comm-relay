@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CommRelay</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=51">
+  <link rel="stylesheet" href="styles.css?v=52">
   <script>
     (function () {
       try {
@@ -827,22 +827,35 @@
                       </div>
 
                       <div id="studio-essential-font-leaderboard" class="form__field" hidden>
-                        <label for="overlay-leaderboard-font-size" data-i18n="obs.leaderboardFontSize">Leaderboard font size (px)</label>
-                        <input id="overlay-leaderboard-font-size" name="overlay_leaderboard_font_size_px" type="number" min="12" max="48" step="1">
-                        <p class="field-hint" data-i18n="obs.leaderboardFontSizeHint">12–48 px. Independent from chat so a narrow ranking can stay smaller.</p>
-                        <p id="overlay-leaderboard-font-size-error" class="field-error" role="alert" hidden></p>
+                        <label for="overlay-leaderboard-sizing-mode" data-i18n="obs.leaderboardSizing">Sizing</label>
+                        <select id="overlay-leaderboard-sizing-mode" name="overlay_leaderboard_sizing_mode">
+                          <option value="auto" data-i18n="obs.leaderboardSizingAuto">Automatic</option>
+                          <option value="fixed" data-i18n="obs.leaderboardSizingFixed">Fixed</option>
+                        </select>
+                        <p class="field-hint" data-i18n="obs.leaderboardSizingHint">Width sets the composition scale; height controls how many complete ranks fit.</p>
+                        <p id="overlay-leaderboard-sizing-mode-error" class="field-error" role="alert" hidden></p>
                       </div>
                       <div id="studio-essential-leaderboard-title" class="form__field" hidden>
-                        <label for="overlay-leaderboard-title" data-i18n="obs.leaderboardTitle">Leaderboard title</label>
-                        <input id="overlay-leaderboard-title" name="overlay_leaderboard_title" type="text" maxlength="64" autocomplete="off">
-                        <p class="field-hint" data-i18n="obs.leaderboardTitleHint">Leave blank to hide the on-stream heading.</p>
-                        <p id="overlay-leaderboard-title-error" class="field-error" role="alert" hidden></p>
+                        <label for="overlay-leaderboard-title-mode" data-i18n="obs.leaderboardTitleMode">Title</label>
+                        <select id="overlay-leaderboard-title-mode" name="overlay_leaderboard_title_mode">
+                          <option value="theme" data-i18n="obs.leaderboardTitleTheme">From theme</option>
+                          <option value="custom" data-i18n="obs.leaderboardTitleCustom">Custom</option>
+                          <option value="hidden" data-i18n="obs.leaderboardTitleHidden">Hidden</option>
+                        </select>
+                        <p id="overlay-leaderboard-title-mode-error" class="field-error" role="alert" hidden></p>
+                        <div id="overlay-leaderboard-custom-title-field" class="conditional-field" hidden>
+                          <label for="overlay-leaderboard-title" data-i18n="obs.leaderboardCustomTitle">Custom title</label>
+                          <input id="overlay-leaderboard-title" name="overlay_leaderboard_title" type="text" maxlength="64" autocomplete="off" aria-describedby="overlay-leaderboard-title-hint">
+                          <p id="overlay-leaderboard-title-hint" class="field-hint" data-i18n="obs.leaderboardTitleHint">Uses the selected theme's title style.</p>
+                          <p id="overlay-leaderboard-title-error" class="field-error" role="alert" hidden></p>
+                        </div>
                       </div>
-                      <div id="studio-essential-leaderboard-max-entries" class="form__field" hidden>
-                        <label for="overlay-leaderboard-max-entries" data-i18n="obs.leaderboardMaxEntries">Max ranks shown</label>
-                        <input id="overlay-leaderboard-max-entries" name="overlay_leaderboard_max_entries" type="number" min="1" max="20" step="1">
-                        <p class="field-hint" data-i18n="obs.leaderboardMaxEntriesHint">1–20 viewers. Default is 5.</p>
-                        <p id="overlay-leaderboard-max-entries-error" class="field-error" role="alert" hidden></p>
+                      <div id="studio-essential-leaderboard-messages" class="form__field" hidden>
+                        <label class="checkbox" for="overlay-leaderboard-show-message-count">
+                          <input id="overlay-leaderboard-show-message-count" type="checkbox">
+                          <span data-i18n="obs.leaderboardShowMessages">Show message count</span>
+                        </label>
+                        <p class="field-hint" data-i18n="obs.leaderboardShowMessagesHint">XP stays primary; message count is secondary and hides first in compact sources.</p>
                       </div>
 
                       <div id="studio-essential-duration" class="form__field form__field--full overlay-chat-only">
@@ -929,15 +942,17 @@
                         </div>
 
                         <div id="overlay-leaderboard-fields" class="overlay-surface-fields" hidden>
-                          <div class="form__field">
-                            <label for="overlay-leaderboard-title-all" data-i18n="obs.leaderboardTitle">Leaderboard title</label>
-                            <input id="overlay-leaderboard-title-all" type="text" maxlength="64" autocomplete="off">
-                            <p class="field-hint" data-i18n="obs.leaderboardTitleHint">Leave blank to hide the on-stream heading.</p>
+                          <div id="overlay-leaderboard-fixed-field" class="form__field" hidden>
+                            <label for="overlay-leaderboard-font-size" data-i18n="obs.leaderboardFontSize">Fixed font size (px)</label>
+                            <input id="overlay-leaderboard-font-size" name="overlay_leaderboard_font_size_px" type="number" min="12" max="48" step="1" inputmode="numeric" aria-describedby="overlay-leaderboard-font-size-hint">
+                            <p id="overlay-leaderboard-font-size-hint" class="field-hint" data-i18n="obs.leaderboardFontSizeHint">12–48 px. Use this compatibility mode when a source must not rescale with width.</p>
+                            <p id="overlay-leaderboard-font-size-error" class="field-error" role="alert" hidden></p>
                           </div>
                           <div class="form__field">
                             <label for="overlay-leaderboard-max-entries-all" data-i18n="obs.leaderboardMaxEntries">Max ranks shown</label>
-                            <input id="overlay-leaderboard-max-entries-all" type="number" min="1" max="20" step="1">
-                            <p class="field-hint" data-i18n="obs.leaderboardMaxEntriesHint">1–20 viewers. Default is 5.</p>
+                            <input id="overlay-leaderboard-max-entries-all" name="overlay_leaderboard_max_entries" type="number" min="1" max="20" step="1" inputmode="numeric" aria-describedby="overlay-leaderboard-max-entries-hint">
+                            <p id="overlay-leaderboard-max-entries-hint" class="field-hint" data-i18n="obs.leaderboardMaxEntriesHint">Upper limit from 1 to 20. Source height may fit fewer complete ranks.</p>
+                            <p id="overlay-leaderboard-max-entries-error" class="field-error" role="alert" hidden></p>
                           </div>
                           <div class="form__field">
                             <label for="overlay-leaderboard-layout" data-i18n="obs.leaderboardLayout">Leaderboard layout</label>
@@ -946,6 +961,9 @@
                               <option value="chips" data-i18n="obs.leaderboardLayoutChips">Chips</option>
                             </select>
                             <p class="field-hint" data-i18n="obs.leaderboardLayoutHint">Panel is one HUD frame. Chips make each rank a separate card in the same theme.</p>
+                          </div>
+                          <div class="form__field form__field--full">
+                            <button id="overlay-leaderboard-reset" class="button-secondary button-secondary--small" type="button" data-i18n="obs.leaderboardReset">Reset leaderboard to theme</button>
                           </div>
                         </div>
 
@@ -2065,6 +2083,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=29"></script>
+  <script type="module" src="app.js?v=30"></script>
 </body>
 </html>

@@ -49,3 +49,27 @@
 ## Evidence and Explicit Skips
 
 Attach command output and a compact screenshot/contact sheet for the P0 rectangle matrix to the implementation change or PR. Record the exact OBS/browser versions used. Database migration, remote/network security, native dialogs, connector behavior, signing, and release publication are out of scope because the design does not change them.
+
+## Execution Results — 2026-09-06
+
+### Automated Linux/browser coverage
+
+- Runtime: Go `1.26.3 linux/amd64`; Node.js `24.15.0`; npm `11.12.1`; Playwright `1.62.1`; bundled Chromium `151.0.7922.34`.
+- The five themes and both layouts passed all 40 exact viewport cases at `320x180`, `640x360`, `1280x720`, and `360x640`. Assertions covered no document scrollbar, no partial visible row, at most one title, XP on every visible row, and the configured rank cap.
+- Automatic width samples resolved to 12, 18, and 36 px at widths 320, 640, and 1280. Height samples fit 1, 3, and 5 complete rows at heights 120, 240, and 480. Fixed 16 px remained 16 px at widths 320 and 1280.
+- Theme/custom/hidden title behavior, compact message suppression, sample/live request isolation, and the no-`ResizeObserver` fixed fallback passed scripted browser assertions.
+- Studio passed draft retention across surface switching, preview-query state, conditional-field focus recovery, inline blank-title/fractional-cap/font validation, Reset-to-theme, and scroll reachability at a 720x500 CSS viewport with device scale factor 2 (1440x1000 capture).
+- Evidence: [`qa-evidence/chromium-leaderboard-matrix.png`](qa-evidence/chromium-leaderboard-matrix.png) and [`qa-evidence/chromium-studio-200-percent.png`](qa-evidence/chromium-studio-200-percent.png).
+
+### Repository and artifact checks
+
+- `go test ./...`, `golangci-lint run ./...`, `npm ci`, `npm test`, `npm run lint`, `npm run test:i18n`, and strict OpenSpec validation passed.
+- A Linux headless artifact built, started with embedded assets and a fresh config, returned `200` for `/` and `/overlay/leaderboard`, returned healthy JSON for `/health`, and shut down cleanly.
+- Config/API tests cover omitted defaults, legacy font/title resolution, unchanged Publish without mode materialization, invalid atomic rejection, public round trips, and secret omission. SQLite testing remains skipped because the schema is unchanged.
+
+### Explicit skips / remaining release gates
+
+- The required Windows packaged-app and OBS CEF P0 matrix was not available in this Linux workspace. No OBS version can be recorded here.
+- macOS browser/OBS and packaged-architecture smoke was unavailable.
+- A production-tagged Linux Wails build could not complete because the runner lacks the `pkg-config` executable/WebKit build tooling, so packaged Wails launch/persistence remains unverified.
+- A prior released binary was not present, so the executable downgrade smoke against copied new config remains unverified. JSON compatibility is covered by the focused current-code tests, but it is not a substitute for that release-binary check.

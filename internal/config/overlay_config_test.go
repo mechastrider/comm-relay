@@ -188,6 +188,90 @@ func TestLeaderboardSurface_WhenStored_ExpectOverridesAndPublicJSON(t *testing.T
 	require.Contains(t, string(data), `"layout":"chips"`)
 }
 
+func TestLeaderboardSurface_WhenPresentationOmitted_ExpectFreshResponsiveDefaults(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	preset := cfg.Overlay.Presets[0]
+	preset.Surfaces.Leaderboard.FontSizePx = 0
+	preset.Surfaces.Leaderboard.SizingMode = ""
+	preset.Surfaces.Leaderboard.TitleMode = ""
+	preset.Surfaces.Leaderboard.Title = ""
+	preset.Surfaces.Leaderboard.ShowMessageCount = false
+
+	require.Equal(t, OverlayLeaderboardSizingAuto, preset.LeaderboardSizingMode())
+	require.Equal(t, OverlayLeaderboardTitleTheme, preset.LeaderboardTitleMode())
+	require.False(t, preset.LeaderboardShowMessageCount())
+	require.Equal(t, OverlayLeaderboardMaxEntriesDefault, preset.LeaderboardMaxEntries())
+}
+
+func TestLeaderboardSurface_WhenLegacyPresentationStored_ExpectPresenceAwareModes(t *testing.T) {
+	t.Parallel()
+
+	preset := Default().Overlay.Presets[0]
+	preset.Surfaces.Leaderboard.FontSizePx = 14
+	preset.Surfaces.Leaderboard.Title = "  Топ эфира  "
+
+	require.Equal(t, OverlayLeaderboardSizingFixed, preset.LeaderboardSizingMode())
+	require.Equal(t, OverlayLeaderboardTitleCustom, preset.LeaderboardTitleMode())
+	require.Equal(t, "Топ эфира", preset.LeaderboardTitle())
+}
+
+func TestLeaderboardSurface_WhenExplicitPresentationStored_ExpectPublicRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	preset := &cfg.Overlay.Presets[0]
+	preset.Surfaces.Leaderboard.SizingMode = OverlayLeaderboardSizingAuto
+	preset.Surfaces.Leaderboard.TitleMode = OverlayLeaderboardTitleHidden
+	preset.Surfaces.Leaderboard.ShowMessageCount = true
+
+	require.NoError(t, cfg.Validate())
+	require.Equal(t, OverlayLeaderboardSizingAuto, preset.LeaderboardSizingMode())
+	require.Equal(t, OverlayLeaderboardTitleHidden, preset.LeaderboardTitleMode())
+	require.True(t, preset.LeaderboardShowMessageCount())
+
+	data, err := json.Marshal(cfg.Public())
+	require.NoError(t, err)
+	require.Contains(t, string(data), `"sizing_mode":"auto"`)
+	require.Contains(t, string(data), `"title_mode":"hidden"`)
+	require.Contains(t, string(data), `"show_message_count":true`)
+}
+
+func TestValidate_WhenLeaderboardSizingModeInvalid_ExpectFieldError(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.SizingMode = "fluid"
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.Contains(t, ValidationFields(err), "overlay_preset_0_surfaces_leaderboard_sizing_mode")
+}
+
+func TestValidate_WhenLeaderboardTitleModeInvalid_ExpectFieldError(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.TitleMode = "fallback"
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.Contains(t, ValidationFields(err), "overlay_preset_0_surfaces_leaderboard_title_mode")
+}
+
+func TestValidate_WhenLeaderboardCustomTitleBlank_ExpectTitleFieldError(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.TitleMode = OverlayLeaderboardTitleCustom
+	cfg.Overlay.Presets[0].Surfaces.Leaderboard.Title = "  "
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.Contains(t, ValidationFields(err), "overlay_preset_0_surfaces_leaderboard_title")
+}
+
 func TestOverlayPreset_WhenSurfaceOpacityOmitted_ExpectSharedStyleFallback(t *testing.T) {
 	t.Parallel()
 

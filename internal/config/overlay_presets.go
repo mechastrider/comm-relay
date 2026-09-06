@@ -30,6 +30,19 @@ const (
 	OverlayLeaderboardLayoutChips = "chips"
 )
 
+// Leaderboard sizing values for overlay.presets[].surfaces.leaderboard.sizing_mode.
+const (
+	OverlayLeaderboardSizingAuto  = "auto"
+	OverlayLeaderboardSizingFixed = "fixed"
+)
+
+// Leaderboard title values for overlay.presets[].surfaces.leaderboard.title_mode.
+const (
+	OverlayLeaderboardTitleTheme  = "theme"
+	OverlayLeaderboardTitleCustom = "custom"
+	OverlayLeaderboardTitleHidden = "hidden"
+)
+
 // Leaderboard title and rank cap for overlay.presets[].surfaces.leaderboard.
 const (
 	OverlayLeaderboardTitleMaxRunes     = 64
@@ -65,11 +78,14 @@ type OverlayChatSurface struct {
 
 // OverlayLeaderboardSurface is the leaderboard look for one overlay preset.
 type OverlayLeaderboardSurface struct {
-	FontSizePx   int      `json:"font_size_px,omitempty"`
-	Layout       string   `json:"layout,omitempty"`
-	Title        string   `json:"title,omitempty"`
-	MaxEntries   *int     `json:"max_entries,omitempty"`
-	PanelOpacity *float64 `json:"panel_opacity,omitempty"`
+	SizingMode       string   `json:"sizing_mode,omitempty"`
+	FontSizePx       int      `json:"font_size_px,omitempty"`
+	Layout           string   `json:"layout,omitempty"`
+	TitleMode        string   `json:"title_mode,omitempty"`
+	Title            string   `json:"title,omitempty"`
+	ShowMessageCount bool     `json:"show_message_count,omitempty"`
+	MaxEntries       *int     `json:"max_entries,omitempty"`
+	PanelOpacity     *float64 `json:"panel_opacity,omitempty"`
 }
 
 // OverlayAlertsSurface holds optional alert-only appearance overrides.
@@ -172,6 +188,11 @@ func (s OverlayLeaderboardSurface) validateFields(prefix string) FieldErrors {
 			OverlayFontSizeMax,
 		)
 	}
+	switch s.SizingMode {
+	case "", OverlayLeaderboardSizingAuto, OverlayLeaderboardSizingFixed:
+	default:
+		fields[key("sizing_mode")] = "Choose automatic or fixed sizing."
+	}
 	switch s.Layout {
 	case "", OverlayLeaderboardLayoutPanel, OverlayLeaderboardLayoutChips:
 	default:
@@ -182,6 +203,14 @@ func (s OverlayLeaderboardSurface) validateFields(prefix string) FieldErrors {
 			"Title must be at most %d characters.",
 			OverlayLeaderboardTitleMaxRunes,
 		)
+	}
+	switch s.TitleMode {
+	case "", OverlayLeaderboardTitleTheme, OverlayLeaderboardTitleCustom, OverlayLeaderboardTitleHidden:
+	default:
+		fields[key("title_mode")] = "Choose theme, custom, or hidden title."
+	}
+	if s.TitleMode == OverlayLeaderboardTitleCustom && strings.TrimSpace(s.Title) == "" {
+		fields[key("title")] = "Enter a custom title."
 	}
 	if s.MaxEntries != nil {
 		if *s.MaxEntries < OverlayLeaderboardMaxEntriesMin || *s.MaxEntries > OverlayLeaderboardMaxEntriesMax {
@@ -287,6 +316,18 @@ func (p OverlayPreset) LeaderboardFontSizePx() int {
 	return p.FontSizePx
 }
 
+// LeaderboardSizingMode resolves omitted legacy settings without mutating the preset.
+func (p OverlayPreset) LeaderboardSizingMode() string {
+	if p.Surfaces.Leaderboard.SizingMode == OverlayLeaderboardSizingAuto {
+		return OverlayLeaderboardSizingAuto
+	}
+	if p.Surfaces.Leaderboard.SizingMode == OverlayLeaderboardSizingFixed ||
+		p.Surfaces.Leaderboard.FontSizePx >= OverlayFontSizeMin {
+		return OverlayLeaderboardSizingFixed
+	}
+	return OverlayLeaderboardSizingAuto
+}
+
 // LeaderboardLayout returns panel unless chips is stored.
 func (p OverlayPreset) LeaderboardLayout() string {
 	if p.Surfaces.Leaderboard.Layout == OverlayLeaderboardLayoutChips {
@@ -298,6 +339,26 @@ func (p OverlayPreset) LeaderboardLayout() string {
 // LeaderboardTitle returns the trimmed on-stream heading, or empty when unset.
 func (p OverlayPreset) LeaderboardTitle() string {
 	return strings.TrimSpace(p.Surfaces.Leaderboard.Title)
+}
+
+// LeaderboardTitleMode resolves omitted legacy settings without mutating the preset.
+func (p OverlayPreset) LeaderboardTitleMode() string {
+	switch p.Surfaces.Leaderboard.TitleMode {
+	case OverlayLeaderboardTitleCustom, OverlayLeaderboardTitleHidden:
+		return p.Surfaces.Leaderboard.TitleMode
+	case OverlayLeaderboardTitleTheme:
+		return OverlayLeaderboardTitleTheme
+	default:
+		if p.LeaderboardTitle() != "" {
+			return OverlayLeaderboardTitleCustom
+		}
+		return OverlayLeaderboardTitleTheme
+	}
+}
+
+// LeaderboardShowMessageCount returns whether rows include the secondary message metric.
+func (p OverlayPreset) LeaderboardShowMessageCount() bool {
+	return p.Surfaces.Leaderboard.ShowMessageCount
 }
 
 // LeaderboardMaxEntries returns the resolved rank cap (default 5).

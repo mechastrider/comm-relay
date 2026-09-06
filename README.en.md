@@ -117,9 +117,19 @@ Open **Studio** in the CommRelay control panel.
 | **Font size** | Text size in the overlay, from **12 to 48 px**. |
 | **Spacing** | **Comfortable** — normal padding. **Compact** — denser when many lines are on screen. |
 | **Theme** | **Default** — cards with a semi-transparent background. **Text only** — text only, no background. **Cockpit panel** — shared HUD panel. **Cockpit popups** — separate MW5 HUD pop-up messages. **G-Rebels Cockpit popups** — pop-up messages in a gold aviation HUD style. The same theme styles chat and the leaderboard. |
-| **Presets** | A named look for a scene or game: theme, limit, TTL, density, text edge, platform marker, panel, plus leaderboard font and layout (`panel` / `chips`). An older `config.json` without presets becomes the **Default** preset. |
+| **Presets** | A named look for a scene or game: theme, limit, TTL, density, text edge, platform marker, panel, plus leaderboard automatic/fixed sizing, title, layout (`panel` / `chips`), and rank cap. An older `config.json` without presets becomes the **Default** preset. |
 | **Follow / Pinned URL** | On the selected surface — **Follow active preset** (no `?preset=`). A pinned URL with `?preset=` is in **Add to OBS** or **Preview options** (⋯). Existing sources that already include `preset` keep working. |
 | **Preview** | The surface list on the left switches the preview (**Chat / Leaderboard / Alerts**); the leaderboard preview always shows a fictitious top-5. Preview backdrop (white, checkerboard, game footage, black) is in **Preview options** (⋯). |
+
+### Leaderboard size and content
+
+In **Automatic** mode, Browser Source width controls the shared scale of text, portraits, spacing, and chrome, while height controls how many complete ranking rows fit. For example, a `320×180` source produces a compact composition with a few ranks; `640×360` produces a larger composition and, when height permits, more rows. Partial rows and scrollbars are never shown. **Maximum ranks** remains an upper limit (default 5).
+
+The title can be **From theme**, **Custom**, or **Hidden**. Custom copy keeps the selected theme's title treatment; hiding the title releases its space to rows. Each row makes labelled **XP** the primary metric. Message count is off by default and can be enabled as secondary content; it disappears first when the source becomes compact.
+
+Use **Fixed** mode for compatibility or exact manual composition with a 12–48 px size. Existing URLs with a valid `font_size_px=` continue to select fixed sizing.
+
+Browser Source viewport size and OBS scene transform are different. Dragging transform handles scales an already rendered image. To make the leaderboard recalculate text and row capacity, change **Width/Height** in Browser Source properties (or the Studio preview dimensions), then adjust the scene transform if needed.
 
 After changing appearance in Studio:
 
@@ -194,6 +204,7 @@ More on typical overlay and OBS issues on Linux: [`docs/FAQ.en.md`](docs/FAQ.en.
 ## Common issues
 
 - **I change font or theme — nothing changes**: in **Studio** click **Publish**, then refresh the Browser Source in OBS if needed. Font size is only from 12 to 48 px.
+- **The leaderboard row count does not change when I resize it on the scene**: change Width/Height in Browser Source properties. Scene transforms scale the rendered image; they do not change the viewport used to fit rows.
 - **Spacing and Theme look the same**: compare with active chat; Compact is more noticeable with 5+ messages; Text only is easier to see on a green or dark scene background; Cockpit themes are meant for output over the game frame.
 - **OBS shows nothing**: check that CommRelay is running, the URL in the Browser Source matches the port, and the connector in the admin panel has status `connected`. On **Linux** if the Browser Source shows a black square, disable browser hardware acceleration in OBS (**File → Settings → Advanced → Sources**) — see [`docs/FAQ.en.md`](docs/FAQ.en.md).
 - **Port 17877 is in use**: close another app on that port or launch CommRelay with a different address via `-addr 127.0.0.1:<port>`.

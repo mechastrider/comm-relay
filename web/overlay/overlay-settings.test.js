@@ -16,6 +16,9 @@ import {
   panelBackground,
   normalizePreviewBackground,
   overlayViewFromConfig,
+  resolveLeaderboardSizingMode,
+  resolveLeaderboardTitle,
+  resolveLeaderboardTitleMode,
   resolvePreset,
 } from "./overlay-settings.js";
 
@@ -354,6 +357,76 @@ test("leaderboardViewFromConfig defaults max_entries to five when omitted", func
   );
   assert.equal(view.max_entries, 5);
   assert.equal(view.title, "");
+  assert.equal(view.sizing_mode, "auto");
+  assert.equal(view.title_mode, "theme");
+  assert.equal(view.show_message_count, false);
+});
+
+test("leaderboard presentation resolves legacy and explicit modes", function () {
+  assert.equal(resolveLeaderboardSizingMode({}, false), "auto");
+  assert.equal(resolveLeaderboardSizingMode({ font_size_px: 14 }, false), "fixed");
+  assert.equal(resolveLeaderboardSizingMode({ sizing_mode: "auto", font_size_px: 14 }, false), "auto");
+  assert.equal(resolveLeaderboardSizingMode({ sizing_mode: "auto" }, true), "fixed");
+  assert.equal(resolveLeaderboardTitleMode({ title: "Топ эфира" }), "custom");
+  assert.equal(resolveLeaderboardTitleMode({ title_mode: "hidden", title: "Old" }), "hidden");
+  assert.deepEqual(resolveLeaderboardTitle({}, "cockpit_panel", "panel"), {
+    mode: "theme",
+    text: "COMMRELAY RANKING",
+  });
+  assert.deepEqual(resolveLeaderboardTitle({ title_mode: "custom", title: "  Топ  " }, "default", "panel"), {
+    mode: "custom",
+    text: "Топ",
+  });
+  assert.deepEqual(resolveLeaderboardTitle({ title_mode: "hidden" }, "cockpit_panel", "panel"), {
+    mode: "hidden",
+    text: "",
+  });
+});
+
+test("leaderboard query font forces fixed compatibility without changing content settings", function () {
+  const view = leaderboardViewFromConfig(
+    {
+      overlay: {
+        presets: [{
+          id: "default",
+          theme: "cockpit_panel",
+          font_size_px: 18,
+          surfaces: {
+            leaderboard: {
+              sizing_mode: "auto",
+              title_mode: "custom",
+              title: "Top",
+              show_message_count: true,
+            },
+          },
+        }],
+      },
+    },
+    new URLSearchParams("font_size_px=16")
+  );
+  assert.equal(view.sizing_mode, "fixed");
+  assert.equal(view.font_size_px, 16);
+  assert.equal(view.title, "Top");
+  assert.equal(view.show_message_count, true);
+});
+
+test("leaderboard sample preview applies bounded unpublished presentation query", function () {
+  const view = leaderboardViewFromConfig(
+    {
+      overlay: {
+        presets: [{ id: "default", theme: "cockpit_panel", font_size_px: 18 }],
+      },
+    },
+    new URLSearchParams(
+      "preview=sample&sizing_mode=auto&base_font_size_px=20&title_mode=custom&title=%D0%A2%D0%BE%D0%BF&show_message_count=1&limit=8"
+    )
+  );
+  assert.equal(view.sizing_mode, "auto");
+  assert.equal(view.font_size_px, 20);
+  assert.equal(view.title_mode, "custom");
+  assert.equal(view.title, "Топ");
+  assert.equal(view.show_message_count, true);
+  assert.equal(view.max_entries, 8);
 });
 
 test("normalizeLeaderboardMaxEntries clamps and defaults", function () {

@@ -9,12 +9,12 @@ import {
   STUDIO_SURFACE_RAIL_COLLAPSED_KEY,
 } from "./constants.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
+import { normalizeLeaderboardSurfaceOverride } from "./leaderboard-presentation.js";
 
 const ADD_TO_OBS_DISMISSED_TRUTHY = new Set(["1", "true", "yes"]);
 const STUDIO_SETUP_STATES = new Set(["unseen", "seen", "skipped", "completed"]);
 
 const STUDIO_SURFACES = new Set(["chat", "leaderboard", "alerts"]);
-const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
 const OVERLAY_DISPLAY_MODES = new Set(["normal", "compact"]);
 
 /** @type {readonly number[]} */
@@ -53,15 +53,6 @@ export function chipValueToMessageTtl(chipValue) {
 }
 
 /**
- * @param {unknown} value
- * @returns {"panel"|"chips"}
- */
-function normalizeLayout(value) {
-  const raw = String(value || "").trim().toLowerCase();
-  return LEADERBOARD_LAYOUTS.has(raw) ? /** @type {"panel"|"chips"} */ (raw) : "panel";
-}
-
-/**
  * @param {unknown} surface
  * @returns {Record<string, unknown>}
  */
@@ -90,18 +81,11 @@ function normalizePreset(preset) {
       ? /** @type {Record<string, unknown>} */ (surfaces.leaderboard)
       : {};
   const fontSizePx = typeof raw.font_size_px === "number" ? raw.font_size_px : 18;
-  const leaderboardFont =
-    typeof leaderboard.font_size_px === "number" ? leaderboard.font_size_px : fontSizePx;
-  const leaderboardSurface = Object.assign({}, normalizeSurfaceOpacity(leaderboard), {
-    font_size_px: leaderboardFont,
-    layout: normalizeLayout(leaderboard.layout),
-  });
-  if (typeof leaderboard.title === "string" && leaderboard.title.trim() !== "") {
-    leaderboardSurface.title = leaderboard.title.trim();
-  }
-  if (typeof leaderboard.max_entries === "number" && leaderboard.max_entries !== 5) {
-    leaderboardSurface.max_entries = leaderboard.max_entries;
-  }
+  const leaderboardSurface = Object.assign(
+    {},
+    normalizeLeaderboardSurfaceOverride(leaderboard),
+    normalizeSurfaceOpacity(leaderboard)
+  );
   const alerts =
     surfaces.alerts && typeof surfaces.alerts === "object"
       ? /** @type {Record<string, unknown>} */ (surfaces.alerts)
