@@ -79,6 +79,33 @@ func TestConfigUpdate_WhenVisibilityObjectOmitted_ExpectStoredPolicyPreserved(t 
 	require.Equal(t, config.LeaderboardVisibilityPolicyAlways, env.ConfigStore.Snapshot().LeaderboardVisibility.Policy)
 }
 
+func TestConfigUpdate_WhenLoggingObjectOmitted_ExpectStoredLoggingPreserved(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	disabled := false
+	require.NoError(t, env.ConfigStore.Mutate(func(cfg *config.Config) error {
+		cfg.Logging.Enabled = &disabled
+		cfg.Logging.RetainSessions = 12
+		return nil
+	}))
+
+	document, err := json.Marshal(env.ConfigStore.Snapshot().Public())
+	require.NoError(t, err)
+	var payload map[string]any
+	require.NoError(t, json.Unmarshal(document, &payload))
+	delete(payload, "logging")
+	body, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/config/update", strings.NewReader(string(body))))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	saved := env.ConfigStore.Snapshot().Logging
+	require.NotNil(t, saved.Enabled)
+	require.False(t, *saved.Enabled)
+	require.Equal(t, 12, saved.RetainSessions)
+}
+
 func TestLeaderboardVisibilityShow_WhenDurationOutOfRange_ExpectBadRequestAndNoMutation(t *testing.T) {
 	env := newTestEnv(t, bus.New(0))
 	before, err := env.Visibility.Snapshot(context.Background())

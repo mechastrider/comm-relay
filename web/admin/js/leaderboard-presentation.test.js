@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  allLeaderboardPresentationTouched,
   conditionalFieldNeedsOwnerFocus,
   leaderboardPreviewQuery,
   normalizeLeaderboardSurfaceOverride,
@@ -50,6 +51,33 @@ test("untouched legacy presentation survives draft collection", function () {
   const initial = { leaderboard: { font_size_px: 14, title: "Legacy" } };
   const next = withLeaderboardPresentation(initial, resolveLeaderboardFormValues(initial.leaderboard, 18), {});
   assert.deepEqual(next, initial);
+});
+
+test("forced presentation collection applies current form values", function () {
+  const initial = { leaderboard: { font_size_px: 14, title: "Legacy" } };
+  const next = withLeaderboardPresentation(
+    initial,
+    {
+      sizing_mode: "fixed",
+      font_size_px: 14,
+      layout: "panel",
+      title_mode: "custom",
+      title: "Updated",
+      show_message_count: true,
+      max_entries: 8,
+    },
+    allLeaderboardPresentationTouched()
+  );
+  assert.deepEqual(next, {
+    leaderboard: {
+      sizing_mode: "fixed",
+      font_size_px: 14,
+      title_mode: "custom",
+      title: "Updated",
+      show_message_count: true,
+      max_entries: 8,
+    },
+  });
 });
 
 test("explicit control edits store only meaningful presentation overrides", function () {

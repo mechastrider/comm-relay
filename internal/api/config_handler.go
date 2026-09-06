@@ -58,6 +58,9 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	if !leaderboardVisibilityPresent(body) {
 		incoming.LeaderboardVisibility = prev.LeaderboardVisibility
 	}
+	if !loggingPresent(body) {
+		incoming.Logging = prev.Logging
+	}
 	incoming.ApplyDefaults()
 
 	if err := h.store.Replace(incoming); err != nil {
@@ -116,4 +119,14 @@ func leaderboardVisibilityPresent(data []byte) bool {
 		return false
 	}
 	return doc.LeaderboardVisibility != nil
+}
+
+func loggingPresent(data []byte) bool {
+	var doc struct {
+		Logging *json.RawMessage `json:"logging"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.Logging != nil
 }

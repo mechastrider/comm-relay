@@ -1,6 +1,19 @@
 const SIZING_MODES = new Set(["auto", "fixed"]);
 const TITLE_MODES = new Set(["theme", "custom", "hidden"]);
 
+const ALL_LEADERBOARD_PRESENTATION_TOUCHED = Object.freeze({
+  sizing: true,
+  font: true,
+  title: true,
+  titleText: true,
+  messages: true,
+  maxEntries: true,
+});
+
+export function allLeaderboardPresentationTouched() {
+  return ALL_LEADERBOARD_PRESENTATION_TOUCHED;
+}
+
 function cloneSurfaces(surfaces) {
   const current = surfaces && typeof surfaces === "object" ? surfaces : {};
   const next = {};

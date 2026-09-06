@@ -24,6 +24,7 @@ import {
   validateSocks5Address,
   proxyRequired,
   loadStatus,
+  syncLeaderboardVisibilityControlsUI,
 } from "./settings.js";
 import { getMessageSoundSettings } from "./sound.js";
 import {
@@ -197,6 +198,7 @@ function resetSectionBaseline(sectionId) {
   const config = state.currentConfig || {};
   sectionBaselines.set(sectionId, extractSectionValuesFromConfig(config, sectionId));
   sectionDrafts.delete(sectionId);
+  applySectionBaselineToDOM(sectionId);
   renderSectionChrome(sectionId);
 }
 
@@ -399,21 +401,7 @@ function applySectionValuesToDOM(sectionId, values) {
 }
 
 function updateLeaderboardVisibilitySettingsUI() {
-  const policy = dom.leaderboardVisibilityPolicyInput?.value || "automatic";
-  const automatic = policy === "automatic";
-  document.querySelectorAll("[data-leaderboard-automatic-control] input").forEach(function (input) {
-    if (input instanceof HTMLInputElement) {
-      input.disabled = !automatic;
-    }
-  });
-  if (dom.leaderboardVisibilityPolicyHint) {
-    const key = policy === "on_request"
-      ? "leaderboardVisibility.onRequestHint"
-      : policy === "always"
-        ? "leaderboardVisibility.alwaysHint"
-        : "leaderboardVisibility.automaticHint";
-    dom.leaderboardVisibilityPolicyHint.textContent = t(key);
-  }
+  syncLeaderboardVisibilityControlsUI();
 }
 
 /**
