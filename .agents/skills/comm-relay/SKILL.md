@@ -5,7 +5,7 @@ description: Product and domain rules for CommRelay (comm-relay). Use when imple
 
 # CommRelay — domain
 
-Canonical brief: [`docs/concept.md`](../../../docs/concept.md). Next horizon: [`docs/roadmap.md`](../../../docs/roadmap.md).
+Canonical brief: [`docs/concept.md`](../../../docs/concept.md). Interactive vision and initiative status: [`docs/interactive/`](../../../docs/interactive/). Next committed horizon: [`docs/roadmap.md`](../../../docs/roadmap.md).
 
 ## Product goals
 

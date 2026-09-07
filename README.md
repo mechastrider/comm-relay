@@ -234,7 +234,7 @@ OAuth не требуется. Укажите slug канала или URL `live
 ## Документация и разработка
 
 - [Техническая документация для разработчиков](docs/development.md) — локальный запуск, проверки, Wails-сборка и release workflow.
-- [Концепция продукта](docs/concept.md) и [roadmap интерактивной системы](docs/roadmap.md).
+- [Концепция продукта](docs/concept.md), [карта интерактивной системы](docs/interactive/README.md) и [roadmap](docs/roadmap.md).
 - [FAQ](docs/FAQ.md) — типичные проблемы с OBS, overlay и платформами.
 
 ## Поддержка и вопросы
