@@ -221,7 +221,7 @@ More on typical overlay and OBS issues on Linux: [`docs/FAQ.en.md`](docs/FAQ.en.
 ## Documentation and development
 
 - [Technical documentation for developers](docs/development.en.md) — local development, checks, Wails builds, and the release workflow.
-- [Product concept](docs/concept.md) and the [interactive-system roadmap](docs/roadmap.md).
+- [Product concept](docs/concept.md), [interactive-system map](docs/interactive/README.md), and [roadmap](docs/roadmap.md).
 - [FAQ](docs/FAQ.en.md) — common OBS, overlay, and platform issues.
 
 ## Support and questions

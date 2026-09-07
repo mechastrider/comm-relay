@@ -2,7 +2,7 @@
 
 This guide is for AI agents working on **CommRelay** — a local Go application that aggregates streaming chat (Twitch, YouTube, …) and feeds an OBS Browser Source overlay.
 
-Product brief: [`docs/concept.md`](docs/concept.md) (Russian). Next horizon: [`docs/roadmap.md`](docs/roadmap.md) (Russian). Open product/UX questions (unresolved): [`docs/open-questions.md`](docs/open-questions.md) (Russian). Canonical implemented behavior: [`openspec/specs/`](openspec/specs/).
+Product brief: [`docs/concept.md`](docs/concept.md) (Russian). Interactive-system hub and idea registry: [`docs/interactive/`](docs/interactive/) (Russian). Next horizon: [`docs/roadmap.md`](docs/roadmap.md) (Russian). Open product/UX questions (unresolved): [`docs/open-questions.md`](docs/open-questions.md) (Russian). Canonical implemented behavior: [`openspec/specs/`](openspec/specs/).
 
 ## Project Overview
 
@@ -26,9 +26,11 @@ comm-relay/
 ├── openspec/             # spec-driven planning (config, specs, changes)
 ├── docs/
 │   ├── concept.md
+│   ├── interactive/       # vision + initiative backlog/status registry
 │   ├── roadmap.md
 │   ├── open-questions.md   # unresolved product/UX questions (not a spec)
-│   └── research/           # deeper notes; may spawn open questions
+│   ├── research/           # durable deep dives and dated archives
+│   └── task-tracker.md     # temporary legacy CR-023 delivery entry
 └── .agents/skills/
 ```
 
@@ -38,14 +40,20 @@ comm-relay/
 2. **Resilience**: auto-reconnect per connector; one connector failing must not crash the process.
 3. **Simple deployment**: single executable, Windows-friendly, minimal memory.
 4. **Logging**: `github.com/muonsoft/clog` (on `log/slog`) — Debug/Info/Warn/Error — see skill `golang-logging`.
-5. **Small, explicit changes**: match existing package layout; plan behavior changes as OpenSpec deltas; update `docs/concept.md` / `docs/roadmap.md` only when the product contract or horizon changes; capture unresolved product/UX questions in `docs/open-questions.md` (see **Open questions** below) instead of coding or roadmap churn.
+5. **Small, explicit changes**: match existing package layout; plan behavior changes as OpenSpec deltas; triage stream/session ideas through `docs/interactive/backlog.md`; update `docs/concept.md` / `docs/roadmap.md` only when the product contract or committed horizon changes; capture unresolved product/UX questions in `docs/open-questions.md` instead of coding or roadmap churn.
 6. **Changelog for user-visible work**: when a task changes **product behavior** a streamer or OBS operator would notice — config, API contract, admin/overlay/dock UX, connectors as experienced in the UI, or README/FAQ text that changes install, setup, or how to use the app — append concise Russian bullets to `CHANGELOG.md` under `## [Unreleased]` (skill `changelog`). **Skip** marketing and repo-only edits: promo/hero images, banners, screenshots, typos in README that do not change instructions, refactors, file/module splits, tests-only, lint, or internal agent/tooling — even if `web/admin`, `web/overlay`, or README files changed. Never erase or rewrite existing `## [X.Y.Z]` sections while editing Unreleased.
 
 ## Language Conventions
 
 - Code identifiers and Go comments: English.
 - Agent skills (`SKILL.md`), `AGENTS.md`, and OpenSpec artifacts: English.
-- `docs/concept.md`, `docs/roadmap.md`, and `docs/open-questions.md` may stay in Russian as the product brief, next-horizon plan, and open-question inbox.
+- `docs/concept.md`, `docs/interactive/`, `docs/roadmap.md`, `docs/research/`, and `docs/open-questions.md` may stay in Russian as product and research documentation.
+
+## Interactive research and ideas
+
+Raw stream transcripts, screenshots, and session analyses stay outside Git under `var/session_analysis/`. Durable ideas and their lifecycle live in [`docs/interactive/backlog.md`](docs/interactive/backlog.md); do not turn raw session output into roadmap commitments or implementation tasks automatically.
+
+**Workflow:** skill [`interactive-research`](.agents/skills/interactive-research/SKILL.md) — deduplicate observations, verify current behavior against canonical specs, assign stable `INT-NNN` ids, and route items to research, open questions, roadmap, or OpenSpec. Never link committed documentation to a local `var/` path.
 
 ## Open questions
 
@@ -91,6 +99,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 |-------|----------|
 | `changelog` | Preparing releases, editing `CHANGELOG.md`, or writing user-facing release notes |
 | `release-announce` | Short Russian social posts (Telegram/VK/Twitter) for a version — `CHANGELOG.md` as source, friendly meaning-first streamer wording |
+| `interactive-research` | Triage stream/session notes, maintain `docs/interactive/backlog.md`, and reconcile initiative status with OpenSpec |
 
 ### Hub / devtools
 
@@ -116,7 +125,7 @@ starts with `work-intake`.
 
 ## OpenSpec workflow
 
-Changes that alter observable behavior are planned using **OpenSpec** (CLI `openspec` 1.8+). Specs describe shipping behavior captured from code; future work is a delta against `openspec/specs/`. For an idea, symptom, or request without a detailed task, start with `work-intake`; it researches the repository and selects the smallest adequate schema before proposal work.
+Changes that alter observable behavior are planned using **OpenSpec** (CLI `openspec` 1.8+). Specs describe shipping behavior captured from code; future work is a delta against `openspec/specs/`. Stream-derived ideas are first triaged into `docs/interactive/backlog.md`; a backlog entry is not authorization to implement. For an idea, symptom, or request without a detailed task, start with `work-intake`; it researches the repository and selects the smallest adequate schema before proposal work.
 
 **Key paths**
 

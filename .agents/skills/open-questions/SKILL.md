@@ -9,6 +9,7 @@ Unresolved **product and UX decisions** that must not drive implementation until
 
 **Inbox:** [`docs/open-questions.md`](../../../docs/open-questions.md) (Russian entries OK).  
 **Canonical shipped behavior:** [`openspec/specs/`](../../../openspec/specs/).  
+**Initiative registry:** [`docs/interactive/backlog.md`](../../../docs/interactive/backlog.md).
 **Committed horizon:** [`docs/roadmap.md`](../../../docs/roadmap.md).  
 **Deep dives:** [`docs/research/`](../../../docs/research/).
 
@@ -19,18 +20,18 @@ Read project [`AGENTS.md`](../../../AGENTS.md) for how this skill fits the agent
 | Layer | Path | Use when |
 |-------|------|----------|
 | Open question | `docs/open-questions.md` | Short entry: context, question, options, status `open` |
+| Initiative | `docs/interactive/backlog.md` | Stable `INT-NNN`, lifecycle status, and routing links |
 | Research note | `docs/research/<topic>.md` | Tables, code cross-check, several subtopics |
 | Roadmap | `docs/roadmap.md` | Direction agreed; priority on the horizon |
 | OpenSpec change | `openspec/changes/<name>/` | Ready to specify and implement |
-| Task | `docs/task-tracker.md` + `docs/tasks/CR-*.md` | Scoped work with acceptance criteria |
 
 Promotion path:
 
 ```text
-open-questions.md (open)
+interactive/backlog.md (needs_decision) ↔ open-questions.md (open)
   → roadmap.md and/or openspec/changes/<name>/
   → openspec/specs/
-  → task-tracker (optional CR task)
+  → interactive/backlog.md (implemented)
 ```
 
 ## When to capture
@@ -50,7 +51,7 @@ Route elsewhere instead:
 |-----------|--------|
 | Clear bug or regression vs specs | Fix against `openspec/specs/` |
 | Decision made; work is next | `docs/roadmap.md` and/or OpenSpec change |
-| Ready to build with acceptance | `docs/task-tracker.md` + `docs/tasks/CR-*.md` |
+| Ready to build with acceptance | OpenSpec change; update the related `INT-NNN` to `in_progress` |
 | Pure technical how-to or one-off answer | Conversation or research note only |
 | User-visible fix already chosen | Implement; use `changelog` if operators notice |
 
@@ -96,11 +97,11 @@ When the human chooses a direction:
 
 1. Set status to `promoted` (work scheduled) or `resolved` (already reflected elsewhere).
 2. Record the link: roadmap bullet, `openspec/changes/<name>/`, or spec path.
-3. Trim duplicate prose from the open-question body once the canonical answer lives in specs, roadmap, or FAQ.
-4. Continue with the normal delivery path:
+3. Update the related `INT-NNN` to `planned`, `in_progress`, or `implemented` as appropriate.
+4. Trim duplicate prose from the open-question body once the canonical answer lives in specs, roadmap, or FAQ.
+5. Continue with the normal delivery path:
    - `openspec-propose` or `openspec new change` for observable behavior changes.
    - `openspec-apply-change` / implementation after artifacts exist.
-   - Optional `docs/task-tracker.md` CR when the team uses task files.
 
 ### 5 — Close without implementation
 
@@ -111,6 +112,7 @@ Set status `wont-fix` with a one-line rationale (e.g. out of scope, acceptable t
 | Skill | Role |
 |-------|------|
 | `work-intake` | During §2 research, scan `docs/open-questions.md`; if maturity stays **Shaping** for product UX, capture or update an open question instead of opening an OpenSpec change |
+| `interactive-research` | Keep the related `INT-NNN` and its routing link synchronized with the question status |
 | `openspec-explore` | Exploration may end by filing an open question; do not create a change folder for tentative product indecision |
 | `openspec-propose` | After promotion, when the decision is ready to specify |
 | `changelog` | Only after shipped behavior changes — not when filing or closing open questions |
