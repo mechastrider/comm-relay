@@ -91,7 +91,7 @@ func TestConnector_RunSession_PublishesMappedMessage(t *testing.T) {
 		return &sessionFakeClient{raw: raw}, nil
 	}
 
-	events, unsub := eventBus.Subscribe()
+	events, unsub := eventBus.Subscribe("test")
 	defer unsub()
 
 	ctx, cancel := context.WithCancel(context.Background())

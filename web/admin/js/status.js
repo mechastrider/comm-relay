@@ -142,6 +142,46 @@ export function formatMessageCounts(counts) {
     return entries.join(", ");
   }
 
+export function formatPipelineSummary(pipeline) {
+    if (!pipeline || typeof pipeline !== "object") {
+      return t("status.pipelineClear");
+    }
+
+    function sumMap(map) {
+      if (!map || typeof map !== "object") {
+        return 0;
+      }
+      return Object.keys(map).reduce(function (total, key) {
+        const value = map[key];
+        return total + (typeof value === "number" ? value : 0);
+      }, 0);
+    }
+
+    const parts = [];
+    const busDrops = sumMap(pipeline.bus_drops);
+    const wsDrops = sumMap(pipeline.websocket_drops);
+    if (busDrops > 0) {
+      parts.push(t("status.pipelineBusDrops", { count: String(busDrops) }));
+    }
+    if (wsDrops > 0) {
+      parts.push(t("status.pipelineWsDrops", { count: String(wsDrops) }));
+    }
+    if (typeof pipeline.commands_fired === "number" && pipeline.commands_fired > 0) {
+      parts.push(t("status.pipelineCommands", { count: String(pipeline.commands_fired) }));
+    }
+    if (typeof pipeline.awards_granted === "number" && pipeline.awards_granted > 0) {
+      parts.push(t("status.pipelineAwards", { count: String(pipeline.awards_granted) }));
+    }
+    const suppressedTotal = sumMap(pipeline.commands_suppressed);
+    if (suppressedTotal > 0) {
+      parts.push(t("status.pipelineSuppressed", { count: String(suppressedTotal) }));
+    }
+    if (parts.length === 0) {
+      return t("status.pipelineClear");
+    }
+    return parts.join(" · ");
+  }
+
 export function formatRefreshTime(value) {
     if (typeof value !== "string" || value === "") {
       return t("status.never");
@@ -251,6 +291,7 @@ export function renderDiagnostics(payload) {
     const clients = payload.websocket_clients;
     const wsText = typeof clients === "number" ? String(clients) : "-";
     const messageText = formatMessageCounts(payload.message_counts);
+    const pipelineText = formatPipelineSummary(payload.pipeline);
 
     if (dom.diagUptime) {
       dom.diagUptime.textContent = uptimeText;
@@ -269,6 +310,12 @@ export function renderDiagnostics(payload) {
     }
     if (dom.settingsDiagMessageCounts) {
       dom.settingsDiagMessageCounts.textContent = messageText;
+    }
+    if (dom.diagPipeline) {
+      dom.diagPipeline.textContent = pipelineText;
+    }
+    if (dom.settingsDiagPipeline) {
+      dom.settingsDiagPipeline.textContent = pipelineText;
     }
     if (payload.connectors) {
       renderStatus(payload.connectors);

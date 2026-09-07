@@ -125,7 +125,7 @@ func (r *Registry) RunMessageCounter(ctx context.Context, b *bus.Bus) {
 		return
 	}
 
-	events, unsub := b.Subscribe()
+	events, unsub := b.Subscribe("message-counter")
 	defer unsub()
 
 	for {

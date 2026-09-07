@@ -39,7 +39,7 @@ comm-relay/
 1. **Unified chat model**: connectors map platform messages to `ChatMessage`; overlay never branches on platform specifics beyond display metadata.
 2. **Resilience**: auto-reconnect per connector; one connector failing must not crash the process.
 3. **Simple deployment**: single executable, Windows-friendly, minimal memory.
-4. **Logging**: `github.com/muonsoft/clog` (on `log/slog`) — Debug/Info/Warn/Error — see skill `golang-logging`.
+4. **Logging**: `github.com/muonsoft/clog` (on `log/slog`) — Debug/Info/Warn/Error — see skill `golang-logging`. Important product events and silent skips must be observable via logs and/or diagnostics counters — see skill `comm-relay-observability`.
 5. **Small, explicit changes**: match existing package layout; plan behavior changes as OpenSpec deltas; triage stream/session ideas through `docs/interactive/backlog.md`; update `docs/concept.md` / `docs/roadmap.md` only when the product contract or committed horizon changes; capture unresolved product/UX questions in `docs/open-questions.md` instead of coding or roadmap churn.
 6. **Changelog for user-visible work**: when a task changes **product behavior** a streamer or OBS operator would notice — config, API contract, admin/overlay/dock UX, connectors as experienced in the UI, or README/FAQ text that changes install, setup, or how to use the app — append concise Russian bullets to `CHANGELOG.md` under `## [Unreleased]` (skill `changelog`). **Skip** marketing and repo-only edits: promo/hero images, banners, screenshots, typos in README that do not change instructions, refactors, file/module splits, tests-only, lint, or internal agent/tooling — even if `web/admin`, `web/overlay`, or README files changed. Never erase or rewrite existing `## [X.Y.Z]` sections while editing Unreleased.
 
@@ -80,6 +80,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 | `comm-relay-backend-golang` | Go style, layers, connectors, bus |
 | `golang-errors` | Error wrapping and sentinels (`github.com/muonsoft/errors`) |
 | `golang-logging` | `github.com/muonsoft/clog`, contextual logging |
+| `comm-relay-observability` | Product event logs, bus/WS drop counters, command/award observability, stream incident debugging |
 | `golang-validation` | Optional: `github.com/muonsoft/validation` for config/API DTOs |
 | `golang-tests` | Handler and connector tests (`api-testing`, testify) |
 | `runnable-background-processes` | Connectors and workers via `pior/runnable` |
@@ -190,6 +191,7 @@ Before reporting a task as done:
 - `go test ./...` (or targeted packages); `-race` when changing concurrency.
 - `golangci-lint run ./...` (config: `.golangci.yml`, v2).
 - If you changed `web/**/*.js`: `npm ci` (once) and `npm run lint`.
+- If you touched ingest, bus, commands, awards, connectors, or WebSocket delivery: verify logging and `pipeline` counters per skill `comm-relay-observability`.
 - If the change is user-visible product behavior (see Core Principle 6 and skill `changelog`): update `CHANGELOG.md` under `[Unreleased]`. Skip changelog for marketing assets, README promo images, and no-behavior refactors of admin/overlay code.
 - If preparing a release: move `[Unreleased]` into a versioned section, set the date, and keep README artifact names/install steps in sync.
 - If static UI changed: smoke-check overlay (transparent background, message limit) and admin forms.

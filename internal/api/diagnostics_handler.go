@@ -6,6 +6,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
+	"github.com/mechastrider/comm-relay/internal/observability"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/mechastrider/comm-relay/internal/version"
 )
@@ -29,13 +30,14 @@ func newDiagnosticsHandler(store *config.Store, registry *status.Registry, hub *
 }
 
 type diagnosticsResponse struct {
-	AppVersion        string            `json:"app_version"`
-	UptimeSeconds     int64             `json:"uptime_seconds"`
-	WebSocketClients  int               `json:"websocket_clients"`
-	EnabledConnectors []string          `json:"enabled_connectors"`
-	MessageCounts     map[string]uint64 `json:"message_counts"`
-	Connectors        statusResponse    `json:"connectors"`
-	EmoteCache        emote.Snapshot    `json:"emote_cache"`
+	AppVersion        string                 `json:"app_version"`
+	UptimeSeconds     int64                  `json:"uptime_seconds"`
+	WebSocketClients  int                    `json:"websocket_clients"`
+	EnabledConnectors []string               `json:"enabled_connectors"`
+	MessageCounts     map[string]uint64      `json:"message_counts"`
+	Pipeline          observability.Snapshot `json:"pipeline"`
+	Connectors        statusResponse         `json:"connectors"`
+	EmoteCache        emote.Snapshot         `json:"emote_cache"`
 }
 
 func (h *diagnosticsHandler) handleGet(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +72,7 @@ func (h *diagnosticsHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 		WebSocketClients:  wsClients,
 		EnabledConnectors: enabledConnectors(cfg),
 		MessageCounts:     messageCounts,
+		Pipeline:          observability.Default.Snapshot(),
 		Connectors: statusResponse{
 			Twitch:  twitchStatusResponse(cfg, h.registry),
 			YouTube: youtubeStatusResponse(cfg, h.registry),

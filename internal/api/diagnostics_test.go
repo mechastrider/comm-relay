@@ -60,7 +60,14 @@ func TestDiagnostics_WhenGet_ExpectRuntimeFields(t *testing.T) {
 		WebSocketClients  int               `json:"websocket_clients"`
 		EnabledConnectors []string          `json:"enabled_connectors"`
 		MessageCounts     map[string]uint64 `json:"message_counts"`
-		Connectors        struct {
+		Pipeline          struct {
+			BusDrops           map[string]uint64 `json:"bus_drops"`
+			WebSocketDrops     map[string]uint64 `json:"websocket_drops"`
+			CommandsFired      uint64            `json:"commands_fired"`
+			CommandsSuppressed map[string]uint64 `json:"commands_suppressed"`
+			AwardsGranted      uint64            `json:"awards_granted"`
+		} `json:"pipeline"`
+		Connectors struct {
 			Twitch struct {
 				State        string `json:"state"`
 				MessageCount uint64 `json:"message_count"`
@@ -79,4 +86,7 @@ func TestDiagnostics_WhenGet_ExpectRuntimeFields(t *testing.T) {
 	require.Equal(t, "connected", payload.Connectors.Twitch.State)
 	require.Equal(t, uint64(3), payload.Connectors.Twitch.MessageCount)
 	require.NotNil(t, payload.EmoteCache.Providers)
+	require.NotNil(t, payload.Pipeline.BusDrops)
+	require.NotNil(t, payload.Pipeline.WebSocketDrops)
+	require.NotNil(t, payload.Pipeline.CommandsSuppressed)
 }

@@ -62,6 +62,10 @@ func (c *wsClient) writePump() {
 			}
 
 			if err := c.conn.WriteMessage(websocket.TextMessage, payload); err != nil {
+				clog.Warn(c.ctx, "websocket write failed",
+					slog.String("frame_type", wireFrameType(payload)),
+					slog.Any("error", err),
+				)
 				return
 			}
 		case <-ticker.C:

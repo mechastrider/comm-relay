@@ -3,9 +3,11 @@ package leaderboard
 
 import (
 	"context"
+	"log/slog"
 	"sync/atomic"
 	"time"
 
+	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 
 	"github.com/mechastrider/comm-relay/internal/config"
@@ -541,6 +543,12 @@ func (c *Controller) emit() {
 	snapshot := c.snapshot()
 	c.current.Store(snapshot)
 	if c.publish != nil {
+		clog.Info(context.Background(), "leaderboard visibility changed",
+			slog.String("state", string(snapshot.State)),
+			slog.String("reason", string(snapshot.Reason)),
+			slog.String("policy", snapshot.Policy),
+			slog.Bool("visible", snapshot.Visible),
+		)
 		c.publish(snapshot)
 	}
 }

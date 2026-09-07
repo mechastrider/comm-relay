@@ -93,7 +93,7 @@ func TestConnector_Run_WhenSessionActive_ExpectPublishedMessage(t *testing.T) {
 	t.Parallel()
 
 	eventBus := bus.New(8)
-	events, unsub := eventBus.Subscribe()
+	events, unsub := eventBus.Subscribe("test")
 	defer unsub()
 
 	fake := &fakeIRCClient{connectCh: make(chan struct{}, 1)}

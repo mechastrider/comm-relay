@@ -42,6 +42,7 @@ Prefer **interfaces** at connector boundaries for tests (`Connector`, `Publisher
 
 - Errors: `github.com/muonsoft/errors` — see [golang-errors](../golang-errors/SKILL.md).
 - Logging: `github.com/muonsoft/clog` — see [golang-logging](../golang-logging/SKILL.md).
+- Product events, drops, and diagnostics counters — see [comm-relay-observability](../comm-relay-observability/SKILL.md).
 - **No panic** in production paths; return `error`.
 - Do not ignore errors (`_ = err` forbidden).
 

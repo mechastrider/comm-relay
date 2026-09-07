@@ -131,7 +131,13 @@ func (c *Connector) runSession(ctx context.Context, channel string) error {
 		imagelink.Enrich(&chatMsg, overlay.ImagePreviews)
 		if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
 			clog.Errorf(ctx, "publish twitch message: %w", err)
+			return
 		}
+		clog.Debug(ctx, "chat message published",
+			slog.String("platform", platformTwitch),
+			slog.String("message_id", chatMsg.ID),
+			slog.String("user_id", chatMsg.UserID),
+		)
 	})
 
 	client.Join(channel)

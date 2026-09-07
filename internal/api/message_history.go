@@ -45,7 +45,7 @@ func (h *MessageHistory) SetConfigStore(cfgStore *config.Store) {
 
 // Run subscribes to chat events until the context is cancelled.
 func (h *MessageHistory) Run(ctx context.Context, b *bus.Bus) {
-	events, unsub := b.Subscribe()
+	events, unsub := b.Subscribe("message-history")
 	defer unsub()
 
 	for {

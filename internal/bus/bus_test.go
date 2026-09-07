@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/observability"
 )
 
 func TestBus_WhenPublishChatMessage_ExpectSubscriberReceives(t *testing.T) {
@@ -17,7 +18,7 @@ func TestBus_WhenPublishChatMessage_ExpectSubscriberReceives(t *testing.T) {
 	b := bus.New(4)
 	t.Cleanup(b.Close)
 
-	events, unsub := b.Subscribe()
+	events, unsub := b.Subscribe("test")
 	defer unsub()
 	require.Equal(t, 1, b.SubscriberCount())
 
@@ -44,10 +45,10 @@ func TestBus_WhenMultipleSubscribers_ExpectBothReceive(t *testing.T) {
 	b := bus.New(4)
 	t.Cleanup(b.Close)
 
-	a, unsubA := b.Subscribe()
+	a, unsubA := b.Subscribe("a")
 	defer unsubA()
 
-	bSub, unsubB := b.Subscribe()
+	bSub, unsubB := b.Subscribe("b")
 	defer unsubB()
 
 	msg := bus.ChatMessage{ID: "2", Platform: "twitch", Message: "hi"}
@@ -78,7 +79,7 @@ func TestBus_WhenClosed_ExpectSubscriberChannelClosed(t *testing.T) {
 	t.Parallel()
 
 	b := bus.New(4)
-	events, _ := b.Subscribe()
+	events, _ := b.Subscribe("test")
 	b.Close()
 
 	_, open := <-events
@@ -92,7 +93,7 @@ func TestBus_WhenSubscriberBufferFull_ExpectPublishDoesNotBlock(t *testing.T) {
 	b := bus.New(bufCap)
 	t.Cleanup(b.Close)
 
-	events, unsub := b.Subscribe()
+	events, unsub := b.Subscribe("test")
 	defer unsub()
 
 	for range bufCap {
@@ -119,7 +120,6 @@ func TestBus_WhenSubscriberBufferFull_ExpectPublishDoesNotBlock(t *testing.T) {
 	}
 	require.NoError(t, publishErr)
 
-	// Drain buffered events so the test goroutine can exit cleanly.
 	for range bufCap {
 		<-events
 	}
@@ -131,13 +131,12 @@ func TestBus_WhenSlowSubscriber_ExpectFastSubscriberStillReceives(t *testing.T) 
 	b := bus.New(1)
 	t.Cleanup(b.Close)
 
-	slow, unsubSlow := b.Subscribe()
+	slow, unsubSlow := b.Subscribe("slow")
 	defer unsubSlow()
 
-	// Fill the slow subscriber buffer without reading.
 	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{ID: "first"})))
 
-	fast, unsubFast := b.Subscribe()
+	fast, unsubFast := b.Subscribe("fast")
 	defer unsubFast()
 
 	msg := bus.ChatMessage{ID: "second", Message: "for fast"}
@@ -156,4 +155,20 @@ func TestBus_WhenSlowSubscriber_ExpectFastSubscriberStillReceives(t *testing.T) 
 	default:
 		t.Fatal("expected first message in slow buffer")
 	}
+}
+
+func TestBus_WhenSubscriberBufferFull_ExpectDropCounterIncrements(t *testing.T) {
+	reg := observability.NewRegistry()
+	b := bus.New(1)
+	b.SetMetricsRegistry(reg)
+	t.Cleanup(b.Close)
+
+	_, unsub := b.Subscribe("full-subscriber")
+	defer unsub()
+
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{ID: "first"})))
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{ID: "second"})))
+
+	snap := reg.Snapshot()
+	require.Equal(t, uint64(1), snap.BusDrops["full-subscriber"])
 }

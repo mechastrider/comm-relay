@@ -416,9 +416,17 @@ func (c *Connector) publishLiveChatItems(ctx context.Context, items []*youtube.L
 
 func (c *Connector) publishChatMessage(ctx context.Context, chatMsg bus.ChatMessage, messageID, emojiSourceText string) {
 	if strings.TrimSpace(chatMsg.Message) == "" {
+		clog.Debug(ctx, "youtube chat message skipped",
+			slog.String("reason", "empty"),
+			slog.String("message_id", strings.TrimSpace(messageID)),
+		)
 		return
 	}
 	if !c.markMessageID(messageID) {
+		clog.Debug(ctx, "youtube chat message skipped",
+			slog.String("reason", "dedupe"),
+			slog.String("message_id", strings.TrimSpace(messageID)),
+		)
 		return
 	}
 
@@ -429,7 +437,13 @@ func (c *Connector) publishChatMessage(ctx context.Context, chatMsg bus.ChatMess
 	imagelink.Enrich(&chatMsg, overlay.ImagePreviews)
 	if err := c.bus.Publish(bus.ChatMessageReceived(chatMsg)); err != nil {
 		clog.Errorf(ctx, "publish youtube message: %w", err)
+		return
 	}
+	clog.Debug(ctx, "chat message published",
+		slog.String("platform", platformYouTube),
+		slog.String("message_id", chatMsg.ID),
+		slog.String("user_id", chatMsg.UserID),
+	)
 }
 
 func (c *Connector) markMessageID(id string) bool {

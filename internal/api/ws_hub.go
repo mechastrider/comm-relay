@@ -11,6 +11,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/leaderboard"
+	"github.com/mechastrider/comm-relay/internal/observability"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -47,7 +48,7 @@ func NewHub(b *bus.Bus, matcher *command.Matcher, cfgStore *config.Store, viewer
 
 // Run consumes bus events and broadcasts them to connected clients until context cancellation.
 func (h *Hub) Run(ctx context.Context) {
-	events, unsub := h.bus.Subscribe()
+	events, unsub := h.bus.Subscribe("websocket-hub")
 	defer unsub()
 
 	for {
@@ -182,11 +183,12 @@ func (h *Hub) broadcast(payload []byte) {
 }
 
 func broadcastClients(clients map[*wsClient]struct{}, payload []byte) {
+	frameType := wireFrameType(payload)
 	for c := range clients {
 		select {
 		case c.send <- payload:
 		default:
-			// Slow client: drop this frame without blocking other clients.
+			observability.Default.RecordWebSocketDrop(frameType)
 		}
 	}
 }

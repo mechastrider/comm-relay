@@ -51,7 +51,7 @@ func (s *fakeStream) RecvMsg(any) error            { return nil }
 
 func TestRunStream_WhenMessagesArrive_ExpectPublish(t *testing.T) {
 	eventBus := bus.New(8)
-	events, unsub := eventBus.Subscribe()
+	events, unsub := eventBus.Subscribe("test")
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/leaderboard"
+	"github.com/mechastrider/comm-relay/internal/observability"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -57,7 +59,7 @@ func (v *ViewerIngest) Run(ctx context.Context, b *bus.Bus) {
 		return
 	}
 
-	events, unsub := b.Subscribe()
+	events, unsub := b.Subscribe("viewer-ingest")
 	defer unsub()
 
 	for {
@@ -77,7 +79,22 @@ func (v *ViewerIngest) Run(ctx context.Context, b *bus.Bus) {
 }
 
 func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
+	var matchedCmd *store.Command
+	if v.matcher != nil {
+		if cmd, ok := v.matcher.Lookup(msg.Message); ok {
+			matchedCmd = cmd
+		}
+	}
+
 	if strings.TrimSpace(msg.Platform) == "" || strings.TrimSpace(msg.UserID) == "" {
+		if matchedCmd != nil {
+			observability.Default.RecordCommandSuppressed("empty_identity")
+			clog.Warn(ctx, "command skipped: empty identity",
+				slog.String("trigger", matchedCmd.Trigger),
+				slog.String("platform", strings.TrimSpace(msg.Platform)),
+				slog.String("message_id", strings.TrimSpace(msg.ID)),
+			)
+		}
 		return
 	}
 
@@ -86,13 +103,6 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		IntervalSeconds: cfg.ActivityIntervalSeconds,
 		SessionLimit:    cfg.ActivitySessionLimit,
 		XP:              cfg.ActivityXP,
-	}
-
-	var matchedCmd *store.Command
-	if v.matcher != nil {
-		if cmd, ok := v.matcher.Lookup(msg.Message); ok {
-			matchedCmd = cmd
-		}
 	}
 
 	now := msg.Timestamp
@@ -135,8 +145,23 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	}
 
 	if !v.matcher.TryFire(msg.Platform, msg.UserID, matchedCmd) {
+		observability.Default.RecordCommandSuppressed("cooldown")
+		clog.Debug(ctx, "command suppressed: cooldown",
+			slog.String("trigger", matchedCmd.Trigger),
+			slog.String("platform", msg.Platform),
+			slog.String("user_id", msg.UserID),
+		)
 		return
 	}
+
+	observability.Default.RecordCommandFired()
+	clog.Info(ctx, "command fired",
+		slog.String("trigger", matchedCmd.Trigger),
+		slog.String("platform", msg.Platform),
+		slog.String("user_id", msg.UserID),
+		slog.String("message_id", strings.TrimSpace(msg.ID)),
+		slog.String("action", string(matchedCmd.Action)),
+	)
 
 	viewerID, ok := v.viewerStore.ViewerIDForIdentity(msg.Platform, msg.UserID)
 	if !ok {

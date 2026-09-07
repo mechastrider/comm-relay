@@ -36,9 +36,11 @@ export const vkDetail = document.getElementById("settings-vk-detail");
 export const diagUptime = document.getElementById("diag-uptime");
 export const diagWsClients = document.getElementById("diag-ws-clients");
 export const diagMessageCounts = document.getElementById("diag-message-counts");
+export const diagPipeline = document.getElementById("diag-pipeline");
 export const settingsDiagUptime = document.getElementById("settings-diag-uptime");
 export const settingsDiagWsClients = document.getElementById("settings-diag-ws-clients");
 export const settingsDiagMessageCounts = document.getElementById("settings-diag-message-counts");
+export const settingsDiagPipeline = document.getElementById("settings-diag-pipeline");
 export const vkEnabled = document.getElementById("vk-enabled");
 export const vkChannel = document.getElementById("vk-channel");
 if (!vkEnabled || !vkChannel) {

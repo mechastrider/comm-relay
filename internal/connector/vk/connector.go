@@ -121,6 +121,11 @@ func (c *Connector) runSession(ctx context.Context, channel string, proxyCfg *co
 			clog.Errorf(ctx, "publish vk message: %w", err)
 			return
 		}
+		clog.Debug(ctx, "chat message published",
+			slog.String("platform", platformVK),
+			slog.String("message_id", chatMsg.ID),
+			slog.String("user_id", chatMsg.UserID),
+		)
 		c.setStatus(status.StateConnected, "", "")
 	})
 }

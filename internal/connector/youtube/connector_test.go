@@ -75,7 +75,7 @@ func TestConnector_Run_WhenPageModeWithoutSource_ExpectErrorStatus(t *testing.T)
 
 func TestConnectorRunPageSession_WhenChannelAutoDetect_ExpectResolvedVideo(t *testing.T) {
 	eventBus := bus.New(8)
-	events, unsub := eventBus.Subscribe()
+	events, unsub := eventBus.Subscribe("test")
 	defer unsub()
 
 	store := testStore(t, config.YouTubeConfig{
@@ -115,7 +115,7 @@ func TestConnectorRunPageSession_WhenChannelAutoDetect_ExpectResolvedVideo(t *te
 
 func TestConnectorRunPageSession_WhenMessagesReturned_ExpectPublish(t *testing.T) {
 	eventBus := bus.New(8)
-	events, unsub := eventBus.Subscribe()
+	events, unsub := eventBus.Subscribe("test")
 	defer unsub()
 
 	store := testStore(t, config.YouTubeConfig{
@@ -148,7 +148,7 @@ func TestConnectorRunPageSession_WhenMessagesReturned_ExpectPublish(t *testing.T
 
 func TestConnectorRunPageSession_WhenYouTubeEmojiShortcutReturned_ExpectEmoteFragments(t *testing.T) {
 	eventBus := bus.New(8)
-	events, unsub := eventBus.Subscribe()
+	events, unsub := eventBus.Subscribe("test")
 	defer unsub()
 
 	store := testStore(t, config.YouTubeConfig{
@@ -191,7 +191,7 @@ func TestConnectorRunPageSession_WhenYouTubeEmojiShortcutReturned_ExpectEmoteFra
 
 func TestConnectorRunSession_WhenLiveChatReturnsDuplicateIDs_ExpectSinglePublish(t *testing.T) {
 	eventBus := bus.New(8)
-	events, unsub := eventBus.Subscribe()
+	events, unsub := eventBus.Subscribe("test")
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())
@@ -214,7 +214,7 @@ func TestConnectorRunSession_WhenLiveChatReturnsDuplicateIDs_ExpectSinglePublish
 
 func TestConnectorRunSession_WhenReconnectedAndAPIReplaysMessage_ExpectDuplicateSkipped(t *testing.T) {
 	eventBus := bus.New(8)
-	events, unsub := eventBus.Subscribe()
+	events, unsub := eventBus.Subscribe("test")
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())
@@ -243,7 +243,7 @@ func TestConnectorRunSession_WhenReconnectedAndAPIReplaysMessage_ExpectDuplicate
 
 func TestConnectorRunSession_WhenAutoAndStreamFails_ExpectPollFallback(t *testing.T) {
 	eventBus := bus.New(8)
-	events, unsub := eventBus.Subscribe()
+	events, unsub := eventBus.Subscribe("test")
 	defer unsub()
 
 	store := testStore(t, testEnabledYouTubeConfig())

@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/leaderboard"
+	"github.com/mechastrider/comm-relay/internal/observability"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -379,6 +381,13 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.hub.Broadcast(alertPayload)
+	observability.Default.RecordAwardGranted()
+	clog.Info(r.Context(), "award granted",
+		slog.String("award_id", award.ID),
+		slog.String("platform", platform),
+		slog.String("user_id", userID),
+		slog.Int("points", award.Points),
+	)
 	if h.visibility != nil {
 		delay := time.Duration(award.DurationMs) * time.Millisecond
 		switch {
