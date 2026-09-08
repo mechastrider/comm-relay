@@ -604,6 +604,17 @@
             <div id="audience-history-panel" class="audience-panel audience-history-panel" role="tabpanel" aria-labelledby="audience-history-tab" hidden>
               <header class="audience-history__toolbar">
                 <h2 class="audience-history__title" data-i18n="audience.historyHeading">Reward history</h2>
+                <form id="reward-history-viewer-filter-form" class="audience-history__filter" role="search">
+                  <div class="form__field audience-history__filter-field">
+                    <label for="reward-history-viewer-filter" data-i18n="history.viewerFilterLabel">Viewer</label>
+                    <input id="reward-history-viewer-filter" type="search" list="reward-history-viewer-options" autocomplete="off" data-i18n-placeholder="history.viewerFilterPlaceholder" placeholder="All viewers" aria-describedby="reward-history-viewer-filter-status reward-history-viewer-filter-error">
+                    <datalist id="reward-history-viewer-options"></datalist>
+                    <p id="reward-history-viewer-filter-status" class="field-hint" role="status" aria-live="polite" hidden></p>
+                    <p id="reward-history-viewer-filter-error" class="field-error" role="alert" hidden></p>
+                  </div>
+                  <button id="apply-reward-history-viewer-filter" type="submit" class="btn-physical btn-small" data-i18n="history.viewerFilterApply">Show</button>
+                  <button id="clear-reward-history-viewer-filter" type="button" class="btn-physical btn-small" data-i18n="history.viewerFilterClear" disabled>Clear</button>
+                </form>
                 <button id="refresh-reward-history" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
               </header>
               <div id="audience-history-content" class="reward-history__content"></div>

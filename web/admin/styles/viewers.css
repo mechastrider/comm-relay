@@ -709,18 +709,40 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 }
 
 .audience-history__toolbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(18rem, 1fr) auto;
   flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
+  align-items: start;
   gap: var(--primitive-space-3);
   padding: var(--primitive-space-3);
   border-bottom: 1px solid var(--border);
 }
 
 .audience-history__title {
-  margin: 0;
+  margin: 1.55rem 0 0;
   font-size: var(--primitive-font-size-md);
+}
+
+.audience-history__filter {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--primitive-space-2);
+  min-width: 0;
+}
+
+.audience-history__filter-field {
+  flex: 1 1 18rem;
+}
+
+.audience-history__filter-field input[type="search"] {
+  width: 100%;
+  padding: 7px 9px;
+  box-sizing: border-box;
+}
+
+.audience-history__filter > .btn-physical,
+.audience-history__toolbar > .btn-physical {
+  margin-top: 1.35rem;
 }
 
 .reward-history__content {
@@ -758,6 +780,30 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 
 .reward-history-table__viewer {
   width: 30%;
+}
+
+.reward-history-table__viewer-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  margin: calc(var(--primitive-space-2) * -1) 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--amber-dim);
+  text-underline-offset: 3px;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.reward-history-table__viewer-button:hover {
+  color: var(--amber);
+  text-decoration-color: currentColor;
 }
 
 .reward-history-table th:last-child,
@@ -842,6 +888,31 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 }
 
 @media (max-width: 640px) {
+  .audience-history__toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .audience-history__title,
+  .audience-history__toolbar > .btn-physical {
+    margin-top: 0;
+  }
+
+  .audience-history__filter {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .audience-history__filter-field {
+    grid-column: 1 / -1;
+  }
+
+  .audience-history__filter > .btn-physical {
+    width: 100%;
+    min-height: var(--touch-target-min);
+    margin-top: 0;
+  }
+
   .reward-history-table:not(.reward-history-table--compact) {
     display: block;
   }

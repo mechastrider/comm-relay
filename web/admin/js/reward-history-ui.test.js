@@ -10,6 +10,9 @@ class FakeElement {
     this.className = "";
     this._textContent = "";
     this.disabled = false;
+    this.hidden = false;
+    this.value = "";
+    this.focused = false;
   }
 
   get textContent() {
@@ -31,6 +34,10 @@ class FakeElement {
 
   addEventListener(name, listener) {
     this.listeners[name] = listener;
+  }
+
+  focus() {
+    this.focused = true;
   }
 }
 
@@ -82,7 +89,13 @@ test("viewer and channel rows preserve hostile long localized text as text nodes
     globalThis.document = originalDocument;
   });
 
-  const { cancelViewerRewardHistory, createViewerRewardHistory, renderHistory } = await import("./reward-history.js");
+  const {
+    cancelViewerRewardHistory,
+    createViewerRewardHistory,
+    ensureRewardHistoryLoaded,
+    initRewardHistory,
+    renderHistory,
+  } = await import("./reward-history.js");
   const mount = new FakeElement("div");
   const hostileViewer = "<Зритель & очень-длинное-имя>".repeat(8);
   const hostileReward = "<Награда & bonus>".repeat(8);
@@ -172,4 +185,75 @@ test("viewer and channel rows preserve hostile long localized text as text nodes
     return node.className === "notice notice--error reward-history__error";
   }));
   cancelViewerRewardHistory();
+
+  const filterElements = new Map([
+    ["audience-history-content", new FakeElement("div")],
+    ["refresh-reward-history", new FakeElement("button")],
+    ["reward-history-viewer-filter-form", new FakeElement("form")],
+    ["reward-history-viewer-filter", new FakeElement("input")],
+    ["reward-history-viewer-options", new FakeElement("datalist")],
+    ["apply-reward-history-viewer-filter", new FakeElement("button")],
+    ["clear-reward-history-viewer-filter", new FakeElement("button")],
+    ["reward-history-viewer-filter-status", new FakeElement("p")],
+    ["reward-history-viewer-filter-error", new FakeElement("p")],
+  ]);
+  globalThis.document.getElementById = function (id) {
+    return filterElements.get(id) || null;
+  };
+  const filterRequests = [];
+  globalThis.fetch = async function (url) {
+    const value = String(url);
+    filterRequests.push(value);
+    if (value === "/api/viewers") {
+      return {
+        ok: true,
+        payload: { viewers: [{ id: "alice", display_name: "Alice", platforms: ["twitch"] }] },
+      };
+    }
+    return {
+      ok: true,
+      payload: value.includes("viewer_id=") ? { entries: [], next_cursor: null } : {
+        entries: [{
+          viewer_id: "alice",
+          viewer_display_name: "Alice",
+          reward_name: "Welcome",
+          points: 5,
+          created_at: "2026-09-08T14:05:00Z",
+        }],
+        next_cursor: null,
+      },
+    };
+  };
+  initRewardHistory();
+  await ensureRewardHistoryLoaded();
+  assert.deepEqual(filterRequests, ["/api/reward-history?limit=50", "/api/viewers"]);
+  assert.equal(filterElements.get("reward-history-viewer-options").children[0].value, "Alice · twitch");
+
+  const viewerFilterButton = descendants(filterElements.get("audience-history-content")).find(function (node) {
+    return node.className === "reward-history-table__viewer-button";
+  });
+  assert.ok(viewerFilterButton);
+  viewerFilterButton.listeners.click();
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(filterRequests.at(-1), "/api/reward-history?limit=50&viewer_id=alice");
+  filterElements.get("clear-reward-history-viewer-filter").listeners.click();
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(filterRequests.at(-1), "/api/reward-history?limit=50");
+
+  const filterInput = filterElements.get("reward-history-viewer-filter");
+  filterInput.value = "Alice";
+  let prevented = false;
+  filterElements.get("reward-history-viewer-filter-form").listeners.submit({
+    preventDefault() { prevented = true; },
+  });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(prevented, true);
+  assert.equal(filterRequests.at(-1), "/api/reward-history?limit=50&viewer_id=alice");
+  assert.equal(filterElements.get("clear-reward-history-viewer-filter").disabled, false);
+
+  filterElements.get("clear-reward-history-viewer-filter").listeners.click();
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(filterRequests.at(-1), "/api/reward-history?limit=50");
+  assert.equal(filterInput.value, "");
+  assert.equal(filterInput.focused, true);
 });

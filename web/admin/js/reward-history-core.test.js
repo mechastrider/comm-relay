@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildViewerFilterOptions,
   formatRewardHistoryTime,
   formatSignedPoints,
   RewardHistoryController,
+  resolveViewerFilter,
   rewardHistoryURL,
   ViewerRewardHistorySession,
 } from "./reward-history-core.js";
@@ -116,6 +118,29 @@ test("builds bounded read URLs and presentation helpers", function () {
   assert.equal(formatSignedPoints(25), "+25 XP");
   assert.equal(formatSignedPoints(-5), "-5 XP");
   assert.match(formatRewardHistoryTime("2026-09-08T14:05:00Z", "en-GB"), /08\/09\/2026, 14:05/);
+});
+
+test("builds searchable viewer choices and disambiguates duplicate names", function () {
+  const options = buildViewerFilterOptions([
+    { id: "alice-twitch", display_name: "Alice", platforms: ["twitch"] },
+    { id: "alice-youtube", display_name: "Alice", platforms: ["youtube"] },
+    { id: "sam-one", display_name: "Sam", platforms: ["twitch"] },
+    { id: "sam-two", display_name: "Sam", platforms: ["twitch"] },
+  ], function (platform) {
+    return platform === "youtube" ? "YouTube" : "Twitch";
+  });
+
+  assert.deepEqual(options.map(function (option) { return option.label; }), [
+    "Alice · Twitch",
+    "Alice · YouTube",
+    "Sam · Twitch · sam-one",
+    "Sam · Twitch · sam-two",
+  ]);
+  assert.equal(resolveViewerFilter(options, "alice · youtube").id, "alice-youtube");
+  assert.equal(resolveViewerFilter(options, "Alice"), null);
+  assert.equal(resolveViewerFilter(options, "Sam"), null);
+  assert.equal(resolveViewerFilter(options, "unknown"), null);
+  assert.equal(resolveViewerFilter(options, ""), null);
 });
 
 test("viewer session cancels selection, close, merge, workspace teardown, and reopens cleanly", async function () {

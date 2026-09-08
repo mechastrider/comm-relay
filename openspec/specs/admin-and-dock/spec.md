@@ -522,11 +522,19 @@ The Audience command editor SHALL let the operator choose Alert or Show leaderbo
 - **THEN** irrelevant fields are no longer required and the visible form describes the new effect before save
 
 ### Requirement: Audience includes a global reward-history view
-Audience SHALL show a Journal tab immediately after Viewers and before the catalog-management tabs. The tab SHALL show a localized table of award time, viewer, reward name, and points in newest-first order. At narrow widths, the same semantic table SHALL present each entry as a stacked event row without horizontal scrolling while retaining its accessible column headings. It SHALL load fresh data when opened and provide explicit Refresh, loading, empty, error with Retry, and Load more states. Load more MUST append older entries without removing already rendered rows.
+Audience SHALL show a Journal tab immediately after Viewers and before the catalog-management tabs. The tab SHALL show a localized table of award time, viewer, reward name, and points in newest-first order. A labeled, searchable viewer choice SHALL filter the journal through the selected canonical viewer id, expose an explicit clear action that restores all viewers, and distinguish viewers whose display names match. Activating a viewer name in a journal entry SHALL apply the same filter. At narrow widths, the same semantic table SHALL present each entry as a stacked event row without horizontal scrolling while retaining its accessible column headings. It SHALL load fresh data when opened and provide explicit Refresh, loading, empty, error with Retry, and Load more states. Load more MUST append older entries without removing already rendered rows.
 
 #### Scenario: Open Journal
 - **WHEN** the operator opens the Audience Journal tab
 - **THEN** the newest award entries appear with localized timestamps and signed XP values
+
+#### Scenario: Filter Journal by viewer
+- **WHEN** the operator selects a viewer from the searchable choice or activates that viewer's name in an entry
+- **THEN** the journal reloads with only that canonical viewer's awards and identifies the active filter
+
+#### Scenario: Clear viewer filter
+- **WHEN** the operator clears an active viewer filter
+- **THEN** the journal reloads the newest awards across all viewers
 
 #### Scenario: No awards yet
 - **WHEN** the history endpoint returns no entries

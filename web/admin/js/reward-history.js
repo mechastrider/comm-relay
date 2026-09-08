@@ -1,14 +1,24 @@
 import { apiURL, mapHTTPError, readJSON } from "./api.js";
 import { getLocale, t } from "./i18n-ui.js";
 import {
+  buildViewerFilterOptions,
   formatRewardHistoryTime,
   formatSignedPoints,
   RewardHistoryController,
+  resolveViewerFilter,
   rewardHistoryURL,
   ViewerRewardHistorySession,
 } from "./reward-history-core.js";
 
 let globalHistory = null;
+let globalHistoryMount = null;
+let globalHistoryRefresh = null;
+let viewerFilterElements = null;
+let viewerFilterOptions = [];
+let viewerFilterViewers = [];
+let viewerFilterRequest = null;
+let selectedViewerId = null;
+let selectedViewerName = "";
 const viewerHistorySession = new ViewerRewardHistorySession();
 
 async function fetchRewardHistory(viewerId, limit, cursor, signal) {
@@ -18,6 +28,15 @@ async function fetchRewardHistory(viewerId, limit, cursor, signal) {
     throw new Error(mapHTTPError(response.status, payload && payload.error));
   }
   return payload || {};
+}
+
+async function fetchViewerFilterViewers(signal) {
+  const response = await fetch(apiURL("/api/viewers"), { signal: signal });
+  const payload = await readJSON(response);
+  if (!response.ok) {
+    throw new Error(mapHTTPError(response.status, payload && payload.error));
+  }
+  return Array.isArray(payload && payload.viewers) ? payload.viewers : [];
 }
 
 function makeButton(label, action, className) {
@@ -59,7 +78,16 @@ export function makeHistoryTable(entries, options) {
       const viewer = document.createElement("th");
       viewer.className = "reward-history-table__viewer";
       viewer.scope = "row";
-      viewer.textContent = String(entry.viewer_display_name || t("viewers.unnamed"));
+      const viewerName = String(entry.viewer_display_name || t("viewers.unnamed"));
+      if (entry.viewer_id && options.onViewerSelect) {
+        const filter = makeButton(viewerName, function () {
+          options.onViewerSelect(String(entry.viewer_id), viewerName);
+        }, "reward-history-table__viewer-button");
+        filter.setAttribute("aria-label", t("history.filterByViewer", { viewer: viewerName }));
+        viewer.append(filter);
+      } else {
+        viewer.textContent = viewerName;
+      }
       tr.append(viewer);
     }
     const reward = document.createElement("td");
@@ -139,14 +167,18 @@ export function renderHistory(mount, state, options) {
   }
 }
 
-function createController(mount, viewerId, limit, compact, afterChange) {
+function createController(mount, viewerId, limit, compact, afterChange, onViewerSelect) {
   let controller;
   controller = new RewardHistoryController({
     fetchPage: function (cursor, signal) {
       return fetchRewardHistory(viewerId, limit, cursor, signal);
     },
     onChange: function (state) {
-      renderHistory(mount, state, { controller: controller, compact: compact });
+      renderHistory(mount, state, {
+        controller: controller,
+        compact: compact,
+        onViewerSelect: onViewerSelect,
+      });
       if (afterChange) {
         afterChange(state);
       }
@@ -155,24 +187,187 @@ function createController(mount, viewerId, limit, compact, afterChange) {
   return controller;
 }
 
+function platformFilterLabel(platform) {
+  const key = "platform." + platform;
+  const label = t(key);
+  return label === key ? platform : label;
+}
+
+function selectedViewerOption(fallbackName) {
+  return viewerFilterOptions.find(function (option) {
+    return option.id === selectedViewerId;
+  }) || (selectedViewerId ? {
+    id: selectedViewerId,
+    displayName: fallbackName || selectedViewerName || selectedViewerId,
+    label: fallbackName || selectedViewerName || selectedViewerId,
+  } : null);
+}
+
+function showViewerFilterError(message) {
+  if (!viewerFilterElements) {
+    return;
+  }
+  viewerFilterElements.error.textContent = message || "";
+  viewerFilterElements.error.hidden = !message;
+  viewerFilterElements.input.setAttribute("aria-invalid", message ? "true" : "false");
+}
+
+function renderViewerFilterSelection(fallbackName) {
+  if (!viewerFilterElements) {
+    return;
+  }
+  const selected = selectedViewerOption(fallbackName);
+  selectedViewerName = selected ? selected.displayName : "";
+  viewerFilterElements.input.value = selected ? selected.label : "";
+  viewerFilterElements.clear.disabled = !selectedViewerId;
+  viewerFilterElements.status.hidden = !selected;
+  viewerFilterElements.status.textContent = selected
+    ? t("history.viewerFilterActive", { viewer: selected.displayName })
+    : "";
+  showViewerFilterError("");
+}
+
+function renderViewerFilterOptions() {
+  if (!viewerFilterElements) {
+    return;
+  }
+  viewerFilterOptions = buildViewerFilterOptions(viewerFilterViewers, platformFilterLabel);
+  viewerFilterElements.options.textContent = "";
+  viewerFilterOptions.forEach(function (choice) {
+    const option = document.createElement("option");
+    option.value = choice.label;
+    viewerFilterElements.options.append(option);
+  });
+  renderViewerFilterSelection();
+}
+
+async function loadViewerFilterOptions() {
+  if (!viewerFilterElements) {
+    return;
+  }
+  if (viewerFilterRequest) {
+    viewerFilterRequest.abort();
+  }
+  const request = new AbortController();
+  viewerFilterRequest = request;
+  viewerFilterElements.input.disabled = true;
+  viewerFilterElements.apply.disabled = true;
+  try {
+    viewerFilterViewers = await fetchViewerFilterViewers(request.signal);
+    if (!request.signal.aborted) {
+      renderViewerFilterOptions();
+    }
+  } catch {
+    if (!request.signal.aborted) {
+      showViewerFilterError(t("history.viewerFilterLoadFailed"));
+    }
+  } finally {
+    if (viewerFilterRequest === request) {
+      viewerFilterRequest = null;
+      viewerFilterElements.input.disabled = false;
+      viewerFilterElements.apply.disabled = false;
+    }
+  }
+}
+
+function createGlobalHistory(viewerId) {
+  return createController(globalHistoryMount, viewerId, 50, false, function (state) {
+    globalHistoryRefresh.disabled = state.loading || state.loadingMore;
+    globalHistoryRefresh.setAttribute("aria-busy", state.loading ? "true" : "false");
+  }, function (nextViewerId, viewerName) {
+    setGlobalViewerFilter(nextViewerId, viewerName);
+  });
+}
+
+function setGlobalViewerFilter(viewerId, fallbackName) {
+  const nextViewerId = viewerId ? String(viewerId) : null;
+  if (!globalHistoryMount || !globalHistoryRefresh) {
+    return Promise.resolve();
+  }
+  if (globalHistory && selectedViewerId === nextViewerId) {
+    selectedViewerName = fallbackName || selectedViewerName;
+    renderViewerFilterSelection(fallbackName);
+    return Promise.resolve();
+  }
+  if (globalHistory) {
+    globalHistory.cancel();
+  }
+  selectedViewerId = nextViewerId;
+  selectedViewerName = nextViewerId ? String(fallbackName || selectedViewerName || nextViewerId) : "";
+  renderViewerFilterSelection(fallbackName);
+  globalHistory = createGlobalHistory(nextViewerId);
+  return globalHistory.loadFirst();
+}
+
+function applyViewerFilterInput() {
+  if (!viewerFilterElements) {
+    return;
+  }
+  const value = viewerFilterElements.input.value.trim();
+  if (!value) {
+    setGlobalViewerFilter(null);
+    return;
+  }
+  const selected = resolveViewerFilter(viewerFilterOptions, value);
+  if (!selected) {
+    showViewerFilterError(t("history.viewerFilterInvalid"));
+    return;
+  }
+  setGlobalViewerFilter(selected.id, selected.displayName);
+}
+
 export function initRewardHistory() {
   const mount = document.getElementById("audience-history-content");
   const refresh = document.getElementById("refresh-reward-history");
-  if (!mount || !refresh) {
+  const form = document.getElementById("reward-history-viewer-filter-form");
+  const input = document.getElementById("reward-history-viewer-filter");
+  const options = document.getElementById("reward-history-viewer-options");
+  const apply = document.getElementById("apply-reward-history-viewer-filter");
+  const clear = document.getElementById("clear-reward-history-viewer-filter");
+  const status = document.getElementById("reward-history-viewer-filter-status");
+  const error = document.getElementById("reward-history-viewer-filter-error");
+  if (!mount || !refresh || !form || !input || !options || !apply || !clear || !status || !error) {
     return;
   }
-  globalHistory = createController(mount, null, 50, false, function (state) {
-    refresh.disabled = state.loading || state.loadingMore;
-    refresh.setAttribute("aria-busy", state.loading ? "true" : "false");
-  });
+  globalHistoryMount = mount;
+  globalHistoryRefresh = refresh;
+  viewerFilterElements = {
+    form: form,
+    input: input,
+    options: options,
+    apply: apply,
+    clear: clear,
+    status: status,
+    error: error,
+  };
+  globalHistory = createGlobalHistory(null);
   refresh.addEventListener("click", function () {
     globalHistory.loadFirst();
+  });
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    applyViewerFilterInput();
+  });
+  input.addEventListener("input", function () {
+    showViewerFilterError("");
+  });
+  input.addEventListener("change", function () {
+    const selected = resolveViewerFilter(viewerFilterOptions, input.value);
+    if (selected) {
+      setGlobalViewerFilter(selected.id, selected.displayName);
+    } else if (!input.value.trim()) {
+      setGlobalViewerFilter(null);
+    }
+  });
+  clear.addEventListener("click", function () {
+    setGlobalViewerFilter(null);
+    input.focus();
   });
 }
 
 export function ensureRewardHistoryLoaded() {
   if (globalHistory) {
-    return globalHistory.loadFirst();
+    return Promise.all([globalHistory.loadFirst(), loadViewerFilterOptions()]);
   }
   return Promise.resolve();
 }
@@ -198,6 +393,7 @@ export function cancelViewerRewardHistory() {
 }
 
 export function refreshRewardHistoryLocale() {
+  renderViewerFilterOptions();
   if (globalHistory) {
     globalHistory.publish();
   }
