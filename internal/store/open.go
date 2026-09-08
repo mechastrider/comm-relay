@@ -21,10 +21,11 @@ var gooseInit sync.Once
 
 // Store is the local SQLite viewer stats database.
 type Store struct {
-	mu            sync.Mutex
-	db            *sql.DB
-	path          string
-	openSessionID string
+	mu                         sync.Mutex
+	db                         *sql.DB
+	path                       string
+	openSessionID              string
+	interactionEventInsertHook func() error
 }
 
 func sqliteDSN(path string) (string, error) {

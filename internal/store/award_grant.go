@@ -17,6 +17,18 @@ type ApplyAwardResult struct {
 	MeaningfulRankChange bool
 }
 
+// GrantAwardInput describes an atomic operator award and its durable journal entry.
+type GrantAwardInput struct {
+	Identity        ChatIdentity
+	Points          int
+	DayResetHour    int
+	Now             time.Time
+	AwardID         string
+	AwardName       string
+	MessagePlatform string
+	MessageID       string
+}
+
 // ApplyAward upserts the chat identity and adds points to all-time, session, and day XP.
 // Empty platform or user_id returns ErrInvalidIdentity. Message counts are not incremented.
 func (s *Store) ApplyAward(identity ChatIdentity, points int, dayResetHour int, now time.Time) (*ApplyAwardResult, error) {
@@ -27,6 +39,37 @@ func (s *Store) ApplyAward(identity ChatIdentity, points int, dayResetHour int, 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	return s.applyAwardLocked(identity, points, dayResetHour, now, nil)
+}
+
+// GrantAward applies XP and appends its award event in one transaction.
+func (s *Store) GrantAward(input GrantAwardInput) (*ApplyAwardResult, error) {
+	if strings.TrimSpace(input.Identity.UserID) == "" || strings.TrimSpace(input.Identity.Platform) == "" {
+		return nil, ErrInvalidIdentity
+	}
+	if strings.TrimSpace(input.AwardID) == "" {
+		return nil, errors.Errorf("award id is required")
+	}
+	if strings.TrimSpace(input.AwardName) == "" {
+		return nil, ErrInvalidAwardName
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	event := AppendInteractionEventInput{
+		Kind:            InteractionEventAward,
+		AwardID:         input.AwardID,
+		AwardName:       input.AwardName,
+		Points:          input.Points,
+		MessagePlatform: input.MessagePlatform,
+		MessageID:       input.MessageID,
+		Now:             input.Now,
+	}
+	return s.applyAwardLocked(input.Identity, input.Points, input.DayResetHour, input.Now, &event)
+}
+
+func (s *Store) applyAwardLocked(identity ChatIdentity, points int, dayResetHour int, now time.Time, event *AppendInteractionEventInput) (*ApplyAwardResult, error) {
 	if err := s.ensureOpenSessionLocked(now); err != nil {
 		return nil, errors.Errorf("ensure open session: %w", err)
 	}
@@ -95,6 +138,13 @@ func (s *Store) ApplyAward(identity ChatIdentity, points int, dayResetHour int, 
 		return nil, err
 	}
 	meaningfulRankChange := topThreeChanged(beforeRanks, afterRanks)
+
+	if event != nil {
+		event.ViewerID = viewerID
+		if err := s.appendInteractionEventLocked(tx, *event); err != nil {
+			return nil, errors.Errorf("append award interaction event: %w", err)
+		}
+	}
 
 	if err := tx.Commit(); err != nil {
 		return nil, errors.Errorf("commit award grant: %w", err)

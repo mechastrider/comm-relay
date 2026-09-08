@@ -18,6 +18,7 @@ import {
   writeAudienceSort,
 } from "./audience-helpers.js";
 import { renderPlatformIcons } from "./platform-icon.js";
+import { cancelViewerRewardHistory, createViewerRewardHistory } from "./reward-history.js";
 
 const VIEWERS_FETCH_TIMEOUT_MS = 15000;
 const SEARCH_DEBOUNCE_MS = 250;
@@ -505,7 +506,7 @@ function clearDetailContainer() {
   }
 }
 
-function renderViewerDetail(viewer) {
+function renderViewerDetail(viewer, rewardHistorySection) {
   const surface = detailSurfaceElements();
   const container = surface.container;
   if (!container) {
@@ -762,7 +763,17 @@ function renderViewerDetail(viewer) {
   });
   mergeField.append(mergeLabel, mergeSelect, mergeButton);
 
-  container.append(portraitSection, title, stats, nameField, hideField, identitiesHeading, identities, mergeField);
+  container.append(
+    portraitSection,
+    title,
+    stats,
+    nameField,
+    hideField,
+    identitiesHeading,
+    identities,
+    mergeField,
+    rewardHistorySection
+  );
 }
 
 function openDetailShell() {
@@ -788,6 +799,7 @@ function openDetailShell() {
 }
 
 export function closeViewerDetail(options) {
+  cancelViewerRewardHistory();
   const restoreFocus = !options || options.restoreFocus !== false;
   if (dom.audienceDetailSheet && dom.audienceDetailSheet.open) {
     dom.audienceDetailSheet.close();
@@ -800,11 +812,13 @@ export function closeViewerDetail(options) {
 }
 
 async function openViewerDetail(id, trigger) {
+  cancelViewerRewardHistory();
   focusReturnElement = trigger || null;
   selectedViewerId = id;
   updateTableSelection(id);
   openDetailShell();
   setDetailLoading(true);
+  const rewardHistorySection = createViewerRewardHistory(id);
 
   if (detailLoadInFlight) {
     await detailLoadInFlight.catch(function () {
@@ -817,7 +831,7 @@ async function openViewerDetail(id, trigger) {
       if (!isAudienceWorkspaceActive() || selectedViewerId !== id) {
         return;
       }
-      renderViewerDetail(payload);
+      renderViewerDetail(payload, rewardHistorySection);
       openDetailShell();
       const surface = detailSurfaceElements();
       if (surface.container) {
@@ -999,6 +1013,7 @@ export async function mergeViewers(fromId, intoId) {
     return;
   }
   mergeInFlight = true;
+  cancelViewerRewardHistory();
   try {
     await fetchJSON("/api/viewers/merge", {
       method: "POST",
@@ -1069,6 +1084,7 @@ function ensureAudienceLoaded() {
 /** @param {import("./workspace-router.js").WorkspaceId} workspaceId */
 export function handleAudienceWorkspaceChange(workspaceId) {
   if (workspaceId !== "audience") {
+    cancelViewerRewardHistory();
     hideViewerDetailShell();
     return;
   }

@@ -17,7 +17,7 @@ No connector-specific platform matrix is needed: fixtures create canonical viewe
 | Spec/UI/platform ref | Steps/check | Expected | P0/P1 |
 |----------------------|-------------|----------|-------|
 | reward history / global | Seed awards plus command/activity events; request first page | Only awards return, newest first, with exact public fields | P0 |
-| reward history / cursor | Seed more than limit, including equal timestamps; traverse all cursors | No duplicates or skipped rows; final cursor absent | P0 |
+| reward history / cursor | Seed more than limit, including exact-second timestamps, legacy RFC3339 fractions of mixed widths, and equal timestamps; migrate and traverse all cursors | Parsed instants are unchanged; normalized lexical order is chronological; no duplicates or skipped rows; final cursor absent | P0 |
 | reward history / validation | Send malformed cursor and limits 0, 101, and non-number | HTTP 400 with UI-safe JSON | P0 |
 | reward history / viewer | Request one viewer, then merge that viewer into another | Only scoped rows before merge; all rows appear on survivor after merge; source returns 404 | P0 |
 | interaction events / atomic grant | Force event insert failure during grant | HTTP failure; no all/session/day XP change and no award alert | P0 |
@@ -40,17 +40,18 @@ No connector-specific platform matrix is needed: fixtures create canonical viewe
 
 ## Persistence Migration / Corruption / Recovery
 
-1. Build a version-13 fixture containing: a normal current award, a renamed current award, an event whose award type was deleted, command/activity events, equal timestamps, and two viewers later merged.
-2. Run Up and verify `reward_name` uses the migration-time catalog name or `award_id`, non-award rows remain null, and both history indexes exist.
+1. Build a version-13 fixture containing: a normal current award, a renamed current award, an event whose award type was deleted, command/activity events, exact-second and mixed one-to-nine-digit fractional UTC timestamps, equal timestamps, and two viewers later merged.
+2. Run Up and verify `reward_name` uses the migration-time catalog name or `award_id`, non-award rows remain null, every interaction-event timestamp has the fixed nine-digit UTC representation without changing its parsed instant, and both history indexes exist.
 3. Reopen the database through normal store startup and traverse global/viewer history.
-4. Run Down then Up in a scratch database; verify ids, kinds, points, source references, timestamps, and XP survive. Accept loss/recreation of `reward_name` according to the rollback contract.
-5. Simulate migration SQL failure and event-insert failure. Verify no schema version is falsely advanced and no partial award grant commits.
+4. While schema 14 remains applied, insert a legacy-column-list award with a variable-width RFC3339Nano timestamp, reopen through the current store without rerunning migration 14, and traverse its keyset pages to verify the trigger supplied the name snapshot and canonical timestamp.
+5. Run Down then Up in a scratch database; verify ids, kinds, points, source references, timestamp values, and XP survive; verify Down removes the compatibility trigger before dropping the dependent schema. Accept the canonical fixed-width timestamp spelling after Down and loss/recreation of `reward_name` according to the rollback contract.
+6. Simulate migration SQL failure and event-insert failure. Verify no schema version is falsely advanced and no partial award grant commits.
 
 ## Install / Upgrade / Downgrade / Packaged-App Smoke
 
 - Upgrade a copy of populated user data with each packaged desktop build; confirm startup, History tab, viewer section, and an immediately granted award.
 - Restart the upgraded version and confirm the entry and snapshot name persist.
-- Replace the binary with the previous release without rolling Down; confirm it starts and existing viewers, award catalog, grants, and leaderboard still work.
+- Replace the binary with the previous release without rolling Down; confirm it starts and existing viewers, award catalog, grants, and leaderboard still work. Grant once with that previous binary, return to the current binary without rerunning migration 14, and confirm the history name and order are readable.
 - No clean-install wizard or uninstall test is added; confirm existing archive extraction and user-data location remain unchanged.
 
 ## Automated Commands / Manual Setup / Fixtures

@@ -32,6 +32,7 @@ type InteractionEvent struct {
 	ViewerID        string
 	CommandTrigger  string
 	AwardID         string
+	AwardName       string
 	Points          int
 	MessagePlatform string
 	MessageID       string
@@ -44,6 +45,7 @@ type AppendInteractionEventInput struct {
 	ViewerID        string
 	CommandTrigger  string
 	AwardID         string
+	AwardName       string
 	Points          int
 	MessagePlatform string
 	MessageID       string
@@ -85,6 +87,14 @@ func (s *Store) AppendInteractionEvent(input AppendInteractionEventInput) error 
 	return s.appendInteractionEventLocked(s.db, input)
 }
 
+// SetInteractionEventInsertHookForTest installs a test-only failure hook used
+// to prove transaction rollback. Production callers must not use it.
+func (s *Store) SetInteractionEventInsertHookForTest(hook func() error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.interactionEventInsertHook = hook
+}
+
 func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteractionEventInput) error {
 	now := input.Now
 	if now.IsZero() {
@@ -96,7 +106,7 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 		viewerID = input.ViewerID
 	}
 
-	var commandTrigger, awardID, messagePlatform, messageID any
+	var commandTrigger, awardID, awardName, messagePlatform, messageID any
 	points := input.Points
 
 	switch input.Kind {
@@ -106,6 +116,7 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 			return errors.New("command trigger is required for command events")
 		}
 		awardID = nil
+		awardName = nil
 		messagePlatform = nil
 		messageID = nil
 		points = 0
@@ -113,6 +124,10 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 		awardID = strings.TrimSpace(input.AwardID)
 		if awardID == "" {
 			return errors.New("award id is required for award events")
+		}
+		awardName = strings.TrimSpace(input.AwardName)
+		if awardName == "" {
+			return ErrInvalidAwardName
 		}
 		commandTrigger = nil
 		if strings.TrimSpace(input.MessagePlatform) != "" {
@@ -124,6 +139,7 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 	case InteractionEventActivity:
 		commandTrigger = nil
 		awardID = nil
+		awardName = nil
 		messagePlatform = nil
 		messageID = nil
 		if points < 0 {
@@ -134,17 +150,23 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 	}
 
 	id := uuid.NewString()
-	createdAt := formatTime(now)
+	createdAt := formatInteractionEventTime(now)
+	if s.interactionEventInsertHook != nil {
+		if err := s.interactionEventInsertHook(); err != nil {
+			return errors.Errorf("inject interaction event insert failure: %w", err)
+		}
+	}
 	if _, err := q.Exec(
 		`INSERT INTO interaction_events (
-			id, kind, viewer_id, command_trigger, award_id, points,
+			id, kind, viewer_id, command_trigger, award_id, reward_name, points,
 			message_platform, message_id, created_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		string(input.Kind),
 		viewerID,
 		commandTrigger,
 		awardID,
+		awardName,
 		points,
 		messagePlatform,
 		messageID,
@@ -154,6 +176,10 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 	}
 
 	return nil
+}
+
+func formatInteractionEventTime(t time.Time) string {
+	return t.UTC().Format("2006-01-02T15:04:05.000000000Z")
 }
 
 // ListInteractionEventsByViewer returns events for one viewer ordered by created_at.
@@ -180,7 +206,7 @@ func (s *Store) CountInteractionEvents() (int, error) {
 
 func (s *Store) listInteractionEventsLocked(whereClause string, args ...any) ([]InteractionEvent, error) {
 	query := `
-		SELECT id, kind, viewer_id, command_trigger, award_id, points,
+		SELECT id, kind, viewer_id, command_trigger, award_id, reward_name, points,
 		       message_platform, message_id, created_at
 		FROM interaction_events ` + whereClause + ` ORDER BY created_at`
 
@@ -211,7 +237,7 @@ type interactionEventScanner interface {
 
 func scanInteractionEvent(row interactionEventScanner) (InteractionEvent, error) {
 	var event InteractionEvent
-	var viewerID, commandTrigger, awardID, messagePlatform, messageID sql.NullString
+	var viewerID, commandTrigger, awardID, awardName, messagePlatform, messageID sql.NullString
 	var createdAtRaw string
 	if err := row.Scan(
 		&event.ID,
@@ -219,6 +245,7 @@ func scanInteractionEvent(row interactionEventScanner) (InteractionEvent, error)
 		&viewerID,
 		&commandTrigger,
 		&awardID,
+		&awardName,
 		&event.Points,
 		&messagePlatform,
 		&messageID,
@@ -235,6 +262,9 @@ func scanInteractionEvent(row interactionEventScanner) (InteractionEvent, error)
 	}
 	if awardID.Valid {
 		event.AwardID = awardID.String
+	}
+	if awardName.Valid {
+		event.AwardName = awardName.String
 	}
 	if messagePlatform.Valid {
 		event.MessagePlatform = messagePlatform.String

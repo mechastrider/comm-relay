@@ -38,13 +38,13 @@ The localhost HTTP server remains authoritative. Browser admin and Wails WebView
 1. The grant handler validates the award and supplies its current id, name, points, optional source reference, and timestamp to one store operation.
 2. The store applies identity/XP changes and inserts the award event in the same transaction. Commit failure leaves both absent.
 3. After commit, the handler performs the existing alert broadcast, diagnostics/logging, visibility scheduling, and leaderboard publication.
-4. History reads select only `kind = 'award'`, join the current canonical viewer, and order by `(created_at DESC, id DESC)`.
+4. History reads select only `kind = 'award'`, join the current canonical viewer, and order by `(created_at DESC, id DESC)`. The migration first normalizes every interaction-event timestamp to fixed-width UTC RFC3339 with exactly nine fractional digits, and all later event writes use the same representation, so SQLite text order is chronological and index-compatible.
 5. The API maps `award_id` and the stored name snapshot to generic `reward_id` and `reward_name` fields. This keeps the read model extensible without defining achievement persistence now.
 6. Global and per-viewer UI own independent cursors. Refresh replaces a list; Load more appends the next page.
 
 ## Threading / Async / Cancellation
 
-Store writes and reads continue under the existing store mutex; no goroutine or background worker is added. Queries fetch at most 101 rows to determine whether a requested page of at most 100 has a successor. Viewer-detail requests use an `AbortController` or selected-viewer generation check so stale responses cannot cross viewer boundaries. Global refresh and pagination disable duplicate in-flight actions and ignore superseded responses.
+Store writes and reads continue under the existing store mutex; no goroutine or background worker is added. Queries fetch at most 101 rows to determine whether a requested page of at most 100 has a successor. Cursor comparisons bind the normalized fixed-width UTC timestamp and event id, never a caller-supplied SQL fragment. Viewer-detail requests use an `AbortController` or selected-viewer generation check so stale responses cannot cross viewer boundaries. Global refresh and pagination disable duplicate in-flight actions and ignore superseded responses.
 
 ## Security and Trust Boundaries
 
@@ -60,7 +60,7 @@ The endpoint is local and read-only but still validates `limit`, cursor, and vie
 
 4. **Use one read endpoint with optional viewer scope.** Separate global and viewer routes would duplicate pagination semantics. `GET /api/reward-history?viewer_id=...` follows the project's query/body identifier rule.
 
-5. **Use opaque keyset pagination, not offsets.** `(created_at, id)` avoids duplicates and skipped rows when newer grants arrive between requests. Offset pagination was rejected for a growing append-only journal.
+5. **Use opaque keyset pagination over canonical event timestamps, not offsets.** Interaction-event timestamps are normalized to fixed-width UTC RFC3339 with nine fractional digits before the history indexes are created, and new event writes use that same format. Comparing `(created_at, id)` as indexed text therefore preserves chronological order and avoids duplicates or skipped rows when newer grants arrive between requests. Raw RFC3339Nano text with variable fractional width was rejected because lexical and chronological order can differ; offset pagination was rejected for a growing append-only journal.
 
 6. **Add an Audience History tab plus an embedded viewer section.** The tab answers channel-wide “who received what”; the viewer section answers “what did this person receive” without navigation. Reusing the Awards catalog tab was rejected because catalog configuration and grant history are different operator tasks.
 
@@ -75,9 +75,9 @@ The endpoint is local and read-only but still validates `limit`, cursor, and vie
 
 ## Migration / Rollout / Rollback
 
-Add the next immutable Goose migration with nullable `reward_name`, backfill every award event to `COALESCE(current award name, award_id)`, then enforce new-write non-empty validation in Go. Do not edit earlier migrations. Existing command/activity rows retain null. Add a descending-compatible index on `(kind, created_at, id)`; retain the viewer index or replace it only if query plans and migration tests prove the new composite viewer index covers existing uses.
+Add the next immutable Goose migration with nullable `reward_name`, backfill every award event to `COALESCE(current award name, award_id)`, and normalize every existing interaction-event `created_at` value to fixed-width UTC RFC3339 with exactly nine fractional digits before creating the history indexes. An `AFTER INSERT` compatibility trigger repeats those repairs for a previous binary that runs after version 14: it canonicalizes its exact/fractional UTC timestamp and fills a missing or blank award snapshot from the catalog or award id. Current writes remain validated and unchanged. Do not edit earlier migrations. Existing command/activity rows retain null. Add a descending-compatible index on `(kind, created_at, id)`; retain the viewer index or replace it only if query plans and migration tests prove the new composite viewer index covers existing uses.
 
-Rollback removes the new index and column if supported by the project's SQLite/Goose baseline; XP and existing event rows remain. A previous binary ignores the added column. The new admin against an older server shows its normal history error state. No `config.json`, OS registration, or packaged artifact changes occur.
+Rollback drops the compatibility trigger before the new indexes and column if supported by the project's SQLite/Goose baseline; XP and existing event rows remain. Down does not reconstruct the prior variable-width spelling of `created_at`: the represented instant is unchanged, and previous binaries already parse the fixed-width RFC3339 form. A previous binary ignores the added column, while its inserts against version 14 are repaired persistently by the trigger. The new admin against an older server shows its normal history error state. No `config.json`, OS registration, or packaged artifact changes occur.
 
 ## Open Questions
 

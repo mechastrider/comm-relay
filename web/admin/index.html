@@ -238,6 +238,7 @@
                 <button id="audience-viewers-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="audience-viewers-panel" data-audience-tab="viewers" data-i18n="audience.tabViewers">Viewers</button>
                 <button id="audience-commands-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-commands-panel" data-audience-tab="commands" data-i18n="audience.tabCommands">Commands</button>
                 <button id="audience-awards-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-awards-panel" data-audience-tab="awards" data-i18n="audience.tabAwards">Awards</button>
+                <button id="audience-history-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-history-panel" tabindex="-1" data-audience-tab="history" data-i18n="audience.tabHistory">History</button>
               </div>
             </header>
 
@@ -598,6 +599,14 @@
                   <p id="awards-editor-empty" class="empty-state audience-catalog-editor__empty" data-i18n="awards.selectOrCreate">Select an award or create one.</p>
                 </aside>
               </div>
+            </div>
+
+            <div id="audience-history-panel" class="audience-panel audience-history-panel" role="tabpanel" aria-labelledby="audience-history-tab" hidden>
+              <header class="audience-history__toolbar">
+                <h2 class="audience-history__title" data-i18n="audience.historyHeading">Reward history</h2>
+                <button id="refresh-reward-history" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
+              </header>
+              <div id="audience-history-content" class="reward-history__content"></div>
             </div>
           </div>
         </section>
