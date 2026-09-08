@@ -77,6 +77,20 @@ export function createCatalogMediaController(options) {
     }
   }
 
+  function releaseFileInputFocus(input) {
+    if (!input) {
+      return;
+    }
+    const scrollParent = input.closest(".audience-catalog-editor__body");
+    const scrollTop = scrollParent instanceof HTMLElement ? scrollParent.scrollTop : 0;
+    if (typeof input.blur === "function") {
+      input.blur();
+    }
+    if (scrollParent instanceof HTMLElement) {
+      scrollParent.scrollTop = scrollTop;
+    }
+  }
+
   function setLayoutError(message) {
     const inputs = document.querySelectorAll('input[name="' + options.layoutName + '"]');
     setFieldError(inputs[0] || null, options.layoutError, message);
@@ -321,6 +335,7 @@ export function createCatalogMediaController(options) {
     } finally {
       if (options.imageInput) {
         options.imageInput.value = "";
+        releaseFileInputFocus(options.imageInput);
       }
     }
   }
@@ -343,6 +358,7 @@ export function createCatalogMediaController(options) {
     } finally {
       if (options.soundFileInput) {
         options.soundFileInput.value = "";
+        releaseFileInputFocus(options.soundFileInput);
       }
     }
   }
@@ -351,7 +367,7 @@ export function createCatalogMediaController(options) {
     options.imageInput?.addEventListener("change", function () {
       const file = options.imageInput?.files?.[0];
       if (file) {
-        handleImageUpload(file).catch(function () {
+        return handleImageUpload(file).catch(function () {
           /* field error */
         });
       }
@@ -375,7 +391,7 @@ export function createCatalogMediaController(options) {
     options.soundFileInput?.addEventListener("change", function () {
       const file = options.soundFileInput?.files?.[0];
       if (file) {
-        handleSoundUpload(file).catch(function () {
+        return handleSoundUpload(file).catch(function () {
           /* field error */
         });
       }

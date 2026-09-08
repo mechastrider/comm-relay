@@ -12,8 +12,9 @@
 
 .audience-workspace {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  min-height: 100%;
+  min-height: 0;
   gap: var(--primitive-space-3);
   padding: var(--primitive-space-4) var(--primitive-space-5);
 }
@@ -1030,6 +1031,7 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   min-width: 0;
   min-height: 0;
   flex-direction: column;
+  overflow: hidden;
   border-left: 1px solid var(--border);
 }
 
@@ -1206,8 +1208,14 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   align-items: center;
 }
 
+.catalog-media-upload {
+  position: relative;
+  overflow: hidden;
+}
+
 .catalog-media-upload input[type="file"] {
   position: absolute;
+  inset: 0;
   width: 1px;
   height: 1px;
   padding: 0;

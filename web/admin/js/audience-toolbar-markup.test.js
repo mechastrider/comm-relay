@@ -150,5 +150,15 @@ assert.match(
   /\.audience-toolbar__actions > \.btn-small,\s*\.audience-toolbar__actions > \.icon-btn--compact\s*\{[\s\S]*?height:\s*var\(--control-min-height\)/,
   "Audience toolbar actions must share one fixed control height"
 );
+assert.match(
+  styles,
+  /\.audience-workspace\s*\{[\s\S]*?flex:\s*1;[\s\S]*?min-height:\s*0;/,
+  "Audience workspace must shrink inside the shell instead of growing past it"
+);
+assert.match(
+  styles,
+  /\.catalog-media-upload\s*\{[\s\S]*?position:\s*relative;[\s\S]*?overflow:\s*hidden;/,
+  "Catalog upload buttons must contain hidden file inputs for focus scrolling"
+);
 
 console.log("audience-toolbar-markup OK");
