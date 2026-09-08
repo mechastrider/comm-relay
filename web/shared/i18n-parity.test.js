@@ -24,6 +24,9 @@ for (const key of enKeys) {
   assert.notEqual(ru[key].trim(), "", "ru[" + key + "] must not be empty");
 }
 
+assert.equal(en["history.loadFailed"], "Could not load reward history.");
+assert.equal(ru["history.loadFailed"], "Не удалось загрузить историю наград.");
+
 console.log("i18n parity OK (" + String(enKeys.length) + " keys)");
 
 const snapshot = normalizeVisibilitySnapshot({

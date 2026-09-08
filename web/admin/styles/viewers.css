@@ -441,6 +441,12 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   --audience-inspector-pad: var(--primitive-space-4);
 }
 
+@media (min-width: 1280px) {
+  .audience-inspector {
+    flex-basis: min(36rem, 44vw);
+  }
+}
+
 .audience-inspector__header {
   display: flex;
   align-items: center;
@@ -692,6 +698,281 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   flex: 1;
   min-height: 0;
   gap: var(--primitive-space-3);
+}
+
+.audience-history-panel {
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.audience-history__toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(18rem, 1fr) auto;
+  flex: 0 0 auto;
+  align-items: start;
+  gap: var(--primitive-space-3);
+  padding: var(--primitive-space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.audience-history__title {
+  margin: 1.55rem 0 0;
+  font-size: var(--primitive-font-size-md);
+}
+
+.audience-history__filter {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--primitive-space-2);
+  min-width: 0;
+}
+
+.audience-history__filter-field {
+  flex: 1 1 18rem;
+}
+
+.audience-history__filter-field input[type="search"] {
+  width: 100%;
+  padding: 7px 9px;
+  box-sizing: border-box;
+}
+
+.audience-history__filter > .btn-physical,
+.audience-history__toolbar > .btn-physical {
+  margin-top: 1.35rem;
+}
+
+.reward-history__content {
+  min-height: 0;
+}
+
+.audience-history-panel > .reward-history__content {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: var(--primitive-space-3);
+  scrollbar-gutter: stable;
+}
+
+.reward-history__table-scroll {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.reward-history-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.reward-history-table th,
+.reward-history-table td {
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.reward-history-table__time {
+  width: 10rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.reward-history-table__viewer {
+  width: 30%;
+}
+
+.reward-history-table__viewer-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  margin: calc(var(--primitive-space-2) * -1) 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--amber-dim);
+  text-underline-offset: 3px;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.reward-history-table__viewer-button:hover {
+  color: var(--amber);
+  text-decoration-color: currentColor;
+}
+
+.reward-history-table th:last-child,
+.reward-history-table td:last-child {
+  width: 5.5rem;
+  white-space: nowrap;
+}
+
+.reward-history-table--compact {
+  display: block;
+  font-size: var(--primitive-font-size-sm);
+}
+
+.reward-history-table--compact thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.reward-history-table--compact tbody {
+  display: grid;
+}
+
+.reward-history-table--compact tbody > tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "reward points"
+    "time points";
+  gap: 2px var(--primitive-space-3);
+  padding: var(--primitive-space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.reward-history-table--compact td {
+  width: auto;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.reward-history-table--compact .reward-history-table__reward {
+  grid-area: reward;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.reward-history-table--compact .reward-history-table__time {
+  grid-area: time;
+  color: var(--muted);
+}
+
+.reward-history-table--compact .reward-history-table__points {
+  grid-area: points;
+  align-self: start;
+}
+
+.reward-history__footer {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: var(--primitive-space-3);
+}
+
+.reward-history__error {
+  margin-top: var(--primitive-space-3);
+}
+
+.audience-detail__reward-history {
+  margin: 0 0 var(--primitive-space-4);
+  padding: var(--primitive-space-3) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.audience-detail__reward-history .reward-history__footer .btn-physical {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .audience-history__toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .audience-history__title,
+  .audience-history__toolbar > .btn-physical {
+    margin-top: 0;
+  }
+
+  .audience-history__filter {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .audience-history__filter-field {
+    grid-column: 1 / -1;
+  }
+
+  .audience-history__filter > .btn-physical {
+    width: 100%;
+    min-height: var(--touch-target-min);
+    margin-top: 0;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) {
+    display: block;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) tbody {
+    display: grid;
+    gap: var(--primitive-space-2);
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) tbody > tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "viewer points"
+      "reward points"
+      "time time";
+    gap: 2px var(--primitive-space-3);
+    padding: var(--primitive-space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--primitive-radius-sm);
+    background: var(--surface-dark);
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) th,
+  .reward-history-table:not(.reward-history-table--compact) td {
+    width: auto;
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) .reward-history-table__viewer {
+    grid-area: viewer;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) .reward-history-table__reward {
+    grid-area: reward;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) .reward-history-table__time {
+    grid-area: time;
+    color: var(--muted);
+    font-size: var(--primitive-font-size-sm);
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) .reward-history-table__points {
+    grid-area: points;
+    align-self: start;
+  }
 }
 
 .audience-catalog-panel {

@@ -32,6 +32,12 @@ import {
   initNewStreamControl,
 } from "./js/viewers.js";
 import { initAudienceTabs } from "./js/audience-tabs.js";
+import {
+  ensureRewardHistoryLoaded,
+  initRewardHistory,
+  refreshRewardHistoryLocale,
+  cancelViewerRewardHistory,
+} from "./js/reward-history.js";
 import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js";
 import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
@@ -141,12 +147,16 @@ initAboutWorkspace();
 initMessageSoundControls();
 bindLocaleSelect();
 initAudienceViewers();
+initRewardHistory();
+window.addEventListener("admin-locale-applied", refreshRewardHistoryLocale);
 initAudienceTabs({
   onTabChange: function (tab) {
     if (tab === "commands") {
       ensureCommandsLoaded();
     } else if (tab === "awards") {
       ensureAwardsLoaded();
+    } else if (tab === "history") {
+      ensureRewardHistoryLoaded();
     }
   },
 });
@@ -196,6 +206,7 @@ state.messagesTimer = window.setInterval(function () {
 }, 5000);
 
 window.addEventListener("beforeunload", function () {
+  cancelViewerRewardHistory();
   disconnectMessageWebSocket();
   if (state.overlayPreviewResizeObserver) {
     state.overlayPreviewResizeObserver.disconnect();

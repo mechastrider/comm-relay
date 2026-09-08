@@ -21,4 +21,10 @@ var (
 	ErrInvalidPoints = errors.New("invalid points")
 	// ErrInvalidIdentity is returned when platform or user_id is empty for award grants.
 	ErrInvalidIdentity = errors.New("invalid identity")
+	// ErrInvalidAwardName is returned when an award-event snapshot is empty.
+	ErrInvalidAwardName = errors.New("invalid award name")
+	// ErrInvalidRewardHistoryLimit is returned for a history page outside its supported bounds.
+	ErrInvalidRewardHistoryLimit = errors.New("invalid reward history limit")
+	// ErrInvalidRewardHistoryCursor is returned for malformed or unsupported history cursors.
+	ErrInvalidRewardHistoryCursor = errors.New("invalid reward history cursor")
 )

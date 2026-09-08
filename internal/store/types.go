@@ -63,6 +63,31 @@ type AwardType struct {
 	ImageSizePct   int
 }
 
+// RewardHistoryEntry is one public, award-only journal entry.
+type RewardHistoryEntry struct {
+	ID                string
+	Kind              InteractionEventKind
+	ViewerID          string
+	ViewerDisplayName string
+	RewardID          string
+	RewardName        string
+	Points            int
+	CreatedAt         time.Time
+}
+
+// RewardHistoryQuery describes one bounded keyset page of award history.
+type RewardHistoryQuery struct {
+	ViewerID string
+	Limit    int
+	Cursor   string
+}
+
+// RewardHistoryPage is a history result and its optional next-page cursor.
+type RewardHistoryPage struct {
+	Entries    []RewardHistoryEntry
+	NextCursor string
+}
+
 // ActivitySettings controls silent activity XP grants on counted chat lines.
 type ActivitySettings struct {
 	IntervalSeconds int
