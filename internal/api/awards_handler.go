@@ -333,10 +333,24 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 
 	cfg := h.configStore.Snapshot()
 	now := time.Now()
-	result, err := h.viewerStore.ApplyAward(store.ChatIdentity{
-		Platform: platform,
-		UserID:   userID,
-	}, award.Points, cfg.DayResetHour, now)
+	messageID := strings.TrimSpace(request.MessageID)
+	messagePlatform := ""
+	if messageID != "" {
+		messagePlatform = platform
+	}
+	result, err := h.viewerStore.GrantAward(store.GrantAwardInput{
+		Identity: store.ChatIdentity{
+			Platform: platform,
+			UserID:   userID,
+		},
+		Points:          award.Points,
+		DayResetHour:    cfg.DayResetHour,
+		Now:             now,
+		AwardID:         award.ID,
+		AwardName:       award.Name,
+		MessagePlatform: messagePlatform,
+		MessageID:       messageID,
+	})
 	if errors.Is(err, store.ErrInvalidIdentity) {
 		writeError(w, http.StatusBadRequest, "platform and user_id are required")
 		return
@@ -364,11 +378,6 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 		Points:   award.Points,
 		Message:  quote,
 	})
-	messageID := strings.TrimSpace(request.MessageID)
-	messagePlatform := ""
-	if messageID != "" {
-		messagePlatform = platform
-	}
 	alertPayload, err := awardAlertWirePayload(award, name, avatarURL, text, award.Points, now, awardAlertContext{
 		MessagePlatform: messagePlatform,
 		MessageID:       messageID,
@@ -401,21 +410,6 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	}
 	if h.leaderboardPublisher != nil {
 		h.leaderboardPublisher.Schedule()
-	}
-
-	event := store.AppendInteractionEventInput{
-		Kind:     store.InteractionEventAward,
-		ViewerID: result.ViewerID,
-		AwardID:  award.ID,
-		Points:   award.Points,
-		Now:      now,
-	}
-	if messageID != "" {
-		event.MessagePlatform = platform
-		event.MessageID = messageID
-	}
-	if err := h.viewerStore.AppendInteractionEvent(event); err != nil {
-		clog.Errorf(r.Context(), "append award interaction event: %w", err)
 	}
 
 	writeJSON(w, http.StatusOK, grantAwardResponse{

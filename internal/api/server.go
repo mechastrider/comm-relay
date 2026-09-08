@@ -73,6 +73,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher)
 	commandsHandler := newCommandsHandler(opts.ViewerStore)
 	awardsHandler := newAwardsHandler(opts.ViewerStore, opts.Hub, leaderboardPublisher, opts.Store, opts.LeaderboardVisibility)
+	rewardHistoryHandler := newRewardHistoryHandler(opts.ViewerStore)
 	overlayDebug := newOverlayDebugHandler(opts.Hub)
 	visibilityHandler := &leaderboardVisibilityHandler{controller: opts.LeaderboardVisibility}
 
@@ -121,6 +122,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("POST /api/awards/update", awardsHandler.handleUpdate)
 	mux.HandleFunc("POST /api/awards/delete", awardsHandler.handleDelete)
 	mux.HandleFunc("POST /api/awards/grant", awardsHandler.handleGrant)
+	mux.HandleFunc("GET /api/reward-history", rewardHistoryHandler.handleList)
 	mux.Handle("GET /dock/messages/", http.StripPrefix("/dock/messages/", http.FileServer(http.FS(static.dock))))
 	mux.HandleFunc("GET /dock/messages", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.dock, "index.html")

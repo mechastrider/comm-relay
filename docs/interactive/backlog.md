@@ -25,7 +25,7 @@
 
 | Порядок | OpenSpec change | Инициативы | Граница результата | Когда начинать |
 |---|---|---|---|---|
-| 1 | `viewer-reward-history` | [INT-025](#int-025) | Журнал наград и достижений в карточке зрителя и общий операторский список поверх уже сохраняемых interaction events | Первый change: он даёт наблюдаемость следующим экспериментам |
+| 1 | `viewer-reward-history` | [INT-025](#int-025) | Журнал выданных наград в карточке зрителя и общий операторский список поверх уже сохраняемых interaction events; достижения остаются в [INT-012](#int-012) | Первый change: он даёт наблюдаемость следующим экспериментам |
 | 2 | `viewer-contracts-experiment` | [INT-017](#int-017) | Один активный контракт, ручное объявление, выбор победителя, существующая награда и закрытие без результата | После журнала; не добавлять отдельную экономику или универсальный rules engine |
 | 3 | `first-viewer-greeting` | [INT-022](#int-022) | Одно автоматическое приветствие по первому сообщению зрителя после подтверждённого начала новой session | После контрактов; широкое автоопределение границы эфира оставить в [INT-030](#int-030), если для greeting достаточно узкого guardrail |
 | 4 | `viewer-ranks-and-achievements` | [INT-012](#int-012) | Звания и достижения из долговечного журнала взаимодействий с понятным отображением текущего прогресса | После журнала наград; до финальных итогов стрима |
@@ -47,7 +47,6 @@
 | <a id="int-021"></a>INT-021 | Принимать ручные внешние события, например через Stream Deck | Rules / integrations | `needs_research` | — | Локальная сессия «Phantom Reapers 15» | Исследовать безопасную локальную boundary без управления игрой |
 | <a id="int-022"></a>INT-022 | Различать первое появление зрителя и первое сообщение текущего стрима | Viewer progression | `candidate` | `next` | Локальные сессии «Phantom Reapers 15–16» | Отделить first-contact greeting от обычной `hi`-команды; воспроизвести наблюдавшиеся пропуски с diagnostics |
 | <a id="int-024"></a>INT-024 | Расширить форматы локальных alert-медиа после проверки OBS и desktop runtime | Media | `needs_research` | — | [Разбор интерфейса](../research/archive/2026-09-03-stream-interface-review.md) | Собирать реальные потребности; текущие безопасные форматы уже специфицированы |
-| <a id="int-025"></a>INT-025 | Просматривать историю полученных зрителями наград и достижений | Analytics / viewer progression | `candidate` | `now` | Обсуждение после стрима 2026-09-08 | Award events уже сохраняются [без browsing API/UI](../../openspec/specs/interaction-events/spec.md); определить общий журнал и связь с [INT-012](#int-012) |
 | <a id="int-026"></a>INT-026 | Награждать зрителей за серии последовательных стримов с настраиваемыми порогами | Viewer progression | `candidate` | — | Обсуждение после стрима 2026-09-08 | Уточнить, что считается участием и что прерывает серию; сопоставить с [`Veteran`](vision.md#achievements) и [INT-012](#int-012) |
 | <a id="int-027"></a>INT-027 | Начислять зрителю XP за донаты | Viewer progression / integrations | `needs_decision` | — | Локальная сессия «Phantom Reapers 16» | [OQ-004](../open-questions.md#oq-004) |
 | <a id="int-028"></a>INT-028 | Запускать настроенную реакцию от имени оператора без сообщения в публичный чат | Commands / operator UX | `candidate` | — | Локальная сессия «Phantom Reapers 16» | Определить минимальную quick-action поверхность; сопоставить с внешними событиями [INT-021](#int-021) |
@@ -77,6 +76,7 @@
 | <a id="int-007"></a>INT-007 | Загружать локальные изображения и звуки и выбирать layout alert | Media / alerts | `implemented` | [Разбор интерфейса](../research/archive/2026-09-03-stream-interface-review.md) | [http-api](../../openspec/specs/http-api/spec.md), [overlay-alerts](../../openspec/specs/overlay-alerts/spec.md) |
 | <a id="int-008"></a>INT-008 | Автоматически показывать и скрывать leaderboard по событиям и таймеру | Leaderboard | `implemented` | Локальная сессия «Phantom Reapers 15» | [leaderboard-visibility](../../openspec/specs/leaderboard-visibility/spec.md) |
 | <a id="int-009"></a>INT-009 | Начислять ограниченный activity XP и расширить редактируемый каталог contribution awards | Viewer progression | `implemented` | [Видение](vision.md) | [viewer-stats](../../openspec/specs/viewer-stats/spec.md), [operator-rewards](../../openspec/specs/operator-rewards/spec.md) |
+| <a id="int-025"></a>INT-025 | Просматривать историю полученных зрителями наград | Analytics / viewer progression | `implemented` | Обсуждение после стрима 2026-09-08 | [viewer-reward-history](../../openspec/specs/viewer-reward-history/spec.md), [admin-and-dock](../../openspec/specs/admin-and-dock/spec.md); достижения остаются в [INT-012](#int-012) |
 
 ## Отложено или отклонено
 

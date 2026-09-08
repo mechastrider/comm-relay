@@ -17,7 +17,7 @@ Use the existing Go/Wails source build and release workflow without dependency, 
 
 Installation remains archive extraction. On first launch of the new version, the existing startup path migrates `comm-relay.db` before serving HTTP. Operators do not configure the feature and do not move data. Upgrade preserves all XP and event rows while backfilling display names for existing award events.
 
-For downgrade, stop CommRelay before replacing the binary. A previous binary can read the database with the additive column and indexes present because its queries name columns explicitly. If the migration is intentionally rolled down, only captured reward-name snapshots are lost; award ids, event timestamps, and XP remain. Uninstall behavior and user-data retention are unchanged.
+For downgrade, stop CommRelay before replacing the binary. A previous binary can read and grant against the database with the additive column and indexes present because its queries name columns explicitly. While schema 14 remains applied, its legacy grants are repaired by the persistent compatibility trigger so a later current binary can read them without rerunning migration 14. If the migration is intentionally rolled down, only captured reward-name snapshots are lost; award ids, event timestamps, and XP remain. Uninstall behavior and user-data retention are unchanged.
 
 ## Update Channels and Compatibility
 

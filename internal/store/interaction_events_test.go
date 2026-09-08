@@ -59,11 +59,12 @@ func TestAppendInteractionEvent_WhenAdviceGrant_ExpectAwardEvent(t *testing.T) {
 
 	// Act
 	err = s.AppendInteractionEvent(store.AppendInteractionEventInput{
-		Kind:     store.InteractionEventAward,
-		ViewerID: result.ViewerID,
-		AwardID:  "advice",
-		Points:   50,
-		Now:      now,
+		Kind:      store.InteractionEventAward,
+		ViewerID:  result.ViewerID,
+		AwardID:   "advice",
+		AwardName: "Advice",
+		Points:    50,
+		Now:       now,
 	})
 
 	// Assert
@@ -91,11 +92,12 @@ func TestMerge_WhenAwardEventsExist_ExpectViewerIDRewritten(t *testing.T) {
 	intoID := viewerID(t, s, "youtube", "2", testDayResetHour, now)
 
 	require.NoError(t, s.AppendInteractionEvent(store.AppendInteractionEventInput{
-		Kind:     store.InteractionEventAward,
-		ViewerID: fromID,
-		AwardID:  "joke",
-		Points:   10,
-		Now:      now,
+		Kind:      store.InteractionEventAward,
+		ViewerID:  fromID,
+		AwardID:   "joke",
+		AwardName: "Joke",
+		Points:    10,
+		Now:       now,
 	}))
 	require.NoError(t, s.AppendInteractionEvent(store.AppendInteractionEventInput{
 		Kind:           store.InteractionEventCommand,
@@ -135,11 +137,12 @@ func TestInteractionEvents_WhenReopenDatabase_ExpectAwardEventPersists(t *testin
 	}, 50, testDayResetHour, now)
 	require.NoError(t, err)
 	require.NoError(t, s.AppendInteractionEvent(store.AppendInteractionEventInput{
-		Kind:     store.InteractionEventAward,
-		ViewerID: result.ViewerID,
-		AwardID:  "advice",
-		Points:   50,
-		Now:      now,
+		Kind:      store.InteractionEventAward,
+		ViewerID:  result.ViewerID,
+		AwardID:   "advice",
+		AwardName: "Advice",
+		Points:    50,
+		Now:       now,
 	}))
 	require.NoError(t, s.Close())
 
@@ -184,6 +187,7 @@ func TestInteractionEventSchema_WhenInspected_ExpectNoMessageBodyColumn(t *testi
 		"viewer_id",
 		"command_trigger",
 		"award_id",
+		"reward_name",
 		"points",
 		"message_platform",
 		"message_id",

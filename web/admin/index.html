@@ -236,6 +236,7 @@
               <h1 id="workspace-audience-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.audienceHeading">Audience</h1>
               <div class="audience-tabs console-tabs" role="tablist" data-i18n-aria-label="audience.tabList" aria-label="Audience sections">
                 <button id="audience-viewers-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="audience-viewers-panel" data-audience-tab="viewers" data-i18n="audience.tabViewers">Viewers</button>
+                <button id="audience-history-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-history-panel" tabindex="-1" data-audience-tab="history" data-i18n="audience.tabHistory">Journal</button>
                 <button id="audience-commands-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-commands-panel" data-audience-tab="commands" data-i18n="audience.tabCommands">Commands</button>
                 <button id="audience-awards-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-awards-panel" data-audience-tab="awards" data-i18n="audience.tabAwards">Awards</button>
               </div>
@@ -598,6 +599,25 @@
                   <p id="awards-editor-empty" class="empty-state audience-catalog-editor__empty" data-i18n="awards.selectOrCreate">Select an award or create one.</p>
                 </aside>
               </div>
+            </div>
+
+            <div id="audience-history-panel" class="audience-panel audience-history-panel" role="tabpanel" aria-labelledby="audience-history-tab" hidden>
+              <header class="audience-history__toolbar">
+                <h2 class="audience-history__title" data-i18n="audience.historyHeading">Reward history</h2>
+                <form id="reward-history-viewer-filter-form" class="audience-history__filter" role="search">
+                  <div class="form__field audience-history__filter-field">
+                    <label for="reward-history-viewer-filter" data-i18n="history.viewerFilterLabel">Viewer</label>
+                    <input id="reward-history-viewer-filter" type="search" list="reward-history-viewer-options" autocomplete="off" data-i18n-placeholder="history.viewerFilterPlaceholder" placeholder="All viewers" aria-describedby="reward-history-viewer-filter-status reward-history-viewer-filter-error">
+                    <datalist id="reward-history-viewer-options"></datalist>
+                    <p id="reward-history-viewer-filter-status" class="field-hint" role="status" aria-live="polite" hidden></p>
+                    <p id="reward-history-viewer-filter-error" class="field-error" role="alert" hidden></p>
+                  </div>
+                  <button id="apply-reward-history-viewer-filter" type="submit" class="btn-physical btn-small" data-i18n="history.viewerFilterApply">Show</button>
+                  <button id="clear-reward-history-viewer-filter" type="button" class="btn-physical btn-small" data-i18n="history.viewerFilterClear" disabled>Clear</button>
+                </form>
+                <button id="refresh-reward-history" type="button" class="btn-physical btn-small" data-i18n="shell.refresh">Refresh</button>
+              </header>
+              <div id="audience-history-content" class="reward-history__content"></div>
             </div>
           </div>
         </section>

@@ -42,7 +42,7 @@ API mutations SHALL use `POST /api/<resource>/<action>` with identifiers in the 
 - **THEN** the client calls `POST /api/viewers/avatar/clear` with JSON `id`
 
 ### Requirement: Reads, health, static, WebSocket, and OAuth callbacks may use GET
-The following GET routes SHALL remain available: `/`, `/overlay`, `/overlay/leaderboard`, `/overlay/alert`, `/dock/messages`, `/shared/`, `/health`, `/ws`, `/api/config`, `/api/status`, `/api/diagnostics`, `/api/messages/recent`, `/api/viewers`, `/api/viewers/get`, `/api/leaderboard`, `/api/commands`, `/api/awards`, `/overlay/assets/{filename}`, `/oauth/youtube/start`, and `/oauth/youtube/callback`.
+The following GET routes SHALL remain available: `/`, `/overlay`, `/overlay/leaderboard`, `/overlay/alert`, `/dock/messages`, `/shared/`, `/health`, `/ws`, `/api/config`, `/api/status`, `/api/diagnostics`, `/api/messages/recent`, `/api/viewers`, `/api/viewers/get`, `/api/leaderboard`, `/api/commands`, `/api/awards`, `/api/reward-history`, `/overlay/assets/{filename}`, `/oauth/youtube/start`, and `/oauth/youtube/callback`.
 
 #### Scenario: Status poll
 - **WHEN** the admin polls connector state
@@ -55,6 +55,10 @@ The following GET routes SHALL remain available: `/`, `/overlay`, `/overlay/lead
 #### Scenario: List commands
 - **WHEN** the Audience commands view loads
 - **THEN** it uses `GET /api/commands`
+
+#### Scenario: Read reward history
+- **WHEN** the Audience History tab or a viewer detail loads award history
+- **THEN** it uses `GET /api/reward-history` with query parameters rather than an id path segment
 
 #### Scenario: Alert page
 - **WHEN** OBS loads the banners Browser Source

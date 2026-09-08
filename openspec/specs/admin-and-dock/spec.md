@@ -520,3 +520,52 @@ The Audience command editor SHALL let the operator choose Alert or Show leaderbo
 #### Scenario: Switch action without losing clarity
 - **WHEN** the operator changes an alert command to Show leaderboard
 - **THEN** irrelevant fields are no longer required and the visible form describes the new effect before save
+
+### Requirement: Audience includes a global reward-history view
+Audience SHALL show a Journal tab immediately after Viewers and before the catalog-management tabs. The tab SHALL show a localized table of award time, viewer, reward name, and points in newest-first order. A labeled, searchable viewer choice SHALL filter the journal through the selected canonical viewer id, expose an explicit clear action that restores all viewers, and distinguish viewers whose display names match. Activating a viewer name in a journal entry SHALL apply the same filter. At narrow widths, the same semantic table SHALL present each entry as a stacked event row without horizontal scrolling while retaining its accessible column headings. It SHALL load fresh data when opened and provide explicit Refresh, loading, empty, error with Retry, and Load more states. Load more MUST append older entries without removing already rendered rows.
+
+#### Scenario: Open Journal
+- **WHEN** the operator opens the Audience Journal tab
+- **THEN** the newest award entries appear with localized timestamps and signed XP values
+
+#### Scenario: Filter Journal by viewer
+- **WHEN** the operator selects a viewer from the searchable choice or activates that viewer's name in an entry
+- **THEN** the journal reloads with only that canonical viewer's awards and identifies the active filter
+
+#### Scenario: Clear viewer filter
+- **WHEN** the operator clears an active viewer filter
+- **THEN** the journal reloads the newest awards across all viewers
+
+#### Scenario: No awards yet
+- **WHEN** the history endpoint returns no entries
+- **THEN** the tab shows a localized empty state and does not show Load more
+
+#### Scenario: Load fails
+- **WHEN** the history request fails
+- **THEN** the tab keeps the existing console usable and offers a localized Retry action
+
+#### Scenario: Load more
+- **WHEN** the current response has `next_cursor` and the operator activates Load more
+- **THEN** older entries are appended and the control reflects its busy state accessibly
+
+### Requirement: Viewer detail includes that viewer's reward history
+The existing wide Audience inspector and compact viewer sheet SHALL include a Reward history section scoped to the selected canonical viewer immediately after the viewer's summary statistics and before profile-management controls. On wide screens, the inspector SHALL grow beyond its compact width so the history and controls use the available space. Reward entries SHALL use a stacked, wrapping layout without horizontal scrolling and show a bounded first page of the newest entries with cursor pagination. Loading or failing to load history MUST NOT hide the viewer's existing profile, statistics, identities, portrait, or merge controls. Changing or closing the selected viewer MUST prevent a late response from rendering under the wrong viewer.
+
+#### Scenario: Open rewarded viewer
+- **WHEN** the operator opens a viewer who has received awards
+- **THEN** the viewer detail shows only that viewer's newest reward entries
+
+#### Scenario: Viewer has no awards
+- **WHEN** the selected viewer has no award history
+- **THEN** the rest of the viewer detail remains available and the history section shows a localized empty state
+
+#### Scenario: Selection changes during load
+- **WHEN** the operator selects Bob before Alice's history request completes
+- **THEN** Alice's late response is discarded or cancelled and MUST NOT appear in Bob's detail
+
+### Requirement: Reward history remains operator-only
+The Journal tab and viewer-detail history SHALL appear only in the admin console. The messages dock and OBS overlay pages MUST NOT gain history controls, history payloads, or a new history WebSocket event.
+
+#### Scenario: Open messages dock
+- **WHEN** the operator opens `/dock/messages`
+- **THEN** the dock remains a messages-only log without reward history
