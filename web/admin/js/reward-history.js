@@ -52,15 +52,18 @@ export function makeHistoryTable(entries, options) {
   entries.forEach(function (entry) {
     const tr = document.createElement("tr");
     const time = document.createElement("td");
+    time.className = "reward-history-table__time";
     time.textContent = formatRewardHistoryTime(entry.created_at, getLocale());
     tr.append(time);
     if (!options.compact) {
       const viewer = document.createElement("th");
+      viewer.className = "reward-history-table__viewer";
       viewer.scope = "row";
       viewer.textContent = String(entry.viewer_display_name || t("viewers.unnamed"));
       tr.append(viewer);
     }
     const reward = document.createElement("td");
+    reward.className = "reward-history-table__reward";
     reward.textContent = String(entry.reward_name || entry.reward_id || "");
     const points = document.createElement("td");
     points.className = "data-table__numeric reward-history-table__points";
@@ -186,7 +189,7 @@ export function createViewerRewardHistory(viewerId) {
   const mount = document.createElement("div");
   mount.className = "reward-history__content";
   section.append(heading, mount);
-  viewerHistorySession.begin(viewerId, createController(mount, viewerId, 10, true));
+  viewerHistorySession.begin(viewerId, createController(mount, viewerId, 5, true));
   return section;
 }
 

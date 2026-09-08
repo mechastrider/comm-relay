@@ -31,6 +31,11 @@ assert.ok(
     viewersJs.indexOf('detailLoadInFlight = fetchJSON("/api/viewers/get?id="'),
   "viewer history must begin alongside, rather than after, the profile request"
 );
+assert.ok(
+  viewersJs.indexOf("stats,\n    rewardHistorySection,") <
+    viewersJs.indexOf("nameField,\n    hideField,"),
+  "reward history must appear after summary statistics and before profile controls"
+);
 assert.match(
   viewersJs,
   /window\.addEventListener\("resize", enforceViewerDetailShellWhenHidden\)/

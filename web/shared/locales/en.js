@@ -577,7 +577,7 @@ export default {
   "audience.tabViewers": "Viewers",
   "audience.tabCommands": "Commands",
   "audience.tabAwards": "Awards",
-  "audience.tabHistory": "History",
+  "audience.tabHistory": "Journal",
   "audience.historyHeading": "Reward history",
   "audience.historyTable": "Channel reward history",
   "audience.historyEmpty": "No awards yet.",

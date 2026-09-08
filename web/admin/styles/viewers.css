@@ -441,6 +441,12 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   --audience-inspector-pad: var(--primitive-space-4);
 }
 
+@media (min-width: 1280px) {
+  .audience-inspector {
+    flex-basis: min(36rem, 44vw);
+  }
+}
+
 .audience-inspector__header {
   display: flex;
   align-items: center;
@@ -730,13 +736,12 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 
 .reward-history__table-scroll {
   max-width: 100%;
-  overflow: auto;
-  scrollbar-gutter: stable;
+  overflow-x: hidden;
 }
 
 .reward-history-table {
   width: 100%;
-  min-width: 42rem;
+  min-width: 0;
   table-layout: fixed;
 }
 
@@ -746,9 +751,13 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   vertical-align: top;
 }
 
-.reward-history-table th:nth-child(1),
-.reward-history-table td:nth-child(1) {
-  width: 9rem;
+.reward-history-table__time {
+  width: 10rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.reward-history-table__viewer {
+  width: 30%;
 }
 
 .reward-history-table th:last-child,
@@ -758,8 +767,57 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 }
 
 .reward-history-table--compact {
-  min-width: 28rem;
+  display: block;
   font-size: var(--primitive-font-size-sm);
+}
+
+.reward-history-table--compact thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.reward-history-table--compact tbody {
+  display: grid;
+}
+
+.reward-history-table--compact tbody > tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "reward points"
+    "time points";
+  gap: 2px var(--primitive-space-3);
+  padding: var(--primitive-space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.reward-history-table--compact td {
+  width: auto;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.reward-history-table--compact .reward-history-table__reward {
+  grid-area: reward;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.reward-history-table--compact .reward-history-table__time {
+  grid-area: time;
+  color: var(--muted);
+}
+
+.reward-history-table--compact .reward-history-table__points {
+  grid-area: points;
+  align-self: start;
 }
 
 .reward-history__footer {
@@ -773,9 +831,77 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 }
 
 .audience-detail__reward-history {
-  margin-top: var(--primitive-space-4);
-  padding-top: var(--primitive-space-3);
+  margin: 0 0 var(--primitive-space-4);
+  padding: var(--primitive-space-3) 0;
   border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.audience-detail__reward-history .reward-history__footer .btn-physical {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .reward-history-table:not(.reward-history-table--compact) {
+    display: block;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) tbody {
+    display: grid;
+    gap: var(--primitive-space-2);
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) tbody > tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "viewer points"
+      "reward points"
+      "time time";
+    gap: 2px var(--primitive-space-3);
+    padding: var(--primitive-space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--primitive-radius-sm);
+    background: var(--surface-dark);
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) th,
+  .reward-history-table:not(.reward-history-table--compact) td {
+    width: auto;
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) .reward-history-table__viewer {
+    grid-area: viewer;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) .reward-history-table__reward {
+    grid-area: reward;
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) .reward-history-table__time {
+    grid-area: time;
+    color: var(--muted);
+    font-size: var(--primitive-font-size-sm);
+  }
+
+  .reward-history-table:not(.reward-history-table--compact) .reward-history-table__points {
+    grid-area: points;
+    align-self: start;
+  }
 }
 
 .audience-catalog-panel {

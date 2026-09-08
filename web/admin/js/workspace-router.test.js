@@ -43,11 +43,11 @@ assert.equal(workspaceHash("about"), "#about");
 assert.equal(workspaceSectionId("live"), "workspace-live");
 assert.equal(workspaceSectionId("settings"), "workspace-settings");
 
-assert.equal(nextAudienceTab("viewers", "ArrowRight"), "commands");
-assert.equal(nextAudienceTab("awards", "ArrowRight"), "history");
-assert.equal(nextAudienceTab("history", "ArrowRight"), "viewers");
-assert.equal(nextAudienceTab("viewers", "ArrowLeft"), "history");
+assert.equal(nextAudienceTab("viewers", "ArrowRight"), "history");
+assert.equal(nextAudienceTab("history", "ArrowRight"), "commands");
+assert.equal(nextAudienceTab("awards", "ArrowRight"), "viewers");
+assert.equal(nextAudienceTab("viewers", "ArrowLeft"), "awards");
 assert.equal(nextAudienceTab("commands", "Home"), "viewers");
-assert.equal(nextAudienceTab("commands", "End"), "history");
+assert.equal(nextAudienceTab("commands", "End"), "awards");
 
 console.log("workspace-router OK");

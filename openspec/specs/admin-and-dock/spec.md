@@ -522,10 +522,10 @@ The Audience command editor SHALL let the operator choose Alert or Show leaderbo
 - **THEN** irrelevant fields are no longer required and the visible form describes the new effect before save
 
 ### Requirement: Audience includes a global reward-history view
-Audience SHALL add a History tab beside Viewers, Commands, and Awards. The tab SHALL show a localized table of award time, viewer, reward name, and points in newest-first order. It SHALL load fresh data when opened and provide explicit Refresh, loading, empty, error with Retry, and Load more states. Load more MUST append older entries without removing already rendered rows. The table MUST be keyboard-readable and MUST expose column headings to assistive technology.
+Audience SHALL show a Journal tab immediately after Viewers and before the catalog-management tabs. The tab SHALL show a localized table of award time, viewer, reward name, and points in newest-first order. At narrow widths, the same semantic table SHALL present each entry as a stacked event row without horizontal scrolling while retaining its accessible column headings. It SHALL load fresh data when opened and provide explicit Refresh, loading, empty, error with Retry, and Load more states. Load more MUST append older entries without removing already rendered rows.
 
-#### Scenario: Open History
-- **WHEN** the operator opens the Audience History tab
+#### Scenario: Open Journal
+- **WHEN** the operator opens the Audience Journal tab
 - **THEN** the newest award entries appear with localized timestamps and signed XP values
 
 #### Scenario: No awards yet
@@ -541,7 +541,7 @@ Audience SHALL add a History tab beside Viewers, Commands, and Awards. The tab S
 - **THEN** older entries are appended and the control reflects its busy state accessibly
 
 ### Requirement: Viewer detail includes that viewer's reward history
-The existing wide Audience inspector and compact viewer sheet SHALL include a Reward history section scoped to the selected canonical viewer. It SHALL use the same row content, newest-first order, empty/error states, and cursor pagination as global history. Loading or failing to load history MUST NOT hide the viewer's existing profile, statistics, identities, portrait, or merge controls. Changing or closing the selected viewer MUST prevent a late response from rendering under the wrong viewer.
+The existing wide Audience inspector and compact viewer sheet SHALL include a Reward history section scoped to the selected canonical viewer immediately after the viewer's summary statistics and before profile-management controls. On wide screens, the inspector SHALL grow beyond its compact width so the history and controls use the available space. Reward entries SHALL use a stacked, wrapping layout without horizontal scrolling and show a bounded first page of the newest entries with cursor pagination. Loading or failing to load history MUST NOT hide the viewer's existing profile, statistics, identities, portrait, or merge controls. Changing or closing the selected viewer MUST prevent a late response from rendering under the wrong viewer.
 
 #### Scenario: Open rewarded viewer
 - **WHEN** the operator opens a viewer who has received awards
@@ -556,7 +556,7 @@ The existing wide Audience inspector and compact viewer sheet SHALL include a Re
 - **THEN** Alice's late response is discarded or cancelled and MUST NOT appear in Bob's detail
 
 ### Requirement: Reward history remains operator-only
-The History tab and viewer-detail history SHALL appear only in the admin console. The messages dock and OBS overlay pages MUST NOT gain history controls, history payloads, or a new history WebSocket event.
+The Journal tab and viewer-detail history SHALL appear only in the admin console. The messages dock and OBS overlay pages MUST NOT gain history controls, history payloads, or a new history WebSocket event.
 
 #### Scenario: Open messages dock
 - **WHEN** the operator opens `/dock/messages`

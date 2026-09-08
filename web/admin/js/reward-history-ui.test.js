@@ -144,8 +144,8 @@ test("viewer and channel rows preserve hostile long localized text as text nodes
   });
   const oldSection = createViewerRewardHistory("old-viewer");
   const reopenedSection = createViewerRewardHistory("viewer/with space");
-  assert.equal(requests[0].url, "/api/reward-history?limit=10&viewer_id=old-viewer");
-  assert.equal(requests[1].url, "/api/reward-history?limit=10&viewer_id=viewer%2Fwith+space");
+  assert.equal(requests[0].url, "/api/reward-history?limit=5&viewer_id=old-viewer");
+  assert.equal(requests[1].url, "/api/reward-history?limit=5&viewer_id=viewer%2Fwith+space");
   requests[1].request.resolve({
     ok: true,
     payload: { entries: [{ reward_name: "новая награда", points: 5, created_at: "2026-09-08T14:05:00Z" }], next_cursor: null },

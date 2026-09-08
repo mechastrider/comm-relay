@@ -767,12 +767,12 @@ function renderViewerDetail(viewer, rewardHistorySection) {
     portraitSection,
     title,
     stats,
+    rewardHistorySection,
     nameField,
     hideField,
     identitiesHeading,
     identities,
-    mergeField,
-    rewardHistorySection
+    mergeField
   );
 }
 

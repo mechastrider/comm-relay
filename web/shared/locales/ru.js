@@ -577,7 +577,7 @@ export default {
   "audience.tabViewers": "Зрители",
   "audience.tabCommands": "Команды",
   "audience.tabAwards": "Награды",
-  "audience.tabHistory": "История",
+  "audience.tabHistory": "Журнал",
   "audience.historyHeading": "История наград",
   "audience.historyTable": "История наград канала",
   "audience.historyEmpty": "Наград пока нет.",
