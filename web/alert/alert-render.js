@@ -94,8 +94,8 @@ export function alertRenderModel(alert) {
     return Object.assign(base, {
       kind: "contract",
       emblemKind: "award",
-      identifier: text(alert.contract_id),
-      emblemLabel: text(alert.contract_title),
+      identifier: text(alert.award_id),
+      emblemLabel: text(alert.award_name),
       title: text(alert.contract_title) || text(alert.text) || "Contract",
       objective: text(alert.contract_objective),
       rewardName: text(alert.award_name) || "Award",

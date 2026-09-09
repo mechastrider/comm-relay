@@ -117,7 +117,10 @@ test("renders a contract from text nodes with its title, objective, and reward s
   assert.equal(byClass(splash, "alert-contract-objective").textContent, objective);
   assert.equal(byClass(splash, "alert-contract-reward").textContent, "Spotter");
   assert.equal(byClass(splash, "alert-points").textContent, "+25");
-  assert.match(byClass(splash, "alert-emblem").className, /alert-emblem--award/);
+  const emblem = byClass(splash, "alert-emblem");
+  assert.match(emblem.className, /alert-emblem--award/);
+  assert.equal(emblem.attributes["data-emblem-symbol"], "reticle");
+  assert.equal(byClass(emblem, "alert-emblem__monogram"), null);
   assert.equal(Object.hasOwn(byClass(splash, "alert-contract-title"), "innerHTML"), false);
 });
 

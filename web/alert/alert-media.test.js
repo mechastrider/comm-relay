@@ -178,7 +178,7 @@ test("uses snapshot media and a stable award-style fallback for contracts", func
   const image = splash.children[0];
   image.listeners.error();
   assert.match(image.className, /alert-emblem--award/);
-  assert.match(image.attributes["data-emblem-symbol"], /^(medal|gem|burst)$/);
+  assert.equal(image.attributes["data-emblem-symbol"], "laurel-star");
 });
 
 test("playAlertAudio uses custom file instead of built-in tone", async function () {
