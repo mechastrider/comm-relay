@@ -77,6 +77,8 @@ export function setLiveTab(tab, options) {
     loadTabData("leaderboard");
   } else if (next === "statistics" && previous !== "statistics") {
     loadTabData("statistics");
+  } else if (next === "contracts" && previous !== "contracts") {
+    loadTabData("contracts");
   }
 
   if (previous !== next) {

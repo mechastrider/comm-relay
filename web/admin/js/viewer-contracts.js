@@ -46,6 +46,7 @@ const errors = {
 let activeContract = null;
 let awards = [];
 let controller = null;
+let viewerController = null;
 let requestInFlight = false;
 let selectedViewer = null;
 let restoreFocus = null;
@@ -194,6 +195,12 @@ export async function openLiveContracts() {
 export function deactivateLiveContracts() {
   if (controller) controller.abort();
   controller = null;
+  if (viewerController) viewerController.abort();
+  viewerController = null;
+  selectedViewer = null;
+  restoreFocus = null;
+  suppressRestoreFocus = false;
+  [el.winnerDialog, el.awardDialog, el.closeDialog].forEach(closeDialog);
 }
 
 async function openContract(event) {
@@ -245,31 +252,42 @@ async function announceAgain() {
 }
 
 async function loadViewers() {
+  if (viewerController) viewerController.abort();
+  viewerController = new AbortController();
+  const currentViewerController = viewerController;
   const query = el.winnerSearch.value.trim();
   el.winnerStatus.textContent = t("state.loading");
-  const response = await request(`/api/viewers?q=${encodeURIComponent(query)}`);
-  const viewers = Array.isArray(response.viewers) ? response.viewers.slice(0, 50) : [];
-  el.winnerResults.replaceChildren();
-  viewers.forEach(function (viewer) {
-    const item = document.createElement("li");
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "viewer-contract-viewer";
-    button.setAttribute("aria-selected", selectedViewer && selectedViewer.id === viewer.id ? "true" : "false");
-    button.textContent = viewer.display_name || viewer.id;
-    const meta = document.createElement("span");
-    meta.className = "viewer-contract-viewer__meta";
-    meta.textContent = Array.isArray(viewer.platforms) ? viewer.platforms.join(" · ") : "";
-    button.append(meta);
-    button.addEventListener("click", function () {
-      selectedViewer = viewer;
-      el.winnerNext.disabled = false;
-      loadViewers().catch(function () { /* keep a usable selection */ });
+  try {
+    const response = await request(`/api/viewers?q=${encodeURIComponent(query)}`, { signal: currentViewerController.signal });
+    if (viewerController !== currentViewerController) return;
+    const viewers = Array.isArray(response.viewers) ? response.viewers.slice(0, 50) : [];
+    el.winnerResults.replaceChildren();
+    viewers.forEach(function (viewer) {
+      const item = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "viewer-contract-viewer";
+      button.setAttribute("aria-selected", selectedViewer && selectedViewer.id === viewer.id ? "true" : "false");
+      button.textContent = viewer.display_name || viewer.id;
+      const meta = document.createElement("span");
+      meta.className = "viewer-contract-viewer__meta";
+      meta.textContent = Array.isArray(viewer.platforms) ? viewer.platforms.join(" · ") : "";
+      button.append(meta);
+      button.addEventListener("click", function () {
+        selectedViewer = viewer;
+        el.winnerNext.disabled = false;
+        loadViewers().catch(function () { /* keep a usable selection */ });
+      });
+      item.append(button);
+      el.winnerResults.append(item);
     });
-    item.append(button);
-    el.winnerResults.append(item);
-  });
-  el.winnerStatus.textContent = viewers.length ? "" : t("contracts.noViewers");
+    el.winnerStatus.textContent = viewers.length ? "" : t("contracts.noViewers");
+  } catch (error) {
+    if (error.name === "AbortError") return;
+    throw error;
+  } finally {
+    if (viewerController === currentViewerController) viewerController = null;
+  }
 }
 
 function openWinnerPicker() {
@@ -303,12 +321,15 @@ function showAwardConfirmation() {
 
 async function confirmAward() {
   if (!selectedViewer || !activeContract) return;
+  let focusDraft = false;
   setBusy(true);
   try {
     await request("/api/viewer-contracts/award", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: activeContract.id, viewer_id: selectedViewer.id }) });
     activeContract = null;
+    restoreFocus = null;
     closeDialog(el.awardDialog);
     setStatus(t("contracts.awarded"));
+    focusDraft = true;
   } catch (error) {
     if (error.status === 404) {
       selectedViewer = null;
@@ -324,6 +345,7 @@ async function confirmAward() {
   } finally {
     setBusy(false);
     render();
+    if (focusDraft) el.title.focus();
   }
 }
 
@@ -336,12 +358,15 @@ function openCloseConfirmation() {
 
 async function confirmClose() {
   if (!activeContract) return;
+  let focusDraft = false;
   setBusy(true);
   try {
     await request("/api/viewer-contracts/close", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: activeContract.id }) });
     activeContract = null;
+    restoreFocus = null;
     closeDialog(el.closeDialog);
     setStatus(t("contracts.closed"));
+    focusDraft = true;
   } catch (error) {
     if (error.status === 409) {
       setStatus(t("contracts.conflict"));
@@ -350,6 +375,7 @@ async function confirmClose() {
   } finally {
     setBusy(false);
     render();
+    if (focusDraft) el.title.focus();
   }
 }
 

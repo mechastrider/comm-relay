@@ -57,6 +57,7 @@
   color: var(--text);
 }
 
+.viewer-contract-dialog:not([open]) { display: none; }
 .viewer-contract-dialog[open] { display: flex; }
 .viewer-contract-dialog__header,
 .viewer-contract-dialog__footer { flex: 0 0 auto; padding: var(--primitive-space-4); }
