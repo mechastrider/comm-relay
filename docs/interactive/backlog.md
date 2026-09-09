@@ -40,7 +40,6 @@
 | <a id="int-010"></a>INT-010 | Явно сохранять выбранные сообщения как моменты и идеи аудитории | Analytics | `needs_decision` | — | [Разбор интерфейса](../research/archive/2026-09-03-stream-interface-review.md) | [OQ-003](../open-questions.md#oq-003-сохранённые-моменты-чата-и-рабочая-область-аналитики-2026-09-07) |
 | <a id="int-011"></a>INT-011 | Выбрать модель тестовых overlay-сценариев и вернуть операторский UI | Studio / overlay | `needs_decision` | — | Практика отладки Studio | [OQ-002](../open-questions.md#oq-002-тестовые-сценарии-overlay--изоляция-ui-и-эфирные-источники-2026-09-05), [active change](../../openspec/changes/studio-overlay-test-tools/) |
 | <a id="int-016"></a>INT-016 | Поддержать несколько алиасов одной команды | Commands | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Проверить UX редактирования и конфликтов триггеров |
-| <a id="int-017"></a>INT-017 | Создавать зрительские контракты: Intel Request, Find Loot и похожие задачи | Interaction model | `candidate` | `next` | Локальные сессии «Phantom Reapers 15–16» | Проверить минимальный ручной lifecycle: объявление, победитель, награда и закрытие без результата |
 | <a id="int-018"></a>INT-018 | Проводить прогнозы перед миссией с ручным выбором результата | Interaction model | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Отделить prediction от расходуемой экономики |
 | <a id="int-019"></a>INT-019 | Проводить голосования зрителей без прямого управления игрой | Interaction model | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Исследовать кроссплатформенный ввод и тайминг |
 | <a id="int-020"></a>INT-020 | Добавить роли и специализации зрителей поверх общего XP | Viewer progression | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Сопоставить с будущими уровнями и achievements |
@@ -77,6 +76,7 @@
 | <a id="int-008"></a>INT-008 | Автоматически показывать и скрывать leaderboard по событиям и таймеру | Leaderboard | `implemented` | Локальная сессия «Phantom Reapers 15» | [leaderboard-visibility](../../openspec/specs/leaderboard-visibility/spec.md) |
 | <a id="int-009"></a>INT-009 | Начислять ограниченный activity XP и расширить редактируемый каталог contribution awards | Viewer progression | `implemented` | [Видение](vision.md) | [viewer-stats](../../openspec/specs/viewer-stats/spec.md), [operator-rewards](../../openspec/specs/operator-rewards/spec.md) |
 | <a id="int-025"></a>INT-025 | Просматривать историю полученных зрителями наград | Analytics / viewer progression | `implemented` | Обсуждение после стрима 2026-09-08 | [viewer-reward-history](../../openspec/specs/viewer-reward-history/spec.md), [admin-and-dock](../../openspec/specs/admin-and-dock/spec.md); достижения остаются в [INT-012](#int-012) |
+| <a id="int-017"></a>INT-017 | Создавать зрительские контракты: Intel Request, Find Loot и похожие задачи | Interaction model | `implemented` | Локальные сессии «Phantom Reapers 15–16» | [viewer-contracts](../../openspec/specs/viewer-contracts/spec.md), [admin-and-dock](../../openspec/specs/admin-and-dock/spec.md), [overlay-alerts](../../openspec/specs/overlay-alerts/spec.md) |
 
 ## Отложено или отклонено
 

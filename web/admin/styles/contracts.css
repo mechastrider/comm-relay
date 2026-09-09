@@ -1,0 +1,77 @@
+/* The manual single-contract workflow inside Live. */
+.live-contracts-region {
+  gap: var(--primitive-space-3);
+}
+
+.live-contracts-draft,
+.live-contract-card {
+  width: min(100%, 46rem);
+}
+
+.live-contracts-draft {
+  display: grid;
+  gap: var(--primitive-space-3);
+}
+
+.live-contract-card {
+  padding: var(--primitive-space-5);
+  border: 1px solid var(--amber-dim);
+  background: linear-gradient(135deg, rgba(212, 160, 23, 0.12), transparent 55%), var(--surface-raised);
+}
+
+.live-contract-card__status {
+  margin: 0 0 var(--primitive-space-2);
+  color: var(--amber);
+  font-size: var(--primitive-font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.live-contract-card h3,
+.live-contract-card__objective,
+.live-contract-card__reward {
+  overflow-wrap: anywhere;
+}
+
+.live-contract-card h3 { margin: 0; }
+.live-contract-card__objective { white-space: pre-wrap; }
+.live-contract-card__reward { color: var(--amber); font-weight: 700; }
+
+.live-contracts-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--primitive-space-2);
+  margin-top: var(--primitive-space-3);
+}
+
+.viewer-contract-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(38rem, calc(100vw - 2rem));
+  max-height: min(42rem, calc(100dvh - 2rem));
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  background: var(--panel-bg);
+  color: var(--text);
+}
+
+.viewer-contract-dialog[open] { display: flex; }
+.viewer-contract-dialog__header,
+.viewer-contract-dialog__footer { flex: 0 0 auto; padding: var(--primitive-space-4); }
+.viewer-contract-dialog__header { border-bottom: 1px solid var(--border); }
+.viewer-contract-dialog__header h2 { margin: 0; }
+.viewer-contract-dialog__body { flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-gutter: stable; padding: var(--primitive-space-4); }
+.viewer-contract-dialog__footer { display: flex; justify-content: flex-end; gap: var(--primitive-space-2); border-top: 1px solid var(--border); }
+.viewer-contract-viewers { display: grid; gap: var(--primitive-space-2); margin: var(--primitive-space-3) 0 0; padding: 0; list-style: none; }
+.viewer-contract-viewer { width: 100%; padding: var(--primitive-space-3); border: 1px solid var(--border); background: var(--surface-raised); color: var(--text); text-align: left; }
+.viewer-contract-viewer[aria-selected="true"] { border-color: var(--amber); }
+.viewer-contract-viewer__meta { display: block; color: var(--muted); font-size: var(--primitive-font-size-sm); }
+.viewer-contract-confirmation { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+@media (max-width: 34rem) {
+  .live-contracts-actions > button { flex: 1 1 100%; }
+  .viewer-contract-dialog__footer { flex-wrap: wrap; }
+  .viewer-contract-dialog__footer > button { flex: 1 1 auto; }
+}

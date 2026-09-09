@@ -68,3 +68,14 @@ When two viewers are merged, existing events SHALL keep their original `viewer_i
 #### Scenario: Merge after awards
 - **WHEN** viewer A has award events and is merged into viewer B
 - **THEN** those events remain queryable for achievement work and are not dropped
+
+### Requirement: Contract awards are durable award events
+Successful winner settlement SHALL append exactly one interaction event with kind `award`, the snapshotted reward id, reward-name snapshot, points, canonical `viewer_id`, timestamp, and the settling `contract_id`. It MUST NOT persist contract objective text or chat content. Closing without a result MUST NOT append an interaction event.
+
+#### Scenario: Contract winner is recorded
+- **WHEN** a viewer wins a 25 XP contract
+- **THEN** one `award` interaction event records 25 points, that viewer, the reward snapshot, and the contract id
+
+#### Scenario: Contract closes without result
+- **WHEN** a contract closes without a winner
+- **THEN** no command, activity, or award interaction event is added

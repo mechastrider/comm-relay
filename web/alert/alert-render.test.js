@@ -97,6 +97,30 @@ test("omits empty award fields and preserves the command presentation", function
   assert.equal(byClass(command, "alert-text").textContent, "Good game, Nova!");
 });
 
+test("renders a contract from text nodes with its title, objective, and reward snapshot", function () {
+  const title = '<img src=x onerror="alert(1)"> Hold the line';
+  const objective = "Survive the final round.";
+  const splash = createAlertSplash(fakeDocument, {
+    source: "contract",
+    contract_id: "hold-the-line",
+    contract_title: title,
+    contract_objective: objective,
+    award_id: "spotter",
+    award_name: "Spotter",
+    name: "Spotter",
+    text: title,
+    points: 25,
+  }, { reducedMotion: true, createEmblem: createAlertEmblem });
+
+  assert.match(splash.className, /alert-splash--contract/);
+  assert.equal(byClass(splash, "alert-contract-title").textContent, title);
+  assert.equal(byClass(splash, "alert-contract-objective").textContent, objective);
+  assert.equal(byClass(splash, "alert-contract-reward").textContent, "Spotter");
+  assert.equal(byClass(splash, "alert-points").textContent, "+25");
+  assert.match(byClass(splash, "alert-emblem").className, /alert-emblem--award/);
+  assert.equal(Object.hasOwn(byClass(splash, "alert-contract-title"), "innerHTML"), false);
+});
+
 test("only permits http(s) avatars and keeps render-model values safe", function () {
   assert.equal(safeImageURL("https://example.test/avatar.png"), "https://example.test/avatar.png");
   assert.equal(safeImageURL("data:image/png;base64,abc"), "");

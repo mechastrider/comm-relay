@@ -18,13 +18,19 @@ export function isValidAlertEnvelope(alert) {
   if (!Number.isFinite(alert.points) || !Number.isFinite(alert.duration_ms) || alert.duration_ms <= 0) {
     return false;
   }
-  return alert.source !== "award" || (
-    alert.points > 0 && nonBlankString(alert.award_id) && nonBlankString(alert.award_name)
-  );
+  if (alert.source === "award") {
+    return alert.points > 0 && nonBlankString(alert.award_id) && nonBlankString(alert.award_name);
+  }
+  if (alert.source === "contract") {
+    return alert.points > 0 && nonBlankString(alert.contract_id) &&
+      nonBlankString(alert.contract_title) && nonBlankString(alert.contract_objective) &&
+      nonBlankString(alert.award_id) && nonBlankString(alert.award_name);
+  }
+  return true;
 }
 
 function laneFor(alert) {
-  return alert && alert.source === "award" ? "award" : "command";
+  return alert && (alert.source === "award" || alert.source === "contract") ? "award" : "command";
 }
 
 function createdAtMs(alert, receivedAt) {

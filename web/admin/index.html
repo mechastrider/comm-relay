@@ -150,6 +150,7 @@
               <button id="live-messages-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="live-messages-panel" data-live-tab="messages" data-i18n="live.tabMessages">Messages</button>
               <button id="live-leaderboard-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="live-leaderboard-panel" tabindex="-1" data-live-tab="leaderboard" data-i18n="live.tabLeaderboard">Leaderboard</button>
               <button id="live-statistics-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="live-statistics-panel" tabindex="-1" data-live-tab="statistics" data-i18n="live.tabStatistics">Statistics</button>
+              <button id="live-contracts-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="live-contracts-panel" tabindex="-1" data-live-tab="contracts" data-i18n="live.tabContracts">Contracts</button>
             </div>
           </div>
           <div class="console-actions live-toolbar-actions">
@@ -222,6 +223,51 @@
                 <p class="notice__body"></p>
                 <button type="button" class="state-retry btn-physical btn-small" data-i18n="state.retry">Retry</button>
               </div>
+            </div>
+          </section>
+
+          <section id="live-contracts-panel" class="canvas-panel live-tab-panel" role="tabpanel" aria-labelledby="live-contracts-tab" hidden>
+            <div id="live-contracts-region" class="live-region live-contracts-region" aria-busy="false">
+              <p id="live-contracts-status" class="field-hint" aria-live="polite"></p>
+              <div id="live-contracts-error" class="notice notice--error" hidden>
+                <p class="notice__body"></p>
+                <button id="live-contracts-retry" class="btn-physical btn-small" type="button" data-i18n="state.retry">Retry</button>
+              </div>
+              <form id="live-contracts-draft" class="live-contracts-draft" novalidate>
+                <div class="form__field">
+                  <label for="live-contract-title" data-i18n="contracts.title">Title</label>
+                  <input id="live-contract-title" type="text" maxlength="320" aria-describedby="live-contract-title-hint live-contract-title-error">
+                  <p id="live-contract-title-hint" class="field-hint" data-i18n="contracts.titleHint">Up to 80 characters.</p>
+                  <p id="live-contract-title-error" class="field-error" role="alert" hidden></p>
+                </div>
+                <div class="form__field">
+                  <label for="live-contract-objective" data-i18n="contracts.objective">Objective</label>
+                  <textarea id="live-contract-objective" rows="4" maxlength="1120" aria-describedby="live-contract-objective-hint live-contract-objective-error"></textarea>
+                  <p id="live-contract-objective-hint" class="field-hint" data-i18n="contracts.objectiveHint">Up to 280 characters.</p>
+                  <p id="live-contract-objective-error" class="field-error" role="alert" hidden></p>
+                </div>
+                <div class="form__field">
+                  <label for="live-contract-reward" data-i18n="contracts.reward">Reward</label>
+                  <select id="live-contract-reward" aria-describedby="live-contract-reward-error"></select>
+                  <p id="live-contract-reward-error" class="field-error" role="alert" hidden></p>
+                </div>
+                <p id="live-contracts-empty-catalog" class="notice__body" hidden data-i18n="contracts.emptyCatalog">Create an award in Audience before announcing a contract.</p>
+                <div class="live-contracts-actions">
+                  <button id="live-contract-open" class="btn-physical" type="submit" data-i18n="contracts.announce">Announce</button>
+                </div>
+              </form>
+              <article id="live-contracts-active" class="live-contract-card" hidden aria-labelledby="live-contract-active-title">
+                <p class="live-contract-card__status" data-i18n="contracts.active">Active contract</p>
+                <h3 id="live-contract-active-title"></h3>
+                <p id="live-contract-active-objective" class="live-contract-card__objective"></p>
+                <p id="live-contract-active-reward" class="live-contract-card__reward"></p>
+                <p id="live-contract-active-time" class="field-hint"></p>
+                <div class="live-contracts-actions">
+                  <button id="live-contract-award" class="btn-physical" type="button" data-i18n="contracts.awardWinner">Award winner</button>
+                  <button id="live-contract-repeat" class="btn-physical btn-small" type="button" data-i18n="contracts.announceAgain">Announce again</button>
+                  <button id="live-contract-close" class="btn-danger btn-small" type="button" data-i18n="contracts.close">Close without result</button>
+                </div>
+              </article>
             </div>
           </section>
         </div>
@@ -1297,6 +1343,27 @@
       <span><span data-i18n="shell.state">State:</span> <strong id="footer-settings-state" data-i18n="shell.loadingSettings">Loading settings</strong></span>
     </footer>
   </div><!-- .app-shell -->
+
+  <dialog id="live-contract-winner-dialog" class="viewer-contract-dialog" aria-labelledby="live-contract-winner-heading">
+    <header class="viewer-contract-dialog__header"><h2 id="live-contract-winner-heading" data-i18n="contracts.pickWinner">Choose winner</h2></header>
+    <div class="viewer-contract-dialog__body">
+      <label for="live-contract-viewer-search" data-i18n="contracts.searchViewer">Search viewers</label>
+      <input id="live-contract-viewer-search" type="search" autocomplete="off">
+      <p id="live-contract-viewer-status" class="field-hint" aria-live="polite"></p>
+      <ul id="live-contract-viewer-results" class="viewer-contract-viewers" data-i18n-aria-label="contracts.viewerResults" aria-label="Viewer results"></ul>
+    </div>
+    <footer class="viewer-contract-dialog__footer"><button id="live-contract-winner-cancel" class="btn-physical btn-small" type="button" data-i18n="dialog.cancel">Cancel</button><button id="live-contract-winner-next" class="btn-physical" type="button" disabled data-i18n="contracts.continue">Continue</button></footer>
+  </dialog>
+  <dialog id="live-contract-award-dialog" class="viewer-contract-dialog" aria-labelledby="live-contract-award-heading">
+    <header class="viewer-contract-dialog__header"><h2 id="live-contract-award-heading" data-i18n="contracts.confirmAward">Award this winner?</h2></header>
+    <div class="viewer-contract-dialog__body"><p id="live-contract-award-confirmation" class="viewer-contract-confirmation"></p></div>
+    <footer class="viewer-contract-dialog__footer"><button id="live-contract-award-cancel" class="btn-physical btn-small" type="button" data-i18n="dialog.cancel">Cancel</button><button id="live-contract-award-confirm" class="btn-physical" type="button" data-i18n="contracts.awardWinner">Award winner</button></footer>
+  </dialog>
+  <dialog id="live-contract-close-dialog" class="viewer-contract-dialog" aria-labelledby="live-contract-close-heading">
+    <header class="viewer-contract-dialog__header"><h2 id="live-contract-close-heading" data-i18n="contracts.confirmClose">Close without a winner?</h2></header>
+    <div class="viewer-contract-dialog__body"><p id="live-contract-close-confirmation" class="viewer-contract-confirmation" data-i18n="contracts.closeConfirmation">No XP or reward-history entry will be created.</p></div>
+    <footer class="viewer-contract-dialog__footer"><button id="live-contract-close-cancel" class="btn-physical btn-small" type="button" data-i18n="dialog.cancel">Cancel</button><button id="live-contract-close-confirm" class="btn-danger" type="button" data-i18n="contracts.close">Close without result</button></footer>
+  </dialog>
 
   <form id="settings-form" class="settings-form" novalidate>
     <dialog id="connections-dialog" class="settings-dialog" aria-labelledby="connections-heading">

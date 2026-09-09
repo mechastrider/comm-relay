@@ -184,6 +184,7 @@ func TestInteractionEventSchema_WhenInspected_ExpectNoMessageBodyColumn(t *testi
 	assert.ElementsMatch(t, []string{
 		"id",
 		"kind",
+		"contract_id",
 		"viewer_id",
 		"command_trigger",
 		"award_id",

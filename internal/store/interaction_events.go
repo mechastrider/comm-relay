@@ -29,6 +29,7 @@ const (
 type InteractionEvent struct {
 	ID              string
 	Kind            InteractionEventKind
+	ContractID      string
 	ViewerID        string
 	CommandTrigger  string
 	AwardID         string
@@ -42,6 +43,7 @@ type InteractionEvent struct {
 // AppendInteractionEventInput describes one append-only interaction event.
 type AppendInteractionEventInput struct {
 	Kind            InteractionEventKind
+	ContractID      string
 	ViewerID        string
 	CommandTrigger  string
 	AwardID         string
@@ -106,7 +108,10 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 		viewerID = input.ViewerID
 	}
 
-	var commandTrigger, awardID, awardName, messagePlatform, messageID any
+	var contractID, commandTrigger, awardID, awardName, messagePlatform, messageID any
+	if strings.TrimSpace(input.ContractID) != "" {
+		contractID = strings.TrimSpace(input.ContractID)
+	}
 	points := input.Points
 
 	switch input.Kind {
@@ -158,11 +163,12 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 	}
 	if _, err := q.Exec(
 		`INSERT INTO interaction_events (
-			id, kind, viewer_id, command_trigger, award_id, reward_name, points,
+			id, kind, contract_id, viewer_id, command_trigger, award_id, reward_name, points,
 			message_platform, message_id, created_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		string(input.Kind),
+		contractID,
 		viewerID,
 		commandTrigger,
 		awardID,
@@ -206,7 +212,7 @@ func (s *Store) CountInteractionEvents() (int, error) {
 
 func (s *Store) listInteractionEventsLocked(whereClause string, args ...any) ([]InteractionEvent, error) {
 	query := `
-		SELECT id, kind, viewer_id, command_trigger, award_id, reward_name, points,
+		SELECT id, kind, contract_id, viewer_id, command_trigger, award_id, reward_name, points,
 		       message_platform, message_id, created_at
 		FROM interaction_events ` + whereClause + ` ORDER BY created_at`
 
@@ -237,11 +243,12 @@ type interactionEventScanner interface {
 
 func scanInteractionEvent(row interactionEventScanner) (InteractionEvent, error) {
 	var event InteractionEvent
-	var viewerID, commandTrigger, awardID, awardName, messagePlatform, messageID sql.NullString
+	var contractID, viewerID, commandTrigger, awardID, awardName, messagePlatform, messageID sql.NullString
 	var createdAtRaw string
 	if err := row.Scan(
 		&event.ID,
 		&event.Kind,
+		&contractID,
 		&viewerID,
 		&commandTrigger,
 		&awardID,
@@ -256,6 +263,9 @@ func scanInteractionEvent(row interactionEventScanner) (InteractionEvent, error)
 
 	if viewerID.Valid {
 		event.ViewerID = viewerID.String
+	}
+	if contractID.Valid {
+		event.ContractID = contractID.String
 	}
 	if commandTrigger.Valid {
 		event.CommandTrigger = commandTrigger.String

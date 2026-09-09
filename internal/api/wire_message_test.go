@@ -54,6 +54,38 @@ func TestAwardAlertWirePayload_WhenCreatedAtHasFraction_ExpectRFC3339Nano(t *tes
 	require.Equal(t, "2026-06-05T10:11:12.987654321Z", decoded["created_at"])
 }
 
+func TestContractAlertWirePayload_ExpectSnapshotAndSnakeCaseJSON(t *testing.T) {
+	t.Parallel()
+
+	payload, err := contractAlertWirePayload(&store.ViewerContract{
+		ID:                   "contract-1",
+		Title:                "Find <cache>",
+		Objective:            "Mark & defend it",
+		RewardID:             "spotter",
+		RewardName:           "Spotter",
+		RewardPoints:         25,
+		RewardSplashTemplate: "ignored",
+		RewardSound:          "ping",
+		RewardDurationMs:     5000,
+		RewardLayout:         "card",
+		RewardImageFit:       "cover",
+		RewardImageSizePct:   100,
+	}, time.Date(2026, 9, 8, 10, 11, 12, 987654321, time.UTC))
+	require.NoError(t, err)
+
+	var decoded map[string]any
+	require.NoError(t, json.Unmarshal(payload, &decoded))
+	require.Equal(t, "alert", decoded["type"])
+	require.Equal(t, "contract", decoded["source"])
+	require.Equal(t, "contract-1", decoded["contract_id"])
+	require.Equal(t, "Find <cache>", decoded["contract_title"])
+	require.Equal(t, "Mark & defend it", decoded["contract_objective"])
+	require.Equal(t, "spotter", decoded["award_id"])
+	require.Equal(t, "Spotter", decoded["award_name"])
+	require.Equal(t, float64(25), decoded["points"])
+	require.Equal(t, "2026-09-08T10:11:12.987654321Z", decoded["created_at"])
+}
+
 func TestChatMessageWirePayload_WhenFragmentsSet_ExpectSnakeCaseJSON(t *testing.T) {
 	t.Parallel()
 

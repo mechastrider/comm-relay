@@ -9,10 +9,10 @@
 > **Allowed fallout**: store types/errors/test hooks, handler wiring, synthetic fixtures, router guards
 > **Blocked**: multiple active contracts, templates/history UI, connector behavior, generic rules engine, config migration
 
-- [ ] 1.1 Add migration 15 and contract/store models with reward snapshot fields, lifecycle checks, nullable interaction-event `contract_id`, and the SQLite-enforced one-active slot.
-- [ ] 1.2 Implement store operations to open, load current, and validate/reload an active contract for repeat announcement, with trimmed Unicode code-point limits and typed not-found/conflict errors.
-- [ ] 1.3 Add `GET /api/viewer-contracts/current` and POST actions `/open` and `/announce` with snake_case payloads, 400/409/500 mapping, post-commit contract alert encoding, and redacted lifecycle logs.
-- [ ] 1.4 Cover fresh/14→15/down-up/older-writer migrations, snapshot survival after catalog edit/delete, one-active races, restart reads, stale repeat, public JSON shape, route methods, and no automatic WebSocket replay.
+- [x] 1.1 Add migration 15 and contract/store models with reward snapshot fields, lifecycle checks, nullable interaction-event `contract_id`, and the SQLite-enforced one-active slot.
+- [x] 1.2 Implement store operations to open, load current, and validate/reload an active contract for repeat announcement, with trimmed Unicode code-point limits and typed not-found/conflict errors.
+- [x] 1.3 Add `GET /api/viewer-contracts/current` and POST actions `/open` and `/announce` with snake_case payloads, 400/409/500 mapping, post-commit contract alert encoding, and redacted lifecycle logs.
+- [x] 1.4 Cover fresh/14→15/down-up/older-writer migrations, snapshot survival after catalog edit/delete, one-active races, restart reads, stale repeat, public JSON shape, route methods, and no automatic WebSocket replay.
 
 ## Slice: `Settle the contract through the existing reward system` (backend)
 
@@ -23,10 +23,10 @@
 > **Allowed fallout**: refactor existing award transaction helpers, rank-change result, test failure injection, wire-frame tests
 > **Blocked**: new currency/reward kind, viewer auto-creation from platform ids, contract history response, automatic winner detection
 
-- [ ] 2.1 Implement one atomic winner transaction keyed by visible canonical `viewer_id`: validate active id, update all/session/day XP, append one kind=`award` event with contract provenance, mark awarded, and expose rank/portrait data for normal post-commit publication.
-- [ ] 2.2 Implement atomic no-result close and POST `/api/viewer-contracts/award` and `/close`, including 404 viewer handling, 409 stale/racing transitions, confirmations' response data, normal award alert/leaderboard visibility hooks, and no frames before commit.
-- [ ] 2.3 Preserve the existing reward-history response and journal behavior for contract awards while proving no-result close and failures add no history; keep title/objective out of interaction events, responses, and Info logs.
-- [ ] 2.4 Add race/idempotency, hidden/merged/multi-platform viewer, catalog-deleted snapshot, exact XP, event provenance, history privacy, rank refresh, WebSocket drop accounting, and injected rollback tests.
+- [x] 2.1 Implement one atomic winner transaction keyed by visible canonical `viewer_id`: validate active id, update all/session/day XP, append one kind=`award` event with contract provenance, mark awarded, and expose rank/portrait data for normal post-commit publication.
+- [x] 2.2 Implement atomic no-result close and POST `/api/viewer-contracts/award` and `/close`, including 404 viewer handling, 409 stale/racing transitions, confirmations' response data, normal award alert/leaderboard visibility hooks, and no frames before commit.
+- [x] 2.3 Preserve the existing reward-history response and journal behavior for contract awards while proving no-result close and failures add no history; keep title/objective out of interaction events, responses, and Info logs.
+- [x] 2.4 Add race/idempotency, hidden/merged/multi-platform viewer, catalog-deleted snapshot, exact XP, event provenance, history privacy, rank refresh, WebSocket drop accounting, and injected rollback tests.
 
 ## Slice: `Operate contracts from Live` (frontend)
 
@@ -37,9 +37,9 @@
 > **Allowed fallout**: reusable pure helpers, abort controllers, existing dialog primitives, test fixtures and package test list
 > **Blocked**: dock controls, contract catalog/history, persistent draft/localStorage, new framework, Studio settings
 
-- [ ] 3.1 Add the fourth Contracts tab/panel and modular state loader with empty/loading/error/offline/conflict recovery, abort/late-response protection, current contract display, and reward catalog empty guidance.
-- [ ] 3.2 Implement labeled title/objective/reward inputs, 80/280 Unicode validation, in-flight gating, associated field errors, draft preservation, Announce and Announce again actions, and EN/RU copy/parity.
-- [ ] 3.3 Implement the capped searchable canonical-viewer picker plus separate award/no-result confirmations, duplicate-name platform distinction, keyboard/focus restoration, 404/409 reconciliation, and success focus/state behavior.
+- [x] 3.1 Add the fourth Contracts tab/panel and modular state loader with empty/loading/error/offline/conflict recovery, abort/late-response protection, current contract display, and reward catalog empty guidance.
+- [x] 3.2 Implement labeled title/objective/reward inputs, 80/280 Unicode validation, in-flight gating, associated field errors, draft preservation, Announce and Announce again actions, and EN/RU copy/parity.
+- [x] 3.3 Implement the capped searchable canonical-viewer picker plus separate award/no-result confirmations, duplicate-name platform distinction, keyboard/focus restoration, 404/409 reconciliation, and success focus/state behavior.
 - [ ] 3.4 Add pure helper, markup, interaction, i18n, accessibility-state, stale-response, and dock-ignore tests; smoke responsive stacking, pinned dialog actions, visible scrolling, and no horizontal clipping.
 
 ## Slice: `Show contract announcements on the existing alert surface` (frontend)
@@ -51,8 +51,8 @@
 > **Allowed fallout**: sample fixtures, safe-media fallback tests, CSS theme selectors, reduced-motion rules
 > **Blocked**: new Browser Source URL, new theme id, preemptive alerts, historical replay, chat/leaderboard presentation changes
 
-- [ ] 4.1 Extend the scheduler so `source=contract` shares the protected FIFO lane with awards, never preempts the visible splash, never expires, and follows documented capacity displacement; retain legacy unknown-source command behavior.
-- [ ] 4.2 Render a distinct contract variant from text nodes with title, objective, reward, +XP, snapshot media/presentation, stable emblem and broken-media fallback across every current theme.
+- [x] 4.1 Extend the scheduler so `source=contract` shares the protected FIFO lane with awards, never preempts the visible splash, never expires, and follows documented capacity displacement; retain legacy unknown-source command behavior.
+- [x] 4.2 Render a distinct contract variant from text nodes with title, objective, reward, +XP, snapshot media/presentation, stable emblem and broken-media fallback across every current theme.
 - [ ] 4.3 Add scheduler/render/media/XSS/reduced-motion/unknown-client tests and a sample fixture; verify transparent root, wrapping/clamping, safe filenames, no empty chrome, audio policy, and OBS rectangle fit.
 
 ## Slice: `Document and prepare the user-visible experiment` (docs)
@@ -64,7 +64,7 @@
 > **Allowed fallout**: concise support guidance and status/date links
 > **Blocked**: roadmap promotion beyond the approved experiment, install-step churn, release versioning, announcement copy, publishing
 
-- [ ] 5.1 Add or refine one Russian `[Unreleased]` bullet for the visible manual contract workflow, preserving all released sections; update RU/EN usage docs only where they enumerate Live tabs or interactive features.
+- [x] 5.1 Add or refine one Russian `[Unreleased]` bullet for the visible manual contract workflow, preserving all released sections; update RU/EN usage docs only where they enumerate Live tabs or interactive features.
 - [ ] 5.2 After behavior and QA are complete, reconcile `INT-017` with the implemented canonical specs, sync delta specs, and archive the change through the explicit OpenSpec closeout workflow; do not promote excluded predictions/rules/economy work.
 
 ## Gate: qa (verification)

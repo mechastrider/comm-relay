@@ -81,7 +81,8 @@ body {
   --alert-emblem-accent: var(--message-accent);
 }
 
-.alert-splash--award .alert-emblem {
+.alert-splash--award .alert-emblem,
+.alert-splash--contract .alert-emblem {
   --award-accent: color-mix(in srgb, var(--message-accent) 42%, #f4c95d);
 }
 
@@ -159,7 +160,10 @@ body {
 .alert-text,
 .alert-award-name,
 .alert-award-viewer,
-.alert-quote {
+.alert-quote,
+.alert-contract-title,
+.alert-contract-objective,
+.alert-contract-reward {
   margin: 0;
   font-size: calc(var(--overlay-font-size) * 1.05);
   line-height: 1.35;
@@ -178,6 +182,25 @@ body {
 .alert-award-viewer {
   font-size: calc(var(--overlay-font-size) * 1.12);
   font-weight: 800;
+}
+
+.alert-contract-title {
+  color: var(--message-accent);
+  font-size: calc(var(--overlay-font-size) * 1.12);
+  font-weight: 900;
+}
+
+.alert-contract-objective {
+  font-size: calc(var(--overlay-font-size) * 0.92);
+  font-weight: 700;
+}
+
+.alert-contract-reward {
+  color: var(--message-accent);
+  font-size: calc(var(--overlay-font-size) * 0.78);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .alert-points {
@@ -222,7 +245,8 @@ body.overlay-theme--default .alert-splash {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
-body.overlay-theme--default .alert-splash--award {
+body.overlay-theme--default .alert-splash--award,
+body.overlay-theme--default .alert-splash--contract {
   border-left-width: 5px;
 }
 
@@ -277,7 +301,8 @@ body.overlay-theme--dashboard .alert-content {
   font-weight: 800;
 }
 
-body.overlay-theme--dashboard .alert-splash--award .alert-award-name {
+body.overlay-theme--dashboard .alert-splash--award .alert-award-name,
+body.overlay-theme--dashboard .alert-splash--contract .alert-contract-title {
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.72);
 }
 
@@ -362,7 +387,9 @@ body.overlay-theme--cockpit-popups .alert-content {
 }
 
 body.overlay-theme--cockpit-panel .alert-award-name,
-body.overlay-theme--cockpit-popups .alert-award-name {
+body.overlay-theme--cockpit-popups .alert-award-name,
+body.overlay-theme--cockpit-panel .alert-contract-title,
+body.overlay-theme--cockpit-popups .alert-contract-title {
   color: var(--hud-cyan);
 }
 
@@ -553,7 +580,8 @@ body.overlay-theme--g-rebels-popups .alert-content {
   line-height: 1.16;
 }
 
-body.overlay-theme--g-rebels-popups .alert-award-name {
+body.overlay-theme--g-rebels-popups .alert-award-name,
+body.overlay-theme--g-rebels-popups .alert-contract-title {
   color: var(--rebels-gold);
 }
 
@@ -586,7 +614,10 @@ body.overlay-theme--g-rebels-popups .alert-quote {
   .alert-text,
   .alert-award-name,
   .alert-award-viewer,
-  .alert-quote {
+  .alert-quote,
+  .alert-contract-title,
+  .alert-contract-objective,
+  .alert-contract-reward {
     font-size: clamp(13px, calc(var(--overlay-font-size) * 0.85), 16px);
     line-height: 1.2;
   }
@@ -597,6 +628,15 @@ body.overlay-theme--g-rebels-popups .alert-quote {
 
   .alert-award-viewer {
     font-size: clamp(14px, calc(var(--overlay-font-size) * 0.9), 17px);
+  }
+
+  .alert-contract-title {
+    font-size: clamp(14px, calc(var(--overlay-font-size) * 0.9), 17px);
+  }
+
+  .alert-contract-objective,
+  .alert-contract-reward {
+    font-size: clamp(11px, calc(var(--overlay-font-size) * 0.74), 14px);
   }
 
   .alert-quote {

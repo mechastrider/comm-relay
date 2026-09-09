@@ -27,4 +27,10 @@ var (
 	ErrInvalidRewardHistoryLimit = errors.New("invalid reward history limit")
 	// ErrInvalidRewardHistoryCursor is returned for malformed or unsupported history cursors.
 	ErrInvalidRewardHistoryCursor = errors.New("invalid reward history cursor")
+	// ErrViewerContractNotFound is returned when a contract id is unknown.
+	ErrViewerContractNotFound = errors.New("viewer contract not found")
+	// ErrViewerContractConflict is returned when a lifecycle action no longer targets the active contract.
+	ErrViewerContractConflict = errors.New("viewer contract conflict")
+	// ErrInvalidViewerContract is returned for invalid contract input.
+	ErrInvalidViewerContract = errors.New("invalid viewer contract")
 )

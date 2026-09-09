@@ -63,6 +63,41 @@ type AwardType struct {
 	ImageSizePct   int
 }
 
+// ViewerContractStatus describes the lifecycle state of a viewer contract.
+type ViewerContractStatus string
+
+const (
+	// ViewerContractActive is the single contract that can be announced or settled.
+	ViewerContractActive ViewerContractStatus = "active"
+	// ViewerContractAwarded records a contract settled with a canonical viewer.
+	ViewerContractAwarded ViewerContractStatus = "awarded"
+	// ViewerContractClosed records a contract settled without a result.
+	ViewerContractClosed ViewerContractStatus = "closed"
+)
+
+// ViewerContract is the durable, snapshotted promise made to viewers.
+type ViewerContract struct {
+	ID                   string
+	Status               ViewerContractStatus
+	Title                string
+	Objective            string
+	RewardID             string
+	RewardName           string
+	RewardPoints         int
+	RewardSplashTemplate string
+	RewardSound          string
+	RewardDurationMs     int
+	RewardImageAsset     string
+	RewardSoundFile      string
+	RewardSoundVolume    int
+	RewardLayout         string
+	RewardImageFit       string
+	RewardImageSizePct   int
+	WinnerViewerID       string
+	AnnouncedAt          time.Time
+	SettledAt            time.Time
+}
+
 // RewardHistoryEntry is one public, award-only journal entry.
 type RewardHistoryEntry struct {
 	ID                string

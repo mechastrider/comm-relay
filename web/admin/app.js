@@ -45,6 +45,7 @@ import { initWorkspaceRouter } from "./js/workspace-router.js";
 import { initLiveTabs, handleLiveWorkspaceChange } from "./js/live-tabs.js";
 import { initLiveLeaderboard } from "./js/live-leaderboard.js";
 import { initLiveStatistics } from "./js/live-statistics.js";
+import { initLiveContracts } from "./js/viewer-contracts.js";
 import { initLiveActivePreset, renderLiveActivePresetControl } from "./js/live-active-preset.js";
 import { initSidebar } from "./js/sidebar.js?v=1";
 import {
@@ -167,6 +168,7 @@ initLiveLeaderboard(function () {
   /* period change handled in leaderboard module */
 });
 initLiveStatistics();
+initLiveContracts();
 initLiveActivePreset();
 initStudio();
 initSettingsWorkspace();
