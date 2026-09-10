@@ -71,6 +71,7 @@
 - [x] 4.8 Top-align the persistent objective, localize its fixed labels from the configured interface locale, and retain ordinary leaderboard dock controls.
 - [x] 4.9 Separate content selection from visibility: restore the original leaderboard control layout, group Contract/Leaderboard as an icon switcher, keep Repeat separate, and preserve the selected mode across every visibility transition.
 - [x] 4.10 Convert the remaining Show for N seconds, Pin/Resume, and Hide buttons to icons with dynamic localized accessible names and hover/focus tooltips.
+- [x] 4.11 Place the visibility icons, Contract/Leaderboard switcher, and Repeat announcement icon in one non-wrapping horizontal control row.
 
 ## Slice: `Document and prepare the user-visible experiment` (docs)
 

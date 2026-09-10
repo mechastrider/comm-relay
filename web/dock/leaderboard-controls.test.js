@@ -34,6 +34,7 @@ test("automatic and on-request policies use timed show, pin toggle, and hide", (
 test("dock toolbar buttons are icons with accessible localized tooltips", () => {
   const markup = readFileSync(new URL("./index.html", import.meta.url), "utf8");
   const script = readFileSync(new URL("./messages.js", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("./messages.css", import.meta.url), "utf8");
   assert.match(markup, /id="leaderboard-always-visible"[^>]+role="switch"/);
   for (const id of ["leaderboard-show", "leaderboard-pin", "leaderboard-hide"]) {
     assert.match(markup, new RegExp(`id="${id}"[^>]+leaderboard-toolbar__icon-button[^>]+aria-label="[^"]+"`));
@@ -49,6 +50,8 @@ test("dock toolbar buttons are icons with accessible localized tooltips", () => 
     assert.match(markup, new RegExp(`id="${id}"[^>]+aria-label="[^"]+"`));
   }
   assert.match(markup, /class="leaderboard-toolbar__mode-switcher"[^>]+role="group"[^>]+data-i18n-aria-label="dock\.contractMode"/);
+  assert.match(markup, /class="leaderboard-toolbar__control-row">[\s\S]*id="leaderboard-timed-actions"[\s\S]*id="contract-presentation-actions"/);
+  assert.match(styles, /\.leaderboard-toolbar__control-row\s*\{[^}]*flex-wrap:\s*nowrap;/s);
   assert.equal((markup.match(/class="ui-tooltip" role="tooltip"/g) || []).length, 6);
   assert.equal((markup.match(/class="leaderboard-toolbar__icon-button has-tooltip"/g) || []).length, 6);
   assert.equal((markup.match(/<svg[^>]+aria-hidden="true"/g) || []).length, 7);

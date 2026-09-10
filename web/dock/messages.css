@@ -38,12 +38,28 @@ body {
 
 .leaderboard-toolbar__topline,
 .leaderboard-toolbar__preset,
+.leaderboard-toolbar__control-row,
 .leaderboard-toolbar__actions,
 .leaderboard-toolbar__always-actions {
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
+}
+
+.leaderboard-toolbar__control-row {
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.leaderboard-toolbar__actions,
+.leaderboard-toolbar__contract-actions {
+  flex: 0 0 auto;
+}
+
+.leaderboard-toolbar__always-actions {
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
 .leaderboard-toolbar [hidden] {
@@ -161,24 +177,14 @@ body {
   max-width: min(190px, 70vw);
 }
 
-.leaderboard-toolbar__contract-actions button:last-child .ui-tooltip {
+.leaderboard-toolbar__contract-actions button .ui-tooltip {
   right: 0;
   left: auto;
   transform: translateY(-4px);
 }
 
-.leaderboard-toolbar__contract-actions button:last-child:hover .ui-tooltip,
-.leaderboard-toolbar__contract-actions button:last-child:focus-visible .ui-tooltip {
-  transform: translateY(0);
-}
-
-.leaderboard-toolbar__contract-actions button:first-child .ui-tooltip {
-  left: 0;
-  transform: translateY(-4px);
-}
-
-.leaderboard-toolbar__contract-actions button:first-child:hover .ui-tooltip,
-.leaderboard-toolbar__contract-actions button:first-child:focus-visible .ui-tooltip {
+.leaderboard-toolbar__contract-actions button:hover .ui-tooltip,
+.leaderboard-toolbar__contract-actions button:focus-visible .ui-tooltip {
   transform: translateY(0);
 }
 
@@ -194,6 +200,13 @@ body {
   background: #242429;
   cursor: pointer;
   font-weight: 700;
+}
+
+.leaderboard-toolbar__switch span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .leaderboard-toolbar__switch input {

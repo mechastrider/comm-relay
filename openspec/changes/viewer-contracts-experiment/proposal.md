@@ -12,7 +12,7 @@ The feature is controlled by the local streamer or OBS operator. A winner may be
 - Persist the active contract across restart and expose explicit actions to award a canonical viewer or close without a result.
 - Snapshot the promised reward at announcement so catalog edits cannot change an active contract's displayed or granted terms.
 - Present a brief announcement through the existing alert Browser Source, then keep the active objective visible by temporarily replacing content in the existing leaderboard Browser Source.
-- Keep the ordinary leaderboard visibility behavior intact, present its button actions as compact icons, and add a separate icon switcher for contract/ranking content plus a repeat-announcement action.
+- Keep the ordinary leaderboard visibility behavior intact and place its icon actions, the contract/ranking switcher, and repeat-announcement action in one compact horizontal row.
 - Reject conflicting/stale lifecycle actions and make successful lifecycle transitions observable without storing chat content.
 
 ## Capabilities

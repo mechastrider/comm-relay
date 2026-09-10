@@ -51,7 +51,7 @@ At narrow widths the card/actions stack in document order without horizontal scr
 
 ### Layout and Components
 
-The leaderboard toolbar presents Show for N seconds, Pin/Resume, and Hide as compact icon buttons while retaining the always-policy switch. While a contract is active, it adds a visually grouped two-button icon switcher for Contract objective or Leaderboard plus a separate Repeat announcement icon. Every icon button reuses the same SVG styling, minimum target size, focus ring, localized accessible name, and shared hover/focus tooltip. The visibility controls operate on whichever content is selected and never change that selection; the mode switcher never changes visibility. The preset selector and status remain available; no second dock panel or duplicate visibility action is introduced.
+The leaderboard toolbar presents Show for N seconds, Pin/Resume, and Hide as compact icon buttons while retaining the always-policy switch. While a contract is active, the same non-wrapping horizontal row continues with a visually grouped two-button icon switcher for Contract objective or Leaderboard and a separate Repeat announcement icon. Every icon button reuses the same SVG styling, minimum target size, focus ring, localized accessible name, and shared hover/focus tooltip. The visibility controls operate on whichever content is selected and never change that selection; the mode switcher never changes visibility. The preset selector and status remain available; no second dock panel or duplicate visibility action is introduced.
 
 ### Data / Forms / Actions
 
