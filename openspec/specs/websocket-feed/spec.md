@@ -146,3 +146,14 @@ Opening or explicitly repeating an active contract SHALL broadcast one productio
 #### Scenario: Unrelated client
 - **WHEN** chat overlay, leaderboard, admin message log, or dock receives a contract alert
 - **THEN** its existing message and ranking behavior remains functional
+
+### Requirement: Active contract presentation has an authoritative snapshot
+The production `/ws` feed SHALL use a `viewer_contract_state` frame containing `contract` (the public active contract object or null), `content` (`contract` or `leaderboard`), and `visible`. A newly connected client MUST receive the current state. Opening, display changes, award, and no-result close MUST broadcast the updated state only after the authoritative operation succeeds. Clients that do not recognize this frame MUST continue processing known frames.
+
+#### Scenario: Leaderboard connects during an active contract
+- **WHEN** the leaderboard Browser Source connects or reconnects while a contract is active
+- **THEN** it receives the active contract and current presentation state without replaying the alert announcement
+
+#### Scenario: Contract settles
+- **WHEN** award or no-result close commits
+- **THEN** connected clients receive `contract=null` and resume ordinary leaderboard behavior

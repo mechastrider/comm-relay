@@ -600,9 +600,21 @@ Award winner SHALL open a labeled searchable canonical-viewer picker using curre
 - **WHEN** settlement returns HTTP 409 because another client already closed the contract
 - **THEN** the UI reloads the current state and does not claim that a second reward was granted
 
-### Requirement: Contract controls remain out of the messages dock
-The OBS messages dock MUST NOT gain contract drafting, announcement, winner-selection, or close controls. It SHALL continue to ignore contract announcement frames for message rendering.
+### Requirement: The messages dock controls active contract presentation
+The OBS messages dock SHALL present the ordinary Show for N seconds, Pin/Resume, and Hide actions as icon-only buttons with localized accessible names and hover/focus tooltips, while retaining the always-policy switch. While a contract is active, the dock SHALL place those visibility actions, a visually separate two-value icon switcher for Contract objective or Leaderboard content, and an icon-only Repeat announcement action in one non-wrapping horizontal row. Show for N seconds, Pin, Resume, Hide, automatic visibility changes, and timed expiry SHALL affect only the shared surface visibility and MUST preserve the selected content. The mode switcher SHALL affect only content and MUST preserve the current visibility state. Every contract control MUST have a localized accessible name, hover/focus tooltip, busy state, and pressed state where applicable. The dock MUST NOT add a second visibility control, contract drafting, winner-selection, editing, or close controls, and contract alert frames MUST NOT become chat rows.
 
-#### Scenario: Contract is announced while dock is open
-- **WHEN** the messages dock receives the announcement frame
-- **THEN** no chat row or contract control is added to the dock
+#### Scenario: Contract becomes active while dock is open
+- **WHEN** the dock receives the authoritative active-contract presentation state
+- **THEN** it shows the contract presentation controls without adding a chat row
+
+#### Scenario: Operator switches to ranking
+- **WHEN** the operator activates the ranking icon while a contract is active
+- **THEN** the shared Browser Source selects the current leaderboard without changing visibility and the ranking control exposes its pressed state
+
+#### Scenario: Operator controls the selected surface
+- **WHEN** the operator uses Show for N seconds, Pin, or Hide while either content mode is selected
+- **THEN** the existing visibility behavior applies to that selected content and the content mode does not change
+
+#### Scenario: Contract ends
+- **WHEN** the active contract is awarded or closed without result
+- **THEN** contract controls disappear and ordinary leaderboard controls and visibility policy resume unchanged
