@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/shared/reward-picker.css?v=2">
     <link rel="stylesheet" href="/shared/tooltip.css?v=21">
-    <link rel="stylesheet" href="/dock/messages/messages.css?v=17">
+    <link rel="stylesheet" href="/dock/messages/messages.css?v=18">
     <script>
       (function () {
         try {
@@ -36,38 +36,33 @@
           <span data-i18n="dock.preset">Preset</span>
           <select id="leaderboard-preset" aria-label="Preset"></select>
         </label>
-        <div id="leaderboard-standard-actions">
-          <div id="leaderboard-always-actions" class="leaderboard-toolbar__always-actions" hidden>
-            <label class="leaderboard-toolbar__switch">
-              <input id="leaderboard-always-visible" type="checkbox" role="switch">
-              <span data-i18n="dock.alwaysVisible">Show leaderboard</span>
-            </label>
-          </div>
-          <div id="leaderboard-timed-actions" class="leaderboard-toolbar__actions">
-            <button id="leaderboard-show" type="button" data-leaderboard-action="show">
-              <span id="leaderboard-show-label">Show for 15s</span>
-            </button>
-            <button id="leaderboard-pin" type="button" data-leaderboard-action="pin" data-i18n="dock.pin" aria-pressed="false">Pin</button>
-            <button id="leaderboard-hide" type="button" data-leaderboard-action="hide" data-i18n="dock.hide">Hide</button>
-          </div>
+        <div id="leaderboard-always-actions" class="leaderboard-toolbar__always-actions" hidden>
+          <label class="leaderboard-toolbar__switch">
+            <input id="leaderboard-always-visible" type="checkbox" role="switch">
+            <span data-i18n="dock.alwaysVisible">Show leaderboard</span>
+          </label>
+        </div>
+        <div id="leaderboard-timed-actions" class="leaderboard-toolbar__actions">
+          <button id="leaderboard-show" type="button" data-leaderboard-action="show">
+            <span id="leaderboard-show-label">Show for 15s</span>
+          </button>
+          <button id="leaderboard-pin" type="button" data-leaderboard-action="pin" data-i18n="dock.pin" aria-pressed="false">Pin</button>
+          <button id="leaderboard-hide" type="button" data-leaderboard-action="hide" data-i18n="dock.hide">Hide</button>
         </div>
         <div id="contract-presentation-actions" class="leaderboard-toolbar__actions leaderboard-toolbar__contract-actions" hidden>
-          <button id="contract-show-objective" class="has-tooltip" type="button" aria-label="Show contract objective" aria-pressed="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg>
-            <span class="ui-tooltip" role="tooltip" data-i18n="dock.contractObjective">Show contract objective</span>
-          </button>
-          <button id="contract-show-leaderboard" class="has-tooltip" type="button" aria-label="Show leaderboard" aria-pressed="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-7M12 20V4M19 20v-11"></path></svg>
-            <span class="ui-tooltip" role="tooltip" data-i18n="dock.contractLeaderboard">Show leaderboard</span>
-          </button>
+          <div class="leaderboard-toolbar__mode-switcher" role="group" aria-label="Displayed content" data-i18n-aria-label="dock.contractMode">
+            <button id="contract-show-objective" class="has-tooltip" type="button" aria-label="Show contract objective" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg>
+              <span class="ui-tooltip" role="tooltip" data-i18n="dock.contractObjective">Show contract objective</span>
+            </button>
+            <button id="contract-show-leaderboard" class="has-tooltip" type="button" aria-label="Show leaderboard" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-7M12 20V4M19 20v-11"></path></svg>
+              <span class="ui-tooltip" role="tooltip" data-i18n="dock.contractLeaderboard">Show leaderboard</span>
+            </button>
+          </div>
           <button id="contract-repeat-announcement" class="has-tooltip" type="button" aria-label="Repeat announcement">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a8 8 0 1 1 2.3 5.7M4 11V5m0 6h6"></path></svg>
             <span class="ui-tooltip" role="tooltip" data-i18n="dock.contractRepeat">Repeat announcement</span>
-          </button>
-          <button id="contract-toggle-visibility" class="has-tooltip" type="button" aria-label="Hide contract surface" aria-pressed="true">
-            <svg class="contract-icon--visible" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
-            <svg class="contract-icon--hidden" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18M10.5 6.2A9.8 9.8 0 0 1 12 6c6 0 9.5 6 9.5 6a15 15 0 0 1-2.2 2.8M6.2 6.2C3.9 8 2.5 12 2.5 12s3.5 6 9.5 6c1.2 0 2.3-.2 3.3-.6"></path></svg>
-            <span id="contract-visibility-tooltip" class="ui-tooltip" role="tooltip">Hide contract surface</span>
           </button>
         </div>
         <p id="leaderboard-toolbar-error" class="leaderboard-toolbar__error" role="alert" hidden></p>
@@ -77,6 +72,6 @@
         <p id="empty-state" class="empty-state">Waiting for chat messages</p>
       </main>
     </div>
-    <script type="module" src="/dock/messages/messages.js?v=21"></script>
+    <script type="module" src="/dock/messages/messages.js?v=22"></script>
   </body>
 </html>

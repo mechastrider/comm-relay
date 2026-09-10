@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -127,7 +128,19 @@ func (h *viewerContractsHandler) handleOpen(w http.ResponseWriter, r *http.Reque
 	if h.writeOpenError(w, r, err) {
 		return
 	}
+	visible := true
+	if h.visibility != nil {
+		visibilitySnapshot, visibilityErr := h.visibility.Pin(r.Context())
+		if visibilityErr != nil {
+			clog.Errorf(r.Context(), "pin viewer contract surface: %w", visibilityErr)
+		} else {
+			visible = visibilitySnapshot.Visible
+		}
+	}
 	snapshot := h.presentation.Activate(contract)
+	if snapshot.Visible != visible {
+		snapshot, _ = h.presentation.SetVisible(visible)
+	}
 	if !h.broadcastContractState(w, r, snapshot) {
 		return
 	}
@@ -352,6 +365,7 @@ func (h *viewerContractsHandler) handleAward(w http.ResponseWriter, r *http.Requ
 	if !h.broadcastContractState(w, r, h.presentation.Clear(result.Contract.ID)) {
 		return
 	}
+	h.resumeLeaderboardVisibility(r.Context())
 
 	award := awardTypeFromContract(result.Contract)
 	viewerName := strings.TrimSpace(result.ViewerDisplayName)
@@ -451,8 +465,18 @@ func (h *viewerContractsHandler) handleClose(w http.ResponseWriter, r *http.Requ
 	if !h.broadcastContractState(w, r, h.presentation.Clear(contract.ID)) {
 		return
 	}
+	h.resumeLeaderboardVisibility(r.Context())
 	clog.Info(r.Context(), "viewer contract closed without result", slog.String("contract_id", contract.ID))
 	writeJSON(w, http.StatusOK, closeViewerContractResponse{ContractID: contract.ID, Closed: true})
+}
+
+func (h *viewerContractsHandler) resumeLeaderboardVisibility(ctx context.Context) {
+	if h.visibility == nil {
+		return
+	}
+	if _, err := h.visibility.Resume(ctx); err != nil {
+		clog.Errorf(ctx, "resume leaderboard visibility after viewer contract: %w", err)
+	}
 }
 
 func (h *viewerContractsHandler) writeSettlementError(w http.ResponseWriter, r *http.Request, contractID string, err error) bool {

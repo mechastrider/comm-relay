@@ -1,6 +1,6 @@
 import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
 import { createRewardControl, messageCanBeRewarded } from "/shared/reward-picker.js?v=4";
-import { setLocale, t } from "/shared/i18n.js?v=18";
+import { applyDomTranslations, setLocale, t } from "/shared/i18n.js?v=18";
 import {
   CONTRACT_CONTENT,
   LEADERBOARD_CONTENT,
@@ -39,8 +39,6 @@ import {
   const contractButton = document.getElementById("contract-show-objective");
   const contractLeaderboardButton = document.getElementById("contract-show-leaderboard");
   const contractRepeatButton = document.getElementById("contract-repeat-announcement");
-  const contractVisibilityButton = document.getElementById("contract-toggle-visibility");
-  const contractVisibilityTooltip = document.getElementById("contract-visibility-tooltip");
 
   let messages = [];
   let socket = null;
@@ -71,15 +69,10 @@ import {
   function applyDockLocale(locale) {
     const next = locale === "en-GB" ? "en-GB" : "ru-RU";
     setLocale(next);
+    applyDomTranslations(document);
     if (emptyState) {
       emptyState.textContent = t("dock.waiting");
     }
-    document.querySelectorAll("[data-i18n]").forEach(function (element) {
-      const key = element.getAttribute("data-i18n");
-      if (key) {
-        element.textContent = t(key);
-      }
-    });
     presetSelect?.setAttribute("aria-label", t("dock.preset"));
     renderVisibilityStatus();
     renderVisibilityControls();
@@ -112,17 +105,6 @@ import {
 
   function renderVisibilityStatus() {
     if (!visibilityStatus) {
-      return;
-    }
-    if (contractSnapshot && contractSnapshot.contract && contractSnapshot.content === CONTRACT_CONTENT) {
-      const key = contractSnapshot.content === CONTRACT_CONTENT
-        ? "dock.contractStatusObjective"
-        : "dock.contractStatusLeaderboard";
-      setNodeText(visibilityStatus, t(key));
-      if (visibilityCountdown) {
-        setNodeText(visibilityCountdown, contractSnapshot.visible ? "" : " · " + t("dock.contractStatusHidden"));
-        visibilityCountdown.removeAttribute("aria-label");
-      }
       return;
     }
     if (!visibilitySnapshot) {
@@ -217,11 +199,6 @@ import {
     setContractButtonState(contractButton, state.contractPressed, "dock.contractObjective", contractActionInFlight === "contract");
     setContractButtonState(contractLeaderboardButton, state.leaderboardPressed, "dock.contractLeaderboard", contractActionInFlight === "leaderboard");
     setContractButtonState(contractRepeatButton, null, "dock.contractRepeat", contractActionInFlight === "repeat");
-    const visibilityKey = state.visiblePressed ? "dock.contractHide" : "dock.contractShow";
-    setContractButtonState(contractVisibilityButton, state.visiblePressed, visibilityKey, contractActionInFlight === "visibility");
-    if (contractVisibilityTooltip) {
-      contractVisibilityTooltip.textContent = t(visibilityKey);
-    }
   }
 
   function setContractSnapshot(value) {
@@ -280,7 +257,7 @@ import {
     }
   }
 
-  async function runContractDisplay(content, visible, action) {
+  async function runContractDisplay(content, action) {
     if (!contractSnapshot || !contractSnapshot.contract || contractActionInFlight !== "") {
       return;
     }
@@ -291,7 +268,7 @@ import {
       const response = await fetch("/api/viewer-contracts/display", {
         method: "POST",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: JSON.stringify({ id: contractSnapshot.contract.id, content: content, visible: visible }),
+        body: JSON.stringify({ id: contractSnapshot.contract.id, content: content, visible: contractSnapshot.visible }),
       });
       if (!response.ok) {
         if (response.status === 409) {
@@ -769,18 +746,12 @@ import {
     runVisibilityAction("hide");
   });
   contractButton?.addEventListener("click", function () {
-    runContractDisplay(CONTRACT_CONTENT, contractSnapshot ? contractSnapshot.visible : true, "contract");
+    runContractDisplay(CONTRACT_CONTENT, "contract");
   });
   contractLeaderboardButton?.addEventListener("click", function () {
-    runContractDisplay(LEADERBOARD_CONTENT, contractSnapshot ? contractSnapshot.visible : true, "leaderboard");
+    runContractDisplay(LEADERBOARD_CONTENT, "leaderboard");
   });
   contractRepeatButton?.addEventListener("click", repeatContractAnnouncement);
-  contractVisibilityButton?.addEventListener("click", function () {
-    if (!contractSnapshot) {
-      return;
-    }
-    runContractDisplay(contractSnapshot.content, !contractSnapshot.visible, "visibility");
-  });
   presetSelect?.addEventListener("change", function () {
     activatePreset(presetSelect.value);
   });

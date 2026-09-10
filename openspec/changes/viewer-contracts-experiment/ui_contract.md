@@ -51,12 +51,12 @@ At narrow widths the card/actions stack in document order without horizontal scr
 
 ### Layout and Components
 
-While a contract is active, the leaderboard toolbar keeps its ordinary Show for N seconds, Pin, and Hide visibility actions and adds four compact icon-only actions: show Contract objective, show Leaderboard, Repeat announcement, and Hide/Show contract surface. Existing SVG/icon styling, minimum target size, focus ring, and shared tooltip primitive are reused. Show for N seconds temporarily selects ranking and restores the objective when the timer expires; Pin keeps ranking selected; Hide returns to the objective. The preset selector and status remain available; no second dock panel is introduced.
+While a contract is active, the leaderboard toolbar keeps its ordinary Show for N seconds, Pin, Hide, and always-policy switch in their original layout. Beneath them it adds a visually grouped two-button icon switcher for Contract objective or Leaderboard plus a separate Repeat announcement icon. Existing SVG/icon styling, minimum target size, focus ring, and shared tooltip primitive are reused. The visibility controls operate on whichever content is selected and never change that selection; the mode switcher never changes visibility. The preset selector and status remain available; no second dock panel or duplicate visibility action is introduced.
 
 ### Data / Forms / Actions
 
 - The dock consumes the authoritative `viewer_contract_state` snapshot and fetches current contract state as recovery when needed.
-- Contract and Leaderboard are a two-value pressed-state choice. Repeat calls the existing announcement action. Hide/Show toggles only the active contract presentation override.
+- Contract and Leaderboard are a two-value pressed-state choice. Repeat calls the existing announcement action. Ordinary leaderboard controls synchronize the selected surface visibility without changing the content choice.
 - Buttons send the active contract id and disable while their request is in flight. A stale 409 reloads state instead of guessing.
 - Ending the contract restores ordinary leaderboard controls and their untouched server-side policy.
 
@@ -68,11 +68,11 @@ While a contract is active, the leaderboard toolbar keeps its ordinary Show for 
 | empty | With no active contract show the ordinary leaderboard controls |
 | error/retry | Keep controls understandable, expose a localized dock status error, and recover on the next snapshot/reconnect |
 | offline/degraded | Disable server actions while preserving accessible labels and reconnect normally |
-| interrupted/recovered | A reconnect receives the authoritative state; a process restart defaults an active contract to visible objective mode |
+| interrupted/recovered | A reconnect receives the authoritative content and synchronized visibility state; a process restart defaults an active contract to visible objective mode |
 
 ## Accessibility / Keyboard / Focus
 
-The Contracts tab and panel use linked `role=tab`/`role=tabpanel`, correct roving tabindex, and the existing tab keyboard order. Every field has a visible label; placeholder text is supplemental only. Dynamic status and errors use an appropriate polite/alert live region without announcing each search keystroke. Viewer results are keyboard operable with a single clear selected state. Opening a dialog moves focus to its heading or first field, focus stays within the modal, Cancel/Escape returns focus to the invoking action, and success returns focus to the Contracts heading or empty-state title. Destructive and award actions require explicit activation and are not triggered by selecting a viewer. Every dock icon has the same localized `aria-label` and hover/focus tooltip meaning; Contract/Leaderboard and visibility expose `aria-pressed`.
+The Contracts tab and panel use linked `role=tab`/`role=tabpanel`, correct roving tabindex, and the existing tab keyboard order. Every field has a visible label; placeholder text is supplemental only. Dynamic status and errors use an appropriate polite/alert live region without announcing each search keystroke. Viewer results are keyboard operable with a single clear selected state. Opening a dialog moves focus to its heading or first field, focus stays within the modal, Cancel/Escape returns focus to the invoking action, and success returns focus to the Contracts heading or empty-state title. Destructive and award actions require explicit activation and are not triggered by selecting a viewer. Every dock icon has the same localized `aria-label` and hover/focus tooltip meaning; the Contract/Leaderboard group has a localized accessible name and each mode exposes `aria-pressed`.
 
 ## Scaling / Theme / Localization / Reduced Motion
 

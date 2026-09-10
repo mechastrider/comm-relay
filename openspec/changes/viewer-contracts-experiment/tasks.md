@@ -57,7 +57,7 @@
 
 ## Slice: `Keep the active objective in the existing leaderboard surface` (backend + frontend)
 
-> **Outcome**: An active contract persistently replaces ranking in the small leaderboard Browser Source, while the dock can switch content, repeat the splash, or hide/show the surface without changing normal leaderboard policy.
+> **Outcome**: An active contract persistently replaces ranking in the small leaderboard Browser Source, while the dock independently switches content, repeats the splash, and controls the selected surface with the original leaderboard visibility actions without changing normal policy.
 > **Acceptance**: `go test ./internal/api`; `npm run lint && npm test`; reconnect/restart and all-theme Browser Source smoke.
 > **Skills**: `comm-relay`, `api-conventions`, `comm-relay-backend-golang`, `comm-relay-observability`, `golang-tests`, `web-static-frontend`, `ux-form-practices`, `obs-overlay-themes`
 > **Scope**: contract presentation controller/API/WS snapshot, `web/leaderboard`, messages dock toolbar, shared locales/tooltips
@@ -65,10 +65,11 @@
 > **Blocked**: new OBS source, durable display preference, ordinary leaderboard policy mutation, dock settlement/editing, hotkeys
 
 - [x] 4.4 Add server-authoritative process-local presentation state, `POST /api/viewer-contracts/display`, initial/reconnect `viewer_contract_state` snapshots, lifecycle broadcasts, conflict handling, redacted logs, and focused Go tests.
-- [x] 4.5 Render a safe compact active-contract card in the existing leaderboard root for every theme, switch to cached ranking on command, honor the contract hide override, and restore ordinary visibility behavior after settlement.
-- [x] 4.6 Add icon-only dock controls for Contract, Leaderboard, Repeat announcement, and Hide/Show with localized `aria-label`, hover/focus tooltips, pressed/busy/error states, and no award/close/edit actions.
+- [x] 4.5 Render a safe compact active-contract card in the existing leaderboard root for every theme, switch to cached ranking on command, honor synchronized surface visibility, and restore ordinary visibility behavior after settlement.
+- [x] 4.6 Add an icon-only Contract/Leaderboard mode switcher and Repeat announcement action with localized `aria-label`, hover/focus tooltips, pressed/busy/error states, and no duplicate visibility or award/close/edit actions.
 - [x] 4.7 Add Node/markup/i18n/CSS tests and smoke reconnect, restart default, stale actions, all leaderboard policies, themes, reduced motion, and narrow OBS rectangles.
-- [x] 4.8 Top-align the persistent objective, localize its fixed labels from the configured interface locale, retain ordinary leaderboard dock controls, and restore the objective after a timed ranking display expires.
+- [x] 4.8 Top-align the persistent objective, localize its fixed labels from the configured interface locale, and retain ordinary leaderboard dock controls.
+- [x] 4.9 Separate content selection from visibility: restore the original leaderboard control layout, group Contract/Leaderboard as an icon switcher, keep Repeat separate, and preserve the selected mode across every visibility transition.
 
 ## Slice: `Document and prepare the user-visible experiment` (docs)
 

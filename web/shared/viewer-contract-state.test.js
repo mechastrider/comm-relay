@@ -31,7 +31,7 @@ test("active contract temporarily owns visibility and inactive state restores le
     activeContract: true, visible: true, content: CONTRACT_CONTENT,
   });
   assert.deepEqual(effectiveLeaderboardVisibility({ ...active, content: LEADERBOARD_CONTENT }, hiddenPolicy), {
-    activeContract: true, visible: false, content: LEADERBOARD_CONTENT,
+    activeContract: true, visible: true, content: LEADERBOARD_CONTENT,
   });
   assert.deepEqual(effectiveLeaderboardVisibility({ contract: null }, { visible: true }), {
     activeContract: false, visible: true, content: LEADERBOARD_CONTENT,
@@ -49,7 +49,7 @@ test("normalizes inactive and rejects unrelated or invalid frames", function () 
   assert.equal(normalizeViewerContractState({ type: "viewer_contract_state", contract: {} }), null);
 });
 
-test("derives accessible pressed and busy states for dock controls", function () {
+test("derives accessible mode-switcher and busy states for dock controls", function () {
   const snapshot = normalizeViewerContractState({
     type: "viewer_contract_state",
     contract: { id: "c-1" },
@@ -61,7 +61,6 @@ test("derives accessible pressed and busy states for dock controls", function ()
     disabled: false,
     contractPressed: true,
     leaderboardPressed: false,
-    visiblePressed: false,
   });
   assert.equal(contractControlState(snapshot, true).disabled, true);
   assert.equal(contractControlState(null, false).active, false);

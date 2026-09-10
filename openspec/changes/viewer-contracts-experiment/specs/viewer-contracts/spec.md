@@ -55,7 +55,7 @@ Opening a contract SHALL snapshot the selected reward's id, display name, points
 ### Requirement: The operator can override active contract presentation
 `POST /api/viewer-contracts/display` SHALL accept the active contract `id`, `content` (`contract` or `leaderboard`), and `visible`. A successful request SHALL update only process-local presentation state and broadcast its authoritative snapshot; it MUST NOT mutate the durable contract or ordinary leaderboard visibility policy. Stale ids and requests without an active contract MUST return HTTP 409. Opening or recovering an active contract after process restart SHALL default to `content=contract` and `visible=true`.
 
-When an active contract exists, successful ordinary leaderboard Show, Pin, or visible Resume actions SHALL select leaderboard content. Ordinary Hide and expiry of a timed leaderboard display SHALL restore contract content while preserving the explicit contract-surface visibility override. Fixed contract-card labels SHALL follow the configured EN/RU interface locale, and the card content SHALL align to the top of the Browser Source.
+When an active contract exists, ordinary leaderboard Show, Pin, Resume, Hide, automatic transitions, and timed expiry SHALL synchronize the active presentation's visibility without changing its selected content. Contract/Leaderboard mode actions SHALL change only content and preserve visibility. Fixed contract-card labels SHALL follow the configured EN/RU interface locale, and the card content SHALL align to the top of the Browser Source.
 
 #### Scenario: Hide the active contract surface
 - **WHEN** the operator submits the active id with `visible=false`
@@ -64,6 +64,10 @@ When an active contract exists, successful ordinary leaderboard Show, Pin, or vi
 #### Scenario: Restore ranking temporarily
 - **WHEN** the operator submits the active id with `content=leaderboard` and `visible=true`
 - **THEN** the shared Browser Source shows ranking without changing the configured leaderboard policy
+
+#### Scenario: Timed visibility preserves content mode
+- **WHEN** the operator starts or finishes a timed display while an active contract content mode is selected
+- **THEN** visibility changes according to the leaderboard controller and the selected contract or ranking content remains unchanged
 
 #### Scenario: Restart with an active contract
 - **WHEN** CommRelay restarts while a durable contract remains active

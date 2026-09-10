@@ -44,11 +44,13 @@ test("dock markup has no standalone resume or auto control", () => {
     "contract-show-objective",
     "contract-show-leaderboard",
     "contract-repeat-announcement",
-    "contract-toggle-visibility",
   ]) {
     assert.match(markup, new RegExp(`id="${id}"[^>]+aria-label="[^"]+"`));
   }
-  assert.equal((markup.match(/class="ui-tooltip" role="tooltip"/g) || []).length, 4);
+  assert.match(markup, /class="leaderboard-toolbar__mode-switcher"[^>]+role="group"[^>]+data-i18n-aria-label="dock\.contractMode"/);
+  assert.equal((markup.match(/class="ui-tooltip" role="tooltip"/g) || []).length, 3);
+  assert.doesNotMatch(markup, /id="contract-toggle-visibility"/);
   assert.doesNotMatch(markup, /contract-(?:award|close|edit)/);
-  assert.doesNotMatch(script, /standardActions\.hidden\s*=\s*contractActive/);
+  assert.doesNotMatch(markup, /id="leaderboard-standard-actions"/);
+  assert.doesNotMatch(script, /runContractDisplay\([^,]+,[^,]+,[^)]*"visibility"/);
 });

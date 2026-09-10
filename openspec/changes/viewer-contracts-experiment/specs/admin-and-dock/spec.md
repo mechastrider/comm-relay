@@ -35,7 +35,7 @@ Award winner SHALL open a labeled searchable canonical-viewer picker using curre
 - **THEN** the UI reloads the current state and does not claim that a second reward was granted
 
 ### Requirement: The messages dock controls active contract presentation
-While a contract is active, the OBS messages dock SHALL retain ordinary leaderboard visibility actions and add icon-only controls that switch the existing leaderboard Browser Source between the contract objective and ranking, repeat the brief alert announcement, and hide or show the contract surface. Show for N seconds SHALL temporarily select ranking and restore the objective when the timer expires; Pin SHALL keep ranking selected; Hide SHALL return to the objective. Every contract control MUST have a localized accessible name, hover/focus tooltip, busy state, and pressed state where applicable. The dock MUST NOT add contract drafting, winner-selection, editing, or close controls, and contract alert frames MUST NOT become chat rows.
+While a contract is active, the OBS messages dock SHALL retain the ordinary leaderboard visibility controls in their original layout and add a visually separate two-value icon switcher for Contract objective or Leaderboard content plus an icon-only Repeat announcement action. Show for N seconds, Pin, Resume, Hide, automatic visibility changes, and timed expiry SHALL affect only the shared surface visibility and MUST preserve the selected content. The mode switcher SHALL affect only content and MUST preserve the current visibility state. Every added contract control MUST have a localized accessible name, hover/focus tooltip, busy state, and pressed state where applicable. The dock MUST NOT add a second visibility control, contract drafting, winner-selection, editing, or close controls, and contract alert frames MUST NOT become chat rows.
 
 #### Scenario: Contract becomes active while dock is open
 - **WHEN** the dock receives the authoritative active-contract presentation state
@@ -43,7 +43,11 @@ While a contract is active, the OBS messages dock SHALL retain ordinary leaderbo
 
 #### Scenario: Operator switches to ranking
 - **WHEN** the operator activates the ranking icon while a contract is active
-- **THEN** the shared Browser Source shows the current leaderboard and the ranking control exposes its pressed state
+- **THEN** the shared Browser Source selects the current leaderboard without changing visibility and the ranking control exposes its pressed state
+
+#### Scenario: Operator controls the selected surface
+- **WHEN** the operator uses Show for N seconds, Pin, or Hide while either content mode is selected
+- **THEN** the existing visibility behavior applies to that selected content and the content mode does not change
 
 #### Scenario: Contract ends
 - **WHEN** the active contract is awarded or closed without result

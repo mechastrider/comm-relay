@@ -147,49 +147,94 @@ func TestLeaderboardVisibilityHandler_WhenControllerUnavailable_ExpectServiceUna
 	}
 }
 
-func TestLeaderboardVisibilityActions_WhenContractActive_ExpectRankingThenObjective(t *testing.T) {
+func TestLeaderboardVisibilityActions_WhenContractActive_ExpectVisibilityChangeWithoutContentChange(t *testing.T) {
 	env := newTestEnv(t, bus.New(0))
-	openViewerContractForTest(t, env, "Find loot", "Mark it")
-
-	show := httptest.NewRecorder()
-	env.Handler.ServeHTTP(show, httptest.NewRequest(http.MethodPost, "/api/leaderboard/show", strings.NewReader(`{}`)))
-	require.Equal(t, http.StatusOK, show.Code)
-	require.Equal(t, contractContentLeaderboard, currentContractContentForTest(t, env))
-
-	get := httptest.NewRecorder()
-	env.Handler.ServeHTTP(get, httptest.NewRequest(http.MethodGet, "/api/leaderboard/visibility", nil))
-	require.Equal(t, http.StatusOK, get.Code)
-	require.Equal(t, contractContentLeaderboard, currentContractContentForTest(t, env))
+	contractID := openViewerContractForTest(t, env, "Find loot", "Mark it")
+	display := httptest.NewRecorder()
+	env.Handler.ServeHTTP(display, httptest.NewRequest(
+		http.MethodPost,
+		"/api/viewer-contracts/display",
+		strings.NewReader(`{"id":"`+contractID+`","content":"leaderboard","visible":true}`),
+	))
+	require.Equal(t, http.StatusOK, display.Code)
 
 	hide := httptest.NewRecorder()
 	env.Handler.ServeHTTP(hide, httptest.NewRequest(http.MethodPost, "/api/leaderboard/hide", strings.NewReader(`{}`)))
 	require.Equal(t, http.StatusOK, hide.Code)
-	require.Equal(t, contractContentContract, currentContractContentForTest(t, env))
+	snapshot := currentContractPresentationForTest(t, env)
+	require.Equal(t, contractContentLeaderboard, snapshot.Content)
+	require.False(t, snapshot.Visible)
+
+	show := httptest.NewRecorder()
+	env.Handler.ServeHTTP(show, httptest.NewRequest(http.MethodPost, "/api/leaderboard/show", strings.NewReader(`{}`)))
+	require.Equal(t, http.StatusOK, show.Code)
+	snapshot = currentContractPresentationForTest(t, env)
+	require.Equal(t, contractContentLeaderboard, snapshot.Content)
+	require.True(t, snapshot.Visible)
 }
 
-func TestHub_WhenTimedLeaderboardExpires_ExpectContractObjectiveRestored(t *testing.T) {
+func TestHub_WhenTimedDisplayExpires_ExpectSelectedContentHidden(t *testing.T) {
 	hub, err := NewHub(bus.New(0), nil, nil, nil)
 	require.NoError(t, err)
 	presentation, err := newViewerContractPresentation(nil)
 	require.NoError(t, err)
 	presentation.Activate(&store.ViewerContract{ID: "contract-1"})
-	_, changed := presentation.SelectContent(contractContentLeaderboard)
-	require.True(t, changed)
+	_, ok := presentation.Update("contract-1", contractContentLeaderboard, true)
+	require.True(t, ok)
 	hub.SetViewerContractPresentation(presentation)
 
 	hub.handleLeaderboardVisibility(context.Background(), leaderboard.Snapshot{State: leaderboard.StateHidden})
 
-	require.Equal(t, contractContentContract, presentation.Current().Content)
+	snapshot := presentation.Current()
+	require.Equal(t, contractContentLeaderboard, snapshot.Content)
+	require.False(t, snapshot.Visible)
 }
 
-func currentContractContentForTest(t *testing.T, env testEnv) string {
+func TestHub_WhenLeaderboardStartsPinned_ExpectRecoveredContractVisible(t *testing.T) {
+	hub, err := NewHub(bus.New(0), nil, nil, nil)
+	require.NoError(t, err)
+	presentation, err := newViewerContractPresentation(nil)
+	require.NoError(t, err)
+	presentation.Activate(&store.ViewerContract{ID: "contract-1"})
+	hub.SetViewerContractPresentation(presentation)
+
+	hub.handleLeaderboardVisibility(context.Background(), leaderboard.Snapshot{
+		State: leaderboard.StatePinned, Reason: leaderboard.ReasonStartup, Visible: true,
+	})
+
+	require.True(t, presentation.Current().Visible)
+}
+
+func TestViewerContractLifecycle_WhenOpenedAndClosed_ExpectSharedVisibilityPinnedThenRestored(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	contractID := openViewerContractForTest(t, env, "Find loot", "Mark it")
+
+	pinned, err := env.Visibility.Snapshot(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, leaderboard.StatePinned, pinned.State)
+
+	closed := httptest.NewRecorder()
+	env.Handler.ServeHTTP(closed, httptest.NewRequest(
+		http.MethodPost,
+		"/api/viewer-contracts/close",
+		strings.NewReader(`{"id":"`+contractID+`"}`),
+	))
+	require.Equal(t, http.StatusOK, closed.Code)
+
+	restored, err := env.Visibility.Snapshot(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, leaderboard.StateHidden, restored.State)
+	require.Equal(t, leaderboard.ReasonPolicy, restored.Reason)
+}
+
+func currentContractPresentationForTest(t *testing.T, env testEnv) currentViewerContractResponse {
 	t.Helper()
 	recorder := httptest.NewRecorder()
 	env.Handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/viewer-contracts/current", nil))
 	require.Equal(t, http.StatusOK, recorder.Code)
 	var payload currentViewerContractResponse
 	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &payload))
-	return payload.Content
+	return payload
 }
 
 func TestHub_WhenProductionClientsRegisterAndTransition_ExpectSnapshotAndBoundedBroadcast(t *testing.T) {

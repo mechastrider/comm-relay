@@ -105,6 +105,14 @@ func (t *realTimer) Stop() {
 // Option customizes a Controller during construction.
 type Option func(*Controller)
 
+// WithInitialPinned starts the runtime visibility override pinned.
+// It is used when another active presentation already owns the shared surface.
+func WithInitialPinned(enabled bool) Option {
+	return func(controller *Controller) {
+		controller.initialPinned = enabled
+	}
+}
+
 func withClock(value clock) Option {
 	return func(controller *Controller) {
 		controller.clock = value
@@ -167,6 +175,7 @@ type Controller struct {
 	dirtySince    time.Time
 	scheduled     []scheduledTrigger
 	override      override
+	initialPinned bool
 }
 
 // Current returns the latest immutable snapshot without waiting on the owner goroutine.
@@ -194,6 +203,10 @@ func NewController(configs ConfigProvider, publish Publisher, options ...Option)
 		option(controller)
 	}
 	controller.applyBaseline(ReasonStartup)
+	if controller.initialPinned {
+		controller.override = overridePin
+		controller.enterPinned(ReasonStartup)
+	}
 	return controller, nil
 }
 

@@ -27,7 +27,7 @@
 | reward history privacy | Query global/viewer history after win | Ordinary award row only; no contract id/title/objective or new kind | P0 |
 | WebSocket compatibility | Feed contract alert and state to all existing clients; connect after open | Alert page handles only the splash; leaderboard/dock restore persistent state; chat stays unchanged; reconnect does not replay the splash | P0 |
 | persistent contract card | Open a contract with each theme and reload the leaderboard source | Existing leaderboard rectangle shows the objective/reward instead of ranking and restores it after reconnect | P0 |
-| dock presentation controls | Switch contract/ranking, repeat, hide/show using icons; exercise retained Show for N seconds, Pin, and Hide actions | State converges across dock/leaderboard; timed ranking restores the objective; localized tooltips and accessible pressed/busy states are correct | P0 |
+| dock presentation controls | Switch contract/ranking and repeat using icons; exercise the original Show for N seconds, Pin, Hide, and always-policy controls in both content modes | Content and visibility states converge independently across dock/leaderboard; visibility transitions preserve the selected mode; localized tooltips and accessible group/pressed/busy states are correct | P0 |
 | leaderboard policy restoration | Start from always, automatic, and on-request policies; override during a contract; settle it | Contract state temporarily owns the surface and the untouched ordinary policy resumes afterward | P0 |
 | protected queue | Visible command + waiting commands + contract; fill mixed/protected queues | No preemption; award/contract FIFO precedes commands; documented displacement and capacity hold | P0 |
 | alert rendering | Render plain/custom/broken media, HTML-like and 280-code-point Cyrillic/Latin text | Text nodes only, readable fallback, no script execution, no empty media hole | P0 |
@@ -88,15 +88,22 @@ Manual setup uses a temporary data directory, development server with loose `web
 - `npm ci`, `npm run lint`, and `npm test` passed; all 47 Node tests passed, including contract presentation state, dock icon/tooltip markup, locale parity, and Browser Source rectangle assertions.
 - `go test ./...` and `go test -race -count=1 ./...` passed during the implementation pass; the focused `go test ./internal/api -count=1` rerun also passed after presentation-state wiring was finalized.
 - `go build ./...`, repository-wide `golangci-lint run ./...`, strict OpenSpec validation, and `git diff --check` passed after the separate `packimport` lint findings were corrected; gate Q.4 is complete.
-- Linux browser smoke used synthetic data and the real local server. It covered open, contract/ranking switching, repeat controls, hide/show, reconnect, restart default (`contract`, visible), settlement restoration, all current leaderboard themes, and a 360×220 narrow Browser Source without overflow or console errors.
+- Linux browser smoke used synthetic data and the real local server. It covered open, contract/ranking switching, repeat controls, the then-current contract hide/show control, reconnect, restart default (`contract`, visible), settlement restoration, all current leaderboard themes, and a 360×220 narrow Browser Source without overflow or console errors.
 - Windows, macOS, packaged Wails, and real OBS/connector cells remain unrun and are not claimed as passed.
 
 ### 2026-09-10 presentation refinement evidence
 
 - A real local-server browser smoke at 360×220 measured the contract card at 6.7 px from the top edge with computed `justify-content: flex-start` and `align-content: start`; neither axis overflowed.
 - The configured Russian locale rendered `Цель договора` and `Награда: Зоркий глаз · +25 XP`; switching the same module to English rendered `Contract objective` and `Reward: Зоркий глаз · +25 XP`.
-- The dock accessibility tree retained `Показать на 15 с`, `Закрепить`, and `Скрыть` alongside the four contract icons. Timed show produced visible `leaderboard`/`timed` state and automatically returned to visible `contract` state after 15 seconds.
+- The dock accessibility tree retained `Показать на 15 с`, `Закрепить`, and `Скрыть` alongside the then-current four contract icons. Timed show produced visible `leaderboard`/`timed` state and automatically returned to visible `contract` state after 15 seconds; this behavior was superseded by the separate mode switcher refinement and must be re-smoked.
 - `npm run lint`, all 47 Node tests, `go test ./...`, focused API tests, `go test -race -count=1 ./internal/api`, repository-wide Go lint, build, strict OpenSpec validation, and diff checks passed.
+
+### 2026-09-10 dock mode-switcher refinement evidence
+
+- A real temporary-server smoke at 360×700 restored the original Russian visibility controls and status, exposed a localized `Показываемое содержимое` group with two 34 px icon buttons, kept Repeat announcement separate by 6 px, and had no horizontal toolbar overflow.
+- Restart with the synthetic active contract produced one coherent pinned state: the objective mode was pressed, status was `Закреплён`, Pin was pressed, Show for 15 seconds was disabled, and Hide remained available.
+- After selecting Leaderboard, Hide, Show for 15 seconds, and timed expiry changed `visible/state` through `false/hidden`, `true/timed`, and `false/hidden` while `content` remained `leaderboard` throughout; the selected icon retained `aria-pressed=true`.
+- ESLint, all 47 Node tests, focused leaderboard/API tests, full `go test ./...`, build, repository-wide Go lint with writable temporary caches, strict OpenSpec validation, and diff checks passed for this refinement.
 
 Attach command output for all automated checks, migration fixture/version results, API/WebSocket sample envelopes with synthetic text, and screenshots for Live empty/active/picker/error states plus each theme/rectangle matrix. Record OS, architecture, webview/OBS version, scale, locale, and any unavailable matrix cell; do not imply an unrun platform passed.
 

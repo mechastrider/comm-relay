@@ -69,14 +69,14 @@ func (p *viewerContractPresentation) Update(id, content string, visible bool) (v
 	return p.snapshotLocked(), true
 }
 
-func (p *viewerContractPresentation) SelectContent(content string) (viewerContractPresentationSnapshot, bool) {
+func (p *viewerContractPresentation) SetVisible(visible bool) (viewerContractPresentationSnapshot, bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if p.contract == nil || p.content == content {
+	if p.contract == nil || p.visible == visible {
 		return p.snapshotLocked(), false
 	}
-	p.content = content
+	p.visible = visible
 	return p.snapshotLocked(), true
 }
 

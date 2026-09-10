@@ -46,14 +46,6 @@ body {
   min-width: 0;
 }
 
-#leaderboard-standard-actions {
-  display: grid;
-}
-
-#leaderboard-standard-actions[hidden] {
-  display: none;
-}
-
 .leaderboard-toolbar [hidden] {
   display: none;
 }
@@ -93,6 +85,12 @@ body {
   justify-content: flex-start;
 }
 
+.leaderboard-toolbar__mode-switcher {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
 .leaderboard-toolbar__contract-actions button {
   flex: 0 0 34px;
   display: inline-grid;
@@ -100,6 +98,19 @@ body {
   min-height: 34px;
   padding: 6px;
   place-items: center;
+}
+
+.leaderboard-toolbar__mode-switcher button {
+  border-radius: 0;
+}
+
+.leaderboard-toolbar__mode-switcher button:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+.leaderboard-toolbar__mode-switcher button:last-child {
+  margin-left: -1px;
+  border-radius: 0 3px 3px 0;
 }
 
 .leaderboard-toolbar__contract-actions svg {
@@ -110,11 +121,6 @@ body {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;
-}
-
-#contract-toggle-visibility[aria-pressed="true"] .contract-icon--hidden,
-#contract-toggle-visibility[aria-pressed="false"] .contract-icon--visible {
-  display: none;
 }
 
 .leaderboard-toolbar__contract-actions .ui-tooltip {

@@ -12,7 +12,7 @@ The feature is controlled by the local streamer or OBS operator. A winner may be
 - Persist the active contract across restart and expose explicit actions to award a canonical viewer or close without a result.
 - Snapshot the promised reward at announcement so catalog edits cannot change an active contract's displayed or granted terms.
 - Present a brief announcement through the existing alert Browser Source, then keep the active objective visible by temporarily replacing content in the existing leaderboard Browser Source.
-- Add compact dock controls to switch that shared surface between contract and ranking, repeat the announcement, or hide/show the surface without changing the ordinary leaderboard policy.
+- Keep the ordinary leaderboard visibility controls intact and add a separate compact icon switcher for contract/ranking content plus a repeat-announcement action.
 - Reject conflicting/stale lifecycle actions and make successful lifecycle transitions observable without storing chat content.
 
 ## Capabilities
@@ -34,4 +34,4 @@ No viewer command entry, automatic winner detection, multiple concurrent contrac
 
 ## Impact
 
-Adds local SQLite state and POST-action/GET API routes, plus admin, dock, leaderboard, and alert UI. Contract presentation overrides are process-local and reset to a visible contract card after restart; the durable contract remains authoritative. Contract text is local operator-authored content, escaped in clients, length-bounded, and never sent to a cloud service. Existing configs and clients remain compatible. Packaging is unchanged; upgrades run an additive database migration and can roll back only before new-schema data is required.
+Adds local SQLite state and POST-action/GET API routes, plus admin, dock, leaderboard, and alert UI. Contract presentation is process-local and resets to a visible contract card after restart; the ordinary leaderboard controls govern visibility while an independent icon switcher chooses contract or ranking content. The durable contract remains authoritative. Contract text is local operator-authored content, escaped in clients, length-bounded, and never sent to a cloud service. Existing configs and clients remain compatible. Packaging is unchanged; upgrades run an additive database migration and can roll back only before new-schema data is required.

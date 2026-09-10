@@ -39,7 +39,7 @@ type leaderboardVisibilityHandler struct {
 func (h *leaderboardVisibilityHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	h.call(w, r, func(ctx context.Context) (leaderboard.Snapshot, error) {
 		return h.controller.Snapshot(ctx)
-	}, "")
+	}, false)
 }
 
 type showLeaderboardRequest struct {
@@ -58,7 +58,7 @@ func (h *leaderboardVisibilityHandler) handleShow(w http.ResponseWriter, r *http
 	}
 	h.call(w, r, func(ctx context.Context) (leaderboard.Snapshot, error) {
 		return h.controller.Show(ctx, duration)
-	}, contractContentLeaderboard)
+	}, true)
 }
 
 func (h *leaderboardVisibilityHandler) handleHide(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +67,7 @@ func (h *leaderboardVisibilityHandler) handleHide(w http.ResponseWriter, r *http
 	}
 	h.call(w, r, func(ctx context.Context) (leaderboard.Snapshot, error) {
 		return h.controller.Hide(ctx)
-	}, contractContentContract)
+	}, true)
 }
 
 func (h *leaderboardVisibilityHandler) handlePin(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +76,7 @@ func (h *leaderboardVisibilityHandler) handlePin(w http.ResponseWriter, r *http.
 	}
 	h.call(w, r, func(ctx context.Context) (leaderboard.Snapshot, error) {
 		return h.controller.Pin(ctx)
-	}, contractContentLeaderboard)
+	}, true)
 }
 
 func (h *leaderboardVisibilityHandler) handleResume(w http.ResponseWriter, r *http.Request) {
@@ -85,14 +85,14 @@ func (h *leaderboardVisibilityHandler) handleResume(w http.ResponseWriter, r *ht
 	}
 	h.call(w, r, func(ctx context.Context) (leaderboard.Snapshot, error) {
 		return h.controller.Resume(ctx)
-	}, contractContentLeaderboard)
+	}, true)
 }
 
 func (h *leaderboardVisibilityHandler) call(
 	w http.ResponseWriter,
 	r *http.Request,
 	action func(context.Context) (leaderboard.Snapshot, error),
-	contractContent string,
+	syncContractVisibility bool,
 ) {
 	if h.controller == nil {
 		writeError(w, http.StatusServiceUnavailable, "leaderboard visibility unavailable")
@@ -112,11 +112,8 @@ func (h *leaderboardVisibilityHandler) call(
 		writeError(w, http.StatusInternalServerError, "failed to update leaderboard visibility")
 		return
 	}
-	if h.hub != nil && contractContent != "" {
-		if contractContent == contractContentLeaderboard && !snapshot.Visible {
-			contractContent = contractContentContract
-		}
-		h.hub.selectActiveContractContent(r.Context(), contractContent)
+	if h.hub != nil && syncContractVisibility {
+		h.hub.syncActiveContractVisibility(r.Context(), snapshot.Visible)
 	}
 	writeJSON(w, http.StatusOK, snapshot)
 }

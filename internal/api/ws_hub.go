@@ -77,12 +77,10 @@ func (h *Hub) handleLeaderboardVisibility(ctx context.Context, snapshot leaderbo
 		return
 	}
 	h.broadcast(payload)
-	if !snapshot.Visible {
-		h.selectActiveContractContent(ctx, contractContentContract)
-	}
+	h.syncActiveContractVisibility(ctx, snapshot.Visible)
 }
 
-func (h *Hub) selectActiveContractContent(ctx context.Context, content string) {
+func (h *Hub) syncActiveContractVisibility(ctx context.Context, visible bool) {
 	h.mu.Lock()
 	presentation := h.contracts
 	h.mu.Unlock()
@@ -90,7 +88,7 @@ func (h *Hub) selectActiveContractContent(ctx context.Context, content string) {
 		return
 	}
 
-	snapshot, changed := presentation.SelectContent(content)
+	snapshot, changed := presentation.SetVisible(visible)
 	if !changed {
 		return
 	}
