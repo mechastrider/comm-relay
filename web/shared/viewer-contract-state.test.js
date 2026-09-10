@@ -30,6 +30,9 @@ test("active contract temporarily owns visibility and inactive state restores le
   assert.deepEqual(effectiveLeaderboardVisibility(active, hiddenPolicy), {
     activeContract: true, visible: true, content: CONTRACT_CONTENT,
   });
+  assert.deepEqual(effectiveLeaderboardVisibility({ ...active, content: LEADERBOARD_CONTENT }, hiddenPolicy), {
+    activeContract: true, visible: false, content: LEADERBOARD_CONTENT,
+  });
   assert.deepEqual(effectiveLeaderboardVisibility({ contract: null }, { visible: true }), {
     activeContract: false, visible: true, content: LEADERBOARD_CONTENT,
   });

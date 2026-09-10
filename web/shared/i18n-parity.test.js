@@ -26,6 +26,8 @@ for (const key of enKeys) {
 
 assert.equal(en["history.loadFailed"], "Could not load reward history.");
 assert.equal(ru["history.loadFailed"], "Не удалось загрузить историю наград.");
+assert.equal(en["leaderboard.contractObjective"], "Contract objective");
+assert.equal(ru["leaderboard.contractObjective"], "Цель договора");
 
 console.log("i18n parity OK (" + String(enKeys.length) + " keys)");
 

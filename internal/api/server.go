@@ -88,7 +88,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	)
 	rewardHistoryHandler := newRewardHistoryHandler(opts.ViewerStore)
 	overlayDebug := newOverlayDebugHandler(opts.Hub)
-	visibilityHandler := &leaderboardVisibilityHandler{controller: opts.LeaderboardVisibility}
+	visibilityHandler := &leaderboardVisibilityHandler{controller: opts.LeaderboardVisibility, hub: opts.Hub}
 
 	mux := http.NewServeMux()
 	instanceID := ""

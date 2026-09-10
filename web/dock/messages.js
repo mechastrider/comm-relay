@@ -29,7 +29,6 @@ import {
   const visibilityCountdown = document.getElementById("leaderboard-visibility-countdown");
   const toolbarError = document.getElementById("leaderboard-toolbar-error");
   const alwaysActions = document.getElementById("leaderboard-always-actions");
-  const standardActions = document.getElementById("leaderboard-standard-actions");
   const alwaysVisibleSwitch = document.getElementById("leaderboard-always-visible");
   const timedActions = document.getElementById("leaderboard-timed-actions");
   const showButton = document.getElementById("leaderboard-show");
@@ -115,7 +114,7 @@ import {
     if (!visibilityStatus) {
       return;
     }
-    if (contractSnapshot && contractSnapshot.contract) {
+    if (contractSnapshot && contractSnapshot.contract && contractSnapshot.content === CONTRACT_CONTENT) {
       const key = contractSnapshot.content === CONTRACT_CONTENT
         ? "dock.contractStatusObjective"
         : "dock.contractStatusLeaderboard";
@@ -165,9 +164,6 @@ import {
     const alwaysMode = controls.mode === "always";
     const contractActive = Boolean(contractSnapshot && contractSnapshot.contract);
 
-    if (standardActions) {
-      standardActions.hidden = contractActive;
-    }
     if (contractActions) {
       contractActions.hidden = !contractActive;
     }

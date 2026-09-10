@@ -511,7 +511,7 @@ export default {
   "iface.language": "Language",
   "iface.localeRu": "Русский — 20:37:08",
   "iface.localeEn": "English — 20:37:08",
-  "iface.languageHint": "Controls admin and OBS dock labels and the 24-hour time format.",
+  "iface.languageHint": "Controls admin, OBS dock, and overlay labels and the 24-hour time format.",
   "iface.viewerStats": "Viewer stats",
   "iface.activityIntervalSeconds": "Activity interval (seconds)",
   "iface.activityIntervalSecondsHint": "Silent XP grant: at most once per viewer per interval during the current stream. Set 0 to disable.",
@@ -806,6 +806,9 @@ export default {
   "dock.contractStatusLeaderboard": "Contract · leaderboard",
   "dock.contractStatusHidden": "hidden",
   "dock.contractActionFailed": "Could not update contract presentation",
+  "leaderboard.contractObjective": "Contract objective",
+  "leaderboard.contractReward": "Reward: {reward} · +{points} XP",
+  "leaderboard.messageCount": "{count} messages",
 
   "banner.checkFields": "Check the highlighted fields.",
   "banner.settingsSaved": "Settings saved.",

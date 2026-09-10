@@ -33,6 +33,7 @@ test("automatic and on-request policies use timed show, pin toggle, and hide", (
 
 test("dock markup has no standalone resume or auto control", () => {
   const markup = readFileSync(new URL("./index.html", import.meta.url), "utf8");
+  const script = readFileSync(new URL("./messages.js", import.meta.url), "utf8");
   assert.match(markup, /id="leaderboard-always-visible"[^>]+role="switch"/);
   assert.match(markup, /id="leaderboard-show"/);
   assert.match(markup, /id="leaderboard-pin"[^>]+aria-pressed="false"/);
@@ -49,4 +50,5 @@ test("dock markup has no standalone resume or auto control", () => {
   }
   assert.equal((markup.match(/class="ui-tooltip" role="tooltip"/g) || []).length, 4);
   assert.doesNotMatch(markup, /contract-(?:award|close|edit)/);
+  assert.doesNotMatch(script, /standardActions\.hidden\s*=\s*contractActive/);
 });

@@ -68,6 +68,7 @@
 - [x] 4.5 Render a safe compact active-contract card in the existing leaderboard root for every theme, switch to cached ranking on command, honor the contract hide override, and restore ordinary visibility behavior after settlement.
 - [x] 4.6 Add icon-only dock controls for Contract, Leaderboard, Repeat announcement, and Hide/Show with localized `aria-label`, hover/focus tooltips, pressed/busy/error states, and no award/close/edit actions.
 - [x] 4.7 Add Node/markup/i18n/CSS tests and smoke reconnect, restart default, stale actions, all leaderboard policies, themes, reduced motion, and narrow OBS rectangles.
+- [x] 4.8 Top-align the persistent objective, localize its fixed labels from the configured interface locale, retain ordinary leaderboard dock controls, and restore the objective after a timed ranking display expires.
 
 ## Slice: `Document and prepare the user-visible experiment` (docs)
 
@@ -86,7 +87,7 @@
 - [ ] Q.1 Execute `qa_plan.md`; record platform/theme/scaling/input matrix coverage and synthetic evidence without real OAuth tokens or chat data.
 - [x] Q.2 Run `npm ci && npm run lint && npm test` and record results.
 - [x] Q.3 Run `go test ./...` and `go test -race -count=1 ./...` and record results.
-- [ ] Q.4 Run `golangci-lint run ./...`, `go build ./...`, `openspec validate viewer-contracts-experiment --strict`, and `git diff --check` and record results.
+- [x] Q.4 Run `golangci-lint run ./...`, `go build ./...`, `openspec validate viewer-contracts-experiment --strict`, and `git diff --check` and record results.
 - [ ] Q.5 Smoke the local server with a temporary data directory: `/health`, all five contract endpoints, WebSocket open/repeat/award behavior, restart recovery, reward Journal/leaderboard, and no-result close.
 - [ ] Q.6 Smoke admin and `/overlay/alert` in both locales, keyboard-only flow, reduced motion, every existing theme, and required Browser Source rectangles; record any unavailable Windows/macOS/Linux packaged-app cell explicitly.
 

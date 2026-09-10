@@ -35,7 +35,7 @@ Award winner SHALL open a labeled searchable canonical-viewer picker using curre
 - **THEN** the UI reloads the current state and does not claim that a second reward was granted
 
 ### Requirement: The messages dock controls active contract presentation
-While a contract is active, the OBS messages dock SHALL replace ordinary leaderboard visibility actions with icon-only controls that switch the existing leaderboard Browser Source between the contract objective and ranking, repeat the brief alert announcement, and hide or show the shared surface. Every control MUST have a localized accessible name, hover/focus tooltip, busy state, and pressed state where applicable. The dock MUST NOT add contract drafting, winner-selection, editing, or close controls, and contract alert frames MUST NOT become chat rows.
+While a contract is active, the OBS messages dock SHALL retain ordinary leaderboard visibility actions and add icon-only controls that switch the existing leaderboard Browser Source between the contract objective and ranking, repeat the brief alert announcement, and hide or show the contract surface. Show for N seconds SHALL temporarily select ranking and restore the objective when the timer expires; Pin SHALL keep ranking selected; Hide SHALL return to the objective. Every contract control MUST have a localized accessible name, hover/focus tooltip, busy state, and pressed state where applicable. The dock MUST NOT add contract drafting, winner-selection, editing, or close controls, and contract alert frames MUST NOT become chat rows.
 
 #### Scenario: Contract becomes active while dock is open
 - **WHEN** the dock receives the authoritative active-contract presentation state

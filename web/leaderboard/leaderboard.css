@@ -44,6 +44,7 @@ body.leaderboard-visibility--hidden .leaderboard {
 
 .contract-card {
   display: grid;
+  align-content: start;
   gap: calc(8px * var(--leaderboard-scale));
   min-width: 0;
   max-height: 100%;
@@ -52,6 +53,10 @@ body.leaderboard-visibility--hidden .leaderboard {
   border: calc(var(--overlay-border-width) * var(--leaderboard-scale)) solid var(--overlay-border-color);
   border-radius: calc(var(--overlay-border-radius) * var(--leaderboard-scale));
   background: var(--overlay-panel-bg);
+}
+
+body.leaderboard-content--contract .leaderboard {
+  justify-content: flex-start;
 }
 
 .contract-card__label,

@@ -10,6 +10,7 @@ import {
   overlayAssetURL,
 } from "../overlay-settings.js?v=8";
 import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.js?v=1";
+import { setLocale, t } from "/shared/i18n.js?v=18";
 import {
   CONTRACT_CONTENT,
   effectiveLeaderboardVisibility,
@@ -134,16 +135,17 @@ function applyEffectiveVisibility() {
   }
   const effective = effectiveLeaderboardVisibility(contractState, leaderboardVisibility);
   const contractActive = effective.activeContract;
+  const contractContentActive = contractActive && effective.content === CONTRACT_CONTENT;
   const visible = effective.visible;
   const visibility = leaderboardVisibility || { state: "hidden", reason: "" };
   document.body.classList.remove("leaderboard-visibility--pending");
   document.body.classList.toggle("leaderboard-visibility--hidden", !visible);
-  document.body.classList.toggle("leaderboard-visibility--timed", !contractActive && visibility.state === "timed");
-  document.body.classList.toggle("leaderboard-visibility--pinned", contractActive || visibility.state === "pinned");
+  document.body.classList.toggle("leaderboard-visibility--timed", !contractContentActive && visibility.state === "timed");
+  document.body.classList.toggle("leaderboard-visibility--pinned", contractContentActive || visibility.state === "pinned");
   if (root) {
     root.setAttribute("aria-hidden", visible ? "false" : "true");
-    root.dataset.visibilityState = contractActive ? "contract" : visibility.state;
-    root.dataset.visibilityReason = contractActive ? "viewer_contract" : visibility.reason;
+    root.dataset.visibilityState = contractContentActive ? "contract" : visibility.state;
+    root.dataset.visibilityReason = contractContentActive ? "viewer_contract" : visibility.reason;
   }
 }
 
@@ -266,14 +268,14 @@ function renderTitle() {
 }
 
 function contractLabel() {
-  const locale = String(navigator.language || document.documentElement.lang || "en").toLowerCase();
-  return locale.startsWith("ru") ? "Цель договора" : "Contract objective";
+  return t("leaderboard.contractObjective");
 }
 
 function contractRewardText(contract) {
-  const locale = String(navigator.language || document.documentElement.lang || "en").toLowerCase();
-  const label = locale.startsWith("ru") ? "Награда" : "Reward";
-  return label + ": " + (contract.reward_name || "—") + " · +" + String(contract.reward_points || 0) + " XP";
+  return t("leaderboard.contractReward", {
+    reward: contract.reward_name || "—",
+    points: contract.reward_points || 0,
+  });
 }
 
 function renderContract(contract) {
@@ -317,8 +319,7 @@ function renderCurrentContent() {
 
 function localizedMessageCount(value) {
   const count = Number(value) || 0;
-  const locale = String(navigator.language || document.documentElement.lang || "en").toLowerCase();
-  return locale.startsWith("ru") ? String(count) + " сообщ." : String(count) + " messages";
+  return t("leaderboard.messageCount", { count: count });
 }
 
 function setLeaderboardFontSize(fontSizePx) {
@@ -607,6 +608,7 @@ async function loadServerConfig() {
       return;
     }
     const payload = await response.json();
+    setLocale(payload && payload.admin && payload.admin.time_locale);
     applyServerOverlayConfig(payload && payload.overlay);
   } catch {
     /* keep URL/default config */

@@ -14,6 +14,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/leaderboard"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 func TestLeaderboardVisibilityRoutes_WhenActionsSucceed_ExpectAuthoritativeSnapshots(t *testing.T) {
@@ -144,6 +145,51 @@ func TestLeaderboardVisibilityHandler_WhenControllerUnavailable_ExpectServiceUna
 		require.Equal(t, http.StatusServiceUnavailable, rec.Code)
 		require.NotContains(t, rec.Body.String(), "controller")
 	}
+}
+
+func TestLeaderboardVisibilityActions_WhenContractActive_ExpectRankingThenObjective(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	openViewerContractForTest(t, env, "Find loot", "Mark it")
+
+	show := httptest.NewRecorder()
+	env.Handler.ServeHTTP(show, httptest.NewRequest(http.MethodPost, "/api/leaderboard/show", strings.NewReader(`{}`)))
+	require.Equal(t, http.StatusOK, show.Code)
+	require.Equal(t, contractContentLeaderboard, currentContractContentForTest(t, env))
+
+	get := httptest.NewRecorder()
+	env.Handler.ServeHTTP(get, httptest.NewRequest(http.MethodGet, "/api/leaderboard/visibility", nil))
+	require.Equal(t, http.StatusOK, get.Code)
+	require.Equal(t, contractContentLeaderboard, currentContractContentForTest(t, env))
+
+	hide := httptest.NewRecorder()
+	env.Handler.ServeHTTP(hide, httptest.NewRequest(http.MethodPost, "/api/leaderboard/hide", strings.NewReader(`{}`)))
+	require.Equal(t, http.StatusOK, hide.Code)
+	require.Equal(t, contractContentContract, currentContractContentForTest(t, env))
+}
+
+func TestHub_WhenTimedLeaderboardExpires_ExpectContractObjectiveRestored(t *testing.T) {
+	hub, err := NewHub(bus.New(0), nil, nil, nil)
+	require.NoError(t, err)
+	presentation, err := newViewerContractPresentation(nil)
+	require.NoError(t, err)
+	presentation.Activate(&store.ViewerContract{ID: "contract-1"})
+	_, changed := presentation.SelectContent(contractContentLeaderboard)
+	require.True(t, changed)
+	hub.SetViewerContractPresentation(presentation)
+
+	hub.handleLeaderboardVisibility(context.Background(), leaderboard.Snapshot{State: leaderboard.StateHidden})
+
+	require.Equal(t, contractContentContract, presentation.Current().Content)
+}
+
+func currentContractContentForTest(t *testing.T, env testEnv) string {
+	t.Helper()
+	recorder := httptest.NewRecorder()
+	env.Handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/viewer-contracts/current", nil))
+	require.Equal(t, http.StatusOK, recorder.Code)
+	var payload currentViewerContractResponse
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &payload))
+	return payload.Content
 }
 
 func TestHub_WhenProductionClientsRegisterAndTransition_ExpectSnapshotAndBoundedBroadcast(t *testing.T) {

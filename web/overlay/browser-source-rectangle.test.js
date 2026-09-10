@@ -41,11 +41,15 @@ test("leaderboard contract card is bounded, safe, and themed in the existing rec
   const objective = block(leaderboardCSS, ".contract-card__objective");
   assert.match(card, /max-height:\s*100%/);
   assert.match(card, /overflow:\s*hidden/);
+  assert.match(card, /align-content:\s*start/);
+  assert.match(leaderboardCSS, /body\.leaderboard-content--contract \.leaderboard\s*\{[\s\S]*?justify-content:\s*flex-start/);
   assert.match(objective, /overflow-wrap:\s*anywhere/);
   assert.match(objective, /-webkit-line-clamp:\s*7/);
   assert.match(leaderboardJS, /root\.textContent = ""/);
   assert.match(leaderboardJS, /title\.textContent = escapeText\(contract\.title\)/);
   assert.match(leaderboardJS, /objective\.textContent = escapeText\(contract\.objective\)/);
+  assert.match(leaderboardJS, /setLocale\(payload && payload\.admin && payload\.admin\.time_locale\)/);
+  assert.match(leaderboardJS, /t\("leaderboard\.contractObjective"\)/);
   ["default", "dashboard", "cockpit-panel", "cockpit-popups", "g-rebels-popups"].forEach(function (theme) {
     assert.match(leaderboardCSS, new RegExp("overlay-theme--" + theme.replace(/-/g, "\\-")));
   });

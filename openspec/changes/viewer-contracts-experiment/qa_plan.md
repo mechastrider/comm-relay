@@ -27,7 +27,7 @@
 | reward history privacy | Query global/viewer history after win | Ordinary award row only; no contract id/title/objective or new kind | P0 |
 | WebSocket compatibility | Feed contract alert and state to all existing clients; connect after open | Alert page handles only the splash; leaderboard/dock restore persistent state; chat stays unchanged; reconnect does not replay the splash | P0 |
 | persistent contract card | Open a contract with each theme and reload the leaderboard source | Existing leaderboard rectangle shows the objective/reward instead of ranking and restores it after reconnect | P0 |
-| dock presentation controls | Switch contract/ranking, repeat, hide/show using icons by pointer and keyboard | State converges across dock/leaderboard; localized tooltips and accessible pressed/busy states are correct | P0 |
+| dock presentation controls | Switch contract/ranking, repeat, hide/show using icons; exercise retained Show for N seconds, Pin, and Hide actions | State converges across dock/leaderboard; timed ranking restores the objective; localized tooltips and accessible pressed/busy states are correct | P0 |
 | leaderboard policy restoration | Start from always, automatic, and on-request policies; override during a contract; settle it | Contract state temporarily owns the surface and the untouched ordinary policy resumes afterward | P0 |
 | protected queue | Visible command + waiting commands + contract; fill mixed/protected queues | No preemption; award/contract FIFO precedes commands; documented displacement and capacity hold | P0 |
 | alert rendering | Render plain/custom/broken media, HTML-like and 280-code-point Cyrillic/Latin text | Text nodes only, readable fallback, no script execution, no empty media hole | P0 |
@@ -35,7 +35,7 @@
 | Live UI states | Exercise loading, empty catalog/search, 400/404/409/500/network, retry and tab leave/return | Correct localized state; draft/active data retained; late requests ignored | P0 |
 | keyboard/focus | Navigate four Live tabs; operate form, picker and both confirmations without pointer | Roving tab semantics, trapped modal focus, no selection-implies-submit, Cancel/Escape focus restoration | P0 |
 | scaling/layout | Use approximately 700 px height and 125–150% scaling/narrow width | Scrollable dialog body, pinned actions, visible scrollbar, no unreachable control/horizontal clip | P1 |
-| localization | Run i18n parity and inspect EN/RU long labels/timestamps | Catalog parity, no raw keys, controls and live announcements remain understandable | P0 |
+| localization | Run i18n parity and inspect EN/RU long labels/timestamps with each configured interface locale | Catalog parity, no raw keys, controls and on-stream contract labels follow the configured locale | P0 |
 | observability/privacy | Open/repeat/award/close/conflict/failure with debug and normal logs | Required ids/actions/levels present; no objective/chat/token/path leak; WS drops use existing counter | P0 |
 
 ## Filesystem / IPC / Permission / Lifecycle Scenarios
@@ -87,9 +87,16 @@ Manual setup uses a temporary data directory, development server with loose `web
 
 - `npm ci`, `npm run lint`, and `npm test` passed; all 47 Node tests passed, including contract presentation state, dock icon/tooltip markup, locale parity, and Browser Source rectangle assertions.
 - `go test ./...` and `go test -race -count=1 ./...` passed during the implementation pass; the focused `go test ./internal/api -count=1` rerun also passed after presentation-state wiring was finalized.
-- `go build ./...`, targeted `golangci-lint run ./internal/api`, strict OpenSpec validation, and `git diff --check` passed. The repository-wide linter remains blocked by pre-existing `packimport` formatting/shadow/revive findings outside this change, so gate Q.4 remains open.
+- `go build ./...`, repository-wide `golangci-lint run ./...`, strict OpenSpec validation, and `git diff --check` passed after the separate `packimport` lint findings were corrected; gate Q.4 is complete.
 - Linux browser smoke used synthetic data and the real local server. It covered open, contract/ranking switching, repeat controls, hide/show, reconnect, restart default (`contract`, visible), settlement restoration, all current leaderboard themes, and a 360×220 narrow Browser Source without overflow or console errors.
 - Windows, macOS, packaged Wails, and real OBS/connector cells remain unrun and are not claimed as passed.
+
+### 2026-09-10 presentation refinement evidence
+
+- A real local-server browser smoke at 360×220 measured the contract card at 6.7 px from the top edge with computed `justify-content: flex-start` and `align-content: start`; neither axis overflowed.
+- The configured Russian locale rendered `Цель договора` and `Награда: Зоркий глаз · +25 XP`; switching the same module to English rendered `Contract objective` and `Reward: Зоркий глаз · +25 XP`.
+- The dock accessibility tree retained `Показать на 15 с`, `Закрепить`, and `Скрыть` alongside the four contract icons. Timed show produced visible `leaderboard`/`timed` state and automatically returned to visible `contract` state after 15 seconds.
+- `npm run lint`, all 47 Node tests, `go test ./...`, focused API tests, `go test -race -count=1 ./internal/api`, repository-wide Go lint, build, strict OpenSpec validation, and diff checks passed.
 
 Attach command output for all automated checks, migration fixture/version results, API/WebSocket sample envelopes with synthetic text, and screenshots for Live empty/active/picker/error states plus each theme/rectangle matrix. Record OS, architecture, webview/OBS version, scale, locale, and any unavailable matrix cell; do not imply an unrun platform passed.
 

@@ -511,7 +511,7 @@ export default {
   "iface.language": "Язык",
   "iface.localeRu": "Русский — 20:37:08",
   "iface.localeEn": "English — 20:37:08",
-  "iface.languageHint": "Подписи в админке и OBS dock и 24-часовой формат времени.",
+  "iface.languageHint": "Подписи в админке, OBS dock и оверлеях и 24-часовой формат времени.",
   "iface.viewerStats": "Статистика зрителей",
   "iface.activityIntervalSeconds": "Интервал активности (сек)",
   "iface.activityIntervalSecondsHint": "Тихое начисление XP: не чаще одного раза на зрителя за интервал в текущем стриме. 0 — отключить.",
@@ -806,6 +806,9 @@ export default {
   "dock.contractStatusLeaderboard": "Договор · лидерборд",
   "dock.contractStatusHidden": "скрыт",
   "dock.contractActionFailed": "Не удалось изменить показ договора",
+  "leaderboard.contractObjective": "Цель договора",
+  "leaderboard.contractReward": "Награда: {reward} · +{points} XP",
+  "leaderboard.messageCount": "Сообщений: {count}",
 
   "banner.checkFields": "Проверьте выделенные поля.",
   "banner.settingsSaved": "Настройки сохранены.",

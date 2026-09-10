@@ -28,9 +28,16 @@ func TestViewerContractPresentation_WhenActivatedUpdatedAndCleared_ExpectBounded
 	require.Equal(t, contractContentLeaderboard, updated.Content)
 	require.False(t, updated.Visible)
 
+	selected, changed := presentation.SelectContent(contractContentContract)
+	require.True(t, changed)
+	require.Equal(t, contractContentContract, selected.Content)
+	require.False(t, selected.Visible)
+	_, changed = presentation.SelectContent(contractContentContract)
+	require.False(t, changed)
+
 	_, ok = presentation.Update("stale", contractContentContract, true)
 	require.False(t, ok)
-	require.Equal(t, contractContentLeaderboard, presentation.Current().Content)
+	require.Equal(t, contractContentContract, presentation.Current().Content)
 
 	cleared := presentation.Clear(contract.ID)
 	require.Nil(t, cleared.Contract)

@@ -40,15 +40,15 @@ export function contractControlState(snapshot, busy) {
 }
 
 export function effectiveLeaderboardVisibility(contractState, leaderboardVisibility) {
-  if (contractState && contractState.contract) {
+  if (contractState && contractState.contract && contractState.content === CONTRACT_CONTENT) {
     return {
       activeContract: true,
       visible: contractState.visible,
-      content: contractState.content,
+      content: CONTRACT_CONTENT,
     };
   }
   return {
-    activeContract: false,
+    activeContract: Boolean(contractState && contractState.contract),
     visible: Boolean(leaderboardVisibility && leaderboardVisibility.visible),
     content: LEADERBOARD_CONTENT,
   };

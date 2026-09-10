@@ -77,6 +77,29 @@ func (h *Hub) handleLeaderboardVisibility(ctx context.Context, snapshot leaderbo
 		return
 	}
 	h.broadcast(payload)
+	if !snapshot.Visible {
+		h.selectActiveContractContent(ctx, contractContentContract)
+	}
+}
+
+func (h *Hub) selectActiveContractContent(ctx context.Context, content string) {
+	h.mu.Lock()
+	presentation := h.contracts
+	h.mu.Unlock()
+	if presentation == nil {
+		return
+	}
+
+	snapshot, changed := presentation.SelectContent(content)
+	if !changed {
+		return
+	}
+	payload, err := viewerContractStateWirePayload(snapshot)
+	if err != nil {
+		clog.Errorf(ctx, "viewer contract state wire payload: %w", err)
+		return
+	}
+	h.Broadcast(payload)
 }
 
 // SetLeaderboardVisibility supplies authoritative snapshots for new production clients.

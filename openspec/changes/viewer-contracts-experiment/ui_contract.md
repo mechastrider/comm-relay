@@ -51,7 +51,7 @@ At narrow widths the card/actions stack in document order without horizontal scr
 
 ### Layout and Components
 
-While a contract is active, the leaderboard toolbar replaces its ordinary visibility actions with four compact icon-only actions: show Contract objective, show Leaderboard, Repeat announcement, and Hide/Show surface. Existing SVG/icon styling, minimum target size, focus ring, and shared tooltip primitive are reused. The preset selector and status remain available; no second dock panel is introduced.
+While a contract is active, the leaderboard toolbar keeps its ordinary Show for N seconds, Pin, and Hide visibility actions and adds four compact icon-only actions: show Contract objective, show Leaderboard, Repeat announcement, and Hide/Show contract surface. Existing SVG/icon styling, minimum target size, focus ring, and shared tooltip primitive are reused. Show for N seconds temporarily selects ranking and restores the objective when the timer expires; Pin keeps ranking selected; Hide returns to the objective. The preset selector and status remain available; no second dock panel is introduced.
 
 ### Data / Forms / Actions
 
@@ -78,7 +78,7 @@ The Contracts tab and panel use linked `role=tab`/`role=tabpanel`, correct rovin
 
 Admin UI uses the existing design tokens, light/dark behavior, minimum target sizes, focus rings, and EN/RU locale application. Cyrillic/Latin mixed text wraps rather than truncating the objective; compact metadata may ellipsize with its full accessible name retained.
 
-The alert and leaderboard contract variants implement every current on-stream theme (`default`, `dashboard`, cockpit variants, and G-Rebels), keep page/background transparency, and fit their Browser Source rectangles in landscape, square, portrait, and narrow-banner shapes. Both render title, objective, reward, and points as text nodes; the compact persistent card prioritizes objective legibility and clamps only when the rectangle physically cannot fit it. `prefers-reduced-motion` removes decorative motion but preserves static emphasis, duration, queue order, audio policy, and content state.
+The alert and leaderboard contract variants implement every current on-stream theme (`default`, `dashboard`, cockpit variants, and G-Rebels), keep page/background transparency, and fit their Browser Source rectangles in landscape, square, portrait, and narrow-banner shapes. Both render title, objective, reward, and points as text nodes; the compact persistent card aligns all content to the top, uses the configured EN/RU interface locale for fixed labels, prioritizes objective legibility, and clamps only when the rectangle physically cannot fit it. `prefers-reduced-motion` removes decorative motion but preserves static emphasis, duration, queue order, audio policy, and content state.
 
 ## Explicit Non-Goals
 

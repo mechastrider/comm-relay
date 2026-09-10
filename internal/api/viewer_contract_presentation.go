@@ -69,6 +69,17 @@ func (p *viewerContractPresentation) Update(id, content string, visible bool) (v
 	return p.snapshotLocked(), true
 }
 
+func (p *viewerContractPresentation) SelectContent(content string) (viewerContractPresentationSnapshot, bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.contract == nil || p.content == content {
+		return p.snapshotLocked(), false
+	}
+	p.content = content
+	return p.snapshotLocked(), true
+}
+
 func (p *viewerContractPresentation) Clear(id string) viewerContractPresentationSnapshot {
 	p.mu.Lock()
 	defer p.mu.Unlock()
