@@ -14,9 +14,12 @@ import (
 type ActionKind string
 
 const (
+	// ActionCreate inserts a command that is absent from the current catalog.
 	ActionCreate ActionKind = "create"
+	// ActionUpdate changes an existing command to match the pack.
 	ActionUpdate ActionKind = "update"
-	ActionSkip   ActionKind = "skip"
+	// ActionSkip leaves an existing command unchanged.
+	ActionSkip ActionKind = "skip"
 )
 
 // PlannedAction is one command upsert decision.
@@ -187,9 +190,9 @@ func applyOne(s *store.Store, assetsDir string, byTrigger map[string]store.Comma
 
 	if exists {
 		input.ID = current.ID
-		updated, err := s.UpdateCommand(input.toUpdate())
-		if err != nil {
-			return err
+		updated, updateErr := s.UpdateCommand(input.toUpdate())
+		if updateErr != nil {
+			return updateErr
 		}
 		byTrigger[cmd.Trigger] = *updated
 		return nil
