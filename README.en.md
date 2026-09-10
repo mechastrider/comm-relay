@@ -26,6 +26,7 @@ The best way to evaluate CommRelay is to see it running on the author's streams:
 - Combines Twitch, YouTube Live Chat, and VK Live / VK Video in one local feed.
 - Tracks viewer stats (XP, messages, session/day/all-time) in a local `comm-relay.db` file next to `config.json` — no separate database server.
 - Recognizes chat commands and lets the streamer grant viewer rewards from Live or the OBS message dock.
+- In **Live → Contracts**, lets the streamer manually announce one viewer task on `/overlay/alert`, choose a winner for a normal XP reward, or close it without a result.
 - Sends transparent chat, leaderboard, and command/reward alert surfaces to OBS.
 - Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
 - Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?period=session|day|all` (same theme as chat; without `preset` it follows the active preset).

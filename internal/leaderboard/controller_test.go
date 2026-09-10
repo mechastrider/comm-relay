@@ -139,6 +139,32 @@ func TestController_WhenStartingPolicies_ExpectConfiguredBaseline(t *testing.T) 
 	}
 }
 
+func TestController_WhenInitialPresentationIsPinned_ExpectPinnedUntilResume(t *testing.T) {
+	cfg := *config.Default()
+	cfg.LeaderboardVisibility.Policy = config.LeaderboardVisibilityPolicyAutomatic
+	provider := &fakeConfigProvider{cfg: cfg}
+	clock := newFakeClock()
+	controller, err := NewController(provider, nil, WithInitialPinned(true), withClock(clock))
+	require.NoError(t, err)
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- controller.Run(ctx) }()
+	require.Eventually(t, controller.running.Load, time.Second, time.Millisecond)
+	t.Cleanup(func() {
+		cancel()
+		require.NoError(t, <-done)
+	})
+
+	initial := snapshot(t, controller)
+	require.Equal(t, StatePinned, initial.State)
+	require.Equal(t, ReasonStartup, initial.Reason)
+
+	resumed, err := controller.Resume(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, StateHidden, resumed.State)
+	require.Equal(t, ReasonPolicy, resumed.Reason)
+}
+
 func TestController_WhenTimedTriggerExtends_ExpectNewestAbsoluteDeadline(t *testing.T) {
 	controller, clock, _, _ := startController(t, config.LeaderboardVisibilityPolicyAutomatic, func(cfg *config.LeaderboardVisibilityConfig) {
 		cfg.CooldownSeconds = 300

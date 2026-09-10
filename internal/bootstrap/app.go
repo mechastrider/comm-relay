@@ -91,11 +91,16 @@ func New(opts Options) (*App, error) {
 	if err != nil {
 		return nil, errors.Errorf("create websocket hub: %w", err)
 	}
+	_, activeContractErr := viewerStore.CurrentViewerContract()
+	hasActiveContract := activeContractErr == nil
+	if activeContractErr != nil && !errors.Is(activeContractErr, store.ErrViewerContractNotFound) {
+		return nil, errors.Errorf("load active viewer contract for leaderboard visibility: %w", activeContractErr)
+	}
 	visibilityController, err := leaderboard.NewController(cfgStore, func(snapshot leaderboard.Snapshot) {
 		if publishErr := eventBus.Publish(bus.LeaderboardVisibilityChanged(snapshot)); publishErr != nil && !errors.Is(publishErr, bus.ErrClosed) {
 			clog.Errorf(context.Background(), "publish leaderboard visibility: %w", publishErr)
 		}
-	})
+	}, leaderboard.WithInitialPinned(hasActiveContract))
 	if err != nil {
 		return nil, errors.Errorf("create leaderboard visibility controller: %w", err)
 	}

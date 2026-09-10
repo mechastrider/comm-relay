@@ -90,6 +90,19 @@ export function alertRenderModel(alert) {
     imageSizePct: normalizeAlertImageSizePct(alert && alert.image_size_pct),
     imageAsset,
   };
+  if (alert && alert.source === "contract") {
+    return Object.assign(base, {
+      kind: "contract",
+      emblemKind: "award",
+      identifier: text(alert.award_id),
+      emblemLabel: text(alert.award_name),
+      title: text(alert.contract_title) || text(alert.text) || "Contract",
+      objective: text(alert.contract_objective),
+      rewardName: text(alert.award_name) || "Award",
+      name,
+      points: Number.isFinite(points) && points > 0 ? "+" + String(points) : "",
+    });
+  }
   if (alert && alert.source === "award") {
     return Object.assign(base, {
       kind: "award",
@@ -113,13 +126,13 @@ export function alertRenderModel(alert) {
 function renderBuiltInGraphic(documentRef, model, createEmblem) {
   if (typeof createEmblem === "function") {
     return createEmblem(documentRef, {
-      kind: model.kind,
+      kind: model.emblemKind || model.kind,
       identifier: model.identifier,
       label: model.emblemLabel,
     });
   }
   const fallback = documentRef.createElement("div");
-  fallback.className = "alert-emblem alert-emblem--" + model.kind;
+  fallback.className = "alert-emblem alert-emblem--" + (model.emblemKind || model.kind);
   fallback.setAttribute("aria-hidden", "true");
   return fallback;
 }
@@ -220,6 +233,15 @@ export function createAlertSplash(documentRef, alert, options = {}) {
     }
     if (model.quote) {
       appendTextElement(documentRef, content, "blockquote", "alert-quote", model.quote);
+    }
+  } else if (model.kind === "contract") {
+    appendTextElement(documentRef, content, "p", "alert-contract-title", model.title);
+    if (model.objective) {
+      appendTextElement(documentRef, content, "p", "alert-contract-objective", model.objective);
+    }
+    const reward = appendTextElement(documentRef, content, "p", "alert-contract-reward", model.rewardName);
+    if (model.points) {
+      appendTextElement(documentRef, reward, "span", "alert-points", model.points);
     }
   } else {
     appendTextElement(documentRef, content, "p", "alert-text", model.text);

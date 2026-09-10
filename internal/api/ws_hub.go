@@ -28,6 +28,7 @@ type Hub struct {
 	cfgStore     *config.Store
 	viewerStore  *store.Store
 	visibility   *leaderboard.Controller
+	contracts    *viewerContractPresentation
 }
 
 // NewHub creates a WebSocket hub bound to the shared event bus.
@@ -76,12 +77,40 @@ func (h *Hub) handleLeaderboardVisibility(ctx context.Context, snapshot leaderbo
 		return
 	}
 	h.broadcast(payload)
+	h.syncActiveContractVisibility(ctx, snapshot.Visible)
+}
+
+func (h *Hub) syncActiveContractVisibility(ctx context.Context, visible bool) {
+	h.mu.Lock()
+	presentation := h.contracts
+	h.mu.Unlock()
+	if presentation == nil {
+		return
+	}
+
+	snapshot, changed := presentation.SetVisible(visible)
+	if !changed {
+		return
+	}
+	payload, err := viewerContractStateWirePayload(snapshot)
+	if err != nil {
+		clog.Errorf(ctx, "viewer contract state wire payload: %w", err)
+		return
+	}
+	h.Broadcast(payload)
 }
 
 // SetLeaderboardVisibility supplies authoritative snapshots for new production clients.
 func (h *Hub) SetLeaderboardVisibility(controller *leaderboard.Controller) {
 	h.mu.Lock()
 	h.visibility = controller
+	h.mu.Unlock()
+}
+
+// SetViewerContractPresentation supplies authoritative snapshots for new production clients.
+func (h *Hub) SetViewerContractPresentation(presentation *viewerContractPresentation) {
+	h.mu.Lock()
+	h.contracts = presentation
 	h.mu.Unlock()
 }
 
@@ -107,9 +136,11 @@ func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
 
 func (h *Hub) register(c *wsClient) {
 	var visibility *leaderboard.Controller
+	var contracts *viewerContractPresentation
 	if !c.debug {
 		h.mu.Lock()
 		visibility = h.visibility
+		contracts = h.contracts
 		h.mu.Unlock()
 		if visibility != nil {
 			ctx := c.ctx
@@ -143,6 +174,16 @@ func (h *Hub) register(c *wsClient) {
 			select {
 			case c.send <- payload:
 			default:
+			}
+		}
+	}
+	if contracts != nil {
+		payload, err := viewerContractStateWirePayload(contracts.Current())
+		if err == nil {
+			select {
+			case c.send <- payload:
+			default:
+				observability.Default.RecordWebSocketDrop(wireViewerContractStateType)
 			}
 		}
 	}

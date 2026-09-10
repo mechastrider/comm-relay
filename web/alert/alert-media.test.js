@@ -156,6 +156,31 @@ test("replaces a broken custom image with the matching built-in emblem", functio
   assert.equal(image.attributes["data-emblem-symbol"], "laurel-star");
 });
 
+test("uses snapshot media and a stable award-style fallback for contracts", function () {
+  const splash = createAlertSplash(
+    fakeDocument,
+    {
+      source: "contract",
+      contract_id: "hold-the-line",
+      contract_title: "Hold the line",
+      contract_objective: "Survive.",
+      award_id: "mvp",
+      award_name: "MVP",
+      text: "Hold the line",
+      points: 25,
+      image_asset: "asset_missing.png",
+    },
+    {
+      overlayAssetURL: (filename) => "/overlay/assets/" + filename,
+      createEmblem: createAlertEmblem,
+    }
+  );
+  const image = splash.children[0];
+  image.listeners.error();
+  assert.match(image.className, /alert-emblem--award/);
+  assert.equal(image.attributes["data-emblem-symbol"], "laurel-star");
+});
+
 test("playAlertAudio uses custom file instead of built-in tone", async function () {
   let playedURL = "";
   const OriginalAudio = globalThis.Audio;

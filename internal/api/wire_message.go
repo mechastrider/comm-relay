@@ -48,27 +48,63 @@ type wireMessageDeleted struct {
 }
 
 type wireAlert struct {
-	Type            string `json:"type"`
-	Name            string `json:"name"`
-	AvatarURL       string `json:"avatar_url,omitempty"`
-	Text            string `json:"text"`
-	Points          int    `json:"points"`
-	Sound           string `json:"sound,omitempty"`
-	DurationMs      int    `json:"duration_ms"`
-	Source          string `json:"source"`
-	CreatedAt       string `json:"created_at"`
-	ImageAsset      string `json:"image_asset,omitempty"`
-	SoundFile       string `json:"sound_file,omitempty"`
-	SoundVolume     int    `json:"sound_volume"`
-	Layout          string `json:"layout,omitempty"`
-	ImageFit        string `json:"image_fit,omitempty"`
-	ImageSizePct    int    `json:"image_size_pct"`
-	Trigger         string `json:"trigger,omitempty"`
-	AwardID         string `json:"award_id,omitempty"`
-	AwardName       string `json:"award_name,omitempty"`
-	MessagePlatform string `json:"message_platform,omitempty"`
-	MessageID       string `json:"message_id,omitempty"`
-	MessageText     string `json:"message_text,omitempty"`
+	Type              string `json:"type"`
+	Name              string `json:"name"`
+	AvatarURL         string `json:"avatar_url,omitempty"`
+	Text              string `json:"text"`
+	Points            int    `json:"points"`
+	Sound             string `json:"sound,omitempty"`
+	DurationMs        int    `json:"duration_ms"`
+	Source            string `json:"source"`
+	CreatedAt         string `json:"created_at"`
+	ImageAsset        string `json:"image_asset,omitempty"`
+	SoundFile         string `json:"sound_file,omitempty"`
+	SoundVolume       int    `json:"sound_volume"`
+	Layout            string `json:"layout,omitempty"`
+	ImageFit          string `json:"image_fit,omitempty"`
+	ImageSizePct      int    `json:"image_size_pct"`
+	Trigger           string `json:"trigger,omitempty"`
+	AwardID           string `json:"award_id,omitempty"`
+	AwardName         string `json:"award_name,omitempty"`
+	ContractID        string `json:"contract_id,omitempty"`
+	ContractTitle     string `json:"contract_title,omitempty"`
+	ContractObjective string `json:"contract_objective,omitempty"`
+	MessagePlatform   string `json:"message_platform,omitempty"`
+	MessageID         string `json:"message_id,omitempty"`
+	MessageText       string `json:"message_text,omitempty"`
+}
+
+func contractAlertWirePayload(contract *store.ViewerContract, createdAt time.Time) ([]byte, error) {
+	alert := wireAlert{
+		Type:              wireAlertType,
+		Name:              contract.RewardName,
+		Text:              contract.Title,
+		Points:            contract.RewardPoints,
+		DurationMs:        contract.RewardDurationMs,
+		Source:            "contract",
+		CreatedAt:         createdAt.UTC().Format(time.RFC3339Nano),
+		AwardID:           contract.RewardID,
+		AwardName:         contract.RewardName,
+		ContractID:        contract.ID,
+		ContractTitle:     contract.Title,
+		ContractObjective: contract.Objective,
+	}
+	applyCatalogAlertMedia(
+		&alert,
+		contract.RewardImageAsset,
+		contract.RewardSoundFile,
+		contract.RewardSound,
+		contract.RewardSoundVolume,
+		contract.RewardLayout,
+		contract.RewardImageFit,
+		contract.RewardImageSizePct,
+	)
+
+	data, err := json.Marshal(alert)
+	if err != nil {
+		return nil, errors.Errorf("marshal contract alert wire event: %w", err)
+	}
+	return data, nil
 }
 
 func chatMessageWirePayload(msg bus.ChatMessage, isCommand bool) ([]byte, error) {

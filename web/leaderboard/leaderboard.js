@@ -10,6 +10,12 @@ import {
   overlayAssetURL,
 } from "../overlay-settings.js?v=8";
 import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.js?v=1";
+import { setLocale, t } from "/shared/i18n.js?v=18";
+import {
+  CONTRACT_CONTENT,
+  effectiveLeaderboardVisibility,
+  normalizeViewerContractState,
+} from "/shared/viewer-contract-state.js?v=1";
 import {
   completeRowsThatFit,
   fontSizeToFitFirstRow,
@@ -100,6 +106,8 @@ let reconnectTimer = null;
 let reconnectDelayMs = INITIAL_RECONNECT_MS;
 let shouldRun = true;
 let latestEntries = [];
+let leaderboardVisibility = null;
+let contractState = productionVisibilityEnabled ? null : { contract: null, content: CONTRACT_CONTENT, visible: false };
 let layoutFrame = null;
 let resizeObserver = null;
 let visibleRowCount = 0;
@@ -113,14 +121,31 @@ function applyLeaderboardVisibility(frame) {
   if (!visibility) {
     return;
   }
+  leaderboardVisibility = visibility;
+  applyEffectiveVisibility();
+}
+
+function applyEffectiveVisibility() {
+  if (!productionVisibilityEnabled) {
+    return;
+  }
+  if (contractState === null) {
+    document.body.classList.add("leaderboard-visibility--pending", "leaderboard-visibility--hidden");
+    return;
+  }
+  const effective = effectiveLeaderboardVisibility(contractState, leaderboardVisibility);
+  const contractActive = effective.activeContract;
+  const contractContentActive = contractActive && effective.content === CONTRACT_CONTENT;
+  const visible = effective.visible;
+  const visibility = leaderboardVisibility || { state: "hidden", reason: "" };
   document.body.classList.remove("leaderboard-visibility--pending");
-  document.body.classList.toggle("leaderboard-visibility--hidden", !visibility.visible);
-  document.body.classList.toggle("leaderboard-visibility--timed", visibility.state === "timed");
-  document.body.classList.toggle("leaderboard-visibility--pinned", visibility.state === "pinned");
+  document.body.classList.toggle("leaderboard-visibility--hidden", !visible);
+  document.body.classList.toggle("leaderboard-visibility--timed", !contractContentActive && visibility.state === "timed");
+  document.body.classList.toggle("leaderboard-visibility--pinned", contractContentActive || visibility.state === "pinned");
   if (root) {
-    root.setAttribute("aria-hidden", visibility.visible ? "false" : "true");
-    root.dataset.visibilityState = visibility.state;
-    root.dataset.visibilityReason = visibility.reason;
+    root.setAttribute("aria-hidden", visible ? "false" : "true");
+    root.dataset.visibilityState = contractContentActive ? "contract" : visibility.state;
+    root.dataset.visibilityReason = contractContentActive ? "viewer_contract" : visibility.reason;
   }
 }
 
@@ -213,7 +238,7 @@ function applyAppearance() {
     document.documentElement.classList.add(previewClass);
     document.body.classList.add(previewClass);
   }
-  renderTitle();
+  renderCurrentContent();
   scheduleLayout();
 }
 
@@ -242,10 +267,59 @@ function renderTitle() {
   heading.textContent = title;
 }
 
+function contractLabel() {
+  return t("leaderboard.contractObjective");
+}
+
+function contractRewardText(contract) {
+  return t("leaderboard.contractReward", {
+    reward: contract.reward_name || "—",
+    points: contract.reward_points || 0,
+  });
+}
+
+function renderContract(contract) {
+  if (!root) {
+    return;
+  }
+  root.textContent = "";
+  document.body.classList.add("leaderboard-content--contract");
+  root.dataset.content = CONTRACT_CONTENT;
+
+  const card = document.createElement("article");
+  card.className = "contract-card";
+  const label = document.createElement("p");
+  label.className = "contract-card__label";
+  label.textContent = contractLabel();
+  const title = document.createElement("h1");
+  title.className = "contract-card__title";
+  title.textContent = escapeText(contract.title);
+  const objective = document.createElement("p");
+  objective.className = "contract-card__objective";
+  objective.textContent = escapeText(contract.objective);
+  const reward = document.createElement("p");
+  reward.className = "contract-card__reward";
+  reward.textContent = contractRewardText(contract);
+  card.append(label, title, objective, reward);
+  root.append(card);
+  scheduleLayout();
+}
+
+function renderCurrentContent() {
+  if (contractState && contractState.contract && contractState.content === CONTRACT_CONTENT) {
+    renderContract(contractState.contract);
+    return;
+  }
+  document.body.classList.remove("leaderboard-content--contract");
+  if (root) {
+    root.dataset.content = "leaderboard";
+  }
+  renderEntries(latestEntries, false);
+}
+
 function localizedMessageCount(value) {
   const count = Number(value) || 0;
-  const locale = String(navigator.language || document.documentElement.lang || "en").toLowerCase();
-  return locale.startsWith("ru") ? String(count) + " сообщ." : String(count) + " messages";
+  return t("leaderboard.messageCount", { count: count });
 }
 
 function setLeaderboardFontSize(fontSizePx) {
@@ -364,17 +438,16 @@ function applyServerOverlayConfig(serverOverlay) {
   overlayView = leaderboardViewFromConfig({ overlay: serverOverlay }, params);
 }
 
-function renderEntries(entries) {
+function renderEntries(entries, remember = true) {
   if (!root) {
     return;
   }
 
-  latestEntries = entriesForDisplay(entries);
-  renderTitle();
-  const existingList = root.querySelector(".leaderboard-list");
-  if (existingList) {
-    existingList.remove();
+  if (remember) {
+    latestEntries = entriesForDisplay(entries);
   }
+  root.textContent = "";
+  renderTitle();
   const list = document.createElement("ol");
   list.className = "leaderboard-list";
 
@@ -437,7 +510,10 @@ async function loadSnapshot() {
     }
     const payload = await response.json();
     if (payload && payload.period === period && Array.isArray(payload.entries)) {
-      renderEntries(payload.entries);
+      latestEntries = entriesForDisplay(payload.entries);
+      if (!(contractState && contractState.contract && contractState.content === CONTRACT_CONTENT)) {
+        renderEntries(latestEntries, false);
+      }
     }
   } catch {
     /* WebSocket may still deliver updates */
@@ -460,13 +536,22 @@ function handleSocketMessage(event) {
     if (samplePreviewEnabled) {
       renderEntries(sampleEntriesForCap(overlayView.max_entries));
     } else {
-      renderEntries(latestEntries);
+      renderCurrentContent();
       void loadSnapshot();
     }
     return;
   }
   if (frame.type === "leaderboard_visibility") {
     applyLeaderboardVisibility(frame);
+    return;
+  }
+  if (frame.type === "viewer_contract_state" && productionVisibilityEnabled) {
+    const next = normalizeViewerContractState(frame);
+    if (next) {
+      contractState = next;
+      applyEffectiveVisibility();
+      renderCurrentContent();
+    }
     return;
   }
   if (samplePreviewEnabled) {
@@ -479,7 +564,10 @@ function handleSocketMessage(event) {
   if (frame.type !== "leaderboard" || frame.period !== period) {
     return;
   }
-  renderEntries(frame.entries);
+  latestEntries = entriesForDisplay(frame.entries);
+  if (!(contractState && contractState.contract && contractState.content === CONTRACT_CONTENT)) {
+    renderEntries(latestEntries, false);
+  }
 }
 
 function scheduleReconnect() {
@@ -520,6 +608,7 @@ async function loadServerConfig() {
       return;
     }
     const payload = await response.json();
+    setLocale(payload && payload.admin && payload.admin.time_locale);
     applyServerOverlayConfig(payload && payload.overlay);
   } catch {
     /* keep URL/default config */

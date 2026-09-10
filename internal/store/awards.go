@@ -279,18 +279,5 @@ func (s *Store) DeleteAward(id string) error {
 }
 
 func (s *Store) getAwardLocked(id string) (*AwardType, error) {
-	row := s.db.QueryRow(`
-		SELECT id, name, points, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
-		FROM award_types
-		WHERE id = ?`, id)
-
-	award, err := scanAward(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, ErrAwardNotFound
-	}
-	if err != nil {
-		return nil, errors.Errorf("get award %q: %w", id, err)
-	}
-
-	return &award, nil
+	return getAward(s.db, id)
 }

@@ -1,6 +1,12 @@
 import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
 import { createRewardControl, messageCanBeRewarded } from "/shared/reward-picker.js?v=4";
-import { setLocale, t } from "/shared/i18n.js?v=18";
+import { applyDomTranslations, setLocale, t } from "/shared/i18n.js?v=18";
+import {
+  CONTRACT_CONTENT,
+  LEADERBOARD_CONTENT,
+  contractControlState,
+  normalizeViewerContractState,
+} from "/shared/viewer-contract-state.js?v=1";
 import {
   normalizeVisibilitySnapshot,
   presetOptions,
@@ -28,7 +34,12 @@ import {
   const showButton = document.getElementById("leaderboard-show");
   const showLabel = document.getElementById("leaderboard-show-label");
   const pinButton = document.getElementById("leaderboard-pin");
+  const pinLabel = document.getElementById("leaderboard-pin-label");
   const hideButton = document.getElementById("leaderboard-hide");
+  const contractActions = document.getElementById("contract-presentation-actions");
+  const contractButton = document.getElementById("contract-show-objective");
+  const contractLeaderboardButton = document.getElementById("contract-show-leaderboard");
+  const contractRepeatButton = document.getElementById("contract-repeat-announcement");
 
   let messages = [];
   let socket = null;
@@ -38,6 +49,8 @@ import {
   let visibilitySnapshot = null;
   let visibilityDisplaySeconds = 15;
   const visibilityActionsInFlight = new Set();
+  let contractSnapshot = null;
+  let contractActionInFlight = "";
   let presetRequestInFlight = false;
   let previewSettings = {
     enabled: false,
@@ -57,18 +70,14 @@ import {
   function applyDockLocale(locale) {
     const next = locale === "en-GB" ? "en-GB" : "ru-RU";
     setLocale(next);
+    applyDomTranslations(document);
     if (emptyState) {
       emptyState.textContent = t("dock.waiting");
     }
-    document.querySelectorAll("[data-i18n]").forEach(function (element) {
-      const key = element.getAttribute("data-i18n");
-      if (key) {
-        element.textContent = t(key);
-      }
-    });
     presetSelect?.setAttribute("aria-label", t("dock.preset"));
     renderVisibilityStatus();
     renderVisibilityControls();
+    renderContractControls();
   }
 
   function refreshTimeLocale(locale) {
@@ -136,6 +145,11 @@ import {
     const controls = visibilityControlState(visibilitySnapshot, visibilityDisplaySeconds);
     const available = visibilitySnapshot !== null;
     const alwaysMode = controls.mode === "always";
+    const contractActive = Boolean(contractSnapshot && contractSnapshot.contract);
+
+    if (contractActions) {
+      contractActions.hidden = !contractActive;
+    }
 
     if (alwaysActions) {
       alwaysActions.hidden = !alwaysMode;
@@ -149,13 +163,18 @@ import {
         visibilityActionsInFlight.has("hide") || visibilityActionsInFlight.has("resume");
       alwaysVisibleSwitch.setAttribute("aria-busy", alwaysVisibleSwitch.disabled && available ? "true" : "false");
     }
-    setNodeText(showLabel, t("dock.showFor", { seconds: controls.displaySeconds }));
+    const showText = t("dock.showFor", { seconds: controls.displaySeconds });
+    setNodeText(showLabel, showText);
     if (showButton) {
+      showButton.setAttribute("aria-label", showText);
       showButton.disabled = !available || controls.showDisabled || visibilityActionsInFlight.has("show");
       showButton.setAttribute("aria-busy", visibilityActionsInFlight.has("show") ? "true" : "false");
     }
     if (pinButton) {
       const pinBusy = visibilityActionsInFlight.has("pin") || visibilityActionsInFlight.has("resume");
+      const pinText = t(controls.pinAction === "resume" ? "dock.resume" : "dock.pin");
+      pinButton.setAttribute("aria-label", pinText);
+      setNodeText(pinLabel, pinText);
       pinButton.disabled = !available || pinBusy;
       pinButton.setAttribute("aria-pressed", controls.pinPressed ? "true" : "false");
       pinButton.setAttribute("aria-busy", pinBusy ? "true" : "false");
@@ -164,6 +183,39 @@ import {
       hideButton.disabled = !available || controls.hideDisabled || visibilityActionsInFlight.has("hide");
       hideButton.setAttribute("aria-busy", visibilityActionsInFlight.has("hide") ? "true" : "false");
     }
+  }
+
+  function setContractButtonState(button, pressed, labelKey, busy) {
+    if (!button) {
+      return;
+    }
+    const label = t(labelKey);
+    button.setAttribute("aria-label", label);
+    if (pressed === null) {
+      button.removeAttribute("aria-pressed");
+    } else {
+      button.setAttribute("aria-pressed", pressed ? "true" : "false");
+    }
+    button.setAttribute("aria-busy", busy ? "true" : "false");
+    button.disabled = contractControlState(contractSnapshot, contractActionInFlight !== "").disabled;
+  }
+
+  function renderContractControls() {
+    const state = contractControlState(contractSnapshot, contractActionInFlight !== "");
+    setContractButtonState(contractButton, state.contractPressed, "dock.contractObjective", contractActionInFlight === "contract");
+    setContractButtonState(contractLeaderboardButton, state.leaderboardPressed, "dock.contractLeaderboard", contractActionInFlight === "leaderboard");
+    setContractButtonState(contractRepeatButton, null, "dock.contractRepeat", contractActionInFlight === "repeat");
+  }
+
+  function setContractSnapshot(value) {
+    const next = normalizeViewerContractState(value);
+    if (!next) {
+      return;
+    }
+    contractSnapshot = next;
+    renderVisibilityStatus();
+    renderVisibilityControls();
+    renderContractControls();
   }
 
   function setVisibilitySnapshot(value) {
@@ -195,6 +247,76 @@ import {
       showToolbarError("");
     } catch {
       renderVisibilityStatus();
+    }
+  }
+
+  async function loadContractState() {
+    try {
+      const response = await fetch("/api/viewer-contracts/current", { headers: { Accept: "application/json" } });
+      if (!response.ok) {
+        throw new Error("contract state unavailable");
+      }
+      const payload = await response.json();
+      setContractSnapshot({ type: "viewer_contract_state", ...payload });
+    } catch {
+      /* The WebSocket snapshot remains authoritative and may recover this state. */
+    }
+  }
+
+  async function runContractDisplay(content, action) {
+    if (!contractSnapshot || !contractSnapshot.contract || contractActionInFlight !== "") {
+      return;
+    }
+    contractActionInFlight = action;
+    renderContractControls();
+    showToolbarError("");
+    try {
+      const response = await fetch("/api/viewer-contracts/display", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ id: contractSnapshot.contract.id, content: content, visible: contractSnapshot.visible }),
+      });
+      if (!response.ok) {
+        if (response.status === 409) {
+          await loadContractState();
+        }
+        throw new Error("contract display failed");
+      }
+      setContractSnapshot(await response.json());
+    } catch {
+      showToolbarError(t("dock.contractActionFailed"));
+    } finally {
+      contractActionInFlight = "";
+      renderContractControls();
+    }
+  }
+
+  async function repeatContractAnnouncement() {
+    if (!contractSnapshot || !contractSnapshot.contract || contractActionInFlight !== "") {
+      return;
+    }
+    contractActionInFlight = "repeat";
+    renderContractControls();
+    showToolbarError("");
+    try {
+      const response = await fetch("/api/viewer-contracts/announce", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ id: contractSnapshot.contract.id }),
+      });
+      if (!response.ok) {
+        if (response.status === 409) {
+          await loadContractState();
+        }
+        throw new Error("contract announce failed");
+      }
+      const payload = await response.json();
+      setContractSnapshot({ type: "viewer_contract_state", ...payload });
+    } catch {
+      showToolbarError(t("dock.contractActionFailed"));
+    } finally {
+      contractActionInFlight = "";
+      renderContractControls();
     }
   }
 
@@ -575,6 +697,7 @@ import {
       reconnectDelayMs = INITIAL_RECONNECT_MS;
       loadRecentMessages();
       loadVisibility();
+      loadContractState();
     });
     nextSocket.addEventListener("message", function (event) {
       try {
@@ -585,6 +708,8 @@ import {
           mergeMessages([wireToMessage(wire)]);
         } else if (wire && wire.type === "leaderboard_visibility") {
           setVisibilitySnapshot(wire);
+        } else if (wire && wire.type === "viewer_contract_state") {
+          setContractSnapshot(wire);
         } else if (wire && wire.type === "overlay_settings") {
           loadDisplaySettings();
         }
@@ -626,10 +751,17 @@ import {
   hideButton?.addEventListener("click", function () {
     runVisibilityAction("hide");
   });
+  contractButton?.addEventListener("click", function () {
+    runContractDisplay(CONTRACT_CONTENT, "contract");
+  });
+  contractLeaderboardButton?.addEventListener("click", function () {
+    runContractDisplay(LEADERBOARD_CONTENT, "leaderboard");
+  });
+  contractRepeatButton?.addEventListener("click", repeatContractAnnouncement);
   presetSelect?.addEventListener("change", function () {
     activatePreset(presetSelect.value);
   });
   window.setInterval(renderVisibilityStatus, 1000);
 
   renderMessages(true);
-  Promise.all([loadDisplaySettings(), loadRecentMessages(), loadVisibility()]).finally(connectWebSocket);
+  Promise.all([loadDisplaySettings(), loadRecentMessages(), loadVisibility(), loadContractState()]).finally(connectWebSocket);

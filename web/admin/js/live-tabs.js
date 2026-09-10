@@ -8,8 +8,9 @@ import {
   openLiveStatistics,
   deactivateLiveStatistics,
 } from "./live-statistics.js";
+import { openLiveContracts, deactivateLiveContracts } from "./viewer-contracts.js";
 
-export const LIVE_TABS = ["messages", "leaderboard", "statistics"];
+export const LIVE_TABS = ["messages", "leaderboard", "statistics", "contracts"];
 
 let currentTab = "messages";
 
@@ -18,6 +19,7 @@ function tabElements() {
     { id: "messages", tab: dom.liveMessagesTab, panel: dom.liveMessagesPanel },
     { id: "leaderboard", tab: dom.liveLeaderboardTab, panel: dom.liveLeaderboardPanel },
     { id: "statistics", tab: dom.liveStatisticsTab, panel: dom.liveStatisticsPanel },
+    { id: "contracts", tab: dom.liveContractsTab, panel: dom.liveContractsPanel },
   ];
 }
 
@@ -41,6 +43,10 @@ function loadTabData(tab) {
     });
   } else if (tab === "statistics") {
     openLiveStatistics().catch(function () {
+      /* region handles error */
+    });
+  } else if (tab === "contracts") {
+    openLiveContracts().catch(function () {
       /* region handles error */
     });
   }
@@ -71,6 +77,8 @@ export function setLiveTab(tab, options) {
     loadTabData("leaderboard");
   } else if (next === "statistics" && previous !== "statistics") {
     loadTabData("statistics");
+  } else if (next === "contracts" && previous !== "contracts") {
+    loadTabData("contracts");
   }
 
   if (previous !== next) {
@@ -78,6 +86,8 @@ export function setLiveTab(tab, options) {
       abortLiveLeaderboard();
     } else if (previous === "statistics") {
       deactivateLiveStatistics();
+    } else if (previous === "contracts") {
+      deactivateLiveContracts();
     }
   }
 
@@ -137,6 +147,10 @@ export function initLiveTabs() {
       openLiveStatistics().catch(function () {
         /* noop */
       });
+    } else if (currentTab === "contracts") {
+      openLiveContracts().catch(function () {
+        /* noop */
+      });
     }
   });
 }
@@ -151,12 +165,15 @@ export function handleLiveWorkspaceChange(workspaceId) {
   if (workspaceId !== "live") {
     abortLiveLeaderboard();
     deactivateLiveStatistics();
+    deactivateLiveContracts();
     return;
   }
   if (currentTab === "leaderboard") {
     loadTabData("leaderboard");
   } else if (currentTab === "statistics") {
     loadTabData("statistics");
+  } else if (currentTab === "contracts") {
+    loadTabData("contracts");
   }
 }
 
@@ -169,5 +186,7 @@ export function reconcileActiveLiveData() {
     loadTabData("leaderboard");
   } else if (currentTab === "statistics") {
     loadTabData("statistics");
+  } else if (currentTab === "contracts") {
+    loadTabData("contracts");
   }
 }

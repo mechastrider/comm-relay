@@ -50,6 +50,30 @@ test("accepts legacy-valid command frames with missing source and created_at", f
   assert.equal(scheduler.snapshot().visible, legacy);
 });
 
+test("keeps valid contract announcements in the protected award lane", function () {
+  const scheduler = createAlertScheduler({ now: () => 0 });
+  const contract = alert("contract-a", "contract", {
+    points: 25,
+    contract_id: "hold-the-line",
+    contract_title: "Hold the line",
+    contract_objective: "Survive the final round.",
+    award_id: "spotter",
+    award_name: "Spotter",
+  });
+
+  assert.equal(isValidAlertEnvelope(contract), true);
+  assert.equal(scheduler.enqueue(alert("visible")), scheduler.snapshot().visible);
+  assert.equal(scheduler.enqueue(contract), null);
+  assert.deepEqual(scheduler.snapshot().awards, [contract]);
+  assert.equal(scheduler.completeVisible(), contract);
+});
+
+test("rejects incomplete contract frames while retaining unknown-source compatibility", function () {
+  const incomplete = alert("contract-a", "contract", { points: 25 });
+  assert.equal(isValidAlertEnvelope(incomplete), false);
+  assert.equal(isValidAlertEnvelope(alert("future", "future-source")), true);
+});
+
 test("keeps one visible splash and selects pending awards before commands", function () {
   let clock = 0;
   const scheduler = createAlertScheduler({ now: () => clock });

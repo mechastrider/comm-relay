@@ -18,6 +18,26 @@ assert.match(
 );
 assert.match(
   viewersJs,
+  /cancelViewerRewardHistory\(\);[\s\S]*?selectedViewerId = id/,
+  "switching viewers must invalidate the previous scoped history request"
+);
+assert.match(
+  viewersJs,
+  /export function closeViewerDetail\(options\) \{[\s\S]*?cancelViewerRewardHistory\(\)/,
+  "closing the viewer shell must invalidate scoped history"
+);
+assert.ok(
+  viewersJs.indexOf("const rewardHistorySection = createViewerRewardHistory(id);") <
+    viewersJs.indexOf('detailLoadInFlight = fetchJSON("/api/viewers/get?id="'),
+  "viewer history must begin alongside, rather than after, the profile request"
+);
+assert.ok(
+  viewersJs.indexOf("stats,\n    rewardHistorySection,") <
+    viewersJs.indexOf("nameField,\n    hideField,"),
+  "reward history must appear after summary statistics and before profile controls"
+);
+assert.match(
+  viewersJs,
   /window\.addEventListener\("resize", enforceViewerDetailShellWhenHidden\)/
 );
 assert.doesNotMatch(

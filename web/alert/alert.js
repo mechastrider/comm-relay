@@ -56,13 +56,16 @@ const scheduler = createAlertScheduler();
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const SAMPLE_ALERT = {
-  source: "award",
+  source: "contract",
+  contract_id: "hold-the-line",
+  contract_title: "Hold the line",
+  contract_objective: "Survive the final round together.",
   award_id: "spotter",
-  name: "Nova",
+  name: "Spotter",
   avatar_url: "",
   award_name: "Spotter",
   points: 25,
-  message_text: "Невероятный фланг — that timing was perfect.",
+  text: "Hold the line",
   sound: "chime",
   duration_ms: 5000,
 };

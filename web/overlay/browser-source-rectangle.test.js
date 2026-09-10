@@ -36,6 +36,25 @@ test("leaderboard rows keep one avatar column when a portrait is missing", funct
   assert.doesNotMatch(leaderboardCSS, /leaderboard-row--without-avatar/);
 });
 
+test("leaderboard contract card is bounded, safe, and themed in the existing rectangle", function () {
+  const card = block(leaderboardCSS, ".contract-card");
+  const objective = block(leaderboardCSS, ".contract-card__objective");
+  assert.match(card, /max-height:\s*100%/);
+  assert.match(card, /overflow:\s*hidden/);
+  assert.match(card, /align-content:\s*start/);
+  assert.match(leaderboardCSS, /body\.leaderboard-content--contract \.leaderboard\s*\{[\s\S]*?justify-content:\s*flex-start/);
+  assert.match(objective, /overflow-wrap:\s*anywhere/);
+  assert.match(objective, /-webkit-line-clamp:\s*7/);
+  assert.match(leaderboardJS, /root\.textContent = ""/);
+  assert.match(leaderboardJS, /title\.textContent = escapeText\(contract\.title\)/);
+  assert.match(leaderboardJS, /objective\.textContent = escapeText\(contract\.objective\)/);
+  assert.match(leaderboardJS, /setLocale\(payload && payload\.admin && payload\.admin\.time_locale\)/);
+  assert.match(leaderboardJS, /t\("leaderboard\.contractObjective"\)/);
+  ["default", "dashboard", "cockpit-panel", "cockpit-popups", "g-rebels-popups"].forEach(function (theme) {
+    assert.match(leaderboardCSS, new RegExp("overlay-theme--" + theme.replace(/-/g, "\\-")));
+  });
+});
+
 test("every alert theme uses the available safe rectangle instead of a narrow card", function () {
   const root = block(alertCSS, ".alert-root");
   const splash = block(alertCSS, ".alert-splash");
@@ -68,6 +87,36 @@ test("compact alert rectangles preserve readable content and fade unavoidable ov
   ["cockpit-popups", "g-rebels-popups"].forEach(function (theme) {
     assert.match(rules, new RegExp("overlay-theme--" + theme.replace(/-/g, "\\-") + " \\.alert-splash"));
   });
+});
+
+test("contract alerts keep the objective as the stable fullscreen focal point", function () {
+  const content = block(alertCSS, ".alert-splash--contract.alert-splash--layout-fullscreen .alert-content");
+  const title = block(alertCSS, ".alert-contract-title");
+  const objective = block(alertCSS, ".alert-contract-objective");
+
+  assert.match(content, /height:\s*100%/);
+  assert.match(content, /grid-template-rows:\s*auto minmax\(0, 1fr\) auto/);
+  assert.match(title, /font-size:\s*calc\(var\(--overlay-font-size\) \* 0\.82\)/);
+  assert.match(objective, /max-height:\s*100%/);
+  assert.match(objective, /font-size:\s*calc\(var\(--overlay-font-size\) \* 1\.12\)/);
+  assert.match(
+    alertCSS,
+    /\.alert-splash--contract\.alert-splash--layout-fullscreen \.alert-contract-objective\s*\{[\s\S]*?font-size:\s*calc\(var\(--overlay-font-size\) \* 1\.34\)/
+  );
+  assert.match(
+    alertCSS,
+    /\.alert-splash--contract\.alert-splash--layout-banner \.alert-contract-objective\s*\{[\s\S]*?-webkit-line-clamp:\s*4/
+  );
+  assert.match(
+    alertCSS,
+    /\.alert-splash--contract\.alert-splash--layout-banner\s*\{[\s\S]*?max-height:\s*100%/
+  );
+  assert.match(alertCSS, /@media \(max-height: 220px\)[\s\S]*?-webkit-line-clamp:\s*1/);
+  assert.match(
+    alertCSS,
+    /@media \(max-height: 220px\)[\s\S]*?overlay-theme--cockpit-panel[\s\S]*?padding:\s*30px 10px 12px 50px/
+  );
+  assert.doesNotMatch(objective, /animation|transition/);
 });
 
 test("built-in alert graphics follow every layout, theme, and motion mode", function () {

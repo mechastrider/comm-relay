@@ -68,6 +68,12 @@ tasks:
     cmds:
       - task: data:sync
 
+  data:seed:
+    desc: Fill var/data with representative fake viewers, XP, and reward history
+    cmds:
+      - mkdir -p var/data
+      - go run ./cmd/comm-relay-seed -config var/data/config.json -reset=true
+
   web:dev:
     desc: Dev stack — Air (Go reload) + live reload for web/ at http://127.0.0.1:17878
     deps: [tools:ensure-air, tools:ensure-node, data:ensure]
