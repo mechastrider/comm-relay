@@ -428,19 +428,19 @@ function normalizeLeaderboardSurface(raw) {
   };
 }
 
-function normalizeAlertsSurface(raw, fontSizePx) {
+function normalizeAlertsSurface(raw) {
   const incoming = raw && raw.alerts && typeof raw.alerts === "object" ? raw.alerts : {};
   return {
     alerts: normalizeAlertsSurfaceOverride(incoming),
   };
 }
 
-function normalizedSurfaceOverrides(raw, fontSizePx) {
+function normalizedSurfaceOverrides(raw) {
   const incoming = raw && typeof raw === "object" ? raw : {};
   const surfaces = Object.assign(
     {},
     normalizeLeaderboardSurface(incoming),
-    normalizeAlertsSurface(incoming, fontSizePx)
+    normalizeAlertsSurface(incoming)
   );
   ["chat", "leaderboard", "alerts"].forEach(function (surface) {
     const value = incoming[surface] && typeof incoming[surface] === "object"
@@ -472,7 +472,7 @@ function normalizePreset(raw) {
     display_mode: raw && raw.display_mode === "compact" ? "compact" : "normal",
     theme: theme,
     style: mergeStyle(theme, raw && raw.style),
-    surfaces: normalizedSurfaceOverrides(raw && raw.surfaces, fontSizePx),
+    surfaces: normalizedSurfaceOverrides(raw && raw.surfaces),
   };
 }
 
