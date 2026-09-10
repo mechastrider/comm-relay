@@ -14,9 +14,15 @@ import {
   normalizeOpacitySurface,
   parsePanelOpacity,
   previewSurfacePanelOpacity,
-  withAlertsAppearance,
   withSurfacePanelOpacity,
 } from "./surface-opacity.js";
+import {
+  allAlertsPresentationTouched,
+  alertsPreviewQuery,
+  normalizeAlertsSurfaceOverride,
+  resolveAlertsFormValues,
+  withAlertsPresentation,
+} from "./alerts-presentation.js";
 import {
   allLeaderboardPresentationTouched,
   conditionalFieldNeedsOwnerFocus,
@@ -37,6 +43,7 @@ let opacityEditorSurface = "chat";
 let panelOpacityTouched = false;
 let panelOpacityDrafts = {};
 let leaderboardTouched = {};
+let alertsTouched = {};
 
 const PANEL_IMAGE_FIT_VALUES = ["cover", "contain", "fill", "tile"];
 const PRESET_LIMIT = 32;
@@ -247,6 +254,25 @@ function setLeaderboardTitleFields(value) {
   setFieldValue("overlay-leaderboard-title", String(value == null ? "" : value));
 }
 
+function syncAlertsConditionalFields(moveFocus) {
+  const fixed = dom.overlayAlertsSizingMode && dom.overlayAlertsSizingMode.value === "fixed";
+  if (
+    moveFocus &&
+    !fixed &&
+    dom.overlayAlertsFontSize &&
+    conditionalFieldNeedsOwnerFocus(document.activeElement, dom.overlayAlertsFontSize) &&
+    dom.overlayAlertsSizingMode
+  ) {
+    dom.overlayAlertsSizingMode.focus();
+  }
+  if (dom.overlayAlertsFontAutoHint) {
+    dom.overlayAlertsFontAutoHint.hidden = fixed;
+  }
+  if (dom.overlayAlertsFontFixedHint) {
+    dom.overlayAlertsFontFixedHint.hidden = !fixed;
+  }
+}
+
 function syncLeaderboardConditionalFields(moveFocus) {
   const fixed = dom.overlayLeaderboardSizingMode && dom.overlayLeaderboardSizingMode.value === "fixed";
   const custom = dom.overlayLeaderboardTitleMode && dom.overlayLeaderboardTitleMode.value === "custom";
@@ -342,10 +368,12 @@ function collectSurfaces(base, options) {
   const maxEntries = Number(readLeaderboardMaxEntriesField());
   const alertsImageSize = normalizeCatalogImageSizePct(fieldValue("overlay-alerts-image-size", "100"));
   const rawAlertsFont = Number.parseInt(fieldValue("overlay-alerts-font-size", String(chatFont)), 10);
+  const alertsSizingMode = fieldValue("overlay-alerts-sizing-mode", "auto") === "fixed" ? "fixed" : "auto";
   const current = base && base.surfaces && typeof base.surfaces === "object" ? base.surfaces : {};
   const forcePersist = options && options.forcePersist;
   const leaderboardTouchedState =
     forcePersist ? allLeaderboardPresentationTouched() : leaderboardTouched;
+  const alertsTouchedState = forcePersist ? allAlertsPresentationTouched() : alertsTouched;
   let surfaces = withLeaderboardPresentation(current, {
     sizing_mode: fieldValue("overlay-leaderboard-sizing-mode", "auto"),
     font_size_px: rawFont,
@@ -355,7 +383,16 @@ function collectSurfaces(base, options) {
     show_message_count: Boolean(dom.overlayLeaderboardShowMessageCount && dom.overlayLeaderboardShowMessageCount.checked),
     max_entries: maxEntries,
   }, leaderboardTouchedState);
-  surfaces = withAlertsAppearance(surfaces, alertsImageSize, rawAlertsFont, chatFont);
+  surfaces = withAlertsPresentation(
+    surfaces,
+    {
+      sizing_mode: alertsSizingMode,
+      font_size_px: rawAlertsFont,
+      inherited_font_size_px: chatFont,
+      image_size_pct: alertsImageSize,
+    },
+    alertsTouchedState
+  );
   if (forcePersist) {
     surfaces = applyAllPanelOpacityDrafts(surfaces);
   } else {
@@ -393,14 +430,8 @@ function normalizeLeaderboardSurface(raw) {
 
 function normalizeAlertsSurface(raw, fontSizePx) {
   const incoming = raw && raw.alerts && typeof raw.alerts === "object" ? raw.alerts : {};
-  const font =
-    typeof incoming.font_size_px === "number" && incoming.font_size_px >= 12
-      ? incoming.font_size_px
-      : fontSizePx;
   return {
-    alerts: {
-      font_size_px: font,
-    },
+    alerts: normalizeAlertsSurfaceOverride(incoming),
   };
 }
 
@@ -580,19 +611,18 @@ function writeFormFromPreset(preset) {
   }
   leaderboardTouched = {};
   syncLeaderboardConditionalFields(false);
-  const alerts =
-    preset.surfaces && preset.surfaces.alerts && typeof preset.surfaces.alerts === "object"
-      ? preset.surfaces.alerts
-      : {};
-  const alertsFont =
-    typeof alerts.font_size_px === "number" && alerts.font_size_px >= 12
-      ? alerts.font_size_px
-      : preset.font_size_px || 18;
-  setFieldValue("overlay-alerts-font-size", String(alertsFont));
+  const alerts = resolveAlertsFormValues(
+    preset.surfaces && preset.surfaces.alerts,
+    preset.font_size_px || 18
+  );
+  setFieldValue("overlay-alerts-sizing-mode", alerts.sizing_mode);
+  setFieldValue("overlay-alerts-font-size", String(alerts.font_size_px));
   setFieldValue(
     "overlay-alerts-image-size",
     String(normalizeCatalogImageSizePct(alerts.image_size_pct))
   );
+  alertsTouched = {};
+  syncAlertsConditionalFields(false);
   syncAlertsImageSizeLabel();
   updatePanelImagePreview(style.panel_image);
   syncThemeCards();
@@ -1005,14 +1035,16 @@ export function collectAppearanceQuery() {
     query.panel_image_scope = style.panel_image_scope;
   }
   if (selectedOpacitySurface() === "alerts") {
-    query.image_size_pct = String(
-      normalizeCatalogImageSizePct(fieldValue("overlay-alerts-image-size", "100"))
-    );
     const chatFont = preset && typeof preset.font_size_px === "number" ? preset.font_size_px : 18;
     const alertsFont = Number.parseInt(fieldValue("overlay-alerts-font-size", String(chatFont)), 10);
-    if (Number.isFinite(alertsFont) && alertsFont !== chatFont) {
-      query.font_size_px = String(alertsFont);
-    }
+    Object.assign(
+      query,
+      alertsPreviewQuery({
+        sizing_mode: fieldValue("overlay-alerts-sizing-mode", "auto") === "fixed" ? "fixed" : "auto",
+        font_size_px: Number.isFinite(alertsFont) ? alertsFont : chatFont,
+        image_size_pct: normalizeCatalogImageSizePct(fieldValue("overlay-alerts-image-size", "100")),
+      })
+    );
   } else if (selectedOpacitySurface() === "leaderboard") {
     const leaderboard = resolveLeaderboardFormValues(
       preset && preset.surfaces && preset.surfaces.leaderboard,
@@ -1340,6 +1372,28 @@ export function initOverlayAppearance() {
       requestPreviewRefresh();
     });
   }
+  if (dom.overlayAlertsSizingMode) {
+    dom.overlayAlertsSizingMode.addEventListener("change", function () {
+      alertsTouched.sizing = true;
+      syncAlertsConditionalFields(true);
+      requestPreviewRefresh();
+    });
+  }
+  if (dom.overlayAlertsFontSize) {
+    dom.overlayAlertsFontSize.addEventListener("input", function () {
+      alertsTouched.font = true;
+    });
+  }
+  if (dom.overlayAlertsImageSize) {
+    dom.overlayAlertsImageSize.addEventListener("input", function () {
+      alertsTouched.imageSize = true;
+      syncAlertsImageSizeLabel();
+    });
+    dom.overlayAlertsImageSize.addEventListener("change", function () {
+      alertsTouched.imageSize = true;
+      syncAlertsImageSizeLabel();
+    });
+  }
   const leaderboardReset = document.getElementById("overlay-leaderboard-reset");
   if (leaderboardReset) {
     leaderboardReset.addEventListener("click", function () {
@@ -1505,6 +1559,7 @@ export function initOverlayAppearance() {
     "overlay-leaderboard-max-entries-all",
     "overlay-leaderboard-layout",
     "overlay-leaderboard-period",
+    "overlay-alerts-sizing-mode",
     "overlay-alerts-image-size",
     "overlay-alerts-font-size",
   ].forEach(function (id) {
@@ -1514,10 +1569,6 @@ export function initOverlayAppearance() {
       el.addEventListener("input", requestPreviewRefresh);
     }
   });
-  if (dom.overlayAlertsImageSize) {
-    dom.overlayAlertsImageSize.addEventListener("input", syncAlertsImageSizeLabel);
-    dom.overlayAlertsImageSize.addEventListener("change", syncAlertsImageSizeLabel);
-  }
 
   window.addEventListener("admin-locale-applied", function () {
     refreshThemeCardLabels();

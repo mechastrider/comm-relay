@@ -337,43 +337,9 @@ function markLegacyCockpitGlass(style, resolved, surface, theme, query, layout) 
   return style;
 }
 
-// alertViewFromConfig resolves alert chrome independently from chat and leaderboard.
-export function alertViewFromConfig(config, params) {
-  const overlay = config && typeof config === "object" ? config.overlay : null;
-  const query = params && typeof params.get === "function" ? params : undefined;
-  const queryPreset = query ? query.get("preset") : params;
-  const resolved = resolvePreset(overlay, queryPreset);
-  const base = surfaceViewFromConfig(config, params, "alerts");
-  const surface =
-    resolved &&
-    resolved.surfaces &&
-    resolved.surfaces.alerts &&
-    typeof resolved.surfaces.alerts === "object"
-      ? resolved.surfaces.alerts
-      : {};
-  let imageSizePct = normalizeAlertImageSizePct(surface.image_size_pct);
-  const queried = queryIntInRange(
-    query,
-    "image_size_pct",
-    ALERT_IMAGE_SIZE_MIN,
-    ALERT_IMAGE_SIZE_MAX
-  );
-  if (queried !== null) {
-    imageSizePct = queried;
-  }
-  let fontSizePx =
-    typeof surface.font_size_px === "number" && surface.font_size_px >= OVERLAY_FONT_SIZE_MIN
-      ? surface.font_size_px
-      : base.font_size_px;
-  const queriedFont = queryIntInRange(query, "font_size_px", OVERLAY_FONT_SIZE_MIN, OVERLAY_FONT_SIZE_MAX);
-  if (queriedFont !== null) {
-    fontSizePx = queriedFont;
-  }
-  return Object.assign({}, base, { image_size_pct: imageSizePct, font_size_px: fontSizePx });
-}
-
 const LEADERBOARD_LAYOUTS = new Set(["panel", "chips"]);
 const LEADERBOARD_SIZING_MODES = new Set(["auto", "fixed"]);
+const ALERT_SIZING_MODES = new Set(["auto", "fixed"]);
 const LEADERBOARD_TITLE_MODES = new Set(["theme", "custom", "hidden"]);
 const OVERLAY_FONT_SIZE_MIN = 12;
 const OVERLAY_FONT_SIZE_MAX = 48;
@@ -410,6 +376,70 @@ export function resolveLeaderboardSizingMode(surface, hasFixedQuery) {
     return raw;
   }
   return surface && typeof surface.font_size_px === "number" ? "fixed" : "auto";
+}
+
+export function resolveAlertSizingMode(surface, hasFixedQuery) {
+  if (hasFixedQuery) {
+    return "fixed";
+  }
+  const raw = String(surface && surface.sizing_mode || "").trim().toLowerCase();
+  if (ALERT_SIZING_MODES.has(raw)) {
+    return raw;
+  }
+  return surface && typeof surface.font_size_px === "number" ? "fixed" : "auto";
+}
+
+// alertViewFromConfig resolves alert chrome independently from chat and leaderboard.
+export function alertViewFromConfig(config, params) {
+  const overlay = config && typeof config === "object" ? config.overlay : null;
+  const query = params && typeof params.get === "function" ? params : undefined;
+  const queryPreset = query ? query.get("preset") : params;
+  const resolved = resolvePreset(overlay, queryPreset);
+  const base = surfaceViewFromConfig(config, params, "alerts");
+  const storedSurface =
+    resolved &&
+    resolved.surfaces &&
+    resolved.surfaces.alerts &&
+    typeof resolved.surfaces.alerts === "object"
+      ? resolved.surfaces.alerts
+      : {};
+  const samplePreview = query && String(query.get("preview") || "").trim().toLowerCase() === "sample";
+  const surface = Object.assign({}, storedSurface);
+  if (samplePreview && query.has("sizing_mode") && ALERT_SIZING_MODES.has(query.get("sizing_mode"))) {
+    surface.sizing_mode = query.get("sizing_mode");
+  }
+  let imageSizePct = normalizeAlertImageSizePct(surface.image_size_pct);
+  const queriedImage = queryIntInRange(
+    query,
+    "image_size_pct",
+    ALERT_IMAGE_SIZE_MIN,
+    ALERT_IMAGE_SIZE_MAX
+  );
+  if (queriedImage !== null) {
+    imageSizePct = queriedImage;
+  }
+  let fontSizePx =
+    typeof surface.font_size_px === "number" && surface.font_size_px >= OVERLAY_FONT_SIZE_MIN
+      ? surface.font_size_px
+      : resolved && typeof resolved.font_size_px === "number"
+        ? resolved.font_size_px
+        : 18;
+  if (samplePreview) {
+    const previewBaseFont = queryIntInRange(query, "base_font_size_px", OVERLAY_FONT_SIZE_MIN, OVERLAY_FONT_SIZE_MAX);
+    if (previewBaseFont !== null) {
+      fontSizePx = previewBaseFont;
+    }
+  }
+  const queriedFont = queryIntInRange(query, "font_size_px", OVERLAY_FONT_SIZE_MIN, OVERLAY_FONT_SIZE_MAX);
+  if (queriedFont !== null) {
+    fontSizePx = queriedFont;
+  }
+  const sizingMode = resolveAlertSizingMode(surface, queriedFont !== null);
+  return Object.assign({}, base, {
+    image_size_pct: imageSizePct,
+    font_size_px: fontSizePx,
+    sizing_mode: sizingMode,
+  });
 }
 
 export function resolveLeaderboardTitleMode(surface) {

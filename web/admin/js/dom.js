@@ -93,6 +93,9 @@ export const studioEssentialPeriod = document.getElementById("studio-essential-p
 export const studioEssentialAlertsImageSize = document.getElementById("studio-essential-alerts-image-size");
 export const overlayAlertsImageSize = document.getElementById("overlay-alerts-image-size");
 export const overlayAlertsFontSize = document.getElementById("overlay-alerts-font-size");
+export const overlayAlertsSizingMode = document.getElementById("overlay-alerts-sizing-mode");
+export const overlayAlertsFontAutoHint = document.getElementById("overlay-alerts-font-auto-hint");
+export const overlayAlertsFontFixedHint = document.getElementById("overlay-alerts-font-fixed-hint");
 export const overlayAlertsImageSizeValue = document.getElementById("overlay-alerts-image-size-value");
 export const overlayPreviewModeControl = document.getElementById("overlay-preview-mode-control");
 export const obsSetupTab = document.getElementById("obs-setup-tab");
@@ -381,6 +384,7 @@ export const fieldErrors = {
     overlay_leaderboard_title: document.getElementById("overlay-leaderboard-title-error"),
     overlay_leaderboard_max_entries: document.getElementById("overlay-leaderboard-max-entries-error"),
     overlay_alerts_font_size_px: document.getElementById("overlay-alerts-font-size-error"),
+    overlay_alerts_sizing_mode: document.getElementById("overlay-alerts-sizing-mode-error"),
     overlay_alerts_image_size_pct: document.getElementById("overlay-alerts-image-size-error"),
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity-error"),
     overlay_display_mode: document.getElementById("overlay-display-mode-error"),
@@ -419,6 +423,7 @@ export const fieldInputs = {
     overlay_leaderboard_title: overlayLeaderboardTitle,
     overlay_leaderboard_max_entries: overlayLeaderboardMaxEntriesAll,
     overlay_alerts_font_size_px: overlayAlertsFontSize,
+    overlay_alerts_sizing_mode: overlayAlertsSizingMode,
     overlay_alerts_image_size_pct: overlayAlertsImageSize,
     overlay_panel_opacity: document.getElementById("overlay-panel-opacity"),
     overlay_display_mode: overlayDisplayMode,

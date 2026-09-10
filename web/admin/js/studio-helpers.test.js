@@ -138,6 +138,34 @@ assert.deepEqual(legacyLeaderboardDraft.presets[0].surfaces.leaderboard, {
   title: "Legacy",
 });
 
+const alertsPresentationDraft = cloneOverlayAppearanceDraft({
+  active_preset_id: "default",
+  presets: [{
+    id: "default",
+    name: "Default",
+    font_size_px: 18,
+    theme: "default",
+    surfaces: {
+      alerts: {
+        sizing_mode: "fixed",
+        font_size_px: 24,
+        image_size_pct: 150,
+      },
+    },
+  }],
+});
+assert.deepEqual(alertsPresentationDraft.presets[0].surfaces.alerts, {
+  sizing_mode: "fixed",
+  font_size_px: 24,
+  image_size_pct: 150,
+});
+
+const alertsSizingDirty = cloneOverlayAppearanceDraft(baseline);
+alertsSizingDirty.presets[0].surfaces = {
+  alerts: { sizing_mode: "fixed", font_size_px: 24 },
+};
+assert.equal(overlayDraftIsDirty(baseline, alertsSizingDirty), true);
+
 const dirtyDraft = cloneOverlayAppearanceDraft(baseline);
 dirtyDraft.max_messages = 25;
 assert.equal(overlayDraftIsDirty(baseline, dirtyDraft), true);

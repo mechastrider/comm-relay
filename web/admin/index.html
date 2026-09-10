@@ -964,9 +964,17 @@
                       </div>
 
                       <div id="studio-essential-font-alerts" class="form__field form__field--full" hidden>
+                        <label for="overlay-alerts-sizing-mode" data-i18n="obs.alertsSizing">Sizing</label>
+                        <select id="overlay-alerts-sizing-mode" name="overlay_alerts_sizing_mode">
+                          <option value="auto" data-i18n="obs.alertsSizingAuto">Automatic</option>
+                          <option value="fixed" data-i18n="obs.alertsSizingFixed">Fixed</option>
+                        </select>
+                        <p class="field-hint" data-i18n="obs.alertsSizingHint">Width sets banner scale from the reference width (800 px for banner layout).</p>
+                        <p id="overlay-alerts-sizing-mode-error" class="field-error" role="alert" hidden></p>
                         <label for="overlay-alerts-font-size" data-i18n="obs.alertsFontSize">Alert font size (px)</label>
                         <input id="overlay-alerts-font-size" name="overlay_alerts_font_size_px" type="number" min="12" max="48" step="1">
-                        <p class="field-hint" data-i18n="obs.alertsFontSizeHint">12–48 px. Independent from chat so banners can stay larger or smaller.</p>
+                        <p id="overlay-alerts-font-auto-hint" class="field-hint" data-i18n="obs.alertsFontSizeAutoHint">Base size at the reference width. Browser Source width rescales text, portraits, and spacing.</p>
+                        <p id="overlay-alerts-font-fixed-hint" class="field-hint" hidden data-i18n="obs.alertsFontSizeHint">12–48 px. Independent from chat so banners can stay larger or smaller.</p>
                         <p id="overlay-alerts-font-size-error" class="field-error" role="alert" hidden></p>
                       </div>
 

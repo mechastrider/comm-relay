@@ -17,6 +17,11 @@ import { startSplashLifecycle } from "./alert-lifecycle.js?v=2";
 import { createAlertSplash } from "./alert-render.js?v=7";
 import { createAlertScheduler } from "./alert-scheduler.js?v=4";
 import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.js?v=1";
+import {
+  activeAlertLayoutFromRoot,
+  alertFontSizeForWidth,
+  alertScaleForFontSize,
+} from "./alert-fit.js?v=1";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;
@@ -52,6 +57,9 @@ let reconnectDelayMs = INITIAL_RECONNECT_MS;
 let shouldRun = true;
 let audioCtx = null;
 let hideTimer = null;
+let layoutFrame = null;
+let resizeObserver = null;
+const responsiveSizingAvailable = typeof ResizeObserver === "function";
 const scheduler = createAlertScheduler();
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -75,12 +83,46 @@ function wsURL() {
   return overlayWebSocketURL(window.location);
 }
 
+function resolvedBaseFontSize() {
+  const fontSize = overlayView.font_size_px;
+  return fontSize >= OVERLAY_FONT_SIZE_MIN && fontSize <= OVERLAY_FONT_SIZE_MAX ? fontSize : 18;
+}
+
+function setAlertFontSize(fontSizePx) {
+  document.documentElement.style.setProperty("--overlay-font-size", String(fontSizePx) + "px");
+  document.documentElement.style.setProperty("--alert-scale", String(alertScaleForFontSize(fontSizePx)));
+}
+
+function layoutAlerts() {
+  const width = root ? root.clientWidth || window.innerWidth : window.innerWidth;
+  const height = root ? root.clientHeight || window.innerHeight : window.innerHeight;
+  const layout = activeAlertLayoutFromRoot(root);
+  const fontSize = alertFontSizeForWidth({
+    sizingMode: overlayView.sizing_mode || "auto",
+    baseFontSizePx: resolvedBaseFontSize(),
+    width: width,
+    height: height,
+    layout: layout,
+  });
+  setAlertFontSize(fontSize);
+  if (root) {
+    root.dataset.sizingMode = overlayView.sizing_mode || "auto";
+    root.dataset.layout = layout;
+  }
+}
+
+function scheduleLayoutAlerts() {
+  if (layoutFrame !== null) {
+    return;
+  }
+  layoutFrame = window.requestAnimationFrame(function () {
+    layoutFrame = null;
+    layoutAlerts();
+  });
+}
+
 function applyAppearance() {
   const style = overlayView.style || {};
-  const fontSize = overlayView.font_size_px;
-  const size =
-    fontSize >= OVERLAY_FONT_SIZE_MIN && fontSize <= OVERLAY_FONT_SIZE_MAX ? fontSize : 18;
-  document.documentElement.style.setProperty("--overlay-font-size", String(size) + "px");
   document.documentElement.style.setProperty(
     "--overlay-line-height",
     String(style.line_height || 1.35)
@@ -158,6 +200,7 @@ function applyAppearance() {
     document.documentElement.classList.add(previewClass);
     document.body.classList.add(previewClass);
   }
+  layoutAlerts();
 }
 
 function applyServerOverlayConfig(serverOverlay) {
@@ -222,9 +265,11 @@ function showSplash(alert) {
   if (!reducedMotion) {
     window.requestAnimationFrame(function () {
       splash.classList.add("alert-splash--visible");
+      scheduleLayoutAlerts();
     });
   } else {
     splash.classList.add("alert-splash--visible");
+    scheduleLayoutAlerts();
   }
 
   const durationMs =
@@ -328,6 +373,14 @@ async function loadServerConfig() {
 }
 
 applyAppearance();
+if (responsiveSizingAvailable && root) {
+  resizeObserver = new ResizeObserver(function () {
+    scheduleLayoutAlerts();
+  });
+  resizeObserver.observe(root);
+} else {
+  window.addEventListener("resize", scheduleLayoutAlerts);
+}
 if (samplePreviewEnabled) {
   loadServerConfig().then(function () {
     showSplash(SAMPLE_ALERT);
@@ -339,6 +392,12 @@ if (samplePreviewEnabled) {
 
 window.addEventListener("beforeunload", function () {
   shouldRun = false;
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+  }
+  if (layoutFrame !== null) {
+    window.cancelAnimationFrame(layoutFrame);
+  }
   if (reconnectTimer !== null) {
     window.clearTimeout(reconnectTimer);
   }

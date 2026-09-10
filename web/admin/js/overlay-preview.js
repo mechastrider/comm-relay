@@ -224,7 +224,7 @@ export function buildOverlayPreviewURL(previewMode) {
       );
       url.searchParams.set("sizing_mode", sizingMode);
       url.searchParams.set(sizingMode === "fixed" ? "font_size_px" : "base_font_size_px", String(leaderboardFont));
-    } else {
+    } else if (surface !== "alerts") {
       url.searchParams.set(
         "max_messages",
         String(

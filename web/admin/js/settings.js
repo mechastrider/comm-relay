@@ -651,6 +651,17 @@ export function validateClient(payload, options) {
 
     (payload.overlay.presets || []).some(function (preset) {
       const alerts = preset && preset.surfaces && preset.surfaces.alerts;
+      const sizingMode = alerts && alerts.sizing_mode;
+      if (sizingMode != null && sizingMode !== "auto" && sizingMode !== "fixed") {
+        setFieldError("overlay_alerts_sizing_mode", t("validation.alertsSizingMode"));
+        firstInvalid = firstInvalid || dom.overlayAlertsSizingMode;
+        return true;
+      }
+      return false;
+    });
+
+    (payload.overlay.presets || []).some(function (preset) {
+      const alerts = preset && preset.surfaces && preset.surfaces.alerts;
       const font = alerts && alerts.font_size_px;
       if (
         font != null &&

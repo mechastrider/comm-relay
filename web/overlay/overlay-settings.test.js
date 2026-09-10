@@ -497,6 +497,54 @@ test("alertViewFromConfig resolves alerts font override", function () {
   assert.equal(queried.font_size_px, 30);
 });
 
+test("alertViewFromConfig defaults to automatic sizing without legacy font override", function () {
+  const view = alertViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [{ id: "default", theme: "default", font_size_px: 18 }],
+      },
+    },
+    new URLSearchParams("")
+  );
+  assert.equal(view.sizing_mode, "auto");
+});
+
+test("alertViewFromConfig treats stored alerts font as fixed sizing", function () {
+  const view = alertViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [
+          {
+            id: "default",
+            theme: "default",
+            font_size_px: 18,
+            surfaces: { alerts: { font_size_px: 24 } },
+          },
+        ],
+      },
+    },
+    new URLSearchParams("")
+  );
+  assert.equal(view.sizing_mode, "fixed");
+  assert.equal(view.font_size_px, 24);
+});
+
+test("alertViewFromConfig honors sample preview automatic sizing query", function () {
+  const view = alertViewFromConfig(
+    {
+      overlay: {
+        active_preset_id: "default",
+        presets: [{ id: "default", theme: "default", font_size_px: 18 }],
+      },
+    },
+    new URLSearchParams("preview=sample&sizing_mode=auto&base_font_size_px=20")
+  );
+  assert.equal(view.sizing_mode, "auto");
+  assert.equal(view.font_size_px, 20);
+});
+
 test("normalizeAlertImageSizePct defaults invalid values to 100", function () {
   assert.equal(normalizeAlertImageSizePct(""), 100);
   assert.equal(normalizeAlertImageSizePct(180), 180);

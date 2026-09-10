@@ -90,6 +90,7 @@ type OverlayLeaderboardSurface struct {
 
 // OverlayAlertsSurface holds optional alert-only appearance overrides.
 type OverlayAlertsSurface struct {
+	SizingMode   string   `json:"sizing_mode,omitempty"`
 	FontSizePx   int      `json:"font_size_px,omitempty"`
 	PanelOpacity *float64 `json:"panel_opacity,omitempty"`
 	ImageSizePct int      `json:"image_size_pct,omitempty"`
@@ -244,6 +245,11 @@ func (s OverlayAlertsSurface) validateFields(prefix string) FieldErrors {
 			OverlayAlertImageSizeMin,
 			OverlayAlertImageSizeMax,
 		)
+	}
+	switch s.SizingMode {
+	case "", OverlayLeaderboardSizingAuto, OverlayLeaderboardSizingFixed:
+	default:
+		fields[key("sizing_mode")] = "Choose automatic or fixed sizing."
 	}
 	if s.FontSizePx != 0 && (s.FontSizePx < OverlayFontSizeMin || s.FontSizePx > OverlayFontSizeMax) {
 		fields[key("font_size_px")] = fmt.Sprintf(

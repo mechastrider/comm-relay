@@ -10,6 +10,7 @@ import {
 } from "./constants.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
 import { normalizeLeaderboardSurfaceOverride } from "./leaderboard-presentation.js";
+import { normalizeAlertsSurfaceOverride } from "./alerts-presentation.js";
 
 const ADD_TO_OBS_DISMISSED_TRUTHY = new Set(["1", "true", "yes"]);
 const STUDIO_SETUP_STATES = new Set(["unseen", "seen", "skipped", "completed"]);
@@ -90,18 +91,12 @@ function normalizePreset(preset) {
     surfaces.alerts && typeof surfaces.alerts === "object"
       ? /** @type {Record<string, unknown>} */ (surfaces.alerts)
       : {};
-  const alertsImageSizePct =
-    typeof alerts.image_size_pct === "number" ? alerts.image_size_pct : 100;
-  const alertsFont =
-    typeof alerts.font_size_px === "number" ? alerts.font_size_px : fontSizePx;
+  const alertsSurface = Object.assign(
+    {},
+    normalizeAlertsSurfaceOverride(alerts),
+    normalizeSurfaceOpacity(surfaces.alerts)
+  );
   const style = raw.style && typeof raw.style === "object" ? raw.style : {};
-  const alertsSurface = Object.assign({}, normalizeSurfaceOpacity(surfaces.alerts));
-  if (alertsImageSizePct !== 100) {
-    alertsSurface.image_size_pct = alertsImageSizePct;
-  }
-  if (alertsFont !== fontSizePx) {
-    alertsSurface.font_size_px = alertsFont;
-  }
   return {
     id: typeof raw.id === "string" ? raw.id : "",
     name: typeof raw.name === "string" ? raw.name : "",

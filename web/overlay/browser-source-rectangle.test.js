@@ -64,6 +64,7 @@ test("every alert theme uses the available safe rectangle instead of a narrow ca
   ["width: 100%", "height: 100%", "min-width: 0", "min-height: 0", "max-width: none", "max-height: 100%", "box-sizing: border-box", "overflow: hidden"].forEach(function (declaration) {
     assert.match(splash, new RegExp(declaration.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   });
+  assert.match(alertCSS, /\.alert-root:has\(\.alert-splash--layout-fullscreen\)\s*\{[\s\S]*?align-items:\s*stretch/);
   assert.doesNotMatch(alertCSS, /max-width:\s*min\(92vw/);
   ["default", "dashboard", "cockpit-panel", "cockpit-popups", "g-rebels-popups"].forEach(function (theme) {
     assert.match(alertCSS, new RegExp("overlay-theme--" + theme.replace(/-/g, "\\-")));
@@ -78,7 +79,7 @@ test("compact alert rectangles preserve readable content and fade unavoidable ov
   assert.ok(compact, "missing compact alert viewport rules");
   const rules = compact[1];
 
-  assert.match(rules, /\.alert-root\s*\{[\s\S]*?padding:\s*6px/);
+  assert.match(rules, /\.alert-root\s*\{[\s\S]*?padding:\s*calc\(6px \* var\(--alert-scale, 1\)\)/);
   assert.match(rules, /\.alert-content\s*\{[\s\S]*?align-content:\s*start/);
   assert.match(rules, /mask-image:\s*linear-gradient\(to bottom/);
   assert.match(rules, /font-size:\s*clamp\(13px,[^;]+16px\)/);
@@ -134,4 +135,8 @@ test("built-in alert graphics follow every layout, theme, and motion mode", func
   assert.match(alertCSS, /\.alert-splash \.alert-emblem\s*\{[\s\S]*?width:\s*var\(--alert-portrait-size\)/);
   assert.match(alertCSS, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.alert-splash--visible \.alert-emblem\s*\{[\s\S]*?animation:\s*none/);
   assert.match(alertCSS, /@media \(max-width: 480px\) and \(max-height: 220px\)[\s\S]*?--alert-portrait-column-base:\s*28px/);
+  assert.match(
+    alertCSS,
+    /@media \(max-height: 280px\)[\s\S]*?\.alert-splash--layout-fullscreen[\s\S]*?min-height:\s*0/
+  );
 });
