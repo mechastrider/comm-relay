@@ -47,6 +47,7 @@ func TestLoadAndValidateMW5JakePack(t *testing.T) {
 	require.Equal(t, "hi", resolved[0].Trigger)
 	require.Equal(t, "Новый наёмник в реестре. {viewer}, добро пожаловать в роту.", resolved[0].SplashTemplate)
 	require.Equal(t, filepath.Join(packDir, "images", "jake-hi.png"), resolved[0].ImagePath)
+	require.Equal(t, filepath.Join(packDir, "audio", "jake-hi.mp3"), resolved[0].AudioPath)
 }
 
 func TestValidatePackRejectsDuplicateTrigger(t *testing.T) {

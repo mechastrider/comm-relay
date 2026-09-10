@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mechastrider/comm-relay/internal/overlayassets"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -67,6 +68,18 @@ func validateResolvedCommand(index int, cmd ResolvedCommand) error {
 		}
 		if _, err := os.Stat(cmd.ImagePath); err != nil {
 			return fmt.Errorf("%s: image file: %w", prefix, err)
+		}
+		if cmd.AudioPath != "" && strings.TrimSpace(cmd.SoundFile) != "" {
+			return fmt.Errorf("%s: audio and sound_file cannot both be set", prefix)
+		}
+		if cmd.AudioPath != "" {
+			data, err := os.ReadFile(cmd.AudioPath)
+			if err != nil {
+				return fmt.Errorf("%s: audio file: %w", prefix, err)
+			}
+			if err := overlayassets.ValidateAlertSoundDuration(data); err != nil {
+				return fmt.Errorf("%s: audio file: %w", prefix, err)
+			}
 		}
 	}
 

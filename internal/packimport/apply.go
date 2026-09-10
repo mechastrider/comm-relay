@@ -290,6 +290,18 @@ func buildCommandInput(assetsDir string, cmd ResolvedCommand, action string) (co
 		input.ImageAsset = assetName
 	}
 
+	if action == store.CommandActionAlert && cmd.AudioPath != "" {
+		data, err := os.ReadFile(cmd.AudioPath)
+		if err != nil {
+			return commandInput{}, errors.Errorf("read audio %s: %w", cmd.AudioPath, err)
+		}
+		assetName, err := overlayassets.Save(assetsDir, overlayassets.KindAlertSound, data)
+		if err != nil {
+			return commandInput{}, errors.Errorf("save audio for !%s: %w", cmd.Trigger, err)
+		}
+		input.SoundFile = assetName
+	}
+
 	return input, nil
 }
 
@@ -306,12 +318,19 @@ func commandMatchesPack(current store.Command, cmd ResolvedCommand) bool {
 		current.SplashTemplate == cmd.SplashTemplate &&
 		current.Sound == cmd.Sound &&
 		current.DurationMs == normalizeDurationMs(cmd.DurationMs) &&
-		current.SoundFile == cmd.SoundFile &&
+		soundMatchesPack(current.SoundFile, cmd) &&
 		current.SoundVolume == store.NormalizeCatalogSoundVolume(cmd.SoundVolume) &&
 		current.Layout == store.NormalizeCatalogLayout(cmd.Layout) &&
 		current.ImageFit == store.NormalizeCatalogImageFit(cmd.ImageFit) &&
 		current.ImageSizePct == store.NormalizeCatalogImageSizePct(cmd.ImageSizePct) &&
 		current.ImageAsset != ""
+}
+
+func soundMatchesPack(currentSoundFile string, cmd ResolvedCommand) bool {
+	if cmd.AudioPath != "" {
+		return currentSoundFile != ""
+	}
+	return currentSoundFile == cmd.SoundFile
 }
 
 func normalizeDurationMs(durationMs int) int {

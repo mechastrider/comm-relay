@@ -56,6 +56,7 @@ type CommandSpec struct {
 	SoundVolume     *int   `yaml:"sound_volume"`
 	ImageSizePct    *int   `yaml:"image_size_pct"`
 	Image           string `yaml:"image"`
+	Audio           string `yaml:"audio"`
 }
 
 // ResolvedCommand merges defaults and per-command fields for import.
@@ -74,6 +75,7 @@ type ResolvedCommand struct {
 	SoundVolume     int
 	ImageSizePct    int
 	ImagePath       string
+	AudioPath       string
 }
 
 // LoadPackDir reads pack.yaml from a pack directory.
@@ -162,6 +164,11 @@ func (p *Pack) resolveCommand(spec CommandSpec) ResolvedCommand {
 		imagePath = filepath.Join(p.packDir, filepath.FromSlash(strings.TrimSpace(spec.Image)))
 	}
 
+	audioPath := ""
+	if strings.TrimSpace(spec.Audio) != "" {
+		audioPath = filepath.Join(p.packDir, filepath.FromSlash(strings.TrimSpace(spec.Audio)))
+	}
+
 	return ResolvedCommand{
 		ID:              id,
 		Trigger:         strings.TrimSpace(spec.Trigger),
@@ -177,6 +184,7 @@ func (p *Pack) resolveCommand(spec CommandSpec) ResolvedCommand {
 		SoundVolume:     soundVolume,
 		ImageSizePct:    imageSizePct,
 		ImagePath:       imagePath,
+		AudioPath:       audioPath,
 	}
 }
 
