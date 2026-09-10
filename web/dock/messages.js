@@ -34,6 +34,7 @@ import {
   const showButton = document.getElementById("leaderboard-show");
   const showLabel = document.getElementById("leaderboard-show-label");
   const pinButton = document.getElementById("leaderboard-pin");
+  const pinLabel = document.getElementById("leaderboard-pin-label");
   const hideButton = document.getElementById("leaderboard-hide");
   const contractActions = document.getElementById("contract-presentation-actions");
   const contractButton = document.getElementById("contract-show-objective");
@@ -162,13 +163,18 @@ import {
         visibilityActionsInFlight.has("hide") || visibilityActionsInFlight.has("resume");
       alwaysVisibleSwitch.setAttribute("aria-busy", alwaysVisibleSwitch.disabled && available ? "true" : "false");
     }
-    setNodeText(showLabel, t("dock.showFor", { seconds: controls.displaySeconds }));
+    const showText = t("dock.showFor", { seconds: controls.displaySeconds });
+    setNodeText(showLabel, showText);
     if (showButton) {
+      showButton.setAttribute("aria-label", showText);
       showButton.disabled = !available || controls.showDisabled || visibilityActionsInFlight.has("show");
       showButton.setAttribute("aria-busy", visibilityActionsInFlight.has("show") ? "true" : "false");
     }
     if (pinButton) {
       const pinBusy = visibilityActionsInFlight.has("pin") || visibilityActionsInFlight.has("resume");
+      const pinText = t(controls.pinAction === "resume" ? "dock.resume" : "dock.pin");
+      pinButton.setAttribute("aria-label", pinText);
+      setNodeText(pinLabel, pinText);
       pinButton.disabled = !available || pinBusy;
       pinButton.setAttribute("aria-pressed", controls.pinPressed ? "true" : "false");
       pinButton.setAttribute("aria-busy", pinBusy ? "true" : "false");

@@ -788,6 +788,7 @@ export default {
   "dock.showFor": "Показать на {seconds} с",
   "dock.alwaysVisible": "Показывать лидерборд",
   "dock.pin": "Закрепить",
+  "dock.resume": "Возобновить автоматический показ",
   "dock.hide": "Скрыть",
   "dock.visibilityHidden": "Скрыт",
   "dock.visibilityAlways": "Всегда показан",

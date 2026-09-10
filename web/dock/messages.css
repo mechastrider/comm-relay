@@ -91,7 +91,7 @@ body {
   align-items: center;
 }
 
-.leaderboard-toolbar__contract-actions button {
+.leaderboard-toolbar .leaderboard-toolbar__icon-button {
   flex: 0 0 34px;
   display: inline-grid;
   width: 34px;
@@ -113,7 +113,7 @@ body {
   border-radius: 0 3px 3px 0;
 }
 
-.leaderboard-toolbar__contract-actions svg {
+.leaderboard-toolbar__icon-button svg {
   width: 18px;
   height: 18px;
   fill: none;
@@ -121,6 +121,39 @@ body {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;
+}
+
+.leaderboard-toolbar__icon-button .leaderboard-toolbar__resume-icon {
+  display: none;
+}
+
+.leaderboard-toolbar__icon-button[aria-pressed="true"] .leaderboard-toolbar__pin-icon {
+  display: none;
+}
+
+.leaderboard-toolbar__icon-button[aria-pressed="true"] .leaderboard-toolbar__resume-icon {
+  display: block;
+}
+
+.leaderboard-toolbar__actions > .has-tooltip:first-child .ui-tooltip {
+  left: 0;
+  transform: translateY(-4px);
+}
+
+.leaderboard-toolbar__actions > .has-tooltip:first-child:hover .ui-tooltip,
+.leaderboard-toolbar__actions > .has-tooltip:first-child:focus-visible .ui-tooltip {
+  transform: translateY(0);
+}
+
+.leaderboard-toolbar__actions > .has-tooltip:last-child .ui-tooltip {
+  right: 0;
+  left: auto;
+  transform: translateY(-4px);
+}
+
+.leaderboard-toolbar__actions > .has-tooltip:last-child:hover .ui-tooltip,
+.leaderboard-toolbar__actions > .has-tooltip:last-child:focus-visible .ui-tooltip {
+  transform: translateY(0);
 }
 
 .leaderboard-toolbar__contract-actions .ui-tooltip {

@@ -27,7 +27,7 @@
 | reward history privacy | Query global/viewer history after win | Ordinary award row only; no contract id/title/objective or new kind | P0 |
 | WebSocket compatibility | Feed contract alert and state to all existing clients; connect after open | Alert page handles only the splash; leaderboard/dock restore persistent state; chat stays unchanged; reconnect does not replay the splash | P0 |
 | persistent contract card | Open a contract with each theme and reload the leaderboard source | Existing leaderboard rectangle shows the objective/reward instead of ranking and restores it after reconnect | P0 |
-| dock presentation controls | Switch contract/ranking and repeat using icons; exercise the original Show for N seconds, Pin, Hide, and always-policy controls in both content modes | Content and visibility states converge independently across dock/leaderboard; visibility transitions preserve the selected mode; localized tooltips and accessible group/pressed/busy states are correct | P0 |
+| dock presentation controls | Exercise the icon-only Show for N seconds, Pin/Resume, Hide, contract/ranking, and repeat controls plus the always-policy switch in both content modes | Content and visibility states converge independently across dock/leaderboard; visibility transitions preserve the selected mode; localized tooltips and accessible group/pressed/busy states are correct | P0 |
 | leaderboard policy restoration | Start from always, automatic, and on-request policies; override during a contract; settle it | Contract state temporarily owns the surface and the untouched ordinary policy resumes afterward | P0 |
 | protected queue | Visible command + waiting commands + contract; fill mixed/protected queues | No preemption; award/contract FIFO precedes commands; documented displacement and capacity hold | P0 |
 | alert rendering | Render plain/custom/broken media, HTML-like and 280-code-point Cyrillic/Latin text | Text nodes only, readable fallback, no script execution, no empty media hole | P0 |
@@ -104,6 +104,12 @@ Manual setup uses a temporary data directory, development server with loose `web
 - Restart with the synthetic active contract produced one coherent pinned state: the objective mode was pressed, status was `Закреплён`, Pin was pressed, Show for 15 seconds was disabled, and Hide remained available.
 - After selecting Leaderboard, Hide, Show for 15 seconds, and timed expiry changed `visible/state` through `false/hidden`, `true/timed`, and `false/hidden` while `content` remained `leaderboard` throughout; the selected icon retained `aria-pressed=true`.
 - ESLint, all 47 Node tests, focused leaderboard/API tests, full `go test ./...`, build, repository-wide Go lint with writable temporary caches, strict OpenSpec validation, and diff checks passed for this refinement.
+
+### 2026-09-10 icon-only visibility controls evidence
+
+- At a 360×700 viewport, Show for 15 seconds, Pin/Resume, and Hide rendered as three 34×34 icon-only buttons with no horizontal overflow; the accessibility tree exposed localized Russian names and no visible text nodes inside the buttons.
+- Hovering Show displayed the localized `Показать на 15 с` tooltip inside the viewport. Activating Pin changed the status to `Закреплён`, swapped the button icon, and changed its accessible name and tooltip to `Возобновить автоматический показ`.
+- ESLint, all 47 Node tests, strict OpenSpec validation, and diff checks passed for this refinement.
 
 Attach command output for all automated checks, migration fixture/version results, API/WebSocket sample envelopes with synthetic text, and screenshots for Live empty/active/picker/error states plus each theme/rectangle matrix. Record OS, architecture, webview/OBS version, scale, locale, and any unavailable matrix cell; do not imply an unrun platform passed.
 

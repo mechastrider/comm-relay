@@ -31,13 +31,14 @@ test("automatic and on-request policies use timed show, pin toggle, and hide", (
   assert.equal(pinned.hideDisabled, false);
 });
 
-test("dock markup has no standalone resume or auto control", () => {
+test("dock toolbar buttons are icons with accessible localized tooltips", () => {
   const markup = readFileSync(new URL("./index.html", import.meta.url), "utf8");
   const script = readFileSync(new URL("./messages.js", import.meta.url), "utf8");
   assert.match(markup, /id="leaderboard-always-visible"[^>]+role="switch"/);
-  assert.match(markup, /id="leaderboard-show"/);
+  for (const id of ["leaderboard-show", "leaderboard-pin", "leaderboard-hide"]) {
+    assert.match(markup, new RegExp(`id="${id}"[^>]+leaderboard-toolbar__icon-button[^>]+aria-label="[^"]+"`));
+  }
   assert.match(markup, /id="leaderboard-pin"[^>]+aria-pressed="false"/);
-  assert.match(markup, /id="leaderboard-hide"/);
   assert.doesNotMatch(markup, /data-leaderboard-action="resume"/);
   assert.doesNotMatch(markup, /data-i18n="dock\.resume"/);
   for (const id of [
@@ -48,9 +49,13 @@ test("dock markup has no standalone resume or auto control", () => {
     assert.match(markup, new RegExp(`id="${id}"[^>]+aria-label="[^"]+"`));
   }
   assert.match(markup, /class="leaderboard-toolbar__mode-switcher"[^>]+role="group"[^>]+data-i18n-aria-label="dock\.contractMode"/);
-  assert.equal((markup.match(/class="ui-tooltip" role="tooltip"/g) || []).length, 3);
+  assert.equal((markup.match(/class="ui-tooltip" role="tooltip"/g) || []).length, 6);
+  assert.equal((markup.match(/class="leaderboard-toolbar__icon-button has-tooltip"/g) || []).length, 6);
+  assert.equal((markup.match(/<svg[^>]+aria-hidden="true"/g) || []).length, 7);
+  assert.doesNotMatch(markup, /<button[^>]*>\s*(?:Show|Pin|Hide|Показать|Закрепить|Скрыть)\s*<\/button>/);
   assert.doesNotMatch(markup, /id="contract-toggle-visibility"/);
   assert.doesNotMatch(markup, /contract-(?:award|close|edit)/);
   assert.doesNotMatch(markup, /id="leaderboard-standard-actions"/);
   assert.doesNotMatch(script, /runContractDisplay\([^,]+,[^,]+,[^)]*"visibility"/);
+  assert.match(script, /controls\.pinAction === "resume" \? "dock\.resume" : "dock\.pin"/);
 });

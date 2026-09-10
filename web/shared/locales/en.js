@@ -788,6 +788,7 @@ export default {
   "dock.showFor": "Show for {seconds}s",
   "dock.alwaysVisible": "Show leaderboard",
   "dock.pin": "Pin",
+  "dock.resume": "Resume automatic display",
   "dock.hide": "Hide",
   "dock.visibilityHidden": "Hidden",
   "dock.visibilityAlways": "Always shown",

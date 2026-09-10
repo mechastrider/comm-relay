@@ -70,6 +70,7 @@
 - [x] 4.7 Add Node/markup/i18n/CSS tests and smoke reconnect, restart default, stale actions, all leaderboard policies, themes, reduced motion, and narrow OBS rectangles.
 - [x] 4.8 Top-align the persistent objective, localize its fixed labels from the configured interface locale, and retain ordinary leaderboard dock controls.
 - [x] 4.9 Separate content selection from visibility: restore the original leaderboard control layout, group Contract/Leaderboard as an icon switcher, keep Repeat separate, and preserve the selected mode across every visibility transition.
+- [x] 4.10 Convert the remaining Show for N seconds, Pin/Resume, and Hide buttons to icons with dynamic localized accessible names and hover/focus tooltips.
 
 ## Slice: `Document and prepare the user-visible experiment` (docs)
 
