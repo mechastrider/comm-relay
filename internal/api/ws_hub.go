@@ -28,6 +28,7 @@ type Hub struct {
 	cfgStore     *config.Store
 	viewerStore  *store.Store
 	visibility   *leaderboard.Controller
+	contracts    *viewerContractPresentation
 }
 
 // NewHub creates a WebSocket hub bound to the shared event bus.
@@ -85,6 +86,13 @@ func (h *Hub) SetLeaderboardVisibility(controller *leaderboard.Controller) {
 	h.mu.Unlock()
 }
 
+// SetViewerContractPresentation supplies authoritative snapshots for new production clients.
+func (h *Hub) SetViewerContractPresentation(presentation *viewerContractPresentation) {
+	h.mu.Lock()
+	h.contracts = presentation
+	h.mu.Unlock()
+}
+
 func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
 	msg = fillChatMessageAvatar(h.viewerStore, h.cfgStore, msg)
 
@@ -107,9 +115,11 @@ func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
 
 func (h *Hub) register(c *wsClient) {
 	var visibility *leaderboard.Controller
+	var contracts *viewerContractPresentation
 	if !c.debug {
 		h.mu.Lock()
 		visibility = h.visibility
+		contracts = h.contracts
 		h.mu.Unlock()
 		if visibility != nil {
 			ctx := c.ctx
@@ -143,6 +153,16 @@ func (h *Hub) register(c *wsClient) {
 			select {
 			case c.send <- payload:
 			default:
+			}
+		}
+	}
+	if contracts != nil {
+		payload, err := viewerContractStateWirePayload(contracts.Current())
+		if err == nil {
+			select {
+			case c.send <- payload:
+			default:
+				observability.Default.RecordWebSocketDrop(wireViewerContractStateType)
 			}
 		}
 	}

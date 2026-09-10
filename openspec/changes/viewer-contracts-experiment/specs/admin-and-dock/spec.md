@@ -1,6 +1,6 @@
 ## Purpose
 
-Add the bounded viewer-contract workflow to the operator console while keeping the messages dock focused on chat operations.
+Add the bounded viewer-contract workflow to the operator console and compact presentation controls to the messages dock.
 
 ## ADDED Requirements
 
@@ -34,9 +34,17 @@ Award winner SHALL open a labeled searchable canonical-viewer picker using curre
 - **WHEN** settlement returns HTTP 409 because another client already closed the contract
 - **THEN** the UI reloads the current state and does not claim that a second reward was granted
 
-### Requirement: Contract controls remain out of the messages dock
-The OBS messages dock MUST NOT gain contract drafting, announcement, winner-selection, or close controls. It SHALL continue to ignore contract announcement frames for message rendering.
+### Requirement: The messages dock controls active contract presentation
+While a contract is active, the OBS messages dock SHALL replace ordinary leaderboard visibility actions with icon-only controls that switch the existing leaderboard Browser Source between the contract objective and ranking, repeat the brief alert announcement, and hide or show the shared surface. Every control MUST have a localized accessible name, hover/focus tooltip, busy state, and pressed state where applicable. The dock MUST NOT add contract drafting, winner-selection, editing, or close controls, and contract alert frames MUST NOT become chat rows.
 
-#### Scenario: Contract is announced while dock is open
-- **WHEN** the messages dock receives the announcement frame
-- **THEN** no chat row or contract control is added to the dock
+#### Scenario: Contract becomes active while dock is open
+- **WHEN** the dock receives the authoritative active-contract presentation state
+- **THEN** it shows the contract presentation controls without adding a chat row
+
+#### Scenario: Operator switches to ranking
+- **WHEN** the operator activates the ranking icon while a contract is active
+- **THEN** the shared Browser Source shows the current leaderboard and the ranking control exposes its pressed state
+
+#### Scenario: Contract ends
+- **WHEN** the active contract is awarded or closed without result
+- **THEN** contract controls disappear and ordinary leaderboard controls and visibility policy resume unchanged

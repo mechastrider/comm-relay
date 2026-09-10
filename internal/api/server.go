@@ -73,12 +73,18 @@ func NewHandler(opts Options) (http.Handler, error) {
 	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher)
 	commandsHandler := newCommandsHandler(opts.ViewerStore)
 	awardsHandler := newAwardsHandler(opts.ViewerStore, opts.Hub, leaderboardPublisher, opts.Store, opts.LeaderboardVisibility)
+	contractPresentation, err := newViewerContractPresentation(opts.ViewerStore)
+	if err != nil {
+		return nil, errors.Errorf("initialize viewer contract presentation: %w", err)
+	}
+	opts.Hub.SetViewerContractPresentation(contractPresentation)
 	viewerContractsHandler := newViewerContractsHandler(
 		opts.ViewerStore,
 		opts.Hub,
 		opts.Store,
 		leaderboardPublisher,
 		opts.LeaderboardVisibility,
+		contractPresentation,
 	)
 	rewardHistoryHandler := newRewardHistoryHandler(opts.ViewerStore)
 	overlayDebug := newOverlayDebugHandler(opts.Hub)
@@ -134,6 +140,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("POST /api/viewer-contracts/announce", viewerContractsHandler.handleAnnounce)
 	mux.HandleFunc("POST /api/viewer-contracts/award", viewerContractsHandler.handleAward)
 	mux.HandleFunc("POST /api/viewer-contracts/close", viewerContractsHandler.handleClose)
+	mux.HandleFunc("POST /api/viewer-contracts/display", viewerContractsHandler.handleDisplay)
 	mux.HandleFunc("GET /api/reward-history", rewardHistoryHandler.handleList)
 	mux.Handle("GET /dock/messages/", http.StripPrefix("/dock/messages/", http.FileServer(http.FS(static.dock))))
 	mux.HandleFunc("GET /dock/messages", func(w http.ResponseWriter, r *http.Request) {

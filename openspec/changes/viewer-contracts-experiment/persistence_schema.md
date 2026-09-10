@@ -9,6 +9,7 @@
 | `config.json` | Existing operator settings | Unchanged | No new keys | Unchanged, including OAuth secrets |
 | overlay assets | Existing validated catalog images/sounds | Existing overlay-assets directory | Generated filenames referenced by reward snapshot | Unchanged; no new upload surface |
 | browser preferences/cache | Unsaved contract draft and transient search results | Current page memory only | JavaScript state, not localStorage | Cleared on reload; contains operator-entered text only |
+| contract presentation override | Active surface content and hidden/shown state; `internal/api` | Process memory only | Contract id, `contract`/`leaderboard`, boolean visibility | Resets after process restart; contains no additional user content |
 
 ## Changed Structures / Formats
 
@@ -57,6 +58,8 @@ All contract methods use the existing `Store.mu` and the single SQLite connectio
 Award settlement is one transaction: select the matching active id, validate the visible canonical viewer, ensure session/day keys, capture rank state, increment all-time/session/day XP, append the award interaction event with `contract_id`, transition the contract to `awarded` with `active_slot=NULL`, and commit. Close similarly transitions the matching active row to `closed`. Each terminal update includes `WHERE id=? AND status='active' AND active_slot=1`; zero affected rows maps to conflict. Alerts and leaderboard frames occur only after commit.
 
 No-result close and failed/racing requests cannot partially change XP or events. Existing transaction rollback and test failure-hook patterns are extended to contract settlement.
+
+Presentation overrides are deliberately excluded from SQLite and `config.json`. On startup the server derives whether a contract is active from SQLite and creates a fresh `contract`/visible presentation snapshot. The normal leaderboard visibility policy remains stored and managed by its existing owner.
 
 ## Encryption / Secret Storage / Privacy
 

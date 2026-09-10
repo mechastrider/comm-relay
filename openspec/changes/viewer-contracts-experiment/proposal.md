@@ -11,7 +11,8 @@ The feature is controlled by the local streamer or OBS operator. A winner may be
 - Add a Live workspace for drafting and manually announcing one viewer contract with a title, objective, and existing catalog reward.
 - Persist the active contract across restart and expose explicit actions to award a canonical viewer or close without a result.
 - Snapshot the promised reward at announcement so catalog edits cannot change an active contract's displayed or granted terms.
-- Present announcements through the existing alert Browser Source; winner settlement reuses the normal award alert, XP update, interaction event, reward journal, and leaderboard refresh.
+- Present a brief announcement through the existing alert Browser Source, then keep the active objective visible by temporarily replacing content in the existing leaderboard Browser Source.
+- Add compact dock controls to switch that shared surface between contract and ranking, repeat the announcement, or hide/show the surface without changing the ordinary leaderboard policy.
 - Reject conflicting/stale lifecycle actions and make successful lifecycle transitions observable without storing chat content.
 
 ## Capabilities
@@ -20,11 +21,11 @@ The feature is controlled by the local streamer or OBS operator. A winner may be
 - `viewer-contracts`: Single-active-contract lifecycle, local persistence, API actions, validation, and atomic settlement.
 
 ### Modified Capabilities
-- `admin-and-dock`: Live operator workflow and accessible winner selection; no dock editing surface.
+- `admin-and-dock`: Live operator workflow, accessible winner selection, and icon-only contract presentation controls in the messages dock.
 - `operator-rewards`: Catalog reward snapshots can be granted through contract settlement.
 - `interaction-events`: Contract settlement records a normal durable award event with contract provenance.
 - `viewer-reward-history`: Contract awards appear in the existing operator journal.
-- `websocket-feed`: Contract announcements use a backward-compatible alert envelope.
+- `websocket-feed`: Contract announcements and an authoritative active-presentation snapshot use backward-compatible envelopes.
 - `overlay-alerts`: Render contract announcements without disrupting award-priority queue behavior.
 
 ## Scope / Non-Goals
@@ -33,4 +34,4 @@ No viewer command entry, automatic winner detection, multiple concurrent contrac
 
 ## Impact
 
-Adds local SQLite state and POST-action/GET API routes, plus admin and alert UI. Contract text is local operator-authored content, escaped in clients, length-bounded, and never sent to a cloud service. Existing configs and clients remain compatible. Packaging is unchanged; upgrades run an additive database migration and can roll back only before new-schema data is required.
+Adds local SQLite state and POST-action/GET API routes, plus admin, dock, leaderboard, and alert UI. Contract presentation overrides are process-local and reset to a visible contract card after restart; the durable contract remains authoritative. Contract text is local operator-authored content, escaped in clients, length-bounded, and never sent to a cloud service. Existing configs and clients remain compatible. Packaging is unchanged; upgrades run an additive database migration and can roll back only before new-schema data is required.

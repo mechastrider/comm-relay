@@ -24,6 +24,7 @@ type viewerContractsHandler struct {
 	configStore          *config.Store
 	leaderboardPublisher *LeaderboardPublisher
 	visibility           *leaderboard.Controller
+	presentation         *viewerContractPresentation
 }
 
 func newViewerContractsHandler(
@@ -32,6 +33,7 @@ func newViewerContractsHandler(
 	configStore *config.Store,
 	leaderboardPublisher *LeaderboardPublisher,
 	visibility *leaderboard.Controller,
+	presentation *viewerContractPresentation,
 ) *viewerContractsHandler {
 	return &viewerContractsHandler{
 		viewerStore:          viewerStore,
@@ -39,6 +41,7 @@ func newViewerContractsHandler(
 		configStore:          configStore,
 		leaderboardPublisher: leaderboardPublisher,
 		visibility:           visibility,
+		presentation:         presentation,
 	}
 }
 
@@ -54,6 +57,8 @@ type viewerContractResponse struct {
 
 type currentViewerContractResponse struct {
 	Contract *viewerContractResponse `json:"contract"`
+	Content  string                  `json:"content"`
+	Visible  bool                    `json:"visible"`
 }
 
 func viewerContractFromStore(contract *store.ViewerContract) *viewerContractResponse {
@@ -79,7 +84,7 @@ func (h *viewerContractsHandler) handleCurrent(w http.ResponseWriter, r *http.Re
 
 	contract, err := h.viewerStore.CurrentViewerContract()
 	if errors.Is(err, store.ErrViewerContractNotFound) {
-		writeJSON(w, http.StatusOK, currentViewerContractResponse{})
+		writeJSON(w, http.StatusOK, currentViewerContractResponse{Content: contractContentContract})
 		return
 	}
 	if err != nil {
@@ -88,7 +93,12 @@ func (h *viewerContractsHandler) handleCurrent(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	writeJSON(w, http.StatusOK, currentViewerContractResponse{Contract: viewerContractFromStore(contract)})
+	snapshot := h.presentation.Current()
+	writeJSON(w, http.StatusOK, currentViewerContractResponse{
+		Contract: viewerContractFromStore(contract),
+		Content:  snapshot.Content,
+		Visible:  snapshot.Visible,
+	})
 }
 
 type openViewerContractRequest struct {
@@ -117,6 +127,10 @@ func (h *viewerContractsHandler) handleOpen(w http.ResponseWriter, r *http.Reque
 	if h.writeOpenError(w, r, err) {
 		return
 	}
+	snapshot := h.presentation.Activate(contract)
+	if !h.broadcastContractState(w, r, snapshot) {
+		return
+	}
 	if !h.broadcastContractAnnouncement(w, r, contract, now) {
 		return
 	}
@@ -125,7 +139,62 @@ func (h *viewerContractsHandler) handleOpen(w http.ResponseWriter, r *http.Reque
 		slog.String("contract_id", contract.ID),
 		slog.String("reward_id", contract.RewardID),
 	)
-	writeJSON(w, http.StatusOK, currentViewerContractResponse{Contract: viewerContractFromStore(contract)})
+	writeJSON(w, http.StatusOK, currentViewerContractResponse{
+		Contract: viewerContractFromStore(contract), Content: snapshot.Content, Visible: snapshot.Visible,
+	})
+}
+
+type displayViewerContractRequest struct {
+	ID      string `json:"id"`
+	Content string `json:"content"`
+	Visible bool   `json:"visible"`
+}
+
+func (h *viewerContractsHandler) handleDisplay(w http.ResponseWriter, r *http.Request) {
+	if !h.requireLifecycleDependencies(w) {
+		return
+	}
+	if h.presentation == nil {
+		writeError(w, http.StatusServiceUnavailable, "contract presentation unavailable")
+		return
+	}
+
+	var request displayViewerContractRequest
+	if !decodeViewerContractRequest(w, r, &request) {
+		return
+	}
+	request.ID = strings.TrimSpace(request.ID)
+	request.Content = strings.TrimSpace(request.Content)
+	if request.ID == "" || (request.Content != contractContentContract && request.Content != contractContentLeaderboard) {
+		writeError(w, http.StatusBadRequest, "id and valid content are required")
+		return
+	}
+	if _, err := h.viewerStore.ActiveViewerContract(request.ID); err != nil {
+		if errors.Is(err, store.ErrViewerContractConflict) {
+			clog.Debug(r.Context(), "viewer contract display rejected", "contract_id", request.ID)
+			writeError(w, http.StatusConflict, "contract is no longer active")
+			return
+		}
+		clog.Errorf(r.Context(), "load viewer contract for display: %w", err)
+		writeError(w, http.StatusInternalServerError, "failed to load contract")
+		return
+	}
+
+	snapshot, ok := h.presentation.Update(request.ID, request.Content, request.Visible)
+	if !ok {
+		clog.Debug(r.Context(), "viewer contract display rejected after state change", "contract_id", request.ID)
+		writeError(w, http.StatusConflict, "contract is no longer active")
+		return
+	}
+	if !h.broadcastContractState(w, r, snapshot) {
+		return
+	}
+	clog.Info(r.Context(), "viewer contract display changed",
+		slog.String("contract_id", request.ID),
+		slog.String("content", request.Content),
+		slog.Bool("visible", request.Visible),
+	)
+	writeJSON(w, http.StatusOK, snapshot)
 }
 
 type announceViewerContractRequest struct {
@@ -159,7 +228,10 @@ func (h *viewerContractsHandler) handleAnnounce(w http.ResponseWriter, r *http.R
 		return
 	}
 	clog.Info(r.Context(), "viewer contract announced again", slog.String("contract_id", contract.ID))
-	writeJSON(w, http.StatusOK, currentViewerContractResponse{Contract: viewerContractFromStore(contract)})
+	snapshot := h.presentation.Current()
+	writeJSON(w, http.StatusOK, currentViewerContractResponse{
+		Contract: viewerContractFromStore(contract), Content: snapshot.Content, Visible: snapshot.Visible,
+	})
 }
 
 func (h *viewerContractsHandler) requireLifecycleDependencies(w http.ResponseWriter) bool {
@@ -230,6 +302,21 @@ func (h *viewerContractsHandler) broadcastContractAnnouncement(
 	return true
 }
 
+func (h *viewerContractsHandler) broadcastContractState(
+	w http.ResponseWriter,
+	r *http.Request,
+	snapshot viewerContractPresentationSnapshot,
+) bool {
+	payload, err := viewerContractStateWirePayload(snapshot)
+	if err != nil {
+		clog.Errorf(r.Context(), "encode viewer contract state: %w", err)
+		writeError(w, http.StatusInternalServerError, "failed to update contract display")
+		return false
+	}
+	h.hub.Broadcast(payload)
+	return true
+}
+
 type awardViewerContractRequest struct {
 	ID       string `json:"id"`
 	ViewerID string `json:"viewer_id"`
@@ -260,6 +347,9 @@ func (h *viewerContractsHandler) handleAward(w http.ResponseWriter, r *http.Requ
 		Now:                  now,
 	})
 	if h.writeSettlementError(w, r, strings.TrimSpace(request.ID), err) {
+		return
+	}
+	if !h.broadcastContractState(w, r, h.presentation.Clear(result.Contract.ID)) {
 		return
 	}
 
@@ -356,6 +446,9 @@ func (h *viewerContractsHandler) handleClose(w http.ResponseWriter, r *http.Requ
 	}
 	contract, err := h.viewerStore.CloseViewerContract(request.ID, time.Now())
 	if h.writeSettlementError(w, r, strings.TrimSpace(request.ID), err) {
+		return
+	}
+	if !h.broadcastContractState(w, r, h.presentation.Clear(contract.ID)) {
 		return
 	}
 	clog.Info(r.Context(), "viewer contract closed without result", slog.String("contract_id", contract.ID))

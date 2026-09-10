@@ -211,6 +211,7 @@ func TestCommandFire_WhenShowLeaderboardAction_ExpectTimedStateNoAlertAndOneEven
 	client := &wsClient{hub: env.Hub, send: make(chan []byte, ClientSendBuffer)}
 	env.Hub.register(client)
 	<-client.send // initial visibility snapshot
+	<-client.send // initial viewer contract state snapshot
 	t.Cleanup(func() { env.Hub.unregister(client) })
 
 	publish := func(id string) {

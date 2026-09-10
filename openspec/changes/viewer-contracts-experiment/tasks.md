@@ -35,7 +35,7 @@
 > **Skills**: `web-static-frontend`, `api-conventions`, `ux-form-practices`, `web-constrained-layout`, `comm-relay`
 > **Scope**: `web/admin` markup/styles/modules/DOM registry, Live tab lifecycle, viewer/reward API composition, locale catalogs
 > **Allowed fallout**: reusable pure helpers, abort controllers, existing dialog primitives, test fixtures and package test list
-> **Blocked**: dock controls, contract catalog/history, persistent draft/localStorage, new framework, Studio settings
+> **Blocked**: contract settlement/editing in dock, contract catalog/history, persistent draft/localStorage, new framework, Studio settings
 
 - [x] 3.1 Add the fourth Contracts tab/panel and modular state loader with empty/loading/error/offline/conflict recovery, abort/late-response protection, current contract display, and reward catalog empty guidance.
 - [x] 3.2 Implement labeled title/objective/reward inputs, 80/280 Unicode validation, in-flight gating, associated field errors, draft preservation, Announce and Announce again actions, and EN/RU copy/parity.
@@ -49,11 +49,25 @@
 > **Skills**: `comm-relay`, `web-static-frontend`, `obs-overlay-themes`, `comm-relay-observability`
 > **Scope**: `web/alert`, shared alert emblem/scheduler helpers, production alert frame compatibility
 > **Allowed fallout**: sample fixtures, safe-media fallback tests, CSS theme selectors, reduced-motion rules
-> **Blocked**: new Browser Source URL, new theme id, preemptive alerts, historical replay, chat/leaderboard presentation changes
+> **Blocked**: new Browser Source URL, new theme id, preemptive alerts, historical alert replay, chat presentation changes
 
 - [x] 4.1 Extend the scheduler so `source=contract` shares the protected FIFO lane with awards, never preempts the visible splash, never expires, and follows documented capacity displacement; retain legacy unknown-source command behavior.
 - [x] 4.2 Render a distinct contract variant from text nodes with title, objective, reward, +XP, snapshot media/presentation, stable emblem and broken-media fallback across every current theme.
 - [ ] 4.3 Add scheduler/render/media/XSS/reduced-motion/unknown-client tests and a sample fixture; verify transparent root, wrapping/clamping, safe filenames, no empty chrome, audio policy, and OBS rectangle fit.
+
+## Slice: `Keep the active objective in the existing leaderboard surface` (backend + frontend)
+
+> **Outcome**: An active contract persistently replaces ranking in the small leaderboard Browser Source, while the dock can switch content, repeat the splash, or hide/show the surface without changing normal leaderboard policy.
+> **Acceptance**: `go test ./internal/api`; `npm run lint && npm test`; reconnect/restart and all-theme Browser Source smoke.
+> **Skills**: `comm-relay`, `api-conventions`, `comm-relay-backend-golang`, `comm-relay-observability`, `golang-tests`, `web-static-frontend`, `ux-form-practices`, `obs-overlay-themes`
+> **Scope**: contract presentation controller/API/WS snapshot, `web/leaderboard`, messages dock toolbar, shared locales/tooltips
+> **Allowed fallout**: runtime state helpers, hub initial snapshot supplier, responsive theme CSS, focused fixtures/tests, cache-buster updates
+> **Blocked**: new OBS source, durable display preference, ordinary leaderboard policy mutation, dock settlement/editing, hotkeys
+
+- [x] 4.4 Add server-authoritative process-local presentation state, `POST /api/viewer-contracts/display`, initial/reconnect `viewer_contract_state` snapshots, lifecycle broadcasts, conflict handling, redacted logs, and focused Go tests.
+- [x] 4.5 Render a safe compact active-contract card in the existing leaderboard root for every theme, switch to cached ranking on command, honor the contract hide override, and restore ordinary visibility behavior after settlement.
+- [x] 4.6 Add icon-only dock controls for Contract, Leaderboard, Repeat announcement, and Hide/Show with localized `aria-label`, hover/focus tooltips, pressed/busy/error states, and no award/close/edit actions.
+- [x] 4.7 Add Node/markup/i18n/CSS tests and smoke reconnect, restart default, stale actions, all leaderboard policies, themes, reduced motion, and narrow OBS rectangles.
 
 ## Slice: `Document and prepare the user-visible experiment` (docs)
 
@@ -70,8 +84,8 @@
 ## Gate: qa (verification)
 
 - [ ] Q.1 Execute `qa_plan.md`; record platform/theme/scaling/input matrix coverage and synthetic evidence without real OAuth tokens or chat data.
-- [ ] Q.2 Run `npm ci && npm run lint && npm test` and record results.
-- [ ] Q.3 Run `go test ./...` and `go test -race -count=1 ./...` and record results.
+- [x] Q.2 Run `npm ci && npm run lint && npm test` and record results.
+- [x] Q.3 Run `go test ./...` and `go test -race -count=1 ./...` and record results.
 - [ ] Q.4 Run `golangci-lint run ./...`, `go build ./...`, `openspec validate viewer-contracts-experiment --strict`, and `git diff --check` and record results.
 - [ ] Q.5 Smoke the local server with a temporary data directory: `/health`, all five contract endpoints, WebSocket open/repeat/award behavior, restart recovery, reward Journal/leaderboard, and no-result close.
 - [ ] Q.6 Smoke admin and `/overlay/alert` in both locales, keyboard-only flow, reduced motion, every existing theme, and required Browser Source rectangles; record any unavailable Windows/macOS/Linux packaged-app cell explicitly.
