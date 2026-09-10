@@ -39,4 +39,14 @@ test("dock markup has no standalone resume or auto control", () => {
   assert.match(markup, /id="leaderboard-hide"/);
   assert.doesNotMatch(markup, /data-leaderboard-action="resume"/);
   assert.doesNotMatch(markup, /data-i18n="dock\.resume"/);
+  for (const id of [
+    "contract-show-objective",
+    "contract-show-leaderboard",
+    "contract-repeat-announcement",
+    "contract-toggle-visibility",
+  ]) {
+    assert.match(markup, new RegExp(`id="${id}"[^>]+aria-label="[^"]+"`));
+  }
+  assert.equal((markup.match(/class="ui-tooltip" role="tooltip"/g) || []).length, 4);
+  assert.doesNotMatch(markup, /contract-(?:award|close|edit)/);
 });

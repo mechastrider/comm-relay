@@ -89,15 +89,17 @@ func runApply(args []string) int {
 		fmt.Fprintf(os.Stderr, "pack-import apply: %v\n", err)
 		return 1
 	}
-	if err := packimport.ValidatePack(pack); err != nil {
-		fmt.Fprintf(os.Stderr, "pack-import apply: %v\n", err)
+	validationErr := packimport.ValidatePack(pack)
+	if validationErr != nil {
+		fmt.Fprintf(os.Stderr, "pack-import apply: %v\n", validationErr)
 		return 1
 	}
 
 	var s *store.Store
 	if !*dryRun {
-		if err := os.MkdirAll(paths.AssetsDir, 0o755); err != nil {
-			fmt.Fprintf(os.Stderr, "pack-import apply: create assets dir: %v\n", err)
+		mkdirErr := os.MkdirAll(paths.AssetsDir, 0o755)
+		if mkdirErr != nil {
+			fmt.Fprintf(os.Stderr, "pack-import apply: create assets dir: %v\n", mkdirErr)
 			return 1
 		}
 		s, err = store.Open(paths.DBPath, store.OpenOptions{TimeLocale: pack.Pack.Locale})

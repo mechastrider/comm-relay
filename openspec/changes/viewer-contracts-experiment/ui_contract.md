@@ -7,8 +7,9 @@
 | Admin Live — Contracts | Announce and settle the one current contract | Fourth tab after Messages, Leaderboard, Statistics | Same in browser and Wails webview |
 | Winner picker dialog | Find one canonical viewer and confirm the promised award | Award winner from the active card | Same; native OS picker is not used |
 | No-result confirmation | End the contract without granting XP | Close without result from the active card | Same |
-| OBS `/overlay/alert` | Show the task and promised reward on stream | Existing Browser Source URL | Same web surface; OBS/CEF rendering differences only |
-| Messages dock | Continue chat moderation/reward workflow | Existing `/dock/messages` | No contract controls or rows |
+| OBS `/overlay/alert` | Briefly announce the task and promised reward | Existing Browser Source URL | Same web surface; OBS/CEF rendering differences only |
+| OBS `/overlay/leaderboard` | Keep the active objective visible in the existing small surface | Existing Browser Source URL; content swaps in place | Same web surface; OBS/CEF rendering differences only |
+| Messages dock | Control which content occupies the shared leaderboard surface | Existing `/dock/messages` toolbar | Same in browser and Wails webview |
 
 ## Menus / Tray / Commands / Shortcuts
 
@@ -46,19 +47,42 @@ At narrow widths the card/actions stack in document order without horizontal scr
 | offline/degraded | Explain that the local server cannot be reached, retain draft/active presentation, and offer Retry; do not queue browser-only actions |
 | interrupted/recovered | Abort/ignore late loads after leaving the tab; on return or app restart read the durable active contract without replaying it automatically |
 
+## View / Flow: `Dock contract presentation`
+
+### Layout and Components
+
+While a contract is active, the leaderboard toolbar replaces its ordinary visibility actions with four compact icon-only actions: show Contract objective, show Leaderboard, Repeat announcement, and Hide/Show surface. Existing SVG/icon styling, minimum target size, focus ring, and shared tooltip primitive are reused. The preset selector and status remain available; no second dock panel is introduced.
+
+### Data / Forms / Actions
+
+- The dock consumes the authoritative `viewer_contract_state` snapshot and fetches current contract state as recovery when needed.
+- Contract and Leaderboard are a two-value pressed-state choice. Repeat calls the existing announcement action. Hide/Show toggles only the active contract presentation override.
+- Buttons send the active contract id and disable while their request is in flight. A stale 409 reloads state instead of guessing.
+- Ending the contract restores ordinary leaderboard controls and their untouched server-side policy.
+
+### States and Recovery
+
+| State | Required behavior |
+|-------|-------------------|
+| loading/busy | Keep the last stable toolbar visible and disable only contract presentation actions in flight |
+| empty | With no active contract show the ordinary leaderboard controls |
+| error/retry | Keep controls understandable, expose a localized dock status error, and recover on the next snapshot/reconnect |
+| offline/degraded | Disable server actions while preserving accessible labels and reconnect normally |
+| interrupted/recovered | A reconnect receives the authoritative state; a process restart defaults an active contract to visible objective mode |
+
 ## Accessibility / Keyboard / Focus
 
-The Contracts tab and panel use linked `role=tab`/`role=tabpanel`, correct roving tabindex, and the existing tab keyboard order. Every field has a visible label; placeholder text is supplemental only. Dynamic status and errors use an appropriate polite/alert live region without announcing each search keystroke. Viewer results are keyboard operable with a single clear selected state. Opening a dialog moves focus to its heading or first field, focus stays within the modal, Cancel/Escape returns focus to the invoking action, and success returns focus to the Contracts heading or empty-state title. Destructive and award actions require explicit activation and are not triggered by selecting a viewer. Icon-only controls, if used, require localized accessible names and hover/focus tooltips.
+The Contracts tab and panel use linked `role=tab`/`role=tabpanel`, correct roving tabindex, and the existing tab keyboard order. Every field has a visible label; placeholder text is supplemental only. Dynamic status and errors use an appropriate polite/alert live region without announcing each search keystroke. Viewer results are keyboard operable with a single clear selected state. Opening a dialog moves focus to its heading or first field, focus stays within the modal, Cancel/Escape returns focus to the invoking action, and success returns focus to the Contracts heading or empty-state title. Destructive and award actions require explicit activation and are not triggered by selecting a viewer. Every dock icon has the same localized `aria-label` and hover/focus tooltip meaning; Contract/Leaderboard and visibility expose `aria-pressed`.
 
 ## Scaling / Theme / Localization / Reduced Motion
 
 Admin UI uses the existing design tokens, light/dark behavior, minimum target sizes, focus rings, and EN/RU locale application. Cyrillic/Latin mixed text wraps rather than truncating the objective; compact metadata may ellipsize with its full accessible name retained.
 
-The alert variant implements every current on-stream theme (`default`, `dashboard`, cockpit variants, and G-Rebels), keeps page/background transparency, and fits the Browser Source rectangle in landscape, square, portrait, and narrow-banner shapes. It renders title, objective, reward, and points as text nodes, clamps only when the rectangle physically cannot fit the bounded objective, and uses a stable contract emblem when custom media is missing/broken. `prefers-reduced-motion` removes decorative motion but preserves static emphasis, duration, queue order, and audio policy.
+The alert and leaderboard contract variants implement every current on-stream theme (`default`, `dashboard`, cockpit variants, and G-Rebels), keep page/background transparency, and fit their Browser Source rectangles in landscape, square, portrait, and narrow-banner shapes. Both render title, objective, reward, and points as text nodes; the compact persistent card prioritizes objective legibility and clamps only when the rectangle physically cannot fit it. `prefers-reduced-motion` removes decorative motion but preserves static emphasis, duration, queue order, audio policy, and content state.
 
 ## Explicit Non-Goals
 
-No contract catalog/templates, historical contract list, viewer opt-in/candidate list, automatic completion signal, dock workflow, Studio editor, dedicated OBS source, native notification, hotkey, drag/drop, or platform-specific UI is added.
+No contract catalog/templates, historical contract list, viewer opt-in/candidate list, automatic completion signal, dock settlement/editing workflow, Studio editor, dedicated OBS source, native notification, hotkey, drag/drop, or platform-specific UI is added.
 
 ## Not applicable
 

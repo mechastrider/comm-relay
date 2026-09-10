@@ -4,7 +4,7 @@
 
 | OS/architecture | Package/artifact | Signing/notary | Smoke target |
 |-----------------|------------------|----------------|--------------|
-| Windows 11 / amd64 | `CommRelay-vX.Y.Z-windows-amd64.zip` with Wails desktop executable and embedded web/migration assets | Existing unsigned early-release policy | Upgrade an existing data directory, open/repeat/award/close contracts in WebView2, and render `/overlay/alert` in OBS |
+| Windows 11 / amd64 | `CommRelay-vX.Y.Z-windows-amd64.zip` with Wails desktop executable and embedded web/migration assets | Existing unsigned early-release policy | Upgrade an existing data directory, operate contracts in WebView2/dock, and render alert plus persistent leaderboard card in OBS |
 | macOS / universal amd64+arm64 | `CommRelay-vX.Y.Z-macos-universal.zip` with `.app` bundle | Existing unsigned/unnotarized policy | Migration/startup plus browser/webview contract flow and transparent alert smoke |
 | Linux / amd64 | `CommRelay-vX.Y.Z-linux-amd64.tar.gz` with current desktop-entry assets | Existing unsigned policy | Migration/startup under WebKitGTK, contract flow, transparent alert; preserve documented OBS GPU workaround |
 | Headless development build / supported Go host | `comm-relay-server` | Not signed | HTTP lifecycle, SQLite restart, `/ws` announcement, and static admin/alert behavior |
@@ -23,7 +23,7 @@ An older binary may be launched against the additive schema only after the plann
 
 ## Update Channels and Compatibility
 
-CommRelay has no new auto-update channel or protocol. The change is delivered by the existing GitHub release workflow. New API routes and the `source: "contract"` alert variant are additive. Older chat, dock, leaderboard, and alert clients must ignore the unknown contract source and continue processing known frames; the new server does not alter existing config or endpoint payloads. Twitch, YouTube Live, and VK connector versions/scopes are unchanged.
+CommRelay has no new auto-update channel or protocol. The change is delivered by the existing GitHub release workflow. New API routes, the `source: "contract"` alert variant, and `viewer_contract_state` frame are additive. Older chat, dock, leaderboard, and alert clients ignore unknown fields/frames and continue processing known frames; the new server does not alter existing config. Twitch, YouTube Live, and VK connector versions/scopes are unchanged.
 
 Because server, embedded admin UI, alert UI, and migration form one coherent feature, mixed loose-web/server versions are development-only. A new admin UI against an old server must show a recoverable unavailable-feature error; an old admin UI against a new server simply leaves contracts unused.
 
@@ -37,7 +37,7 @@ Application rollback keeps the additive schema by default. Schema rollback is a 
 
 Add a concise Russian `[Unreleased]` changelog bullet describing the visible outcome: an operator can announce one viewer task in Live, award the winner through an existing reward, or close without a result. Mention that contracts are manual and only one may be active; do not describe table/routes/module details. Update existing RU/EN product-usage documentation only if it enumerates Live tabs or interactive features; install steps and artifact names remain unchanged.
 
-Support checks should ask whether an active contract is visible after refresh, whether `/overlay/alert` is connected, and whether Announce again restores a missed splash. Existing diagnostics WebSocket-drop counters and redacted lifecycle logs are sufficient; no new support bundle data is required.
+Support checks should ask whether the active objective is visible in the leaderboard source after refresh, which dock content/visibility icon is selected, whether `/overlay/alert` is connected, and whether Repeat announcement restores a missed splash. Existing diagnostics WebSocket-drop counters and redacted lifecycle logs are sufficient; no new support bundle data is required.
 
 ## Authority Boundary
 

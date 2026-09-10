@@ -99,7 +99,7 @@ func TestViewerContracts_WhenNoActiveContract_ExpectNullContract(t *testing.T) {
 
 	// Assert
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.JSONEq(t, `{"contract":null}`, rec.Body.String())
+	require.JSONEq(t, `{"contract":null,"content":"contract","visible":false}`, rec.Body.String())
 }
 
 func TestViewerContracts_WhenWebSocketConnectsAfterOpen_ExpectNoAutomaticReplay(t *testing.T) {
@@ -116,15 +116,49 @@ func TestViewerContracts_WhenWebSocketConnectsAfterOpen_ExpectNoAutomaticReplay(
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = connection.Close() })
 	require.NoError(t, connection.SetReadDeadline(time.Now().Add(250*time.Millisecond)))
-	_, frame, readErr := connection.ReadMessage()
-
-	// Assert: the connection can receive an unrelated snapshot, but no active
-	// contract is synthesized for a newly connected client.
-	if readErr == nil {
+	foundState := false
+	for {
+		_, frame, readErr := connection.ReadMessage()
+		if readErr != nil {
+			break
+		}
 		var decoded map[string]any
 		require.NoError(t, json.Unmarshal(frame, &decoded))
-		require.NotEqual(t, "contract", decoded["source"])
+		require.NotEqual(t, "contract", decoded["source"], "brief announcement must not replay")
+		if decoded["type"] == wireViewerContractStateType {
+			foundState = true
+			contract := decoded["contract"].(map[string]any)
+			require.Equal(t, "Find loot", contract["title"])
+			require.Equal(t, contractContentContract, decoded["content"])
+			require.Equal(t, true, decoded["visible"])
+		}
 	}
+	require.True(t, foundState, "active presentation snapshot must be sent on reconnect")
+}
+
+func TestViewerContracts_WhenDisplayChanges_ExpectAuthoritativeStateAndStaleConflict(t *testing.T) {
+	// Arrange
+	env := newTestEnv(t, bus.New(0))
+	contractID := openViewerContractForTest(t, env, "Find loot", "Mark it")
+
+	// Act
+	display := httptest.NewRecorder()
+	env.Handler.ServeHTTP(display, httptest.NewRequest(http.MethodPost, "/api/viewer-contracts/display", strings.NewReader(`{"id":"`+contractID+`","content":"leaderboard","visible":false}`)))
+	stale := httptest.NewRecorder()
+	env.Handler.ServeHTTP(stale, httptest.NewRequest(http.MethodPost, "/api/viewer-contracts/display", strings.NewReader(`{"id":"stale","content":"contract","visible":true}`)))
+	invalid := httptest.NewRecorder()
+	env.Handler.ServeHTTP(invalid, httptest.NewRequest(http.MethodPost, "/api/viewer-contracts/display", strings.NewReader(`{"id":"`+contractID+`","content":"other","visible":true}`)))
+
+	// Assert
+	require.Equal(t, http.StatusOK, display.Code)
+	var snapshot viewerContractPresentationSnapshot
+	require.NoError(t, json.Unmarshal(display.Body.Bytes(), &snapshot))
+	require.Equal(t, wireViewerContractStateType, snapshot.Type)
+	require.Equal(t, contractID, snapshot.Contract.ID)
+	require.Equal(t, contractContentLeaderboard, snapshot.Content)
+	require.False(t, snapshot.Visible)
+	require.Equal(t, http.StatusConflict, stale.Code)
+	require.Equal(t, http.StatusBadRequest, invalid.Code)
 }
 
 func TestViewerContracts_WhenAwardedOrClosed_ExpectNormalAwardAndNoResultSemantics(t *testing.T) {

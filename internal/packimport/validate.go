@@ -91,7 +91,7 @@ func validateTrigger(trigger string) error {
 		return fmt.Errorf("trigger is required")
 	}
 	if strings.Contains(trigger, "!") {
-		return fmt.Errorf("trigger must not contain !")
+		return fmt.Errorf("trigger must not contain an exclamation mark")
 	}
 	if strings.ContainsAny(trigger, " \t") {
 		return fmt.Errorf("trigger must not contain whitespace")

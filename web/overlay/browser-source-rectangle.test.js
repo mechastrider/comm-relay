@@ -36,6 +36,21 @@ test("leaderboard rows keep one avatar column when a portrait is missing", funct
   assert.doesNotMatch(leaderboardCSS, /leaderboard-row--without-avatar/);
 });
 
+test("leaderboard contract card is bounded, safe, and themed in the existing rectangle", function () {
+  const card = block(leaderboardCSS, ".contract-card");
+  const objective = block(leaderboardCSS, ".contract-card__objective");
+  assert.match(card, /max-height:\s*100%/);
+  assert.match(card, /overflow:\s*hidden/);
+  assert.match(objective, /overflow-wrap:\s*anywhere/);
+  assert.match(objective, /-webkit-line-clamp:\s*7/);
+  assert.match(leaderboardJS, /root\.textContent = ""/);
+  assert.match(leaderboardJS, /title\.textContent = escapeText\(contract\.title\)/);
+  assert.match(leaderboardJS, /objective\.textContent = escapeText\(contract\.objective\)/);
+  ["default", "dashboard", "cockpit-panel", "cockpit-popups", "g-rebels-popups"].forEach(function (theme) {
+    assert.match(leaderboardCSS, new RegExp("overlay-theme--" + theme.replace(/-/g, "\\-")));
+  });
+});
+
 test("every alert theme uses the available safe rectangle instead of a narrow card", function () {
   const root = block(alertCSS, ".alert-root");
   const splash = block(alertCSS, ".alert-splash");

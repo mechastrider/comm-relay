@@ -16,10 +16,10 @@ const packFileName = "pack.yaml"
 
 // Pack is the machine-readable command catalog for one content pack.
 type Pack struct {
-	SchemaVersion int              `yaml:"schema_version"`
-	Pack          PackMeta         `yaml:"pack"`
-	Defaults      CommandDefaults  `yaml:"defaults"`
-	Commands      []CommandSpec    `yaml:"commands"`
+	SchemaVersion int             `yaml:"schema_version"`
+	Pack          PackMeta        `yaml:"pack"`
+	Defaults      CommandDefaults `yaml:"defaults"`
+	Commands      []CommandSpec   `yaml:"commands"`
 	packDir       string
 }
 

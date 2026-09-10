@@ -20,7 +20,7 @@ Define the bounded operator-controlled lifecycle for one active viewer contract 
 - **THEN** the API returns HTTP 400 with a UI-safe error and no contract is created
 
 ### Requirement: The active contract is durable and readable
-`GET /api/viewer-contracts/current` SHALL return `{"contract":null}` when no contract is active or an object containing `id`, `title`, `objective`, `reward_id`, `reward_name`, positive `reward_points`, and RFC3339 `announced_at`. At most one contract MUST be active, including after a process restart.
+`GET /api/viewer-contracts/current` SHALL return `contract` as null when no contract is active or an object containing `id`, `title`, `objective`, `reward_id`, `reward_name`, positive `reward_points`, and RFC3339 `announced_at`. The response SHALL also contain authoritative `content` and `visible` presentation fields. At most one contract MUST be active, including after a process restart.
 
 #### Scenario: Restart with an active contract
 - **WHEN** CommRelay restarts after a contract was opened but not settled
@@ -52,6 +52,21 @@ Opening a contract SHALL snapshot the selected reward's id, display name, points
 - **WHEN** the operator submits the id of a settled contract
 - **THEN** the request returns HTTP 409 and no announcement is broadcast
 
+### Requirement: The operator can override active contract presentation
+`POST /api/viewer-contracts/display` SHALL accept the active contract `id`, `content` (`contract` or `leaderboard`), and `visible`. A successful request SHALL update only process-local presentation state and broadcast its authoritative snapshot; it MUST NOT mutate the durable contract or ordinary leaderboard visibility policy. Stale ids and requests without an active contract MUST return HTTP 409. Opening or recovering an active contract after process restart SHALL default to `content=contract` and `visible=true`.
+
+#### Scenario: Hide the active contract surface
+- **WHEN** the operator submits the active id with `visible=false`
+- **THEN** the shared leaderboard Browser Source hides while the contract remains active
+
+#### Scenario: Restore ranking temporarily
+- **WHEN** the operator submits the active id with `content=leaderboard` and `visible=true`
+- **THEN** the shared Browser Source shows ranking without changing the configured leaderboard policy
+
+#### Scenario: Restart with an active contract
+- **WHEN** CommRelay restarts while a durable contract remains active
+- **THEN** presentation resets to the visible contract objective and connected clients receive that snapshot
+
 ### Requirement: Winner settlement is atomic and idempotent
 `POST /api/viewer-contracts/award` SHALL accept active contract `id` and canonical `viewer_id`. It MUST resolve a visible canonical viewer, atomically mark the contract awarded, grant exactly the snapshotted reward points to session, day, and all-time XP, and append one award interaction event. Only after commit SHALL it broadcast the normal award alert and refreshed leaderboards. Retrying the same or another settlement for a non-active id MUST return HTTP 409 without another grant, event, or alert.
 
@@ -81,6 +96,10 @@ Opening a contract SHALL snapshot the selected reward's id, display name, points
 #### Scenario: Stale close request
 - **WHEN** a close request races after a winner settlement
 - **THEN** it receives HTTP 409 and cannot change the awarded result
+
+#### Scenario: Ordinary leaderboard resumes after settlement
+- **WHEN** award or close commits for the active contract
+- **THEN** the contract presentation becomes inactive and the pre-existing leaderboard visibility policy resumes without being rewritten
 
 ### Requirement: Lifecycle operations are observable without exposing content
 Successful open, repeat announcement, award, and no-result close operations SHALL be logged with action and contract id; winner settlement SHALL also include viewer id and reward id. Rejected stale transitions and persistence failures MUST be observable at an appropriate log level. Logs MUST NOT include the contract objective, chat bodies, OAuth tokens, or filesystem secrets.

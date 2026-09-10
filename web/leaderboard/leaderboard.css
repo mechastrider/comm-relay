@@ -42,6 +42,60 @@ body.leaderboard-visibility--hidden .leaderboard {
   word-break: break-word;
 }
 
+.contract-card {
+  display: grid;
+  gap: calc(8px * var(--leaderboard-scale));
+  min-width: 0;
+  max-height: 100%;
+  padding: calc(14px * var(--leaderboard-scale));
+  overflow: hidden;
+  border: calc(var(--overlay-border-width) * var(--leaderboard-scale)) solid var(--overlay-border-color);
+  border-radius: calc(var(--overlay-border-radius) * var(--leaderboard-scale));
+  background: var(--overlay-panel-bg);
+}
+
+.contract-card__label,
+.contract-card__title,
+.contract-card__objective,
+.contract-card__reward {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.contract-card__label {
+  color: var(--overlay-platform, #9da8b7);
+  font-size: 0.64em;
+  font-weight: 800;
+  letter-spacing: calc(1.4px * var(--leaderboard-scale));
+  text-transform: uppercase;
+}
+
+.contract-card__title {
+  font-size: 1.08em;
+  line-height: 1.15;
+}
+
+.contract-card__objective {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: 0.94em;
+  font-weight: 650;
+  line-height: 1.28;
+  white-space: pre-wrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+}
+
+.contract-card__reward {
+  color: var(--overlay-text);
+  font-size: 0.78em;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
 .leaderboard-list {
   flex: 0 0 auto;
   display: grid;
@@ -147,6 +201,15 @@ body.overlay-theme--dashboard.overlay-has-panel .leaderboard-row {
   background: var(--overlay-panel-bg);
 }
 
+body.overlay-theme--dashboard .contract-card {
+  border: 0;
+  background: transparent;
+}
+
+body.overlay-theme--dashboard.overlay-has-panel .contract-card {
+  background: var(--overlay-panel-bg);
+}
+
 body.overlay-theme--dashboard .leaderboard-rank {
   color: var(--overlay-text);
 }
@@ -182,6 +245,45 @@ body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard {
   box-shadow:
     0 0 0 max(1px, calc(1px * var(--leaderboard-scale))) rgba(0, 0, 0, 0.5) inset,
     0 0 calc(28px * var(--leaderboard-scale)) rgba(16, 218, 216, 0.16);
+}
+
+body.leaderboard-content--contract.overlay-theme--cockpit-panel .leaderboard,
+body.leaderboard-content--contract.overlay-theme--cockpit-popups .leaderboard,
+body.leaderboard-content--contract.overlay-theme--g-rebels-popups .leaderboard {
+  padding: calc(14px * var(--leaderboard-scale)) calc(18px * var(--leaderboard-scale)) calc(16px * var(--leaderboard-scale)) calc(72px * var(--leaderboard-scale));
+  border: max(1px, calc(1px * var(--leaderboard-scale))) solid rgba(83, 232, 226, 0.44);
+  background:
+    linear-gradient(var(--hud-cyan), var(--hud-cyan)) calc(14px * var(--leaderboard-scale)) calc(18px * var(--leaderboard-scale)) / calc(28px * var(--leaderboard-scale)) calc(3px * var(--leaderboard-scale)) no-repeat,
+    linear-gradient(90deg, rgba(51, 222, 204, 0.12) 0 calc(46px * var(--leaderboard-scale)), transparent calc(46px * var(--leaderboard-scale))),
+    linear-gradient(90deg, rgba(53, 210, 208, 0.38) 0 max(1px, calc(1px * var(--leaderboard-scale))), transparent max(1px, calc(1px * var(--leaderboard-scale)))) calc(46px * var(--leaderboard-scale)) 0 / max(1px, calc(1px * var(--leaderboard-scale))) 100% no-repeat,
+    var(--overlay-panel-bg);
+  clip-path: polygon(0 0, calc(100% - 18px * var(--leaderboard-scale)) 0, 100% calc(18px * var(--leaderboard-scale)), 100% 100%, calc(14px * var(--leaderboard-scale)) 100%, 0 calc(100% - 14px * var(--leaderboard-scale)));
+}
+
+body.leaderboard-content--contract.overlay-theme--g-rebels-popups .leaderboard {
+  border-color: rgba(247, 227, 106, 0.42);
+  background:
+    linear-gradient(var(--rebels-gold), var(--rebels-gold)) calc(14px * var(--leaderboard-scale)) calc(18px * var(--leaderboard-scale)) / calc(28px * var(--leaderboard-scale)) calc(3px * var(--leaderboard-scale)) no-repeat,
+    linear-gradient(90deg, rgba(247, 227, 106, 0.12) 0 calc(46px * var(--leaderboard-scale)), transparent calc(46px * var(--leaderboard-scale))),
+    linear-gradient(90deg, rgba(247, 227, 106, 0.38) 0 max(1px, calc(1px * var(--leaderboard-scale))), transparent max(1px, calc(1px * var(--leaderboard-scale)))) calc(46px * var(--leaderboard-scale)) 0 / max(1px, calc(1px * var(--leaderboard-scale))) 100% no-repeat,
+    var(--overlay-panel-bg);
+}
+
+body.leaderboard-content--contract.overlay-theme--cockpit-panel .contract-card,
+body.leaderboard-content--contract.overlay-theme--cockpit-popups .contract-card,
+body.leaderboard-content--contract.overlay-theme--g-rebels-popups .contract-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+body.leaderboard-content--contract.overlay-theme--cockpit-panel .contract-card__label,
+body.leaderboard-content--contract.overlay-theme--cockpit-popups .contract-card__label {
+  color: var(--hud-cyan);
+}
+
+body.leaderboard-content--contract.overlay-theme--g-rebels-popups .contract-card__label {
+  color: var(--rebels-gold);
 }
 
 body.overlay-theme--g-rebels-popups.leaderboard-layout--panel .leaderboard {

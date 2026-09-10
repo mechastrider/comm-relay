@@ -167,6 +167,9 @@ func TestHub_WhenProductionClientsRegisterAndTransition_ExpectSnapshotAndBounded
 		return snapshotErr == nil
 	}, time.Second, time.Millisecond)
 	hub.SetLeaderboardVisibility(controller)
+	presentation, err := newViewerContractPresentation(nil)
+	require.NoError(t, err)
+	hub.SetViewerContractPresentation(presentation)
 	first := &wsClient{hub: hub, send: make(chan []byte, ClientSendBuffer)}
 	second := &wsClient{hub: hub, send: make(chan []byte, ClientSendBuffer)}
 	debug := &wsClient{hub: hub, send: make(chan []byte, ClientSendBuffer), debug: true}
@@ -178,6 +181,9 @@ func TestHub_WhenProductionClientsRegisterAndTransition_ExpectSnapshotAndBounded
 		frame := decodeVisibilityFrame(t, <-client.send)
 		require.Equal(t, "leaderboard_visibility", frame["type"])
 		require.Equal(t, "hidden", frame["state"])
+		contractFrame := decodeVisibilityFrame(t, <-client.send)
+		require.Equal(t, wireViewerContractStateType, contractFrame["type"])
+		require.Nil(t, contractFrame["contract"])
 	}
 	select {
 	case payload := <-debug.send:
@@ -197,6 +203,7 @@ func TestHub_WhenProductionClientsRegisterAndTransition_ExpectSnapshotAndBounded
 	hub.register(reconnected)
 	frame := decodeVisibilityFrame(t, <-reconnected.send)
 	require.Equal(t, "pinned", frame["state"])
+	require.Equal(t, wireViewerContractStateType, decodeVisibilityFrame(t, <-reconnected.send)["type"])
 }
 
 type staticConfigProvider struct{ cfg config.Config }

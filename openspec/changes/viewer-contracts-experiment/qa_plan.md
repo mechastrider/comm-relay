@@ -25,7 +25,10 @@
 | missing/hidden winner | Submit unknown and hidden merge-source ids | 404; active contract unchanged; picker clears stale selection | P0 |
 | close without result | Confirm close, then retry | Active clears; no XP/event/history/alert; retry 409 | P0 |
 | reward history privacy | Query global/viewer history after win | Ordinary award row only; no contract id/title/objective or new kind | P0 |
-| WebSocket compatibility | Feed contract alert to all existing clients; connect after open | Alert page handles it; chat/dock/leaderboard stay unchanged; reconnect does not replay | P0 |
+| WebSocket compatibility | Feed contract alert and state to all existing clients; connect after open | Alert page handles only the splash; leaderboard/dock restore persistent state; chat stays unchanged; reconnect does not replay the splash | P0 |
+| persistent contract card | Open a contract with each theme and reload the leaderboard source | Existing leaderboard rectangle shows the objective/reward instead of ranking and restores it after reconnect | P0 |
+| dock presentation controls | Switch contract/ranking, repeat, hide/show using icons by pointer and keyboard | State converges across dock/leaderboard; localized tooltips and accessible pressed/busy states are correct | P0 |
+| leaderboard policy restoration | Start from always, automatic, and on-request policies; override during a contract; settle it | Contract state temporarily owns the surface and the untouched ordinary policy resumes afterward | P0 |
 | protected queue | Visible command + waiting commands + contract; fill mixed/protected queues | No preemption; award/contract FIFO precedes commands; documented displacement and capacity hold | P0 |
 | alert rendering | Render plain/custom/broken media, HTML-like and 280-code-point Cyrillic/Latin text | Text nodes only, readable fallback, no script execution, no empty media hole | P0 |
 | themes/rectangles | Snapshot every theme in landscape, square, portrait, narrow banner; toggle reduced motion | Transparent outside chrome, no scrollbars/clipped frame, usable wrapping/clamp, static reduced-motion emphasis | P1 |
@@ -40,9 +43,9 @@
 - Run with default desktop data locations and with a temporary explicit `-config` path; confirm the existing SQLite file alone gains schema 15 and no new config/file location appears.
 - Start with the data directory writable, open a contract, terminate cleanly, restart, and verify recovery. Repeat with process interruption after committed response and confirm the durable result is authoritative.
 - Make a disposable database/data directory read-only or inject store failures; startup/action must fail with a wrapped error and must not recreate, truncate, or partially settle data.
-- Connect multiple local WebSocket clients, stall one queue, announce a contract, and verify other clients continue while `pipeline.websocket_drops.alert` accounts for pressure.
+- Connect multiple local WebSocket clients, stall one queue, change contract presentation, and verify other clients continue while WebSocket drop accounting identifies alert/state frame pressure.
 - Confirm no native dialog, child process, external network request, connector publish, clipboard, notification, tray/menu, or new permission prompt occurs.
-- Put OBS alert source offline during open, reconnect, verify no replay, then use Announce again and verify one splash.
+- Put both OBS sources offline during open, reconnect, verify the persistent leaderboard card restores without replaying the alert, then use Repeat announcement and verify one splash.
 
 ## Persistence Migration / Corruption / Recovery
 
@@ -74,11 +77,19 @@ openspec validate viewer-contracts-experiment --strict
 git diff --check
 ```
 
-Add focused Go suites for migration 15, store lifecycle/atomic settlement, handler status/JSON contracts, wire payloads, hub broadcast/drop behavior, reward history, and router POST-action guards. Add Node suites for contract form/state helpers, tab markup/keyboard behavior, alert scheduling/render/media/XSS/reduced motion, i18n parity, and dock/chat ignore behavior. Extend the seed command or test-only fixtures only if needed to create duplicate-name, merged, hidden, multi-platform, and reward-history data without real connector access.
+Add focused Go suites for migration 15, store lifecycle/atomic settlement, handler status/JSON contracts, presentation-state snapshots, wire payloads, hub broadcast/drop behavior, reward history, and router POST-action guards. Add Node suites for contract form/state helpers, tab markup/keyboard behavior, alert scheduling/render/media/XSS/reduced motion, leaderboard presentation state/rendering, dock icons/tooltips, i18n parity, and unrelated-client ignore behavior. Extend the seed command or test-only fixtures only if needed to create duplicate-name, merged, hidden, multi-platform, and reward-history data without real connector access.
 
-Manual setup uses a temporary data directory, development server with loose `web/`, two browser windows for conflict checks, and OBS/browser viewport presets for visual/audio smoke. Never copy real OAuth tokens or live chat text into fixtures/evidence.
+Manual setup uses a temporary data directory, development server with loose `web/`, two browser windows for conflict checks, the messages dock, and OBS/browser viewport presets for visual/audio smoke. Never copy real OAuth tokens or live chat text into fixtures/evidence.
 
 ## Evidence and Explicit Skips
+
+### 2026-09-09 implementation evidence
+
+- `npm ci`, `npm run lint`, and `npm test` passed; all 47 Node tests passed, including contract presentation state, dock icon/tooltip markup, locale parity, and Browser Source rectangle assertions.
+- `go test ./...` and `go test -race -count=1 ./...` passed during the implementation pass; the focused `go test ./internal/api -count=1` rerun also passed after presentation-state wiring was finalized.
+- `go build ./...`, targeted `golangci-lint run ./internal/api`, strict OpenSpec validation, and `git diff --check` passed. The repository-wide linter remains blocked by pre-existing `packimport` formatting/shadow/revive findings outside this change, so gate Q.4 remains open.
+- Linux browser smoke used synthetic data and the real local server. It covered open, contract/ranking switching, repeat controls, hide/show, reconnect, restart default (`contract`, visible), settlement restoration, all current leaderboard themes, and a 360×220 narrow Browser Source without overflow or console errors.
+- Windows, macOS, packaged Wails, and real OBS/connector cells remain unrun and are not claimed as passed.
 
 Attach command output for all automated checks, migration fixture/version results, API/WebSocket sample envelopes with synthetic text, and screenshots for Live empty/active/picker/error states plus each theme/rectangle matrix. Record OS, architecture, webview/OBS version, scale, locale, and any unavailable matrix cell; do not imply an unrun platform passed.
 

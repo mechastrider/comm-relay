@@ -7,7 +7,7 @@
 | Windows 11 | amd64 | Wails/WebView2 and headless builds expose the same contract API, admin flow, SQLite migration, and embedded alert assets |
 | macOS supported by current release | universal 64-bit (amd64/arm64) | Same behavior through the packaged Wails webview; no entitlement or signing change |
 | Linux distributions supported by current release | amd64 | Same behavior through WebKitGTK and headless build; existing OBS hardware-acceleration caveats remain |
-| OBS Browser Source on supported hosts | OBS-provided CEF | Contract alerts remain transparent and responsive; no platform-specific frame fields or logic |
+| OBS Browser Source on supported hosts | OBS-provided CEF | Contract alerts and the persistent leaderboard card remain transparent and responsive; no platform-specific frame fields or logic |
 
 Viewer eligibility is platform-neutral: canonical viewers originating from Twitch, YouTube Live, VK Live, or merges are treated identically. Connector availability or failure does not affect an already active contract or its ability to settle against a durable viewer.
 
@@ -20,8 +20,8 @@ Viewer eligibility is platform-neutral: canonical viewers originating from Twitc
 | tray/menu/shortcuts | Existing application menu/tray/global-shortcut behavior is unchanged | None | Not applicable |
 | protocol/file associations | Existing localhost `http`/`ws` URLs only; no scheme or file association | Existing loopback access | API/WS failure is shown as local-server error with retry |
 | single instance/deep open | No new single-instance or deep-link contract | None | Concurrent browser/webview clients rely on SQLite lifecycle conflicts and reload authoritative state |
-| child processes/IPC | No child process or native IPC; browser/webview talks to the in-process localhost HTTP/WebSocket server | Existing loopback boundary | A dropped announcement is recoverable with Announce again; it is never auto-replayed |
-| sleep/wake/shutdown | No timer or background worker; committed active state remains in SQLite | None beyond current database access | After wake/restart, admin reads the current contract; OBS reconnect does not replay it automatically |
+| child processes/IPC | No child process or native IPC; browser/webview talks to the in-process localhost HTTP/WebSocket server | Existing loopback boundary | A dropped announcement is recoverable with Announce again; the persistent card restores from a state snapshot |
+| sleep/wake/shutdown | No timer or background worker; committed active state remains in SQLite while display overrides stay process-local | None beyond current database access | After wake/restart, admin reads the current contract and the shared OBS surface defaults to the visible objective; the alert is not replayed |
 
 The migration must be compatible with Windows file locking and the existing single SQLite connection/WAL settings. It MUST NOT move settings from `config.json`, create a second database, or write contract text to release/install locations.
 
