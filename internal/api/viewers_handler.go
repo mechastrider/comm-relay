@@ -58,6 +58,7 @@ type viewerSummaryResponse struct {
 	AvatarURL           string                   `json:"avatar_url,omitempty"`
 	CustomAvatar        string                   `json:"custom_avatar,omitempty"`
 	LeaderboardHidden   bool                     `json:"leaderboard_hidden,omitempty"`
+	GreetingsDisabled   bool                     `json:"greetings_disabled"`
 	MessageCount        int                      `json:"message_count"`
 	XP                  int                      `json:"xp"`
 	SessionMessageCount int                      `json:"session_message_count"`
@@ -85,6 +86,7 @@ func viewerSummaryFromStore(viewer store.Viewer, includeIdentities bool, customA
 		DisplayName:         viewer.DisplayName,
 		AvatarURL:           store.ViewerPortraitURL(viewer, customAvatarsEnabled),
 		LeaderboardHidden:   viewer.LeaderboardHidden,
+		GreetingsDisabled:   viewer.GreetingsDisabled,
 		MessageCount:        viewer.MessageCount,
 		XP:                  viewer.XP,
 		SessionMessageCount: viewer.SessionMessageCount,
@@ -233,6 +235,7 @@ type updateViewerRequest struct {
 	ID                string  `json:"id"`
 	DisplayName       *string `json:"display_name"`
 	LeaderboardHidden *bool   `json:"leaderboard_hidden"`
+	GreetingsDisabled *bool   `json:"greetings_disabled"`
 }
 
 func (h *viewersHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
@@ -252,7 +255,7 @@ func (h *viewersHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "id is required")
 		return
 	}
-	if request.DisplayName == nil && request.LeaderboardHidden == nil {
+	if request.DisplayName == nil && request.LeaderboardHidden == nil && request.GreetingsDisabled == nil {
 		writeJSON(w, http.StatusOK, map[string]bool{"updated": true})
 		return
 	}
@@ -285,6 +288,17 @@ func (h *viewersHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		flushLeaderboard = true
+	}
+	if request.GreetingsDisabled != nil {
+		if err := h.viewerStore.UpdateGreetingsDisabled(request.ID, *request.GreetingsDisabled); err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				writeError(w, http.StatusNotFound, "viewer not found")
+				return
+			}
+			clog.Errorf(r.Context(), "update viewer greeting exclusion: %w", err)
+			writeError(w, http.StatusInternalServerError, "failed to update viewer")
+			return
+		}
 	}
 
 	if flushLeaderboard && h.publisher != nil {

@@ -246,7 +246,7 @@ func (h *Hub) BroadcastDebug(payload []byte) int {
 		case c.send <- payload:
 			accepted++
 		default:
-			// Slow client: use the same drop policy as the production audience.
+			observability.Default.RecordWebSocketDrop(wireFrameType(payload))
 		}
 	}
 	return accepted
@@ -266,6 +266,7 @@ func (h *Hub) BroadcastDebugBatch(payloads ...[]byte) int {
 			case c.send <- payload:
 			default:
 				acceptedAll = false
+				observability.Default.RecordWebSocketDrop(wireFrameType(payload))
 			}
 			if !acceptedAll {
 				break

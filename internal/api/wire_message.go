@@ -69,9 +69,20 @@ type wireAlert struct {
 	ContractID        string `json:"contract_id,omitempty"`
 	ContractTitle     string `json:"contract_title,omitempty"`
 	ContractObjective string `json:"contract_objective,omitempty"`
+	GreetingKind      string `json:"greeting_kind,omitempty"`
 	MessagePlatform   string `json:"message_platform,omitempty"`
 	MessageID         string `json:"message_id,omitempty"`
 	MessageText       string `json:"message_text,omitempty"`
+}
+
+func greetingAlertWirePayload(greeting store.Greeting, name, avatarURL, text string, createdAt time.Time) ([]byte, error) {
+	alert := wireAlert{Type: wireAlertType, Name: name, AvatarURL: avatarURL, Text: text, DurationMs: greeting.DurationMs, Source: "greeting", GreetingKind: string(greeting.ID), CreatedAt: createdAt.UTC().Format(time.RFC3339Nano)}
+	applyCatalogAlertMedia(&alert, greeting.ImageAsset, greeting.SoundFile, greeting.Sound, greeting.SoundVolume, greeting.Layout, greeting.ImageFit, greeting.ImageSizePct)
+	data, err := json.Marshal(alert)
+	if err != nil {
+		return nil, errors.Errorf("marshal greeting alert wire event: %w", err)
+	}
+	return data, nil
 }
 
 func contractAlertWirePayload(contract *store.ViewerContract, createdAt time.Time) ([]byte, error) {

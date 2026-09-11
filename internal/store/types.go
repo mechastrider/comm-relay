@@ -47,6 +47,31 @@ type Command struct {
 	ImageSizePct    int
 }
 
+// GreetingKind identifies one of the two fixed automatic greeting definitions.
+type GreetingKind string
+
+const (
+	// GreetingNewViewer identifies the first-ever ordinary message greeting.
+	GreetingNewViewer GreetingKind = "new_viewer"
+	// GreetingReturningViewer identifies the first ordinary message after a new stream.
+	GreetingReturningViewer GreetingKind = "returning_viewer"
+)
+
+// Greeting is a persisted fixed automatic greeting definition.
+type Greeting struct {
+	ID             GreetingKind
+	Enabled        bool
+	SplashTemplate string
+	Sound          string
+	DurationMs     int
+	ImageAsset     string
+	SoundFile      string
+	SoundVolume    int
+	Layout         string
+	ImageFit       string
+	ImageSizePct   int
+}
+
 // AwardType is a persisted operator award catalog entry.
 type AwardType struct {
 	ID             string
@@ -140,6 +165,7 @@ type Viewer struct {
 	ID                  string
 	CustomAvatar        string
 	LeaderboardHidden   bool
+	GreetingsDisabled   bool
 	DisplayName         string
 	DisplayNameOverride string
 	MessageCount        int

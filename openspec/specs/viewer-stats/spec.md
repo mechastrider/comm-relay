@@ -7,7 +7,7 @@ Track contribution as XP in session, day, and all-time windows. Count every iden
 ## Requirements
 
 ### Requirement: Chat lines with a stable identity update durable counters
-When an ingested chat line has a non-empty `platform` and `user_id`, the system SHALL upsert that identity onto a canonical viewer and increment that viewer's `message_count` by 1 for all-time, the current stream session, and the current stats day. The line MUST NOT add XP by itself. After the count update, the system MAY grant activity XP as specified in the activity requirement. Lines without `user_id` SHALL still appear in live chat and MUST NOT create a viewer or change counters.
+When an ingested chat line has a non-empty `platform` and `user_id`, the system SHALL upsert that identity onto a canonical viewer and increment that viewer's `message_count` by 1 for all-time, the current stream session, and the current stats day. The line MUST NOT add XP by itself. After the count update, the system MAY grant activity XP as specified in the activity requirement. After command matching, a line that does not match an enabled command SHALL atomically record whether it is the canonical viewer's first ordinary message ever and first ordinary message in the current stream session for greeting qualification. Greeting qualification MUST NOT itself alter `xp` or `message_count`. Lines without `user_id` SHALL still appear in live chat and MUST NOT create a viewer or change counters.
 
 #### Scenario: First message from a Twitch user
 - **WHEN** a Twitch message arrives with `user_id` `42` and display name `Alice` and activity is enabled
@@ -20,6 +20,14 @@ When an ingested chat line has a non-empty `platform` and `user_id`, the system 
 #### Scenario: Missing user id
 - **WHEN** a chat line has an empty `user_id`
 - **THEN** no viewer row is created and existing counters stay unchanged
+
+#### Scenario: First ordinary line after command
+- **WHEN** a new identified viewer sends an enabled command followed by an ordinary line
+- **THEN** both lines increment existing message counters and only the ordinary line establishes the greeting markers
+
+#### Scenario: Concurrent duplicate intake
+- **WHEN** two ordinary lines for the same canonical viewer are processed concurrently before any marker exists
+- **THEN** exactly one line is committed as first-ever and first-in-session for greeting qualification
 
 ### Requirement: Identities stay distinct until the operator merges them
 Each `(platform, user_id)` pair SHALL map to exactly one canonical viewer. The same display name on two platforms MUST remain two viewers until the operator merges them. The system MUST NOT auto-merge by username or display name.
@@ -40,7 +48,7 @@ Each `(platform, user_id)` pair SHALL map to exactly one canonical viewer. The s
 - **THEN** the request fails with HTTP 400 and no counters change
 
 ### Requirement: Stream session and stats day are independent periods
-The system SHALL keep one current stream session. If none is open at start, it SHALL open one. `POST /api/sessions/start` SHALL end the current session and open a new empty session. The stats day key SHALL use the operator's local timezone and `day_reset_hour` (0–23, default 6). Session totals MUST NOT reset at the day boundary; day totals MUST NOT reset when a new session starts.
+The system SHALL keep one current stream session. If none is open at start, it SHALL open one. `POST /api/sessions/start` SHALL end the current session and open a new empty session and SHALL be the only authoritative manual boundary for returning-viewer greetings. Starting a session SHALL create an empty ordinary-message greeting period independently of day and all-time counters. A stats day transition or process restart MUST NOT create a new greeting period. The stats day key SHALL use the operator's local timezone and `day_reset_hour` (0–23, default 6). Session totals MUST NOT reset at the day boundary; day totals MUST NOT reset when a new session starts.
 
 #### Scenario: New stream
 - **WHEN** the operator confirms a new stream
@@ -49,6 +57,14 @@ The system SHALL keep one current stream session. If none is open at start, it S
 #### Scenario: Overnight session before reset hour
 - **WHEN** `day_reset_hour` is 6 and a session runs from 22:00 to 02:00 local time
 - **THEN** those messages share one stats day and one session
+
+#### Scenario: New stream greeting period
+- **WHEN** the operator starts a new stream and a known viewer sends an ordinary message
+- **THEN** the message is first in the new session even when the viewer has current-day activity
+
+#### Scenario: Restart mid-session
+- **WHEN** the process restarts after a viewer's first ordinary session message
+- **THEN** a later message in the same session is not treated as first in session
 
 ### Requirement: Admin can list, search, and open a viewer
 `GET /api/viewers` SHALL return canonical viewers (not hidden merge sources) with last-seen identity fields, counters for session, day, and all-time, and `platforms`: a JSON array of unique platform ids for that viewer. Period counters SHALL use `xp` and `message_count`. The payload MUST NOT include `score`. Platform ids SHALL be unique, lowercase, and ordered with the last-seen platform first, then remaining identities by last-seen time descending. The list MUST NOT include `identities` or per-identity logins. An optional `q` query SHALL filter by display name, username, or platform user id. `GET /api/viewers/get` SHALL accept `id` as a query parameter and return that viewer's identities and the same `xp` counters. Viewer identifiers MUST appear in query or JSON bodies, never as `/api/{id}` path segments.

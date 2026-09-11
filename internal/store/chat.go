@@ -32,6 +32,8 @@ type ChatMutationResult struct {
 	ReplacedAvatarCache  string
 	XPChanged            bool
 	MeaningfulRankChange bool
+	GreetingKind         GreetingKind
+	GreetingSuppressed   string
 }
 
 // ApplyChatMutationResult applies chat and reports whether XP and ordered top-three membership changed.
@@ -40,6 +42,28 @@ func (s *Store) ApplyChatMutationResult(
 	activity ActivitySettings,
 	dayResetHour int,
 	now time.Time,
+) (ChatMutationResult, error) {
+	return s.applyChatMutationResult(identity, activity, dayResetHour, now, true)
+}
+
+// ApplyClassifiedChatMutationResult records an ordinary-message greeting marker only
+// when ordinary is true. Recognized commands still retain all existing counters.
+func (s *Store) ApplyClassifiedChatMutationResult(
+	identity ChatIdentity,
+	activity ActivitySettings,
+	dayResetHour int,
+	now time.Time,
+	ordinary bool,
+) (ChatMutationResult, error) {
+	return s.applyChatMutationResult(identity, activity, dayResetHour, now, ordinary)
+}
+
+func (s *Store) applyChatMutationResult(
+	identity ChatIdentity,
+	activity ActivitySettings,
+	dayResetHour int,
+	now time.Time,
+	ordinary bool,
 ) (ChatMutationResult, error) {
 	if strings.TrimSpace(identity.UserID) == "" || strings.TrimSpace(identity.Platform) == "" {
 		return ChatMutationResult{}, nil
@@ -103,6 +127,15 @@ func (s *Store) ApplyChatMutationResult(
 		return ChatMutationResult{}, countErr
 	}
 
+	var greetingKind GreetingKind
+	var greetingSuppressed string
+	if ordinary {
+		greetingKind, greetingSuppressed, err = s.qualifyGreetingLocked(tx, viewerID, sessionID, seenAt)
+		if err != nil {
+			return ChatMutationResult{}, err
+		}
+	}
+
 	if xpChanged {
 		if err := s.grantActivityLocked(tx, viewerID, sessionID, dayKey, activity, now); err != nil {
 			return ChatMutationResult{}, err
@@ -126,7 +159,52 @@ func (s *Store) ApplyChatMutationResult(
 		ReplacedAvatarCache:  replacedCache,
 		XPChanged:            xpChanged,
 		MeaningfulRankChange: meaningfulRankChange,
+		GreetingKind:         greetingKind,
+		GreetingSuppressed:   greetingSuppressed,
 	}, nil
+}
+
+func (s *Store) qualifyGreetingLocked(tx *sql.Tx, viewerID, sessionID, seenAt string) (GreetingKind, string, error) {
+	var firstEver sql.NullString
+	var disabled int
+	if err := tx.QueryRow(`SELECT first_ordinary_message_at, greetings_disabled FROM viewers WHERE id = ?`, viewerID).Scan(&firstEver, &disabled); err != nil {
+		return "", "", errors.Errorf("load greeting viewer markers: %w", err)
+	}
+	var firstSession sql.NullString
+	err := tx.QueryRow(`SELECT first_ordinary_message_at FROM viewer_session_stats WHERE viewer_id = ? AND session_id = ?`, viewerID, sessionID).Scan(&firstSession)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return "", "", errors.Errorf("load greeting session marker: %w", err)
+	}
+
+	kind := GreetingReturningViewer
+	if !firstEver.Valid || strings.TrimSpace(firstEver.String) == "" {
+		kind = GreetingNewViewer
+		if _, err := tx.Exec(`UPDATE viewers SET first_ordinary_message_at = ? WHERE id = ? AND first_ordinary_message_at IS NULL`, seenAt, viewerID); err != nil {
+			return "", "", errors.Errorf("set first ordinary viewer marker: %w", err)
+		}
+	}
+	if !firstSession.Valid || strings.TrimSpace(firstSession.String) == "" {
+		if _, err := tx.Exec(`UPDATE viewer_session_stats SET first_ordinary_message_at = ? WHERE viewer_id = ? AND session_id = ? AND first_ordinary_message_at IS NULL`, seenAt, viewerID, sessionID); err != nil {
+			return "", "", errors.Errorf("set first ordinary session marker: %w", err)
+		}
+	} else if kind != GreetingNewViewer {
+		return "", "", nil
+	}
+
+	if disabled != 0 {
+		return kind, "excluded", nil
+	}
+	var enabled int
+	if err := tx.QueryRow(`SELECT enabled FROM greeting_definitions WHERE id = ?`, kind).Scan(&enabled); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", "", ErrGreetingNotFound
+		}
+		return "", "", errors.Errorf("load greeting definition state: %w", err)
+	}
+	if enabled == 0 {
+		return kind, "disabled", nil
+	}
+	return kind, "", nil
 }
 
 func (s *Store) activityGrantEligibleLocked(

@@ -284,6 +284,7 @@
                 <button id="audience-viewers-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="audience-viewers-panel" data-audience-tab="viewers" data-i18n="audience.tabViewers">Viewers</button>
                 <button id="audience-history-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-history-panel" tabindex="-1" data-audience-tab="history" data-i18n="audience.tabHistory">Journal</button>
                 <button id="audience-commands-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-commands-panel" data-audience-tab="commands" data-i18n="audience.tabCommands">Commands</button>
+                <button id="audience-greetings-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-greetings-panel" tabindex="-1" data-audience-tab="greetings" data-i18n="audience.tabGreetings">Greetings</button>
                 <button id="audience-awards-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-awards-panel" data-audience-tab="awards" data-i18n="audience.tabAwards">Awards</button>
               </div>
             </header>
@@ -514,6 +515,19 @@
                   </form>
                   <p id="commands-editor-empty" class="empty-state audience-catalog-editor__empty" data-i18n="commands.selectOrCreate">Select a command or create one.</p>
                 </aside>
+              </div>
+            </div>
+
+            <div id="audience-greetings-panel" class="audience-panel audience-catalog-panel" role="tabpanel" aria-labelledby="audience-greetings-tab" hidden>
+              <div class="audience-catalog-layout">
+                <section class="audience-catalog-list" aria-labelledby="greetings-list-heading"><header class="audience-catalog-list__header"><h2 id="greetings-list-heading" class="audience-catalog-list__title" data-i18n="greetings.listHeading">Automatic greetings</h2></header><div class="audience-catalog-list__body"><ul id="greetings-list" class="audience-catalog-items" role="listbox" aria-labelledby="greetings-list-heading"></ul><div id="greetings-list-error" class="notice notice--error" hidden><p class="notice__body"></p><button id="greetings-retry" class="btn-physical btn-small" type="button" data-i18n="state.retry">Retry</button></div></div></section>
+                <aside class="audience-catalog-editor" aria-labelledby="greetings-editor-heading"><header class="audience-catalog-editor__header"><h2 id="greetings-editor-heading" class="audience-catalog-editor__title" tabindex="-1" data-i18n="greetings.editorHeading">Edit greeting</h2><div class="audience-catalog-editor__actions"><button id="greetings-test" class="btn-physical btn-small" type="button" data-i18n="greetings.test">Test</button><button id="greetings-save" class="btn-physical btn-small" type="submit" form="greetings-form" data-i18n="catalog.save">Save</button></div></header>
+                  <form id="greetings-form" class="audience-catalog-editor__body" hidden>
+                    <fieldset class="form__field"><legend data-i18n="greetings.behavior">Behavior</legend><label><input id="greeting-enabled" type="checkbox"> <span data-i18n="greetings.enabled">Enabled</span></label><p id="greeting-trigger" class="field-hint"></p></fieldset>
+                    <fieldset class="form__field"><legend data-i18n="greetings.content">Content</legend><label for="greeting-template" data-i18n="catalog.splashTemplate">Splash template</label><div id="greeting-template-vars" class="catalog-template-vars" role="group" data-i18n-aria-label="catalog.templateVariables"></div><input id="greeting-template" type="text" required autocomplete="off"><p id="greeting-template-preview" class="catalog-template-preview" aria-live="polite"></p><p class="field-error" data-greeting-error="splash_template" role="alert" hidden></p></fieldset>
+                    <fieldset class="form__field"><legend data-i18n="greetings.media">Media</legend><label for="greeting-sound" data-i18n="catalog.soundLabel">Sound</label><select id="greeting-sound"><option value="" data-i18n="sound.silence">Silence</option><option value="chime" data-i18n="sound.chime">Chime</option><option value="ping" data-i18n="sound.ping">Ping</option><option value="soft" data-i18n="sound.soft">Soft</option><option value="alert" data-i18n="sound.alert">Alert</option></select><label for="greeting-image-file" data-i18n="catalog.imageLabel">Alert image</label><input id="greeting-image-file" type="file" accept="image/png,image/jpeg,image/webp"><button id="greeting-image-clear" class="btn-physical btn-small" type="button" data-i18n="catalog.clear">Clear</button><p id="greeting-image-name" class="field-hint"></p><p class="field-error" data-greeting-error="image_asset" role="alert" hidden></p><label for="greeting-sound-file" data-i18n="catalog.customSoundLabel">Custom sound file</label><input id="greeting-sound-file" type="file" accept="audio/mpeg,audio/wav,.mp3,.wav"><button id="greeting-sound-clear" class="btn-physical btn-small" type="button" data-i18n="catalog.clear">Clear</button><p id="greeting-sound-name" class="field-hint"></p><p class="field-error" data-greeting-error="sound_file" role="alert" hidden></p><label for="greeting-volume" data-i18n="catalog.soundVolumeLabel">Sound volume</label><input id="greeting-volume" type="range" min="0" max="100" value="70"><output id="greeting-volume-output">70%</output><p class="field-error" data-greeting-error="sound_volume" role="alert" hidden></p><label for="greeting-image-fit" data-i18n="catalog.imageFitLabel">Image scale</label><select id="greeting-image-fit"><option value="cover">Fill</option><option value="contain">Fit</option><option value="fill">Stretch</option><option value="tile">Tile</option></select><p class="field-error" data-greeting-error="image_fit" role="alert" hidden></p><label for="greeting-image-size" data-i18n="catalog.imageSizeLabel">Image size</label><input id="greeting-image-size" type="range" min="25" max="300" step="5" value="100"><output id="greeting-image-size-output">100%</output><p class="field-error" data-greeting-error="image_size_pct" role="alert" hidden></p></fieldset>
+                    <fieldset class="form__field"><legend data-i18n="greetings.appearance">Appearance</legend><label data-i18n="catalog.layoutLabel">Layout</label><div><label><input type="radio" name="greeting-layout" value="card"> <span data-i18n="catalog.layoutCard">Card</span></label><label><input type="radio" name="greeting-layout" value="banner"> <span data-i18n="catalog.layoutBanner">Banner</span></label><label><input type="radio" name="greeting-layout" value="fullscreen"> <span data-i18n="catalog.layoutFullscreen">Fullscreen</span></label></div><p class="field-error" data-greeting-error="layout" role="alert" hidden></p><label for="greeting-duration" data-i18n="catalog.durationLabel">Duration (ms)</label><input id="greeting-duration" type="number" min="1" required><p class="field-error" data-greeting-error="duration_ms" role="alert" hidden></p></fieldset><p id="greetings-status" class="field-hint" role="status" aria-live="polite"></p>
+                  </form></aside>
               </div>
             </div>
 
@@ -1919,6 +1933,17 @@
       </div>
     </dialog>
 
+    <dialog id="discard-changes-dialog" class="prompt-dialog" aria-labelledby="discard-changes-title" aria-describedby="discard-changes-message">
+      <div class="prompt-dialog__frame">
+        <h3 id="discard-changes-title" data-i18n="dialog.discardUnsavedTitle">Discard unsaved changes?</h3>
+        <p id="discard-changes-message" class="prompt-dialog__message"></p>
+        <div class="prompt-dialog__actions">
+          <button id="discard-changes-cancel" class="btn-physical" type="button" autofocus data-i18n="dialog.keepEditing">Keep editing</button>
+          <button id="discard-changes-confirm" class="btn-physical btn-danger" type="button" data-i18n="dialog.discardChanges">Discard changes</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="new-stream-prompt" class="prompt-dialog" aria-labelledby="new-stream-prompt-title">
       <div class="prompt-dialog__frame">
         <h3 id="new-stream-prompt-title" data-i18n="stream.newStreamTitle">Start a new stream?</h3>
@@ -2240,6 +2265,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=32"></script>
+  <script type="module" src="app.js?v=33"></script>
 </body>
 </html>

@@ -72,6 +72,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	configHandler.leaderboardPublisher = leaderboardPublisher
 	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher)
 	commandsHandler := newCommandsHandler(opts.ViewerStore)
+	greetingsHandler := newGreetingsHandler(opts.ViewerStore, opts.Store, opts.Hub)
 	awardsHandler := newAwardsHandler(opts.ViewerStore, opts.Hub, leaderboardPublisher, opts.Store, opts.LeaderboardVisibility)
 	contractPresentation, err := newViewerContractPresentation(opts.ViewerStore)
 	if err != nil {
@@ -127,6 +128,9 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("POST /api/leaderboard/pin", visibilityHandler.handlePin)
 	mux.HandleFunc("POST /api/leaderboard/resume", visibilityHandler.handleResume)
 	mux.HandleFunc("GET /api/commands", commandsHandler.handleList)
+	mux.HandleFunc("GET /api/greetings", greetingsHandler.handleList)
+	mux.HandleFunc("POST /api/greetings/update", greetingsHandler.handleUpdate)
+	mux.HandleFunc("POST /api/greetings/preview", greetingsHandler.handlePreview)
 	mux.HandleFunc("POST /api/commands/create", commandsHandler.handleCreate)
 	mux.HandleFunc("POST /api/commands/update", commandsHandler.handleUpdate)
 	mux.HandleFunc("POST /api/commands/delete", commandsHandler.handleDelete)

@@ -42,6 +42,16 @@ func overlayAssetReferenced(name string, cfg config.Config, viewerStore *store.S
 		}
 	}
 
+	greetings, err := viewerStore.ListGreetings()
+	if err != nil {
+		return false, errors.Errorf("list greetings for overlay asset reference: %w", err)
+	}
+	for _, greeting := range greetings {
+		if greeting.ImageAsset == name || greeting.SoundFile == name {
+			return true, nil
+		}
+	}
+
 	inUse, err := viewerStore.OverlayAssetFilenameInUse(name)
 	if err != nil {
 		return false, errors.Errorf("check viewer portrait asset reference: %w", err)

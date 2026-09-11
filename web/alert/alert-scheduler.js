@@ -26,6 +26,10 @@ export function isValidAlertEnvelope(alert) {
       nonBlankString(alert.contract_title) && nonBlankString(alert.contract_objective) &&
       nonBlankString(alert.award_id) && nonBlankString(alert.award_name);
   }
+  if (alert.source === "greeting") {
+    return alert.points === 0 &&
+      (alert.greeting_kind === "new_viewer" || alert.greeting_kind === "returning_viewer");
+  }
   return true;
 }
 

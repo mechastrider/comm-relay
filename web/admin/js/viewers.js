@@ -707,6 +707,27 @@ function renderViewerDetail(viewer, rewardHistorySection) {
   });
   hideField.append(hideLabel);
 
+  const greetingsField = document.createElement("div");
+  greetingsField.className = "form__field audience-detail__hide-field";
+  const greetingsLabel = document.createElement("label");
+  const greetingsInput = document.createElement("input");
+  greetingsInput.id = "viewer-greetings-disabled";
+  greetingsInput.type = "checkbox";
+  greetingsInput.checked = Boolean(viewer.greetings_disabled);
+  greetingsLabel.htmlFor = greetingsInput.id;
+  greetingsLabel.append(greetingsInput, document.createTextNode(" " + t("greetings.exclude")));
+  const greetingsHint = document.createElement("p");
+  greetingsHint.className = "field-hint";
+  greetingsHint.textContent = t("greetings.excludeHint");
+  greetingsInput.addEventListener("change", function () {
+    const nextDisabled = greetingsInput.checked;
+    greetingsInput.disabled = true;
+    updateViewerGreetingsDisabled(viewer.id, nextDisabled)
+      .catch(function () { greetingsInput.checked = !nextDisabled; })
+      .finally(function () { greetingsInput.disabled = false; });
+  });
+  greetingsField.append(greetingsLabel, greetingsHint);
+
   const identitiesHeading = document.createElement("h4");
   identitiesHeading.className = "audience-detail__subheading";
   identitiesHeading.textContent = t("viewers.identities");
@@ -770,6 +791,7 @@ function renderViewerDetail(viewer, rewardHistorySection) {
     rewardHistorySection,
     nameField,
     hideField,
+    greetingsField,
     identitiesHeading,
     identities,
     mergeField
@@ -975,6 +997,17 @@ async function updateViewerLeaderboardHidden(id, hidden) {
     body: JSON.stringify({ id: id, leaderboard_hidden: hidden }),
   });
   showBanner("success", t("viewers.leaderboardHideSaved"));
+  await loadViewersList(currentSearchQuery());
+  await openViewerDetail(id, focusReturnElement);
+}
+
+async function updateViewerGreetingsDisabled(id, disabled) {
+  await fetchJSON("/api/viewers/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: id, greetings_disabled: disabled }),
+  });
+  showBanner("success", t("greetings.excludeSaved"));
   await loadViewersList(currentSearchQuery());
   await openViewerDetail(id, focusReturnElement);
 }

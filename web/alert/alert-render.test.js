@@ -144,3 +144,16 @@ test("combinedAlertPortraitScale multiplies preset and per-item size", function 
   assert.equal(combinedAlertPortraitScale(1.5, 200), 3);
   assert.equal(combinedAlertPortraitScale(2, 50), 1);
 });
+
+test("renders stable distinct graphics for new and returning greetings", function () {
+  const fresh = createAlertSplash(fakeDocument, {
+    source: "greeting", greeting_kind: "new_viewer", name: "Alice", text: "Welcome, Alice!",
+  }, { createEmblem: createAlertEmblem });
+  const returning = createAlertSplash(fakeDocument, {
+    source: "greeting", greeting_kind: "returning_viewer", name: "Alice", text: "Welcome back, Alice!",
+  }, { createEmblem: createAlertEmblem });
+  assert.match(fresh.className, /alert-splash--greeting/);
+  assert.equal(byClass(fresh, "alert-emblem").attributes["data-emblem-symbol"], "broadcast");
+  assert.equal(byClass(returning, "alert-emblem").attributes["data-emblem-symbol"], "laurel-star");
+  assert.equal(byClass(returning, "alert-text").textContent, "Welcome back, Alice!");
+});
