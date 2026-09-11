@@ -42,6 +42,7 @@
 - [x] 3.3 Implement draft Test against the debug audience with honest receiver feedback, busy protection, preserved unsaved values, and a recovery link/instruction for Studio alert test mode.
 - [x] 3.4 Add `Exclude from automatic greetings` to viewer detail with helper text, save/recovery behavior, and no retroactive greeting.
 - [x] 3.5 Add EN/RU strings, variable-chip tooltips, keyboard/focus behavior, narrow-layout scrolling, and focused markup/helper/i18n tests.
+- [x] 3.6 Replace native admin discard confirmations with the shared styled dialog for Greetings and Settings, including focus restoration, browser regression coverage, and an ESLint guard against native admin dialogs.
 
 ## Slice: `Product documentation and release-facing behavior`
 

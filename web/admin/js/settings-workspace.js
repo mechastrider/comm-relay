@@ -42,6 +42,7 @@ import {
   setConnectionsSection,
   showNetworkPanel,
 } from "./connections.js";
+import { confirmDiscardChanges } from "./discard-changes-dialog.js";
 
 /** @type {Map<string, Record<string, unknown>>} */
 const sectionBaselines = new Map();
@@ -429,7 +430,7 @@ function focusSettingsField(el) {
   if (section instanceof HTMLElement) {
     const sectionId = section.getAttribute("data-settings-section-panel");
     if (sectionId && sectionId !== activeSection) {
-      selectSettingsSection(sectionId, { skipDirtyCheck: true });
+      void selectSettingsSection(sectionId, { skipDirtyCheck: true });
     }
   }
   focusConnectionsField(el);
@@ -682,21 +683,22 @@ function notifySectionInput(sectionId) {
 
 /**
  * @param {string} sectionId
- * @returns {boolean}
+ * @param {HTMLElement | null} [opener]
+ * @returns {Promise<boolean>}
  */
-function confirmDiscardSection(sectionId) {
+async function confirmDiscardSection(sectionId, opener) {
   if (!isSectionDirty(sectionId)) {
     return true;
   }
-  return window.confirm(t("settings.discardConfirm"));
+  return confirmDiscardChanges({ message: t("settings.discardConfirm"), opener: opener });
 }
 
 /**
  * @param {string} sectionId
- * @param {{ skipDirtyCheck?: boolean }} [options]
- * @returns {boolean}
+ * @param {{ skipDirtyCheck?: boolean, opener?: HTMLElement | null }} [options]
+ * @returns {Promise<boolean>}
  */
-export function selectSettingsSection(sectionId, options) {
+export async function selectSettingsSection(sectionId, options) {
   const nextSection = SETTINGS_SECTIONS.includes(sectionId) ? sectionId : DEFAULT_SETTINGS_SECTION;
   if (!options || !options.skipDirtyCheck) {
     if (
@@ -704,7 +706,7 @@ export function selectSettingsSection(sectionId, options) {
       activeSection !== nextSection &&
       SETTINGS_EDITABLE_SECTIONS.includes(activeSection) &&
       isSectionDirty(activeSection) &&
-      !confirmDiscardSection(activeSection)
+      !await confirmDiscardSection(activeSection, options && options.opener ? options.opener : null)
     ) {
       return false;
     }
@@ -827,8 +829,9 @@ function createSectionToolbar(sectionId) {
     t("settings.saveSection") +
     "</button>" +
     "</div>";
-  toolbar.querySelector("[data-section-reset]")?.addEventListener("click", function () {
-    if (!confirmDiscardSection(sectionId)) {
+  toolbar.querySelector("[data-section-reset]")?.addEventListener("click", async function (event) {
+    const opener = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+    if (!await confirmDiscardSection(sectionId, opener)) {
       return;
     }
     applySectionBaselineToDOM(sectionId);
@@ -1041,7 +1044,7 @@ function bindSectionInputHandlers() {
 function bindSettingsNavigation() {
   const links = Array.from(document.querySelectorAll("[data-settings-nav]"));
   links.forEach(function (link, index) {
-    link.addEventListener("click", function (event) {
+    link.addEventListener("click", async function (event) {
       const sectionId = link.getAttribute("data-settings-nav");
       if (!sectionId) {
         return;
@@ -1050,11 +1053,11 @@ function bindSettingsNavigation() {
         return;
       }
       event.preventDefault();
-      if (!selectSettingsSection(sectionId)) {
+      if (!await selectSettingsSection(sectionId, { opener: link })) {
         document.querySelector('[data-settings-nav][aria-selected="true"]')?.focus();
       }
     });
-    link.addEventListener("keydown", function (event) {
+    link.addEventListener("keydown", async function (event) {
       if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(event.key) === -1) {
         return;
       }
@@ -1071,19 +1074,21 @@ function bindSettingsNavigation() {
       }
       const nextLink = links[nextIndex];
       const nextSection = nextLink && nextLink.getAttribute("data-settings-nav");
-      if (nextSection && selectSettingsSection(nextSection)) {
+      if (nextSection && await selectSettingsSection(nextSection, { opener: nextLink })) {
         nextLink.focus();
       }
     });
   });
 }
 
-function syncSectionFromHash() {
+async function syncSectionFromHash() {
   if (parseWorkspaceHash(window.location.hash) !== "settings") {
     return;
   }
   const section = parseSettingsSectionFromHash(window.location.hash) || DEFAULT_SETTINGS_SECTION;
-  selectSettingsSection(section, { skipDirtyCheck: suppressNavigationGuard });
+  if (!await selectSettingsSection(section, { skipDirtyCheck: suppressNavigationGuard })) {
+    window.history.replaceState(null, "", settingsSectionHash(activeSection));
+  }
 }
 
 function interceptSettingsNavigation() {
@@ -1097,7 +1102,7 @@ function interceptSettingsNavigation() {
       suppressNavigationGuard = false;
     }
     if (parseWorkspaceHash(window.location.hash) === "settings") {
-      syncSectionFromHash();
+      void syncSectionFromHash();
     }
   });
 }
@@ -1107,7 +1112,7 @@ function onSettingsEnter() {
   if (sectionBaselines.size === 0 && state.currentConfig) {
     resetAllSectionBaselines();
   }
-  syncSectionFromHash();
+  void syncSectionFromHash();
   renderAllSectionChrome();
 }
 
@@ -1121,7 +1126,7 @@ export function navigateToSettingsSection(sectionId) {
   }
   if (parseWorkspaceHash(window.location.hash) === "settings") {
     onSettingsEnter();
-    selectSettingsSection(sectionId, { skipDirtyCheck: true });
+    void selectSettingsSection(sectionId, { skipDirtyCheck: true });
   }
 }
 

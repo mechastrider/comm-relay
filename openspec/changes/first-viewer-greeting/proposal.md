@@ -15,6 +15,7 @@ Streamers and OBS operators can configure greetings in the local admin UI. Ident
 - Add an Audience → Greetings catalog with the same text, image, sound, layout, volume, image sizing, and duration controls as alert commands, plus a non-delivering test preview.
 - Let the operator exclude an individual canonical viewer from automatic greetings.
 - Deliver greetings through the existing `/overlay/alert` surface in an expiring low-priority queue lane below awards and contracts.
+- Replace native admin discard confirmations with one shared in-application modal, including the Greetings catalog and Settings sections.
 
 ## Capabilities
 

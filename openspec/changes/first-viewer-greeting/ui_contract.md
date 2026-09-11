@@ -8,6 +8,7 @@
 | Greeting editor | Configure and test one fixed greeting | Select `New viewer` or `Returning viewer` | File picker uses the existing browser/Wails upload path |
 | Viewer inspector | Suppress greetings for a bot, streamer, or technical account | `Audience` → `Viewers` → select viewer | None |
 | Alert test receiver | See a safe end-to-end greeting test | Existing `Studio` alert test mode | None |
+| Unsaved-change confirmation | Keep editing or explicitly discard a local draft | Change greeting/Settings section or reset a dirty Settings section | None between Wails and a supported browser |
 
 ## Menus / Tray / Commands / Shortcuts
 
@@ -35,7 +36,7 @@ There is no trigger, action, cooldown, Create, or Delete control. No new OBS sur
 
 ### Data / Forms / Actions
 
-Both fixed rows load together. Selecting another row with dirty input uses the catalog's standard unsaved-change protection. Save validates on submit, disables Save/Test during the request, and updates row status only after success. Test submits current draft fields and representative localized sample data to the isolated test audience without saving. A successful test reports receiver count in a polite live region. Media controls reuse command-editor bounds and asset workflows.
+Both fixed rows load together. Selecting another row with dirty input opens the shared in-application discard dialog rather than a browser prompt. Cancel keeps the current row and restores focus to the attempted row; explicit discard changes selection. The same dialog protects dirty Settings section changes and Reset. Save validates on submit, disables Save/Test during the request, and updates row status only after success. Test submits current draft fields and representative localized sample data to the isolated test audience without saving. A successful test reports receiver count in a polite live region. Media controls reuse command-editor bounds and asset workflows.
 
 ### States and Recovery
 
@@ -66,4 +67,4 @@ No arbitrary greeting creation, reordering, bulk enable, per-platform definition
 
 ## Not applicable
 
-Native windows, system dialogs beyond existing file upload, notifications, drag-and-drop, clipboard, tray, and global shortcuts are intentionally unaffected.
+Native windows and system dialogs beyond existing file upload are intentionally unaffected. Unsaved admin drafts use the app's existing `<dialog>` visual system; notifications, drag-and-drop, clipboard, tray, and global shortcuts remain unaffected.

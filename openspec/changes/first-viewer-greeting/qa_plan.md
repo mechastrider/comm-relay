@@ -27,6 +27,7 @@
 | `overlay-alerts`: scheduling | Queue greeting with commands, awards, and contracts; exceed wait/capacity | Protected work wins; greeting expires at 10 s and cannot displace protected item | P0 |
 | `overlay-alerts`: rendering | Test both kinds, all layouts, custom/broken media, sound, themes | Correct emblem/fallback/text/media with transparent page | P1 |
 | `admin-and-dock`: catalog | Navigate tabs, select both rows, edit/save, provoke errors | Correct order/layout; no Create/Delete; draft and focus preserved on error | P0 |
+| `admin-and-dock`: discard confirmation | Dirty Greetings and Settings drafts; select another item/section, Reset, cancel and confirm with mouse and keyboard | Styled application dialog is used; cancel preserves the draft and restores focus; confirm proceeds; no native browser confirmation remains | P0 |
 | `admin-and-dock`: preview recovery | Test with and without debug receiver | Honest delivered-client feedback and recovery guidance | P1 |
 | `admin-and-dock`: responsive/a11y | 375 px and desktop; keyboard only; screen-reader spot check | No horizontal/clipped fields; logical focus; labels/errors/tooltips announced | P1 |
 | diagnostics | Exercise fired, disabled, excluded, and delivery-drop paths | Bounded counters/reasons distinguish qualification and transport without message text | P1 |

@@ -1933,6 +1933,17 @@
       </div>
     </dialog>
 
+    <dialog id="discard-changes-dialog" class="prompt-dialog" aria-labelledby="discard-changes-title" aria-describedby="discard-changes-message">
+      <div class="prompt-dialog__frame">
+        <h3 id="discard-changes-title" data-i18n="dialog.discardUnsavedTitle">Discard unsaved changes?</h3>
+        <p id="discard-changes-message" class="prompt-dialog__message"></p>
+        <div class="prompt-dialog__actions">
+          <button id="discard-changes-cancel" class="btn-physical" type="button" autofocus data-i18n="dialog.keepEditing">Keep editing</button>
+          <button id="discard-changes-confirm" class="btn-physical btn-danger" type="button" data-i18n="dialog.discardChanges">Discard changes</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="new-stream-prompt" class="prompt-dialog" aria-labelledby="new-stream-prompt-title">
       <div class="prompt-dialog__frame">
         <h3 id="new-stream-prompt-title" data-i18n="stream.newStreamTitle">Start a new stream?</h3>
@@ -2254,6 +2265,6 @@
 
   <div id="status-error-popover" class="status-error-popover" role="tooltip" hidden></div>
 
-  <script type="module" src="app.js?v=32"></script>
+  <script type="module" src="app.js?v=33"></script>
 </body>
 </html>

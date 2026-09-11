@@ -33,6 +33,17 @@ Greeting templates SHALL offer insert controls for `{viewer}`, `{streamer}`, and
 - **WHEN** a keyboard user activates the `{viewer}` insert control
 - **THEN** `{viewer}` is inserted at the current template selection and its purpose is available without pointer hover
 
+### Requirement: Unsaved admin drafts use an application confirmation dialog
+The admin SHALL use its shared, styled `<dialog>` confirmation rather than a native browser confirmation for every action that discards unsaved changes. The Greeting catalog and editable Settings sections MUST use this dialog. It SHALL explain that the current draft will be lost, offer a safe cancel action and an explicit discard action, restore focus to the initiating control after cancel, and prevent the discarded navigation or reset when canceled.
+
+#### Scenario: Keep greeting draft
+- **WHEN** the operator edits a greeting and selects another greeting, then chooses to keep editing
+- **THEN** the application dialog closes, focus returns to the selected catalog row, and the current greeting draft remains unchanged
+
+#### Scenario: Discard Settings section draft
+- **WHEN** the operator edits a Settings section and changes section or chooses Reset, then confirms discard
+- **THEN** the application dialog closes and the selected section or baseline reset proceeds without a native browser dialog
+
 ### Requirement: Test uses the isolated alert test audience
 The editor SHALL provide a visibly labelled Test action that uses the current unsaved form values and representative viewer data. Test MUST target only the dedicated overlay-debug alert audience, MUST NOT broadcast to production `/ws`, consume greeting eligibility, update settings, or write interaction history, and SHALL report whether any test receiver accepted the frame.
 

@@ -41,6 +41,7 @@ All routes remain localhost-only and accept bounded JSON. Greeting assets must b
 4. **Use canonical viewers and union state on merge.** This prevents cross-platform duplicate greetings. Exclusion uses logical OR on merge as the conservative choice.
 5. **Reuse the expiring command queue lane with explicit `source: greeting`.** Greetings stay subordinate to protected awards/contracts without adding a third scheduler policy.
 6. **Use the isolated overlay-debug audience for Test.** Production preview was rejected because synthetic greetings could appear on-air.
+7. **Use one shared in-application discard dialog for admin drafts.** Native `window.confirm` was rejected because it does not share the app's visual language, accessible focus handling, or localizable action layout. The shared modal is reused by the greeting catalog and Settings, while Studio keeps its existing specialized discard dialog.
 
 ## Risks / Trade-offs
 

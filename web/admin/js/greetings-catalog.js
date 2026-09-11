@@ -2,6 +2,7 @@ import { apiURL, mapHTTPError, readJSON } from "./api.js";
 import { t } from "./i18n-ui.js";
 import { previewStreamerName, renderSplashPreview } from "./catalog-template.js";
 import { insertSplashVariable } from "./catalog-template-core.js";
+import { confirmDiscardChanges } from "./discard-changes-dialog.js";
 
 let greetings = [];
 let selectedID = "";
@@ -56,13 +57,13 @@ function renderList() {
     const primary = document.createElement("span"); primary.className = "audience-catalog-items__primary"; primary.textContent = label(item);
     const meta = document.createElement("span"); meta.className = "audience-catalog-items__meta"; meta.textContent = hint(item) + " · " + (item.enabled ? t("commands.enabledShort") : t("commands.disabledShort"));
     row.append(primary, meta);
-    const choose = () => {
+    const choose = async () => {
       if (saving) return;
-      if (item.id !== selectedID && dirty && !window.confirm(t("greetings.discardConfirm"))) return;
+      if (item.id !== selectedID && dirty && !await confirmDiscardChanges({ message: t("greetings.discardConfirm"), opener: row })) return;
       selectedID = item.id; fill(); renderList();
       if (window.matchMedia("(max-width: 720px)").matches) el("greetings-editor-heading")?.focus();
     };
-    row.addEventListener("click", choose); row.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); choose(); } });
+    row.addEventListener("click", function () { void choose(); }); row.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); void choose(); } });
     list.append(row);
   });
 }

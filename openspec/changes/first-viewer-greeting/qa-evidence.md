@@ -13,6 +13,8 @@ Date: 2026-09-11 (Linux CI workspace)
 - `npm ci`, `npm run lint`, and `npm run test:i18n` — passed.
 - Focused admin greeting markup, alert rendering, and alert scheduler tests — passed.
 - Chromium browser regression at 1440×900 — passed: a delayed greeting save blocks list selection without a discard dialog; after save, both catalog headers measure 54 px.
+- Chromium browser regression at 1440×900 — passed: Greetings and Settings use the shared styled discard dialog; mouse and keyboard cancel preserve the draft and restore focus, confirm continues section navigation or Reset, and no native browser dialog opens.
+- ESLint negative probes — passed: `window.confirm`, `globalThis.alert`, and global `prompt` in `web/admin` each fail `no-restricted-properties` or `no-restricted-globals`.
 - `golangci-lint run ./...` — passed.
 - `go build ./cmd/comm-relay-server` — passed.
 - `openspec validate first-viewer-greeting --strict` — passed.
