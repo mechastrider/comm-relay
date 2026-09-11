@@ -7,6 +7,7 @@ let greetings = [];
 let selectedID = "";
 let loading = null;
 let dirty = false;
+let saving = false;
 
 const el = (id) => document.getElementById(id);
 
@@ -16,7 +17,10 @@ function label(item) { return item.id === "returning_viewer" ? t("greetings.retu
 function hint(item) { return item.id === "returning_viewer" ? t("greetings.returningViewerHint") : t("greetings.newViewerHint"); }
 
 function setBusy(next) {
+  saving = Boolean(next);
   [el("greetings-save"), el("greetings-test")].forEach((button) => { if (button) button.disabled = next; });
+  const list = el("greetings-list"); if (list) list.setAttribute("aria-busy", saving ? "true" : "false");
+  const form = el("greetings-form"); if (form) { form.setAttribute("aria-busy", saving ? "true" : "false"); form.querySelectorAll("input, select, button").forEach((control) => { control.disabled = saving; }); }
 }
 
 function currentPayload() {
@@ -53,6 +57,7 @@ function renderList() {
     const meta = document.createElement("span"); meta.className = "audience-catalog-items__meta"; meta.textContent = hint(item) + " · " + (item.enabled ? t("commands.enabledShort") : t("commands.disabledShort"));
     row.append(primary, meta);
     const choose = () => {
+      if (saving) return;
       if (item.id !== selectedID && dirty && !window.confirm(t("greetings.discardConfirm"))) return;
       selectedID = item.id; fill(); renderList();
       if (window.matchMedia("(max-width: 720px)").matches) el("greetings-editor-heading")?.focus();

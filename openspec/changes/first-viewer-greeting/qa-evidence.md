@@ -12,6 +12,7 @@ Date: 2026-09-11 (Linux CI workspace)
 - `node --test web/alert/alert-render.test.js web/alert/alert-scheduler.test.js` — passed.
 - `npm ci`, `npm run lint`, and `npm run test:i18n` — passed.
 - Focused admin greeting markup, alert rendering, and alert scheduler tests — passed.
+- Chromium browser regression at 1440×900 — passed: a delayed greeting save blocks list selection without a discard dialog; after save, both catalog headers measure 54 px.
 - `golangci-lint run ./...` — passed.
 - `go build ./cmd/comm-relay-server` — passed.
 - `openspec validate first-viewer-greeting --strict` — passed.
