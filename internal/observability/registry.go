@@ -16,11 +16,13 @@ var Default = NewRegistry()
 
 // Snapshot is a point-in-time view of pipeline counters exposed via diagnostics.
 type Snapshot struct {
-	BusDrops           map[string]uint64 `json:"bus_drops"`
-	WebSocketDrops     map[string]uint64 `json:"websocket_drops"`
-	CommandsFired      uint64            `json:"commands_fired"`
-	CommandsSuppressed map[string]uint64 `json:"commands_suppressed"`
-	AwardsGranted      uint64            `json:"awards_granted"`
+	BusDrops            map[string]uint64 `json:"bus_drops"`
+	WebSocketDrops      map[string]uint64 `json:"websocket_drops"`
+	CommandsFired       uint64            `json:"commands_fired"`
+	CommandsSuppressed  map[string]uint64 `json:"commands_suppressed"`
+	AwardsGranted       uint64            `json:"awards_granted"`
+	GreetingsFired      map[string]uint64 `json:"greetings_fired"`
+	GreetingsSuppressed map[string]uint64 `json:"greetings_suppressed"`
 }
 
 // Registry tracks delivery and product-event counters.
@@ -34,20 +36,44 @@ type Registry struct {
 	commandsSuppressed map[string]uint64
 	suppressLogCounts  map[string]uint64
 
-	commandsFired atomic.Uint64
-	awardsGranted atomic.Uint64
+	commandsFired       atomic.Uint64
+	awardsGranted       atomic.Uint64
+	greetingsFired      map[string]uint64
+	greetingsSuppressed map[string]uint64
 }
 
 // NewRegistry creates an empty observability registry.
 func NewRegistry() *Registry {
 	return &Registry{
-		busDrops:           make(map[string]uint64),
-		busDropLogCounts:   make(map[string]uint64),
-		wsDrops:            make(map[string]uint64),
-		wsDropLogCounts:    make(map[string]uint64),
-		commandsSuppressed: make(map[string]uint64),
-		suppressLogCounts:  make(map[string]uint64),
+		busDrops:            make(map[string]uint64),
+		busDropLogCounts:    make(map[string]uint64),
+		wsDrops:             make(map[string]uint64),
+		wsDropLogCounts:     make(map[string]uint64),
+		commandsSuppressed:  make(map[string]uint64),
+		greetingsFired:      make(map[string]uint64),
+		greetingsSuppressed: make(map[string]uint64),
+		suppressLogCounts:   make(map[string]uint64),
 	}
+}
+
+// RecordGreetingFired increments the greeting kind counter.
+func (r *Registry) RecordGreetingFired(kind string) {
+	if r == nil {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.greetingsFired[kind]++
+}
+
+// RecordGreetingSuppressed increments a bounded suppression-reason counter.
+func (r *Registry) RecordGreetingSuppressed(reason string) {
+	if r == nil {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.greetingsSuppressed[reason]++
 }
 
 // RecordBusDrop increments the subscriber drop counter and emits a rate-limited warn log.
@@ -156,9 +182,11 @@ func (r *Registry) RecordAwardGranted() {
 func (r *Registry) Snapshot() Snapshot {
 	if r == nil {
 		return Snapshot{
-			BusDrops:           map[string]uint64{},
-			WebSocketDrops:     map[string]uint64{},
-			CommandsSuppressed: map[string]uint64{},
+			BusDrops:            map[string]uint64{},
+			WebSocketDrops:      map[string]uint64{},
+			CommandsSuppressed:  map[string]uint64{},
+			GreetingsFired:      map[string]uint64{},
+			GreetingsSuppressed: map[string]uint64{},
 		}
 	}
 
@@ -166,14 +194,18 @@ func (r *Registry) Snapshot() Snapshot {
 	busDrops := copyUint64Map(r.busDrops)
 	wsDrops := copyUint64Map(r.wsDrops)
 	suppressed := copyUint64Map(r.commandsSuppressed)
+	greetingsFired := copyUint64Map(r.greetingsFired)
+	greetingsSuppressed := copyUint64Map(r.greetingsSuppressed)
 	r.mu.Unlock()
 
 	return Snapshot{
-		BusDrops:           busDrops,
-		WebSocketDrops:     wsDrops,
-		CommandsFired:      r.commandsFired.Load(),
-		CommandsSuppressed: suppressed,
-		AwardsGranted:      r.awardsGranted.Load(),
+		BusDrops:            busDrops,
+		WebSocketDrops:      wsDrops,
+		CommandsFired:       r.commandsFired.Load(),
+		CommandsSuppressed:  suppressed,
+		AwardsGranted:       r.awardsGranted.Load(),
+		GreetingsFired:      greetingsFired,
+		GreetingsSuppressed: greetingsSuppressed,
 	}
 }
 

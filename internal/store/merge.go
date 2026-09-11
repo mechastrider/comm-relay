@@ -49,6 +49,9 @@ func (s *Store) Merge(fromID, intoID string, dayResetHour int, now time.Time) er
 	if err := s.sumAllTimeCountersLocked(tx, fromID, intoID); err != nil {
 		return err
 	}
+	if err := s.mergeGreetingStateLocked(tx, fromID, intoID); err != nil {
+		return err
+	}
 	if err := s.sumSessionCountersLocked(tx, fromID, intoID, sessionID); err != nil {
 		return err
 	}
@@ -79,6 +82,67 @@ func (s *Store) Merge(fromID, intoID string, dayResetHour int, now time.Time) er
 	}
 
 	return nil
+}
+
+func (s *Store) mergeGreetingStateLocked(tx *sql.Tx, fromID, intoID string) error {
+	var fromDisabled, intoDisabled int
+	var fromFirst, intoFirst sql.NullString
+	if err := tx.QueryRow(`SELECT greetings_disabled, first_ordinary_message_at FROM viewers WHERE id = ?`, fromID).Scan(&fromDisabled, &fromFirst); err != nil {
+		return errors.Errorf("load source greeting state: %w", err)
+	}
+	if err := tx.QueryRow(`SELECT greetings_disabled, first_ordinary_message_at FROM viewers WHERE id = ?`, intoID).Scan(&intoDisabled, &intoFirst); err != nil {
+		return errors.Errorf("load destination greeting state: %w", err)
+	}
+	mergedFirst := earlierTimestamp(fromFirst, intoFirst)
+	if _, err := tx.Exec(`UPDATE viewers SET greetings_disabled = ?, first_ordinary_message_at = ? WHERE id = ?`, boolInt(fromDisabled != 0 || intoDisabled != 0), mergedFirst, intoID); err != nil {
+		return errors.Errorf("merge viewer greeting state: %w", err)
+	}
+	rows, err := tx.Query(`SELECT session_id, first_ordinary_message_at FROM viewer_session_stats WHERE viewer_id = ?`, fromID)
+	if err != nil {
+		return errors.Errorf("list source greeting session markers: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var sessionID string
+		var source sql.NullString
+		if err := rows.Scan(&sessionID, &source); err != nil {
+			return errors.Errorf("scan source greeting session marker: %w", err)
+		}
+		var destination sql.NullString
+		err := tx.QueryRow(`SELECT first_ordinary_message_at FROM viewer_session_stats WHERE viewer_id = ? AND session_id = ?`, intoID, sessionID).Scan(&destination)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return errors.Errorf("load destination greeting session marker: %w", err)
+		}
+		if _, err := tx.Exec(`INSERT INTO viewer_session_stats (viewer_id, session_id, message_count, xp, first_ordinary_message_at)
+			VALUES (?, ?, 0, 0, ?)
+			ON CONFLICT(viewer_id, session_id) DO UPDATE SET first_ordinary_message_at = excluded.first_ordinary_message_at`, intoID, sessionID, earlierTimestamp(source, destination)); err != nil {
+			return errors.Errorf("merge greeting session marker: %w", err)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return errors.Errorf("iterate source greeting session markers: %w", err)
+	}
+	return nil
+}
+
+func boolInt(value bool) int {
+	if value {
+		return 1
+	}
+	return 0
+}
+
+func earlierTimestamp(a, b sql.NullString) sql.NullString {
+	if !a.Valid || strings.TrimSpace(a.String) == "" {
+		return b
+	}
+	if !b.Valid || strings.TrimSpace(b.String) == "" {
+		return a
+	}
+	if a.String <= b.String {
+		return a
+	}
+	return b
 }
 
 func (s *Store) repointIdentitiesLocked(tx *sql.Tx, fromID, intoID string) error {

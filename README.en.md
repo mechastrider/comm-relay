@@ -30,8 +30,8 @@ The best way to evaluate CommRelay is to see it running on the author's streams:
 - Sends transparent chat, leaderboard, and command/reward alert surfaces to OBS.
 - Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
 - Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?period=session|day|all` (same theme as chat; without `preset` it follows the active preset).
-- Shows command and reward alerts on a separate OBS Browser Source: `http://127.0.0.1:17877/overlay/alert` (sound plays in that source; enable **Control audio via OBS** for stream audio).
-- Provides a local console with Live, Audience, Studio, and Settings workspaces: statuses, messages, viewers, command and award catalogs, overlay setup, and diagnostics.
+- Shows command, reward, and automatic-greeting alerts on a separate OBS Browser Source: `http://127.0.0.1:17877/overlay/alert` (sound plays in that source; enable **Control audio via OBS** for stream audio).
+- Provides a local console with Live, Audience, Studio, and Settings workspaces: statuses, messages, viewers, command, award, and greeting catalogs, overlay setup, and diagnostics. New and returning greetings start disabled; the confirmed **New stream** action defines the returning-viewer boundary.
 - In **Settings → Data** you can hide `!command` lines in the chat overlay only — they remain visible in Live and the dock.
 - Supports Twitch emotes, FrankerFaceZ, BetterTTV, 7TV, and safe image previews.
 - Automatically reconnects connectors and stores settings locally in `config.json`.

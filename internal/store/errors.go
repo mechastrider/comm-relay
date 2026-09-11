@@ -33,4 +33,6 @@ var (
 	ErrViewerContractConflict = errors.New("viewer contract conflict")
 	// ErrInvalidViewerContract is returned for invalid contract input.
 	ErrInvalidViewerContract = errors.New("invalid viewer contract")
+	// ErrGreetingNotFound is returned when a reserved greeting definition is missing.
+	ErrGreetingNotFound = errors.New("greeting definition not found")
 )

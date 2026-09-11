@@ -46,7 +46,7 @@ func TestCommandFire_WhenBangGG_ExpectAlertAndIsCommand(t *testing.T) {
 		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
 		if readErr != nil {
-			continue
+			break
 		}
 		var frame map[string]any
 		if json.Unmarshal(data, &frame) != nil {
@@ -309,7 +309,7 @@ func TestConfig_WhenHideCommandMessages_ExpectPublicAndOverlaySettings(t *testin
 		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
 		if readErr != nil {
-			continue
+			break
 		}
 		var frame map[string]any
 		if json.Unmarshal(data, &frame) != nil {
@@ -434,7 +434,7 @@ func TestCommandFire_WhenTemplateHasStreamerAndMessage_ExpectResolved(t *testing
 		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
 		if readErr != nil {
-			continue
+			break
 		}
 		var frame map[string]any
 		if json.Unmarshal(data, &frame) != nil {

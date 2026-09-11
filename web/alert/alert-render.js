@@ -114,6 +114,17 @@ export function alertRenderModel(alert) {
       quote: text(alert.message_text),
     });
   }
+  if (alert && alert.source === "greeting") {
+    const greetingKind = alert.greeting_kind === "returning_viewer" ? "returning_viewer" : "new_viewer";
+    return Object.assign(base, {
+      kind: "greeting",
+      emblemKind: "greeting",
+      identifier: greetingKind,
+      emblemLabel: greetingKind,
+      name,
+      text: typeof alert.text === "string" ? alert.text : "",
+    });
+  }
   return Object.assign(base, {
     kind: "command",
     identifier: text(alert && alert.trigger),

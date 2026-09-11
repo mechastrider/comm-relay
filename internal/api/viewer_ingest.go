@@ -110,13 +110,13 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		now = time.Now()
 	}
 
-	result, err := v.viewerStore.ApplyChatMutationResult(store.ChatIdentity{
+	result, err := v.viewerStore.ApplyClassifiedChatMutationResult(store.ChatIdentity{
 		Platform:    msg.Platform,
 		UserID:      msg.UserID,
 		Username:    msg.Username,
 		DisplayName: msg.DisplayName,
 		AvatarURL:   msg.AvatarURL,
-	}, activity, cfg.DayResetHour, now)
+	}, activity, cfg.DayResetHour, now, matchedCmd == nil)
 	if err != nil {
 		clog.Errorf(ctx, "apply chat to viewer store: %w", err)
 		return
@@ -137,6 +137,35 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 			v.visibility.SubmitTrigger(leaderboard.ReasonRankChange)
 		} else {
 			v.visibility.MarkDirty()
+		}
+	}
+
+	if result.GreetingKind != "" {
+		if result.GreetingSuppressed != "" {
+			observability.Default.RecordGreetingSuppressed(result.GreetingSuppressed)
+			clog.Debug(ctx, "greeting suppressed",
+				slog.String("greeting_kind", string(result.GreetingKind)),
+				slog.String("platform", msg.Platform),
+				slog.String("user_id", msg.UserID),
+				slog.String("reason", result.GreetingSuppressed),
+			)
+		} else if v.hub != nil {
+			greeting, greetingErr := v.viewerStore.GetGreeting(result.GreetingKind)
+			if greetingErr != nil {
+				clog.Errorf(ctx, "load greeting definition: %w", greetingErr)
+			} else {
+				name := command.DisplayName(msg.Username, msg.DisplayName)
+				text := command.SubstituteTemplate(greeting.SplashTemplate, command.TemplateVars{Viewer: name, Streamer: cfg.StreamerDisplayName, Message: msg.Message})
+				alertMsg := fillChatMessageAvatar(v.viewerStore, v.cfgStore, msg)
+				payload, payloadErr := greetingAlertWirePayload(*greeting, name, alertMsg.AvatarURL, text, now)
+				if payloadErr != nil {
+					clog.Errorf(ctx, "greeting wire payload: %w", payloadErr)
+				} else {
+					v.hub.Broadcast(payload)
+					observability.Default.RecordGreetingFired(string(result.GreetingKind))
+					clog.Info(ctx, "greeting fired", slog.String("greeting_kind", string(result.GreetingKind)), slog.String("platform", msg.Platform), slog.String("user_id", msg.UserID))
+				}
+			}
 		}
 	}
 

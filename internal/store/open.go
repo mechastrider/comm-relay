@@ -123,6 +123,13 @@ func Open(path string, opts OpenOptions) (*Store, error) {
 		}
 		return nil, errors.Errorf("ensure starter catalog: %w", err)
 	}
+	if err := s.ensureGreetingDefinitionsLocked(resolvedOpenLocale(opts.TimeLocale)); err != nil {
+		closeErr := db.Close()
+		if closeErr != nil {
+			return nil, errors.Errorf("ensure greeting definitions: %w (close database: %w)", err, closeErr)
+		}
+		return nil, errors.Errorf("ensure greeting definitions: %w", err)
+	}
 
 	return s, nil
 }

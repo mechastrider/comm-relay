@@ -22,6 +22,11 @@ const GENERIC_SYMBOLS = Object.freeze({
   award: ["medal", "gem", "burst"],
 });
 
+const GREETING_SYMBOLS = Object.freeze({
+  new_viewer: "broadcast",
+  returning_viewer: "laurel-star",
+});
+
 const SYMBOL_SHAPES = Object.freeze({
   flags: [
     ["path", { d: "M19 48 43 16M45 48 21 16" }],
@@ -119,12 +124,12 @@ function monogram(value) {
 }
 
 export function alertEmblemModel(kind, identifier, label) {
-  const normalizedKind = kind === "award" ? "award" : "command";
+  const normalizedKind = kind === "award" ? "award" : kind === "greeting" ? "greeting" : "command";
   const normalizedIdentifier = normalizedText(identifier).toLocaleLowerCase();
-  const semantic = normalizedKind === "award" ? AWARD_SYMBOLS : COMMAND_SYMBOLS;
+  const semantic = normalizedKind === "award" ? AWARD_SYMBOLS : normalizedKind === "greeting" ? GREETING_SYMBOLS : COMMAND_SYMBOLS;
   const hashKey = normalizedKind + ":" + (normalizedIdentifier || normalizedText(label));
   const hash = stableHash(hashKey);
-  const fallbackSymbols = GENERIC_SYMBOLS[normalizedKind];
+  const fallbackSymbols = GENERIC_SYMBOLS[normalizedKind === "greeting" ? "command" : normalizedKind];
   const symbol = semantic[normalizedIdentifier] || fallbackSymbols[hash % fallbackSymbols.length];
   return {
     kind: normalizedKind,

@@ -56,6 +56,23 @@ func (s *Store) UpdateLeaderboardHidden(id string, hidden bool) error {
 	return nil
 }
 
+// UpdateGreetingsDisabled sets whether automatic greetings are suppressed for a canonical viewer.
+func (s *Store) UpdateGreetingsDisabled(id string, disabled bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := loadVisibleViewer(s.db, id); err != nil {
+		return err
+	}
+	value := 0
+	if disabled {
+		value = 1
+	}
+	if _, err := s.db.Exec(`UPDATE viewers SET greetings_disabled = ? WHERE id = ?`, value, id); err != nil {
+		return errors.Errorf("set greetings disabled: %w", err)
+	}
+	return nil
+}
+
 // List returns visible viewers optionally filtered by query string.
 func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error) {
 	s.mu.Lock()
@@ -74,6 +91,7 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 			v.id,
 			v.custom_avatar,
 			v.leaderboard_hidden,
+			v.greetings_disabled,
 			v.display_name,
 			v.message_count,
 			v.xp,
@@ -184,6 +202,7 @@ func (s *Store) Get(id string, dayResetHour int, now time.Time) (*Viewer, error)
 			v.id,
 			v.custom_avatar,
 			v.leaderboard_hidden,
+			v.greetings_disabled,
 			v.display_name,
 			v.message_count,
 			v.xp,
@@ -278,10 +297,12 @@ func scanViewerListRow(rows *sql.Rows) (Viewer, error) {
 	var displayOverride sql.NullString
 	var lastSeenRaw string
 	var leaderboardHidden int
+	var greetingsDisabled int
 	if err := rows.Scan(
 		&viewer.ID,
 		&viewer.CustomAvatar,
 		&leaderboardHidden,
+		&greetingsDisabled,
 		&displayOverride,
 		&viewer.MessageCount,
 		&viewer.XP,
@@ -308,6 +329,7 @@ func scanViewerListRow(rows *sql.Rows) (Viewer, error) {
 		viewer.DisplayNameOverride = displayOverride.String
 	}
 	viewer.LeaderboardHidden = leaderboardHidden != 0
+	viewer.GreetingsDisabled = greetingsDisabled != 0
 
 	return viewer, nil
 }
@@ -317,10 +339,12 @@ func scanViewerSummaryRow(row *sql.Row) (Viewer, error) {
 	var displayOverride sql.NullString
 	var lastSeenRaw string
 	var leaderboardHidden int
+	var greetingsDisabled int
 	if err := row.Scan(
 		&viewer.ID,
 		&viewer.CustomAvatar,
 		&leaderboardHidden,
+		&greetingsDisabled,
 		&displayOverride,
 		&viewer.MessageCount,
 		&viewer.XP,
@@ -342,6 +366,7 @@ func scanViewerSummaryRow(row *sql.Row) (Viewer, error) {
 		viewer.DisplayNameOverride = displayOverride.String
 	}
 	viewer.LeaderboardHidden = leaderboardHidden != 0
+	viewer.GreetingsDisabled = greetingsDisabled != 0
 
 	return viewer, nil
 }

@@ -40,6 +40,7 @@ import {
 } from "./js/reward-history.js";
 import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js";
 import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js";
+import { initGreetingsCatalog, ensureGreetingsLoaded } from "./js/greetings-catalog.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
 import { initWorkspaceRouter } from "./js/workspace-router.js";
 import { initLiveTabs, handleLiveWorkspaceChange } from "./js/live-tabs.js";
@@ -154,6 +155,8 @@ initAudienceTabs({
   onTabChange: function (tab) {
     if (tab === "commands") {
       ensureCommandsLoaded();
+    } else if (tab === "greetings") {
+      ensureGreetingsLoaded();
     } else if (tab === "awards") {
       ensureAwardsLoaded();
     } else if (tab === "history") {
@@ -163,6 +166,7 @@ initAudienceTabs({
 });
 initCommandsCatalog();
 initAwardsCatalog();
+initGreetingsCatalog();
 initLiveTabs();
 initLiveLeaderboard(function () {
   /* period change handled in leaderboard module */

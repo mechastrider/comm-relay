@@ -1,7 +1,7 @@
-/** @typedef {"viewers"|"commands"|"awards"|"history"} AudienceTabId */
+/** @typedef {"viewers"|"commands"|"greetings"|"awards"|"history"} AudienceTabId */
 
 /** @type {readonly AudienceTabId[]} */
-export const AUDIENCE_TABS = Object.freeze(["viewers", "history", "commands", "awards"]);
+export const AUDIENCE_TABS = Object.freeze(["viewers", "history", "commands", "greetings", "awards"]);
 
 let focusTabAfterHashChange = null;
 
@@ -70,6 +70,7 @@ export function setAudienceTab(tab, options) {
     { id: "viewers", tab: document.getElementById("audience-viewers-tab"), panel: document.getElementById("audience-viewers-panel") },
     { id: "history", tab: document.getElementById("audience-history-tab"), panel: document.getElementById("audience-history-panel") },
     { id: "commands", tab: document.getElementById("audience-commands-tab"), panel: document.getElementById("audience-commands-panel") },
+    { id: "greetings", tab: document.getElementById("audience-greetings-tab"), panel: document.getElementById("audience-greetings-panel") },
     { id: "awards", tab: document.getElementById("audience-awards-tab"), panel: document.getElementById("audience-awards-panel") },
   ];
 

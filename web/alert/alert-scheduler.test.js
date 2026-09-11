@@ -50,6 +50,18 @@ test("accepts legacy-valid command frames with missing source and created_at", f
   assert.equal(scheduler.snapshot().visible, legacy);
 });
 
+test("puts valid greetings in the expiring low-priority command lane", function () {
+  let clock = 0;
+  const scheduler = createAlertScheduler({ now: () => clock });
+  const greeting = alert("new-viewer", "greeting", { greeting_kind: "new_viewer" });
+  assert.equal(isValidAlertEnvelope(greeting), true);
+  scheduler.enqueue(alert("visible", "award"));
+  scheduler.enqueue(greeting);
+  assert.deepEqual(scheduler.snapshot().commands, [greeting]);
+  clock = 10_001;
+  assert.equal(scheduler.completeVisible(), null);
+});
+
 test("keeps valid contract announcements in the protected award lane", function () {
   const scheduler = createAlertScheduler({ now: () => 0 });
   const contract = alert("contract-a", "contract", {
