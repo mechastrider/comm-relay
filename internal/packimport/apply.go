@@ -107,8 +107,10 @@ func PlanApply(pack *Pack, existing []store.Command, opts ApplyOptions) []Planne
 
 // ApplyResult summarizes one import run.
 type ApplyResult struct {
-	Planned []PlannedAction
-	Applied int
+	Planned          []PlannedAction
+	PlannedGreetings []PlannedGreetingAction
+	Applied          int
+	AppliedGreetings int
 }
 
 // Apply imports a validated pack into the store and overlay assets directory.
@@ -139,14 +141,21 @@ func Apply(pack *Pack, s *store.Store, assetsDir string, opts ApplyOptions) (*Ap
 		case ActionSkip:
 			continue
 		case ActionCreate, ActionUpdate:
-			if err := applyOne(s, assetsDir, byTrigger, action, opts.DurationsOnly); err != nil {
-				return result, err
+			if applyErr := applyOne(s, assetsDir, byTrigger, action, opts.DurationsOnly); applyErr != nil {
+				return result, applyErr
 			}
 			result.Applied++
 		default:
 			return result, fmt.Errorf("unknown action kind %q", action.Kind)
 		}
 	}
+
+	plannedGreetings, appliedGreetings, err := applyGreetings(pack, s, assetsDir, opts)
+	if err != nil {
+		return result, err
+	}
+	result.PlannedGreetings = plannedGreetings
+	result.AppliedGreetings = appliedGreetings
 
 	return result, nil
 }

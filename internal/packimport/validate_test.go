@@ -39,8 +39,15 @@ func TestLoadAndValidateMW5JakePack(t *testing.T) {
 	require.Equal(t, 1, pack.SchemaVersion)
 	require.Equal(t, "mw5-jake", pack.Pack.Slug)
 	require.Len(t, pack.Commands, 19)
+	require.Len(t, pack.Greetings, 2)
 
 	require.NoError(t, packimport.ValidatePack(pack))
+
+	resolvedGreetings := pack.ResolvedGreetings()
+	require.Len(t, resolvedGreetings, 2)
+	require.Equal(t, "new_viewer", resolvedGreetings[0].ID)
+	require.True(t, resolvedGreetings[0].Enabled)
+	require.Equal(t, "Новый мехвоин прибыл: {viewer}. Добро пожаловать на борт!", resolvedGreetings[0].SplashTemplate)
 
 	resolved := pack.ResolvedCommands()
 	require.Len(t, resolved, 19)

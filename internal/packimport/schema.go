@@ -8,6 +8,8 @@ import (
 
 	"github.com/muonsoft/errors"
 	"gopkg.in/yaml.v3"
+
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 const currentSchemaVersion = 1
@@ -19,6 +21,7 @@ type Pack struct {
 	SchemaVersion int             `yaml:"schema_version"`
 	Pack          PackMeta        `yaml:"pack"`
 	Defaults      CommandDefaults `yaml:"defaults"`
+	Greetings     []GreetingSpec  `yaml:"greetings"`
 	Commands      []CommandSpec   `yaml:"commands"`
 	packDir       string
 }
@@ -38,6 +41,38 @@ type CommandDefaults struct {
 	ImageFit     string `yaml:"image_fit"`
 	SoundVolume  *int   `yaml:"sound_volume"`
 	ImageSizePct *int   `yaml:"image_size_pct"`
+}
+
+// GreetingSpec is one automatic greeting entry from pack.yaml.
+type GreetingSpec struct {
+	ID           string `yaml:"id"`
+	Enabled      *bool  `yaml:"enabled"`
+	Splash       string `yaml:"splash"`
+	Sound        string `yaml:"sound"`
+	SoundFile    string `yaml:"sound_file"`
+	DurationMs   int    `yaml:"duration_ms"`
+	Layout       string `yaml:"layout"`
+	ImageFit     string `yaml:"image_fit"`
+	SoundVolume  *int   `yaml:"sound_volume"`
+	ImageSizePct *int   `yaml:"image_size_pct"`
+	Image        string `yaml:"image"`
+	Audio        string `yaml:"audio"`
+}
+
+// ResolvedGreeting merges defaults and per-greeting fields for import.
+type ResolvedGreeting struct {
+	ID             string
+	Enabled        bool
+	SplashTemplate string
+	Sound          string
+	SoundFile      string
+	DurationMs     int
+	Layout         string
+	ImageFit       string
+	SoundVolume    int
+	ImageSizePct   int
+	ImagePath      string
+	AudioPath      string
 }
 
 // CommandSpec is one chat command entry from pack.yaml.
@@ -105,6 +140,15 @@ func (p *Pack) Dir() string {
 	return p.packDir
 }
 
+// ResolvedGreetings returns import-ready greetings with defaults applied.
+func (p *Pack) ResolvedGreetings() []ResolvedGreeting {
+	out := make([]ResolvedGreeting, 0, len(p.Greetings))
+	for _, spec := range p.Greetings {
+		out = append(out, p.resolveGreeting(spec))
+	}
+	return out
+}
+
 // ResolvedCommands returns import-ready commands with defaults applied.
 func (p *Pack) ResolvedCommands() []ResolvedCommand {
 	out := make([]ResolvedCommand, 0, len(p.Commands))
@@ -112,6 +156,67 @@ func (p *Pack) ResolvedCommands() []ResolvedCommand {
 		out = append(out, p.resolveCommand(spec))
 	}
 	return out
+}
+
+func (p *Pack) resolveGreeting(spec GreetingSpec) ResolvedGreeting {
+	enabled := false
+	if p.Defaults.Enabled != nil {
+		enabled = *p.Defaults.Enabled
+	}
+	if spec.Enabled != nil {
+		enabled = *spec.Enabled
+	}
+
+	layout := strings.TrimSpace(spec.Layout)
+	if layout == "" {
+		layout = strings.TrimSpace(p.Defaults.Layout)
+	}
+
+	imageFit := strings.TrimSpace(spec.ImageFit)
+	if imageFit == "" {
+		imageFit = strings.TrimSpace(p.Defaults.ImageFit)
+	}
+
+	soundVolume := 0
+	if p.Defaults.SoundVolume != nil {
+		soundVolume = *p.Defaults.SoundVolume
+	}
+	if spec.SoundVolume != nil {
+		soundVolume = *spec.SoundVolume
+	}
+
+	imageSizePct := 0
+	if p.Defaults.ImageSizePct != nil {
+		imageSizePct = *p.Defaults.ImageSizePct
+	}
+	if spec.ImageSizePct != nil {
+		imageSizePct = *spec.ImageSizePct
+	}
+
+	imagePath := ""
+	if strings.TrimSpace(spec.Image) != "" {
+		imagePath = filepath.Join(p.packDir, filepath.FromSlash(strings.TrimSpace(spec.Image)))
+	}
+
+	audioPath := ""
+	if strings.TrimSpace(spec.Audio) != "" {
+		audioPath = filepath.Join(p.packDir, filepath.FromSlash(strings.TrimSpace(spec.Audio)))
+	}
+
+	return ResolvedGreeting{
+		ID:             strings.TrimSpace(spec.ID),
+		Enabled:        enabled,
+		SplashTemplate: strings.TrimSpace(spec.Splash),
+		Sound:          strings.TrimSpace(spec.Sound),
+		SoundFile:      strings.TrimSpace(spec.SoundFile),
+		DurationMs:     spec.DurationMs,
+		Layout:         layout,
+		ImageFit:       imageFit,
+		SoundVolume:    soundVolume,
+		ImageSizePct:   imageSizePct,
+		ImagePath:      imagePath,
+		AudioPath:      audioPath,
+	}
 }
 
 func (p *Pack) resolveCommand(spec CommandSpec) ResolvedCommand {
@@ -211,5 +316,26 @@ func validateSchema(pack *Pack) error {
 		seenTriggers[trigger] = struct{}{}
 	}
 
+	if len(pack.Greetings) > 0 {
+		seenIDs := make(map[string]struct{}, len(pack.Greetings))
+		for i, spec := range pack.Greetings {
+			id := strings.TrimSpace(spec.ID)
+			if id == "" {
+				return fmt.Errorf("greetings[%d]: id is required", i)
+			}
+			if !validGreetingID(id) {
+				return fmt.Errorf("greetings[%d]: invalid id %q", i, id)
+			}
+			if _, ok := seenIDs[id]; ok {
+				return fmt.Errorf("greetings[%d]: duplicate id %q", i, id)
+			}
+			seenIDs[id] = struct{}{}
+		}
+	}
+
 	return nil
+}
+
+func validGreetingID(id string) bool {
+	return id == string(store.GreetingNewViewer) || id == string(store.GreetingReturningViewer)
 }
