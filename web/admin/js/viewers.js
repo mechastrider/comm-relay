@@ -881,10 +881,13 @@ function openDetailShell() {
 export function closeViewerDetail(options) {
   cancelViewerRewardHistory();
   const restoreFocus = !options || options.restoreFocus !== false;
+  selectedViewerId = null;
   if (dom.audienceDetailSheet && dom.audienceDetailSheet.open) {
     dom.audienceDetailSheet.close();
   }
   clearDetailContainer();
+  updateTableSelection(null);
+  syncInspectorVisibility();
   if (restoreFocus && focusReturnElement && typeof focusReturnElement.focus === "function") {
     focusReturnElement.focus();
   }

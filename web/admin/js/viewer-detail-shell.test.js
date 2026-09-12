@@ -26,6 +26,11 @@ assert.match(
   /export function closeViewerDetail\(options\) \{[\s\S]*?cancelViewerRewardHistory\(\)/,
   "closing the viewer shell must invalidate scoped history"
 );
+assert.match(
+  viewersJs,
+  /export function closeViewerDetail\(options\) \{[\s\S]*?selectedViewerId = null/,
+  "closing the viewer shell must clear the current selection"
+);
 assert.ok(
   viewersJs.indexOf("const rewardHistorySection = createViewerRewardHistory(id);") <
     viewersJs.indexOf('detailLoadInFlight = fetchJSON("/api/viewers/get?id="'),

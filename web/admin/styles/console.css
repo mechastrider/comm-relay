@@ -241,7 +241,7 @@
   border-radius: 4px;
 }
 
-.empty-state {
+.message-panel > .empty-state {
   position: absolute;
   inset: 0;
   display: grid;

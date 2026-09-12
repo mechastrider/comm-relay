@@ -60,7 +60,7 @@ func runValidate(args []string) int {
 		return 1
 	}
 
-	fmt.Printf("OK %s (%d commands)\n", pack.Pack.Slug, len(pack.Commands))
+	fmt.Printf("OK %s (%d commands, %d greetings)\n", pack.Pack.Slug, len(pack.Commands), len(pack.Greetings))
 	return 0
 }
 
@@ -124,8 +124,15 @@ func runApply(args []string) int {
 			fmt.Fprintf(os.Stderr, "pack-import apply: %v\n", listErr)
 			return 1
 		}
-		planned := packimport.PlanApply(pack, existing, opts)
-		result = &packimport.ApplyResult{Planned: planned}
+		existingGreetings, greetingsErr := listGreetingsForDryRun(paths.DBPath, pack.Pack.Locale)
+		if greetingsErr != nil {
+			fmt.Fprintf(os.Stderr, "pack-import apply: %v\n", greetingsErr)
+			return 1
+		}
+		result = &packimport.ApplyResult{
+			Planned:          packimport.PlanApply(pack, existing, opts),
+			PlannedGreetings: packimport.PlanGreetingApply(pack, existingGreetings, opts),
+		}
 	} else {
 		result, err = packimport.Apply(pack, s, paths.AssetsDir, opts)
 		if err != nil {
@@ -137,8 +144,15 @@ func runApply(args []string) int {
 	for _, action := range result.Planned {
 		fmt.Printf("%-8s !%-12s %s\n", action.Kind, action.Trigger, action.Detail)
 	}
+	for _, action := range result.PlannedGreetings {
+		fmt.Printf("%-8s @%-14s %s\n", action.Kind, action.ID, action.Detail)
+	}
 	if !*dryRun {
-		fmt.Printf("applied %d change(s) to %s\n", result.Applied, paths.DBPath)
+		totalApplied := result.Applied + result.AppliedGreetings
+		fmt.Printf("applied %d change(s) to %s\n", totalApplied, paths.DBPath)
+		if result.AppliedGreetings > 0 {
+			fmt.Printf("  commands: %d, greetings: %d\n", result.Applied, result.AppliedGreetings)
+		}
 		fmt.Printf("assets dir: %s\n", overlayassets.DirForConfig(paths.ConfigPath))
 	}
 
@@ -152,4 +166,13 @@ func listCommandsForDryRun(dbPath, locale string) ([]store.Command, error) {
 	}
 	defer func() { _ = s.Close() }()
 	return s.ListCommands()
+}
+
+func listGreetingsForDryRun(dbPath, locale string) ([]store.Greeting, error) {
+	s, err := store.Open(dbPath, store.OpenOptions{TimeLocale: locale})
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = s.Close() }()
+	return s.ListGreetings()
 }

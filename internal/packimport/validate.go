@@ -35,6 +35,57 @@ func ValidatePack(pack *Pack) error {
 		}
 	}
 
+	for i, greeting := range pack.ResolvedGreetings() {
+		if err := validateResolvedGreeting(i, greeting); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateResolvedGreeting(index int, greeting ResolvedGreeting) error {
+	prefix := fmt.Sprintf("greetings[%d]", index)
+
+	if strings.TrimSpace(greeting.ID) == "" {
+		return fmt.Errorf("%s: id is required after defaults merge", prefix)
+	}
+	if greeting.SplashTemplate == "" {
+		return fmt.Errorf("%s: splash is required", prefix)
+	}
+	if !allowedSounds[greeting.Sound] {
+		return fmt.Errorf("%s: invalid sound %q", prefix, greeting.Sound)
+	}
+	if greeting.AudioPath != "" && strings.TrimSpace(greeting.SoundFile) != "" {
+		return fmt.Errorf("%s: audio and sound_file cannot both be set", prefix)
+	}
+	if greeting.ImagePath != "" {
+		if _, err := os.Stat(greeting.ImagePath); err != nil {
+			return fmt.Errorf("%s: image file: %w", prefix, err)
+		}
+	}
+	if greeting.AudioPath != "" {
+		data, err := os.ReadFile(greeting.AudioPath)
+		if err != nil {
+			return fmt.Errorf("%s: audio file: %w", prefix, err)
+		}
+		if err := overlayassets.ValidateAlertSoundDuration(data); err != nil {
+			return fmt.Errorf("%s: audio file: %w", prefix, err)
+		}
+	}
+	if msg := store.ValidateCatalogLayoutField(greeting.Layout); msg != "" {
+		return fmt.Errorf("%s: %s", prefix, msg)
+	}
+	if msg := store.ValidateCatalogImageFitField(greeting.ImageFit); msg != "" {
+		return fmt.Errorf("%s: %s", prefix, msg)
+	}
+	if msg := store.ValidateCatalogSoundVolumeField(greeting.SoundVolume); msg != "" {
+		return fmt.Errorf("%s: %s", prefix, msg)
+	}
+	if msg := store.ValidateCatalogImageSizePctField(greeting.ImageSizePct); msg != "" {
+		return fmt.Errorf("%s: %s", prefix, msg)
+	}
+
 	return nil
 }
 
