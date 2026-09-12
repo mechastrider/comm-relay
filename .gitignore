@@ -42,6 +42,7 @@ tmp/
 build-errors.log
 
 .agent-orchestration/
+.playwright-mcp/
 comm-relay.db
 comm-relay.db-wal
 comm-relay.db-shm
