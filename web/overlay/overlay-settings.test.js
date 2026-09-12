@@ -360,6 +360,7 @@ test("leaderboardViewFromConfig defaults max_entries to five when omitted", func
   assert.equal(view.sizing_mode, "auto");
   assert.equal(view.title_mode, "theme");
   assert.equal(view.show_message_count, false);
+  assert.equal(view.show_viewer_titles, false);
 });
 
 test("leaderboard presentation resolves legacy and explicit modes", function () {
@@ -397,6 +398,7 @@ test("leaderboard query font forces fixed compatibility without changing content
               title_mode: "custom",
               title: "Top",
               show_message_count: true,
+			  show_viewer_titles: true,
             },
           },
         }],
@@ -408,6 +410,7 @@ test("leaderboard query font forces fixed compatibility without changing content
   assert.equal(view.font_size_px, 16);
   assert.equal(view.title, "Top");
   assert.equal(view.show_message_count, true);
+  assert.equal(view.show_viewer_titles, true);
 });
 
 test("leaderboard sample preview applies bounded unpublished presentation query", function () {
@@ -418,7 +421,7 @@ test("leaderboard sample preview applies bounded unpublished presentation query"
       },
     },
     new URLSearchParams(
-      "preview=sample&sizing_mode=auto&base_font_size_px=20&title_mode=custom&title=%D0%A2%D0%BE%D0%BF&show_message_count=1&limit=8"
+      "preview=sample&sizing_mode=auto&base_font_size_px=20&title_mode=custom&title=%D0%A2%D0%BE%D0%BF&show_message_count=1&show_viewer_titles=1&limit=8"
     )
   );
   assert.equal(view.sizing_mode, "auto");
@@ -426,6 +429,7 @@ test("leaderboard sample preview applies bounded unpublished presentation query"
   assert.equal(view.title_mode, "custom");
   assert.equal(view.title, "Топ");
   assert.equal(view.show_message_count, true);
+  assert.equal(view.show_viewer_titles, true);
   assert.equal(view.max_entries, 8);
 });
 

@@ -28,6 +28,7 @@ func TestAppendInteractionEvent_WhenCommandFire_ExpectListedByViewer(t *testing.
 	err := s.AppendInteractionEvent(store.AppendInteractionEventInput{
 		Kind:           store.InteractionEventCommand,
 		ViewerID:       viewerID,
+		CommandID:      "gg",
 		CommandTrigger: "gg",
 		Now:            now,
 	})
@@ -38,6 +39,7 @@ func TestAppendInteractionEvent_WhenCommandFire_ExpectListedByViewer(t *testing.
 	require.NoError(t, err)
 	require.Len(t, events, 1)
 	assert.Equal(t, store.InteractionEventCommand, events[0].Kind)
+	assert.Equal(t, "gg", events[0].CommandID)
 	assert.Equal(t, viewerID, events[0].ViewerID)
 	assert.Equal(t, "gg", events[0].CommandTrigger)
 	assert.Equal(t, 0, events[0].Points)
@@ -102,6 +104,7 @@ func TestMerge_WhenAwardEventsExist_ExpectViewerIDRewritten(t *testing.T) {
 	require.NoError(t, s.AppendInteractionEvent(store.AppendInteractionEventInput{
 		Kind:           store.InteractionEventCommand,
 		ViewerID:       fromID,
+		CommandID:      "gg",
 		CommandTrigger: "gg",
 		Now:            now,
 	}))
@@ -186,6 +189,7 @@ func TestInteractionEventSchema_WhenInspected_ExpectNoMessageBodyColumn(t *testi
 		"kind",
 		"contract_id",
 		"viewer_id",
+		"command_id",
 		"command_trigger",
 		"award_id",
 		"reward_name",

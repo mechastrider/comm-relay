@@ -42,6 +42,7 @@ import {
 import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js";
 import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js";
 import { initGreetingsCatalog, ensureGreetingsLoaded } from "./js/greetings-catalog.js";
+import { initProgressionCatalog, ensureProgressionLoaded } from "./js/progression-catalog.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
 import { initWorkspaceRouter } from "./js/workspace-router.js";
 import { initLiveTabs, handleLiveWorkspaceChange } from "./js/live-tabs.js";
@@ -163,12 +164,15 @@ initAudienceTabs({
       ensureAwardsLoaded();
     } else if (tab === "history") {
       ensureRewardHistoryLoaded();
+    } else if (tab === "progression") {
+      ensureProgressionLoaded();
     }
   },
 });
 initCommandsCatalog();
 initAwardsCatalog();
 initGreetingsCatalog();
+initProgressionCatalog();
 initLiveTabs();
 initLiveLeaderboard(function () {
   /* period change handled in leaderboard module */

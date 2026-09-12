@@ -31,6 +31,7 @@ type InteractionEvent struct {
 	Kind            InteractionEventKind
 	ContractID      string
 	ViewerID        string
+	CommandID       string
 	CommandTrigger  string
 	AwardID         string
 	AwardName       string
@@ -45,6 +46,7 @@ type AppendInteractionEventInput struct {
 	Kind            InteractionEventKind
 	ContractID      string
 	ViewerID        string
+	CommandID       string
 	CommandTrigger  string
 	AwardID         string
 	AwardName       string
@@ -83,10 +85,37 @@ func (s *Store) ViewerIDForIdentity(platform, userID string) (string, bool) {
 
 // AppendInteractionEvent inserts one interaction event under the store mutex.
 func (s *Store) AppendInteractionEvent(input AppendInteractionEventInput) error {
+	_, err := s.AppendInteractionEventResult(input)
+	return err
+}
+
+// AppendInteractionEventResult appends an event and returns its complete
+// post-commit progression outcome. Command facts and their unlocks share one
+// transaction, so failed writes never produce a publishable result.
+func (s *Store) AppendInteractionEventResult(input AppendInteractionEventInput) (ProgressionResultBundle, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.appendInteractionEventLocked(s.db, input)
+	tx, err := s.db.Begin()
+	if err != nil {
+		return ProgressionResultBundle{}, errors.Errorf("begin interaction event append: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	if err := s.appendInteractionEventLocked(tx, input); err != nil {
+		return ProgressionResultBundle{}, err
+	}
+	var results []ProgressionEvaluationResult
+	if input.Kind == InteractionEventCommand {
+		result, err := evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: strings.TrimSpace(input.ViewerID), CauseMetric: ProgressionMetricCommandCount, Now: input.Now})
+		if err != nil {
+			return ProgressionResultBundle{}, errors.Errorf("evaluate command progression: %w", err)
+		}
+		results = append(results, result)
+	}
+	if err := tx.Commit(); err != nil {
+		return ProgressionResultBundle{}, errors.Errorf("commit interaction event append: %w", err)
+	}
+	return newProgressionResultBundle(results...), nil
 }
 
 // SetInteractionEventInsertHookForTest installs a test-only failure hook used
@@ -108,7 +137,7 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 		viewerID = input.ViewerID
 	}
 
-	var contractID, commandTrigger, awardID, awardName, messagePlatform, messageID any
+	var contractID, commandID, commandTrigger, awardID, awardName, messagePlatform, messageID any
 	if strings.TrimSpace(input.ContractID) != "" {
 		contractID = strings.TrimSpace(input.ContractID)
 	}
@@ -116,9 +145,10 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 
 	switch input.Kind {
 	case InteractionEventCommand:
+		commandID = strings.TrimSpace(input.CommandID)
 		commandTrigger = strings.TrimSpace(input.CommandTrigger)
-		if commandTrigger == "" {
-			return errors.New("command trigger is required for command events")
+		if commandID == "" || commandTrigger == "" {
+			return errors.New("command id and trigger are required for command events")
 		}
 		awardID = nil
 		awardName = nil
@@ -135,6 +165,7 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 			return ErrInvalidAwardName
 		}
 		commandTrigger = nil
+		commandID = nil
 		if strings.TrimSpace(input.MessagePlatform) != "" {
 			messagePlatform = strings.TrimSpace(input.MessagePlatform)
 		}
@@ -142,6 +173,7 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 			messageID = strings.TrimSpace(input.MessageID)
 		}
 	case InteractionEventActivity:
+		commandID = nil
 		commandTrigger = nil
 		awardID = nil
 		awardName = nil
@@ -163,13 +195,14 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 	}
 	if _, err := q.Exec(
 		`INSERT INTO interaction_events (
-			id, kind, contract_id, viewer_id, command_trigger, award_id, reward_name, points,
+			id, kind, contract_id, viewer_id, command_id, command_trigger, award_id, reward_name, points,
 			message_platform, message_id, created_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		string(input.Kind),
 		contractID,
 		viewerID,
+		commandID,
 		commandTrigger,
 		awardID,
 		awardName,
@@ -212,7 +245,7 @@ func (s *Store) CountInteractionEvents() (int, error) {
 
 func (s *Store) listInteractionEventsLocked(whereClause string, args ...any) ([]InteractionEvent, error) {
 	query := `
-		SELECT id, kind, contract_id, viewer_id, command_trigger, award_id, reward_name, points,
+		SELECT id, kind, contract_id, viewer_id, command_id, command_trigger, award_id, reward_name, points,
 		       message_platform, message_id, created_at
 		FROM interaction_events ` + whereClause + ` ORDER BY created_at`
 
@@ -243,13 +276,14 @@ type interactionEventScanner interface {
 
 func scanInteractionEvent(row interactionEventScanner) (InteractionEvent, error) {
 	var event InteractionEvent
-	var contractID, viewerID, commandTrigger, awardID, awardName, messagePlatform, messageID sql.NullString
+	var contractID, viewerID, commandID, commandTrigger, awardID, awardName, messagePlatform, messageID sql.NullString
 	var createdAtRaw string
 	if err := row.Scan(
 		&event.ID,
 		&event.Kind,
 		&contractID,
 		&viewerID,
+		&commandID,
 		&commandTrigger,
 		&awardID,
 		&awardName,
@@ -269,6 +303,9 @@ func scanInteractionEvent(row interactionEventScanner) (InteractionEvent, error)
 	}
 	if commandTrigger.Valid {
 		event.CommandTrigger = commandTrigger.String
+	}
+	if commandID.Valid {
+		event.CommandID = commandID.String
 	}
 	if awardID.Valid {
 		event.AwardID = awardID.String

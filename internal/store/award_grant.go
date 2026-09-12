@@ -15,6 +15,7 @@ type ApplyAwardResult struct {
 	DisplayName          string
 	AvatarURL            string
 	MeaningfulRankChange bool
+	Progression          ProgressionResultBundle
 }
 
 // GrantAwardInput describes an atomic operator award and its durable journal entry.
@@ -104,6 +105,10 @@ func (s *Store) applyAwardLocked(identity ChatIdentity, points int, dayResetHour
 	if err != nil {
 		return nil, err
 	}
+	var previousXP int
+	if queryErr := tx.QueryRow(`SELECT xp FROM viewers WHERE id = ?`, viewerID).Scan(&previousXP); queryErr != nil {
+		return nil, errors.Errorf("read viewer XP before award progression: %w", queryErr)
+	}
 
 	if _, execErr := tx.Exec(
 		`UPDATE viewers
@@ -141,9 +146,23 @@ func (s *Store) applyAwardLocked(identity ChatIdentity, points int, dayResetHour
 
 	if event != nil {
 		event.ViewerID = viewerID
-		if err := s.appendInteractionEventLocked(tx, *event); err != nil {
-			return nil, errors.Errorf("append award interaction event: %w", err)
+		if appendErr := s.appendInteractionEventLocked(tx, *event); appendErr != nil {
+			return nil, errors.Errorf("append award interaction event: %w", appendErr)
 		}
+	}
+
+	progressionResults := make([]ProgressionEvaluationResult, 0, 2)
+	xpResult, err := evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: ProgressionMetricXP, PreviousXP: previousXP, HasPreviousXP: true, Now: now})
+	if err != nil {
+		return nil, errors.Errorf("evaluate award XP progression: %w", err)
+	}
+	progressionResults = append(progressionResults, xpResult)
+	if event != nil {
+		awardResult, evaluationErr := evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: ProgressionMetricAwardCount, Now: now})
+		if evaluationErr != nil {
+			return nil, errors.Errorf("evaluate award-count progression: %w", evaluationErr)
+		}
+		progressionResults = append(progressionResults, awardResult)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -156,6 +175,7 @@ func (s *Store) applyAwardLocked(identity ChatIdentity, points int, dayResetHour
 		DisplayName:          displayName,
 		AvatarURL:            avatarURL,
 		MeaningfulRankChange: meaningfulRankChange,
+		Progression:          newProgressionResultBundle(progressionResults...),
 	}, nil
 }
 

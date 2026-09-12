@@ -16,7 +16,7 @@
 | Spec/UI/platform ref | Steps/check | Expected | P0/P1 |
 |----------------------|-------------|----------|-------|
 | viewer-progression / levels | Configure 0/100/500 levels; cross thresholds by activity and award XP; edit/delete thresholds | Highest threshold derives from all-time XP; no bonus XP; baseline protected; admin edits silent | P0 |
-| viewer-progression / metrics | For one viewer generate messages, XP, selected awards, successful/rejected commands, participation in distinct sessions, awarded/closed contracts | Each typed metric counts only its documented durable successful fact | P0 |
+| viewer-progression / metrics | For one viewer generate messages, XP, selected awards, successful/rejected commands, participation in distinct sessions, awarded/closed contracts; rename a command after execution | Each typed metric counts only its documented durable successful fact; command progress follows the durable command id, not a later trigger | P0 |
 | viewer-progression / repeat | Cross N, 2N, and multiple thresholds in one atomic increase; retry evaluation | Every occurrence appears once; one-time rules do not repeat | P0 |
 | viewer-progression / revisions | Rename/disable/secret-toggle, then change target/metric/repeat mode | Cosmetic fields keep revision; rule fields increment it; old snapshots survive; new backfill is silent | P0 |
 | viewer-progression / seeds | Initialize RU and EN fresh stores; upgrade populated v16 store; edit/delete seeds; restart/change locale | Stable ids/thresholds, locale-correct text, exactly-once bootstrap, no restoration/retranslation | P0 |
@@ -51,13 +51,13 @@ Fixtures:
 
 1. empty database at schema 0;
 2. schema 16 database with RU and EN configured locales;
-3. populated database with deleted starter awards/commands, completed sessions/days, awards, commands, contracts, greetings flags, custom portrait, and viewer merges;
+3. populated database with renamed, deleted, and unresolvable legacy command triggers plus deleted starter awards, completed sessions/days, awards, commands, contracts, greetings flags, custom portrait, and viewer merges;
 4. upgraded database interrupted at each bootstrap/reconciliation checkpoint;
 5. two viewers with overlapping/disjoint stats and duplicate unlock occurrences;
 6. malformed/corrupt progression row in a disposable copy;
 7. legacy/current config files with omitted, false, true, and invalid `show_viewer_titles`.
 
-For valid fixtures run migration, foreign-key check, `PRAGMA integrity_check`, seed assertions, reconciliation twice, restart, merge, and query-plan inspection. Inject transaction failures before commit and assert total rollback plus zero WS events. Corruption must surface through diagnostics/logging without silently deleting/reseeding user data. Back up before manual upgrade/downgrade work.
+For valid fixtures run migration, foreign-key check, `PRAGMA integrity_check`, stable-command-id backfill assertions (including idempotent retry and unresolved no-op rows), seed assertions, reconciliation twice, restart, merge, and query-plan inspection. Inject transaction failures before commit and assert total rollback plus zero WS events. Corruption must surface through diagnostics/logging without silently deleting/reseeding user data. Back up before manual upgrade/downgrade work.
 
 ## Install / Upgrade / Downgrade / Packaged-App Smoke
 

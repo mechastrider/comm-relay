@@ -21,11 +21,12 @@ const (
 )
 
 type wireLeaderboardEntry struct {
-	Rank         int    `json:"rank"`
-	DisplayName  string `json:"display_name"`
-	AvatarURL    string `json:"avatar_url,omitempty"`
-	XP           int    `json:"xp"`
-	MessageCount int    `json:"message_count"`
+	Rank         int                       `json:"rank"`
+	DisplayName  string                    `json:"display_name"`
+	AvatarURL    string                    `json:"avatar_url,omitempty"`
+	XP           int                       `json:"xp"`
+	MessageCount int                       `json:"message_count"`
+	Level        *progressionLevelResponse `json:"level,omitempty"`
 }
 
 type wireLeaderboard struct {
@@ -37,13 +38,18 @@ type wireLeaderboard struct {
 func leaderboardWirePayload(period string, entries []store.LeaderboardEntry) ([]byte, error) {
 	wireEntries := make([]wireLeaderboardEntry, 0, len(entries))
 	for _, entry := range entries {
-		wireEntries = append(wireEntries, wireLeaderboardEntry{
+		wireEntry := wireLeaderboardEntry{
 			Rank:         entry.Rank,
 			DisplayName:  entry.DisplayName,
 			AvatarURL:    entry.AvatarURL,
 			XP:           entry.XP,
 			MessageCount: entry.MessageCount,
-		})
+		}
+		if entry.Level != nil {
+			level := progressionLevelFromStore(*entry.Level)
+			wireEntry.Level = &level
+		}
+		wireEntries = append(wireEntries, wireEntry)
 	}
 
 	data, err := json.Marshal(wireLeaderboard{

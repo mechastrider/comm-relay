@@ -26,6 +26,7 @@ type Store struct {
 	path                       string
 	openSessionID              string
 	interactionEventInsertHook func() error
+	mergeHook                  func() error
 }
 
 func sqliteDSN(path string) (string, error) {
@@ -129,6 +130,13 @@ func Open(path string, opts OpenOptions) (*Store, error) {
 			return nil, errors.Errorf("ensure greeting definitions: %w (close database: %w)", err, closeErr)
 		}
 		return nil, errors.Errorf("ensure greeting definitions: %w", err)
+	}
+	if err := s.ensureProgressionBootstrapLocked(resolvedOpenLocale(opts.TimeLocale)); err != nil {
+		closeErr := db.Close()
+		if closeErr != nil {
+			return nil, errors.Errorf("ensure progression bootstrap: %w (close database: %w)", err, closeErr)
+		}
+		return nil, errors.Errorf("ensure progression bootstrap: %w", err)
 	}
 
 	return s, nil

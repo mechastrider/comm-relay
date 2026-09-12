@@ -30,11 +30,18 @@ export function isValidAlertEnvelope(alert) {
     return alert.points === 0 &&
       (alert.greeting_kind === "new_viewer" || alert.greeting_kind === "returning_viewer");
   }
+  if (alert.source === "progression") {
+    return nonBlankString(alert.viewer_id) &&
+      ((alert.level && nonBlankString(alert.level.title)) ||
+        (Array.isArray(alert.achievements) && alert.achievements.some(function (item) {
+          return item && nonBlankString(item.name);
+        })));
+  }
   return true;
 }
 
 function laneFor(alert) {
-  return alert && (alert.source === "award" || alert.source === "contract") ? "award" : "command";
+  return alert && (alert.source === "award" || alert.source === "contract" || alert.source === "progression") ? "award" : "command";
 }
 
 function createdAtMs(alert, receivedAt) {

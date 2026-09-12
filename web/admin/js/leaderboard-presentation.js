@@ -7,6 +7,7 @@ const ALL_LEADERBOARD_PRESENTATION_TOUCHED = Object.freeze({
   title: true,
   titleText: true,
   messages: true,
+  titles: true,
   maxEntries: true,
 });
 
@@ -45,6 +46,9 @@ export function normalizeLeaderboardSurfaceOverride(value) {
   if (raw.show_message_count === true) {
     next.show_message_count = true;
   }
+  if (raw.show_viewer_titles === true) {
+    next.show_viewer_titles = true;
+  }
   if (typeof raw.max_entries === "number" && raw.max_entries >= 1 && raw.max_entries <= 20 && raw.max_entries !== 5) {
     next.max_entries = raw.max_entries;
   }
@@ -70,6 +74,7 @@ export function resolveLeaderboardFormValues(value, inheritedFontSizePx) {
     title_mode: titleMode,
     title: title,
     show_message_count: raw.show_message_count === true,
+    show_viewer_titles: raw.show_viewer_titles === true,
     max_entries:
       typeof raw.max_entries === "number" && raw.max_entries >= 1 && raw.max_entries <= 20
         ? raw.max_entries
@@ -128,6 +133,14 @@ export function withLeaderboardPresentation(surfaces, values, touched) {
     }
   }
 
+  if (state.titles) {
+    if (form.show_viewer_titles === true) {
+      leaderboard.show_viewer_titles = true;
+    } else {
+      delete leaderboard.show_viewer_titles;
+    }
+  }
+
   if (state.maxEntries) {
     if (Number.isFinite(form.max_entries) && form.max_entries !== 5) {
       leaderboard.max_entries = form.max_entries;
@@ -154,6 +167,7 @@ export function leaderboardPreviewQuery(values) {
     title_mode: TITLE_MODES.has(form.title_mode) ? form.title_mode : "theme",
     title: form.title_mode === "custom" ? String(form.title || "").trim() : undefined,
     show_message_count: form.show_message_count === true ? "1" : "0",
+    show_viewer_titles: form.show_viewer_titles === true ? "1" : "0",
     limit: String(form.max_entries),
   };
 }

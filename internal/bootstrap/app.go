@@ -123,6 +123,7 @@ func New(opts Options) (*App, error) {
 
 	leaderboardPublisher := api.NewLeaderboardPublisher(hub, viewerStore, cfgStore)
 	avatarWorker := avatarcache.NewWorker(viewerStore, overlayassets.DirForConfig(opts.ConfigPath))
+	progressionReconciler := store.NewProgressionReconciler(viewerStore)
 	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher, commandMatcher, hub, avatarWorker, visibilityController)
 
 	handler, err := api.NewHandler(api.Options{
@@ -189,6 +190,7 @@ func New(opts Options) (*App, error) {
 		runnable.HTTPServer(srv).
 			ShutdownTimeout(10 * time.Second).
 			Name("http"),
+		runnable.Func(progressionReconciler.Run).Name("progression-reconciliation"),
 	}
 
 	twitchConn := twitchconnector.New(eventBus, cfgStore, statusRegistry, emoteEnricher)

@@ -81,7 +81,8 @@ A singleton/keyed state row records bootstrap state (`pending:<locale>` or `comp
 ### Existing-table changes
 
 - Add `viewers.progression_alerts_disabled INTEGER NOT NULL DEFAULT 0` with a boolean check.
-- Add indexes for award/command counts by `(viewer_id, kind, award_id/command_trigger)` and contract wins by winner/status only after query-plan verification.
+- Add nullable `interaction_events.command_id TEXT` for the stable id of each successful command at execution time. Keep `command_trigger` as the immutable historical display snapshot; do not add a catalog foreign key, so deleted commands remain understandable.
+- Add indexes for award/command counts by `(viewer_id, kind, award_id/command_id)` and contract wins by winner/status only after query-plan verification.
 - Do not duplicate all-time message/XP counters or session participation aggregates.
 - Update merge queries to iterate every `viewer_session_stats` and `viewer_day_stats` key, using upsert-add semantics before deleting source rows. Reassign `interaction_events`, contracts where applicable, and unlocks in the same transaction.
 
@@ -104,7 +105,7 @@ No secret or credential is added. SQLite retains the project's existing at-rest 
 
 ## Migration / Downgrade / Backup / Export
 
-1. An additive Goose migration creates tables, constraints, indexes, singleton state, and the viewer boolean with default false. Structural migration does not scan history.
+1. An additive Goose migration creates tables, constraints, indexes, singleton state, and the viewer boolean with default false. A subsequent additive migration adds nullable `interaction_events.command_id` and backfills only a legacy row whose saved `command_trigger` resolves to exactly one current command. It leaves ambiguous or deleted-command rows unchanged; the migration is idempotent and never deletes interaction history.
 2. On first progression bootstrap, persist `pending:<normalized locale>` before inserting localized seeds so a crash cannot change language on retry. Use a progression-specific key/state, independent of existing command/award bootstrap.
 3. For databases with no progression metadata, insert every stable seed with conflict-safe semantics, mark bootstrap complete, increment reconciliation generation, and run silent backfill. Existing award/command subjects that were deleted remain valid seed references with saved labels but cannot gain progress until rebound.
 4. Existing databases and fresh databases follow the same one-time catalog contract. A completed marker prevents retranslation/restoration after user edits or deletion.
@@ -119,7 +120,7 @@ SQLite corruption and application-data removal follow existing recovery guidance
 
 ## Verification
 
-- Migrate fresh, version-16, and representative populated databases; verify foreign keys and `PRAGMA integrity_check`.
+- Migrate fresh, version-16, and representative populated databases; verify foreign keys, `PRAGMA integrity_check`, durable command ids for new executions, and safe no-op treatment of unresolved legacy command events.
 - Crash/restart at pending-locale, mid-seed, and mid-reconciliation checkpoints; verify stable language, no duplicate seeds/unlocks, and no alerts.
 - Exercise concurrent live evaluation and reconciliation under `go test -race`; assert one occurrence per unique key and post-commit publication.
 - Merge viewers with overlapping/non-overlapping historical sessions, days, interactions, contracts, opt-outs, and unlocks; verify sums, earliest collision timestamps, audit, and rollback injection.

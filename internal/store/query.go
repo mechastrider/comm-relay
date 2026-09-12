@@ -73,6 +73,20 @@ func (s *Store) UpdateGreetingsDisabled(id string, disabled bool) error {
 	return nil
 }
 
+// UpdateProgressionAlertsDisabled sets whether live progression alerts are
+// suppressed for one canonical viewer. Unlock history remains visible.
+func (s *Store) UpdateProgressionAlertsDisabled(id string, disabled bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := loadVisibleViewer(s.db, id); err != nil {
+		return err
+	}
+	if _, err := s.db.Exec(`UPDATE viewers SET progression_alerts_disabled = ? WHERE id = ?`, boolInt(disabled), id); err != nil {
+		return errors.Errorf("set progression alerts disabled: %w", err)
+	}
+	return nil
+}
+
 // List returns visible viewers optionally filtered by query string.
 func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error) {
 	s.mu.Lock()
@@ -92,6 +106,7 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 			v.custom_avatar,
 			v.leaderboard_hidden,
 			v.greetings_disabled,
+			v.progression_alerts_disabled,
 			v.display_name,
 			v.message_count,
 			v.xp,
@@ -203,6 +218,7 @@ func (s *Store) Get(id string, dayResetHour int, now time.Time) (*Viewer, error)
 			v.custom_avatar,
 			v.leaderboard_hidden,
 			v.greetings_disabled,
+			v.progression_alerts_disabled,
 			v.display_name,
 			v.message_count,
 			v.xp,
@@ -298,11 +314,13 @@ func scanViewerListRow(rows *sql.Rows) (Viewer, error) {
 	var lastSeenRaw string
 	var leaderboardHidden int
 	var greetingsDisabled int
+	var progressionAlertsDisabled int
 	if err := rows.Scan(
 		&viewer.ID,
 		&viewer.CustomAvatar,
 		&leaderboardHidden,
 		&greetingsDisabled,
+		&progressionAlertsDisabled,
 		&displayOverride,
 		&viewer.MessageCount,
 		&viewer.XP,
@@ -330,6 +348,7 @@ func scanViewerListRow(rows *sql.Rows) (Viewer, error) {
 	}
 	viewer.LeaderboardHidden = leaderboardHidden != 0
 	viewer.GreetingsDisabled = greetingsDisabled != 0
+	viewer.ProgressionAlertsDisabled = progressionAlertsDisabled != 0
 
 	return viewer, nil
 }
@@ -340,11 +359,13 @@ func scanViewerSummaryRow(row *sql.Row) (Viewer, error) {
 	var lastSeenRaw string
 	var leaderboardHidden int
 	var greetingsDisabled int
+	var progressionAlertsDisabled int
 	if err := row.Scan(
 		&viewer.ID,
 		&viewer.CustomAvatar,
 		&leaderboardHidden,
 		&greetingsDisabled,
+		&progressionAlertsDisabled,
 		&displayOverride,
 		&viewer.MessageCount,
 		&viewer.XP,
@@ -367,6 +388,7 @@ func scanViewerSummaryRow(row *sql.Row) (Viewer, error) {
 	}
 	viewer.LeaderboardHidden = leaderboardHidden != 0
 	viewer.GreetingsDisabled = greetingsDisabled != 0
+	viewer.ProgressionAlertsDisabled = progressionAlertsDisabled != 0
 
 	return viewer, nil
 }

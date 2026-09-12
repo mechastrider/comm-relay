@@ -38,7 +38,7 @@ Non-goals:
 3. After commit, the caller publishes any source alert first, then one aggregate progression frame, then the usual leaderboard/viewer refreshes. No frame is published on rollback.
 4. The admin refreshes an open viewer row/card from the progression frame; the alert overlay queues one combined splash.
 
-Stream participation means a distinct stream session in which the canonical viewer has at least one counted message. Award and command metrics use stable catalog ids. Deleted subjects retain their saved label and historical count but cannot receive new facts. Contract wins count successfully completed contracts attributed to the viewer.
+Stream participation means a distinct stream session in which the canonical viewer has at least one counted message. Award and command metrics use stable catalog ids. A successful command event records its immutable command id as well as its historical trigger; command progress counts the id, never a mutable trigger. Upgrade backfill adopts a legacy event only when its saved trigger still resolves uniquely to a current command id; unresolved or deleted-command events remain durable history but are not counted by the id-based metric. Deleted subjects retain their saved label and historical count but cannot receive new facts. Contract wins count successfully completed contracts attributed to the viewer.
 
 Catalog initialization uses a progression-specific bootstrap marker and a persisted pending locale. Schema migration creates empty structures; a cancellable reconciliation worker seeds/adopts definitions and scans viewers in bounded batches after startup. Rule revisions enqueue the same idempotent worker. Status is readable by the admin. Reconciliation inserts `backfilled` unlocks and never returns production events.
 
@@ -65,6 +65,10 @@ The current level is the highest configured threshold not exceeding all-time XP.
 ### Decision: Conditions use typed metrics, not an expression language
 
 The first version supports six indexed metrics with an optional award/command subject and one positive target. An expression language was rejected because it complicates validation, explainability, query cost, migration, and UI accessibility.
+
+### Decision: Command progress keys historical events by stable command id
+
+Successful command events persist the selected command's stable id at execution time, while retaining the trigger as a historical display snapshot. An additive migration backfills only unambiguous legacy rows by matching their saved trigger to a currently existing command. Events that cannot be mapped safely remain visible in the journal but do not satisfy an id-based achievement. Treating triggers as subjects was rejected because renaming a command would silently split or redirect viewer progress.
 
 ### Decision: Condition edits create immutable revisions
 
@@ -96,7 +100,7 @@ Progression has no legacy user-owned catalog, so all installations receive the s
 
 ## Migration / Rollout / Rollback
 
-Additive SQLite migrations create catalogs, revisions, unlocks, alert settings, reconciliation state, and the viewer opt-out field. A separate bootstrap phase inserts locale-aware seeds once and schedules silent reconciliation. Existing stats and interaction rows are not rewritten during installation.
+Additive SQLite migrations create catalogs, revisions, unlocks, alert settings, reconciliation state, and the viewer opt-out field. A follow-up additive migration adds nullable `command_id` to interaction events and safely backfills only rows whose historical trigger resolves to a current command. A separate bootstrap phase inserts locale-aware seeds once and schedules silent reconciliation. No migration rewrites or deletes unresolved historical interaction rows.
 
 `show_viewer_titles` is an optional preset field resolving false, so old config files and pinned overlay URLs retain their appearance. Older binaries ignore additive SQLite tables and the unknown optional config field; they cannot display progression but retain the underlying viewer history. Rollback does not delete progression data. A later forward upgrade resumes reconciliation idempotently.
 

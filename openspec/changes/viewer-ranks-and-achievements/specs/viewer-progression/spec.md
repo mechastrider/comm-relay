@@ -28,6 +28,16 @@ Each achievement SHALL have a stable id, localized name and description, `enable
 - **WHEN** a recognized command is rejected by its cooldown or does not complete successfully
 - **THEN** its successful-command achievement metric does not increase
 
+#### Scenario: Command rename preserves progress identity
+- **WHEN** a successful command event is recorded and the operator later changes that command's trigger
+- **THEN** the event retains the stable command id selected at execution time
+- **AND** an achievement targeting that command id continues to count it
+
+#### Scenario: Unresolvable legacy command remains non-qualifying
+- **WHEN** an upgraded historical command event has no stored command id and its saved trigger no longer resolves to a current command
+- **THEN** the event remains in durable history
+- **AND** it does not increase any id-based command achievement metric
+
 #### Scenario: Deleted subject remains understandable
 - **WHEN** an award referenced by an existing achievement is later deleted
 - **THEN** the achievement retains its snapshotted subject label, stops gaining progress, and remains editable

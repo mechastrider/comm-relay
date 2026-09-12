@@ -384,6 +384,12 @@ func (h *viewerContractsHandler) handleAward(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	h.hub.Broadcast(payload)
+	if progressionPayload, ok, progressionErr := progressionLivePayload(h.viewerStore, result.ViewerID, cfg.DayResetHour, cfg.CustomAvatarsEnabled, result.Progression); progressionErr != nil {
+		clog.Errorf(r.Context(), "build contract progression frame: %w", progressionErr)
+	} else if ok {
+		h.hub.Broadcast(progressionPayload)
+		observability.Default.RecordProgressionPublished()
+	}
 	observability.Default.RecordAwardGranted()
 	clog.Info(r.Context(), "viewer contract awarded",
 		slog.String("contract_id", result.Contract.ID),

@@ -14,6 +14,7 @@ import { parseWorkspaceHash } from "./workspace-router.js";
 import { getLiveTab } from "./live-tabs.js";
 import { applyLiveLeaderboardFrame, cacheLiveLeaderboardFrame } from "./live-leaderboard.js";
 import { invalidateLiveStatistics } from "./live-statistics.js";
+import { applyViewerProgressionFrame } from "./viewers.js";
 
 function isActiveLiveTab(tab) {
   return parseWorkspaceHash(window.location.hash) === "live" && getLiveTab() === tab;
@@ -434,6 +435,10 @@ export function handleWireMessage(wire) {
         applyLiveLeaderboardFrame(wire);
       }
       invalidateLiveStatistics({ active: isActiveLiveTab("statistics") });
+      return;
+    }
+    if (wire.type === "viewer_progression") {
+      applyViewerProgressionFrame(wire);
       return;
     }
     if (wire.type !== "message") {

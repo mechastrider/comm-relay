@@ -34,6 +34,7 @@ type ChatMutationResult struct {
 	MeaningfulRankChange bool
 	GreetingKind         GreetingKind
 	GreetingSuppressed   string
+	Progression          ProgressionResultBundle
 }
 
 // ApplyChatMutationResult applies chat and reports whether XP and ordered top-three membership changed.
@@ -96,6 +97,10 @@ func (s *Store) applyChatMutationResult(
 	if err != nil {
 		return ChatMutationResult{}, err
 	}
+	var previousXP int
+	if queryErr := tx.QueryRow(`SELECT xp FROM viewers WHERE id = ?`, viewerID).Scan(&previousXP); queryErr != nil {
+		return ChatMutationResult{}, errors.Errorf("read viewer XP before chat progression: %w", queryErr)
+	}
 
 	xpChanged := false
 	var beforeRanks topThreeSnapshot
@@ -142,6 +147,25 @@ func (s *Store) applyChatMutationResult(
 		}
 	}
 
+	progressionResults := make([]ProgressionEvaluationResult, 0, 3)
+	for _, evaluation := range []ProgressionEvaluationInput{
+		{ViewerID: viewerID, CauseMetric: ProgressionMetricMessageCount, Now: now},
+		{ViewerID: viewerID, CauseMetric: ProgressionMetricSessionCount, Now: now},
+	} {
+		result, evaluationErr := evaluateProgressionLocked(tx, evaluation)
+		if evaluationErr != nil {
+			return ChatMutationResult{}, errors.Errorf("evaluate chat progression: %w", evaluationErr)
+		}
+		progressionResults = append(progressionResults, result)
+	}
+	if xpChanged {
+		result, evaluationErr := evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: ProgressionMetricXP, PreviousXP: previousXP, HasPreviousXP: true, Now: now})
+		if evaluationErr != nil {
+			return ChatMutationResult{}, errors.Errorf("evaluate activity XP progression: %w", evaluationErr)
+		}
+		progressionResults = append(progressionResults, result)
+	}
+
 	meaningfulRankChange := false
 	if xpChanged {
 		afterRanks, rankErr := captureTopThree(tx, sessionID, dayKey)
@@ -161,6 +185,7 @@ func (s *Store) applyChatMutationResult(
 		MeaningfulRankChange: meaningfulRankChange,
 		GreetingKind:         greetingKind,
 		GreetingSuppressed:   greetingSuppressed,
+		Progression:          newProgressionResultBundle(progressionResults...),
 	}, nil
 }
 

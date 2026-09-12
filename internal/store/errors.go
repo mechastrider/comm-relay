@@ -35,4 +35,12 @@ var (
 	ErrInvalidViewerContract = errors.New("invalid viewer contract")
 	// ErrGreetingNotFound is returned when a reserved greeting definition is missing.
 	ErrGreetingNotFound = errors.New("greeting definition not found")
+	// ErrProgressionLevelNotFound is returned when a level id is unknown.
+	ErrProgressionLevelNotFound = errors.New("progression level not found")
+	// ErrAchievementNotFound is returned when an achievement id is unknown.
+	ErrAchievementNotFound = errors.New("achievement not found")
+	// ErrProgressionValidation is returned for a bounded progression catalog value.
+	ErrProgressionValidation = errors.New("invalid progression value")
+	// ErrBaselineLevel is returned when an operation would remove or move the zero-XP level.
+	ErrBaselineLevel = errors.New("baseline progression level is protected")
 )

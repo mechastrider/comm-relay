@@ -97,6 +97,24 @@ test("omits empty award fields and preserves the command presentation", function
   assert.equal(byClass(command, "alert-text").textContent, "Good game, Nova!");
 });
 
+test("renders one combined progression splash without parsing untrusted titles as HTML", function () {
+  const title = '<img src=x onerror="alert(1)"> Veteran';
+  const splash = createAlertSplash(fakeDocument, {
+    source: "progression",
+    viewer_id: "viewer-1",
+    name: "Nova",
+    avatar_url: "https://example.test/nova.png",
+    level: { id: "veteran", title },
+    achievements: [{ id: "spotter", name: "Spotter" }, { id: "meme", name: "Meme Lord" }],
+  }, { createEmblem: createAlertEmblem });
+
+  assert.match(splash.className, /alert-splash--progression/);
+  assert.equal(byClass(splash, "alert-progression-name").textContent, "Nova");
+  assert.equal(byClass(splash, "alert-progression-level").textContent, title);
+  assert.equal(byClass(splash, "alert-progression-achievements").textContent, "Spotter · Meme Lord");
+  assert.equal(Object.hasOwn(byClass(splash, "alert-progression-level"), "innerHTML"), false);
+});
+
 test("renders a contract from text nodes with its title, objective, and reward snapshot", function () {
   const title = '<img src=x onerror="alert(1)"> Hold the line';
   const objective = "Survive the final round.";

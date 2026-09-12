@@ -19,6 +19,7 @@ test("legacy leaderboard fields resolve without materializing modes", function (
     title_mode: "custom",
     title: "Топ эфира",
     show_message_count: false,
+    show_viewer_titles: false,
     max_entries: 5,
   });
   assert.deepEqual(normalizeLeaderboardSurfaceOverride(raw), {
@@ -42,6 +43,7 @@ test("preview query carries automatic and fixed draft state without forcing auto
     title_mode: "custom",
     title: "Топ",
     show_message_count: "1",
+    show_viewer_titles: "0",
     limit: "8",
   });
   assert.equal(leaderboardPreviewQuery({ sizing_mode: "fixed", font_size_px: 16 }).font_size_px, "16");
@@ -64,6 +66,7 @@ test("forced presentation collection applies current form values", function () {
       title_mode: "custom",
       title: "Updated",
       show_message_count: true,
+      show_viewer_titles: true,
       max_entries: 8,
     },
     allLeaderboardPresentationTouched()
@@ -75,6 +78,7 @@ test("forced presentation collection applies current form values", function () {
       title_mode: "custom",
       title: "Updated",
       show_message_count: true,
+      show_viewer_titles: true,
       max_entries: 8,
     },
   });
@@ -84,7 +88,7 @@ test("explicit control edits store only meaningful presentation overrides", func
   const fixed = withLeaderboardPresentation(
     { leaderboard: { font_size_px: 14, title: "Legacy" } },
     { sizing_mode: "auto", font_size_px: 14, layout: "panel", title_mode: "hidden", title: "Legacy", show_message_count: true, max_entries: 8 },
-    { sizing: true, title: true, messages: true, maxEntries: true }
+    { sizing: true, title: true, messages: true, titles: true, maxEntries: true }
   );
   assert.deepEqual(fixed, {
     leaderboard: { title_mode: "hidden", show_message_count: true, max_entries: 8 },

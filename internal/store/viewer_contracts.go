@@ -39,6 +39,7 @@ type AwardViewerContractResult struct {
 	ViewerDisplayName    string
 	ViewerAvatarURL      string
 	MeaningfulRankChange bool
+	Progression          ProgressionResultBundle
 }
 
 // OpenViewerContract creates the only active contract and snapshots its reward.
@@ -199,6 +200,10 @@ func (s *Store) AwardViewerContract(input AwardViewerContractInput) (*AwardViewe
 	if visibleErr := loadVisibleViewer(tx, viewerID); visibleErr != nil {
 		return nil, visibleErr
 	}
+	var previousXP int
+	if queryErr := tx.QueryRow(`SELECT xp FROM viewers WHERE id = ?`, viewerID).Scan(&previousXP); queryErr != nil {
+		return nil, errors.Errorf("read viewer XP before contract progression: %w", queryErr)
+	}
 
 	dayKey := DayKey(now, input.DayResetHour)
 	beforeRanks, err := captureTopThree(tx, sessionID, dayKey)
@@ -246,6 +251,18 @@ func (s *Store) AwardViewerContract(input AwardViewerContractInput) (*AwardViewe
 	if rows == 0 {
 		return nil, ErrViewerContractConflict
 	}
+	progressionResults := make([]ProgressionEvaluationResult, 0, 3)
+	for _, evaluation := range []ProgressionEvaluationInput{
+		{ViewerID: viewerID, CauseMetric: ProgressionMetricXP, PreviousXP: previousXP, HasPreviousXP: true, Now: now},
+		{ViewerID: viewerID, CauseMetric: ProgressionMetricAwardCount, Now: now},
+		{ViewerID: viewerID, CauseMetric: ProgressionMetricContractWinCount, Now: now},
+	} {
+		progression, evaluationErr := evaluateProgressionLocked(tx, evaluation)
+		if evaluationErr != nil {
+			return nil, errors.Errorf("evaluate contract progression: %w", evaluationErr)
+		}
+		progressionResults = append(progressionResults, progression)
+	}
 	if err := tx.Commit(); err != nil {
 		return nil, errors.Errorf("commit viewer contract award: %w", err)
 	}
@@ -259,6 +276,7 @@ func (s *Store) AwardViewerContract(input AwardViewerContractInput) (*AwardViewe
 		ViewerDisplayName:    viewerDisplayName,
 		ViewerAvatarURL:      viewerAvatarURL,
 		MeaningfulRankChange: topThreeChanged(beforeRanks, afterRanks),
+		Progression:          newProgressionResultBundle(progressionResults...),
 	}, nil
 }
 

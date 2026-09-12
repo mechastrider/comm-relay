@@ -256,6 +256,30 @@ func TestMerge_WhenDayResetHourZeroAt0100_ExpectSameDayBucketSummed(t *testing.T
 	assert.Equal(t, 5, target.DayXP)
 }
 
+func TestMerge_WhenFailureOccursBeforeCommit_ExpectCompleteRollback(t *testing.T) {
+	// Arrange
+	s, _ := openTestStore(t)
+	now := time.Date(2026, 9, 12, 12, 0, 0, 0, time.UTC)
+	fromIdentity := store.ChatIdentity{Platform: "twitch", UserID: "merge-rollback-from", DisplayName: "From"}
+	intoIdentity := store.ChatIdentity{Platform: "youtube", UserID: "merge-rollback-into", DisplayName: "Into"}
+	require.NoError(t, s.ApplyChat(fromIdentity, defaultActivity(), testDayResetHour, now))
+	require.NoError(t, s.ApplyChat(intoIdentity, defaultActivity(), testDayResetHour, now))
+	fromID := viewerID(t, s, fromIdentity.Platform, fromIdentity.UserID, testDayResetHour, now)
+	intoID := viewerID(t, s, intoIdentity.Platform, intoIdentity.UserID, testDayResetHour, now)
+	s.SetMergeHookForTest(func() error { return errors.New("injected merge failure") })
+	t.Cleanup(func() { s.SetMergeHookForTest(nil) })
+
+	// Act
+	err := s.Merge(fromID, intoID, testDayResetHour, now.Add(time.Second))
+
+	// Assert
+	require.Error(t, err)
+	viewers := listAt(t, s, "", testDayResetHour, now.Add(time.Second))
+	require.Len(t, viewers, 2)
+	assert.Equal(t, 1, getAt(t, s, fromID, testDayResetHour, now).MessageCount)
+	assert.Equal(t, 1, getAt(t, s, intoID, testDayResetHour, now).MessageCount)
+}
+
 func TestListGet_WhenBeforeResetHour_ExpectPreviousDayBucket(t *testing.T) {
 	// Arrange
 	s, _ := openTestStore(t)

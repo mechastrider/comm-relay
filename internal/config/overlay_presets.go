@@ -84,6 +84,7 @@ type OverlayLeaderboardSurface struct {
 	TitleMode        string   `json:"title_mode,omitempty"`
 	Title            string   `json:"title,omitempty"`
 	ShowMessageCount bool     `json:"show_message_count,omitempty"`
+	ShowViewerTitles bool     `json:"show_viewer_titles,omitempty"`
 	MaxEntries       *int     `json:"max_entries,omitempty"`
 	PanelOpacity     *float64 `json:"panel_opacity,omitempty"`
 }

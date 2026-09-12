@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
@@ -84,6 +85,30 @@ func TestContractAlertWirePayload_ExpectSnapshotAndSnakeCaseJSON(t *testing.T) {
 	require.Equal(t, "Spotter", decoded["award_name"])
 	require.Equal(t, float64(25), decoded["points"])
 	require.Equal(t, "2026-09-08T10:11:12.987654321Z", decoded["created_at"])
+}
+
+func TestViewerProgressionWirePayload_WhenUnlockAndLevelPresent_ExpectOneCompactFrame(t *testing.T) {
+	// Arrange
+	previous := store.ProgressionLevel{ID: "newcomer", Title: "Newcomer", MinXP: 0}
+	current := store.ProgressionLevel{ID: "regular", Title: "Regular", MinXP: 100, Announce: true}
+	bundle := store.ProgressionResultBundle{PreviousLevel: &previous, CurrentLevel: &current, Unlocks: []store.AchievementUnlock{{ID: "unlock", AchievementID: "first", Occurrence: 1}}}
+
+	// Act
+	payload, ok, err := viewerProgressionWirePayload("viewer", "Viewer", "", bundle, true, bundle.Unlocks, &store.ProgressionAlertSettings{Layout: "card", SoundVolume: 70, DurationMs: 5000})
+
+	// Assert
+	require.NoError(t, err)
+	require.True(t, ok)
+	var decoded map[string]any
+	require.NoError(t, json.Unmarshal(payload, &decoded))
+	assert.Equal(t, "viewer_progression", decoded["type"])
+	assert.Equal(t, "viewer", decoded["viewer_id"])
+	assert.Equal(t, "Viewer", decoded["display_name"])
+	assert.Equal(t, "card", decoded["layout"])
+	assert.Equal(t, float64(5000), decoded["duration_ms"])
+	assert.NotEmpty(t, decoded["created_at"])
+	assert.Contains(t, decoded, "level")
+	assert.Contains(t, decoded, "achievements")
 }
 
 func TestChatMessageWirePayload_WhenFragmentsSet_ExpectSnakeCaseJSON(t *testing.T) {

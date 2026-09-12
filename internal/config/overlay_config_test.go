@@ -198,10 +198,12 @@ func TestLeaderboardSurface_WhenPresentationOmitted_ExpectFreshResponsiveDefault
 	preset.Surfaces.Leaderboard.TitleMode = ""
 	preset.Surfaces.Leaderboard.Title = ""
 	preset.Surfaces.Leaderboard.ShowMessageCount = false
+	preset.Surfaces.Leaderboard.ShowViewerTitles = false
 
 	require.Equal(t, OverlayLeaderboardSizingAuto, preset.LeaderboardSizingMode())
 	require.Equal(t, OverlayLeaderboardTitleTheme, preset.LeaderboardTitleMode())
 	require.False(t, preset.LeaderboardShowMessageCount())
+	require.False(t, preset.Surfaces.Leaderboard.ShowViewerTitles)
 	require.Equal(t, OverlayLeaderboardMaxEntriesDefault, preset.LeaderboardMaxEntries())
 }
 
@@ -225,17 +227,20 @@ func TestLeaderboardSurface_WhenExplicitPresentationStored_ExpectPublicRoundTrip
 	preset.Surfaces.Leaderboard.SizingMode = OverlayLeaderboardSizingAuto
 	preset.Surfaces.Leaderboard.TitleMode = OverlayLeaderboardTitleHidden
 	preset.Surfaces.Leaderboard.ShowMessageCount = true
+	preset.Surfaces.Leaderboard.ShowViewerTitles = true
 
 	require.NoError(t, cfg.Validate())
 	require.Equal(t, OverlayLeaderboardSizingAuto, preset.LeaderboardSizingMode())
 	require.Equal(t, OverlayLeaderboardTitleHidden, preset.LeaderboardTitleMode())
 	require.True(t, preset.LeaderboardShowMessageCount())
+	require.True(t, preset.Surfaces.Leaderboard.ShowViewerTitles)
 
 	data, err := json.Marshal(cfg.Public())
 	require.NoError(t, err)
 	require.Contains(t, string(data), `"sizing_mode":"auto"`)
 	require.Contains(t, string(data), `"title_mode":"hidden"`)
 	require.Contains(t, string(data), `"show_message_count":true`)
+	require.Contains(t, string(data), `"show_viewer_titles":true`)
 }
 
 func TestValidate_WhenLeaderboardSizingModeInvalid_ExpectFieldError(t *testing.T) {
