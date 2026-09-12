@@ -746,7 +746,20 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 }
 
 .reward-history__content {
+  position: relative;
   min-height: 0;
+}
+
+.reward-history__content > .empty-state {
+  position: static;
+  display: block;
+  margin: 0;
+  padding: var(--primitive-space-4) 0;
+  color: var(--muted);
+  font-size: inherit;
+  letter-spacing: normal;
+  text-align: center;
+  text-transform: none;
 }
 
 .audience-history-panel > .reward-history__content {

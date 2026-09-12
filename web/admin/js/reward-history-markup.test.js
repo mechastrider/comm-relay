@@ -8,6 +8,7 @@ const markup = await readFile(join(here, "..", "index.html"), "utf8");
 const tabs = await readFile(join(here, "audience-tabs.js"), "utf8");
 const history = await readFile(join(here, "reward-history.js"), "utf8");
 const styles = await readFile(join(here, "..", "styles", "viewers.css"), "utf8");
+const consoleStyles = await readFile(join(here, "..", "styles", "console.css"), "utf8");
 
 assert.match(markup, /id="audience-history-tab"[\s\S]*?data-audience-tab="history"/);
 assert.match(markup, /id="audience-history-panel"[\s\S]*?role="tabpanel"/);
@@ -29,5 +30,17 @@ assert.match(styles, /\.reward-history__table-scroll\s*\{[\s\S]*?overflow-x:\s*h
 assert.doesNotMatch(styles, /\.reward-history-table\s*\{[\s\S]*?min-width:\s*42rem/);
 assert.match(styles, /\.reward-history-table--compact tbody > tr\s*\{[\s\S]*?grid-template-areas:/);
 assert.match(styles, /\.audience-detail-sheet__body\s*\{[\s\S]*?min-height:\s*0[\s\S]*?overflow:\s*auto/);
+assert.match(
+  consoleStyles,
+  /\.message-panel > \.empty-state\s*\{[\s\S]*?position:\s*absolute/
+);
+assert.doesNotMatch(
+  consoleStyles,
+  /^\s*\.empty-state\s*\{[\s\S]*?position:\s*absolute/m
+);
+assert.match(
+  styles,
+  /\.reward-history__content > \.empty-state\s*\{[\s\S]*?position:\s*static/
+);
 
 console.log("reward-history markup OK");

@@ -6,13 +6,13 @@
 @import url("./styles/components.css");
 @import url("./styles/utilities.css");
 @import url("./styles/shell.css?v=24");
-@import url("./styles/console.css");
+@import url("./styles/console.css?v=2");
 @import url("./styles/systems.css");
 @import url("./styles/dialogs.css?v=21");
 @import url("./styles/dialog-frame.css?v=23");
 @import url("./styles/forms.css?v=21");
 @import url("./styles/about.css");
-@import url("./styles/viewers.css?v=18");
+@import url("./styles/viewers.css?v=19");
 @import url("./styles/live.css?v=3");
 @import url("./styles/contracts.css?v=2");
 @import url("./styles/studio.css?v=32");
