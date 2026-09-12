@@ -748,6 +748,7 @@ export default {
   "catalog.imageFallbackHint": "Without a custom file, a built-in graphic is used; Clear restores it.",
   "catalog.customSoundLabel": "Custom sound file",
   "catalog.soundVolumeLabel": "Sound volume",
+  "catalog.volumeLabel": "Volume",
   "catalog.layoutLabel": "Layout",
   "catalog.layoutCard": "Card",
   "catalog.layoutBanner": "Banner",

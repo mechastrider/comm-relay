@@ -748,6 +748,7 @@ export default {
   "catalog.imageFallbackHint": "Без своего файла используется встроенная графика; «Очистить» возвращает её.",
   "catalog.customSoundLabel": "Свой звуковой файл",
   "catalog.soundVolumeLabel": "Громкость звука",
+  "catalog.volumeLabel": "Громкость",
   "catalog.layoutLabel": "Макет",
   "catalog.layoutCard": "Карточка",
   "catalog.layoutBanner": "Баннер",
