@@ -187,6 +187,9 @@ export function syncStudioInspectorEssential(surface) {
   if (dom.studioEssentialLeaderboardMessages) {
     dom.studioEssentialLeaderboardMessages.hidden = current !== "leaderboard";
   }
+  if (dom.studioEssentialLeaderboardTitles) {
+    dom.studioEssentialLeaderboardTitles.hidden = current !== "leaderboard";
+  }
   if (dom.studioEssentialFontAlerts) {
     dom.studioEssentialFontAlerts.hidden = current !== "alerts";
   }
@@ -381,6 +384,7 @@ function collectSurfaces(base, options) {
     title_mode: fieldValue("overlay-leaderboard-title-mode", "theme"),
     title: title,
     show_message_count: Boolean(dom.overlayLeaderboardShowMessageCount && dom.overlayLeaderboardShowMessageCount.checked),
+    show_viewer_titles: Boolean(dom.overlayLeaderboardShowViewerTitles && dom.overlayLeaderboardShowViewerTitles.checked),
     max_entries: maxEntries,
   }, leaderboardTouchedState);
   surfaces = withAlertsPresentation(
@@ -608,6 +612,9 @@ function writeFormFromPreset(preset) {
   setFieldValue("overlay-leaderboard-layout", leaderboard.layout);
   if (dom.overlayLeaderboardShowMessageCount) {
     dom.overlayLeaderboardShowMessageCount.checked = leaderboard.show_message_count;
+  }
+  if (dom.overlayLeaderboardShowViewerTitles) {
+    dom.overlayLeaderboardShowViewerTitles.checked = leaderboard.show_viewer_titles;
   }
   leaderboardTouched = {};
   syncLeaderboardConditionalFields(false);
@@ -1372,6 +1379,12 @@ export function initOverlayAppearance() {
       requestPreviewRefresh();
     });
   }
+  if (dom.overlayLeaderboardShowViewerTitles) {
+    dom.overlayLeaderboardShowViewerTitles.addEventListener("change", function () {
+      leaderboardTouched.titles = true;
+      requestPreviewRefresh();
+    });
+  }
   if (dom.overlayAlertsSizingMode) {
     dom.overlayAlertsSizingMode.addEventListener("change", function () {
       alertsTouched.sizing = true;
@@ -1405,10 +1418,14 @@ export function initOverlayAppearance() {
       if (dom.overlayLeaderboardShowMessageCount) {
         dom.overlayLeaderboardShowMessageCount.checked = false;
       }
+	  if (dom.overlayLeaderboardShowViewerTitles) {
+	    dom.overlayLeaderboardShowViewerTitles.checked = false;
+	  }
       leaderboardTouched = {
         sizing: true,
         title: true,
         messages: true,
+		titles: true,
         maxEntries: true,
       };
       syncLeaderboardConditionalFields(true);

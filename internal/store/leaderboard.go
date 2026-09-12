@@ -17,6 +17,7 @@ type LeaderboardEntry struct {
 	AvatarURL    string
 	XP           int
 	MessageCount int
+	Level        *ProgressionLevel
 }
 
 // Leaderboard returns ranked visible viewers for the requested period.
@@ -40,6 +41,10 @@ func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time
 	}
 
 	dayKey := DayKey(now, dayResetHour)
+	levels, err := progressionLevelsForLeaderboard(s.db)
+	if err != nil {
+		return nil, err
+	}
 
 	var query string
 	var args []any
@@ -86,6 +91,7 @@ func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time
 		}
 		rank++
 		entry.Rank = rank
+		entry.Level = resolvedLeaderboardLevel(levels, entry.XP)
 		entries = append(entries, entry)
 	}
 	if err := rows.Err(); err != nil {
@@ -93,6 +99,36 @@ func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time
 	}
 
 	return entries, nil
+}
+
+func progressionLevelsForLeaderboard(db *sql.DB) ([]ProgressionLevel, error) {
+	rows, err := db.Query(`SELECT id, title, min_xp, announce, created_at, updated_at FROM progression_levels ORDER BY min_xp, id`)
+	if err != nil {
+		return nil, errors.Errorf("list progression levels for leaderboard: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	levels := []ProgressionLevel{}
+	for rows.Next() {
+		level, err := scanProgressionLevel(rows)
+		if err != nil {
+			return nil, errors.Errorf("scan progression level for leaderboard: %w", err)
+		}
+		levels = append(levels, level)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errors.Errorf("iterate progression levels for leaderboard: %w", err)
+	}
+	return levels, nil
+}
+
+func resolvedLeaderboardLevel(levels []ProgressionLevel, xp int) *ProgressionLevel {
+	for index := len(levels) - 1; index >= 0; index-- {
+		if levels[index].MinXP <= xp {
+			level := levels[index]
+			return &level
+		}
+	}
+	return nil
 }
 
 func normalizeLeaderboardPeriod(period string) string {

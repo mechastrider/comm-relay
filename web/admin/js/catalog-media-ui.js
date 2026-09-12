@@ -45,7 +45,7 @@ async function playBuiltInPreview(state, sound, volume) {
  * @param {HTMLSelectElement | null} options.builtInSoundInput
  * @param {string} options.layoutName
  * @param {HTMLElement | null} options.layoutError
- * @param {"command" | "award"} options.graphicKind
+ * @param {"command" | "award" | "greeting"} options.graphicKind
  * @param {(record: Record<string, unknown>) => {identifier?: string, label?: string}} options.graphicIdentity
  */
 export function createCatalogMediaController(options) {

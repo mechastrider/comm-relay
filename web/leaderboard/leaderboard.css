@@ -139,11 +139,33 @@ body.leaderboard-content--contract .leaderboard {
 }
 
 .leaderboard-name {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  overflow: hidden;
+  font-weight: 700;
+}
+
+.leaderboard-display-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.leaderboard-viewer-title {
+  overflow: hidden;
+  color: var(--overlay-platform, #9da8b7);
+  font-size: 0.64em;
   font-weight: 700;
+  letter-spacing: calc(0.35px * var(--leaderboard-scale));
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+body.leaderboard-density--compact .leaderboard-viewer-title {
+  display: none;
 }
 
 .leaderboard-metrics {

@@ -18,6 +18,74 @@
   padding: var(--primitive-space-4) var(--primitive-space-5);
 }
 
+.audience-tabs {
+  overflow-x: auto;
+  scrollbar-gutter: stable;
+}
+
+.audience-progression-panel {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.progression-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--primitive-space-3);
+  min-width: 0;
+}
+
+.progression-card {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--primitive-space-2);
+  padding: var(--primitive-space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface);
+}
+
+.progression-card--settings {
+  grid-column: 1 / -1;
+}
+
+.progression-card__header,
+.progression-form__actions,
+.progression-checks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitive-space-2);
+}
+
+.progression-card__header {
+  justify-content: space-between;
+}
+
+.progression-card__header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.progression-form {
+  display: grid;
+  gap: var(--primitive-space-2);
+  min-width: 0;
+}
+
+.progression-form input,
+.progression-form select {
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .progression-grid { grid-template-columns: minmax(0, 1fr); }
+  .progression-card--settings { grid-column: auto; }
+}
+
 .audience-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -318,6 +386,20 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.audience-viewers-table__name-stack {
+  display: grid;
+  min-width: 0;
+}
+
+.audience-viewers-table__title {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.75em;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .audience-viewers-table__name-button:focus-visible {

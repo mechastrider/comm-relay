@@ -37,15 +37,19 @@ Each `(platform, user_id)` pair SHALL map to exactly one canonical viewer. The s
 - **THEN** the admin viewer list shows two viewers until a merge succeeds
 
 ### Requirement: Operator can merge two viewers
-`POST /api/viewers/merge` SHALL accept JSON `from_id` and `into_id`. On success the system SHALL move all identities from the source viewer onto the target, add `message_count` and `xp` (all-time, current session, and current day) into the target, hide the source from lists and leaderboards, and record an audit of the merge. Merging a viewer into itself SHALL be rejected. Unmerge is not provided.
+`POST /api/viewers/merge` SHALL accept JSON `from_id` and `into_id`. On success the system SHALL move all identities from the source viewer onto the target; consolidate all-time counters and every current or historical session and day stats row; reassign interaction history and progression history using their capability-specific collision rules; combine opt-out flags restrictively; hide the source from lists and leaderboards; and record an audit of the merge. The entire merge MUST be atomic and MUST NOT emit retrospective alerts. Merging a viewer into itself SHALL be rejected. Unmerge is not provided.
 
 #### Scenario: Cross-platform merge
 - **WHEN** the operator merges viewer A into viewer B
-- **THEN** both identities appear on B, B's counters are the sums, and A no longer appears in `GET /api/viewers` or leaderboards
+- **THEN** both identities appear on B, every overlapping period is summed exactly once, non-overlapping historical periods remain available, and A no longer appears in `GET /api/viewers` or leaderboards
 
 #### Scenario: Self-merge rejected
 - **WHEN** `from_id` equals `into_id`
-- **THEN** the request fails with HTTP 400 and no counters change
+- **THEN** the request fails with HTTP 400 and no counters, identities, facts, or histories change
+
+#### Scenario: Merge fails midway
+- **WHEN** any historical row cannot be consolidated safely
+- **THEN** the transaction rolls back and both canonical viewers remain unchanged
 
 ### Requirement: Stream session and stats day are independent periods
 The system SHALL keep one current stream session. If none is open at start, it SHALL open one. `POST /api/sessions/start` SHALL end the current session and open a new empty session and SHALL be the only authoritative manual boundary for returning-viewer greetings. Starting a session SHALL create an empty ordinary-message greeting period independently of day and all-time counters. A stats day transition or process restart MUST NOT create a new greeting period. The stats day key SHALL use the operator's local timezone and `day_reset_hour` (0–23, default 6). Session totals MUST NOT reset at the day boundary; day totals MUST NOT reset when a new session starts.

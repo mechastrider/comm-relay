@@ -15,7 +15,7 @@ assert.match(markup, /id="audience-history-panel"[\s\S]*?role="tabpanel"/);
 assert.match(markup, /id="refresh-reward-history"/);
 assert.match(markup, /id="reward-history-viewer-filter"[\s\S]*?list="reward-history-viewer-options"/);
 assert.match(markup, /id="clear-reward-history-viewer-filter"[\s\S]*?disabled/);
-assert.match(tabs, /"viewers", "history", "commands", "greetings", "awards"/);
+assert.match(tabs, /"viewers", "history", "progression", "commands", "greetings", "awards"/);
 assert.match(history, /const viewerName = String\(entry\.viewer_display_name/);
 assert.match(history, /textContent = String\(entry\.reward_name/);
 assert.doesNotMatch(history, /innerHTML/);

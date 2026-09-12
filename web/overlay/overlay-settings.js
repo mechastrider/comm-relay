@@ -542,6 +542,9 @@ export function leaderboardViewFromConfig(config, params) {
   if (samplePreview && query.has("show_message_count")) {
     surface.show_message_count = ["1", "true"].includes(String(query.get("show_message_count")).toLowerCase());
   }
+  if (samplePreview && query.has("show_viewer_titles")) {
+    surface.show_viewer_titles = ["1", "true"].includes(String(query.get("show_viewer_titles")).toLowerCase());
+  }
   let fontSizePx =
     typeof surface.font_size_px === "number" && surface.font_size_px >= OVERLAY_FONT_SIZE_MIN
       ? surface.font_size_px
@@ -579,6 +582,7 @@ export function leaderboardViewFromConfig(config, params) {
     title_mode: title.mode,
     title: title.text,
     show_message_count: surface.show_message_count === true,
+    show_viewer_titles: surface.show_viewer_titles === true,
     max_entries: maxEntries,
   };
 }

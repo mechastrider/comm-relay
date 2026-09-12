@@ -90,6 +90,24 @@ export function alertRenderModel(alert) {
     imageSizePct: normalizeAlertImageSizePct(alert && alert.image_size_pct),
     imageAsset,
   };
+  if (alert && alert.source === "progression") {
+    const level = alert.level && typeof alert.level === "object" ? alert.level : null;
+    const achievements = Array.isArray(alert.achievements) ? alert.achievements : [];
+    const names = achievements
+      .map(function (item) { return text(item && item.name); })
+      .filter(Boolean)
+      .slice(0, 3);
+    return Object.assign(base, {
+      kind: "progression",
+      emblemKind: "award",
+      identifier: "progression",
+      emblemLabel: "progression",
+      name,
+      levelTitle: level ? text(level.title) : "",
+      achievementNames: names,
+      avatarURL: safeImageURL(alert.avatar_url),
+    });
+  }
   if (alert && alert.source === "contract") {
     return Object.assign(base, {
       kind: "contract",
@@ -225,7 +243,7 @@ export function createAlertSplash(documentRef, alert, options = {}) {
   const portraitURL =
     model.imageAsset && typeof options.overlayAssetURL === "function"
       ? options.overlayAssetURL(model.imageAsset)
-      : "";
+      : model.avatarURL;
   splash.append(
     renderAlertPortrait(documentRef, model, portraitURL, options.createEmblem)
   );
@@ -236,7 +254,15 @@ export function createAlertSplash(documentRef, alert, options = {}) {
 
   const content = documentRef.createElement("div");
   content.className = "alert-content";
-  if (model.kind === "award") {
+  if (model.kind === "progression") {
+    appendTextElement(documentRef, content, "p", "alert-progression-name", model.name);
+    if (model.levelTitle) {
+      appendTextElement(documentRef, content, "p", "alert-progression-level", model.levelTitle);
+    }
+    if (model.achievementNames.length > 0) {
+      appendTextElement(documentRef, content, "p", "alert-progression-achievements", model.achievementNames.join(" · "));
+    }
+  } else if (model.kind === "award") {
     appendTextElement(documentRef, content, "p", "alert-award-name", model.awardName);
     const viewer = appendTextElement(documentRef, content, "p", "alert-award-viewer", model.name);
     if (model.points) {

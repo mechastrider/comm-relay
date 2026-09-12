@@ -390,6 +390,12 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.hub.Broadcast(alertPayload)
+	if progressionPayload, ok, progressionErr := progressionLivePayload(h.viewerStore, result.ViewerID, cfg.DayResetHour, cfg.CustomAvatarsEnabled, result.Progression); progressionErr != nil {
+		clog.Errorf(r.Context(), "build award progression frame: %w", progressionErr)
+	} else if ok {
+		h.hub.Broadcast(progressionPayload)
+		observability.Default.RecordProgressionPublished()
+	}
 	observability.Default.RecordAwardGranted()
 	clog.Info(r.Context(), "award granted",
 		slog.String("award_id", award.ID),

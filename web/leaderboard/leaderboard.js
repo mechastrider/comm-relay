@@ -50,11 +50,11 @@ const PREVIEW_BACKGROUND_CLASSES = [
 ];
 
 const SAMPLE_ENTRIES = [
-  { rank: 1, display_name: "Nova", xp: 42, message_count: 18, avatar_url: "" },
-  { rank: 2, display_name: "Brick", xp: 31, message_count: 14, avatar_url: "" },
-  { rank: 3, display_name: "Helix", xp: 18, message_count: 9, avatar_url: "" },
-  { rank: 4, display_name: "Mira", xp: 12, message_count: 6, avatar_url: "" },
-  { rank: 5, display_name: "Tor", xp: 7, message_count: 4, avatar_url: "" },
+  { rank: 1, display_name: "Nova", xp: 42, message_count: 18, avatar_url: "", level: { title: "Veteran" } },
+  { rank: 2, display_name: "Brick", xp: 31, message_count: 14, avatar_url: "", level: { title: "Regular" } },
+  { rank: 3, display_name: "Helix", xp: 18, message_count: 9, avatar_url: "", level: { title: "Recruit" } },
+  { rank: 4, display_name: "Mira", xp: 12, message_count: 6, avatar_url: "", level: { title: "Recruit" } },
+  { rank: 5, display_name: "Tor", xp: 7, message_count: 4, avatar_url: "", level: { title: "Recruit" } },
 ];
 
 const root = document.getElementById("leaderboard");
@@ -474,7 +474,16 @@ function renderEntries(entries, remember = true) {
 
     const name = document.createElement("span");
     name.className = "leaderboard-name";
-    name.textContent = escapeText(entry.display_name || "—");
+    const displayName = document.createElement("span");
+    displayName.className = "leaderboard-display-name";
+    displayName.textContent = escapeText(entry.display_name || "—");
+    name.append(displayName);
+    if (overlayView.show_viewer_titles && entry.level && typeof entry.level.title === "string" && entry.level.title.trim()) {
+      const title = document.createElement("span");
+      title.className = "leaderboard-viewer-title";
+      title.textContent = entry.level.title.trim();
+      name.append(title);
+    }
 
     const metrics = document.createElement("span");
     metrics.className = "leaderboard-metrics";

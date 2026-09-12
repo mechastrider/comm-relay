@@ -121,6 +121,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		clog.Errorf(ctx, "apply chat to viewer store: %w", err)
 		return
 	}
+	chatViewerID, _ := v.viewerStore.ViewerIDForIdentity(msg.Platform, msg.UserID)
 
 	if v.avatarWorker != nil {
 		if result.ReplacedAvatarCache != "" {
@@ -168,6 +169,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 			}
 		}
 	}
+	v.publishProgression(ctx, result.Progression, chatViewerID, cfg.DayResetHour)
 
 	if matchedCmd == nil || v.matcher == nil {
 		return
@@ -201,10 +203,12 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	event := store.AppendInteractionEventInput{
 		Kind:           store.InteractionEventCommand,
 		ViewerID:       viewerID,
+		CommandID:      matchedCmd.ID,
 		CommandTrigger: matchedCmd.Trigger,
 		Points:         0,
 	}
-	if err := v.viewerStore.AppendInteractionEvent(event); err != nil {
+	commandProgression, err := v.viewerStore.AppendInteractionEventResult(event)
+	if err != nil {
 		clog.Errorf(ctx, "append command interaction event: %w", err)
 	}
 	if matchedCmd.Action == store.CommandActionShowLeaderboard {
@@ -215,6 +219,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		if _, err := v.visibility.Request(ctx, leaderboard.ReasonCommand); err != nil {
 			clog.Errorf(ctx, "show leaderboard command: %w", err)
 		}
+		v.publishProgression(ctx, commandProgression, viewerID, cfg.DayResetHour)
 		return
 	}
 
@@ -233,5 +238,28 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 			return
 		}
 		v.hub.Broadcast(alertPayload)
+	}
+	v.publishProgression(ctx, commandProgression, viewerID, cfg.DayResetHour)
+}
+
+func (v *ViewerIngest) publishProgression(ctx context.Context, bundle store.ProgressionResultBundle, viewerID string, dayResetHour int) {
+	if v.hub == nil {
+		return
+	}
+	if strings.TrimSpace(viewerID) == "" {
+		return
+	}
+	customAvatarsEnabled := true
+	if v.cfgStore != nil {
+		customAvatarsEnabled = v.cfgStore.Snapshot().CustomAvatarsEnabled
+	}
+	payload, ok, err := progressionLivePayload(v.viewerStore, viewerID, dayResetHour, customAvatarsEnabled, bundle)
+	if err != nil {
+		clog.Errorf(ctx, "build viewer progression frame: %w", err)
+		return
+	}
+	if ok {
+		v.hub.Broadcast(payload)
+		observability.Default.RecordProgressionPublished()
 	}
 }

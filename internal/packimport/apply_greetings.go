@@ -189,16 +189,22 @@ func greetingMatchesPack(current store.Greeting, spec ResolvedGreeting) bool {
 		return false
 	}
 
+	return soundMatchesGreeting(current.SoundFile, spec) && imageMatchesGreeting(current.ImageAsset, spec)
+}
+
+func soundMatchesGreeting(currentSoundFile string, spec ResolvedGreeting) bool {
 	if spec.AudioPath != "" {
-		return current.SoundFile != ""
+		return currentSoundFile != ""
 	}
 	if spec.SoundFile != "" {
-		return current.SoundFile == spec.SoundFile
+		return currentSoundFile == spec.SoundFile
 	}
+	return true
+}
 
+func imageMatchesGreeting(currentImageAsset string, spec ResolvedGreeting) bool {
 	if spec.ImagePath != "" {
-		return current.ImageAsset != ""
+		return currentImageAsset != ""
 	}
-
 	return true
 }

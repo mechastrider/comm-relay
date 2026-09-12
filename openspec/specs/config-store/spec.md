@@ -251,3 +251,14 @@ Omitted leaderboard sizing SHALL resolve to `fixed` when a legacy leaderboard-sp
 #### Scenario: Secrets remain omitted
 - **WHEN** a client reads `GET /api/config`
 - **THEN** the visibility object is returned without changing existing secret-redaction behavior
+
+### Requirement: Overlay presets may store viewer-title visibility
+`surfaces.leaderboard.show_viewer_titles` SHALL be an optional boolean in stored and public overlay presets. Omission MUST resolve to false and MUST NOT rewrite an unchanged legacy preset. Invalid non-boolean values SHALL reject config update with a field error while preserving stored configuration.
+
+#### Scenario: Legacy config load
+- **WHEN** an older preset has no `show_viewer_titles` field
+- **THEN** public config resolves it as false and the file is not rewritten solely for that default
+
+#### Scenario: Publish enabled titles
+- **WHEN** Studio publishes `show_viewer_titles` true
+- **THEN** the preset persists true while unrelated configuration and secrets remain unchanged

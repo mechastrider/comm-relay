@@ -80,6 +80,23 @@ test("keeps valid contract announcements in the protected award lane", function 
   assert.equal(scheduler.completeVisible(), contract);
 });
 
+test("keeps a combined progression frame in the protected non-expiring lane", function () {
+  let clock = 0;
+  const scheduler = createAlertScheduler({ now: () => clock });
+  const progression = alert("progression-a", "progression", {
+    viewer_id: "viewer-1",
+    level: { id: "veteran", title: "Veteran" },
+    achievements: [{ id: "achievement_spotter", name: "Spotter" }],
+  });
+
+  assert.equal(isValidAlertEnvelope(progression), true);
+  scheduler.enqueue(alert("visible"));
+  scheduler.enqueue(progression);
+  clock = 20_000;
+  assert.deepEqual(scheduler.snapshot().awards, [progression]);
+  assert.equal(scheduler.completeVisible(), progression);
+});
+
 test("rejects incomplete contract frames while retaining unknown-source compatibility", function () {
   const incomplete = alert("contract-a", "contract", { points: 25 });
   assert.equal(isValidAlertEnvelope(incomplete), false);

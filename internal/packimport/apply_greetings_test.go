@@ -103,6 +103,31 @@ func TestPlanGreetingApplyUpdatesSplash(t *testing.T) {
 	require.Equal(t, "new_viewer", planned[0].ID)
 }
 
+func TestPlanGreetingApplyUpdatesWhenImageMissing(t *testing.T) {
+	packDir := writeGreetingPackDir(t, true)
+	pack, err := packimport.LoadPackDir(packDir)
+	require.NoError(t, err)
+
+	existing := []store.Greeting{
+		{
+			ID:             store.GreetingNewViewer,
+			Enabled:        true,
+			SplashTemplate: "Новый мехвоин прибыл: {viewer}. Добро пожаловать на борт!",
+			Sound:          "chime",
+			DurationMs:     12000,
+			SoundFile:      "asset_existing.mp3",
+			SoundVolume:    70,
+			Layout:         "fullscreen",
+			ImageFit:       "contain",
+			ImageSizePct:   100,
+		},
+	}
+
+	planned := packimport.PlanGreetingApply(pack, existing, packimport.ApplyOptions{})
+	require.Len(t, planned, 1)
+	require.Equal(t, packimport.ActionUpdate, planned[0].Kind)
+}
+
 func TestPlanGreetingApplySkipUnchanged(t *testing.T) {
 	pack := &packimport.Pack{
 		SchemaVersion: 1,

@@ -68,6 +68,7 @@ func TestRewardHistory_WhenPaginatedAcrossEqualTimestamps_ExpectCompleteAwardOnl
 	require.NoError(t, s.AppendInteractionEvent(store.AppendInteractionEventInput{
 		Kind:           store.InteractionEventCommand,
 		ViewerID:       aliceResult.ViewerID,
+		CommandID:      "gg",
 		CommandTrigger: "gg",
 		Now:            now.Add(2 * time.Nanosecond),
 	}))

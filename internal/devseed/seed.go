@@ -285,6 +285,7 @@ func Run(opts Options) (Result, error) {
 		if err = s.AppendInteractionEvent(store.AppendInteractionEventInput{
 			Kind:           store.InteractionEventCommand,
 			ViewerID:       survivorID,
+			CommandID:      "gg",
 			CommandTrigger: "gg",
 			Now:            base.Add(-20 * time.Minute),
 		}); err != nil {

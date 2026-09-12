@@ -180,6 +180,9 @@ body {
 .alert-text,
 .alert-award-name,
 .alert-award-viewer,
+.alert-progression-name,
+.alert-progression-level,
+.alert-progression-achievements,
 .alert-quote,
 .alert-contract-title,
 .alert-contract-objective,
@@ -202,6 +205,26 @@ body {
 .alert-award-viewer {
   font-size: calc(var(--overlay-font-size) * 1.12);
   font-weight: 800;
+}
+
+.alert-progression-name {
+  color: var(--message-accent);
+  font-size: calc(var(--overlay-font-size) * 0.78);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.alert-progression-level {
+  color: var(--overlay-text);
+  font-size: calc(var(--overlay-font-size) * 1.18);
+  font-weight: 900;
+}
+
+.alert-progression-achievements {
+  color: color-mix(in srgb, var(--overlay-text) 86%, transparent);
+  font-size: calc(var(--overlay-font-size) * 0.82);
+  font-weight: 700;
 }
 
 .alert-contract-title {
@@ -287,7 +310,8 @@ body.overlay-theme--default .alert-splash {
 }
 
 body.overlay-theme--default .alert-splash--award,
-body.overlay-theme--default .alert-splash--contract {
+body.overlay-theme--default .alert-splash--contract,
+body.overlay-theme--default .alert-splash--progression {
   border-left-width: 5px;
 }
 

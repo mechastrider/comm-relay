@@ -25,6 +25,9 @@ assert.doesNotMatch(settingsSource, /window\.confirm\(/, "Settings must not show
 assert.match(source, /let saving = false/, "Greeting catalog must track an in-flight save");
 assert.match(source, /if \(saving\) return/, "Greeting rows must not switch while a save is in flight");
 assert.match(source, /setAttribute\("aria-busy", saving \? "true" : "false"\)/, "Busy state must be conveyed to the list and form");
+assert.match(markup, /id="greeting-image-preview"/, "Greeting editor must preview alert images");
+assert.match(markup, /id="greeting-sound-play"/, "Greeting editor must preview custom sounds");
+assert.match(source, /createCatalogMediaController/, "Greeting media must reuse the shared catalog media controller");
 assert.match(styles, /--audience-catalog-header-height: calc\(var\(--control-min-height\) \+ 2 \* var\(--primitive-space-3\)\)/, "Catalog header height must use the control and spacing tokens");
 assert.match(styles, /\.audience-catalog-list__header,[\s\S]*?min-height: var\(--audience-catalog-header-height\)/, "List and editor headers must share one minimum height");
 

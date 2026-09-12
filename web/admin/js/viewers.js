@@ -369,7 +369,16 @@ function renderViewersTable(viewers) {
     chevron.setAttribute("aria-hidden", "true");
     chevron.textContent = "›";
 
-    nameInner.append(nameButton, chevron);
+    const nameStack = document.createElement("span");
+    nameStack.className = "audience-viewers-table__name-stack";
+    nameStack.append(nameButton);
+    if (viewer.current_level?.title) {
+      const viewerTitle = document.createElement("span");
+      viewerTitle.className = "audience-viewers-table__title";
+      viewerTitle.textContent = viewer.current_level.title;
+      nameStack.append(viewerTitle);
+    }
+    nameInner.append(nameStack, chevron);
     nameCell.append(nameInner);
 
     const platformCell = document.createElement("td");
@@ -636,6 +645,35 @@ function renderViewerDetail(viewer, rewardHistorySection) {
     stats.append(dt, dd);
   });
 
+  const progression = viewer.progression;
+  const progressionSection = document.createElement("section");
+  progressionSection.className = "audience-detail__progression";
+  const progressionHeading = document.createElement("h4");
+  progressionHeading.className = "audience-detail__subheading";
+  progressionHeading.textContent = t("viewers.progressionHeading");
+  const current = progression?.current_level || viewer.current_level;
+  const next = progression?.next_level;
+  const progressionText = document.createElement("p");
+  progressionText.className = "field-hint";
+  if (current && next) {
+    const remaining = Math.max(0, Number(next.min_xp || 0) - Number(viewer.xp || 0));
+    progressionText.textContent = t("viewers.progressionNext", { current: current.title, next: next.title, remaining: String(remaining) });
+  } else if (current) {
+    progressionText.textContent = t("viewers.progressionMax", { current: current.title });
+  } else {
+    progressionText.textContent = t("viewers.progressionNone");
+  }
+  progressionSection.append(progressionHeading, progressionText);
+  const achievementList = document.createElement("ul");
+  achievementList.className = "audience-detail__identities";
+  (progression?.achievements || []).forEach(function (item) {
+    const row = document.createElement("li");
+    const achievement = item.achievement || {};
+    row.textContent = achievement.name + " · " + String(item.value || 0) + "/" + String(achievement.revision?.target || 0) + (item.occurrences > 1 ? " ×" + String(item.occurrences) : "");
+    achievementList.append(row);
+  });
+  if (achievementList.children.length) progressionSection.append(achievementList);
+
   const nameField = document.createElement("div");
   nameField.className = "form__field audience-detail__name-field";
   const nameLabel = document.createElement("label");
@@ -728,6 +766,24 @@ function renderViewerDetail(viewer, rewardHistorySection) {
   });
   greetingsField.append(greetingsLabel, greetingsHint);
 
+  const progressionAlertsField = document.createElement("div");
+  progressionAlertsField.className = "form__field audience-detail__hide-field";
+  const progressionAlertsLabel = document.createElement("label");
+  const progressionAlertsInput = document.createElement("input");
+  progressionAlertsInput.id = "viewer-progression-alerts-disabled";
+  progressionAlertsInput.type = "checkbox";
+  progressionAlertsInput.checked = Boolean(viewer.progression_alerts_disabled);
+  progressionAlertsLabel.htmlFor = progressionAlertsInput.id;
+  progressionAlertsLabel.append(progressionAlertsInput, document.createTextNode(" " + t("viewers.progressionAlertsExclude")));
+  progressionAlertsInput.addEventListener("change", function () {
+    const nextDisabled = progressionAlertsInput.checked;
+    progressionAlertsInput.disabled = true;
+    updateViewerProgressionAlertsDisabled(viewer.id, nextDisabled)
+      .catch(function () { progressionAlertsInput.checked = !nextDisabled; })
+      .finally(function () { progressionAlertsInput.disabled = false; });
+  });
+  progressionAlertsField.append(progressionAlertsLabel);
+
   const identitiesHeading = document.createElement("h4");
   identitiesHeading.className = "audience-detail__subheading";
   identitiesHeading.textContent = t("viewers.identities");
@@ -788,10 +844,12 @@ function renderViewerDetail(viewer, rewardHistorySection) {
     portraitSection,
     title,
     stats,
+    progressionSection,
     rewardHistorySection,
     nameField,
     hideField,
     greetingsField,
+    progressionAlertsField,
     identitiesHeading,
     identities,
     mergeField
@@ -873,6 +931,41 @@ async function openViewerDetail(id, trigger) {
 
 export async function selectViewer(id) {
   return openViewerDetail(id, null);
+}
+
+// applyViewerProgressionFrame updates only immutable display nodes. It deliberately
+// avoids refetching an open detail editor so a pending display-name edit and its
+// focus/scroll position are never discarded by a live overlay event.
+export function applyViewerProgressionFrame(frame) {
+  if (!frame || typeof frame !== "object" || typeof frame.viewer_id !== "string") {
+    return;
+  }
+  const level = frame.level && typeof frame.level === "object" ? frame.level : null;
+  if (!level || typeof level.title !== "string" || level.title.trim() === "") {
+    return;
+  }
+  const update = function (viewer) {
+    if (viewer && viewer.id === frame.viewer_id) {
+      viewer.current_level = level;
+    }
+  };
+  serverOrderedViewers.forEach(update);
+  viewersCache.forEach(update);
+  const row = dom.audienceViewersTableBody?.querySelector('tr[data-viewer-id="' + CSS.escape(frame.viewer_id) + '"]');
+  if (row) {
+    const nameStack = row.querySelector(".audience-viewers-table__name-stack");
+    let title = row.querySelector(".audience-viewers-table__title");
+    if (!title && nameStack) {
+      title = document.createElement("span");
+      title.className = "audience-viewers-table__title";
+      nameStack.append(title);
+    }
+    if (title) title.textContent = level.title;
+  }
+  if (selectedViewerId === frame.viewer_id) {
+    const detailTitle = detailSurfaceElements().container?.querySelector(".audience-detail__progression .field-hint");
+    if (detailTitle) detailTitle.textContent = t("viewers.progressionMax", { current: level.title });
+  }
 }
 
 function handleTableRowKeydown(event) {
@@ -1011,6 +1104,17 @@ async function updateViewerGreetingsDisabled(id, disabled) {
     body: JSON.stringify({ id: id, greetings_disabled: disabled }),
   });
   showBanner("success", t("greetings.excludeSaved"));
+  await loadViewersList(currentSearchQuery());
+  await openViewerDetail(id, focusReturnElement);
+}
+
+async function updateViewerProgressionAlertsDisabled(id, disabled) {
+  await fetchJSON("/api/viewers/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: id, progression_alerts_disabled: disabled }),
+  });
+  showBanner("success", t("viewers.progressionAlertsSaved"));
   await loadViewersList(currentSearchQuery());
   await openViewerDetail(id, focusReturnElement);
 }
