@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/muonsoft/errors"
@@ -69,6 +70,12 @@ type OverlayPresetSurfaces struct {
 	Chat        OverlayChatSurface        `json:"chat"`
 	Leaderboard OverlayLeaderboardSurface `json:"leaderboard"`
 	Alerts      OverlayAlertsSurface      `json:"alerts"`
+	Recap       *OverlayRecapSurface      `json:"recap,omitempty"`
+}
+
+// OverlayRecapSurface holds optional recap-only appearance overrides.
+type OverlayRecapSurface struct {
+	PanelOpacity *float64 `json:"panel_opacity,omitempty"`
 }
 
 // OverlayChatSurface holds optional chat-only appearance overrides.
@@ -166,6 +173,9 @@ func (p OverlayPreset) validateFields(prefix string) FieldErrors {
 	mergeFieldErrors(fields, p.Surfaces.Chat.validateFields(key("surfaces_chat")))
 	mergeFieldErrors(fields, p.Surfaces.Leaderboard.validateFields(key("surfaces_leaderboard")))
 	mergeFieldErrors(fields, p.Surfaces.Alerts.validateFields(key("surfaces_alerts")))
+	if p.Surfaces.Recap != nil {
+		mergeFieldErrors(fields, p.Surfaces.Recap.validateFields(key("surfaces_recap")))
+	}
 	return fields
 }
 
@@ -231,6 +241,10 @@ func (s OverlayChatSurface) validateFields(prefix string) FieldErrors {
 	return validateSurfacePanelOpacity(prefix, s.PanelOpacity)
 }
 
+func (s OverlayRecapSurface) validateFields(prefix string) FieldErrors {
+	return validateSurfacePanelOpacity(prefix, s.PanelOpacity)
+}
+
 func (s OverlayAlertsSurface) validateFields(prefix string) FieldErrors {
 	fields := validateSurfacePanelOpacity(prefix, s.PanelOpacity)
 	key := func(name string) string {
@@ -263,11 +277,19 @@ func (s OverlayAlertsSurface) validateFields(prefix string) FieldErrors {
 }
 
 func validateSurfacePanelOpacity(prefix string, opacity *float64) FieldErrors {
-	if opacity == nil || (*opacity >= overlayPanelOpacityMin && *opacity <= overlayPanelOpacityMax) {
+	if opacity == nil {
 		return FieldErrors{}
 	}
+	if !isFinitePanelOpacity(*opacity) ||
+		*opacity < overlayPanelOpacityMin ||
+		*opacity > overlayPanelOpacityMax {
+		return FieldErrors{prefix + "_panel_opacity": "Panel opacity must be between 0 and 1."}
+	}
+	return FieldErrors{}
+}
 
-	return FieldErrors{prefix + "_panel_opacity": "Panel opacity must be between 0 and 1."}
+func isFinitePanelOpacity(opacity float64) bool {
+	return !math.IsNaN(opacity) && !math.IsInf(opacity, 0)
 }
 
 // ChatPanelOpacity returns the chat override or the shared style value for legacy presets.
@@ -283,6 +305,14 @@ func (p OverlayPreset) LeaderboardPanelOpacity() float64 {
 // AlertsPanelOpacity returns the alerts override or the shared style value.
 func (p OverlayPreset) AlertsPanelOpacity() float64 {
 	return resolvedSurfacePanelOpacity(p.Style.PanelOpacity, p.Surfaces.Alerts.PanelOpacity)
+}
+
+// RecapPanelOpacity returns the recap override or the theme-specific full-canvas default.
+func (p OverlayPreset) RecapPanelOpacity() float64 {
+	if p.Surfaces.Recap != nil && p.Surfaces.Recap.PanelOpacity != nil {
+		return *p.Surfaces.Recap.PanelOpacity
+	}
+	return defaultRecapPanelOpacityForTheme(p.Theme)
 }
 
 func resolvedSurfacePanelOpacity(fallback float64, override *float64) float64 {

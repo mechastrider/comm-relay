@@ -11,12 +11,12 @@
 > **Allowed fallout**: store interfaces, fixtures, merge/evaluator callers, diagnostics, migration tests
 > **Blocked**: full chat storage, guessed attribution, session labels/export/deletion, new progression metrics
 
-- [ ] 1.1 Add `00019_stream_recaps.sql` with nullable event/unlock `session_id`, recap table, stable history indexes, conservative interval backfill, and a preserving Down migration.
-- [ ] 1.2 Add migration fixtures for exact/open/gapped/overlapping intervals, boundary timestamps, backfilled unlock exclusion, preserved row counts, foreign keys, and Up/Down/Up behavior.
-- [ ] 1.3 Thread the causal open session id through live command, award, activity, contract-award, and achievement-unlock writes in their existing transactions; keep reconciliation/backfill unlocks sessionless.
-- [ ] 1.4 Preserve nullable attribution through viewer merges and achievement uniqueness collisions, retaining the earliest surviving unlock's time and session together.
-- [ ] 1.5 Implement typed, cursor-bounded newest-first session summaries/details using `(started_at, id)`, selected-session stats, public ranking/achievement filters, and no raw chat or next-boundary-as-end labeling.
-- [ ] 1.6 Add store tests for pagination, old/current session selection, Top 5/six-group ordering, privacy exclusions, empty sessions, missing ids, and attribution/merge paths.
+- [x] 1.1 Add `00019_stream_recaps.sql` with nullable event/unlock `session_id`, recap table, stable history indexes, conservative interval backfill, and a preserving Down migration.
+- [x] 1.2 Add migration fixtures for exact/open/gapped/overlapping intervals, boundary timestamps, backfilled unlock exclusion, preserved row counts, foreign keys, and Up/Down/Up behavior.
+- [x] 1.3 Thread the causal open session id through live command, award, activity, contract-award, and achievement-unlock writes in their existing transactions; keep reconciliation/backfill unlocks sessionless.
+- [x] 1.4 Preserve nullable attribution through viewer merges and achievement uniqueness collisions, retaining the earliest surviving unlock's time and session together.
+- [x] 1.5 Implement typed, cursor-bounded newest-first session summaries/details using `(started_at, id)`, selected-session stats, public ranking/achievement filters, and no raw chat or next-boundary-as-end labeling.
+- [x] 1.6 Add store tests for pagination, old/current session selection, Top 5/six-group ordering, privacy exclusions, empty sessions, missing ids, and attribution/merge paths.
 
 ### Slice: Immutable recap capture and runtime control
 
@@ -27,14 +27,14 @@
 > **Allowed fallout**: typed DTOs/errors, router/static embed registration, diagnostics counters, integration fixtures
 > **Blocked**: automatic stream-end detection, snapshot replacement, old-session replay, alert scheduler changes
 
-- [ ] 2.1 Define the version-1 bounded public recap DTO and validate identity, timestamps, counts, string/URL bounds, ranking length, achievement grouping, and supported versions on encode/read.
-- [ ] 2.2 Implement serialized first capture for an expected open `session_id`, unique-conflict convergence/reuse, insert-only snapshot storage, and unchanged counters/session facts on Show/Hide.
-- [ ] 2.3 Implement the lock-protected ephemeral visibility controller, startup-hidden state, idempotent Hide, and post-commit New stream hiding without persisting visibility.
-- [ ] 2.4 Add `GET /api/stream-recaps/current` with current session detail/state plus `POST /api/stream-recaps/show` and `POST /api/stream-recaps/hide` with strict bodies and safe 400/409/503/500 mappings.
-- [ ] 2.5 Add `GET /api/sessions` and `GET /api/sessions/get?id=...` with limit/cursor validation, snake_case DTOs, 404 mapping, and router-guard coverage.
-- [ ] 2.6 Publish and seed `stream_recap_state` on production `/ws`, isolate debug clients, preserve bounded non-blocking delivery, and attach existing drop diagnostics.
-- [ ] 2.7 Register `/overlay/recap` and trailing-slash asset serving in both embedded and development-web modes without shadowing chat, leaderboard, alert, admin, or dock routes.
-- [ ] 2.8 Add concurrency/integration tests for duplicate Show, Show versus New stream/live writes, cancellation/rollback, stale ids, exact replay, reconnect state, process restart, stalled clients, and unrelated-client compatibility.
+- [x] 2.1 Define the version-1 bounded public recap DTO and validate identity, timestamps, counts, string/URL bounds, ranking length, achievement grouping, and supported versions on encode/read.
+- [x] 2.2 Implement serialized first capture for an expected open `session_id`, unique-conflict convergence/reuse, insert-only snapshot storage, and unchanged counters/session facts on Show/Hide.
+- [x] 2.3 Implement the lock-protected ephemeral visibility controller, startup-hidden state, idempotent Hide, and post-commit New stream hiding without persisting visibility.
+- [x] 2.4 Add `GET /api/stream-recaps/current` with current session detail/state plus `POST /api/stream-recaps/show` and `POST /api/stream-recaps/hide` with strict bodies and safe 400/409/503/500 mappings.
+- [x] 2.5 Add `GET /api/sessions` and `GET /api/sessions/get?id=...` with limit/cursor validation, snake_case DTOs, 404 mapping, and router-guard coverage.
+- [x] 2.6 Publish and seed `stream_recap_state` on production `/ws`, isolate debug clients, preserve bounded non-blocking delivery, and attach existing drop diagnostics.
+- [x] 2.7 Register `/overlay/recap` and trailing-slash asset serving in both embedded and development-web modes without shadowing chat, leaderboard, alert, admin, or dock routes.
+- [x] 2.8 Add concurrency/integration tests for duplicate Show, Show versus New stream/live writes, cancellation/rollback, stale ids, exact replay, reconnect state, process restart, stalled clients, and unrelated-client compatibility.
 
 ### Slice: Backward-compatible recap appearance
 
@@ -45,8 +45,8 @@
 > **Allowed fallout**: config fixtures and validation localization keys
 > **Blocked**: page opacity, independent recap presets, config migration into SQLite
 
-- [ ] 3.1 Add presence-aware `surfaces.recap.panel_opacity`, theme-derived in-memory defaults, and validation from 0 through 1 without load-time materialization.
-- [ ] 3.2 Extend config/API tests for legacy omission, explicit zero, boundaries, non-finite/type/out-of-range input, unknown keys, save/restore, and unchanged stored config after failure.
+- [x] 3.1 Add presence-aware `surfaces.recap.panel_opacity`, theme-derived in-memory defaults, and validation from 0 through 1 without load-time materialization.
+- [x] 3.2 Extend config/API tests for legacy omission, explicit zero, boundaries, non-finite/type/out-of-range input, unknown keys, save/restore, and unchanged stored config after failure.
 
 ## Frontend
 

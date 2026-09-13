@@ -107,6 +107,20 @@ func TestNewHandlerRoutes(t *testing.T) {
 		require.Contains(t, cssRec.Body.String(), "background: transparent")
 	})
 
+	t.Run("recap overlay", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/overlay/recap", nil))
+		require.Equal(t, http.StatusOK, rec.Code)
+		body := rec.Body.String()
+		require.Contains(t, body, `id="recap-root"`)
+		require.NotContains(t, body, `id="messages"`)
+		require.NotContains(t, body, `id="alert-root"`)
+
+		slashRec := httptest.NewRecorder()
+		handler.ServeHTTP(slashRec, httptest.NewRequest(http.MethodGet, "/overlay/recap/", nil))
+		require.Equal(t, http.StatusOK, slashRec.Code)
+	})
+
 	t.Run("dedicated test overlays reuse production pages", func(t *testing.T) {
 		for _, route := range []struct {
 			path string

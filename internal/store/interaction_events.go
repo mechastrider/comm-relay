@@ -31,6 +31,7 @@ type InteractionEvent struct {
 	Kind            InteractionEventKind
 	ContractID      string
 	ViewerID        string
+	SessionID       string
 	CommandID       string
 	CommandTrigger  string
 	AwardID         string
@@ -96,6 +97,10 @@ func (s *Store) AppendInteractionEventResult(input AppendInteractionEventInput) 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if err := s.ensureOpenSessionLocked(input.Now); err != nil {
+		return ProgressionResultBundle{}, errors.Errorf("ensure open session: %w", err)
+	}
+
 	tx, err := s.db.Begin()
 	if err != nil {
 		return ProgressionResultBundle{}, errors.Errorf("begin interaction event append: %w", err)
@@ -106,7 +111,7 @@ func (s *Store) AppendInteractionEventResult(input AppendInteractionEventInput) 
 	}
 	var results []ProgressionEvaluationResult
 	if input.Kind == InteractionEventCommand {
-		result, err := evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: strings.TrimSpace(input.ViewerID), CauseMetric: ProgressionMetricCommandCount, Now: input.Now})
+		result, err := s.evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: strings.TrimSpace(input.ViewerID), CauseMetric: ProgressionMetricCommandCount, Now: input.Now})
 		if err != nil {
 			return ProgressionResultBundle{}, errors.Errorf("evaluate command progression: %w", err)
 		}
@@ -186,6 +191,14 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 		return errors.Errorf("unsupported interaction event kind %q", input.Kind)
 	}
 
+	sessionID, err := s.openSessionLocked()
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errors.New("open session is required for interaction events")
+		}
+		return errors.Errorf("lookup open session for interaction event: %w", err)
+	}
+
 	id := uuid.NewString()
 	createdAt := formatInteractionEventTime(now)
 	if s.interactionEventInsertHook != nil {
@@ -195,13 +208,14 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 	}
 	if _, err := q.Exec(
 		`INSERT INTO interaction_events (
-			id, kind, contract_id, viewer_id, command_id, command_trigger, award_id, reward_name, points,
+			id, kind, contract_id, viewer_id, session_id, command_id, command_trigger, award_id, reward_name, points,
 			message_platform, message_id, created_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		string(input.Kind),
 		contractID,
 		viewerID,
+		sessionID,
 		commandID,
 		commandTrigger,
 		awardID,
@@ -245,7 +259,7 @@ func (s *Store) CountInteractionEvents() (int, error) {
 
 func (s *Store) listInteractionEventsLocked(whereClause string, args ...any) ([]InteractionEvent, error) {
 	query := `
-		SELECT id, kind, contract_id, viewer_id, command_id, command_trigger, award_id, reward_name, points,
+		SELECT id, kind, contract_id, viewer_id, session_id, command_id, command_trigger, award_id, reward_name, points,
 		       message_platform, message_id, created_at
 		FROM interaction_events ` + whereClause + ` ORDER BY created_at`
 
@@ -276,13 +290,14 @@ type interactionEventScanner interface {
 
 func scanInteractionEvent(row interactionEventScanner) (InteractionEvent, error) {
 	var event InteractionEvent
-	var contractID, viewerID, commandID, commandTrigger, awardID, awardName, messagePlatform, messageID sql.NullString
+	var contractID, viewerID, sessionID, commandID, commandTrigger, awardID, awardName, messagePlatform, messageID sql.NullString
 	var createdAtRaw string
 	if err := row.Scan(
 		&event.ID,
 		&event.Kind,
 		&contractID,
 		&viewerID,
+		&sessionID,
 		&commandID,
 		&commandTrigger,
 		&awardID,
@@ -297,6 +312,9 @@ func scanInteractionEvent(row interactionEventScanner) (InteractionEvent, error)
 
 	if viewerID.Valid {
 		event.ViewerID = viewerID.String
+	}
+	if sessionID.Valid {
+		event.SessionID = sessionID.String
 	}
 	if contractID.Valid {
 		event.ContractID = contractID.String
