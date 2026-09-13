@@ -49,12 +49,19 @@ test("builds the decorative Streamer Like thumbs-up and sparkle", function () {
   assert.equal(emblem.children[0].children.length, 3);
 });
 
-test("keeps generic emblem selection and monogram stable", function () {
+test("keeps generic emblem selection stable and text-free", function () {
   const first = alertEmblemModel("award", "community-hero", "Community Hero");
   const second = alertEmblemModel("award", "community-hero", "Community Hero");
   assert.deepEqual(first, second);
-  assert.equal(first.monogram, "CH");
+  assert.equal(Object.hasOwn(first, "monogram"), false);
   assert.match(first.symbol, /^(medal|gem|burst)$/);
+
+  const emblem = createAlertEmblem(fakeDocument, {
+    kind: "award",
+    identifier: "community-hero",
+    label: "Community Hero",
+  });
+  assert.equal(emblem.children.some(child => child.className === "alert-emblem__monogram"), false);
 });
 
 test("builds decorative SVG without parsing HTML", function () {

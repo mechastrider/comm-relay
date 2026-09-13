@@ -39,9 +39,9 @@ import {
   refreshRewardHistoryLocale,
   cancelViewerRewardHistory,
 } from "./js/reward-history.js";
-import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js";
-import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js";
-import { initGreetingsCatalog, ensureGreetingsLoaded } from "./js/greetings-catalog.js";
+import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js?v=2";
+import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js?v=2";
+import { initGreetingsCatalog, ensureGreetingsLoaded } from "./js/greetings-catalog.js?v=2";
 import { initProgressionCatalog, ensureProgressionLoaded } from "./js/progression-catalog.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket, renderAdminConnectionState } from "./js/ws.js";
 import { initWorkspaceRouter } from "./js/workspace-router.js";
