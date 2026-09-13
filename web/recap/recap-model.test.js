@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { LOCALE_ENGLISH, LOCALE_RUSSIAN, setLocale, t } from "../shared/i18n.js";
 
 globalThis.window = { location: new URL("http://localhost/overlay/recap") };
 const { SAMPLE_RECAP, normalizeRecapSnapshot, recapContentLayout, visibleRecapFromFrame } = await import("./recap-model.js");
@@ -33,4 +34,16 @@ test("recap composition expands a sole populated section", function () {
   assert.equal(recapContentLayout({ ranking: [], achievement_groups: [{}] }), "single");
   assert.equal(recapContentLayout({ ranking: [{}], achievement_groups: [{}] }), "split");
   assert.equal(recapContentLayout({ ranking: [], achievement_groups: [] }), "empty");
+});
+
+test("recap overlay labels are complete in Russian and English", function () {
+  setLocale(LOCALE_RUSSIAN);
+  assert.equal(t("recap.overlayTitle"), "Итоги стрима");
+  assert.equal(t("recap.overlayTopViewers"), "Лучшие зрители");
+  assert.equal(t("recap.overlayMessageCount", { count: 12 }), "12 сообщ.");
+
+  setLocale(LOCALE_ENGLISH);
+  assert.equal(t("recap.overlayTitle"), "Stream recap");
+  assert.equal(t("recap.overlayAchievements"), "Achievements");
+  assert.equal(t("recap.overlayMessageCount", { count: 12 }), "12 messages");
 });

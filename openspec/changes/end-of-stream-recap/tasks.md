@@ -62,7 +62,7 @@
 - [x] 4.1 Build the minimal recap document and safe text/portrait renderer for closing title, totals, Top 5, grouped achievements, empty-section collapse, and deterministic fallbacks.
 - [x] 4.2 Implement production WebSocket initial/update handling, unknown-frame tolerance, bounded reconnect, exact visible snapshot restoration, and full DOM clearing/transparency on Hide.
 - [x] 4.3 Implement isolated `preview=sample` behavior that uses fictitious bounded data/draft appearance and never reads history or applies/mutates production recap state.
-- [x] 4.4 Add responsive landscape/square/portrait compositions for `default`, `dashboard`, `cockpit_panel`, `cockpit_popups`, and `g_rebels_popups`, including theme-default opacity and explicit zero.
+- [x] 4.4 Add responsive landscape/square/portrait compositions with visibly distinct theme-native typography, geometry, panels, and accents for `default`, `dashboard`, `cockpit_panel`, `cockpit_popups`, and `g_rebels_popups`, including theme-default opacity and explicit zero.
 - [x] 4.5 Add reduced-motion, long RU/EN text, zoom/scaling, broken portrait, hostile text, min/max/empty data, source-rectangle, and no-scroll/no-visible-hidden regression tests.
 - [x] 4.6 Smoke the dedicated recap beside a short alert Browser Source and prove their geometry, state, queues, and animations remain independent.
 
@@ -93,7 +93,7 @@
 - [x] 6.1 Add Recap to Studio surface selection and preview routing while preserving all unpublished per-surface draft values.
 - [x] 6.2 Add labelled 0..1 recap backdrop-opacity editing, theme-default display, publish/revert/error focus, and explicit-zero handling without production Show/Hide side effects.
 - [x] 6.3 Add Recap to every existing OBS setup surface with follow-active and `?preset=<id>` URLs, Copy/Open feedback, and full-canvas/z-order guidance.
-- [x] 6.4 Add RU/EN locale keys and parity, Studio state/markup, opacity, query/URL, clipboard failure, and production-isolation tests.
+- [x] 6.4 Add RU/EN locale keys and parity for every recap system label, propagate the active locale into Studio preview, and cover Studio state/markup, opacity, query/URL, clipboard failure, and production isolation.
 - [x] 6.5 Confirm `/dock/messages`, chat, leaderboard, alert, and their setup URLs/controls remain unchanged when recap frames and settings arrive.
 
 ## Docs

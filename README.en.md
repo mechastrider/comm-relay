@@ -101,7 +101,7 @@ In **Live**, click **Recap**, review the current stream summary, and confirm **C
 
 Showing, hiding, or showing the recap again never ends the stream, creates a session, or resets counters. Starting another session still requires the separate confirmed **New stream** action. The recap dialog's **History** view provides compact summaries for the current and earlier sessions, including sessions without a captured recap; this version cannot replay a historical session on air.
 
-The `/overlay/recap` source is transparent while the recap is hidden. If Browser Source briefly disconnects, it restores the same visible immutable snapshot after reconnecting. A full CommRelay process restart intentionally resets visibility: the snapshot remains in history, but you must click **Show recap** again to put it on air.
+The `/overlay/recap` source uses the selected active or pinned preset and displays its system labels in the application language. It remains transparent while the recap is hidden. If Browser Source briefly disconnects, it restores the same visible immutable snapshot after reconnecting. A full CommRelay process restart intentionally resets visibility: the snapshot remains in history, but you must click **Show recap** again to put it on air.
 
 ## Message log in the OBS interface
 

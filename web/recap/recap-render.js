@@ -1,4 +1,5 @@
 import { createChatRender } from "/shared/chat-render.js?v=12";
+import { t } from "/shared/i18n.js?v=18";
 import { recapContentLayout } from "./recap-model.js?v=1";
 
 const renderer = createChatRender({ avatarFallback: "detailed" });
@@ -28,22 +29,26 @@ function metric(label, value) {
 
 function ranking(snapshot) {
   const section = node("section", "recap-section recap-section--ranking");
-  section.appendChild(node("h2", "recap-section__heading", "TOP 5"));
+  section.appendChild(node("h2", "recap-section__heading", t("recap.overlayTopViewers")));
   const list = node("ol", "recap-ranking");
   snapshot.ranking.forEach(function (entry) {
     const row = node("li", "recap-ranking__row");
     const identity = node("div", "recap-ranking__identity");
+    const displayName = entry.display_name || t("recap.overlayAnonymousViewer");
     identity.append(
       node("span", "recap-ranking__rank", "#" + entry.rank),
-      portrait(entry.display_name, entry.portrait_url, "recap-portrait recap-portrait--ranking")
+      portrait(displayName, entry.portrait_url, "recap-portrait recap-portrait--ranking")
     );
     const name = node("div", "recap-ranking__name");
-    name.appendChild(node("strong", "recap-ranking__display-name", entry.display_name));
+    name.appendChild(node("strong", "recap-ranking__display-name", displayName));
     if (entry.title) {
       name.appendChild(node("span", "recap-ranking__title", entry.title));
     }
     const stats = node("div", "recap-ranking__stats");
-    stats.append(node("strong", "", entry.xp + " XP"), node("span", "", entry.message_count + " messages"));
+    stats.append(
+      node("strong", "", entry.xp + " XP"),
+      node("span", "", t("recap.overlayMessageCount", { count: entry.message_count }))
+    );
     row.append(identity, name, stats);
     list.appendChild(row);
   });
@@ -53,14 +58,15 @@ function ranking(snapshot) {
 
 function achievements(snapshot) {
   const section = node("section", "recap-section recap-section--achievements");
-  section.appendChild(node("h2", "recap-section__heading", "RECOGNITION"));
+  section.appendChild(node("h2", "recap-section__heading", t("recap.overlayAchievements")));
   const list = node("div", "recap-achievements");
   snapshot.achievement_groups.forEach(function (group) {
     const card = node("article", "recap-achievement");
-    card.appendChild(portrait(group.viewer_display_name, group.viewer_portrait_url, "recap-portrait recap-portrait--achievement"));
+    const viewerName = group.viewer_display_name || t("recap.overlayAnonymousViewer");
+    card.appendChild(portrait(viewerName, group.viewer_portrait_url, "recap-portrait recap-portrait--achievement"));
     const copy = node("div", "recap-achievement__copy");
-    copy.appendChild(node("strong", "recap-achievement__name", group.name));
-    copy.appendChild(node("span", "recap-achievement__viewer", group.viewer_display_name));
+    copy.appendChild(node("strong", "recap-achievement__name", group.name || t("recap.overlayUnnamedAchievement")));
+    copy.appendChild(node("span", "recap-achievement__viewer", viewerName));
     if (group.description) {
       copy.appendChild(node("p", "recap-achievement__description", group.description));
     }
@@ -78,12 +84,15 @@ export function renderRecap(root, snapshot) {
   root.textContent = "";
   const recap = node("main", "recap");
   const header = node("header", "recap-header");
-  header.append(node("p", "recap-kicker", "COMMRELAY"), node("h1", "recap-title", "STREAM RECAP"));
+  header.append(
+    node("p", "recap-kicker", t("recap.overlayKicker")),
+    node("h1", "recap-title", t("recap.overlayTitle"))
+  );
   const totals = node("div", "recap-totals");
   totals.append(
-    metric("VIEWERS", snapshot.totals.viewer_count),
-    metric("MESSAGES", snapshot.totals.message_count),
-    metric("SESSION XP", snapshot.totals.xp)
+    metric(t("recap.overlayViewers"), snapshot.totals.viewer_count),
+    metric(t("recap.overlayMessages"), snapshot.totals.message_count),
+    metric(t("recap.overlaySessionXP"), snapshot.totals.xp)
   );
   header.appendChild(totals);
   recap.appendChild(header);

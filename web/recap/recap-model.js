@@ -68,7 +68,7 @@ export function normalizeRecapSnapshot(value) {
       const row = entry && typeof entry === "object" ? entry : {};
       return {
         rank: nonNegative(row.rank) || index + 1,
-        display_name: text(row.display_name, "Anonymous"),
+        display_name: text(row.display_name, ""),
         portrait_url: safePortrait(row.portrait_url),
         xp: nonNegative(row.xp),
         message_count: nonNegative(row.message_count),
@@ -78,9 +78,9 @@ export function normalizeRecapSnapshot(value) {
     achievement_groups: groups.map(function (entry) {
       const group = entry && typeof entry === "object" ? entry : {};
       return {
-        viewer_display_name: text(group.viewer_display_name, "Anonymous"),
+        viewer_display_name: text(group.viewer_display_name, ""),
         viewer_portrait_url: safePortrait(group.viewer_portrait_url),
-        name: text(group.name, "Achievement"),
+        name: text(group.name, ""),
         description: text(group.description, ""),
         count: positive(group.count),
         unlocked_at: text(group.unlocked_at, ""),

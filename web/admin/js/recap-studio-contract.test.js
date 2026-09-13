@@ -13,6 +13,7 @@ test("recap Studio preview is sample-only and carries the appearance draft", fun
   assert.match(preview, /surface !== "alerts" && surface !== "recap"/);
   assert.match(appearance, /\["chat", "leaderboard", "alerts", "recap"\]/);
   assert.match(appearance, /recapDefaultPanelOpacity/);
+  assert.match(preview, /surface === "recap"[\s\S]*?searchParams\.set\("locale", getLocale\(\)\)/);
 });
 
 test("recap validation errors select and focus the shared opacity editor", function () {

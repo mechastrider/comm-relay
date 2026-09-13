@@ -8,6 +8,7 @@ const model = readFileSync(new URL("./recap-model.js", import.meta.url), "utf8")
 const render = readFileSync(new URL("./recap-render.js", import.meta.url), "utf8");
 
 test("recap is a dedicated full-canvas transparent surface with all themes", function () {
+  assert.match(css, /@import url\("\.\.\/overlay\.css\?v=23"\)/);
   assert.match(css, /#recap-root\s*\{[^}]*position:\s*fixed[^}]*inset:\s*0[^}]*overflow:\s*hidden/s);
   assert.match(css, /html, body \{[^}]*background:\s*transparent[^}]*overflow:\s*hidden/s);
   ["default", "dashboard", "cockpit-panel", "cockpit-popups", "g-rebels-popups"].forEach(function (theme) {
@@ -16,6 +17,14 @@ test("recap is a dedicated full-canvas transparent surface with all themes", fun
   assert.match(css, /min-aspect-ratio:\s*4 \/ 5[^}]*max-aspect-ratio:\s*5 \/ 4/);
   assert.match(css, /max-aspect-ratio:\s*4 \/ 5/);
   assert.match(css, /prefers-reduced-motion: reduce/);
+});
+
+test("each recap theme owns a distinct visual grammar", function () {
+  assert.match(css, /restrained broadcast card[\s\S]*?overlay-theme--default/i);
+  assert.match(css, /overlay-theme--dashboard[\s\S]*?\.recap-section__heading[\s\S]*?background:\s*var\(--recap-accent\)/);
+  assert.match(css, /overlay-theme--cockpit-panel \.recap::before[\s\S]*?linear-gradient\(90deg, rgb\(53 210 208/);
+  assert.match(css, /overlay-theme--cockpit-popups \.recap-section[\s\S]*?clip-path:\s*polygon/);
+  assert.match(css, /overlay-theme--g-rebels-popups \.recap::before[\s\S]*?repeating-linear-gradient/);
 });
 
 test("a sole recap section has a full-width composition track", function () {
@@ -41,4 +50,7 @@ test("renderer only writes authored values through textContent and uses required
   assert.doesNotMatch(render, /innerHTML/);
   assert.match(render, /entry\.portrait_url/);
   assert.match(render, /group\.viewer_portrait_url/);
+  assert.match(render, /t\("recap\.overlayTitle"\)/);
+  assert.match(render, /t\("recap\.overlayMessageCount"/);
+  assert.doesNotMatch(render, /"STREAM RECAP"|"RECOGNITION"|"VIEWERS"|"MESSAGES"/);
 });

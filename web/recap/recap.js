@@ -1,30 +1,69 @@
 "use strict";
 
-import { fontStack, normalizePreviewBackground, panelBackground, recapViewFromConfig } from "/overlay/overlay-settings.js?v=1";
+import {
+  fontStack,
+  normalizePanelImageFit,
+  normalizePreviewBackground,
+  overlayAssetURL,
+  panelBackground,
+  recapViewFromConfig,
+} from "/overlay/overlay-settings.js?v=8";
+import { readCachedLocale, setLocale, t } from "/shared/i18n.js?v=18";
 import { normalizeRecapSnapshot, SAMPLE_RECAP, visibleRecapFromFrame } from "./recap-model.js?v=1";
-import { renderRecap } from "./recap-render.js?v=1";
+import { renderRecap } from "./recap-render.js?v=2";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;
 const THEME_CLASSES = ["default", "dashboard", "cockpit-panel", "cockpit-popups", "g-rebels-popups"];
+const TEXT_EDGE_CLASSES = ["none", "shadow", "outline"];
+const PANEL_IMAGE_FIT_CLASSES = ["cover", "contain", "fill", "tile"];
 const params = new URLSearchParams(window.location.search);
 const sampleMode = params.get("preview") === "sample";
 const root = document.getElementById("recap-root");
 let view = recapViewFromConfig({ overlay: null }, params);
+let overlayAssetsRevision = Date.now();
 let socket = null;
 let reconnectTimer = null;
 let reconnectDelay = INITIAL_RECONNECT_MS;
 let visibleSnapshot = null;
 
+setLocale(params.get("locale") || readCachedLocale());
+
 function applyAppearance() {
   const style = view.style || {};
+  document.documentElement.style.setProperty("--recap-font-size", String(view.font_size_px || 18) + "px");
+  document.documentElement.style.setProperty("--recap-line-height", String(style.line_height || 1.35));
   document.documentElement.style.setProperty("--recap-panel-bg", panelBackground(view.theme, style));
+  document.documentElement.style.setProperty(
+    "--recap-panel-opacity",
+    String(typeof style.panel_opacity === "number" ? style.panel_opacity : 0.58)
+  );
+  document.documentElement.style.setProperty(
+    "--recap-panel-image",
+    style.panel_image
+      ? 'url("' + overlayAssetURL(style.panel_image, overlayAssetsRevision) + '")'
+      : "none"
+  );
   document.documentElement.style.setProperty("--recap-font", fontStack(style.font_family));
   document.documentElement.style.setProperty("--recap-border", style.border_color || "#ffffff");
   document.documentElement.style.setProperty("--recap-border-width", String(style.border_width || 0) + "px");
   document.documentElement.style.setProperty("--recap-radius", String(style.border_radius || 0) + "px");
+  document.documentElement.style.setProperty(
+    "--recap-text-edge-strength",
+    String(style.text_edge_strength || 0)
+  );
   THEME_CLASSES.forEach(function (name) { document.body.classList.remove("overlay-theme--" + name); });
   document.body.classList.add("overlay-theme--" + String(view.theme || "default").replace(/_/g, "-"));
+  TEXT_EDGE_CLASSES.forEach(function (name) { document.body.classList.remove("overlay-text-edge--" + name); });
+  document.body.classList.add(
+    "overlay-text-edge--" + (style.text_edge === "none" || style.text_edge === "outline" ? style.text_edge : "shadow")
+  );
+  PANEL_IMAGE_FIT_CLASSES.forEach(function (name) {
+    document.body.classList.remove("recap-panel-image-fit--" + name);
+  });
+  document.body.classList.add("recap-panel-image-fit--" + normalizePanelImageFit(style.panel_image_fit));
+  document.body.classList.toggle("recap-has-panel-image", Boolean(style.panel_image));
+  document.title = t("recap.overlayDocumentTitle");
   if (sampleMode) {
     document.documentElement.className = "overlay-preview--" + normalizePreviewBackground(params.get("preview_background"));
   }
@@ -71,7 +110,10 @@ async function loadAppearance() {
     if (!response.ok) {
       return;
     }
-    view = recapViewFromConfig(await response.json(), params);
+    const payload = await response.json();
+    setLocale(payload && payload.admin && payload.admin.time_locale);
+    overlayAssetsRevision = Date.now();
+    view = recapViewFromConfig(payload, params);
     applyAppearance();
     if (visibleSnapshot) {
       renderRecap(root, visibleSnapshot);
@@ -120,10 +162,14 @@ function connect() {
   socket.addEventListener("error", function () { socket.close(); });
 }
 
-applyAppearance();
-if (sampleMode) {
-  showRecap(normalizeRecapSnapshot(SAMPLE_RECAP));
-} else {
-  loadAppearance();
+async function start() {
+  applyAppearance();
+  if (sampleMode) {
+    showRecap(normalizeRecapSnapshot(SAMPLE_RECAP));
+    return;
+  }
+  await loadAppearance();
   connect();
 }
+
+start();

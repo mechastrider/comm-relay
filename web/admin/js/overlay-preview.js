@@ -18,7 +18,7 @@ import {
   OVERLAY_PREVIEW_HEIGHT_MAX,
   OVERLAY_PREVIEW_SIZES,
 } from './constants.js';
-import { t } from './i18n-ui.js';
+import { getLocale, t } from './i18n-ui.js';
 import { collectAppearanceQuery, updatePresetIsland, syncStudioInspectorEssential } from './overlay-appearance.js';
 import {
   DEFAULT_PREVIEW_BACKGROUND,
@@ -198,6 +198,9 @@ export function buildOverlayPreviewURL(previewMode) {
         "preview_background",
         normalizePreviewBackground(dom.overlayPreviewBackground && dom.overlayPreviewBackground.value)
       );
+    }
+    if (surface === "recap") {
+      url.searchParams.set("locale", getLocale());
     }
     if (surface === "leaderboard") {
       url.searchParams.set(
@@ -708,6 +711,9 @@ export function initOverlayPreview() {
     document.addEventListener("overlay-preview-refresh", scheduleOverlayPreviewRefresh);
     window.addEventListener("admin-locale-applied", function () {
       setOverlayPreviewState(previewState);
+      if (getPreviewSurface() === "recap") {
+        refreshOverlayPreview(true);
+      }
     });
     const overlayPreviewHost = document.getElementById("workspace-studio");
     if (overlayPreviewHost) {
