@@ -1,9 +1,9 @@
 import { t } from "./i18n-ui.js";
 import { state } from "./state.js";
-import { defaultStyleForTheme, mergeStyle } from "../../overlay/overlay-settings.js";
+import { defaultStyleForTheme, mergeStyle, recapDefaultPanelOpacity } from "../../overlay/overlay-settings.js";
 import { uploadOverlayAsset } from "./overlay-asset-upload.js";
 import { showBanner } from "./ui-shell.js";
-import { buildObsOverlayURL } from "./overlay-url.js";
+import { buildObsOverlayURL, buildObsRecapURL } from "./overlay-url.js";
 import { buildObsAlertURL } from "./alert-url.js";
 import { buildFollowActiveURLForSurface, messageTtlToChipValue, chipValueToMessageTtl } from "./studio-helpers.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
@@ -14,8 +14,8 @@ import {
   normalizeOpacitySurface,
   parsePanelOpacity,
   previewSurfacePanelOpacity,
-  withSurfacePanelOpacity,
 } from "./surface-opacity.js";
+import { collectPanelOpacityOverrides, resetPanelOpacityDraft } from "./overlay-appearance-state.js";
 import {
   allAlertsPresentationTouched,
   alertsPreviewQuery,
@@ -177,7 +177,7 @@ function initDurationChips() {
 }
 
 export function syncStudioInspectorEssential(surface) {
-  const current = surface === "leaderboard" ? "leaderboard" : surface === "alerts" ? "alerts" : "chat";
+  const current = surface === "leaderboard" ? "leaderboard" : surface === "alerts" ? "alerts" : surface === "recap" ? "recap" : "chat";
   if (dom.studioEssentialFontLeaderboard) {
     dom.studioEssentialFontLeaderboard.hidden = current !== "leaderboard";
   }
@@ -208,8 +208,18 @@ export function syncStudioInspectorEssential(surface) {
         ? "studio.surfaceLeaderboardSettings"
         : current === "alerts"
           ? "studio.surfaceAlertsSettings"
+          : current === "recap"
+            ? "studio.surfaceRecapSettings"
           : "studio.surfaceChatSettings";
     dom.studioSelectedSurfaceHeading.textContent = t(headingKey);
+  }
+  const opacityLabel = document.getElementById("overlay-panel-opacity-label");
+  const opacityHint = document.getElementById("overlay-panel-opacity-hint");
+  if (opacityLabel) {
+    opacityLabel.textContent = t(current === "recap" ? "obs.recapBackdropOpacity" : "obs.panelOpacity");
+  }
+  if (opacityHint) {
+    opacityHint.textContent = t(current === "recap" ? "obs.recapBackdropOpacityHint" : "obs.panelOpacityHint");
   }
 }
 
@@ -348,21 +358,6 @@ function syncAlertsImageSizeLabel() {
   dom.overlayAlertsImageSizeValue.textContent = String(value) + "%";
 }
 
-function applyAllPanelOpacityDrafts(surfaces) {
-  let next = surfaces;
-  Object.keys(panelOpacityDrafts).forEach(function (surface) {
-    const opacity = parsePanelOpacity(panelOpacityDrafts[surface]);
-    if (opacity !== null) {
-      next = withSurfacePanelOpacity(next, surface, opacity);
-    }
-  });
-  const currentOpacity = parsePanelOpacity(fieldValue("overlay-panel-opacity", ""));
-  if (currentOpacity !== null) {
-    next = withSurfacePanelOpacity(next, opacityEditorSurface, currentOpacity);
-  }
-  return next;
-}
-
 function collectSurfaces(base, options) {
   const chatFont = Number.parseInt(fieldValue("overlay-font-size", String((base && base.font_size_px) || 18)), 10);
   const rawFont = Number(fieldValue("overlay-leaderboard-font-size", String(chatFont)));
@@ -397,17 +392,14 @@ function collectSurfaces(base, options) {
     },
     alertsTouchedState
   );
-  if (forcePersist) {
-    surfaces = applyAllPanelOpacityDrafts(surfaces);
-  } else {
-    const rawOpacity = panelOpacityTouched
+  surfaces = collectPanelOpacityOverrides(surfaces, {
+    drafts: panelOpacityDrafts,
+    surface: opacityEditorSurface,
+    value: panelOpacityTouched
       ? panelOpacityDrafts[opacityEditorSurface]
-      : fieldValue("overlay-panel-opacity", "");
-    const opacity = parsePanelOpacity(rawOpacity);
-    if (panelOpacityTouched && opacity !== null) {
-      surfaces = withSurfacePanelOpacity(surfaces, opacityEditorSurface, opacity);
-    }
-  }
+      : fieldValue("overlay-panel-opacity", ""),
+    touched: panelOpacityTouched,
+  });
   return surfaces;
 }
 
@@ -446,7 +438,7 @@ function normalizedSurfaceOverrides(raw) {
     normalizeLeaderboardSurface(incoming),
     normalizeAlertsSurface(incoming)
   );
-  ["chat", "leaderboard", "alerts"].forEach(function (surface) {
+  ["chat", "leaderboard", "alerts", "recap"].forEach(function (surface) {
     const value = incoming[surface] && typeof incoming[surface] === "object"
       ? incoming[surface].panel_opacity
       : undefined;
@@ -592,7 +584,7 @@ function writeFormFromPreset(preset) {
   panelOpacityDrafts = {};
   setFieldValue(
     "overlay-panel-opacity",
-    String(effectiveSurfaceOpacity(preset.surfaces, opacityEditorSurface, style.panel_opacity))
+    String(effectiveSurfaceOpacity(preset.surfaces, opacityEditorSurface, opacityFallbackForSurface(preset, opacityEditorSurface, style)))
   );
   setFieldValue("overlay-panel-image", style.panel_image || "");
   setPanelImageFit(style.panel_image_fit || "cover");
@@ -641,6 +633,12 @@ function selectedOpacitySurface() {
   return normalizeOpacitySurface(selected && selected.getAttribute("data-obs-preview-surface"));
 }
 
+function opacityFallbackForSurface(preset, surface, style) {
+  return surface === "recap"
+    ? recapDefaultPanelOpacity(preset && preset.theme)
+    : style.panel_opacity;
+}
+
 function syncOpacityEditorSurface() {
   const preset = currentPreset();
   if (!preset) {
@@ -660,7 +658,11 @@ function syncOpacityEditorSurface() {
     "overlay-panel-opacity",
     panelOpacityTouched
       ? panelOpacityDrafts[opacityEditorSurface]
-      : String(effectiveSurfaceOpacity(updatedPreset.surfaces, opacityEditorSurface, style.panel_opacity))
+      : String(effectiveSurfaceOpacity(
+          updatedPreset.surfaces,
+          opacityEditorSurface,
+          opacityFallbackForSurface(updatedPreset, opacityEditorSurface, style)
+        ))
   );
   requestPreviewRefresh();
 }
@@ -818,6 +820,7 @@ export function updatePresetIsland() {
   const previewSurface = surface ? surface.getAttribute("data-obs-preview-surface") : "chat";
   const overlayUrl = buildObsOverlayURL({ presetId: activePresetId });
   const alertUrl = buildObsAlertURL({ presetId: activePresetId });
+  const recapUrl = buildObsRecapURL({ presetId: activePresetId });
   if (dom.presetIslandUrl) {
     if (previewSurface === "leaderboard") {
       const leaderboardUrl = currentLeaderboardURL({ pinned: true });
@@ -826,12 +829,16 @@ export function updatePresetIsland() {
     } else if (previewSurface === "alerts") {
       dom.presetIslandUrl.value = alertUrl;
       dom.presetIslandUrl.title = alertUrl;
+    } else if (previewSurface === "recap") {
+      dom.presetIslandUrl.value = recapUrl;
+      dom.presetIslandUrl.title = recapUrl;
     } else {
       dom.presetIslandUrl.value = overlayUrl;
       dom.presetIslandUrl.title = overlayUrl;
     }
   }
   const followOverlayUrl = buildObsOverlayURL({ followActive: true });
+  const followRecapUrl = buildObsRecapURL({ followActive: true });
   if (dom.obsOverlayUrl) {
     dom.obsOverlayUrl.value = followOverlayUrl;
   }
@@ -902,6 +909,8 @@ export function updatePresetIsland() {
       pinnedUrl = currentLeaderboardURL({ pinned: true });
     } else if (previewSurface === "alerts") {
       pinnedUrl = alertUrl;
+    } else if (previewSurface === "recap") {
+      pinnedUrl = recapUrl;
     } else {
       pinnedUrl = overlayUrl;
     }
@@ -958,6 +967,34 @@ export function updatePresetIsland() {
     dom.studioAddToObsAlertPinnedUrl.title = alertUrl;
     if (dom.studioAddToObsAlertPinnedLabel) {
       dom.studioAddToObsAlertPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
+  if (dom.obsRecapUrl) {
+    dom.obsRecapUrl.value = followRecapUrl;
+    dom.obsRecapUrl.title = followRecapUrl;
+  }
+  if (dom.obsRecapOpen) {
+    dom.obsRecapOpen.href = followRecapUrl;
+  }
+  if (dom.obsRecapUrlPinned) {
+    dom.obsRecapUrlPinned.value = recapUrl;
+    dom.obsRecapUrlPinned.title = recapUrl;
+    if (dom.obsRecapPinnedLabel) {
+      dom.obsRecapPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
+    }
+  }
+  if (dom.studioAddToObsRecapFollowUrl) {
+    dom.studioAddToObsRecapFollowUrl.value = followRecapUrl;
+    dom.studioAddToObsRecapFollowUrl.title = followRecapUrl;
+  }
+  if (dom.studioAddToObsRecapOpen) {
+    dom.studioAddToObsRecapOpen.href = followRecapUrl;
+  }
+  if (dom.studioAddToObsRecapPinnedUrl) {
+    dom.studioAddToObsRecapPinnedUrl.value = recapUrl;
+    dom.studioAddToObsRecapPinnedUrl.title = recapUrl;
+    if (dom.studioAddToObsRecapPinnedLabel) {
+      dom.studioAddToObsRecapPinnedLabel.textContent = t("obs.pinnedPresetNamed", { name: pinnedLabel });
     }
   }
   if (dom.presetUrlStatus) {
@@ -1020,8 +1057,9 @@ export function collectAppearanceQuery() {
   const draftOpacity = panelOpacityTouched
     ? parsePanelOpacity(panelOpacityDrafts[opacityEditorSurface])
     : null;
+  const selectedSurface = selectedOpacitySurface();
   const previewOpacity = draftOpacity === null
-    ? previewSurfacePanelOpacity(preset, selectedOpacitySurface(), style.panel_opacity)
+    ? previewSurfacePanelOpacity(preset, selectedSurface, opacityFallbackForSurface(preset, selectedSurface, style))
     : draftOpacity;
   const query = {
     preset: activePresetId,
@@ -1041,7 +1079,7 @@ export function collectAppearanceQuery() {
     query.panel_image_fit = style.panel_image_fit;
     query.panel_image_scope = style.panel_image_scope;
   }
-  if (selectedOpacitySurface() === "alerts") {
+  if (selectedSurface === "alerts") {
     const chatFont = preset && typeof preset.font_size_px === "number" ? preset.font_size_px : 18;
     const alertsFont = Number.parseInt(fieldValue("overlay-alerts-font-size", String(chatFont)), 10);
     Object.assign(
@@ -1052,7 +1090,7 @@ export function collectAppearanceQuery() {
         image_size_pct: normalizeCatalogImageSizePct(fieldValue("overlay-alerts-image-size", "100")),
       })
     );
-  } else if (selectedOpacitySurface() === "leaderboard") {
+  } else if (selectedSurface === "leaderboard") {
     const leaderboard = resolveLeaderboardFormValues(
       preset && preset.surfaces && preset.surfaces.leaderboard,
       preset && typeof preset.font_size_px === "number" ? preset.font_size_px : 18
@@ -1301,8 +1339,15 @@ function resetGroup(group) {
     setFieldValue("overlay-line-height", String(defaults.line_height));
   } else if (group === "surface") {
     setFieldValue("overlay-panel-color", defaults.panel_color);
-    setFieldValue("overlay-panel-opacity", String(defaults.panel_opacity));
+    const surface = selectedOpacitySurface();
+    const opacity = String(surface === "recap" ? recapDefaultPanelOpacity(theme) : defaults.panel_opacity);
+    setFieldValue(
+      "overlay-panel-opacity",
+      opacity
+    );
+    opacityEditorSurface = surface;
     panelOpacityTouched = true;
+    panelOpacityDrafts = resetPanelOpacityDraft(panelOpacityDrafts, surface, opacity);
     setFieldValue("overlay-panel-image", "");
     setPanelImageFit(defaults.panel_image_fit);
     setFieldValue("overlay-panel-image-scope", defaults.panel_image_scope);

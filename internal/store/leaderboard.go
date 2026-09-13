@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"strings"
 	"time"
@@ -102,7 +103,11 @@ func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time
 }
 
 func progressionLevelsForLeaderboard(db *sql.DB) ([]ProgressionLevel, error) {
-	rows, err := db.Query(`SELECT id, title, min_xp, announce, created_at, updated_at FROM progression_levels ORDER BY min_xp, id`)
+	return progressionLevelsForLeaderboardQuerier(context.Background(), db)
+}
+
+func progressionLevelsForLeaderboardQuerier(ctx context.Context, q contextRowsQuerier) ([]ProgressionLevel, error) {
+	rows, err := q.QueryContext(ctx, `SELECT id, title, min_xp, announce, created_at, updated_at FROM progression_levels ORDER BY min_xp, id`)
 	if err != nil {
 		return nil, errors.Errorf("list progression levels for leaderboard: %w", err)
 	}

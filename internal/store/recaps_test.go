@@ -110,6 +110,26 @@ func TestCaptureStreamRecap_WhenContextCancelledBeforeInsert_ExpectNoRow(t *test
 	assert.True(t, errors.Is(err, store.ErrRecapNotFound))
 }
 
+func TestCaptureStreamRecap_WhenCancelledDuringCapture_ExpectRollbackWithoutSnapshot(t *testing.T) {
+	// Arrange
+	s, _ := openTestStore(t)
+	sessionID, err := s.CurrentSessionID()
+	require.NoError(t, err)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	s.SetRecapCaptureHookForTest(cancel)
+	t.Cleanup(func() { s.SetRecapCaptureHookForTest(nil) })
+
+	// Act
+	_, err = s.CaptureStreamRecap(ctx, sessionID, false)
+
+	// Assert
+	require.Error(t, err)
+	assert.ErrorIs(t, err, context.Canceled)
+	_, err = s.LoadStreamRecap(sessionID)
+	assert.ErrorIs(t, err, store.ErrRecapNotFound)
+}
+
 func TestCaptureStreamRecap_WhenCommittedBeforeCancel_ExpectSnapshotPersists(t *testing.T) {
 	s, _ := openTestStore(t)
 	sessionID, err := s.CurrentSessionID()

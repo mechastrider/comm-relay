@@ -15,7 +15,7 @@ import { normalizeAlertsSurfaceOverride } from "./alerts-presentation.js";
 const ADD_TO_OBS_DISMISSED_TRUTHY = new Set(["1", "true", "yes"]);
 const STUDIO_SETUP_STATES = new Set(["unseen", "seen", "skipped", "completed"]);
 
-const STUDIO_SURFACES = new Set(["chat", "leaderboard", "alerts"]);
+const STUDIO_SURFACES = new Set(["chat", "leaderboard", "alerts", "recap"]);
 const OVERLAY_DISPLAY_MODES = new Set(["normal", "compact"]);
 
 /** @type {readonly number[]} */
@@ -106,11 +106,16 @@ function normalizePreset(preset) {
     display_mode: raw.display_mode === "compact" ? "compact" : "normal",
     theme: typeof raw.theme === "string" ? raw.theme : "default",
     style: style,
-    surfaces: {
-      chat: normalizeSurfaceOpacity(surfaces.chat),
-      leaderboard: leaderboardSurface,
-      alerts: alertsSurface,
-    },
+    surfaces: Object.assign(
+      {
+        chat: normalizeSurfaceOpacity(surfaces.chat),
+        leaderboard: leaderboardSurface,
+        alerts: alertsSurface,
+      },
+      Object.keys(normalizeSurfaceOpacity(surfaces.recap)).length > 0
+        ? { recap: normalizeSurfaceOpacity(surfaces.recap) }
+        : {}
+    ),
   };
 }
 
@@ -244,11 +249,11 @@ export function sourceUrlPinsPreset(href, presetId) {
 
 /**
  * @param {unknown} surface
- * @returns {"chat"|"leaderboard"|"alerts"}
+ * @returns {"chat"|"leaderboard"|"alerts"|"recap"}
  */
 export function normalizeStudioSurface(surface) {
   const raw = String(surface || "").trim().toLowerCase();
-  return STUDIO_SURFACES.has(raw) ? /** @type {"chat"|"leaderboard"|"alerts"} */ (raw) : "chat";
+  return STUDIO_SURFACES.has(raw) ? /** @type {"chat"|"leaderboard"|"alerts"|"recap"} */ (raw) : "chat";
 }
 
 /**
@@ -443,6 +448,13 @@ export function buildFollowActiveURLForSurface(surface, options) {
     return overlaySourceURL({
       origin: origin,
       pathname: "/overlay/alert",
+      followActive: true,
+    });
+  }
+  if (normalized === "recap") {
+    return overlaySourceURL({
+      origin: origin,
+      pathname: "/overlay/recap",
       followActive: true,
     });
   }

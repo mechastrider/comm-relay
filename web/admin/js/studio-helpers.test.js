@@ -29,7 +29,7 @@ import {
   elementHasVerticalOverflow,
   syncStudioInspectorScrollInset,
 } from "./studio-helpers.js";
-import { buildObsOverlayURL } from "./overlay-url.js";
+import { buildObsOverlayURL, buildObsRecapURL } from "./overlay-url.js";
 import { buildLeaderboardURL } from "./leaderboard-url.js";
 
 const ORIGIN = "http://127.0.0.1:17877";
@@ -48,6 +48,8 @@ assert.equal(
   ORIGIN + "/overlay?preset=scene-a"
 );
 assert.equal(buildObsOverlayURL("legacy-id"), "http://127.0.0.1/overlay?preset=legacy-id");
+assert.equal(buildObsRecapURL({ origin: ORIGIN, followActive: true }), ORIGIN + "/overlay/recap");
+assert.equal(buildObsRecapURL({ origin: ORIGIN, presetId: "scene-a" }), ORIGIN + "/overlay/recap?preset=scene-a");
 
 const followLeaderboard = buildLeaderboardURL({ origin: ORIGIN, period: "session", followActive: true });
 assert.ok(sourceUrlOmitsPreset(ORIGIN, followLeaderboard));
@@ -199,6 +201,7 @@ assert.equal(overlayDraftIsDirty(reordered, reorderedOther), false);
 assert.equal(normalizeStudioSurface("chat"), "chat");
 assert.equal(normalizeStudioSurface("leaderboard"), "leaderboard");
 assert.equal(normalizeStudioSurface("alerts"), "alerts");
+assert.equal(normalizeStudioSurface("recap"), "recap");
 assert.equal(normalizeStudioSurface("dock"), "chat");
 assert.equal(normalizeStudioSurface(""), "chat");
 assert.equal(normalizeStudioSurface(null), "chat");
@@ -218,6 +221,10 @@ assert.equal(new URL(followLeaderboardSurface).pathname, "/overlay/leaderboard")
 const followAlerts = buildFollowActiveURLForSurface("alerts", { origin: ORIGIN });
 assert.equal(followAlerts, ORIGIN + "/overlay/alert");
 assert.ok(sourceUrlOmitsPreset(ORIGIN, followAlerts));
+
+const followRecap = buildFollowActiveURLForSurface("recap", { origin: ORIGIN });
+assert.equal(followRecap, ORIGIN + "/overlay/recap");
+assert.ok(sourceUrlOmitsPreset(ORIGIN, followRecap));
 
 const invalidSurfaceUrl = buildFollowActiveURLForSurface("dock", { origin: ORIGIN });
 assert.equal(invalidSurfaceUrl, ORIGIN + "/overlay");

@@ -87,6 +87,11 @@ export function initSettingsDialogs() {
         if (event.target !== dialog) {
           return;
         }
+        // Live recap owns dismissal so an in-flight immutable capture cannot
+        // be closed by the generic backdrop handler.
+        if (dialog === dom.liveRecapDialog) {
+          return;
+        }
         event.preventDefault();
         requestDialogClose(dialog);
       });

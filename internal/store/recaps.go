@@ -24,7 +24,17 @@ func (s *Store) CaptureStreamRecap(ctx context.Context, expectedSessionID string
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	currentSessionID, err := s.openSessionLocked()
+	if s.db == nil {
+		return nil, ErrStoreUnavailable
+	}
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, errors.Errorf("begin stream recap capture: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	currentSessionID, err := s.openSessionContextQuerierLocked(ctx, tx)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrRecapSessionConflict
 	}
@@ -35,14 +45,14 @@ func (s *Store) CaptureStreamRecap(ctx context.Context, expectedSessionID string
 		return nil, ErrRecapSessionConflict
 	}
 
-	if existing, loadErr := s.loadStreamRecapLocked(expectedSessionID); loadErr == nil {
+	if existing, loadErr := s.loadStreamRecapQuerierLocked(ctx, tx, expectedSessionID); loadErr == nil {
 		return existing, nil
 	} else if !errors.Is(loadErr, ErrRecapNotFound) {
 		return nil, loadErr
 	}
 
 	capturedAt := time.Now().UTC()
-	snapshot, err := s.buildStreamRecapSnapshotLocked(expectedSessionID, customAvatarsEnabled, capturedAt)
+	snapshot, err := s.buildStreamRecapSnapshotQuerierLocked(ctx, tx, expectedSessionID, customAvatarsEnabled, capturedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +67,13 @@ func (s *Store) CaptureStreamRecap(ctx context.Context, expectedSessionID string
 	}
 
 	capturedAtRaw := formatTime(capturedAt)
-	_, err = s.db.Exec(
+	if s.recapCaptureHook != nil {
+		s.recapCaptureHook()
+	}
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		return nil, errors.Errorf("capture stream recap: %w", ctxErr)
+	}
+	_, err = tx.ExecContext(ctx,
 		`INSERT INTO stream_recaps (id, session_id, schema_version, payload_json, captured_at, created_at)
 		 VALUES (?, ?, ?, ?, ?, ?)`,
 		snapshot.ID,
@@ -69,9 +85,18 @@ func (s *Store) CaptureStreamRecap(ctx context.Context, expectedSessionID string
 	)
 	if err != nil {
 		if isUniqueConstraint(err) {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+				return nil, errors.Errorf("rollback stream recap capture: %w", rollbackErr)
+			}
 			return s.loadStreamRecapLocked(expectedSessionID)
 		}
 		return nil, errors.Errorf("insert stream recap: %w", err)
+	}
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		return nil, errors.Errorf("capture stream recap: %w", ctxErr)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, errors.Errorf("commit stream recap capture: %w", err)
 	}
 	return snapshot, nil
 }
@@ -85,12 +110,19 @@ func (s *Store) LoadStreamRecap(sessionID string) (*recap.Snapshot, error) {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.db == nil {
+		return nil, ErrStoreUnavailable
+	}
 	return s.loadStreamRecapLocked(sessionID)
 }
 
 func (s *Store) loadStreamRecapLocked(sessionID string) (*recap.Snapshot, error) {
+	return s.loadStreamRecapQuerierLocked(context.Background(), s.db, sessionID)
+}
+
+func (s *Store) loadStreamRecapQuerierLocked(ctx context.Context, q contextRowQuerier, sessionID string) (*recap.Snapshot, error) {
 	var payloadJSON string
-	err := s.db.QueryRow(`SELECT payload_json FROM stream_recaps WHERE session_id = ?`, sessionID).Scan(&payloadJSON)
+	err := q.QueryRowContext(ctx, `SELECT payload_json FROM stream_recaps WHERE session_id = ?`, sessionID).Scan(&payloadJSON)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrRecapNotFound
 	}
@@ -104,9 +136,9 @@ func (s *Store) loadStreamRecapLocked(sessionID string) (*recap.Snapshot, error)
 	return snapshot, nil
 }
 
-func (s *Store) buildStreamRecapSnapshotLocked(sessionID string, customAvatarsEnabled bool, capturedAt time.Time) (*recap.Snapshot, error) {
+func (s *Store) buildStreamRecapSnapshotQuerierLocked(ctx context.Context, q contextRowsQuerier, sessionID string, customAvatarsEnabled bool, capturedAt time.Time) (*recap.Snapshot, error) {
 	var startedAtRaw string
-	err := s.db.QueryRow(`SELECT started_at FROM stream_sessions WHERE id = ?`, sessionID).Scan(&startedAtRaw)
+	err := q.QueryRowContext(ctx, `SELECT started_at FROM stream_sessions WHERE id = ?`, sessionID).Scan(&startedAtRaw)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrRecapSessionConflict
 	}
@@ -118,15 +150,15 @@ func (s *Store) buildStreamRecapSnapshotLocked(sessionID string, customAvatarsEn
 		return nil, err
 	}
 
-	totals, err := s.sessionTotalsLocked(sessionID)
+	totals, err := s.sessionTotalsQuerierLocked(ctx, q, sessionID)
 	if err != nil {
 		return nil, err
 	}
-	ranking, err := s.sessionRankingLocked(sessionID, customAvatarsEnabled)
+	ranking, err := s.sessionRankingQuerierLocked(ctx, q, sessionID, customAvatarsEnabled)
 	if err != nil {
 		return nil, err
 	}
-	groups, err := s.sessionAchievementGroupsLocked(sessionID, customAvatarsEnabled)
+	groups, err := s.sessionAchievementGroupsQuerierLocked(ctx, q, sessionID, customAvatarsEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -139,6 +171,14 @@ func (s *Store) buildStreamRecapSnapshotLocked(sessionID string, customAvatarsEn
 		AchievementGroups: groups,
 	}
 	return recapBuildSnapshot(sessionID, startedAt, capturedAt, detail)
+}
+
+// SetRecapCaptureHookForTest installs a deterministic hook before the recap
+// insert. It must be configured before concurrent capture calls.
+func (s *Store) SetRecapCaptureHookForTest(hook func()) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.recapCaptureHook = hook
 }
 
 func recapBuildSnapshot(sessionID string, startedAt, capturedAt time.Time, detail *SessionDetail) (*recap.Snapshot, error) {

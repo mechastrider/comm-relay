@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -69,6 +70,10 @@ func (h *streamRecapsHandler) handleCurrent(w http.ResponseWriter, r *http.Reque
 		writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
 		return
 	}
+	if errors.Is(err, store.ErrStoreUnavailable) {
+		writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
+		return
+	}
 	if err != nil {
 		clog.Errorf(r.Context(), "load current session for recap: %w", err)
 		writeError(w, http.StatusInternalServerError, "failed to load stream recap")
@@ -81,6 +86,10 @@ func (h *streamRecapsHandler) handleCurrent(w http.ResponseWriter, r *http.Reque
 	}
 
 	detail, err := h.viewerStore.GetSession(sessionID, customAvatarsEnabled)
+	if errors.Is(err, store.ErrStoreUnavailable) {
+		writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
+		return
+	}
 	if err != nil {
 		clog.Errorf(r.Context(), "load current session detail for recap: %w", err)
 		writeError(w, http.StatusInternalServerError, "failed to load stream recap")
@@ -92,6 +101,9 @@ func (h *streamRecapsHandler) handleCurrent(w http.ResponseWriter, r *http.Reque
 		storedSnapshot, err = h.viewerStore.LoadStreamRecap(sessionID)
 		if errors.Is(err, store.ErrRecapNotFound) {
 			storedSnapshot = nil
+		} else if errors.Is(err, store.ErrStoreUnavailable) {
+			writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
+			return
 		} else if errors.Is(err, store.ErrRecapPayloadInvalid) {
 			clog.Errorf(r.Context(), "load stored stream recap: %w", err)
 			writeError(w, http.StatusInternalServerError, "failed to load stream recap")
@@ -123,7 +135,7 @@ func (h *streamRecapsHandler) handleShow(w http.ResponseWriter, r *http.Request)
 	}
 
 	var request streamRecapShowRequest
-	if !decodeStreamRecapAction(w, r, &request) {
+	if !decodeStreamRecapAction(w, r, &request, "session_id") {
 		return
 	}
 	sessionID := strings.TrimSpace(request.SessionID)
@@ -137,9 +149,15 @@ func (h *streamRecapsHandler) handleShow(w http.ResponseWriter, r *http.Request)
 		customAvatarsEnabled = h.configStore.Snapshot().CustomAvatarsEnabled
 	}
 
-	snapshot, err := h.viewerStore.CaptureStreamRecap(r.Context(), sessionID, customAvatarsEnabled)
+	state, err := h.controller.ShowAfter(func() (*recap.Snapshot, error) {
+		return h.viewerStore.CaptureStreamRecap(r.Context(), sessionID, customAvatarsEnabled)
+	})
 	if errors.Is(err, store.ErrRecapSessionConflict) {
 		writeError(w, http.StatusConflict, "stream recap session conflict")
+		return
+	}
+	if errors.Is(err, store.ErrStoreUnavailable) {
+		writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
 		return
 	}
 	if errors.Is(err, store.ErrRecapPayloadInvalid) {
@@ -157,10 +175,8 @@ func (h *streamRecapsHandler) handleShow(w http.ResponseWriter, r *http.Request)
 
 	clog.Info(r.Context(), "stream recap captured",
 		slog.String("session_id", sessionID),
-		slog.String("snapshot_id", snapshot.ID),
+		slog.String("snapshot_id", state.Snapshot.ID),
 	)
-
-	state := h.controller.Show(snapshot)
 
 	writeJSON(w, http.StatusOK, streamRecapShowResponse{
 		Visible:  state.Visible,
@@ -182,13 +198,11 @@ func (h *streamRecapsHandler) handleHide(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, http.StatusOK, streamRecapHideResponse{Visible: state.Visible})
 }
 
-func decodeStreamRecapAction(w http.ResponseWriter, r *http.Request, target any) bool {
-	decoder := json.NewDecoder(io.LimitReader(r.Body, 4096))
-	decoder.DisallowUnknownFields()
-	err := decoder.Decode(target)
-	if errors.Is(err, io.EOF) {
-		return true
-	}
+func decodeStreamRecapAction(w http.ResponseWriter, r *http.Request, target any, supportedFields ...string) bool {
+	r.Body = http.MaxBytesReader(w, r.Body, 4096)
+	decoder := json.NewDecoder(r.Body)
+	var raw json.RawMessage
+	err := decoder.Decode(&raw)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid JSON")
 		return false
@@ -197,7 +211,34 @@ func decodeStreamRecapAction(w http.ResponseWriter, r *http.Request, target any)
 		writeError(w, http.StatusBadRequest, "invalid JSON")
 		return false
 	}
+	var object map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &object); err != nil || object == nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON")
+		return false
+	}
+	for field := range object {
+		if !isSupportedStreamRecapField(field, supportedFields) {
+			writeError(w, http.StatusBadRequest, "invalid JSON")
+			return false
+		}
+	}
+
+	payloadDecoder := json.NewDecoder(bytes.NewReader(raw))
+	payloadDecoder.DisallowUnknownFields()
+	if err := payloadDecoder.Decode(target); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON")
+		return false
+	}
 	return true
+}
+
+func isSupportedStreamRecapField(field string, supportedFields []string) bool {
+	for _, supportedField := range supportedFields {
+		if field == supportedField {
+			return true
+		}
+	}
+	return false
 }
 
 type sessionTotalsResponse struct {

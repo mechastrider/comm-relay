@@ -16,6 +16,7 @@ import { applyLiveLeaderboardFrame, cacheLiveLeaderboardFrame } from "./live-lea
 import { invalidateLiveStatistics } from "./live-statistics.js";
 import { applyViewerProgressionFrame } from "./viewers.js";
 import { setRegionState } from "./shell-state.js";
+import { handleLiveRecapWire } from "./live-recap.js";
 
 let messagesLoadInFlight = false;
 
@@ -480,6 +481,10 @@ export function handleWireMessage(wire) {
     }
     if (wire.type === "viewer_progression") {
       applyViewerProgressionFrame(wire);
+      return;
+    }
+    if (wire.type === "stream_recap_state") {
+      handleLiveRecapWire(wire);
       return;
     }
     if (wire.type !== "message") {

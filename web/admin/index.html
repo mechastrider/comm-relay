@@ -155,6 +155,10 @@
           </div>
           <div class="console-actions live-toolbar-actions">
             <span id="settings-state" class="settings-state" aria-live="polite" data-i18n="shell.loadingSettings">Loading settings</span>
+            <button id="live-recap-button" class="btn-physical btn-small has-tooltip" type="button">
+              <span data-i18n="recap.open">Recap</span>
+              <span class="ui-tooltip" role="tooltip" data-i18n="recap.openHint">Review the current stream and show its final recap.</span>
+            </button>
             <button id="new-stream-button" class="btn-physical btn-small has-tooltip" type="button">
               <span data-i18n="stream.newStream">New stream</span>
               <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer XP and the session leaderboard. Day and all-time stay.</span>
@@ -779,6 +783,11 @@
                   <span class="studio-surface-item__copy"><span data-i18n="obs.surfaceAlerts">Alerts</span><small>/overlay/alert</small></span>
                   <span class="ui-tooltip" role="tooltip" data-i18n="obs.surfaceAlerts">Alerts</span>
                 </button>
+                <button id="studio-surface-recap" class="studio-surface-item obs-source-item has-tooltip" type="button" data-obs-preview-surface="recap" aria-pressed="false" data-i18n-aria-label="obs.surfaceRecap">
+                  <svg class="studio-surface-item__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 4h12v16H6z" stroke-linejoin="round"></path><path d="M9 8h6M9 12h6M9 16h3" stroke-linecap="round"></path></svg>
+                  <span class="studio-surface-item__copy"><span data-i18n="obs.surfaceRecap">Recap</span><small>/overlay/recap</small></span>
+                  <span class="ui-tooltip" role="tooltip" data-i18n="obs.surfaceRecap">Recap</span>
+                </button>
               </nav>
               <aside id="studio-setup-reminder" class="studio-setup-reminder" data-studio-essential-only>
                 <h3 data-i18n="studio.setupReminderTitle">Ready for OBS?</h3>
@@ -1161,7 +1170,7 @@
                     <input id="overlay-panel-color" type="color" value="#000000">
                   </div>
                   <div class="form__field">
-                    <label for="overlay-panel-opacity" data-i18n="obs.panelOpacity">Panel opacity</label>
+                    <label id="overlay-panel-opacity-label" for="overlay-panel-opacity" data-i18n="obs.panelOpacity">Panel opacity</label>
                     <input id="overlay-panel-opacity" type="number" min="0" max="1" step="0.05" inputmode="decimal" aria-describedby="overlay-panel-opacity-hint" data-field-hint-id="overlay-panel-opacity-hint">
                     <p id="overlay-panel-opacity-hint" class="field-hint" data-i18n="obs.panelOpacityHint">Applies to the selected on-stream surface only. Enter a value from 0 to 1.</p>
                     <p id="overlay-panel-opacity-error" class="field-error" role="alert" hidden></p>
@@ -1696,6 +1705,10 @@
                   <span data-i18n="obs.alerts">Banners</span>
                   <small>/overlay/alert</small>
                 </button>
+                <button class="obs-source-item" type="button" data-obs-source="recap">
+                  <span data-i18n="obs.recap">Recap</span>
+                  <small>/overlay/recap</small>
+                </button>
                 <p class="obs-source-group-label" data-i18n="obs.sourcesOperator">Only visible to you</p>
                 <button class="obs-source-item" type="button" data-obs-source="dock">
                   <span data-i18n="obs.messageDock">Message dock</span>
@@ -1756,6 +1769,8 @@
                 </details>
 
                 <p class="field-hint" data-obs-source-pane="alerts" hidden data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
+                <p class="field-hint" data-obs-source-pane="recap" hidden data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
+                <p class="field-hint" data-obs-source-pane="recap" hidden data-i18n="obs.recapCanvasHint">Use a full-canvas Browser Source and place it above scene content; it stays empty until you show a recap.</p>
 
                 <div class="obs-url-field studio-url-primary" data-obs-source-pane="alerts" hidden>
                   <label for="obs-alert-url" data-i18n="obs.followActivePreset">Follow active preset</label>
@@ -1770,6 +1785,22 @@
                   <div class="obs-url-row">
                     <input id="obs-alert-url-pinned" type="text" readonly value="/overlay/alert">
                     <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-alert-url-pinned" data-copy-label="Pinned alert URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </details>
+
+                <div class="obs-url-field studio-url-primary" data-obs-source-pane="recap" hidden>
+                  <label for="obs-recap-url" data-i18n="obs.followActivePreset">Follow active preset</label>
+                  <div class="obs-url-row">
+                    <input id="obs-recap-url" type="text" readonly value="/overlay/recap">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-recap-url" data-copy-label="Recap URL" data-i18n="obs.copyUrl">Copy URL</button>
+                  </div>
+                </div>
+                <details class="studio-url-pinned" data-obs-source-pane="recap" hidden>
+                  <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+                  <p id="obs-recap-pinned-label" class="field-hint"></p>
+                  <div class="obs-url-row">
+                    <input id="obs-recap-url-pinned" type="text" readonly value="/overlay/recap">
+                    <button class="btn-physical btn-small" type="button" data-copy-obs-url="obs-recap-url-pinned" data-copy-label="Pinned recap URL" data-i18n="obs.copyUrl">Copy URL</button>
                   </div>
                 </details>
 
@@ -1810,6 +1841,10 @@
                 </div>
                 <div class="obs-integration-actions" data-obs-source-pane="alerts" hidden>
                   <a id="obs-alert-open" class="button-secondary button-secondary--small" href="/overlay/alert?preview=sample" target="_blank" rel="noopener" data-i18n="obs.openAlerts">Open alerts</a>
+                  <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance" data-i18n="obs.customizeAppearance">Customize appearance</button>
+                </div>
+                <div class="obs-integration-actions" data-obs-source-pane="recap" hidden>
+                  <a id="obs-recap-open" class="button-secondary button-secondary--small" href="/overlay/recap" target="_blank" rel="noopener" data-i18n="obs.openRecap">Open recap</a>
                   <button class="button-secondary button-secondary--small" type="button" data-obs-section="appearance" data-i18n="obs.customizeAppearance">Customize appearance</button>
                 </div>
                 <div class="obs-integration-actions" data-obs-source-pane="dock" hidden>
@@ -1860,6 +1895,10 @@
               <span data-i18n="obs.surfaceAlerts">Alerts</span>
               <small>/overlay/alert</small>
             </button>
+            <button class="studio-add-to-obs-nav-item" type="button" data-studio-add-to-obs-source="recap" aria-pressed="false">
+              <span data-i18n="obs.recap">Recap</span>
+              <small>/overlay/recap</small>
+            </button>
             <button class="studio-add-to-obs-nav-item" type="button" data-studio-add-to-obs-source="dock" aria-pressed="false">
               <span data-i18n="obs.messageDock">Message dock</span>
               <small>/dock/messages</small>
@@ -1878,6 +1917,8 @@
 
             <p class="field-hint" data-studio-add-to-obs-pane="chat" data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
             <p class="field-hint" data-studio-add-to-obs-pane="alerts" hidden data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
+            <p class="field-hint" data-studio-add-to-obs-pane="recap" hidden data-i18n="obs.followActiveHint">Follow active preset URLs update when you change the active preset in Live or Studio.</p>
+            <p class="field-hint" data-studio-add-to-obs-pane="recap" hidden data-i18n="obs.recapCanvasHint">Use a full-canvas Browser Source and place it above scene content; it stays empty until you show a recap.</p>
 
             <div class="obs-url-field studio-url-primary" data-studio-add-to-obs-pane="chat">
               <label for="studio-add-to-obs-follow-url" data-i18n="obs.followActivePreset">Follow active preset</label>
@@ -1935,6 +1976,22 @@
               </div>
             </details>
 
+            <div class="obs-url-field studio-url-primary" data-studio-add-to-obs-pane="recap" hidden>
+              <label for="studio-add-to-obs-recap-follow-url" data-i18n="obs.followActivePreset">Follow active preset</label>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-recap-follow-url" type="text" readonly value="/overlay/recap">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-recap-follow-url" data-copy-label="Recap URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </div>
+            <details class="studio-url-pinned" data-studio-add-to-obs-pane="recap" hidden>
+              <summary data-i18n="obs.pinnedPresetAdvanced">Pinned preset (advanced)</summary>
+              <p id="studio-add-to-obs-recap-pinned-label" class="field-hint"></p>
+              <div class="obs-url-row">
+                <input id="studio-add-to-obs-recap-pinned-url" type="text" readonly value="/overlay/recap">
+                <button class="btn-physical btn-small" type="button" data-copy-obs-url="studio-add-to-obs-recap-pinned-url" data-copy-label="Pinned recap URL" data-i18n="obs.copyUrl">Copy URL</button>
+              </div>
+            </details>
+
             <div class="obs-url-field" data-studio-add-to-obs-pane="dock" hidden>
               <label for="studio-add-to-obs-dock-url" data-i18n="obs.dockUrl">Message dock URL</label>
               <div class="obs-url-row">
@@ -1970,6 +2027,9 @@
             </div>
             <div class="obs-integration-actions" data-studio-add-to-obs-pane="alerts" hidden>
               <a id="studio-add-to-obs-alert-open" class="button-secondary button-secondary--small" href="/overlay/alert?preview=sample" target="_blank" rel="noopener" data-i18n="obs.openAlerts">Open alerts</a>
+            </div>
+            <div class="obs-integration-actions" data-studio-add-to-obs-pane="recap" hidden>
+              <a id="studio-add-to-obs-recap-open" class="button-secondary button-secondary--small" href="/overlay/recap" target="_blank" rel="noopener" data-i18n="obs.openRecap">Open recap</a>
             </div>
             <div class="obs-integration-actions" data-studio-add-to-obs-pane="dock" hidden>
               <a id="studio-add-to-obs-dock-open" class="button-secondary button-secondary--small" href="/dock/messages" target="_blank" rel="noopener" data-i18n="obs.openMessageDock">Open message dock</a>
@@ -2018,6 +2078,28 @@
           <button id="new-stream-prompt-confirm" class="btn-physical btn-start" type="button" data-i18n="stream.newStreamConfirm">Start new stream</button>
         </div>
       </div>
+    </dialog>
+
+    <dialog id="live-recap-dialog" class="live-recap-dialog" aria-labelledby="live-recap-heading" aria-describedby="live-recap-status">
+      <header class="live-recap-dialog__header">
+        <h2 id="live-recap-heading" tabindex="-1" data-i18n="recap.title">Stream recap</h2>
+        <button id="live-recap-close" class="icon-btn has-tooltip" type="button" data-i18n-aria-label="dialog.close" aria-label="Close"><span aria-hidden="true">×</span><span class="ui-tooltip" role="tooltip" data-i18n="dialog.close">Close</span></button>
+      </header>
+      <div class="live-recap-dialog__tabs" role="tablist" data-i18n-aria-label="recap.viewSwitcher" aria-label="Recap view">
+        <button id="live-recap-current-tab" class="dialog-tab" type="button" role="tab" aria-controls="live-recap-body" aria-selected="true" data-i18n="recap.current">Current stream</button>
+        <button id="live-recap-history-tab" class="dialog-tab" type="button" role="tab" aria-controls="live-recap-body" aria-selected="false" data-i18n="recap.history">History</button>
+      </div>
+      <p id="live-recap-status" class="live-recap-dialog__status" role="status" aria-live="polite" hidden></p>
+      <div id="live-recap-body" class="live-recap-dialog__body" aria-busy="false"></div>
+      <footer class="live-recap-dialog__footer">
+        <button id="live-recap-back" class="btn-physical btn-small" type="button" hidden data-i18n="recap.back">Back</button>
+        <span class="live-recap-dialog__spacer"></span>
+        <button id="live-recap-retry" class="btn-physical btn-small" type="button" hidden data-i18n="state.retry">Retry</button>
+        <button id="live-recap-cancel" class="btn-physical btn-small" type="button" hidden data-i18n="dialog.cancel">Cancel</button>
+        <button id="live-recap-hide" class="btn-physical btn-small" type="button" hidden data-i18n="recap.hide">Hide recap</button>
+        <button id="live-recap-show" class="btn-physical" type="button" data-i18n="recap.show">Show recap</button>
+        <button id="live-recap-confirm" class="btn-physical btn-start" type="button" hidden data-i18n="recap.confirmShow">Capture and show recap</button>
+      </footer>
     </dialog>
 
     <dialog id="viewer-merge-prompt" class="prompt-dialog" aria-labelledby="viewer-merge-prompt-title">

@@ -370,14 +370,18 @@ func (h *viewersHandler) handleStartSession(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.viewerStore.StartSession(time.Now()); err != nil {
+	var err error
+	if h.recap != nil {
+		_, err = h.recap.HideAfter(func() error {
+			return h.viewerStore.StartSession(time.Now())
+		})
+	} else {
+		err = h.viewerStore.StartSession(time.Now())
+	}
+	if err != nil {
 		clog.Errorf(r.Context(), "start stream session: %w", err)
 		writeError(w, http.StatusInternalServerError, "failed to start session")
 		return
-	}
-
-	if h.recap != nil {
-		h.recap.HideOnNewStream()
 	}
 
 	if h.publisher != nil {

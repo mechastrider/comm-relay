@@ -41,3 +41,25 @@ export function buildObsOverlayURL(options) {
     followActive: false,
   });
 }
+
+/**
+ * @param {string | { presetId?: string, followActive?: boolean, origin?: string }} options
+ * @returns {string}
+ */
+export function buildObsRecapURL(options) {
+  if (typeof options === "string") {
+    return overlaySourceURL({
+      origin: resolveOrigin(undefined),
+      pathname: "/overlay/recap",
+      presetId: options,
+      followActive: false,
+    });
+  }
+  const opts = options || {};
+  return overlaySourceURL({
+    origin: resolveOrigin(opts.origin),
+    pathname: "/overlay/recap",
+    presetId: opts.presetId,
+    followActive: Boolean(opts.followActive),
+  });
+}

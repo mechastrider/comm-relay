@@ -49,6 +49,7 @@ import { initLiveTabs, handleLiveWorkspaceChange } from "./js/live-tabs.js";
 import { initLiveLeaderboard } from "./js/live-leaderboard.js";
 import { initLiveStatistics } from "./js/live-statistics.js";
 import { initLiveContracts } from "./js/viewer-contracts.js";
+import { initLiveRecap } from "./js/live-recap.js";
 import { initLiveActivePreset, renderLiveActivePresetControl } from "./js/live-active-preset.js";
 import { initSidebar } from "./js/sidebar.js?v=1";
 import {
@@ -190,6 +191,7 @@ initLiveLeaderboard(function () {
 });
 initLiveStatistics();
 initLiveContracts();
+initLiveRecap();
 initLiveActivePreset();
 initStudio();
 initSettingsWorkspace();

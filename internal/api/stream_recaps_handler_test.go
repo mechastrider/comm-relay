@@ -2,10 +2,13 @@ package api
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -150,6 +153,90 @@ func TestStreamRecaps_Show_WhenInvalidJSON_ExpectBadRequest(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
+func TestStreamRecaps_Actions_WhenBodyIsNotExactJSONObject_ExpectBadRequest(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+
+	tests := []struct {
+		name string
+		path string
+		body string
+	}{
+		{name: "show empty", path: "/api/stream-recaps/show", body: ""},
+		{name: "show blank session", path: "/api/stream-recaps/show", body: `{"session_id":" "}`},
+		{name: "show missing session", path: "/api/stream-recaps/show", body: `{}`},
+		{name: "show non snake case field", path: "/api/stream-recaps/show", body: `{"SESSION_ID":"current"}`},
+		{name: "show unknown field", path: "/api/stream-recaps/show", body: `{"session_id":"current","unexpected":true}`},
+		{name: "show trailing value", path: "/api/stream-recaps/show", body: `{"session_id":"current"} {}`},
+		{name: "hide empty", path: "/api/stream-recaps/hide", body: ""},
+		{name: "hide unknown field", path: "/api/stream-recaps/hide", body: `{"unexpected":true}`},
+		{name: "hide null", path: "/api/stream-recaps/hide", body: "null"},
+		{name: "hide trailing value", path: "/api/stream-recaps/hide", body: `{} {}`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// Act
+			rec := httptest.NewRecorder()
+			env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, test.path, strings.NewReader(test.body)))
+
+			// Assert
+			require.Equal(t, http.StatusBadRequest, rec.Code)
+		})
+	}
+}
+
+func TestStreamRecaps_Show_WhenStoreClosed_ExpectServiceUnavailable(t *testing.T) {
+	// Arrange
+	path := filepath.Join(t.TempDir(), "comm-relay.db")
+	viewerStore, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, viewerStore.Close()) })
+	controller := recap.NewController(nil)
+	handler := newStreamRecapsHandler(viewerStore, nil, controller)
+	require.NoError(t, viewerStore.Close())
+
+	// Act
+	currentRec := httptest.NewRecorder()
+	handler.handleCurrent(currentRec, httptest.NewRequest(http.MethodGet, "/api/stream-recaps/current", nil))
+
+	rec := httptest.NewRecorder()
+	handler.handleShow(rec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show", strings.NewReader(`{"session_id":"current"}`)))
+
+	// Assert
+	require.Equal(t, http.StatusServiceUnavailable, currentRec.Code)
+	require.Equal(t, http.StatusServiceUnavailable, rec.Code)
+	require.False(t, controller.Current().Visible)
+}
+
+func TestStreamRecaps_Current_WhenStoredPayloadCorrupt_ExpectInternalServerError(t *testing.T) {
+	// Arrange
+	path := filepath.Join(t.TempDir(), "comm-relay.db")
+	viewerStore, err := store.Open(path, store.OpenOptions{TimeLocale: "en-GB"})
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, viewerStore.Close()) })
+	handler := newStreamRecapsHandler(viewerStore, nil, recap.NewController(nil))
+	sessionID, err := viewerStore.CurrentSessionID()
+	require.NoError(t, err)
+
+	showRec := httptest.NewRecorder()
+	handler.handleShow(showRec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show", strings.NewReader(`{"session_id":"`+sessionID+`"}`)))
+	require.Equal(t, http.StatusOK, showRec.Code)
+
+	db, err := sql.Open("sqlite", path)
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, db.Close()) })
+	_, err = db.Exec(`UPDATE stream_recaps SET payload_json = ? WHERE session_id = ?`, `{"version":2}`, sessionID)
+	require.NoError(t, err)
+
+	// Act
+	rec := httptest.NewRecorder()
+	handler.handleCurrent(rec, httptest.NewRequest(http.MethodGet, "/api/stream-recaps/current", nil))
+
+	// Assert
+	require.Equal(t, http.StatusInternalServerError, rec.Code)
+	require.Contains(t, rec.Body.String(), "failed to load stream recap")
+}
+
 func TestStreamRecaps_ShowAgain_WhenLaterActivity_ExpectSameSnapshot(t *testing.T) {
 	env := newTestEnv(t, bus.New(0))
 	sessionID, err := env.ViewerStore.CurrentSessionID()
@@ -264,6 +351,93 @@ func TestStreamRecaps_NewStream_WhenRecapVisible_ExpectHidden(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal(currentRec.Body.Bytes(), &payload))
 	require.False(t, payload.Visible)
+}
+
+func TestStreamRecaps_ShowAndNewStream_WhenNewStartsDuringCapture_ExpectCurrentHidden(t *testing.T) {
+	// Arrange
+	env := newTestEnv(t, bus.New(0))
+	sessionID, err := env.ViewerStore.CurrentSessionID()
+	require.NoError(t, err)
+	captureReached := make(chan struct{})
+	allowCaptureCommit := make(chan struct{})
+	env.ViewerStore.SetRecapCaptureHookForTest(func() {
+		close(captureReached)
+		<-allowCaptureCommit
+	})
+	t.Cleanup(func() { env.ViewerStore.SetRecapCaptureHookForTest(nil) })
+	newStreamAttempted := make(chan struct{})
+	env.Recap.SetTransitionHookForTest(func(kind string) {
+		if kind == "hide" {
+			close(newStreamAttempted)
+		}
+	})
+	t.Cleanup(func() { env.Recap.SetTransitionHookForTest(nil) })
+	visiblePublishStarted := make(chan struct{})
+	allowVisiblePublish := make(chan struct{})
+	var emittedMu sync.Mutex
+	emitted := make([]recap.State, 0, 2)
+	env.Recap.SetPublisherForTest(func(state recap.State) {
+		if state.Visible {
+			close(visiblePublishStarted)
+			<-allowVisiblePublish
+		}
+		emittedMu.Lock()
+		emitted = append(emitted, state)
+		emittedMu.Unlock()
+	})
+	hideStateCommitted := make(chan struct{})
+	env.Recap.SetStateHookForTest(func(kind string) {
+		if kind == "hide" {
+			close(hideStateCommitted)
+		}
+	})
+	t.Cleanup(func() { env.Recap.SetStateHookForTest(nil) })
+
+	showDone := make(chan *httptest.ResponseRecorder, 1)
+	go func() {
+		showRec := httptest.NewRecorder()
+		env.Handler.ServeHTTP(showRec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show", strings.NewReader(`{"session_id":"`+sessionID+`"}`)))
+		showDone <- showRec
+	}()
+	<-captureReached
+
+	startDone := make(chan *httptest.ResponseRecorder, 1)
+	go func() {
+		startRec := httptest.NewRecorder()
+		env.Handler.ServeHTTP(startRec, httptest.NewRequest(http.MethodPost, "/api/sessions/start", nil))
+		startDone <- startRec
+	}()
+	<-newStreamAttempted
+
+	// Act
+	close(allowCaptureCommit)
+	<-visiblePublishStarted
+	<-hideStateCommitted
+	require.False(t, env.Recap.Current().Visible)
+	close(allowVisiblePublish)
+	showRec := <-showDone
+	startRec := <-startDone
+	currentRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(currentRec, httptest.NewRequest(http.MethodGet, "/api/stream-recaps/current", nil))
+
+	// Assert
+	require.Equal(t, http.StatusOK, showRec.Code)
+	require.Equal(t, http.StatusOK, startRec.Code)
+	require.Equal(t, http.StatusOK, currentRec.Code)
+	var showPayload streamRecapShowResponse
+	require.NoError(t, json.Unmarshal(showRec.Body.Bytes(), &showPayload))
+	require.True(t, showPayload.Visible)
+	require.NotNil(t, showPayload.Snapshot)
+	var currentPayload streamRecapCurrentResponse
+	require.NoError(t, json.Unmarshal(currentRec.Body.Bytes(), &currentPayload))
+	require.NotEqual(t, sessionID, currentPayload.SessionID)
+	require.False(t, currentPayload.Visible)
+	require.Nil(t, currentPayload.Snapshot)
+	emittedMu.Lock()
+	require.Len(t, emitted, 2)
+	require.True(t, emitted[0].Visible)
+	require.False(t, emitted[1].Visible)
+	emittedMu.Unlock()
 }
 
 func TestSessions_ListAndGet_WhenSessionsExist_ExpectBoundedResponses(t *testing.T) {

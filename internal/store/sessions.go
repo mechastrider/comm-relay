@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
@@ -213,8 +214,12 @@ func scanSessionSummaryRow(rows *sql.Rows, currentSessionID string) (SessionSumm
 }
 
 func (s *Store) sessionTotalsLocked(sessionID string) (SessionTotals, error) {
+	return s.sessionTotalsQuerierLocked(context.Background(), s.db, sessionID)
+}
+
+func (s *Store) sessionTotalsQuerierLocked(ctx context.Context, q contextRowQuerier, sessionID string) (SessionTotals, error) {
 	var totals SessionTotals
-	err := s.db.QueryRow(`
+	err := q.QueryRowContext(ctx, `
 		SELECT
 			COALESCE(SUM(CASE WHEN COALESCE(vss.xp, 0) > 0 OR COALESCE(vss.message_count, 0) > 0 THEN 1 ELSE 0 END), 0),
 			COALESCE(SUM(COALESCE(vss.message_count, 0)), 0),
@@ -228,12 +233,16 @@ func (s *Store) sessionTotalsLocked(sessionID string) (SessionTotals, error) {
 }
 
 func (s *Store) sessionRankingLocked(sessionID string, customAvatarsEnabled bool) ([]SessionRankingEntry, error) {
-	levels, err := progressionLevelsForLeaderboard(s.db)
+	return s.sessionRankingQuerierLocked(context.Background(), s.db, sessionID, customAvatarsEnabled)
+}
+
+func (s *Store) sessionRankingQuerierLocked(ctx context.Context, q contextRowsQuerier, sessionID string, customAvatarsEnabled bool) ([]SessionRankingEntry, error) {
+	levels, err := progressionLevelsForLeaderboardQuerier(ctx, q)
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := s.db.Query(leaderboardSessionQuery, sessionID, 5)
+	rows, err := q.QueryContext(ctx, leaderboardSessionQuery, sessionID, 5)
 	if err != nil {
 		return nil, errors.Errorf("load session ranking: %w", err)
 	}
@@ -267,7 +276,11 @@ func (s *Store) sessionRankingLocked(sessionID string, customAvatarsEnabled bool
 }
 
 func (s *Store) sessionAchievementGroupsLocked(sessionID string, customAvatarsEnabled bool) ([]SessionAchievementGroup, error) {
-	rows, err := s.db.Query(`
+	return s.sessionAchievementGroupsQuerierLocked(context.Background(), s.db, sessionID, customAvatarsEnabled)
+}
+
+func (s *Store) sessionAchievementGroupsQuerierLocked(ctx context.Context, q contextRowsQuerier, sessionID string, customAvatarsEnabled bool) ([]SessionAchievementGroup, error) {
+	rows, err := q.QueryContext(ctx, `
 		SELECT
 			vau.viewer_id,
 			`+effectiveDisplayNameSQL+`,

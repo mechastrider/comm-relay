@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -11,6 +12,15 @@ import (
 
 type rowQuerier interface {
 	QueryRow(query string, args ...any) *sql.Row
+}
+
+type contextRowQuerier interface {
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+}
+
+type contextRowsQuerier interface {
+	contextRowQuerier
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }
 
 // UpdateDisplayName sets or clears the canonical display-name override for a viewer.

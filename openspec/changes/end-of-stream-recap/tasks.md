@@ -59,12 +59,12 @@
 > **Allowed fallout**: shared safe portrait/text utilities, deterministic sample fixture, embed manifests/tests
 > **Blocked**: reusing `/overlay/alert`, alert timers/queue, interactive on-stream controls, framework adoption
 
-- [ ] 4.1 Build the minimal recap document and safe text/portrait renderer for closing title, totals, Top 5, grouped achievements, empty-section collapse, and deterministic fallbacks.
-- [ ] 4.2 Implement production WebSocket initial/update handling, unknown-frame tolerance, bounded reconnect, exact visible snapshot restoration, and full DOM clearing/transparency on Hide.
-- [ ] 4.3 Implement isolated `preview=sample` behavior that uses fictitious bounded data/draft appearance and never reads history or applies/mutates production recap state.
-- [ ] 4.4 Add responsive landscape/square/portrait compositions for `default`, `dashboard`, `cockpit_panel`, `cockpit_popups`, and `g_rebels_popups`, including theme-default opacity and explicit zero.
-- [ ] 4.5 Add reduced-motion, long RU/EN text, zoom/scaling, broken portrait, hostile text, min/max/empty data, source-rectangle, and no-scroll/no-visible-hidden regression tests.
-- [ ] 4.6 Smoke the dedicated recap beside a short alert Browser Source and prove their geometry, state, queues, and animations remain independent.
+- [x] 4.1 Build the minimal recap document and safe text/portrait renderer for closing title, totals, Top 5, grouped achievements, empty-section collapse, and deterministic fallbacks.
+- [x] 4.2 Implement production WebSocket initial/update handling, unknown-frame tolerance, bounded reconnect, exact visible snapshot restoration, and full DOM clearing/transparency on Hide.
+- [x] 4.3 Implement isolated `preview=sample` behavior that uses fictitious bounded data/draft appearance and never reads history or applies/mutates production recap state.
+- [x] 4.4 Add responsive landscape/square/portrait compositions for `default`, `dashboard`, `cockpit_panel`, `cockpit_popups`, and `g_rebels_popups`, including theme-default opacity and explicit zero.
+- [x] 4.5 Add reduced-motion, long RU/EN text, zoom/scaling, broken portrait, hostile text, min/max/empty data, source-rectangle, and no-scroll/no-visible-hidden regression tests.
+- [x] 4.6 Smoke the dedicated recap beside a short alert Browser Source and prove their geometry, state, queues, and animations remain independent.
 
 ### Slice: Live recap control and compact session history
 
@@ -75,11 +75,11 @@
 > **Allowed fallout**: shared modal/status helpers and focused markup/state tests
 > **Blocked**: Analytics workspace, charts/export/delete/rename, historical production replay, dock controls
 
-- [ ] 5.1 Add the separate Live Recap action and constrained modal shell with pinned header/footer, scrollable body, Current stream/History switch, focus trap/return, and localized accessible labels/status.
-- [ ] 5.2 Implement current summary/snapshot rendering, permanent/no-reset confirmation, expected-session Show, idempotent Hide/Show again, busy guards, and no optimistic mutation.
-- [ ] 5.3 Implement bounded newest-first history pagination, session detail/back navigation, captured/current markers, sessions-without-recap empty states, and no historical Show action.
-- [ ] 5.4 Handle safe errors, retry/offline recovery, HTTP 409 stale-session refresh, WebSocket visibility updates, and interrupted confirmations without automatic resubmission.
-- [ ] 5.5 Add focused state/markup/API tests for cancel-without-request, exact bodies/URLs, duplicate-submit prevention, cursor handling, stale conflicts, XSS-safe rendering, focus, and constrained overflow.
+- [x] 5.1 Add the separate Live Recap action and constrained modal shell with pinned header/footer, scrollable body, Current stream/History switch, focus trap/return, and localized accessible labels/status.
+- [x] 5.2 Implement current summary/snapshot rendering, permanent/no-reset confirmation, expected-session Show, idempotent Hide/Show again, busy guards, and no optimistic mutation.
+- [x] 5.3 Implement bounded newest-first history pagination, session detail/back navigation, captured/current markers, sessions-without-recap empty states, and no historical Show action.
+- [x] 5.4 Handle safe errors, retry/offline recovery, HTTP 409 stale-session refresh, WebSocket visibility updates, and interrupted confirmations without automatic resubmission.
+- [x] 5.5 Add focused state/markup/API tests for cancel-without-request, exact bodies/URLs, duplicate-submit prevention, cursor handling, stale conflicts, XSS-safe rendering, focus, and constrained overflow.
 
 ### Slice: Studio preview and OBS setup
 
@@ -90,11 +90,11 @@
 > **Allowed fallout**: surface-opacity helpers, preview query builder, admin markup tests
 > **Blocked**: direct OBS scene mutation, new desktop/native menu, per-achievement recap media
 
-- [ ] 6.1 Add Recap to Studio surface selection and preview routing while preserving all unpublished per-surface draft values.
-- [ ] 6.2 Add labelled 0..1 recap backdrop-opacity editing, theme-default display, publish/revert/error focus, and explicit-zero handling without production Show/Hide side effects.
-- [ ] 6.3 Add Recap to every existing OBS setup surface with follow-active and `?preset=<id>` URLs, Copy/Open feedback, and full-canvas/z-order guidance.
-- [ ] 6.4 Add RU/EN locale keys and parity, Studio state/markup, opacity, query/URL, clipboard failure, and production-isolation tests.
-- [ ] 6.5 Confirm `/dock/messages`, chat, leaderboard, alert, and their setup URLs/controls remain unchanged when recap frames and settings arrive.
+- [x] 6.1 Add Recap to Studio surface selection and preview routing while preserving all unpublished per-surface draft values.
+- [x] 6.2 Add labelled 0..1 recap backdrop-opacity editing, theme-default display, publish/revert/error focus, and explicit-zero handling without production Show/Hide side effects.
+- [x] 6.3 Add Recap to every existing OBS setup surface with follow-active and `?preset=<id>` URLs, Copy/Open feedback, and full-canvas/z-order guidance.
+- [x] 6.4 Add RU/EN locale keys and parity, Studio state/markup, opacity, query/URL, clipboard failure, and production-isolation tests.
+- [x] 6.5 Confirm `/dock/messages`, chat, leaderboard, alert, and their setup URLs/controls remain unchanged when recap frames and settings arrive.
 
 ## Docs
 
@@ -107,39 +107,39 @@
 > **Allowed fallout**: screenshots/help copy directly required by the feature
 > **Blocked**: release announcement, tag/release publication, roadmap promises for non-goals
 
-- [ ] 7.1 Update Russian and English setup/help text with the dedicated canvas-sized `/overlay/recap`, follow-active/pinned examples, source z-order, and troubleshooting for hidden/reconnect/restart behavior.
-- [ ] 7.2 Document that first confirmed Show fixes the session snapshot permanently, never ends/resets the session, and legacy session attribution can remain incomplete when ambiguous.
-- [ ] 7.3 Add concise Russian `[Unreleased]` bullets for the visible recap, compact history, Studio/setup affordances, and explicit no-auto-reset behavior without rewriting released sections.
+- [x] 7.1 Update Russian and English setup/help text with the dedicated canvas-sized `/overlay/recap`, follow-active/pinned examples, source z-order, and troubleshooting for hidden/reconnect/restart behavior.
+- [x] 7.2 Document that first confirmed Show fixes the session snapshot permanently, never ends/resets the session, and legacy session attribution can remain incomplete when ambiguous.
+- [x] 7.3 Add concise Russian `[Unreleased]` bullets for the visible recap, compact history, Studio/setup affordances, and explicit no-auto-reset behavior without rewriting released sections.
 - [ ] 7.4 After implementation/review acceptance, sync the nine capability deltas to canonical specs and archive the change; do not archive while required QA evidence or tasks remain open.
 
 ## Verification
 
 ### Gate: automated checks
 
-- [ ] V.1 Run `gofmt` and `goimports` on every touched Go file; verify no formatting diff remains.
-- [ ] V.2 Run `go test ./...`.
-- [ ] V.3 Run `go test -race ./internal/store ./internal/api ./internal/bus ./internal/bootstrap` (adjust only to include the actual recap controller/broadcaster owner, never excluding store/API).
-- [ ] V.4 Run `golangci-lint run ./...`.
-- [ ] V.5 Run `npm ci` once for the clean frontend dependency set, then `npm run lint`.
-- [ ] V.6 Run `npm test` and `npm run test:i18n`.
-- [ ] V.7 Run `openspec validate end-of-stream-recap --strict` and `git diff --check`.
+- [x] V.1 Run `gofmt` and `goimports` on every touched Go file; verify no formatting diff remains.
+- [x] V.2 Run `go test ./...`.
+- [x] V.3 Run `go test -race ./internal/store ./internal/api ./internal/bus ./internal/bootstrap` (adjust only to include the actual recap controller/broadcaster owner, never excluding store/API).
+- [x] V.4 Run `golangci-lint run ./...`.
+- [x] V.5 Run `npm ci` once for the clean frontend dependency set, then `npm run lint`.
+- [x] V.6 Run `npm test` and `npm run test:i18n`.
+- [x] V.7 Run `openspec validate end-of-stream-recap --strict` and `git diff --check`.
 
 ### Gate: qa
 
 - [ ] Q.1 Execute every P0 scenario in `qa_plan.md`; attach command output, HTTP/WS assertions, migration integrity results, and unresolved failures.
-- [ ] Q.2 Complete the five-theme × three-aspect-ratio OBS matrix with empty/min/max/hostile fixtures, hidden transparency, reduced motion, and Alert/Recap rectangle independence evidence.
-- [ ] Q.3 Complete keyboard/focus/short-height/200%-zoom and RU/EN Live/Studio checks, including cancel, stale conflict, offline/retry, and production-isolated preview.
+- [x] Q.2 Complete the five-theme × three-aspect-ratio OBS matrix with empty/min/max/hostile fixtures, hidden transparency, reduced motion, and Alert/Recap rectangle independence evidence.
+- [x] Q.3 Complete keyboard/focus/short-height/200%-zoom and RU/EN Live/Studio checks, including cancel, stale conflict, offline/retry, and production-isolated preview.
 - [ ] Q.4 Run fresh-install, sanitized pre-`00019` upgrade, binary rollback, schema Down/Up test, reconnect/sleep, and process-restart-hidden lifecycle checks without using real user data.
 
 ### Gate: review
 
-- [ ] R.1 Perform a fresh independent diff review against proposal/spec/design/UI/platform/persistence/distribution/QA contracts; require CRITICAL=0 and resolve every correctness, privacy, concurrency, migration, accessibility, and OBS-layout finding.
-- [ ] R.2 Confirm router conventions, safe error mapping, session/visibility non-interference, public-data filtering, observability for capture/conflict/drop/failure, and no unrelated product or dock changes.
-- [ ] R.3 Re-run every affected automated command after review fixes and record the final green commit/diff state.
+- [x] R.1 Perform a fresh independent diff review against proposal/spec/design/UI/platform/persistence/distribution/QA contracts; require CRITICAL=0 and resolve every correctness, privacy, concurrency, migration, accessibility, and OBS-layout finding.
+- [x] R.2 Confirm router conventions, safe error mapping, session/visibility non-interference, public-data filtering, observability for capture/conflict/drop/failure, and no unrelated product or dock changes.
+- [x] R.3 Re-run every affected automated command after review fixes and record the final green commit/diff state.
 
 ### Gate: distribution-readiness
 
-- [ ] D.1 Verify recap assets are embedded in headless and Wails builds and artifact contents/names remain the existing Windows amd64 ZIP, macOS universal ZIP, and Linux amd64 tarball layouts.
+- [x] D.1 Verify recap assets are embedded in headless and Wails builds and artifact contents/names remain the existing Windows amd64 ZIP, macOS universal ZIP, and Linux amd64 tarball layouts.
 - [ ] D.2 Record per-platform packaged smoke results for fresh/upgrade/restart-hidden behavior and confirm no config/database/user fixture is bundled.
-- [ ] D.3 Review migration backup/rollback and release/support notes against `distribution_plan.md`; confirm minimum OS, permissions, signing/notary status, and update channels are unchanged.
-- [ ] D.4 Stop at readiness: do not sign, notarize, tag, upload, publish, modify production OBS scenes, or run against production user data without separate authority.
+- [x] D.3 Review migration backup/rollback and release/support notes against `distribution_plan.md`; confirm minimum OS, permissions, signing/notary status, and update channels are unchanged.
+- [x] D.4 Stop at readiness: do not sign, notarize, tag, upload, publish, modify production OBS scenes, or run against production user data without separate authority.
