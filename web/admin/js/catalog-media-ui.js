@@ -1,5 +1,5 @@
 import { t } from "./i18n-ui.js";
-import { createAlertEmblem } from "../../shared/alert-emblem.js";
+import { createAlertEmblem } from "../../shared/alert-emblem.js?v=2";
 import {
   catalogMediaPayload,
   catalogImageFitCSSValue,

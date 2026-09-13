@@ -39,9 +39,9 @@ import {
   refreshRewardHistoryLocale,
   cancelViewerRewardHistory,
 } from "./js/reward-history.js";
-import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js";
-import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js";
-import { initGreetingsCatalog, ensureGreetingsLoaded } from "./js/greetings-catalog.js";
+import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js?v=2";
+import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js?v=2";
+import { initGreetingsCatalog, ensureGreetingsLoaded } from "./js/greetings-catalog.js?v=2";
 import { initProgressionCatalog, ensureProgressionLoaded } from "./js/progression-catalog.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket, renderAdminConnectionState } from "./js/ws.js";
 import { initWorkspaceRouter } from "./js/workspace-router.js";
@@ -49,6 +49,7 @@ import { initLiveTabs, handleLiveWorkspaceChange } from "./js/live-tabs.js";
 import { initLiveLeaderboard } from "./js/live-leaderboard.js";
 import { initLiveStatistics } from "./js/live-statistics.js";
 import { initLiveContracts } from "./js/viewer-contracts.js";
+import { initLiveRecap } from "./js/live-recap.js";
 import { initLiveActivePreset, renderLiveActivePresetControl } from "./js/live-active-preset.js";
 import { initSidebar } from "./js/sidebar.js?v=1";
 import {
@@ -190,6 +191,7 @@ initLiveLeaderboard(function () {
 });
 initLiveStatistics();
 initLiveContracts();
+initLiveRecap();
 initLiveActivePreset();
 initStudio();
 initSettingsWorkspace();

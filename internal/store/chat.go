@@ -152,14 +152,14 @@ func (s *Store) applyChatMutationResult(
 		{ViewerID: viewerID, CauseMetric: ProgressionMetricMessageCount, Now: now},
 		{ViewerID: viewerID, CauseMetric: ProgressionMetricSessionCount, Now: now},
 	} {
-		result, evaluationErr := evaluateProgressionLocked(tx, evaluation)
+		result, evaluationErr := s.evaluateProgressionLocked(tx, evaluation)
 		if evaluationErr != nil {
 			return ChatMutationResult{}, errors.Errorf("evaluate chat progression: %w", evaluationErr)
 		}
 		progressionResults = append(progressionResults, result)
 	}
 	if xpChanged {
-		result, evaluationErr := evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: ProgressionMetricXP, PreviousXP: previousXP, HasPreviousXP: true, Now: now})
+		result, evaluationErr := s.evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: ProgressionMetricXP, PreviousXP: previousXP, HasPreviousXP: true, Now: now})
 		if evaluationErr != nil {
 			return ChatMutationResult{}, errors.Errorf("evaluate activity XP progression: %w", evaluationErr)
 		}

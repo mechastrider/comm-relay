@@ -1,4 +1,4 @@
-const SURFACES = new Set(["chat", "leaderboard", "alerts"]);
+const SURFACES = new Set(["chat", "leaderboard", "alerts", "recap"]);
 
 export function normalizeOpacitySurface(value) {
   return SURFACES.has(value) ? value : "chat";
@@ -49,6 +49,12 @@ export function previewSurfacePanelOpacity(preset, surface, fallback) {
       ? preset.surfaces[selected]
       : null;
   const hasOverride = surfaceConfig && isPanelOpacity(surfaceConfig.panel_opacity);
+  // Recap has no shared-style fallback: omission deliberately resolves its
+  // readable value from the active theme. Do not freeze that value into a
+  // Studio preview URL merely because the control displays it.
+  if (selected === "recap" && !hasOverride) {
+    return undefined;
+  }
   const theme = preset && typeof preset.theme === "string" ? preset.theme : "";
   if (!hasOverride && shared === 0 && ["cockpit_panel", "cockpit_popups", "g_rebels_popups"].includes(theme)) {
     return undefined;

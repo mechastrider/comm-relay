@@ -14,6 +14,8 @@ import {
   normalizePanelImageScope,
   panelOpacityQueryValue,
   panelBackground,
+  recapDefaultPanelOpacity,
+  recapViewFromConfig,
   normalizePreviewBackground,
   overlayViewFromConfig,
   resolveLeaderboardSizingMode,
@@ -156,6 +158,27 @@ test("surface views resolve independent opacity overrides with legacy fallback",
   assert.equal(overlayViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 0.58);
   assert.equal(leaderboardViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 0.58);
   assert.equal(alertViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 0.58);
+});
+
+test("recap opacity uses its own readable theme defaults and preserves explicit zero", function () {
+  const expected = {
+    default: 0.58,
+    dashboard: 0.58,
+    cockpit_panel: 0.70,
+    cockpit_popups: 0.76,
+    g_rebels_popups: 0.78,
+  };
+  Object.entries(expected).forEach(function ([theme, opacity]) {
+    const config = { overlay: { presets: [{ id: "recap", theme, style: { panel_opacity: 0 }, surfaces: {} }] } };
+    const view = recapViewFromConfig(config, new URLSearchParams());
+    assert.equal(recapDefaultPanelOpacity(theme), opacity);
+    assert.equal(view.style.panel_opacity, opacity);
+    assert.equal(view.style.legacy_cockpit_glass, false);
+    assert.equal(panelBackground(view.theme, view.style), "rgba(0, 0, 0, " + opacity + ")");
+
+    config.overlay.presets[0].surfaces.recap = { panel_opacity: 0 };
+    assert.equal(recapViewFromConfig(config, new URLSearchParams()).style.panel_opacity, 0);
+  });
 });
 
 test("legacy cockpit glass exactly matches every baseline theme, surface, and leaderboard layout", function () {

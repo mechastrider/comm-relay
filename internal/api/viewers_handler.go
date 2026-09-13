@@ -13,6 +13,7 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/overlayassets"
+	"github.com/mechastrider/comm-relay/internal/recap"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -20,10 +21,16 @@ type viewersHandler struct {
 	viewerStore *store.Store
 	cfgStore    *config.Store
 	publisher   *LeaderboardPublisher
+	recap       *recap.Controller
 	assetsDir   string
 }
 
-func newViewersHandler(viewerStore *store.Store, cfgStore *config.Store, publisher *LeaderboardPublisher) *viewersHandler {
+func newViewersHandler(
+	viewerStore *store.Store,
+	cfgStore *config.Store,
+	publisher *LeaderboardPublisher,
+	recapController *recap.Controller,
+) *viewersHandler {
 	assetsDir := ""
 	if cfgStore != nil {
 		assetsDir = overlayassets.DirForConfig(cfgStore.Path())
@@ -32,6 +39,7 @@ func newViewersHandler(viewerStore *store.Store, cfgStore *config.Store, publish
 		viewerStore: viewerStore,
 		cfgStore:    cfgStore,
 		publisher:   publisher,
+		recap:       recapController,
 		assetsDir:   assetsDir,
 	}
 }
@@ -362,7 +370,15 @@ func (h *viewersHandler) handleStartSession(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.viewerStore.StartSession(time.Now()); err != nil {
+	var err error
+	if h.recap != nil {
+		_, err = h.recap.HideAfter(func() error {
+			return h.viewerStore.StartSession(time.Now())
+		})
+	} else {
+		err = h.viewerStore.StartSession(time.Now())
+	}
+	if err != nil {
 		clog.Errorf(r.Context(), "start stream session: %w", err)
 		writeError(w, http.StatusInternalServerError, "failed to start session")
 		return

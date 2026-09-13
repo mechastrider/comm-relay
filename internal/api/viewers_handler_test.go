@@ -258,6 +258,10 @@ func TestViewerIngest_WhenEmptyUserID_ExpectNoViewer(t *testing.T) {
 		}
 		var frame map[string]any
 		require.NoError(t, json.Unmarshal(data, &frame))
+		switch frame["type"] {
+		case wireLeaderboardVisibilityType, wireViewerContractStateType, wireStreamRecapStateType:
+			continue
+		}
 		require.NotEqual(t, "leaderboard", frame["type"])
 	}
 }

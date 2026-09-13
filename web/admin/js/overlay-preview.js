@@ -18,7 +18,7 @@ import {
   OVERLAY_PREVIEW_HEIGHT_MAX,
   OVERLAY_PREVIEW_SIZES,
 } from './constants.js';
-import { t } from './i18n-ui.js';
+import { getLocale, t } from './i18n-ui.js';
 import { collectAppearanceQuery, updatePresetIsland, syncStudioInspectorEssential } from './overlay-appearance.js';
 import {
   DEFAULT_PREVIEW_BACKGROUND,
@@ -186,16 +186,21 @@ export function buildOverlayPreviewURL(previewMode) {
         ? "/overlay/leaderboard"
         : surface === "alerts"
           ? "/overlay/alert"
+          : surface === "recap"
+            ? "/overlay/recap"
           : "/overlay";
     const url = new URL(pathname, window.location.origin);
     const mode =
-      surface === "leaderboard" || surface === "alerts" ? "sample" : previewMode;
+      surface === "leaderboard" || surface === "alerts" || surface === "recap" ? "sample" : previewMode;
     if (mode) {
       url.searchParams.set("preview", mode);
       url.searchParams.set(
         "preview_background",
         normalizePreviewBackground(dom.overlayPreviewBackground && dom.overlayPreviewBackground.value)
       );
+    }
+    if (surface === "recap") {
+      url.searchParams.set("locale", getLocale());
     }
     if (surface === "leaderboard") {
       url.searchParams.set(
@@ -224,7 +229,7 @@ export function buildOverlayPreviewURL(previewMode) {
       );
       url.searchParams.set("sizing_mode", sizingMode);
       url.searchParams.set(sizingMode === "fixed" ? "font_size_px" : "base_font_size_px", String(leaderboardFont));
-    } else if (surface !== "alerts") {
+    } else if (surface !== "alerts" && surface !== "recap") {
       url.searchParams.set(
         "max_messages",
         String(
@@ -281,7 +286,7 @@ export function buildOverlayPreviewURL(previewMode) {
 export function getPreviewSurface() {
     const pressed = document.querySelector("[data-obs-preview-surface][aria-pressed='true']");
     const surface = pressed ? pressed.getAttribute("data-obs-preview-surface") : "chat";
-    if (surface === "leaderboard" || surface === "alerts") {
+    if (surface === "leaderboard" || surface === "alerts" || surface === "recap") {
       return surface;
     }
     return "chat";
@@ -289,7 +294,7 @@ export function getPreviewSurface() {
 
 export function applyPreviewSurface(surface) {
     const current =
-      surface === "leaderboard" ? "leaderboard" : surface === "alerts" ? "alerts" : "chat";
+      surface === "leaderboard" ? "leaderboard" : surface === "alerts" ? "alerts" : surface === "recap" ? "recap" : "chat";
     document.querySelectorAll("[data-obs-preview-surface]").forEach(function (button) {
       const selected = button.getAttribute("data-obs-preview-surface") === current;
       button.setAttribute("aria-pressed", selected ? "true" : "false");
@@ -365,6 +370,10 @@ export function updateOverlayPreviewNote() {
     }
     if (surface === "alerts") {
       dom.overlayPreviewNote.textContent = t("obs.previewNoteAlerts");
+      return;
+    }
+    if (surface === "recap") {
+      dom.overlayPreviewNote.textContent = t("obs.previewNoteRecap");
       return;
     }
     dom.overlayPreviewNote.textContent = dom.overlayPreviewMode.value === "live"
@@ -702,6 +711,9 @@ export function initOverlayPreview() {
     document.addEventListener("overlay-preview-refresh", scheduleOverlayPreviewRefresh);
     window.addEventListener("admin-locale-applied", function () {
       setOverlayPreviewState(previewState);
+      if (getPreviewSurface() === "recap") {
+        refreshOverlayPreview(true);
+      }
     });
     const overlayPreviewHost = document.getElementById("workspace-studio");
     if (overlayPreviewHost) {

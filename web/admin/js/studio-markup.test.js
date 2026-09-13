@@ -11,10 +11,15 @@ const surfaceList = markup.match(
 assert.ok(surfaceList, "Studio surface selector exists");
 assert.doesNotMatch(surfaceList[0], /role="tab"/);
 assert.match(surfaceList[0], /data-obs-preview-surface="chat"[^>]*aria-pressed="true"/);
+assert.match(surfaceList[0], /data-obs-preview-surface="recap"[^>]*aria-pressed="false"/);
 assert.match(surfaceList[0], /studio-surface-item__icon/);
 assert.match(styles, /\.studio-surface-item\[aria-pressed="true"\]/);
 assert.match(markup, /id="overlay-panel-opacity"[^>]*aria-describedby="overlay-panel-opacity-hint"/);
 assert.match(markup, /id="overlay-panel-opacity-error"[^>]*role="alert"/);
+assert.match(markup, /id="overlay-panel-opacity-label"[^>]*for="overlay-panel-opacity"/);
+assert.match(markup, /data-obs-source="recap"/);
+assert.match(markup, /id="obs-recap-url"[^>]*value="\/overlay\/recap"/);
+assert.match(markup, /id="studio-add-to-obs-recap-follow-url"[^>]*value="\/overlay\/recap"/);
 assert.match(styles, /border-left-color:\s*var\(--amber\)/);
 assert.doesNotMatch(
   styles,

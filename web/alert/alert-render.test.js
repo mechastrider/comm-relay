@@ -115,6 +115,18 @@ test("renders one combined progression splash without parsing untrusted titles a
   assert.equal(Object.hasOwn(byClass(splash, "alert-progression-level"), "innerHTML"), false);
 });
 
+test("keeps the progression fallback graphic free of generated text", function () {
+  const splash = createAlertSplash(fakeDocument, {
+    source: "progression",
+    name: "Nova",
+    level: { id: "veteran", title: "Veteran" },
+  }, { createEmblem: createAlertEmblem });
+
+  const emblem = byClass(splash, "alert-emblem--award");
+  assert.equal(emblem.attributes["data-emblem-symbol"], "burst");
+  assert.equal(byClass(emblem, "alert-emblem__monogram"), null);
+});
+
 test("renders a contract from text nodes with its title, objective, and reward snapshot", function () {
   const title = '<img src=x onerror="alert(1)"> Hold the line';
   const objective = "Survive the final round.";

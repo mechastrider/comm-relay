@@ -4,6 +4,7 @@ import { handleWireMessage } from './messages.js';
 import { reconcileActiveLiveData } from "./live-tabs.js";
 import * as dom from "./dom.js";
 import { t } from "./i18n-ui.js";
+import { reconcileLiveRecapOnReconnect } from "./live-recap.js";
 
 export function wsURL() {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -73,6 +74,7 @@ export function connectMessageWebSocket() {
       state.wsConnected = true;
       renderAdminConnectionState();
       reconcileActiveLiveData();
+      reconcileLiveRecapOnReconnect();
     });
 
     socket.addEventListener("message", function (event) {

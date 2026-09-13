@@ -15,6 +15,8 @@ test("surface opacity uses the shared value until a surface stores an override",
   assert.equal(effectiveSurfaceOpacity({}, "chat", 0.58), 0.58);
   assert.equal(effectiveSurfaceOpacity({ chat: { panel_opacity: 0 } }, "chat", 0.58), 0);
   assert.equal(effectiveSurfaceOpacity({ alerts: { panel_opacity: 1 } }, "alerts", 0.58), 1);
+  assert.equal(effectiveSurfaceOpacity({}, "recap", 0.7), 0.7);
+  assert.equal(effectiveSurfaceOpacity({ recap: { panel_opacity: 0 } }, "recap", 0.7), 0);
 });
 
 test("untouched legacy cockpit previews omit opacity until a surface stores an explicit value", function () {
@@ -79,12 +81,20 @@ test("selected Studio preview queries use that surface draft opacity with legacy
       chat: { panel_opacity: 0.2 },
       leaderboard: { panel_opacity: 0.65 },
       alerts: { panel_opacity: 0.4 },
+      recap: { panel_opacity: 0 },
     },
   };
   assert.equal(previewSurfacePanelOpacity(preset, "chat", 0.58), 0.2);
   assert.equal(previewSurfacePanelOpacity(preset, "leaderboard", 0.58), 0.65);
   assert.equal(previewSurfacePanelOpacity(preset, "alerts", 0.58), 0.4);
+  assert.equal(previewSurfacePanelOpacity(preset, "recap", 0.7), 0);
   assert.equal(previewSurfacePanelOpacity({ style: { panel_opacity: 0.35 }, surfaces: {} }, "alerts", 0.58), 0.35);
+});
+
+test("an omitted recap preview opacity remains theme-derived instead of inheriting shared style", function () {
+  const preset = { theme: "cockpit_panel", style: { panel_opacity: 0 }, surfaces: {} };
+  assert.equal(previewSurfacePanelOpacity(preset, "recap", 0.70), undefined);
+  assert.equal(previewSurfacePanelOpacity({ theme: "default", style: { panel_opacity: 0.58 }, surfaces: {} }, "recap", 0.58), undefined);
 });
 
 test("leaderboard chips to panel clears the stored layout without losing opacity", function () {

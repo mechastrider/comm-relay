@@ -26,6 +26,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/emote/ytemoji"
 	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/overlayassets"
+	"github.com/mechastrider/comm-relay/internal/recap"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
@@ -122,6 +123,9 @@ func New(opts Options) (*App, error) {
 	youtubeEmojiRefresher := ytemoji.NewRefresher(youtubeEmojiCatalog, emoteHTTP)
 
 	leaderboardPublisher := api.NewLeaderboardPublisher(hub, viewerStore, cfgStore)
+	recapController := recap.NewController(func(state recap.State) {
+		hub.BroadcastStreamRecapState(state)
+	})
 	avatarWorker := avatarcache.NewWorker(viewerStore, overlayassets.DirForConfig(opts.ConfigPath))
 	progressionReconciler := store.NewProgressionReconciler(viewerStore)
 	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher, commandMatcher, hub, avatarWorker, visibilityController)
@@ -137,6 +141,7 @@ func New(opts Options) (*App, error) {
 		Runtime:               runtimeInfo,
 		EmoteCache:            emoteCache,
 		LeaderboardVisibility: visibilityController,
+		StreamRecap:           recapController,
 	})
 	if err != nil {
 		return nil, errors.Errorf("create handler: %w", err)

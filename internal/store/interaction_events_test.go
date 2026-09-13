@@ -189,6 +189,7 @@ func TestInteractionEventSchema_WhenInspected_ExpectNoMessageBodyColumn(t *testi
 		"kind",
 		"contract_id",
 		"viewer_id",
+		"session_id",
 		"command_id",
 		"command_trigger",
 		"award_id",

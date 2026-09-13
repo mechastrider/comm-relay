@@ -70,6 +70,25 @@ The overlay page background stays transparent: only the message card may be opaq
 
 You should see sample messages. The same mode exists in **Studio → Preview**.
 
+### The recap source is empty or did not recover
+
+Stream recap uses a dedicated Browser Source — not chat or the short alert source:
+
+```
+http://127.0.0.1:17877/overlay/recap
+```
+
+Without `?preset=`, the source follows the active Studio preset. For a pinned look, use the URL from **Add to OBS**, for example `http://127.0.0.1:17877/overlay/recap?preset=default`.
+
+1. Size Browser Source to the full scene canvas (for example, `1920×1080`) and place it above ordinary scene sources. Keep `/overlay/alert` as a separate source with its own dimensions.
+2. Until you click **Show recap** in **Live → Recap**, the page is fully transparent — this is its normal hidden state.
+3. A visible recap restores automatically after a brief WebSocket disconnect. If it does not return, check the port and URL, then refresh the Browser Source cache.
+4. Restarting the CommRelay process intentionally hides the recap. Its captured snapshot remains in **History**; click **Show recap** again.
+
+The first confirmed **Capture and show recap** permanently fixes the snapshot for the current session. Every later Show uses that same snapshot, even if new messages or XP arrive afterward. Showing or hiding never ends the session or resets counters; only the separate **New stream** action creates another session.
+
+Upgrades migrate old history conservatively: an event is assigned to a session only when its timestamp identifies one unambiguously. Historical summaries may therefore remain incomplete in ambiguous cases instead of guessing attribution.
+
 ### Messages in admin but not in overlay (browser and OBS)
 
 1. **Message TTL** — in **Studio** choose **Until replaced** (duration chip) or set a custom value in **Advanced**, then click **Publish**. By default messages disappear after 20 seconds; old entries are not shown when opening the overlay.

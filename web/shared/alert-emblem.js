@@ -115,14 +115,6 @@ function stableHash(value) {
   return hash >>> 0;
 }
 
-function monogram(value) {
-  const words = normalizedText(value).toLocaleUpperCase().match(/[\p{L}\p{N}]+/gu) || [];
-  if (words.length > 1) {
-    return Array.from(words[0])[0] + Array.from(words[1])[0];
-  }
-  return words.length === 1 ? Array.from(words[0]).slice(0, 2).join("") : "?";
-}
-
 export function alertEmblemModel(kind, identifier, label) {
   const normalizedKind = kind === "award" ? "award" : kind === "greeting" ? "greeting" : "command";
   const normalizedIdentifier = normalizedText(identifier).toLocaleLowerCase();
@@ -136,7 +128,6 @@ export function alertEmblemModel(kind, identifier, label) {
     identifier: normalizedIdentifier,
     symbol,
     variant: hash % 3,
-    monogram: semantic[normalizedIdentifier] ? "" : monogram(label || normalizedIdentifier),
   };
 }
 
@@ -175,13 +166,6 @@ export function createAlertEmblem(documentRef, options = {}) {
     svg.append(svgElement(documentRef, tagName, attrs));
   });
   root.append(svg);
-
-  if (model.monogram) {
-    const label = documentRef.createElement("span");
-    label.className = "alert-emblem__monogram";
-    label.textContent = model.monogram;
-    root.append(label);
-  }
 
   const orbit = documentRef.createElement("span");
   orbit.className = "alert-emblem__orbit";

@@ -4,7 +4,7 @@ import { t } from "./i18n-ui.js";
 import { previewStreamerName, renderSplashPreview } from "./catalog-template.js";
 import { insertSplashVariable } from "./catalog-template-core.js";
 import { confirmDiscardChanges } from "./discard-changes-dialog.js";
-import { createCatalogMediaController } from "./catalog-media-ui.js";
+import { createCatalogMediaController } from "./catalog-media-ui.js?v=2";
 
 const greetingMedia = createCatalogMediaController({
   imagePreview: dom.greetingImagePreview,
