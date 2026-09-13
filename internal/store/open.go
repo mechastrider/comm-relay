@@ -174,12 +174,16 @@ func parseTime(raw string) (time.Time, error) {
 }
 
 func (s *Store) openSessionLocked() (string, error) {
+	return s.openSessionQuerierLocked(s.db)
+}
+
+func (s *Store) openSessionQuerierLocked(q rowQuerier) (string, error) {
 	if s.openSessionID != "" {
 		return s.openSessionID, nil
 	}
 
 	var id string
-	err := s.db.QueryRow(`SELECT id FROM stream_sessions WHERE ended_at IS NULL ORDER BY started_at DESC LIMIT 1`).Scan(&id)
+	err := q.QueryRow(`SELECT id FROM stream_sessions WHERE ended_at IS NULL ORDER BY started_at DESC LIMIT 1`).Scan(&id)
 	if err == nil {
 		s.openSessionID = id
 		return id, nil
@@ -189,6 +193,22 @@ func (s *Store) openSessionLocked() (string, error) {
 	}
 
 	return "", errors.Errorf("query open session: %w", err)
+}
+
+// CurrentSessionID returns the open stream session id when one exists.
+func (s *Store) CurrentSessionID() (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	sessionID, err := s.openSessionLocked()
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", ErrSessionNotFound
+	}
+	if err != nil {
+		return "", errors.Errorf("lookup current session: %w", err)
+	}
+
+	return sessionID, nil
 }
 
 func (s *Store) ensureOpenSessionLocked(now time.Time) error {

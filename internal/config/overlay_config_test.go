@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -467,6 +468,169 @@ func TestLoad_WhenSurfacePanelOpacityHasMalformedType_ExpectError(t *testing.T) 
       "id": "default", "name": "Default", "max_messages": 30,
       "message_ttl_seconds": 20, "font_size_px": 18, "display_mode": "normal", "theme": "default",
       "surfaces": { "chat": { "panel_opacity": "opaque" } }
+    }]
+  }
+}`), 0o644))
+
+	_, err := Load(path)
+	require.Error(t, err)
+}
+
+func TestOverlayPreset_WhenRecapOpacityOmitted_ExpectThemeDefaultWithoutMaterialization(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		theme    string
+		expected float64
+	}{
+		{OverlayThemeDefault, 0.58},
+		{OverlayThemeDashboard, 0.58},
+		{OverlayThemeCockpitPanel, 0.70},
+		{OverlayThemeCockpitPopups, 0.76},
+		{OverlayThemeGRebelsPopups, 0.78},
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.theme, func(t *testing.T) {
+			t.Parallel()
+
+			cfg := Default()
+			cfg.Overlay.Presets[0].Theme = tc.theme
+			cfg.Overlay.Presets[0].Style = defaultOverlayStyleForTheme(tc.theme)
+
+			require.Nil(t, cfg.Overlay.Presets[0].Surfaces.Recap)
+			require.InDelta(t, tc.expected, cfg.Overlay.Presets[0].RecapPanelOpacity(), 0.001)
+
+			data, err := json.Marshal(cfg.Public())
+			require.NoError(t, err)
+			require.NotContains(t, string(data), `"recap"`)
+		})
+	}
+}
+
+func TestOverlayPreset_WhenRecapOpacityOverridesStored_ExpectExplicitZeroAndEndpointsPreserved(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	zero, middle, one := 0.0, 0.35, 1.0
+	cfg.Overlay.Presets[0].Surfaces.Recap = &OverlayRecapSurface{PanelOpacity: &middle}
+
+	require.NoError(t, cfg.Validate())
+	require.Equal(t, 0.35, cfg.Overlay.Presets[0].RecapPanelOpacity())
+
+	cfg.Overlay.Presets[0].Surfaces.Recap.PanelOpacity = &zero
+	require.NoError(t, cfg.Validate())
+	require.Equal(t, 0.0, cfg.Overlay.Presets[0].RecapPanelOpacity())
+
+	cfg.Overlay.Presets[0].Surfaces.Recap.PanelOpacity = &one
+	require.NoError(t, cfg.Validate())
+	require.Equal(t, 1.0, cfg.Overlay.Presets[0].RecapPanelOpacity())
+
+	data, err := json.Marshal(cfg.Public())
+	require.NoError(t, err)
+	require.Contains(t, string(data), `"recap":{"panel_opacity":1}`)
+}
+
+func TestValidate_WhenRecapPanelOpacityInvalid_ExpectFieldError(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		value float64
+	}{
+		{name: "above range", value: 1.2},
+		{name: "below range", value: -0.1},
+		{name: "nan", value: math.NaN()},
+		{name: "positive inf", value: math.Inf(1)},
+		{name: "negative inf", value: math.Inf(-1)},
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			cfg := Default()
+			value := tc.value
+			cfg.Overlay.Presets[0].Surfaces.Recap = &OverlayRecapSurface{PanelOpacity: &value}
+
+			err := cfg.Validate()
+			require.Error(t, err)
+			require.True(t, errors.Is(err, ErrInvalidConfig))
+			require.Contains(t, ValidationFields(err), "overlay_preset_0_surfaces_recap_panel_opacity")
+		})
+	}
+}
+
+func TestLoad_WhenLegacyPresetHasNoRecapSurface_ExpectThemeDefaultAndUnchangedBytes(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	raw := `{
+  "overlay": {
+    "active_preset_id": "legacy",
+    "presets": [{
+      "id": "legacy", "name": "Legacy", "max_messages": 30,
+      "message_ttl_seconds": 20, "font_size_px": 18, "display_mode": "normal",
+      "theme": "cockpit_popups", "style": {"font_family":"system","line_height":1.35,"text_edge":"shadow","text_edge_strength":2,"platform_marker":"both","panel_color":"#000000","panel_opacity":0,"border_width":0,"border_color":"#ffffff","border_radius":8}
+    }]
+  }
+}`
+	require.NoError(t, os.WriteFile(path, []byte(raw), 0o644))
+
+	cfg, err := Load(path)
+	require.NoError(t, err)
+	preset := cfg.Overlay.Presets[0]
+	require.Nil(t, preset.Surfaces.Recap)
+	require.InDelta(t, 0.76, preset.RecapPanelOpacity(), 0.001)
+
+	after, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, raw, string(after))
+}
+
+func TestLoad_WhenRecapSurfaceHasUnknownKeys_ExpectIgnoredAndValid(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	require.NoError(t, os.WriteFile(path, []byte(`{
+  "overlay": {
+    "active_preset_id": "default",
+    "presets": [{
+      "id": "default", "name": "Default", "max_messages": 30,
+      "message_ttl_seconds": 20, "font_size_px": 18, "display_mode": "normal", "theme": "default",
+      "surfaces": {
+        "recap": {
+          "panel_opacity": 0.42,
+          "page_opacity": 0.5,
+          "future_setting": true
+        }
+      }
+    }]
+  }
+}`), 0o644))
+
+	cfg, err := Load(path)
+	require.NoError(t, err)
+	require.NotNil(t, cfg.Overlay.Presets[0].Surfaces.Recap)
+	require.NotNil(t, cfg.Overlay.Presets[0].Surfaces.Recap.PanelOpacity)
+	require.InDelta(t, 0.42, *cfg.Overlay.Presets[0].Surfaces.Recap.PanelOpacity, 0.001)
+	require.InDelta(t, 0.42, cfg.Overlay.Presets[0].RecapPanelOpacity(), 0.001)
+}
+
+func TestLoad_WhenRecapPanelOpacityHasMalformedType_ExpectError(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	require.NoError(t, os.WriteFile(path, []byte(`{
+  "overlay": {
+    "active_preset_id": "default",
+    "presets": [{
+      "id": "default", "name": "Default", "max_messages": 30,
+      "message_ttl_seconds": 20, "font_size_px": 18, "display_mode": "normal", "theme": "default",
+      "surfaces": { "recap": { "panel_opacity": "opaque" } }
     }]
   }
 }`), 0o644))

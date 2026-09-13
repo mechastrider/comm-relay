@@ -88,7 +88,7 @@ func (s *Store) Merge(fromID, intoID string, dayResetHour int, now time.Time) er
 		ProgressionMetricSessionCount,
 		ProgressionMetricContractWinCount,
 	} {
-		if _, err := evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: intoID, CauseMetric: metric, Backfilled: true, Now: now}); err != nil {
+		if _, err := s.evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: intoID, CauseMetric: metric, Backfilled: true, Now: now}); err != nil {
 			return errors.Errorf("reconcile merged viewer progression: %w", err)
 		}
 	}
@@ -245,18 +245,19 @@ func (s *Store) rewriteViewerContractsLocked(tx *sql.Tx, fromID, intoID string) 
 }
 
 func (s *Store) mergeProgressionHistoryLocked(tx *sql.Tx, fromID, intoID string) error {
-	rows, err := tx.Query(`SELECT id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at FROM viewer_achievement_unlocks WHERE viewer_id = ?`, fromID)
+	rows, err := tx.Query(`SELECT id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at, session_id FROM viewer_achievement_unlocks WHERE viewer_id = ?`, fromID)
 	if err != nil {
 		return errors.Errorf("list source achievement unlocks: %w", err)
 	}
 	type unlockRow struct {
 		id, achievementID, name, description, unlockedAt string
+		sessionID                                        sql.NullString
 		revision, occurrence, progressValue, backfilled  int
 	}
 	source := []unlockRow{}
 	for rows.Next() {
 		var row unlockRow
-		if err := rows.Scan(&row.id, &row.achievementID, &row.revision, &row.occurrence, &row.progressValue, &row.name, &row.description, &row.backfilled, &row.unlockedAt); err != nil {
+		if err := rows.Scan(&row.id, &row.achievementID, &row.revision, &row.occurrence, &row.progressValue, &row.name, &row.description, &row.backfilled, &row.unlockedAt, &row.sessionID); err != nil {
 			_ = rows.Close()
 			return errors.Errorf("scan source achievement unlock: %w", err)
 		}
@@ -269,14 +270,15 @@ func (s *Store) mergeProgressionHistoryLocked(tx *sql.Tx, fromID, intoID string)
 		return errors.Errorf("iterate source achievement unlocks: %w", err)
 	}
 	for _, row := range source {
-		if _, err := tx.Exec(`INSERT INTO viewer_achievement_unlocks (id, viewer_id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		if _, err := tx.Exec(`INSERT INTO viewer_achievement_unlocks (id, viewer_id, session_id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(viewer_id, achievement_id, revision, occurrence) DO UPDATE SET
 				progress_value = CASE WHEN excluded.unlocked_at < viewer_achievement_unlocks.unlocked_at THEN excluded.progress_value ELSE viewer_achievement_unlocks.progress_value END,
 				name = CASE WHEN excluded.unlocked_at < viewer_achievement_unlocks.unlocked_at THEN excluded.name ELSE viewer_achievement_unlocks.name END,
 				description = CASE WHEN excluded.unlocked_at < viewer_achievement_unlocks.unlocked_at THEN excluded.description ELSE viewer_achievement_unlocks.description END,
 				backfilled = CASE WHEN excluded.unlocked_at < viewer_achievement_unlocks.unlocked_at THEN excluded.backfilled ELSE viewer_achievement_unlocks.backfilled END,
-				unlocked_at = CASE WHEN excluded.unlocked_at < viewer_achievement_unlocks.unlocked_at THEN excluded.unlocked_at ELSE viewer_achievement_unlocks.unlocked_at END`, row.id, intoID, row.achievementID, row.revision, row.occurrence, row.progressValue, row.name, row.description, row.backfilled, row.unlockedAt); err != nil {
+				session_id = CASE WHEN excluded.unlocked_at < viewer_achievement_unlocks.unlocked_at THEN excluded.session_id ELSE viewer_achievement_unlocks.session_id END,
+				unlocked_at = CASE WHEN excluded.unlocked_at < viewer_achievement_unlocks.unlocked_at THEN excluded.unlocked_at ELSE viewer_achievement_unlocks.unlocked_at END`, row.id, intoID, row.sessionID, row.achievementID, row.revision, row.occurrence, row.progressValue, row.name, row.description, row.backfilled, row.unlockedAt); err != nil {
 			return errors.Errorf("merge achievement unlock: %w", err)
 		}
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
 	"github.com/mechastrider/comm-relay/internal/leaderboard"
+	"github.com/mechastrider/comm-relay/internal/recap"
 	"github.com/mechastrider/comm-relay/internal/runtime"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
@@ -26,6 +27,7 @@ type Options struct {
 	Runtime               *runtime.Info
 	EmoteCache            *emote.Cache
 	LeaderboardVisibility *leaderboard.Controller
+	StreamRecap           *recap.Controller
 }
 
 // NewHandler returns the root HTTP handler for CommRelay.
@@ -70,7 +72,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 		leaderboardPublisher = newLeaderboardPublisher(opts.Hub, opts.ViewerStore, opts.Store)
 	}
 	configHandler.leaderboardPublisher = leaderboardPublisher
-	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher)
+	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher, opts.StreamRecap)
 	commandsHandler := newCommandsHandler(opts.ViewerStore)
 	greetingsHandler := newGreetingsHandler(opts.ViewerStore, opts.Store, opts.Hub)
 	progressionHandler := newProgressionHandler(opts.ViewerStore, opts.Hub)
@@ -89,6 +91,9 @@ func NewHandler(opts Options) (http.Handler, error) {
 		contractPresentation,
 	)
 	rewardHistoryHandler := newRewardHistoryHandler(opts.ViewerStore)
+	sessionsHandler := newSessionsHandler(opts.ViewerStore, opts.Store)
+	streamRecapsHandler := newStreamRecapsHandler(opts.ViewerStore, opts.Store, opts.StreamRecap)
+	opts.Hub.SetStreamRecapController(opts.StreamRecap)
 	overlayDebug := newOverlayDebugHandler(opts.Hub)
 	visibilityHandler := &leaderboardVisibilityHandler{controller: opts.LeaderboardVisibility, hub: opts.Hub}
 
@@ -122,6 +127,11 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("POST /api/viewers/avatar/upload", viewersHandler.handleAvatarUpload)
 	mux.HandleFunc("POST /api/viewers/avatar/clear", viewersHandler.handleAvatarClear)
 	mux.HandleFunc("POST /api/sessions/start", viewersHandler.handleStartSession)
+	mux.HandleFunc("GET /api/sessions", sessionsHandler.handleList)
+	mux.HandleFunc("GET /api/sessions/get", sessionsHandler.handleGet)
+	mux.HandleFunc("GET /api/stream-recaps/current", streamRecapsHandler.handleCurrent)
+	mux.HandleFunc("POST /api/stream-recaps/show", streamRecapsHandler.handleShow)
+	mux.HandleFunc("POST /api/stream-recaps/hide", streamRecapsHandler.handleHide)
 	mux.HandleFunc("GET /api/leaderboard", viewersHandler.handleLeaderboard)
 	mux.HandleFunc("GET /api/leaderboard/visibility", visibilityHandler.handleGet)
 	mux.HandleFunc("POST /api/leaderboard/show", visibilityHandler.handleShow)
@@ -186,6 +196,10 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.Handle("GET /overlay/alert/", http.StripPrefix("/overlay/alert/", http.FileServer(http.FS(static.alert))))
 	mux.HandleFunc("GET /overlay/alert", func(w http.ResponseWriter, r *http.Request) {
 		serveFSFile(w, r, static.alert, "index.html")
+	})
+	mux.Handle("GET /overlay/recap/", http.StripPrefix("/overlay/recap/", http.FileServer(http.FS(static.recap))))
+	mux.HandleFunc("GET /overlay/recap", func(w http.ResponseWriter, r *http.Request) {
+		serveFSFile(w, r, static.recap, "index.html")
 	})
 	mux.Handle("GET /overlay/", http.StripPrefix("/overlay/", http.FileServer(http.FS(static.overlay))))
 	mux.HandleFunc("GET /overlay", func(w http.ResponseWriter, r *http.Request) {

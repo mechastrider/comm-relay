@@ -257,7 +257,7 @@ func (s *Store) AwardViewerContract(input AwardViewerContractInput) (*AwardViewe
 		{ViewerID: viewerID, CauseMetric: ProgressionMetricAwardCount, Now: now},
 		{ViewerID: viewerID, CauseMetric: ProgressionMetricContractWinCount, Now: now},
 	} {
-		progression, evaluationErr := evaluateProgressionLocked(tx, evaluation)
+		progression, evaluationErr := s.evaluateProgressionLocked(tx, evaluation)
 		if evaluationErr != nil {
 			return nil, errors.Errorf("evaluate contract progression: %w", evaluationErr)
 		}

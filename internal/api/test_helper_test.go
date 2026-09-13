@@ -16,6 +16,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/leaderboard"
+	"github.com/mechastrider/comm-relay/internal/recap"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -26,6 +27,7 @@ type testEnv struct {
 	ConfigStore *config.Store
 	Matcher     *command.Matcher
 	Visibility  *leaderboard.Controller
+	Recap       *recap.Controller
 	Hub         *Hub
 }
 
@@ -63,6 +65,9 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 	history.SetViewerStore(viewerStore)
 	history.SetConfigStore(cfgStore)
 	publisher := NewLeaderboardPublisher(hub, viewerStore, cfgStore)
+	recapController := recap.NewController(func(state recap.State) {
+		hub.BroadcastStreamRecapState(state)
+	})
 	visibility, err := leaderboard.NewController(cfgStore, func(snapshot leaderboard.Snapshot) {
 		_ = b.Publish(bus.LeaderboardVisibilityChanged(snapshot))
 	})
@@ -120,6 +125,7 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 		ViewerStore:           viewerStore,
 		LeaderboardPublisher:  publisher,
 		LeaderboardVisibility: visibility,
+		StreamRecap:           recapController,
 		History:               history,
 	})
 	require.NoError(t, err)
@@ -131,6 +137,7 @@ func newTestEnv(t *testing.T, b *bus.Bus) testEnv {
 		ConfigStore: cfgStore,
 		Matcher:     matcher,
 		Visibility:  visibility,
+		Recap:       recapController,
 		Hub:         hub,
 	}
 }

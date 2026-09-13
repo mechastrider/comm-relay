@@ -101,6 +101,24 @@ func defaultOverlayStyleForTheme(theme string) OverlayStyleConfig {
 	return style
 }
 
+// defaultRecapPanelOpacityForTheme returns the readable full-canvas recap backdrop
+// when surfaces.recap.panel_opacity is omitted. Values are resolved in memory
+// only and are not written to config.json.
+func defaultRecapPanelOpacityForTheme(theme string) float64 {
+	switch theme {
+	case OverlayThemeDashboard, OverlayThemeDefault:
+		return 0.58
+	case OverlayThemeCockpitPanel:
+		return 0.70
+	case OverlayThemeCockpitPopups:
+		return 0.76
+	case OverlayThemeGRebelsPopups:
+		return 0.78
+	default:
+		return defaultOverlayStyleForTheme(OverlayThemeDefault).PanelOpacity
+	}
+}
+
 func (s *OverlayStyleConfig) applyDefaults(theme string) {
 	def := defaultOverlayStyleForTheme(theme)
 	if *s == (OverlayStyleConfig{}) {

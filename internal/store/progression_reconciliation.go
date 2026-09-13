@@ -143,7 +143,7 @@ func (s *Store) reconcileProgressionBatch(ctx context.Context, batchSize int, no
 			ProgressionMetricSessionCount,
 			ProgressionMetricContractWinCount,
 		} {
-			if _, err := evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: metric, Backfilled: true, Now: now}); err != nil {
+			if _, err := s.evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: metric, Backfilled: true, Now: now}); err != nil {
 				return false, errors.Errorf("evaluate progression reconciliation viewer: %w", err)
 			}
 		}

@@ -186,7 +186,7 @@ func (s *Store) GetViewerProgression(viewerID string) (*ViewerProgression, error
 		}
 		result.Achievements = append(result.Achievements, ViewerAchievementProgress{Definition: definition, Value: value, Occurrences: occurrences})
 	}
-	rows, err := s.db.Query(`SELECT id, viewer_id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at FROM viewer_achievement_unlocks WHERE viewer_id = ? ORDER BY unlocked_at DESC, id DESC`, viewerID)
+	rows, err := s.db.Query(`SELECT id, viewer_id, session_id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at FROM viewer_achievement_unlocks WHERE viewer_id = ? ORDER BY unlocked_at DESC, id DESC`, viewerID)
 	if err != nil {
 		return nil, errors.Errorf("list viewer progression unlocks: %w", err)
 	}
@@ -581,7 +581,7 @@ func scanAchievement(scanner interface{ Scan(...any) error }) (AchievementDefini
 func (s *Store) ListAchievementUnlocks(viewerID string) ([]AchievementUnlock, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	rows, err := s.db.Query(`SELECT id, viewer_id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at FROM viewer_achievement_unlocks WHERE viewer_id = ? ORDER BY unlocked_at DESC, id DESC`, strings.TrimSpace(viewerID))
+	rows, err := s.db.Query(`SELECT id, viewer_id, session_id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at FROM viewer_achievement_unlocks WHERE viewer_id = ? ORDER BY unlocked_at DESC, id DESC`, strings.TrimSpace(viewerID))
 	if err != nil {
 		return nil, errors.Errorf("list achievement unlocks: %w", err)
 	}
@@ -602,10 +602,14 @@ func (s *Store) ListAchievementUnlocks(viewerID string) ([]AchievementUnlock, er
 
 func scanAchievementUnlock(scanner interface{ Scan(...any) error }) (AchievementUnlock, error) {
 	var item AchievementUnlock
+	var sessionID sql.NullString
 	var backfilled int
 	var unlocked string
-	if err := scanner.Scan(&item.ID, &item.ViewerID, &item.AchievementID, &item.Revision, &item.Occurrence, &item.ProgressValue, &item.Name, &item.Description, &backfilled, &unlocked); err != nil {
+	if err := scanner.Scan(&item.ID, &item.ViewerID, &sessionID, &item.AchievementID, &item.Revision, &item.Occurrence, &item.ProgressValue, &item.Name, &item.Description, &backfilled, &unlocked); err != nil {
 		return AchievementUnlock{}, err
+	}
+	if sessionID.Valid {
+		item.SessionID = sessionID.String
 	}
 	var err error
 	item.UnlockedAt, err = parseTime(unlocked)
@@ -621,6 +625,7 @@ func scanAchievementUnlock(scanner interface{ Scan(...any) error }) (Achievement
 type InsertAchievementUnlockInput struct {
 	ID            string
 	ViewerID      string
+	SessionID     string
 	AchievementID string
 	Revision      int
 	Occurrence    int
@@ -654,7 +659,11 @@ func (s *Store) InsertAchievementUnlock(input InsertAchievementUnlockInput) (boo
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	result, err := s.db.Exec(`INSERT INTO viewer_achievement_unlocks (id, viewer_id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(viewer_id, achievement_id, revision, occurrence) DO NOTHING`, input.ID, strings.TrimSpace(input.ViewerID), strings.TrimSpace(input.AchievementID), input.Revision, input.Occurrence, input.ProgressValue, name, description, boolInt(input.Backfilled), formatTime(input.UnlockedAt))
+	var sessionID any
+	if strings.TrimSpace(input.SessionID) != "" && !input.Backfilled {
+		sessionID = strings.TrimSpace(input.SessionID)
+	}
+	result, err := s.db.Exec(`INSERT INTO viewer_achievement_unlocks (id, viewer_id, session_id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(viewer_id, achievement_id, revision, occurrence) DO NOTHING`, input.ID, strings.TrimSpace(input.ViewerID), sessionID, strings.TrimSpace(input.AchievementID), input.Revision, input.Occurrence, input.ProgressValue, name, description, boolInt(input.Backfilled), formatTime(input.UnlockedAt))
 	if err != nil {
 		return false, errors.Errorf("insert achievement unlock: %w", err)
 	}

@@ -55,6 +55,38 @@ func TestStore_WhenSurfaceOpacityOverridesSaved_ExpectRestartRoundTrip(t *testin
 	require.Equal(t, 0.58, legacy.Overlay.Presets[0].Style.PanelOpacity)
 }
 
+func TestStore_WhenRecapPanelOpacitySaved_ExpectRestartRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	cfg, err := Load(path)
+	require.NoError(t, err)
+	store, err := NewStore(path, cfg)
+	require.NoError(t, err)
+
+	zero, middle := 0.0, 0.35
+	require.NoError(t, store.Mutate(func(current *Config) error {
+		current.Overlay.Presets[0].Surfaces.Recap = &OverlayRecapSurface{PanelOpacity: &middle}
+		return nil
+	}))
+
+	reloaded, err := Load(path)
+	require.NoError(t, err)
+	preset := reloaded.Overlay.Presets[0]
+	require.NotNil(t, preset.Surfaces.Recap.PanelOpacity)
+	require.Equal(t, 0.35, preset.RecapPanelOpacity())
+
+	require.NoError(t, store.Mutate(func(current *Config) error {
+		current.Overlay.Presets[0].Surfaces.Recap = &OverlayRecapSurface{PanelOpacity: &zero}
+		return nil
+	}))
+
+	reloaded, err = Load(path)
+	require.NoError(t, err)
+	require.Equal(t, 0.0, reloaded.Overlay.Presets[0].RecapPanelOpacity())
+}
+
 func TestStore_WhenReplaceValid_ExpectPersisted(t *testing.T) {
 	t.Parallel()
 

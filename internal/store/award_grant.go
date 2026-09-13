@@ -152,13 +152,13 @@ func (s *Store) applyAwardLocked(identity ChatIdentity, points int, dayResetHour
 	}
 
 	progressionResults := make([]ProgressionEvaluationResult, 0, 2)
-	xpResult, err := evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: ProgressionMetricXP, PreviousXP: previousXP, HasPreviousXP: true, Now: now})
+	xpResult, err := s.evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: ProgressionMetricXP, PreviousXP: previousXP, HasPreviousXP: true, Now: now})
 	if err != nil {
 		return nil, errors.Errorf("evaluate award XP progression: %w", err)
 	}
 	progressionResults = append(progressionResults, xpResult)
 	if event != nil {
-		awardResult, evaluationErr := evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: ProgressionMetricAwardCount, Now: now})
+		awardResult, evaluationErr := s.evaluateProgressionLocked(tx, ProgressionEvaluationInput{ViewerID: viewerID, CauseMetric: ProgressionMetricAwardCount, Now: now})
 		if evaluationErr != nil {
 			return nil, errors.Errorf("evaluate award-count progression: %w", evaluationErr)
 		}
