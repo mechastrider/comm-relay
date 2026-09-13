@@ -43,7 +43,7 @@ import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog
 import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js";
 import { initGreetingsCatalog, ensureGreetingsLoaded } from "./js/greetings-catalog.js";
 import { initProgressionCatalog, ensureProgressionLoaded } from "./js/progression-catalog.js";
-import { connectMessageWebSocket, disconnectMessageWebSocket } from "./js/ws.js";
+import { connectMessageWebSocket, disconnectMessageWebSocket, renderAdminConnectionState } from "./js/ws.js";
 import { initWorkspaceRouter } from "./js/workspace-router.js";
 import { initLiveTabs, handleLiveWorkspaceChange } from "./js/live-tabs.js";
 import { initLiveLeaderboard } from "./js/live-leaderboard.js";
@@ -136,10 +136,21 @@ dom.form.addEventListener("change", function (event) {
   }
 });
 dom.refreshMessages.addEventListener("click", function () {
-  loadRecentMessages().catch(function () {
-    showBanner("error", t("banner.cannotLoadMessages"));
+  loadRecentMessages({ showLoading: true }).catch(function () {
+    /* inline error region handles failure */
   });
 });
+
+if (dom.liveMessagesError) {
+  const messagesRetry = dom.liveMessagesError.querySelector(".state-retry");
+  if (messagesRetry) {
+    messagesRetry.addEventListener("click", function () {
+      loadRecentMessages({ showLoading: true }).catch(function () {
+        /* inline error region handles failure */
+      });
+    });
+  }
+}
 
 handleOAuthQuery();
 initOverlayPreview();
@@ -193,28 +204,44 @@ if (dom.shellDiagnosticsButton) {
 renderSettingsState();
 
 refreshAll()
-  .catch(function () {
+  .catch(function (error) {
     if (!state.currentConfig) {
       markSettingsUnavailable();
     }
-    showBanner("error", t("banner.cannotReach"));
+    const message = error && error.partial
+      ? t("banner.partialLoad")
+      : t("banner.cannotReach");
+    showBanner("error", message);
   })
   .finally(function () {
     state.soundReady = true;
     renderLiveActivePresetControl();
     connectMessageWebSocket();
+    renderAdminConnectionState();
   });
 
 state.statusTimer = window.setInterval(function () {
-  loadStatus().catch(function () {
-    /* keep last known status */
-  });
+  loadStatus()
+    .then(function () {
+      state.statusPollStale = false;
+      renderAdminConnectionState();
+    })
+    .catch(function () {
+      state.statusPollStale = true;
+      renderAdminConnectionState();
+    });
 }, 5000);
 
 state.messagesTimer = window.setInterval(function () {
-  loadRecentMessages({ playSound: true }).catch(function () {
-    /* keep last known messages */
-  });
+  loadRecentMessages({ playSound: true })
+    .then(function () {
+      state.messagesPollStale = false;
+      renderAdminConnectionState();
+    })
+    .catch(function () {
+      state.messagesPollStale = true;
+      renderAdminConnectionState();
+    });
 }, 5000);
 
 window.addEventListener("beforeunload", function () {

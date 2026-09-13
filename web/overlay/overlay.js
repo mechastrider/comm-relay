@@ -120,13 +120,22 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
   let overlayAssetsRevision = Date.now();
   let hideCommandMessages = false;
   let restyleRenderedMessages = function () {};
+  let purgeCommandMessages = function () {};
+
+  function applyHideCommandMessages(nextHidden) {
+    const wasHidden = hideCommandMessages;
+    hideCommandMessages = nextHidden;
+    if (!wasHidden && hideCommandMessages) {
+      purgeCommandMessages();
+    }
+  }
 
   function applyOverlaySettingsFrame(frame) {
     if (!frame || typeof frame !== "object") {
       return;
     }
     if (typeof frame.hide_command_messages === "boolean") {
-      hideCommandMessages = frame.hide_command_messages;
+      applyHideCommandMessages(frame.hide_command_messages);
     }
     if (frame.overlay && typeof frame.overlay === "object") {
       applyServerOverlayConfig(frame.overlay);
@@ -370,7 +379,7 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
       }
       const payload = await response.json();
       if (typeof payload.hide_command_messages === "boolean") {
-        hideCommandMessages = payload.hide_command_messages;
+        applyHideCommandMessages(payload.hide_command_messages);
       }
       applyServerOverlayConfig(payload && payload.overlay);
     } catch {
@@ -702,6 +711,16 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     row.classList.toggle("message--rewarded", Boolean(reward));
   }
 
+  function purgeVisibleCommandMessages() {
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const frame = entries[i] && entries[i].frame;
+      if (frame && frame.is_command) {
+        removeEntry(i, true);
+      }
+    }
+  }
+  purgeCommandMessages = purgeVisibleCommandMessages;
+
   function restyleVisibleMessages() {
     entries.forEach(function (entry) {
       if (entry.frame) {
@@ -895,6 +914,8 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     });
   }
 
+  let historyBootstrapped = false;
+
   function connect() {
     clearReconnectTimer();
     if (!shouldRun) {
@@ -913,6 +934,9 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     socket = new WebSocket(wsURL());
     socket.addEventListener("open", function () {
       reconnectDelayMs = INITIAL_RECONNECT_MS;
+      if (!debugTestEnabled && historyBootstrapped) {
+        loadRecentMessages();
+      }
     });
     socket.addEventListener("message", handleSocketMessage);
     socket.addEventListener("close", scheduleReconnect);
@@ -933,7 +957,12 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     loadServerConfig().finally(renderSamplePreview);
   } else {
     loadServerConfig().then(function () {
-      return debugTestEnabled ? undefined : loadRecentMessages();
+      if (debugTestEnabled) {
+        return undefined;
+      }
+      return loadRecentMessages().then(function () {
+        historyBootstrapped = true;
+      });
     }).finally(connect);
   }
 }

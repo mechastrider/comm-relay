@@ -128,6 +128,20 @@ function hideListError() {
   }
 }
 
+function showEditorError(message) {
+  if (!dom.commandsEditorStatus) {
+    return;
+  }
+  dom.commandsEditorStatus.textContent = message || t("catalog.saveFailed");
+  dom.commandsEditorStatus.hidden = false;
+}
+
+function hideEditorError() {
+  if (dom.commandsEditorStatus) {
+    dom.commandsEditorStatus.hidden = true;
+  }
+}
+
 function syncEditorVisibility() {
   const hasSelection = creatingNew || selectedCommandId;
   if (dom.commandsEditorForm) {
@@ -443,6 +457,7 @@ async function saveCommand() {
   }
 
   clearFieldErrors();
+  hideEditorError();
   const payload = readEditorPayload();
   const triggerErrorKey = validateCommandTrigger(payload.trigger);
   if (triggerErrorKey) {
@@ -490,7 +505,7 @@ async function saveCommand() {
     selectCommand(selectedCommandId, false);
   } catch (err) {
     const message = err instanceof Error && err.message ? err.message : t("catalog.saveFailed");
-    showListError(message);
+    showEditorError(message);
   } finally {
     saveInFlight = false;
     setButtonsDisabled(false);

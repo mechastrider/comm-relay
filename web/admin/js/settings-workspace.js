@@ -77,6 +77,32 @@ export function anySettingsSectionDirty() {
 }
 
 /**
+ * @param {readonly string[]} sectionIds
+ * @param {HTMLElement | null} [opener]
+ * @returns {Promise<boolean>}
+ */
+export async function confirmDiscardSettingsSections(sectionIds, opener) {
+  const dirtySections = sectionIds.filter(function (sectionId) {
+    return isSectionDirty(sectionId);
+  });
+  if (dirtySections.length === 0) {
+    return true;
+  }
+  const confirmed = await confirmDiscardChanges({
+    message: t("settings.discardConfirm"),
+    opener: opener || null,
+  });
+  if (confirmed) {
+    dirtySections.forEach(function (sectionId) {
+      resetSectionBaseline(sectionId);
+    });
+    state.settingsDirty = anySettingsSectionDirty();
+    renderSettingsState();
+  }
+  return confirmed;
+}
+
+/**
  * @param {string} sectionId
  * @returns {boolean}
  */

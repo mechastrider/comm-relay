@@ -1,6 +1,7 @@
 import { apiURL, mapHTTPError, readJSON } from "./api.js";
 import { t } from "./i18n-ui.js";
 import { confirmDiscardChanges } from "./discard-changes-dialog.js";
+import { setRegionState } from "./shell-state.js";
 
 let levels = [];
 let achievements = [];
@@ -47,14 +48,28 @@ async function fetchJSON(path) {
 
 function setStatus(message) {
   const status = el("progression-status");
-  if (status) status.textContent = message || "";
+  if (!status) {
+    return;
+  }
+  status.textContent = message || "";
+  status.setAttribute("aria-live", message ? "polite" : "off");
 }
 
 function setLevelError(message) {
   const error = el("progression-level-error");
+  const input = el("progression-level-xp");
   if (!error) return;
   error.textContent = message || "";
   error.hidden = !message;
+  if (input) {
+    if (message) {
+      input.setAttribute("aria-invalid", "true");
+      input.setAttribute("aria-describedby", "progression-level-baseline-hint progression-level-error");
+    } else {
+      input.removeAttribute("aria-invalid");
+      input.setAttribute("aria-describedby", "progression-level-baseline-hint");
+    }
+  }
 }
 
 function selectedLevel() { return levels.find((item) => item.id === selectedLevelID) || null; }
@@ -191,8 +206,30 @@ async function load() {
 export function ensureProgressionLoaded() {
   if (!isVisible()) return Promise.resolve();
   if (loading) return loading;
+  const panel = document.getElementById("audience-progression-panel");
   setStatus(t("state.loading"));
-  loading = load().catch(function (error) { setStatus(error.message); el("progression-retry").hidden = false; throw error; }).finally(function () { loading = null; });
+  if (panel) {
+    setRegionState(panel, "loading");
+    panel.setAttribute("aria-busy", "true");
+  }
+  loading = load()
+    .catch(function (error) {
+      setStatus(error.message);
+      if (el("progression-retry")) {
+        el("progression-retry").hidden = false;
+      }
+      if (panel) {
+        setRegionState(panel, "error");
+      }
+      throw error;
+    })
+    .finally(function () {
+      if (panel) {
+        setRegionState(panel, null);
+        panel.setAttribute("aria-busy", "false");
+      }
+      loading = null;
+    });
   return loading;
 }
 

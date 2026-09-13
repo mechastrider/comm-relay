@@ -75,6 +75,13 @@ If the WebSocket drops, the overlay SHALL reconnect with exponential backoff sta
 - **WHEN** `/ws` closes
 - **THEN** the overlay attempts to reconnect without operator action
 
+### Requirement: Overlay refills recent history after WebSocket reconnect
+After an initial history restore on page load, each successful WebSocket reconnect SHALL fetch recent messages from `GET /api/messages/recent` (up to the current `max_messages` cap) before applying new live frames. History refill failure MUST NOT prevent live WebSocket updates.
+
+#### Scenario: Brief disconnect during stream
+- **WHEN** the overlay WebSocket reconnects after a drop while chat history still contains recent messages
+- **THEN** messages missed during the disconnect are restored from recent history when available
+
 ### Requirement: Platform icon sits with the display name
 When the platform marker is `icon` or `both`, the overlay SHALL render the platform icon immediately before the display name inside the message identity, in every supported theme. The icon MUST NOT occupy a leftover grid cell (for example under the avatar) in HUD themes.
 

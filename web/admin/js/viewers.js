@@ -432,20 +432,66 @@ function detailSurfaceElements() {
       container: dom.audienceInspectorBody,
       loading: dom.audienceInspectorLoading,
       empty: dom.audienceInspectorEmpty,
+      error: dom.audienceInspectorError,
       shell: dom.audienceInspector,
     };
   }
   return {
     container: dom.audienceSheetBody,
     loading: dom.audienceSheetLoading,
+    error: dom.audienceSheetError,
     shell: dom.audienceDetailSheet,
   };
+}
+
+function setDetailError(message, viewerId) {
+  const surface = detailSurfaceElements();
+  if (!surface.error) {
+    return;
+  }
+  const body = surface.error.querySelector(".notice__body");
+  if (body) {
+    body.textContent = message || t("audience.detailLoadFailed");
+  }
+  surface.error.hidden = false;
+  let retry = surface.error.querySelector(".state-retry");
+  if (!retry) {
+    retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "state-retry btn-physical btn-small";
+    retry.textContent = t("state.retry");
+    surface.error.append(retry);
+  }
+  retry.onclick = function () {
+    if (viewerId) {
+      openViewerDetail(viewerId, focusReturnElement).catch(function () {
+        /* error UI handles failure */
+      });
+    }
+  };
+  if (surface.container) {
+    surface.container.hidden = true;
+  }
+  if (surface.empty) {
+    surface.empty.hidden = true;
+  }
+  retry.focus();
+}
+
+function clearDetailError() {
+  const surface = detailSurfaceElements();
+  if (surface.error) {
+    surface.error.hidden = true;
+  }
 }
 
 function setDetailLoading(loading) {
   const surface = detailSurfaceElements();
   if (surface.loading) {
     surface.loading.hidden = !loading;
+  }
+  if (loading) {
+    clearDetailError();
   }
   if (surface.container) {
     surface.container.hidden = loading;
@@ -502,6 +548,7 @@ function syncViewerDetailLayout() {
 }
 
 function clearDetailContainer() {
+  clearDetailError();
   const surface = detailSurfaceElements();
   if (surface.container) {
     surface.container.textContent = "";
@@ -738,6 +785,7 @@ function renderViewerDetail(viewer, rewardHistorySection) {
     updateViewerLeaderboardHidden(viewer.id, nextHidden)
       .catch(function () {
         hideCheckbox.checked = !nextHidden;
+        showBanner("error", t("viewers.toggleSaveFailed"));
       })
       .finally(function () {
         hideCheckbox.disabled = false;
@@ -761,7 +809,10 @@ function renderViewerDetail(viewer, rewardHistorySection) {
     const nextDisabled = greetingsInput.checked;
     greetingsInput.disabled = true;
     updateViewerGreetingsDisabled(viewer.id, nextDisabled)
-      .catch(function () { greetingsInput.checked = !nextDisabled; })
+      .catch(function () {
+        greetingsInput.checked = !nextDisabled;
+        showBanner("error", t("viewers.toggleSaveFailed"));
+      })
       .finally(function () { greetingsInput.disabled = false; });
   });
   greetingsField.append(greetingsLabel, greetingsHint);
@@ -779,7 +830,10 @@ function renderViewerDetail(viewer, rewardHistorySection) {
     const nextDisabled = progressionAlertsInput.checked;
     progressionAlertsInput.disabled = true;
     updateViewerProgressionAlertsDisabled(viewer.id, nextDisabled)
-      .catch(function () { progressionAlertsInput.checked = !nextDisabled; })
+      .catch(function () {
+        progressionAlertsInput.checked = !nextDisabled;
+        showBanner("error", t("viewers.toggleSaveFailed"));
+      })
       .finally(function () { progressionAlertsInput.disabled = false; });
   });
   progressionAlertsField.append(progressionAlertsLabel);
@@ -914,12 +968,22 @@ async function openViewerDetail(id, trigger) {
       if (!isAudienceWorkspaceActive() || selectedViewerId !== id) {
         return;
       }
+      clearDetailError();
       renderViewerDetail(payload, rewardHistorySection);
       openDetailShell();
       const surface = detailSurfaceElements();
       if (surface.container) {
         surface.container.focus();
       }
+    })
+    .catch(function (error) {
+      if (!isAudienceWorkspaceActive() || selectedViewerId !== id) {
+        return;
+      }
+      const message = error instanceof Error && error.message
+        ? error.message
+        : t("audience.detailLoadFailed");
+      setDetailError(message, id);
     })
     .finally(function () {
       setDetailLoading(false);
