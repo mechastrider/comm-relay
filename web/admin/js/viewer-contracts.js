@@ -80,7 +80,10 @@ function clearFieldErrors() {
   Object.entries(errors).forEach(function ([name, node]) {
     if (node) node.hidden = true;
     const input = el[name];
-    if (input) input.removeAttribute("aria-invalid");
+    if (input) {
+      input.removeAttribute("aria-invalid");
+      input.removeAttribute("aria-describedby");
+    }
   });
 }
 
@@ -91,7 +94,12 @@ function showFieldError(name, message) {
     node.textContent = message;
     node.hidden = false;
   }
-  if (input) input.setAttribute("aria-invalid", "true");
+  if (input) {
+    input.setAttribute("aria-invalid", "true");
+    if (node && node.id) {
+      input.setAttribute("aria-describedby", node.id);
+    }
+  }
 }
 
 function validateDraft() {

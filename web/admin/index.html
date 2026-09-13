@@ -140,7 +140,7 @@
             </div>
 
             <div class="main-area">
-      <div id="banner" class="banner" role="alert" aria-live="polite" hidden></div>
+      <div id="banner" class="banner" role="alert" hidden></div>
 
       <section class="console-panel live-work-area" aria-labelledby="live-work-heading">
         <h2 id="live-work-heading" class="visually-hidden" data-i18n="live.workArea">Live workspace</h2>
@@ -176,9 +176,14 @@
 
         <div class="live-tab-panels">
           <section id="live-messages-panel" class="canvas-panel live-tab-panel" role="tabpanel" aria-labelledby="live-messages-tab">
-            <div class="message-panel">
+            <div id="live-messages-region" class="live-region message-panel">
               <ul id="recent-messages" class="message-list" aria-live="polite"></ul>
-              <p id="recent-messages-empty" class="empty-state" data-i18n="shell.noMessagesYet">No messages yet.</p>
+              <p id="recent-messages-empty" class="empty-state live-region-empty" data-i18n="shell.noMessagesYet">No messages yet.</p>
+              <p id="live-messages-loading" class="empty-state" hidden data-i18n="state.loading">Loading</p>
+              <div id="live-messages-error" class="notice notice--error live-region-error" hidden>
+                <p class="notice__body"></p>
+                <button type="button" class="state-retry btn-physical btn-small" data-i18n="state.retry">Retry</button>
+              </div>
             </div>
           </section>
 
@@ -369,6 +374,10 @@
                 <div id="audience-inspector-body" class="audience-inspector__body" tabindex="-1"></div>
                 <p id="audience-inspector-empty" class="empty-state audience-inspector__empty" data-i18n="audience.selectViewer">Select a viewer from the table.</p>
                 <p id="audience-inspector-loading" class="audience-inspector__loading" hidden data-i18n="state.loading">Loading</p>
+                <div id="audience-inspector-error" class="notice notice--error audience-inspector__error" hidden role="alert">
+                  <p class="notice__body"></p>
+                  <button type="button" class="state-retry btn-physical btn-small" data-i18n="state.retry">Retry</button>
+                </div>
               </aside>
             </div>
             </div>
@@ -437,6 +446,7 @@
                       <button id="commands-delete-button" class="btn-physical btn-danger btn-small" type="button" data-i18n="catalog.delete">Delete</button>
                     </div>
                   </header>
+                  <p id="commands-editor-status" class="catalog-editor-status notice notice--error" role="alert" aria-live="polite" hidden></p>
                   <form id="commands-editor-form" class="audience-catalog-editor__body" hidden>
                     <div class="form__field">
                       <label for="command-trigger-input" data-i18n="commands.triggerLabel">Trigger (!slug)</label>
@@ -603,6 +613,7 @@
                       <button id="awards-delete-button" class="btn-physical btn-danger btn-small" type="button" data-i18n="catalog.delete">Delete</button>
                     </div>
                   </header>
+                  <p id="awards-editor-status" class="catalog-editor-status notice notice--error" role="alert" aria-live="polite" hidden></p>
                   <form id="awards-editor-form" class="audience-catalog-editor__body" hidden>
                     <div class="form__field">
                       <label for="award-name-input" data-i18n="awards.nameLabel">Name</label>
@@ -1411,6 +1422,8 @@
       <span class="tag">ADMIN</span>
       <span><span data-i18n="shell.uptime">Uptime:</span> <strong id="diag-uptime">-</strong></span>
       <span><span data-i18n="shell.ws">WS:</span> <strong id="diag-ws-clients">-</strong></span>
+      <span><span data-i18n="shell.adminWs">Admin WS:</span> <strong id="diag-admin-ws">-</strong></span>
+      <span id="diag-stale-notice" class="status-bar__stale" hidden data-i18n="shell.pollStale">Data may be stale</span>
       <span><span data-i18n="shell.messages">Messages:</span> <strong id="diag-message-counts">-</strong></span>
       <span><span data-i18n="shell.pipeline">Pipeline:</span> <strong id="diag-pipeline">-</strong></span>
       <span class="status-bar__spacer"></span>
@@ -2039,6 +2052,10 @@
         </header>
         <div id="audience-sheet-body" class="audience-detail-sheet__body" tabindex="-1"></div>
         <p id="audience-sheet-loading" class="audience-detail-sheet__loading" hidden data-i18n="state.loading">Loading</p>
+        <div id="audience-sheet-error" class="notice notice--error audience-detail-sheet__error" hidden role="alert">
+          <p class="notice__body"></p>
+          <button type="button" class="state-retry btn-physical btn-small" data-i18n="state.retry">Retry</button>
+        </div>
       </div>
     </dialog>
 

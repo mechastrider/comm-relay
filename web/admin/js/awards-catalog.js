@@ -123,6 +123,20 @@ function hideListError() {
   }
 }
 
+function showEditorError(message) {
+  if (!dom.awardsEditorStatus) {
+    return;
+  }
+  dom.awardsEditorStatus.textContent = message || t("catalog.saveFailed");
+  dom.awardsEditorStatus.hidden = false;
+}
+
+function hideEditorError() {
+  if (dom.awardsEditorStatus) {
+    dom.awardsEditorStatus.hidden = true;
+  }
+}
+
 function syncEditorVisibility() {
   const hasSelection = creatingNew || selectedAwardId;
   if (dom.awardsEditorForm) {
@@ -405,6 +419,7 @@ async function saveAward() {
   }
 
   clearFieldErrors();
+  hideEditorError();
   const payload = readEditorPayload();
   if (String(payload.name || "").trim() === "") {
     setFieldError(dom.awardNameInput, dom.awardNameError, t("awards.nameRequired"));
@@ -457,7 +472,7 @@ async function saveAward() {
     selectAward(selectedAwardId, false);
   } catch (err) {
     const message = err instanceof Error && err.message ? err.message : t("catalog.saveFailed");
-    showListError(message);
+    showEditorError(message);
   } finally {
     saveInFlight = false;
     setButtonsDisabled(false);

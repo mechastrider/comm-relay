@@ -159,8 +159,34 @@ async function load() {
 }
 
 export function ensureGreetingsLoaded() {
-  if (!visible()) return Promise.resolve(); if (loading) return loading;
-  loading = load().catch((error) => { const box = el("greetings-list-error"); if (box) { box.hidden = false; const body = box.querySelector(".notice__body"); if (body) body.textContent = error.message; } throw error; }).finally(() => { loading = null; }); return loading;
+  if (!visible()) return Promise.resolve();
+  if (loading) return loading;
+  const list = el("greetings-list");
+  if (list) {
+    list.setAttribute("aria-busy", "true");
+  }
+  const status = el("greetings-status");
+  if (status) {
+    status.textContent = t("state.loading");
+    status.setAttribute("aria-live", "polite");
+  }
+  loading = load()
+    .catch(function (error) {
+      const box = el("greetings-list-error");
+      if (box) {
+        box.hidden = false;
+        const body = box.querySelector(".notice__body");
+        if (body) body.textContent = error.message;
+      }
+      throw error;
+    })
+    .finally(function () {
+      if (list) {
+        list.setAttribute("aria-busy", "false");
+      }
+      loading = null;
+    });
+  return loading;
 }
 
 export function initGreetingsCatalog() {

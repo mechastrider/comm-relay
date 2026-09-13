@@ -15,6 +15,7 @@ export function showBanner(kind, message) {
     }
     dom.banner.hidden = false;
     dom.banner.className = "banner notice banner--" + kind;
+    dom.banner.setAttribute("role", kind === "success" ? "status" : "alert");
     dom.banner.textContent = message;
     if (kind === "success") {
       state.bannerTimer = window.setTimeout(function () {

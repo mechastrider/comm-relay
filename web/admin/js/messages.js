@@ -15,6 +15,47 @@ import { getLiveTab } from "./live-tabs.js";
 import { applyLiveLeaderboardFrame, cacheLiveLeaderboardFrame } from "./live-leaderboard.js";
 import { invalidateLiveStatistics } from "./live-statistics.js";
 import { applyViewerProgressionFrame } from "./viewers.js";
+import { setRegionState } from "./shell-state.js";
+
+let messagesLoadInFlight = false;
+
+export function setMessagesLoading(loading) {
+  messagesLoadInFlight = loading;
+  if (dom.liveMessagesLoading) {
+    dom.liveMessagesLoading.hidden = !loading;
+  }
+  if (dom.liveMessagesRegion) {
+    setRegionState(dom.liveMessagesRegion, loading ? "loading" : null);
+    dom.liveMessagesRegion.setAttribute("aria-busy", loading ? "true" : "false");
+  }
+  if (loading && dom.recentMessagesEmpty) {
+    dom.recentMessagesEmpty.hidden = true;
+  }
+}
+
+export function setMessagesLoadError(message) {
+  if (!dom.liveMessagesError) {
+    return;
+  }
+  const body = dom.liveMessagesError.querySelector(".notice__body");
+  if (body) {
+    body.textContent = message || t("live.messagesLoadFailed");
+  }
+  dom.liveMessagesError.hidden = false;
+  if (dom.liveMessagesRegion) {
+    setRegionState(dom.liveMessagesRegion, "error");
+  }
+}
+
+export function clearMessagesLoadError() {
+  if (dom.liveMessagesError) {
+    dom.liveMessagesError.hidden = true;
+  }
+  if (dom.liveMessagesRegion && !messagesLoadInFlight) {
+    setRegionState(dom.liveMessagesRegion, null);
+    dom.liveMessagesRegion.setAttribute("aria-busy", "false");
+  }
+}
 
 function isActiveLiveTab(tab) {
   return parseWorkspaceHash(window.location.hash) === "live" && getLiveTab() === tab;

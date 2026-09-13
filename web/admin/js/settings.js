@@ -33,6 +33,9 @@ import {
   renderRecentMessages,
   maybePlayMessageSound,
   trackMessages,
+  setMessagesLoading,
+  setMessagesLoadError,
+  clearMessagesLoadError,
 } from './messages.js';
 import { renderDiagnostics } from './status.js';
 import { applyAdminLocale, localeFromConfig, t } from './i18n-ui.js';
@@ -902,24 +905,60 @@ async function waitForYouTubeOAuthConnected() {
 
 export async function loadRecentMessages(options) {
     const playSound = options && options.playSound;
-    const response = await fetch(
-      apiURL("/api/messages/recent?limit=" + String(RECENT_MESSAGE_LIMIT))
-    );
-    const payload = await readJSON(response);
-    if (!response.ok) {
-      throw new Error(mapHTTPError(response.status, payload && payload.error));
+    const showLoading = options && options.showLoading;
+    if (showLoading) {
+      setMessagesLoading(true);
     }
-    const messages = (payload && payload.messages) || [];
-    if (playSound) {
-      maybePlayMessageSound(messages);
+    try {
+      const response = await fetch(
+        apiURL("/api/messages/recent?limit=" + String(RECENT_MESSAGE_LIMIT))
+      );
+      const payload = await readJSON(response);
+      if (!response.ok) {
+        throw new Error(mapHTTPError(response.status, payload && payload.error));
+      }
+      const messages = (payload && payload.messages) || [];
+      if (playSound) {
+        maybePlayMessageSound(messages);
+      }
+      trackMessages(messages);
+      renderRecentMessages(messages);
+      clearMessagesLoadError();
+      state.soundReady = true;
+    } catch (error) {
+      const message = error instanceof Error && error.message
+        ? error.message
+        : t("live.messagesLoadFailed");
+      setMessagesLoadError(message);
+      throw error;
+    } finally {
+      if (showLoading) {
+        setMessagesLoading(false);
+      }
     }
-    trackMessages(messages);
-    renderRecentMessages(messages);
-    state.soundReady = true;
   }
 
 export async function refreshAll() {
-    await Promise.all([loadConfig(), loadStatus(), loadRecentMessages()]);
+    const results = await Promise.allSettled([
+      loadConfig(),
+      loadStatus(),
+      loadRecentMessages({ showLoading: true }),
+    ]);
+    const failures = results.filter(function (result) {
+      return result.status === "rejected";
+    });
+    if (failures.length === 0) {
+      return;
+    }
+    if (!state.currentConfig) {
+      throw failures[0].reason || new Error(t("banner.cannotReach"));
+    }
+    if (failures.length === results.length) {
+      throw failures[0].reason || new Error(t("banner.cannotReach"));
+    }
+    const partialError = new Error(t("banner.partialLoad"));
+    partialError.partial = true;
+    throw partialError;
   }
 
 export async function saveSettings(event) {

@@ -2,6 +2,8 @@ import { state } from './state.js';
 import { INITIAL_WS_RECONNECT_MS, MAX_WS_RECONNECT_MS } from './constants.js';
 import { handleWireMessage } from './messages.js';
 import { reconcileActiveLiveData } from "./live-tabs.js";
+import * as dom from "./dom.js";
+import { t } from "./i18n-ui.js";
 
 export function wsURL() {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -19,11 +21,34 @@ export function scheduleWSReconnect() {
     if (!state.wsShouldRun || state.wsReconnectTimer !== null) {
       return;
     }
+    state.wsConnected = false;
+    renderAdminConnectionState();
     state.wsReconnectTimer = window.setTimeout(function () {
       state.wsReconnectTimer = null;
       connectMessageWebSocket();
     }, state.wsReconnectDelayMs);
     state.wsReconnectDelayMs = Math.min(state.wsReconnectDelayMs * 2, MAX_WS_RECONNECT_MS);
+    renderAdminConnectionState();
+  }
+
+export function renderAdminConnectionState() {
+    if (!dom.diagAdminWs) {
+      return;
+    }
+    let label = t("shell.adminWsDisconnected");
+    let className = "status-pill--error";
+    if (state.wsConnected) {
+      label = t("shell.adminWsConnected");
+      className = "status-pill--connected";
+    } else if (state.wsReconnectTimer !== null) {
+      label = t("shell.adminWsReconnecting");
+      className = "status-pill--reconnecting";
+    }
+    dom.diagAdminWs.textContent = label;
+    dom.diagAdminWs.className = "status-pill " + className;
+    if (dom.diagStaleNotice) {
+      dom.diagStaleNotice.hidden = !(state.statusPollStale || state.messagesPollStale);
+    }
   }
 
 export function connectMessageWebSocket() {
@@ -40,9 +65,13 @@ export function connectMessageWebSocket() {
     }
 
     state.wsSocket = socket;
+    state.wsConnected = false;
+    renderAdminConnectionState();
 
     socket.addEventListener("open", function () {
       state.wsReconnectDelayMs = INITIAL_WS_RECONNECT_MS;
+      state.wsConnected = true;
+      renderAdminConnectionState();
       reconcileActiveLiveData();
     });
 
@@ -60,6 +89,8 @@ export function connectMessageWebSocket() {
       if (state.wsSocket === socket) {
         state.wsSocket = null;
       }
+      state.wsConnected = false;
+      renderAdminConnectionState();
       scheduleWSReconnect();
     });
 
@@ -71,6 +102,8 @@ export function connectMessageWebSocket() {
 export function disconnectMessageWebSocket() {
     state.wsShouldRun = false;
     clearWSReconnectTimer();
+    state.wsConnected = false;
+    renderAdminConnectionState();
     if (state.wsSocket) {
       state.wsSocket.close();
       state.wsSocket = null;

@@ -1,6 +1,8 @@
 import * as dom from './dom.js';
 import { updateOBSSetupURLs, setOBSSection } from './obs-setup.js';
 import { focusConnectionsField, setConnectionsSection } from './connections.js';
+import { confirmDiscardSettingsSections } from './settings-workspace.js';
+import { confirmDiscardStudioDraft, isStudioOverlayDirty, restoreStudioBaseline } from './studio.js';
 
 export function openDialogForElement(el) {
     if (!el) {
@@ -24,6 +26,36 @@ export function closeOpenDialogs() {
     });
   }
 
+/**
+ * @param {HTMLDialogElement} dialog
+ * @returns {Promise<boolean>}
+ */
+async function confirmDialogClose(dialog) {
+  if (dialog === dom.connectionsDialog) {
+    return confirmDiscardSettingsSections(["platforms", "network"]);
+  }
+  if (dialog === dom.overlayDialog && isStudioOverlayDirty()) {
+    const confirmed = await confirmDiscardStudioDraft();
+    if (confirmed) {
+      restoreStudioBaseline();
+    }
+    return confirmed;
+  }
+  return true;
+}
+
+/**
+ * @param {HTMLDialogElement} dialog
+ * @returns {Promise<boolean>}
+ */
+async function requestDialogClose(dialog) {
+  if (!(await confirmDialogClose(dialog))) {
+    return false;
+  }
+  dialog.close();
+  return true;
+}
+
 export function initSettingsDialogs() {
     document.querySelectorAll("[data-dialog-target]").forEach(function (button) {
       button.addEventListener("click", function () {
@@ -45,16 +77,25 @@ export function initSettingsDialogs() {
       button.addEventListener("click", function () {
         const dialog = button.closest("dialog");
         if (dialog) {
-          dialog.close();
+          requestDialogClose(dialog);
         }
       });
     });
 
     document.querySelectorAll("dialog").forEach(function (dialog) {
       dialog.addEventListener("click", function (event) {
-        if (event.target === dialog) {
-          dialog.close();
+        if (event.target !== dialog) {
+          return;
         }
+        event.preventDefault();
+        requestDialogClose(dialog);
+      });
+      dialog.addEventListener("cancel", function (event) {
+        if (dialog !== dom.connectionsDialog && dialog !== dom.overlayDialog) {
+          return;
+        }
+        event.preventDefault();
+        requestDialogClose(dialog);
       });
     });
   }

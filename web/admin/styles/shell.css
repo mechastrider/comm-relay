@@ -361,6 +361,20 @@ html[data-sidebar-state="collapsed"] .shell-nav--side .shell-nav__toggle-icon {
   letter-spacing: 1px;
 }
 
+.status-bar__stale {
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.catalog-editor-status {
+  margin: 0 0 0.75rem;
+}
+
+.audience-inspector__error,
+.audience-detail-sheet__error {
+  margin: 0.75rem 0 0;
+}
+
 .status-bar__spacer {
   flex: 1;
 }
