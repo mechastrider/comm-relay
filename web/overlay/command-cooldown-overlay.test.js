@@ -108,6 +108,13 @@ test("hide_command_cooldown_overlay skips outcomes and successful hide stays sep
   assert.equal(shouldHideSuccessfulCommandMessage(true, true, false, false), true);
 });
 
+test("pending cooldown skips hold so outcome-before-message still freezes", function () {
+  assert.equal(shouldHoldCommandMessageForOutcome(true, true), true);
+  assert.equal(shouldHoldCommandMessageForOutcome(true, true, false), true);
+  assert.equal(shouldHoldCommandMessageForOutcome(true, true, true), false);
+  assert.equal(shouldHoldCommandMessageForOutcome(true, false, true), false);
+});
+
 test("message before cooldown outcome with hide_command_messages releases held row for freeze", function () {
   const frame = {
     type: "message",
@@ -174,7 +181,7 @@ test("every chat theme has frozen cooldown feedback with reduced-motion fallback
 
 test("overlay wires command_outcome and cooldown constant", async function () {
   const overlay = await readFile(new URL("./overlay.js", import.meta.url), "utf8");
-  assert.match(overlay, /from "\/overlay\/command-cooldown-overlay\.js\?v=1"/);
+  assert.match(overlay, /from "\/overlay\/command-cooldown-overlay\.js\?v=2"/);
   assert.match(overlay, /frame\.type === "command_outcome"/);
   assert.match(overlay, /hide_command_cooldown_overlay/);
   assert.match(overlay, /pendingCommandMessages/);

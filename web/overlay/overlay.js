@@ -21,7 +21,7 @@ import {
   planCommandOutcomeHandling,
   commandOutcomeKeyFromFrame,
   COMMAND_OUTCOME_WAIT_MS,
-} from "/overlay/command-cooldown-overlay.js?v=1";
+} from "/overlay/command-cooldown-overlay.js?v=2";
 import {
   findRewardedEntry,
   restartRewardHighlight,
@@ -929,7 +929,11 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
 
     if (
       !skipCommandHold &&
-      shouldHoldCommandMessageForOutcome(hideCommandMessages, frame.is_command === true)
+      shouldHoldCommandMessageForOutcome(
+        hideCommandMessages,
+        frame.is_command === true,
+        key !== "" && pendingCommandCooldowns.has(key)
+      )
     ) {
       if (key !== "" && !hasRenderedMessage(frame)) {
         holdCommandMessageForOutcome(frame, key);

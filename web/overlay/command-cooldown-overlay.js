@@ -26,7 +26,14 @@ export function shouldIgnoreCommandOutcome(outcome, hideCommandCooldownOverlay) 
   return outcome.status !== "cooldown";
 }
 
-export function shouldHoldCommandMessageForOutcome(hideCommandMessages, isCommand) {
+export function shouldHoldCommandMessageForOutcome(
+  hideCommandMessages,
+  isCommand,
+  hasPendingCooldown
+) {
+  if (hasPendingCooldown === true) {
+    return false;
+  }
   return hideCommandMessages === true && isCommand === true;
 }
 
