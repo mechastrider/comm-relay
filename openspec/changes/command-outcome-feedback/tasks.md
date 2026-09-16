@@ -33,8 +33,8 @@
 > **Allowed fallout**: shared message-row helper if it removes duplication without extra features
 > **Blocked**: overlay timer, diagnostics UI redesign
 
-- [ ] 3.1 Mark Live and dock rows accepted on `fired` (including `show_leaderboard`) and frozen with a ticking countdown on `cooldown`; restore from recent `command_outcome`. Verify message-list tests or equivalent node coverage.
-- [ ] 3.2 Add Settings control for `hide_command_cooldown_overlay` next to hide-command-messages with EN/RU labels/hints. Verify `npm run test:i18n` and settings helper tests.
+- [x] 3.1 Mark Live and dock rows accepted on `fired` (including `show_leaderboard`) and frozen with a ticking countdown on `cooldown`; restore from recent `command_outcome`. Verify message-list tests or equivalent node coverage.
+- [x] 3.2 Add Settings control for `hide_command_cooldown_overlay` next to hide-command-messages with EN/RU labels/hints. Verify `npm run test:i18n` and settings helper tests.
 
 ## 4. Product documentation
 

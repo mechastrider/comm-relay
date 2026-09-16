@@ -2311,9 +2311,16 @@
             <div class="form__field">
               <label class="checkbox" for="hide-command-messages">
                 <input id="hide-command-messages" name="hide_command_messages" type="checkbox">
-                <span data-i18n="iface.hideCommandMessages">Hide command lines in chat overlay</span>
+                <span data-i18n="iface.hideCommandMessages">Hide successful command lines in chat overlay</span>
               </label>
-              <p class="field-hint" data-i18n="iface.hideCommandMessagesHint">When enabled, !commands still appear in admin and the dock, but not on /overlay.</p>
+              <p class="field-hint" data-i18n="iface.hideCommandMessagesHint">When enabled, accepted !commands are hidden on /overlay only. Admin and the dock still show them. Cooldown lines can flash separately unless you hide overlay cooldown below.</p>
+            </div>
+            <div class="form__field">
+              <label class="checkbox" for="hide-command-cooldown-overlay">
+                <input id="hide-command-cooldown-overlay" name="hide_command_cooldown_overlay" type="checkbox">
+                <span data-i18n="iface.hideCommandCooldownOverlay">Hide command cooldown flash on chat overlay</span>
+              </label>
+              <p class="field-hint" data-i18n="iface.hideCommandCooldownOverlayHint">When enabled, frozen cooldown lines are not shown on /overlay. Admin and the dock still show cooldown countdowns. Independent from hiding successful commands above.</p>
             </div>
             <div class="form__field">
               <label class="checkbox" for="custom-avatars-enabled">

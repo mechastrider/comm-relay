@@ -109,9 +109,18 @@ const basePayload = {
   admin: { time_locale: "ru-RU", message_sound: { enabled: false, volume: 0.5, sound: "chime" } },
 };
 
-const dataValues = { activity_interval_seconds: 120, activity_session_limit: 5, activity_xp: 3, day_reset_hour: 12 };
+const dataValues = {
+  activity_interval_seconds: 120,
+  activity_session_limit: 5,
+  activity_xp: 3,
+  day_reset_hour: 12,
+  hide_command_messages: true,
+  hide_command_cooldown_overlay: true,
+};
 const withData = applySectionToConfig(basePayload, "data", dataValues);
 assert.equal(withData.activity_interval_seconds, 120);
+assert.equal(withData.hide_command_messages, true);
+assert.equal(withData.hide_command_cooldown_overlay, true);
 assert.equal(withData.activity_session_limit, 5);
 assert.equal(withData.activity_xp, 3);
 assert.equal(withData.day_reset_hour, 12);
@@ -154,6 +163,8 @@ const dockMarkup = readFileSync(new URL("../../dock/index.html", import.meta.url
 const dockStyles = readFileSync(new URL("../../dock/messages.css", import.meta.url), "utf8");
 assert.match(adminMarkup, /id="leaderboard-visibility-policy"/);
 assert.match(adminMarkup, /id="command-action-input"/);
+assert.match(adminMarkup, /id="hide-command-cooldown-overlay"/);
+assert.match(adminMarkup, /hide_command_cooldown_overlay/);
 assert.match(adminMarkup, /id="command-alert-fields"/);
 assert.ok(dockMarkup.indexOf("leaderboard-toolbar") < dockMarkup.indexOf("message-panel"));
 assert.match(dockMarkup, /aria-live="polite"/);

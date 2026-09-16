@@ -175,6 +175,9 @@ function collectSectionValuesFromDOM(sectionId) {
       hide_command_messages: dom.hideCommandMessagesInput
         ? dom.hideCommandMessagesInput.checked
         : false,
+      hide_command_cooldown_overlay: dom.hideCommandCooldownOverlayInput
+        ? dom.hideCommandCooldownOverlayInput.checked
+        : false,
       custom_avatars_enabled: dom.customAvatarsEnabledInput
         ? dom.customAvatarsEnabledInput.checked
         : true,
@@ -340,6 +343,9 @@ function applySectionValuesToDOM(sectionId, values) {
     }
     if (dom.hideCommandMessagesInput) {
       dom.hideCommandMessagesInput.checked = Boolean(values.hide_command_messages);
+    }
+    if (dom.hideCommandCooldownOverlayInput) {
+      dom.hideCommandCooldownOverlayInput.checked = Boolean(values.hide_command_cooldown_overlay);
     }
     if (dom.customAvatarsEnabledInput) {
       dom.customAvatarsEnabledInput.checked = values.custom_avatars_enabled !== false;
