@@ -45,7 +45,7 @@
 > **Allowed fallout**: existing Settings hint if it would misdescribe hide-command-messages vs cooldown
 > **Blocked**: concept/roadmap expansion, packet 4 aliases
 
-- [ ] 4.1 Add concise Russian `[Unreleased]` bullets for fired/cooldown chrome, default overlay freeze, and the new hide-cooldown setting. Verify the new bullets sit under `[Unreleased]` without rewriting versioned sections.
+- [x] 4.1 Add concise Russian `[Unreleased]` bullets for fired/cooldown chrome, default overlay freeze, and the new hide-cooldown setting. Verify the new bullets sit under `[Unreleased]` without rewriting versioned sections.
 - [ ] 4.2 After implementation, mark INT-034 `in_progress` then `implemented` only when specs are synced/archived; do not claim aliases. Verify `openspec validate command-outcome-feedback --strict`.
 
 ## 5. QA
