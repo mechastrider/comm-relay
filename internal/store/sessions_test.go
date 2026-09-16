@@ -102,6 +102,24 @@ func TestGetSession_WhenRankingAndGroupsSeeded_ExpectTopFiveAndSixGroupsOrdering
 	assert.Len(t, detail.AchievementGroups, 6)
 }
 
+func TestGetSession_WhenRankingTitleResolved_ExpectAllTimeXPNotSessionXP(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Date(2026, 9, 12, 12, 0, 0, 0, time.UTC)
+	identity := store.ChatIdentity{Platform: "twitch", UserID: "veteran", DisplayName: "VeteranViewer"}
+	_, err := s.ApplyAward(identity, 150, testDayResetHour, now)
+	require.NoError(t, err)
+	require.NoError(t, s.StartSession(now.Add(time.Hour)))
+	sessionID, err := s.CurrentSessionID()
+	require.NoError(t, err)
+	require.NoError(t, s.ApplyChat(identity, disabledActivity(), testDayResetHour, now.Add(time.Hour)))
+
+	detail, err := s.GetSession(sessionID, false)
+	require.NoError(t, err)
+	require.Len(t, detail.Ranking, 1)
+	assert.Equal(t, 0, detail.Ranking[0].XP)
+	assert.Equal(t, "Regular", detail.Ranking[0].Title)
+}
+
 func TestGetSession_WhenPrivacyFlagsSet_ExpectExcludedFromRankingAndGroups(t *testing.T) {
 	s, _ := openTestStore(t)
 	now := time.Date(2026, 9, 12, 12, 0, 0, 0, time.UTC)

@@ -33,6 +33,24 @@ func TestCaptureStreamRecap_WhenEmptyCurrentSession_ExpectZeroTotalsSnapshot(t *
 	assert.Zero(t, snapshot.Totals.XP)
 }
 
+func TestCaptureStreamRecap_WhenRankingTitleResolved_ExpectAllTimeXPNotSessionXP(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Now().UTC().Truncate(time.Second)
+	identity := store.ChatIdentity{Platform: "twitch", UserID: "viewer", DisplayName: "Viewer"}
+	_, err := s.ApplyAward(identity, 150, testDayResetHour, now)
+	require.NoError(t, err)
+	require.NoError(t, s.StartSession(now.Add(time.Hour)))
+	sessionID, err := s.CurrentSessionID()
+	require.NoError(t, err)
+	require.NoError(t, s.ApplyChat(identity, store.ActivitySettings{IntervalSeconds: 0, SessionLimit: 0, XP: 0}, testDayResetHour, now.Add(time.Hour)))
+
+	snapshot, err := s.CaptureStreamRecap(context.Background(), sessionID, false)
+	require.NoError(t, err)
+	require.Len(t, snapshot.Ranking, 1)
+	assert.Equal(t, 0, snapshot.Ranking[0].XP)
+	assert.Equal(t, "Regular", snapshot.Ranking[0].Title)
+}
+
 func TestCaptureStreamRecap_WhenCalledTwice_ExpectExactStoredReplay(t *testing.T) {
 	s, _ := openTestStore(t)
 	now := time.Now().UTC().Truncate(time.Second)

@@ -105,6 +105,23 @@ func TestLeaderboard_WhenHiddenMergeSource_ExpectOmitted(t *testing.T) {
 	assert.Equal(t, 5, entries[0].XP)
 }
 
+func TestLeaderboard_WhenSessionPeriod_ExpectLevelFromAllTimeXP(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Date(2026, 8, 25, 12, 0, 0, 0, time.UTC)
+	identity := store.ChatIdentity{Platform: "twitch", UserID: "42", DisplayName: "Alice"}
+	_, err := s.ApplyAward(identity, 150, testDayResetHour, now)
+	require.NoError(t, err)
+	require.NoError(t, s.StartSession(now.Add(2*time.Hour)))
+	require.NoError(t, s.ApplyChat(identity, disabledActivity(), testDayResetHour, now.Add(2*time.Hour)))
+
+	entries, err := s.Leaderboard("session", 20, testDayResetHour, now.Add(2*time.Hour), true)
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+	assert.Equal(t, 0, entries[0].XP)
+	require.NotNil(t, entries[0].Level)
+	assert.Equal(t, "Regular", entries[0].Level.Title)
+}
+
 func TestLeaderboard_WhenAllPeriod_ExpectAllTimeCounters(t *testing.T) {
 	s, _ := openTestStore(t)
 	now := time.Date(2026, 8, 25, 12, 0, 0, 0, time.UTC)

@@ -73,12 +73,14 @@ func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time
 	for rows.Next() {
 		var entry LeaderboardEntry
 		var customAvatar, platformAvatar string
+		var allTimeXP int
 		if err := rows.Scan(
 			&entry.DisplayName,
 			&customAvatar,
 			&platformAvatar,
 			&entry.XP,
 			&entry.MessageCount,
+			&allTimeXP,
 		); err != nil {
 			return nil, errors.Errorf("scan leaderboard row: %w", err)
 		}
@@ -92,7 +94,7 @@ func (s *Store) Leaderboard(period string, limit int, dayResetHour int, now time
 		}
 		rank++
 		entry.Rank = rank
-		entry.Level = resolvedLeaderboardLevel(levels, entry.XP)
+		entry.Level = resolvedLeaderboardLevel(levels, allTimeXP)
 		entries = append(entries, entry)
 	}
 	if err := rows.Err(); err != nil {
@@ -173,7 +175,8 @@ SELECT
 	TRIM(v.custom_avatar),
 	` + lastSeenAvatarSQL + `,
 	COALESCE(vss.xp, 0),
-	COALESCE(vss.message_count, 0)
+	COALESCE(vss.message_count, 0),
+	v.xp
 FROM viewers v
 INNER JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
 WHERE v.hidden = 0
@@ -188,7 +191,8 @@ SELECT
 	TRIM(v.custom_avatar),
 	` + lastSeenAvatarSQL + `,
 	COALESCE(vds.xp, 0),
-	COALESCE(vds.message_count, 0)
+	COALESCE(vds.message_count, 0),
+	v.xp
 FROM viewers v
 INNER JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?
 WHERE v.hidden = 0
@@ -203,7 +207,8 @@ SELECT
 	TRIM(v.custom_avatar),
 	` + lastSeenAvatarSQL + `,
 	v.xp,
-	v.message_count
+	v.message_count,
+	v.xp
 FROM viewers v
 WHERE v.hidden = 0
   AND v.leaderboard_hidden = 0

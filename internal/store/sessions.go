@@ -253,7 +253,8 @@ func (s *Store) sessionRankingQuerierLocked(ctx context.Context, q contextRowsQu
 	for rows.Next() {
 		var entry SessionRankingEntry
 		var customAvatar, platformAvatar string
-		if err := rows.Scan(&entry.DisplayName, &customAvatar, &platformAvatar, &entry.XP, &entry.MessageCount); err != nil {
+		var allTimeXP int
+		if err := rows.Scan(&entry.DisplayName, &customAvatar, &platformAvatar, &entry.XP, &entry.MessageCount, &allTimeXP); err != nil {
 			return nil, errors.Errorf("scan session ranking row: %w", err)
 		}
 		resolved := ResolvePortraitURL(PortraitFields{CustomAvatar: customAvatar}, customAvatarsEnabled)
@@ -264,7 +265,7 @@ func (s *Store) sessionRankingQuerierLocked(ctx context.Context, q contextRowsQu
 		}
 		rank++
 		entry.Rank = rank
-		if level := resolvedLeaderboardLevel(levels, entry.XP); level != nil {
+		if level := resolvedLeaderboardLevel(levels, allTimeXP); level != nil {
 			entry.Title = level.Title
 		}
 		entries = append(entries, entry)
