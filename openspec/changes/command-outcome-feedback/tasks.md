@@ -21,8 +21,8 @@
 > **Allowed fallout**: overlay node tests, reduced-motion frozen style
 > **Blocked**: admin/dock countdown, Studio duration control
 
-- [ ] 2.1 Apply frozen cooldown chrome for 5000 ms when `command_outcome` is `cooldown` and `hide_command_cooldown_overlay` is false, buffering late message frames by platform+id. Verify overlay tests for attach-before-message and 5 s removal.
-- [ ] 2.2 Hide successful command lines with `hide_command_messages` while still showing default cooldown flashes; honor `hide_command_cooldown_overlay`. Verify tests for both flag combinations. Run `npm run lint`.
+- [x] 2.1 Apply frozen cooldown chrome for 5000 ms when `command_outcome` is `cooldown` and `hide_command_cooldown_overlay` is false, buffering late message frames by platform+id. Verify overlay tests for attach-before-message and 5 s removal.
+- [x] 2.2 Hide successful command lines with `hide_command_messages` while still showing default cooldown flashes; honor `hide_command_cooldown_overlay`. Verify tests for both flag combinations. Run `npm run lint`.
 
 ## 3. Admin and dock countdown
 

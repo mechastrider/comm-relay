@@ -9,6 +9,20 @@ import {
   overlayViewFromConfig
 } from "/overlay/overlay-settings.js?v=8";
 import {
+  findEntryByMessageKey,
+  rememberPendingCommandCooldown,
+  restartCommandCooldownOverlay,
+  shouldHoldCommandMessageForOutcome,
+  shouldIgnoreCommandOutcome,
+  shouldRenderHeldCommandMessage,
+  takePendingCommandCooldown,
+  takePendingCommandMessage,
+  clearPendingCommandMessage,
+  planCommandOutcomeHandling,
+  commandOutcomeKeyFromFrame,
+  COMMAND_OUTCOME_WAIT_MS,
+} from "/overlay/command-cooldown-overlay.js?v=1";
+import {
   findRewardedEntry,
   restartRewardHighlight,
   rewardLabelText,
@@ -119,6 +133,7 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
   let overlayView = overlayViewFromConfig({ overlay: null }, params);
   let overlayAssetsRevision = Date.now();
   let hideCommandMessages = false;
+  let hideCommandCooldownOverlay = false;
   let restyleRenderedMessages = function () {};
   let purgeCommandMessages = function () {};
 
@@ -130,12 +145,19 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     }
   }
 
+  let applyHideCommandCooldownOverlay = function (nextHidden) {
+    hideCommandCooldownOverlay = nextHidden;
+  };
+
   function applyOverlaySettingsFrame(frame) {
     if (!frame || typeof frame !== "object") {
       return;
     }
     if (typeof frame.hide_command_messages === "boolean") {
       applyHideCommandMessages(frame.hide_command_messages);
+    }
+    if (typeof frame.hide_command_cooldown_overlay === "boolean") {
+      applyHideCommandCooldownOverlay(frame.hide_command_cooldown_overlay);
     }
     if (frame.overlay && typeof frame.overlay === "object") {
       applyServerOverlayConfig(frame.overlay);
@@ -381,6 +403,9 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
       if (typeof payload.hide_command_messages === "boolean") {
         applyHideCommandMessages(payload.hide_command_messages);
       }
+      if (typeof payload.hide_command_cooldown_overlay === "boolean") {
+        applyHideCommandCooldownOverlay(payload.hide_command_cooldown_overlay);
+      }
       applyServerOverlayConfig(payload && payload.overlay);
     } catch {
       /* keep URL/default config */
@@ -398,9 +423,12 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
   function initOverlay(listEl) {
   applyAppearance();
 
-  /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, rewardTimer: number | null, messageKey: string }>} */
+  /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, rewardTimer: number | null, commandCooldownTimer: number | null, commandCooldownActive: boolean, messageKey: string }>} */
   const entries = [];
   const renderedMessageIDs = new Set();
+  const pendingCommandCooldowns = new Map();
+  /** @type {Map<string, { frame: object, waitTimer: number | null }>} */
+  const pendingCommandMessages = new Map();
   let reconnectDelayMs = INITIAL_RECONNECT_MS;
   let reconnectTimer = null;
   let socket = null;
@@ -451,6 +479,10 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
       window.clearTimeout(entry.rewardTimer);
       entry.rewardTimer = null;
     }
+    if (entry.commandCooldownTimer !== null) {
+      window.clearTimeout(entry.commandCooldownTimer);
+      entry.commandCooldownTimer = null;
+    }
     if (entry.messageKey !== "") {
       renderedMessageIDs.delete(entry.messageKey);
     }
@@ -496,12 +528,16 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
   }
 
   function hasRenderedMessage(frame) {
-    return Boolean(
+    const key = messageKey(frame);
+    if (
       frame &&
-        typeof frame.id === "string" &&
-        frame.id !== "" &&
-        renderedMessageIDs.has(messageKey(frame))
-    );
+      typeof frame.id === "string" &&
+      frame.id !== "" &&
+      (renderedMessageIDs.has(key) || pendingCommandMessages.has(key))
+    ) {
+      return true;
+    }
+    return false;
   }
 
   function removeMessage(frame) {
@@ -526,10 +562,20 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
       if (entry.rewardTimer !== null) {
         window.clearTimeout(entry.rewardTimer);
       }
+      if (entry.commandCooldownTimer !== null) {
+        window.clearTimeout(entry.commandCooldownTimer);
+      }
       entry.el.remove();
     });
     entries.splice(0, entries.length);
     renderedMessageIDs.clear();
+    pendingCommandCooldowns.clear();
+    pendingCommandMessages.forEach(function (held) {
+      if (held.waitTimer !== null) {
+        window.clearTimeout(held.waitTimer);
+      }
+    });
+    pendingCommandMessages.clear();
     listEl.replaceChildren();
   }
 
@@ -711,15 +757,155 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     row.classList.toggle("message--rewarded", Boolean(reward));
   }
 
+  function purgeHeldCommandMessages() {
+    pendingCommandMessages.forEach(function (_held, key) {
+      clearPendingCommandMessage(pendingCommandMessages, key, window.clearTimeout.bind(window));
+      if (key !== "") {
+        renderedMessageIDs.delete(key);
+      }
+    });
+  }
+
   function purgeVisibleCommandMessages() {
+    purgeHeldCommandMessages();
     for (let i = entries.length - 1; i >= 0; i--) {
-      const frame = entries[i] && entries[i].frame;
-      if (frame && frame.is_command) {
+      const entry = entries[i];
+      const frame = entry && entry.frame;
+      if (frame && frame.is_command && !entry.commandCooldownActive) {
         removeEntry(i, true);
       }
     }
   }
   purgeCommandMessages = purgeVisibleCommandMessages;
+
+  function purgeCommandCooldownRows() {
+    for (let i = entries.length - 1; i >= 0; i--) {
+      if (entries[i].commandCooldownActive) {
+        removeEntry(i, false);
+      }
+    }
+  }
+
+  applyHideCommandCooldownOverlay = function (nextHidden) {
+    const wasHidden = hideCommandCooldownOverlay;
+    hideCommandCooldownOverlay = nextHidden;
+    if (!wasHidden && hideCommandCooldownOverlay) {
+      pendingCommandCooldowns.clear();
+      purgeHeldCommandMessages();
+      purgeCommandCooldownRows();
+    }
+  };
+
+  function holdCommandMessageForOutcome(frame, key) {
+    clearPendingCommandMessage(pendingCommandMessages, key, window.clearTimeout.bind(window));
+    const waitTimer = window.setTimeout(function () {
+      pendingCommandMessages.delete(key);
+      renderedMessageIDs.delete(key);
+      if (!hideCommandMessages) {
+        renderMessage(frame, { skipCommandHold: true });
+      }
+    }, COMMAND_OUTCOME_WAIT_MS);
+    pendingCommandMessages.set(key, { frame: frame, waitTimer: waitTimer });
+  }
+
+  function updateCommandCooldownChrome(entry, active) {
+    entry.commandCooldownActive = active;
+    entry.el.classList.toggle("message--command-cooldown", active);
+  }
+
+  function applyCommandCooldownToEntry(entry) {
+    restartCommandCooldownOverlay(entry, {
+      setTimeout: window.setTimeout,
+      clearTimeout: window.clearTimeout,
+      onStart: function (target) {
+        updateCommandCooldownChrome(target, true);
+      },
+      onEnd: function (target) {
+        updateCommandCooldownChrome(target, false);
+        removeEntryElement(target.el, true);
+      },
+    });
+  }
+
+  function handleCommandOutcome(outcome) {
+    const key = commandOutcomeKeyFromFrame(outcome);
+    if (key === "") {
+      return;
+    }
+    const hasEntry = Boolean(findEntryByMessageKey(entries, key));
+    const hasHeldMessage = pendingCommandMessages.has(key);
+    const plan = planCommandOutcomeHandling(
+      outcome,
+      hideCommandCooldownOverlay,
+      hideCommandMessages,
+      hasEntry,
+      hasHeldMessage
+    );
+
+    if (plan.action === "ignore") {
+      return;
+    }
+
+    if (plan.action === "fired") {
+      clearPendingCommandMessage(pendingCommandMessages, key, window.clearTimeout.bind(window));
+      pendingCommandCooldowns.delete(key);
+      renderedMessageIDs.delete(key);
+      if (plan.removeVisibleEntry) {
+        const entry = findEntryByMessageKey(entries, key);
+        if (entry && !entry.commandCooldownActive) {
+          removeEntryElement(entry.el, true);
+        }
+      }
+      return;
+    }
+
+    if (plan.action === "cooldown_suppressed") {
+      clearPendingCommandMessage(pendingCommandMessages, key, window.clearTimeout.bind(window));
+      pendingCommandCooldowns.delete(key);
+      renderedMessageIDs.delete(key);
+      return;
+    }
+
+    pendingCommandCooldowns.delete(key);
+
+    if (plan.action === "cooldown_apply") {
+      const entry = findEntryByMessageKey(entries, key);
+      if (entry) {
+        applyCommandCooldownToEntry(entry);
+      }
+      return;
+    }
+
+    if (plan.action === "cooldown_show_held") {
+      const heldFrame = takePendingCommandMessage(
+        pendingCommandMessages,
+        key,
+        window.clearTimeout.bind(window)
+      );
+      if (heldFrame) {
+        renderMessage(heldFrame, { skipCommandHold: true, forceCommandCooldown: true });
+        const entry = findEntryByMessageKey(entries, key);
+        if (entry) {
+          applyCommandCooldownToEntry(entry);
+        }
+      }
+      return;
+    }
+
+    if (plan.action === "cooldown_buffer") {
+      if (shouldIgnoreCommandOutcome(outcome, hideCommandCooldownOverlay)) {
+        return;
+      }
+      rememberPendingCommandCooldown(pendingCommandCooldowns, key);
+    }
+  }
+
+  function maybeApplyPendingCommandCooldown(entry) {
+    if (!takePendingCommandCooldown(pendingCommandCooldowns, entry.messageKey)) {
+      return;
+    }
+    applyCommandCooldownToEntry(entry);
+  }
 
   function restyleVisibleMessages() {
     entries.forEach(function (entry) {
@@ -736,10 +922,34 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     if (frame.type !== "message") {
       return;
     }
-    if (hideCommandMessages && frame.is_command) {
+    const renderOptions = options || {};
+    const skipCommandHold = renderOptions.skipCommandHold === true;
+    const forceCommandCooldown = renderOptions.forceCommandCooldown === true;
+    const key = messageKey(frame);
+
+    if (
+      !skipCommandHold &&
+      shouldHoldCommandMessageForOutcome(hideCommandMessages, frame.is_command === true)
+    ) {
+      if (key !== "" && !hasRenderedMessage(frame)) {
+        holdCommandMessageForOutcome(frame, key);
+      }
       return;
     }
-    if (hasRenderedMessage(frame)) {
+
+    const hasPendingCooldown =
+      key !== "" && (pendingCommandCooldowns.has(key) || forceCommandCooldown);
+    if (
+      !shouldRenderHeldCommandMessage(
+        hideCommandMessages,
+        frame.is_command === true,
+        forceCommandCooldown
+      ) &&
+      !hasPendingCooldown
+    ) {
+      return;
+    }
+    if (!forceCommandCooldown && hasRenderedMessage(frame)) {
       return;
     }
 
@@ -748,12 +958,17 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     if (user === "?" && text === "" && !hasFragments(frame)) {
       return;
     }
-    const renderOptions = options || {};
-    const ttlMs = Object.prototype.hasOwnProperty.call(renderOptions, "ttlMs")
+    let ttlMs = Object.prototype.hasOwnProperty.call(renderOptions, "ttlMs")
       ? renderOptions.ttlMs
       : messageTTLMilliseconds(frame);
-    if (ttlMs === 0) {
+    if (ttlMs === 0 && !hasPendingCooldown) {
       return;
+    }
+    if (ttlMs === 0 && hasPendingCooldown) {
+      ttlMs = null;
+    }
+    if (forceCommandCooldown) {
+      ttlMs = null;
     }
 
     const row = document.createElement("div");
@@ -774,11 +989,14 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
       rewardTimer: null,
       reward: null,
       rewardSlot: rewardSlot,
+      commandCooldownTimer: null,
+      commandCooldownActive: false,
       messageKey: messageKey(frame),
       frame: frame,
     });
     trimToLimit();
     scrollToBottom();
+    maybeApplyPendingCommandCooldown(entries[entries.length - 1]);
   }
 
   function highlightRewardedMessage(alert) {
@@ -821,6 +1039,10 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     }
     if (frame.type === "alert") {
       highlightRewardedMessage(frame);
+      return;
+    }
+    if (frame.type === "command_outcome") {
+      handleCommandOutcome(frame);
       return;
     }
     if (frame.type !== "message") {
