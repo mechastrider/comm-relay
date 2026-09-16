@@ -251,6 +251,24 @@ export function overlayViewFromConfig(config, params) {
   return surfaceViewFromConfig(config, params, "chat");
 }
 
+// Recap uses a full-canvas backdrop rather than the historical chat/alert
+// fallback. Keep this separate from the legacy cockpit-glass path: omission is
+// a deliberate readable recap default, while an explicit 0 stays transparent.
+export function recapDefaultPanelOpacity(theme) {
+  switch (normalizeTheme(theme)) {
+    case "cockpit_panel":
+      return 0.70;
+    case "cockpit_popups":
+      return 0.76;
+    case "g_rebels_popups":
+      return 0.78;
+    case "dashboard":
+    case "default":
+    default:
+      return 0.58;
+  }
+}
+
 function surfaceOpacity(resolved, surface, fallback) {
   const surfaces = resolved && resolved.surfaces && typeof resolved.surfaces === "object"
     ? resolved.surfaces
@@ -301,6 +319,27 @@ function surfaceViewFromConfig(config, params, surface) {
     font_size_px: resolved && typeof resolved.font_size_px === "number" ? resolved.font_size_px : 18,
     display_mode: resolved && resolved.display_mode === "compact" ? "compact" : "normal",
     theme: theme,
+    style: style,
+  };
+}
+
+// recapViewFromConfig deliberately does not call surfaceViewFromConfig. That
+// helper preserves the old transparent cockpit treatment for chat and alerts;
+// recap has its own persisted optional surface opacity and theme defaults.
+export function recapViewFromConfig(config, params) {
+  const overlay = config && typeof config === "object" ? config.overlay : null;
+  const query = params && typeof params.get === "function" ? params : undefined;
+  const queryPreset = query ? query.get("preset") : params;
+  const resolved = resolvePreset(overlay, queryPreset);
+  const theme = themeFromResolvedAndQuery(resolved, query);
+  const merged = mergeStyle(theme, resolved && resolved.style);
+  merged.panel_opacity = surfaceOpacity(resolved, "recap", recapDefaultPanelOpacity(theme));
+  const style = applyQueryStyleOverrides(merged, query);
+  style.legacy_cockpit_glass = false;
+  style.legacy_cockpit_glass_background = "";
+  return {
+    font_size_px: resolved && typeof resolved.font_size_px === "number" ? resolved.font_size_px : 18,
+    theme: normalizeTheme(theme),
     style: style,
   };
 }

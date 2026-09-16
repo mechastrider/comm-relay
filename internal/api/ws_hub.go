@@ -12,6 +12,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/observability"
+	"github.com/mechastrider/comm-relay/internal/recap"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -29,6 +30,7 @@ type Hub struct {
 	viewerStore  *store.Store
 	visibility   *leaderboard.Controller
 	contracts    *viewerContractPresentation
+	recap        *recap.Controller
 }
 
 // NewHub creates a WebSocket hub bound to the shared event bus.
@@ -107,6 +109,25 @@ func (h *Hub) SetLeaderboardVisibility(controller *leaderboard.Controller) {
 	h.mu.Unlock()
 }
 
+// SetStreamRecapController supplies authoritative recap state for new production clients.
+func (h *Hub) SetStreamRecapController(controller *recap.Controller) {
+	h.mu.Lock()
+	h.recap = controller
+	h.mu.Unlock()
+}
+
+// BroadcastStreamRecapState publishes recap visibility to production clients only.
+func (h *Hub) BroadcastStreamRecapState(state recap.State) {
+	payload, err := streamRecapStateWirePayload(state)
+	if err != nil {
+		clog.Errorf(context.Background(), "stream recap state wire payload: %w", err)
+		return
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	broadcastClients(h.clients, payload)
+}
+
 // SetViewerContractPresentation supplies authoritative snapshots for new production clients.
 func (h *Hub) SetViewerContractPresentation(presentation *viewerContractPresentation) {
 	h.mu.Lock()
@@ -137,10 +158,12 @@ func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
 func (h *Hub) register(c *wsClient) {
 	var visibility *leaderboard.Controller
 	var contracts *viewerContractPresentation
+	var recapController *recap.Controller
 	if !c.debug {
 		h.mu.Lock()
 		visibility = h.visibility
 		contracts = h.contracts
+		recapController = h.recap
 		h.mu.Unlock()
 		if visibility != nil {
 			ctx := c.ctx
@@ -184,6 +207,16 @@ func (h *Hub) register(c *wsClient) {
 			case c.send <- payload:
 			default:
 				observability.Default.RecordWebSocketDrop(wireViewerContractStateType)
+			}
+		}
+	}
+	if recapController != nil {
+		payload, err := streamRecapStateWirePayload(recapController.Current())
+		if err == nil {
+			select {
+			case c.send <- payload:
+			default:
+				observability.Default.RecordWebSocketDrop(wireStreamRecapStateType)
 			}
 		}
 	}

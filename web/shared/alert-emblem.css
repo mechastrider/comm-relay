@@ -58,23 +58,6 @@
   filter: drop-shadow(0 0 5px color-mix(in srgb, var(--alert-emblem-accent) 45%, transparent));
 }
 
-.alert-emblem__monogram {
-  position: absolute;
-  right: 8%;
-  bottom: 5%;
-  max-width: 58%;
-  overflow: hidden;
-  color: #ffffff;
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: clamp(9px, calc(var(--alert-portrait-size, 72px) * 0.2), 20px);
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 0.04em;
-  text-overflow: clip;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.92);
-  white-space: nowrap;
-}
-
 .alert-emblem__orbit {
   position: absolute;
   inset: 12%;

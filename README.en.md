@@ -31,6 +31,7 @@ The best way to evaluate CommRelay is to see it running on the author's streams:
 - Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
 - Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?period=session|day|all` (same theme as chat; without `preset` it follows the active preset).
 - Shows command, reward, and automatic-greeting alerts on a separate OBS Browser Source: `http://127.0.0.1:17877/overlay/alert` (sound plays in that source; enable **Control audio via OBS** for stream audio).
+- Captures the current stream recap on the operator's command and shows it on a separate full-canvas OBS Browser Source: `http://127.0.0.1:17877/overlay/recap`; compact session history remains available in Live.
 - Provides a local console with Live, Audience, Studio, and Settings workspaces: statuses, messages, viewers, command, award, and greeting catalogs, overlay setup, and diagnostics. New and returning greetings start disabled; the confirmed **New stream** action defines the returning-viewer boundary.
 - In **Settings → Data** you can hide `!command` lines in the chat overlay only — they remain visible in Live and the dock.
 - Supports Twitch emotes, FrankerFaceZ, BetterTTV, 7TV, and safe image previews.
@@ -79,20 +80,28 @@ Do not move the `CommRelay` folder after installing the shortcut without running
 1. Launch the app. The CommRelay window opens and the local server starts inside it.
 2. Open **Settings → Platforms** and enable the platforms you need.
 3. Click **Save** on that section after changing settings.
-4. Open **Studio**: on first visit **Add to OBS** opens with Browser Source steps and copyable URLs; then customize the on-stream surfaces (chat, leaderboard, alerts).
+4. Open **Studio**: on first visit **Add to OBS** opens with Browser Source steps and copyable URLs; then customize the on-stream surfaces (chat, leaderboard, alerts, recap).
 
 By default CommRelay listens on `127.0.0.1:17877`. The admin panel is available at `http://127.0.0.1:17877/`, and the overlay at `http://127.0.0.1:17877/overlay`.
 
 ## OBS Browser Source
 
-1. In CommRelay open **Studio**: on the left, the on-stream surface list (chat, leaderboard, alerts). **Add to OBS** opens Browser Source steps and all copyable URLs.
-2. Select a surface and copy **Follow active preset** from the preview — or open **Add to OBS** and copy the URL for the source you need. In OBS add a **Browser** source (chat, leaderboard, alerts) or a Custom Browser Dock (message log).
-3. The primary chat, leaderboard, and alert URLs **omit** `?preset=` — the source follows the active preset. For a scene-specific look, copy the **Pinned preset** URL in **Add to OBS** or from **Preview options** (⋯) on the preview. The leaderboard also includes `period` and, when needed, `layout` / `font_size_px`.
+1. In CommRelay open **Studio**: on the left, the on-stream surface list (chat, leaderboard, alerts, recap). **Add to OBS** opens Browser Source steps and all copyable URLs.
+2. Select a surface and copy **Follow active preset** from the preview — or open **Add to OBS** and copy the URL for the source you need. In OBS add a **Browser** source (chat, leaderboard, alerts, recap) or a Custom Browser Dock (message log).
+3. The primary chat, leaderboard, alert, and recap URLs **omit** `?preset=` — the source follows the active preset. For a scene-specific look, copy the **Pinned preset** URL in **Add to OBS** or from **Preview options** (⋯) on the preview. For example, recap uses `http://127.0.0.1:17877/overlay/recap` to follow the active preset and `http://127.0.0.1:17877/overlay/recap?preset=default` to stay pinned. The leaderboard also includes `period` and, when needed, `layout` / `font_size_px`.
 4. For **Alerts** (`/overlay/alert`) add a separate Browser Source on the scene. Banner sound plays in that source — enable **Control audio via OBS** on the source to hear it in the recording and stream.
-5. Set the size for your scene layout. Do not add a background manually: on-stream sources are already transparent.
+5. Set the size for your scene layout. Size the recap source to the full canvas (for example, `1920×1080`) and place it above ordinary scene sources; keep the alert source separate. Do not add a background manually: on-stream sources are already transparent.
 6. Keep CommRelay running during the stream.
 
 If you changed the port in settings, update the URL in OBS.
+
+## Stream recap and session history
+
+In **Live**, click **Recap**, review the current stream summary, and confirm **Capture and show recap**. The first confirmation permanently stores the snapshot for that session: later messages, XP, and achievements continue to count in the current session, but the captured recap does not update and every later Show reuses it.
+
+Showing, hiding, or showing the recap again never ends the stream, creates a session, or resets counters. Starting another session still requires the separate confirmed **New stream** action. The recap dialog's **History** view provides compact summaries for the current and earlier sessions, including sessions without a captured recap; this version cannot replay a historical session on air.
+
+The `/overlay/recap` source uses the selected active or pinned preset and displays its system labels in the application language. It remains transparent while the recap is hidden. If Browser Source briefly disconnects, it restores the same visible immutable snapshot after reconnecting. A full CommRelay process restart intentionally resets visibility: the snapshot remains in history, but you must click **Show recap** again to put it on air.
 
 ## Message log in the OBS interface
 
@@ -120,7 +129,7 @@ Open **Studio** in the CommRelay control panel.
 | **Theme** | **Default** — cards with a semi-transparent background. **Text only** — text only, no background. **Cockpit panel** — shared HUD panel. **Cockpit popups** — separate MW5 HUD pop-up messages. **G-Rebels Cockpit popups** — pop-up messages in a gold aviation HUD style. The same theme styles chat and the leaderboard. |
 | **Presets** | A named look for a scene or game: theme, limit, TTL, density, text edge, platform marker, panel, plus leaderboard automatic/fixed sizing, title, layout (`panel` / `chips`), and rank cap. An older `config.json` without presets becomes the **Default** preset. |
 | **Follow / Pinned URL** | On the selected surface — **Follow active preset** (no `?preset=`). A pinned URL with `?preset=` is in **Add to OBS** or **Preview options** (⋯). Existing sources that already include `preset` keep working. |
-| **Preview** | The surface list on the left switches the preview (**Chat / Leaderboard / Alerts**); the leaderboard preview always shows a fictitious top-5. Preview backdrop (white, checkerboard, game footage, black) is in **Preview options** (⋯). |
+| **Preview** | The surface list on the left switches the preview (**Chat / Leaderboard / Alerts / Recap**); the leaderboard uses a fictitious top-5, and Recap uses an isolated sample that never changes production. Preview backdrop (white, checkerboard, game footage, black) is in **Preview options** (⋯). |
 
 ### Leaderboard size and content
 
@@ -204,6 +213,8 @@ Download a new archive from [Releases](https://github.com/mechastrider/comm-rela
 
 Before updating check [`CHANGELOG.md`](CHANGELOG.md): it lists new features, fixes, and possible manual steps.
 
+On the first launch of a version with session history, the database is upgraded automatically. Legacy events are assigned to a session only when their timestamps identify it unambiguously, so historical summaries may remain incomplete in ambiguous cases. Existing viewer totals are not reset.
+
 More on typical overlay and OBS issues on Linux: [`docs/FAQ.en.md`](docs/FAQ.en.md).
 
 ## Common issues
@@ -212,6 +223,7 @@ More on typical overlay and OBS issues on Linux: [`docs/FAQ.en.md`](docs/FAQ.en.
 - **The leaderboard row count does not change when I resize it on the scene**: change Width/Height in Browser Source properties. Scene transforms scale the rendered image; they do not change the viewport used to fit rows.
 - **Spacing and Theme look the same**: compare with active chat; Compact is more noticeable with 5+ messages; Text only is easier to see on a green or dark scene background; Cockpit themes are meant for output over the game frame.
 - **OBS shows nothing**: check that CommRelay is running, the URL in the Browser Source matches the port, and the connector in the admin panel has status `connected`. On **Linux** if the Browser Source shows a black square, disable browser hardware acceleration in OBS (**File → Settings → Advanced → Sources**) — see [`docs/FAQ.en.md`](docs/FAQ.en.md).
+- **The recap source is empty**: this is expected while recap is hidden. Check `/overlay/recap`, full-canvas dimensions, and source order, then open **Live → Recap**. After restarting CommRelay, click **Show recap** again; the stored snapshot is still available.
 - **Port 17877 is in use**: close another app on that port or launch CommRelay with a different address via `-addr 127.0.0.1:<port>`.
 - **YouTube OAuth fails**: redirect URI in Google Cloud must exactly match the port from `config.json`. Click **Connect** in API mode — sign-in opens in the system browser, not the CommRelay embedded window.
 - **No YouTube messages**: an active stream with live chat enabled is required; in simple mode check the video URL.

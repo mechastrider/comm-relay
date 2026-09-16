@@ -26,6 +26,7 @@ import {
 import { parsePanelOpacity } from "./surface-opacity.js";
 import {
   getPreviewSurface,
+  applyPreviewSurface,
   mountOverlayPreview,
   unmountOverlayPreview,
   scheduleOverlayPreviewRefresh,
@@ -460,6 +461,11 @@ async function publishStudioDraft() {
     });
     const body = await readJSON(response);
     if (!response.ok) {
+      if (body && body.fields && Object.keys(body.fields).some(function (key) {
+        return /^overlay_preset_\d+_surfaces_recap_panel_opacity$/.test(key);
+      })) {
+        applyPreviewSurface("recap");
+      }
       const firstInvalid =
         body && body.fields ? applyServerFieldErrors(body.fields) : null;
       if (firstInvalid) {

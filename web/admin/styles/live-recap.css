@@ -1,0 +1,38 @@
+.live-recap-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(44rem, calc(100vw - 2rem));
+  max-height: min(43.75rem, calc(100dvh - 2rem));
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  background: var(--panel-bg);
+  color: var(--text);
+}
+.live-recap-dialog:not([open]) { display: none; }
+.live-recap-dialog::backdrop { background: rgba(0, 0, 0, 0.62); }
+.live-recap-dialog__header, .live-recap-dialog__tabs, .live-recap-dialog__footer { flex: 0 0 auto; }
+.live-recap-dialog__header { display: flex; align-items: center; justify-content: space-between; gap: var(--primitive-space-3); padding: var(--primitive-space-4); border-bottom: 1px solid var(--border); }
+.live-recap-dialog__header h2 { margin: 0; }
+.live-recap-dialog__tabs { display: flex; gap: var(--primitive-space-2); padding: var(--primitive-space-3) var(--primitive-space-4); border-bottom: 1px solid var(--border-dark); }
+.live-recap-dialog__status { flex: 0 0 auto; margin: var(--primitive-space-3) var(--primitive-space-4) 0; color: var(--muted); overflow-wrap: anywhere; }
+.live-recap-dialog__status.notice--error { color: var(--danger); }
+.live-recap-dialog__body { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-color: var(--amber-dim) var(--surface-dark); padding: var(--primitive-space-4); }
+.live-recap-dialog__footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--primitive-space-2); padding: var(--primitive-space-4); border-top: 1px solid var(--border); background: var(--surface); }
+.live-recap-dialog__spacer { flex: 1 1 auto; }
+.live-recap-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--primitive-space-2); margin: var(--primitive-space-4) 0; }
+.live-recap-totals > * { margin: 0; padding: var(--primitive-space-3); border: 1px solid var(--border); background: var(--surface-raised); }
+.live-recap-totals dt { color: var(--muted); font-size: var(--primitive-font-size-sm); font-weight: 700; text-transform: uppercase; }
+.live-recap-totals dd { font-size: var(--primitive-font-size-lg); font-variant-numeric: tabular-nums; }
+.live-recap-dialog__body section { margin-top: var(--primitive-space-5); }
+.live-recap-dialog__body h3 { margin: 0 0 var(--primitive-space-3); overflow-wrap: anywhere; }
+.live-recap-ranking, .live-recap-achievements, .live-recap-history { display: grid; gap: var(--primitive-space-2); margin: 0; padding: 0; list-style: none; }
+.live-recap-ranking li, .live-recap-achievements li, .live-recap-history-row { display: flex; align-items: center; gap: var(--primitive-space-3); min-width: 0; padding: var(--primitive-space-3); border: 1px solid var(--border); background: var(--surface-raised); }
+.live-recap-history-row { width: 100%; color: var(--text); text-align: left; cursor: pointer; flex-wrap: wrap; }
+.live-recap-history-row:hover, .live-recap-history-row:focus-visible { border-color: var(--amber); }
+.live-recap-ranking__copy, .live-recap-achievements li > span { display: grid; min-width: 0; gap: 2px; overflow-wrap: anywhere; }
+.live-recap-ranking__copy small, .live-recap-achievements small, .live-recap-ranking__meta { color: var(--muted); font-size: var(--primitive-font-size-sm); }
+.live-recap-ranking__meta { margin-left: auto; font-variant-numeric: tabular-nums; text-align: right; }
+.live-recap-portrait { display: inline-grid; flex: 0 0 2.1rem; width: 2.1rem; height: 2.1rem; place-items: center; overflow: hidden; border-radius: 50%; background: var(--surface-dark); color: var(--amber); font-weight: 700; }
+.live-recap-portrait img { width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 34rem) { .live-recap-dialog__footer > button { flex: 1 1 auto; } .live-recap-dialog__spacer { display: none; } .live-recap-totals { grid-template-columns: 1fr; } .live-recap-ranking__meta { width: 100%; margin-left: 2.9rem; text-align: left; } }

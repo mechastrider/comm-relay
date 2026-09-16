@@ -11,7 +11,7 @@ import {
   alertViewFromConfig,
 } from "/overlay/overlay-settings.js?v=9";
 import { createChatRender } from "/shared/chat-render.js?v=12";
-import { createAlertEmblem } from "/shared/alert-emblem.js?v=1";
+import { createAlertEmblem } from "/shared/alert-emblem.js?v=2";
 import { ensureAudioContext, playAlertAudio, stopCustomAlertSound } from "./alert-sound.js";
 import { startSplashLifecycle } from "./alert-lifecycle.js?v=2";
 import { createAlertSplash } from "./alert-render.js?v=7";

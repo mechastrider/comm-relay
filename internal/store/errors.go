@@ -3,6 +3,9 @@ package store
 import "github.com/muonsoft/errors"
 
 var (
+	// ErrStoreUnavailable is returned when the local SQLite store has been closed.
+	ErrStoreUnavailable = errors.New("store unavailable")
+
 	// ErrNotFound is returned when a viewer id is missing or hidden.
 	ErrNotFound = errors.New("viewer not found")
 	// ErrSelfMerge is returned when merge source and target are the same viewer.
@@ -43,4 +46,17 @@ var (
 	ErrProgressionValidation = errors.New("invalid progression value")
 	// ErrBaselineLevel is returned when an operation would remove or move the zero-XP level.
 	ErrBaselineLevel = errors.New("baseline progression level is protected")
+
+	// ErrSessionNotFound is returned when a stream session id is unknown.
+	ErrSessionNotFound = errors.New("session not found")
+	// ErrInvalidSessionListLimit is returned for a session page outside its supported bounds.
+	ErrInvalidSessionListLimit = errors.New("invalid session list limit")
+	// ErrInvalidSessionCursor is returned for a malformed or unsupported session cursor.
+	ErrInvalidSessionCursor = errors.New("invalid session list cursor")
+	// ErrRecapSessionConflict is returned when Show targets a stale or non-current session.
+	ErrRecapSessionConflict = errors.New("recap session conflict")
+	// ErrRecapPayloadInvalid is returned when a recap snapshot fails validation.
+	ErrRecapPayloadInvalid = errors.New("recap payload invalid")
+	// ErrRecapNotFound is returned when a session has no stored recap snapshot.
+	ErrRecapNotFound = errors.New("stream recap not found")
 )

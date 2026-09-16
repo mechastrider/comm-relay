@@ -88,11 +88,11 @@ export function updateStudioAddToObsDockURL() {
 }
 
 /**
- * @param {"chat"|"leaderboard"|"alerts"|"dock"} source
+ * @param {"chat"|"leaderboard"|"alerts"|"recap"|"dock"} source
  */
 function setStudioAddToObsSource(source) {
   const current =
-    source === "leaderboard" || source === "dock" || source === "alerts" ? source : "chat";
+    source === "leaderboard" || source === "dock" || source === "alerts" || source === "recap" ? source : "chat";
   if (!dom.studioAddToObsDialog) {
     return;
   }
@@ -150,6 +150,20 @@ function setStudioAddToObsSource(source) {
       badge.textContent = t("obs.visibleToViewers");
       badge.classList.add("obs-audience-badge--live");
     }
+  } else if (current === "recap") {
+    if (title) {
+      title.textContent = t("obs.recap");
+    }
+    if (summary) {
+      summary.textContent = t("obs.recapSummary");
+    }
+    if (eyebrow) {
+      eyebrow.textContent = t("obs.browserSource");
+    }
+    if (badge) {
+      badge.textContent = t("obs.visibleToViewers");
+      badge.classList.add("obs-audience-badge--live");
+    }
   } else if (current === "dock") {
     if (title) {
       title.textContent = t("obs.messageDock");
@@ -199,7 +213,7 @@ export function initStudioAddToObs() {
   dom.studioAddToObsDialog.querySelectorAll("[data-studio-add-to-obs-source]").forEach(function (button) {
     button.addEventListener("click", function () {
       const source = button.getAttribute("data-studio-add-to-obs-source");
-      if (source === "chat" || source === "leaderboard" || source === "alerts" || source === "dock") {
+      if (source === "chat" || source === "leaderboard" || source === "alerts" || source === "recap" || source === "dock") {
         setStudioAddToObsSource(source);
       }
     });
@@ -250,7 +264,7 @@ export function initStudioAddToObs() {
     );
     const source = selected ? selected.getAttribute("data-studio-add-to-obs-source") : "chat";
     setStudioAddToObsSource(
-      source === "leaderboard" || source === "dock" || source === "alerts" ? source : "chat"
+      source === "leaderboard" || source === "dock" || source === "alerts" || source === "recap" ? source : "chat"
     );
   });
 }

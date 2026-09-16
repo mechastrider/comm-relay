@@ -531,7 +531,7 @@ func readWebSocketFrameSkippingLeaderboard(t *testing.T, conn *websocket.Conn) m
 			continue
 		}
 		frame := decodeFrame(t, payload)
-		if frame["type"] == wireLeaderboardType || frame["type"] == wireLeaderboardVisibilityType || frame["type"] == wireViewerContractStateType {
+		if frame["type"] == wireLeaderboardType || frame["type"] == wireLeaderboardVisibilityType || frame["type"] == wireViewerContractStateType || frame["type"] == wireStreamRecapStateType {
 			continue
 		}
 		return frame

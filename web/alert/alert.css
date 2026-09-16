@@ -1,5 +1,5 @@
 @import url("../overlay.css");
-@import url("/shared/alert-emblem.css?v=1");
+@import url("/shared/alert-emblem.css?v=2");
 
 :root {
   --alert-scale: 1;

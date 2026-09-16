@@ -59,6 +59,70 @@ func TestConfig_WhenSurfaceOpacityOverridesUpdated_ExpectPublicRoundTripAndUnrel
 	require.Equal(t, "preserved-token", env.ConfigStore.Snapshot().YouTube.OAuth.RefreshToken)
 }
 
+func TestConfig_WhenRecapPanelOpacityUpdated_ExpectPublicRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	env := newTestEnv(t, bus.New(0))
+	body := strings.NewReader(`{
+  "server_port": 17877,
+  "twitch": { "enabled": false, "channel": "" },
+  "youtube": { "enabled": false, "oauth": { "client_id": "" } },
+  "vk": { "enabled": false },
+  "overlay": {
+    "active_preset_id": "default",
+    "presets": [{
+      "id": "default", "name": "Default", "max_messages": 30,
+      "message_ttl_seconds": 20, "font_size_px": 18, "display_mode": "normal", "theme": "default",
+      "style": { "font_family": "system", "line_height": 1.35, "text_edge": "shadow", "text_edge_strength": 2, "platform_marker": "stripe", "panel_color": "#000000", "panel_opacity": 0.58, "border_width": 0, "border_color": "#ffffff", "border_radius": 8 },
+      "surfaces": {
+        "recap": { "panel_opacity": 0 }
+      }
+    }]
+  }
+}`)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/config/update", body)
+	req.Header.Set("Content-Type", "application/json")
+	env.Handler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+
+	var payload map[string]any
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	preset := payload["overlay"].(map[string]any)["presets"].([]any)[0].(map[string]any)
+	surfaces := preset["surfaces"].(map[string]any)
+	require.Equal(t, float64(0), surfaces["recap"].(map[string]any)["panel_opacity"])
+	require.Equal(t, 0.0, env.ConfigStore.Snapshot().Overlay.Presets[0].RecapPanelOpacity())
+}
+
+func TestConfig_WhenRecapPanelOpacityInvalid_ExpectAtomicRejection(t *testing.T) {
+	t.Parallel()
+
+	env := newTestEnv(t, bus.New(0))
+	before := env.ConfigStore.Snapshot()
+	body := strings.NewReader(`{
+  "server_port": 17877,
+  "twitch": { "enabled": false, "channel": "" },
+  "youtube": { "enabled": false, "oauth": { "client_id": "" } },
+  "vk": { "enabled": false },
+  "overlay": {
+    "active_preset_id": "default",
+    "presets": [{
+      "id": "default", "name": "Default", "max_messages": 30,
+      "message_ttl_seconds": 20, "font_size_px": 18, "display_mode": "normal", "theme": "default",
+      "style": { "font_family": "system", "line_height": 1.35, "text_edge": "shadow", "text_edge_strength": 2, "platform_marker": "stripe", "panel_color": "#000000", "panel_opacity": 0.58, "border_width": 0, "border_color": "#ffffff", "border_radius": 8 },
+      "surfaces": { "recap": { "panel_opacity": 1.2 } }
+    }]
+  }
+}`)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/config/update", body)
+	req.Header.Set("Content-Type", "application/json")
+	env.Handler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	require.Contains(t, rec.Body.String(), "overlay_preset_0_surfaces_recap_panel_opacity")
+	require.Equal(t, before, env.ConfigStore.Snapshot())
+}
+
 func TestConfig_WhenSurfaceOpacityInvalid_ExpectAtomicRejection(t *testing.T) {
 	t.Parallel()
 

@@ -141,6 +141,9 @@ function restoreFieldHint(input) {
 }
 
 export function normalizeServerFieldKey(key) {
+  if (/^overlay_preset_\d+_surfaces_recap_panel_opacity$/.test(String(key || ""))) {
+    return "overlay_panel_opacity";
+  }
   const match = String(key || "").match(/^overlay_preset_\d+_surfaces_(leaderboard|alerts)_(.+)$/);
   return match ? "overlay_" + match[1] + "_" + match[2] : key;
 }

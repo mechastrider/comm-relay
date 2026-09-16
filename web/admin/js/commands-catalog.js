@@ -11,7 +11,7 @@ import {
   previewStreamerName,
   renderSplashPreview,
 } from "./catalog-template.js";
-import { createCatalogMediaController } from "./catalog-media-ui.js";
+import { createCatalogMediaController } from "./catalog-media-ui.js?v=2";
 import {
   buildCommandPayload,
   commandUsesAlertPresentation,

@@ -229,7 +229,7 @@ export function initOBSSetup() {
       button.addEventListener("click", function () {
         const sourceButton = button.closest("[data-obs-source-pane]");
         const pane = sourceButton && sourceButton.getAttribute("data-obs-source-pane");
-        if (button.dataset.obsSection === "appearance" && (pane === "leaderboard" || pane === "chat" || pane === "alerts")) {
+        if (button.dataset.obsSection === "appearance" && (pane === "leaderboard" || pane === "chat" || pane === "alerts" || pane === "recap")) {
           applyPreviewSurface(pane);
           updatePresetIsland();
         }
@@ -270,7 +270,7 @@ export function initOBSSetup() {
 
   function setOBSSource(name) {
     const source =
-      name === "leaderboard" || name === "dock" || name === "alerts" ? name : "chat";
+      name === "leaderboard" || name === "dock" || name === "alerts" || name === "recap" ? name : "chat";
     document.querySelectorAll("[data-obs-source]").forEach(function (button) {
       if (button.disabled) {
         return;
@@ -313,6 +313,20 @@ export function initOBSSetup() {
       }
       if (summary) {
         summary.textContent = t("obs.alertsSummary");
+      }
+      if (eyebrow) {
+        eyebrow.textContent = t("obs.browserSource");
+      }
+      if (badge) {
+        badge.textContent = t("obs.visibleToViewers");
+        badge.classList.add("obs-audience-badge--live");
+      }
+    } else if (source === "recap") {
+      if (title) {
+        title.textContent = t("obs.recap");
+      }
+      if (summary) {
+        summary.textContent = t("obs.recapSummary");
       }
       if (eyebrow) {
         eyebrow.textContent = t("obs.browserSource");

@@ -41,7 +41,7 @@ The alert client SHALL show exactly one splash at a time and MUST NOT replace or
 - **THEN** the incoming command is discarded and no award is removed
 
 ### Requirement: Splash content uses avatar or custom media, template text, and sound
-Each alert frame SHALL include `type` `"alert"`, viewer display `name`, `avatar_url` when known, resolved `text`, `points` (0 for command fires), `sound` (a built-in id, empty for silence, or omitted when a custom file is used), `duration_ms`, `layout` (`card`, `banner`, or `fullscreen`; missing or unknown values SHALL use `fullscreen`), `sound_volume` (0–100; missing SHALL use 70), optional `image_asset`, optional `sound_file`, optional `image_fit` (`cover`, `contain`, `fill`, or `tile`; missing SHALL use `contain`), and optional `image_size_pct` (25–300; missing or zero SHALL use 100). When `image_asset` is a safe stored filename, the client SHALL render `/overlay/assets/{filename}` as the primary graphic and SHALL apply `image_fit` to that element. When `image_asset` is absent or fails to load, the client SHALL render a built-in command signal or award medal instead of the viewer avatar. Known starter command triggers and award ids SHALL have stable semantic symbols; the `like` award SHALL use an outlined thumbs-up with a small four-point sparkle. Every other catalog item SHALL receive a stable generic emblem derived from its source and identifier. When `sound_file` is a safe stored filename, the client SHALL play `/overlay/assets/{filename}` at `sound_volume` and MUST NOT also play a built-in tone. Otherwise sound SHALL play in this page using the built-in tone set (`chime`, `ping`, `soft`, `alert`) or silence, at `sound_volume`. Text SHALL be a text node (no `innerHTML`), and built-in graphics MUST be decorative to assistive technology.
+Each alert frame SHALL include `type` `"alert"`, viewer display `name`, `avatar_url` when known, resolved `text`, `points` (0 for command fires), `sound` (a built-in id, empty for silence, or omitted when a custom file is used), `duration_ms`, `layout` (`card`, `banner`, or `fullscreen`; missing or unknown values SHALL use `fullscreen`), `sound_volume` (0–100; missing SHALL use 70), optional `image_asset`, optional `sound_file`, optional `image_fit` (`cover`, `contain`, `fill`, or `tile`; missing SHALL use `contain`), and optional `image_size_pct` (25–300; missing or zero SHALL use 100). When `image_asset` is a safe stored filename, the client SHALL render `/overlay/assets/{filename}` as the primary graphic and SHALL apply `image_fit` to that element. When `image_asset` is absent or fails to load, the client SHALL render a built-in command signal or award medal instead of the viewer avatar. Known starter command triggers and award ids SHALL have stable semantic symbols; the `like` award SHALL use an outlined thumbs-up with a small four-point sparkle. Every other catalog item SHALL receive a stable generic emblem derived from its source and identifier. Built-in graphics MUST NOT contain generated letters, monograms, or catalog text; all alert copy SHALL remain in the content area. When `sound_file` is a safe stored filename, the client SHALL play `/overlay/assets/{filename}` at `sound_volume` and MUST NOT also play a built-in tone. Otherwise sound SHALL play in this page using the built-in tone set (`chime`, `ping`, `soft`, `alert`) or silence, at `sound_volume`. Text SHALL be a text node (no `innerHTML`), and built-in graphics MUST be decorative to assistive technology.
 
 #### Scenario: Command uses a built-in signal
 - **WHEN** an alert frame for `!gg` arrives without `image_asset`
@@ -57,7 +57,7 @@ Each alert frame SHALL include `type` `"alert"`, viewer display `name`, `avatar_
 
 #### Scenario: Operator-created item uses a generic emblem
 - **WHEN** an alert for an unknown command trigger or award id arrives without `image_asset`
-- **THEN** the page shows a stable source-appropriate generic emblem derived from that identifier
+- **THEN** the page shows a stable source-appropriate generic emblem derived from that identifier without letters or a monogram over the graphic
 
 #### Scenario: Silence
 - **WHEN** `sound` is empty and `sound_file` is absent
@@ -232,3 +232,24 @@ Progression splashes SHALL use the protected lane with awards and contracts, MUS
 #### Scenario: Progression arrives behind an award
 - **WHEN** an award is visible and its derived progression frame arrives
 - **THEN** the award finishes before the progression splash begins
+
+### Requirement: Alert chrome fills the Browser Source rectangle
+
+The alert root and its primary themed chrome MUST size from the complete Browser Source viewport, minus theme-safe inner padding, without an intrinsic narrow viewport maximum width. Content MUST wrap, align, and clip or fade inside that rectangle while the page outside the chrome remains transparent.
+
+#### Scenario: Wide alert source
+- **WHEN** an alert is shown in a wide landscape rectangle
+- **THEN** its primary chrome expands across the available rectangle instead of remaining a centered narrow card
+
+#### Scenario: Portrait or narrow alert source
+- **WHEN** the same theme is shown in a portrait or narrow rectangle
+- **THEN** its content reflows without clipped borders, page scrollbars, or a fixed aspect-ratio assumption
+
+### Requirement: Dedicated alert test page preserves production queue behavior
+
+`GET /overlay/test/alert` MUST connect only to `/ws/overlay-debug`, MUST NOT subscribe to production alert frames, and MUST enqueue test alert frames through the production renderer. On `debug_reset` it MUST clear the visible splash, pending queue, transient timers, and dedupe state. Normal `/overlay/alert` behavior MUST remain unchanged.
+
+#### Scenario: Test simultaneous alert kinds
+- **WHEN** an alert-burst scenario sends command and award alerts
+- **THEN** its command, award, command sequence follows the same bounded, non-preempting queue rules as production alerts
+- **AND** the award alert includes its sample source message

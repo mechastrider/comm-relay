@@ -75,7 +75,7 @@ func (s *Store) EvaluateProgression(input ProgressionEvaluationInput) (Progressi
 		return ProgressionEvaluationResult{}, errors.Errorf("begin progression evaluation: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	result, err := evaluateProgressionLocked(tx, input)
+	result, err := s.evaluateProgressionLocked(tx, input)
 	if err != nil {
 		return ProgressionEvaluationResult{}, err
 	}
@@ -95,12 +95,23 @@ func validProgressionMetric(metric ProgressionMetric) bool {
 	}
 }
 
-func evaluateProgressionLocked(tx *sql.Tx, input ProgressionEvaluationInput) (ProgressionEvaluationResult, error) {
+func (s *Store) evaluateProgressionLocked(tx *sql.Tx, input ProgressionEvaluationInput) (ProgressionEvaluationResult, error) {
 	if err := loadVisibleViewer(tx, input.ViewerID); err != nil {
 		return ProgressionEvaluationResult{}, err
 	}
 	if input.Now.IsZero() {
 		input.Now = time.Now()
+	}
+	var unlockSessionID sql.NullString
+	if !input.Backfilled {
+		sessionID, err := s.openSessionQuerierLocked(tx)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return ProgressionEvaluationResult{}, errors.New("open session is required for live achievement unlocks")
+			}
+			return ProgressionEvaluationResult{}, errors.Errorf("lookup open session for achievement unlock: %w", err)
+		}
+		unlockSessionID = sql.NullString{String: sessionID, Valid: true}
 	}
 	result := ProgressionEvaluationResult{CauseMetric: input.CauseMetric, Backfilled: input.Backfilled}
 	if input.HasPreviousXP {
@@ -153,7 +164,10 @@ func evaluateProgressionLocked(tx *sql.Tx, input ProgressionEvaluationInput) (Pr
 		}
 		for occurrence := 1; occurrence <= occurrences; occurrence++ {
 			unlock := AchievementUnlock{ID: uuid.NewString(), ViewerID: input.ViewerID, AchievementID: achievementID, Revision: revision, Occurrence: occurrence, ProgressValue: value, Name: name, Description: description, Backfilled: input.Backfilled, UnlockedAt: input.Now.UTC()}
-			inserted, err := insertAchievementUnlock(tx, unlock)
+			if unlockSessionID.Valid {
+				unlock.SessionID = unlockSessionID.String
+			}
+			inserted, err := insertAchievementUnlock(tx, unlock, unlockSessionID)
 			if err != nil {
 				return ProgressionEvaluationResult{}, err
 			}
@@ -176,8 +190,8 @@ func progressionLevelAtXP(q rowQuerier, xp int) (*ProgressionLevel, error) {
 	return &level, nil
 }
 
-func insertAchievementUnlock(q execQuerier, unlock AchievementUnlock) (bool, error) {
-	result, err := q.Exec(`INSERT INTO viewer_achievement_unlocks (id, viewer_id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(viewer_id, achievement_id, revision, occurrence) DO NOTHING`, unlock.ID, unlock.ViewerID, unlock.AchievementID, unlock.Revision, unlock.Occurrence, unlock.ProgressValue, unlock.Name, unlock.Description, boolInt(unlock.Backfilled), formatTime(unlock.UnlockedAt))
+func insertAchievementUnlock(q execQuerier, unlock AchievementUnlock, sessionID sql.NullString) (bool, error) {
+	result, err := q.Exec(`INSERT INTO viewer_achievement_unlocks (id, viewer_id, session_id, achievement_id, revision, occurrence, progress_value, name, description, backfilled, unlocked_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(viewer_id, achievement_id, revision, occurrence) DO NOTHING`, unlock.ID, unlock.ViewerID, sessionID, unlock.AchievementID, unlock.Revision, unlock.Occurrence, unlock.ProgressValue, unlock.Name, unlock.Description, boolInt(unlock.Backfilled), formatTime(unlock.UnlockedAt))
 	if err != nil {
 		return false, errors.Errorf("insert evaluated achievement unlock: %w", err)
 	}

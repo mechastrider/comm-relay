@@ -178,3 +178,21 @@ Each leaderboard preset SHALL support boolean `show_viewer_titles`, default fals
 #### Scenario: Constrained height
 - **WHEN** title text would cause the last complete row to clip
 - **THEN** the row title is hidden before rank, viewer name, or XP is removed
+
+### Requirement: Leaderboard surface root fills the Browser Source rectangle
+
+The leaderboard's top-level runtime container MUST occupy the complete Browser Source viewport with transparent page background, border-box sizing, and clipped outer overflow. Panel and chips layouts MUST preserve their configured semantics while adapting to the available rectangle.
+
+#### Scenario: Resize either leaderboard layout
+- **WHEN** a panel or chips source is rendered in landscape, square, portrait, or narrow-banner rectangles
+- **THEN** its surface root follows the viewport without accidental scrollbars or clipped outer chrome
+- **AND** the selected layout remains recognizable
+
+### Requirement: Dedicated leaderboard test page uses production snapshot rendering
+
+`GET /overlay/test/leaderboard` MUST connect only to `/ws/overlay-debug`, MUST NOT fetch or subscribe to production rankings, MUST apply test leaderboard frames through its production snapshot renderer, and MUST clear its test ranking and related transient state on `debug_reset`. Normal `/overlay/leaderboard` behavior MUST remain unchanged.
+
+#### Scenario: Fire a leaderboard update
+- **WHEN** `leaderboard_update` arrives at a test leaderboard
+- **THEN** its deterministic three-row test ranking replaces the prior test ranking
+- **AND** no statistics or viewer score is persisted

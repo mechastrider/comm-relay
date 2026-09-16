@@ -1,6 +1,6 @@
 ## Purpose
 
-Define a safe Studio workflow for exercising real overlay event paths without a live stream or product-state mutation.
+Define a safe workflow for exercising real overlay event paths without a live stream or product-state mutation. Studio interactive test panel requirements live in admin-and-dock and are **deferred** until [OQ-002](../../../docs/open-questions.md#oq-002-тестовые-сценарии-overlay--изоляция-ui-и-эфирные-источники-2026-09-05); this capability covers the isolated debug channel, typed scenarios, and dedicated test pages.
 
 ## ADDED Requirements
 

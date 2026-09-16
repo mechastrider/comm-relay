@@ -9,7 +9,11 @@ for (const source of [chat, leaderboard, alert]) {
   assert.match(source, /overlayWebSocketURL\(window\.location\)/, "surface uses the shared fail-closed WebSocket selector");
   assert.match(source, /debug_reset/, "surface handles the global reset frame");
 }
-assert.match(chat, /debugTestEnabled \? undefined : loadRecentMessages\(\)/, "test chat skips production history restore");
+assert.match(
+  chat,
+  /if \(debugTestEnabled\) \{\s*return undefined;\s*\}\s*return loadRecentMessages\(\)\.then/,
+  "debug chat skips history restore while production chat restores it before connecting"
+);
 assert.match(leaderboard, /if \(!debugTestEnabled\) \{\s*await loadSnapshot\(\);/, "test leaderboard skips production snapshot fetch");
 assert.match(chat, /highlightRewardedMessage\(frame\)/, "test rewards use the production reward path");
 assert.match(alert, /scheduler\.reset\(\);\s*clearSplash\(\);/, "test alert reset clears queue and visible lifecycle");

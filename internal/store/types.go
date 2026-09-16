@@ -241,6 +241,7 @@ type AchievementDefinition struct {
 type AchievementUnlock struct {
 	ID            string
 	ViewerID      string
+	SessionID     string
 	AchievementID string
 	Revision      int
 	Occurrence    int
@@ -249,6 +250,71 @@ type AchievementUnlock struct {
 	Description   string
 	Backfilled    bool
 	UnlockedAt    time.Time
+}
+
+// SessionTotals aggregates participation for one stream session.
+type SessionTotals struct {
+	ViewerCount  int
+	MessageCount int
+	XP           int
+}
+
+// SessionSummary is a bounded list row for stream session history.
+type SessionSummary struct {
+	ID        string
+	StartedAt time.Time
+	EndedAt   *time.Time
+	IsCurrent bool
+	HasRecap  bool
+	Totals    SessionTotals
+}
+
+// SessionsQuery requests a cursor page of session summaries.
+type SessionsQuery struct {
+	Limit  int
+	Cursor string
+}
+
+// SessionsPage is one newest-first page of session summaries.
+type SessionsPage struct {
+	Sessions   []SessionSummary
+	NextCursor string
+}
+
+// SessionRankingEntry is one public recap/leaderboard row for a session.
+type SessionRankingEntry struct {
+	Rank         int
+	DisplayName  string
+	PortraitURL  string
+	XP           int
+	MessageCount int
+	Title        string
+}
+
+// SessionAchievementGroup groups repeated unlocks for recap presentation.
+type SessionAchievementGroup struct {
+	ViewerDisplayName string
+	ViewerPortraitURL string
+	AchievementID     string
+	Revision          int
+	Name              string
+	Description       string
+	Count             int
+	LatestUnlockedAt  time.Time
+}
+
+// SessionDetail is the bounded read model for one selected session.
+type SessionDetail struct {
+	ID                string
+	StartedAt         time.Time
+	EndedAt           *time.Time
+	IsCurrent         bool
+	HasRecap          bool
+	Totals            SessionTotals
+	RecapCapturedAt   *time.Time
+	RecapPayloadJSON  string
+	Ranking           []SessionRankingEntry
+	AchievementGroups []SessionAchievementGroup
 }
 
 // ProgressionAlertSettings controls shared unlock-alert presentation.

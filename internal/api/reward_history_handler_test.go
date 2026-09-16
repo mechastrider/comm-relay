@@ -121,6 +121,8 @@ func TestAwardGrant_WhenEventInsertFails_ExpectNoSuccessfulGrantEffects(t *testi
 	require.NoError(t, err)
 	_, _, err = conn.ReadMessage() // Initial viewer contract state frame.
 	require.NoError(t, err)
+	_, _, err = conn.ReadMessage() // Initial stream recap state frame.
+	require.NoError(t, err)
 	viewerID := seedViewer(t, env, "twitch", "42", "Alice")
 	before, err := env.ViewerStore.Get(viewerID, env.ConfigStore.Snapshot().DayResetHour, time.Now())
 	require.NoError(t, err)
