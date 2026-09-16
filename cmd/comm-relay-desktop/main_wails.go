@@ -83,7 +83,7 @@ func (a *desktopApp) startup(ctx context.Context) {
 		clog.Warn(ctx, "session log file unavailable", slog.Any("error", logErr))
 	}
 	a.logSession = logSession
-	logging.WriteStartupLine(logSession)
+	logging.LogSessionStarted(ctx, logSession)
 	runnable.SetLogger(slog.Default())
 
 	app, err := bootstrap.New(bootstrap.Options{
@@ -115,6 +115,7 @@ func (a *desktopApp) startup(ctx context.Context) {
 
 	a.relay = app
 	a.adminURL = app.AdminURL()
+	app.LogStartup(ctx, cfg.ListenAddr(), configPath, a.webRoot(), logSession.FilePath(), cfg)
 	clog.Info(ctx, "comm-relay desktop ready", slog.String("admin_url", a.adminURL))
 	a.tryNavigateAdmin()
 }
@@ -130,21 +131,19 @@ func (a *desktopApp) domReady(ctx context.Context) {
 }
 
 func (a *desktopApp) shutdown(ctx context.Context) {
+	if a.relay != nil {
+		stopCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+
+		if err := a.relay.Stop(stopCtx); err != nil {
+			clog.Errorf(ctx, "stop relay: %w", err)
+		}
+	}
+
 	if a.logSession != nil {
 		if err := a.logSession.Close(); err != nil {
 			clog.Warn(ctx, "close session log", slog.Any("error", err))
 		}
-	}
-
-	if a.relay == nil {
-		return
-	}
-
-	stopCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	if err := a.relay.Stop(stopCtx); err != nil {
-		clog.Errorf(ctx, "stop relay: %w", err)
 	}
 }
 

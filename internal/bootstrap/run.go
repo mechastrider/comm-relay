@@ -42,7 +42,7 @@ func Run(opts Options) error {
 			clog.Warn(context.Background(), "close session log", slog.Any("error", closeErr))
 		}
 	}()
-	logging.WriteStartupLine(logSession)
+	logging.LogSessionStarted(context.Background(), logSession)
 	runnable.SetLogger(slog.Default())
 
 	app, err := New(opts)

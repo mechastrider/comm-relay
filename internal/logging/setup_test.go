@@ -1,16 +1,25 @@
 package logging
 
 import (
+	"context"
+	"errors"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/muonsoft/clog"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/config"
 )
+
+type brokenWriter struct{}
+
+func (brokenWriter) Write([]byte) (int, error) {
+	return 0, errors.New("stderr unavailable")
+}
 
 func TestSetup_WhenEnabled_ExpectSessionFileAndStderrLogger(t *testing.T) {
 	// Setup mutates slog.Default; do not run beside other Setup tests.
@@ -82,6 +91,24 @@ func TestPruneSessions_WhenMoreThanRetain_ExpectOldestRemoved(t *testing.T) {
 	}, names)
 }
 
+func TestLogSessionStarted_WhenFileEnabled_ExpectSlogLineInSessionFile(t *testing.T) {
+	prev := slog.Default()
+	t.Cleanup(func() { slog.SetDefault(prev) })
+
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.json")
+
+	session, err := Setup(config.Default().Logging, configPath, false)
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, session.Close()) })
+
+	LogSessionStarted(context.Background(), session)
+
+	data, err := os.ReadFile(session.FilePath())
+	require.NoError(t, err)
+	require.Contains(t, string(data), "session started")
+}
+
 func TestSetup_WritesToBothHandlers(t *testing.T) {
 	prev := slog.Default()
 	t.Cleanup(func() { slog.SetDefault(prev) })
@@ -98,4 +125,33 @@ func TestSetup_WritesToBothHandlers(t *testing.T) {
 	data, err := os.ReadFile(session.FilePath())
 	require.NoError(t, err)
 	require.Contains(t, string(data), "hello session log")
+}
+
+func TestSetup_WhenStderrBroken_ExpectSessionFileStillReceivesLogs(t *testing.T) {
+	prev := slog.Default()
+	t.Cleanup(func() { slog.SetDefault(prev) })
+
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.json")
+	require.NoError(t, os.WriteFile(configPath, []byte("{}"), 0o644))
+
+	level := slog.LevelInfo
+	opts := &slog.HandlerOptions{Level: level}
+	stderrHandler := slog.NewTextHandler(brokenWriter{}, opts)
+
+	session := &Session{}
+	filePath, err := openSessionFile(configPath, config.Default().Logging.RetainSessions)
+	require.NoError(t, err)
+	session.file = filePath.file
+	session.filePath = filePath.path
+	fileHandler := slog.NewTextHandler(filePath.file, opts)
+
+	slog.SetDefault(slog.New(combineHandlers(stderrHandler, fileHandler)))
+	t.Cleanup(func() { require.NoError(t, session.Close()) })
+
+	clog.Info(context.Background(), "desktop session line")
+
+	data, err := os.ReadFile(session.FilePath())
+	require.NoError(t, err)
+	require.Contains(t, string(data), "desktop session line")
 }

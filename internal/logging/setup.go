@@ -2,7 +2,6 @@ package logging
 
 import (
 	"context"
-	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -39,9 +38,13 @@ func (s *Session) Close() error {
 		return nil
 	}
 
-	err := s.file.Close()
+	syncErr := s.file.Sync()
+	closeErr := s.file.Close()
 	s.file = nil
-	return err
+	if closeErr != nil {
+		return closeErr
+	}
+	return syncErr
 }
 
 // SetupStderr configures slog.Default for console output only.
@@ -148,11 +151,13 @@ func pruneSessions(logDir string, retainSessions int) error {
 	return nil
 }
 
-func combineHandlers(primary slog.Handler, secondary slog.Handler) slog.Handler {
-	if secondary == nil {
-		return primary
+func combineHandlers(stderrHandler slog.Handler, fileHandler slog.Handler) slog.Handler {
+	if fileHandler == nil {
+		return stderrHandler
 	}
-	return &multiHandler{handlers: []slog.Handler{primary, secondary}}
+	// File first: GUI builds (e.g. Wails on Windows) may have a broken stderr pipe;
+	// the old order aborted before the session file when stderr.Handle returned an error.
+	return &multiHandler{handlers: []slog.Handler{fileHandler, stderrHandler}}
 }
 
 type multiHandler struct {
@@ -169,6 +174,7 @@ func (m *multiHandler) Enabled(ctx context.Context, level slog.Level) bool {
 }
 
 func (m *multiHandler) Handle(ctx context.Context, record slog.Record) error {
+	var lastErr error
 	for i, handler := range m.handlers {
 		if !handler.Enabled(ctx, record.Level) {
 			continue
@@ -178,10 +184,10 @@ func (m *multiHandler) Handle(ctx context.Context, record slog.Record) error {
 			rec = record.Clone()
 		}
 		if err := handler.Handle(ctx, rec); err != nil {
-			return err
+			lastErr = err
 		}
 	}
-	return nil
+	return lastErr
 }
 
 func (m *multiHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
@@ -200,12 +206,11 @@ func (m *multiHandler) WithGroup(name string) slog.Handler {
 	return &multiHandler{handlers: next}
 }
 
-// WriteStartupLine writes a short header to the session log when file logging is active.
-func WriteStartupLine(session *Session) {
+// LogSessionStarted records the start of a file-backed session log via slog.
+func LogSessionStarted(ctx context.Context, session *Session) {
 	if session == nil || session.file == nil {
 		return
 	}
 
-	line := "session started at " + time.Now().Format(time.RFC3339) + "\n"
-	_, _ = io.WriteString(session.file, line)
+	clog.Info(ctx, "session started", slog.Time("started_at", time.Now()))
 }
