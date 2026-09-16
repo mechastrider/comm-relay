@@ -10,6 +10,7 @@ import {
   planCommandOutcomeHandling,
   rememberPendingCommandCooldown,
   restartCommandCooldownOverlay,
+  shouldClearRenderedMessageDedupeKey,
   shouldHideSuccessfulCommandMessage,
   shouldHoldCommandMessageForOutcome,
   shouldIgnoreCommandOutcome,
@@ -179,13 +180,32 @@ test("every chat theme has frozen cooldown feedback with reduced-motion fallback
   );
 });
 
+test("shouldClearRenderedMessageDedupeKey keeps dedupe while a chat row stays visible", function () {
+  assert.equal(shouldClearRenderedMessageDedupeKey(true), false);
+  assert.equal(shouldClearRenderedMessageDedupeKey(false), true);
+});
+
+test("fired outcome with visible command row should not clear dedupe key", function () {
+  const plan = planCommandOutcomeHandling(
+    { status: "fired", message_platform: "twitch", message_id: "cmd-2" },
+    false,
+    false,
+    true,
+    false
+  );
+  assert.equal(plan.action, "fired");
+  assert.equal(plan.removeVisibleEntry, false);
+  assert.equal(shouldClearRenderedMessageDedupeKey(true), false);
+});
+
 test("overlay wires command_outcome and cooldown constant", async function () {
   const overlay = await readFile(new URL("./overlay.js", import.meta.url), "utf8");
-  assert.match(overlay, /from "\/overlay\/command-cooldown-overlay\.js\?v=2"/);
+  assert.match(overlay, /from "\/overlay\/command-cooldown-overlay\.js\?v=3"/);
   assert.match(overlay, /frame\.type === "command_outcome"/);
   assert.match(overlay, /hide_command_cooldown_overlay/);
   assert.match(overlay, /pendingCommandMessages/);
   assert.match(overlay, /shouldHoldCommandMessageForOutcome/);
   assert.match(overlay, /planCommandOutcomeHandling/);
+  assert.match(overlay, /updateCommandCooldownChrome\(entry, entry\.commandCooldownActive\)/);
   assert.doesNotMatch(overlay, /cooldown_remaining_ms/);
 });

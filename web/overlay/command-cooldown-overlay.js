@@ -37,6 +37,10 @@ export function shouldHoldCommandMessageForOutcome(
   return hideCommandMessages === true && isCommand === true;
 }
 
+export function shouldClearRenderedMessageDedupeKey(hasVisibleEntry) {
+  return hasVisibleEntry !== true;
+}
+
 export function planCommandOutcomeHandling(
   outcome,
   hideCommandCooldownOverlay,

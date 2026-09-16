@@ -14,6 +14,7 @@ import {
   restartCommandCooldownOverlay,
   shouldHoldCommandMessageForOutcome,
   shouldIgnoreCommandOutcome,
+  shouldClearRenderedMessageDedupeKey,
   shouldRenderHeldCommandMessage,
   takePendingCommandCooldown,
   takePendingCommandMessage,
@@ -21,7 +22,7 @@ import {
   planCommandOutcomeHandling,
   commandOutcomeKeyFromFrame,
   COMMAND_OUTCOME_WAIT_MS,
-} from "/overlay/command-cooldown-overlay.js?v=2";
+} from "/overlay/command-cooldown-overlay.js?v=3";
 import {
   findRewardedEntry,
   restartRewardHighlight,
@@ -814,6 +815,10 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
   }
 
   function applyCommandCooldownToEntry(entry) {
+    if (entry.ttlTimer !== null) {
+      window.clearTimeout(entry.ttlTimer);
+      entry.ttlTimer = null;
+    }
     restartCommandCooldownOverlay(entry, {
       setTimeout: window.setTimeout,
       clearTimeout: window.clearTimeout,
@@ -849,12 +854,11 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     if (plan.action === "fired") {
       clearPendingCommandMessage(pendingCommandMessages, key, window.clearTimeout.bind(window));
       pendingCommandCooldowns.delete(key);
-      renderedMessageIDs.delete(key);
-      if (plan.removeVisibleEntry) {
-        const entry = findEntryByMessageKey(entries, key);
-        if (entry && !entry.commandCooldownActive) {
-          removeEntryElement(entry.el, true);
-        }
+      const entry = findEntryByMessageKey(entries, key);
+      if (plan.removeVisibleEntry && entry && !entry.commandCooldownActive) {
+        removeEntryElement(entry.el, true);
+      } else if (shouldClearRenderedMessageDedupeKey(Boolean(entry))) {
+        renderedMessageIDs.delete(key);
       }
       return;
     }
@@ -862,7 +866,10 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     if (plan.action === "cooldown_suppressed") {
       clearPendingCommandMessage(pendingCommandMessages, key, window.clearTimeout.bind(window));
       pendingCommandCooldowns.delete(key);
-      renderedMessageIDs.delete(key);
+      const suppressedEntry = findEntryByMessageKey(entries, key);
+      if (shouldClearRenderedMessageDedupeKey(Boolean(suppressedEntry))) {
+        renderedMessageIDs.delete(key);
+      }
       return;
     }
 
@@ -911,6 +918,7 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     entries.forEach(function (entry) {
       if (entry.frame) {
         entry.rewardSlot = fillMessageRow(entry.el, entry.frame, entry.reward);
+        updateCommandCooldownChrome(entry, entry.commandCooldownActive);
       }
     });
     trimToLimit();

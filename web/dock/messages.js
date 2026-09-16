@@ -1,6 +1,6 @@
 import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
 import { createRewardControl, messageCanBeRewarded } from "/shared/reward-picker.js?v=4";
-import { applyDomTranslations, setLocale, t } from "/shared/i18n.js?v=18";
+import { applyDomTranslations, setLocale, t } from "/shared/i18n.js?v=19";
 import {
   CONTRACT_CONTENT,
   LEADERBOARD_CONTENT,
