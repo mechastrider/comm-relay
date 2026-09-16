@@ -6,6 +6,7 @@
 
 - [`frontend-refactoring.md`](frontend-refactoring.md) — направление развития admin frontend.
 - [`platform-stream-diagnostics.md`](platform-stream-diagnostics.md) — доступные сигналы состояния эфиров Twitch, YouTube и VK Live.
+- [`operator-follow-up-changes.md`](operator-follow-up-changes.md) — пакеты следующих OpenSpec changes (команды, recap all-time, опечатки, архив эфиров).
 
 ## Архивные снимки
 

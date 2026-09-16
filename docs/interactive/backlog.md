@@ -21,15 +21,16 @@
 
 ## Рекомендуемая последовательность ближайших изменений
 
-Это рабочая навигация для следующих сессий, а не автоматическое повышение lifecycle-статуса инициатив. OpenSpec changes следует создавать **по одному**: следующий начинается после проверки и закрытия предыдущего. Для всех пяти изменений использовать проектный профиль `desktop-change`.
+Это рабочая навигация для следующих сессий, а не автоматическое повышение lifecycle-статуса инициатив. OpenSpec changes следует создавать **по одному**: следующий начинается после проверки и закрытия предыдущего. Пакеты (скоуп, non-goals, схема, приёмка): [`../research/operator-follow-up-changes.md`](../research/operator-follow-up-changes.md). Схема — `spec-driven` или `desktop-change` по пакету, не всем подряд.
 
-| Порядок | OpenSpec change | Инициативы | Граница результата | Когда начинать |
-|---|---|---|---|---|
-| 1 | `viewer-reward-history` | [INT-025](#int-025) | Журнал выданных наград в карточке зрителя и общий операторский список поверх уже сохраняемых interaction events; достижения остаются в [INT-012](#int-012) | Первый change: он даёт наблюдаемость следующим экспериментам |
-| 2 | `viewer-contracts-experiment` | [INT-017](#int-017) | Один активный контракт, ручное объявление, выбор победителя, существующая награда и закрытие без результата | После журнала; не добавлять отдельную экономику или универсальный rules engine |
-| 3 | `first-viewer-greeting` | [INT-022](#int-022) | Одно автоматическое приветствие по первому сообщению зрителя после подтверждённого начала новой session | После контрактов; широкое автоопределение границы эфира оставить в [INT-030](#int-030), если для greeting достаточно узкого guardrail |
-| 4 | `viewer-ranks-and-achievements` | [INT-012](#int-012) | Звания и достижения из долговечного журнала взаимодействий с понятным отображением текущего прогресса | После журнала наград; до финальных итогов стрима |
-| 5 | `end-of-stream-recap` | [INT-031](#int-031) | Ручной полноэкранный финал с session leaderboard, достижениями текущего эфира и компактной историей sessions | **Закрыт** — archive [`2026-09-16-end-of-stream-recap`](../openspec/changes/archive/2026-09-16-end-of-stream-recap/) |
+| Порядок | OpenSpec change | Схема | Инициативы | Граница результата | Когда начинать |
+|---|---|---|---|---|---|
+| 1 | `command-outcome-feedback` | `spec-driven` | [INT-034](#int-034) | Статус команды fired/cooldown на WS; короткий кулдаун на оверлее (default); таймер в админке и доке | Первый: эфирная боль, без миграции |
+| 2 | `audience-session-count` | `spec-driven` | [INT-035](#int-035) | Колонка и карточка: число сессий с `message_count > 0` | После 1 только из‑за очереди сессий; независим по коду |
+| 3 | `recap-all-time-and-share-image` | `desktop-change` | [INT-036](#int-036) | На `/overlay/recap` итоги эфира и статус за всё время; PNG для соцсетей. Сезон не входит | INT-031 уже в main |
+| 4 | `command-aliases-and-typos` | `desktop-change` | [INT-016](#int-016), [INT-037](#int-037) | Алиасы каталога + Damerau ≤ 1 при trigger ≥ 4 и unique winner | После 1: оба трогают matcher |
+| 5 | `admin-stream-archive` | `spec-driven` | [INT-033](#int-033) | Первоклассный архив эфиров в админке, карточка итогов каждого | Удобнее после 3 (те же итоги / PNG) |
+| 6 | `recap-season-window` | `desktop-change` | [INT-032](#int-032) | Третье окно recap — сумма за сезон | После 3; сначала выбрать границу сезона |
 
 Если при intake выяснится, что change выходит за указанную границу, новую функциональность следует вернуть в отдельную инициативу, а не расширять текущий proposal.
 
@@ -39,7 +40,7 @@
 |---|---|---|---|---|---|---|
 | <a id="int-010"></a>INT-010 | Явно сохранять выбранные сообщения как моменты и идеи аудитории | Analytics | `needs_decision` | — | [Разбор интерфейса](../research/archive/2026-09-03-stream-interface-review.md) | [OQ-003](../open-questions.md#oq-003-сохранённые-моменты-чата-и-рабочая-область-аналитики-2026-09-07) |
 | <a id="int-011"></a>INT-011 | Выбрать модель тестовых overlay-сценариев и вернуть операторский UI | Studio / overlay | `needs_decision` | — | Практика отладки Studio | [OQ-002](../open-questions.md#oq-002-тестовые-сценарии-overlay--изоляция-ui-и-эфирные-источники-2026-09-05), backend + `/overlay/test/*` в archive [`2026-09-16-studio-overlay-test-tools`](../openspec/changes/archive/2026-09-16-studio-overlay-test-tools/) |
-| <a id="int-016"></a>INT-016 | Поддержать несколько алиасов одной команды | Commands | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Проверить UX редактирования и конфликтов триггеров |
+| <a id="int-016"></a>INT-016 | Поддержать несколько алиасов одной команды | Commands | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Вместе с опечатками [INT-037](#int-037) в change `command-aliases-and-typos`; [пакет 4](../research/operator-follow-up-changes.md) |
 | <a id="int-018"></a>INT-018 | Проводить прогнозы перед миссией с ручным выбором результата | Interaction model | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Отделить prediction от расходуемой экономики |
 | <a id="int-019"></a>INT-019 | Проводить голосования зрителей без прямого управления игрой | Interaction model | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Исследовать кроссплатформенный ввод и тайминг |
 | <a id="int-020"></a>INT-020 | Добавить роли и специализации зрителей поверх общего XP | Viewer progression | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Сопоставить с будущими уровнями и achievements |
@@ -50,6 +51,12 @@
 | <a id="int-028"></a>INT-028 | Запускать настроенную реакцию от имени оператора без сообщения в публичный чат | Commands / operator UX | `candidate` | — | Локальная сессия «Phantom Reapers 16» | Определить минимальную quick-action поверхность; сопоставить с внешними событиями [INT-021](#int-021) |
 | <a id="int-029"></a>INT-029 | Управлять доминированием повторных наград одного зрителя в session XP | Viewer progression | `needs_decision` | — | Локальная сессия «Phantom Reapers 16» | [OQ-005](../open-questions.md#oq-005) |
 | <a id="int-030"></a>INT-030 | Снижать риск переноса session XP между эфирами, если оператор забыл начать новую session | Admin / sessions | `needs_research` | — | Локальная сессия «Phantom Reapers 16» | Исследовать безопасное напоминание и доступные [сигналы состояния эфира](../research/platform-stream-diagnostics.md) |
+| <a id="int-032"></a>INT-032 | Показывать на recap-поверхности сумму за сезон отдельно от итогов одного эфира и статуса за всё время | End-of-stream / overlay | `candidate` | — | Обсуждение 2026-09-16 | Change `recap-season-window` после all-time [INT-036](#int-036). Сначала выбрать границу сезона. [Пакет 6](../research/operator-follow-up-changes.md) |
+| <a id="int-033"></a>INT-033 | В админке отдельно просматривать архив эфиров и итоги каждого стрима | Admin / sessions | `candidate` | — | Обсуждение 2026-09-16 | Change `admin-stream-archive`. Компактный History уже в диалоге Recap [INT-031](#int-031); Audience → Журнал — награды [INT-025](#int-025). [Пакет 5](../research/operator-follow-up-changes.md) |
+| <a id="int-034"></a>INT-034 | Показывать, что чат-команда принята или заморожена кулдауном | Commands / overlay | `candidate` | — | Обсуждение 2026-09-16 | Change `command-outcome-feedback`, `spec-driven`. [Пакет 1](../research/operator-follow-up-changes.md) |
+| <a id="int-035"></a>INT-035 | В Audience → Зрители показывать число эфиров, в которых зритель писал сообщения | Admin / Audience | `candidate` | — | Обсуждение 2026-09-16 | Change `audience-session-count`, `spec-driven`. Метрика как Veteran. [Пакет 2](../research/operator-follow-up-changes.md) |
+| <a id="int-036"></a>INT-036 | На recap переключать итоги эфира и статус за всё время; выгружать картинку для соцсетей | End-of-stream / overlay | `candidate` | — | Обсуждение 2026-09-16 | Change `recap-all-time-and-share-image`, `desktop-change`. Сезон остаётся в [INT-032](#int-032). [Пакет 3](../research/operator-follow-up-changes.md) |
+| <a id="int-037"></a>INT-037 | Принимать команду с небольшой опечаткой, если сосед уникален | Commands | `candidate` | — | Обсуждение 2026-09-16 | Вместе с алиасами [INT-016](#int-016). Damerau ≤ 1, trigger ≥ 4, unique. [Пакет 4](../research/operator-follow-up-changes.md) |
 
 ## Согласованный горизонт
 
