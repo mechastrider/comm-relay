@@ -50,10 +50,10 @@
 
 ## 5. QA
 
-- [ ] 5.1 Execute `qa_plan.md` P0 scenarios (two `!gg`, overlay freeze vs hide flags, admin/dock countdown, reload restore, leaderboard accepted). Record evidence or explicit environment skips.
-- [ ] 5.2 Run `go test ./...` and `go test -race ./internal/command ./internal/api ./internal/config`.
-- [ ] 5.3 Run `golangci-lint run ./...`.
-- [ ] 5.4 Run `npm ci`, `npm run lint`, and `npm run test:i18n`.
+- [x] 5.1 Execute `qa_plan.md` P0 scenarios (two `!gg`, overlay freeze vs hide flags, admin/dock countdown, reload restore, leaderboard accepted). Record evidence or explicit environment skips.
+- [x] 5.2 Run `go test ./...` and `go test -race ./internal/command ./internal/api ./internal/config`.
+- [x] 5.3 Run `golangci-lint run ./...`.
+- [x] 5.4 Run `npm ci`, `npm run lint`, and `npm run test:i18n`.
 
 ## 6. Review
 
