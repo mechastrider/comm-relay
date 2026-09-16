@@ -7,7 +7,9 @@ import (
 )
 
 const (
-	OutcomeStatusFired    = "fired"
+	// OutcomeStatusFired is a successful command match that consumed cooldown.
+	OutcomeStatusFired = "fired"
+	// OutcomeStatusCooldown is a match suppressed because the identity is still cooling down.
 	OutcomeStatusCooldown = "cooldown"
 )
 
