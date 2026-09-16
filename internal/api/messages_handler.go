@@ -52,6 +52,13 @@ func (h *messagesHandler) recentMessages(limit int) []adminMessage {
 		if _, ok := h.matcher.Lookup(messages[i].Message); ok {
 			messages[i].IsCommand = true
 		}
+		if outcome, ok := h.matcher.MessageOutcome(messages[i].Platform, messages[i].ID); ok {
+			messages[i].CommandOutcome = &commandOutcomeJSON{
+				Trigger:             outcome.Trigger,
+				Status:              outcome.Status,
+				CooldownRemainingMs: outcome.CooldownRemainingMs,
+			}
+		}
 	}
 
 	return messages

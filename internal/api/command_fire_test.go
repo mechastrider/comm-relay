@@ -92,6 +92,7 @@ func TestCommandFire_WhenCooldown_ExpectOneAlert(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 
 	alerts := make(chan struct{}, 4)
+	outcomes := make(chan map[string]any, 8)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -104,8 +105,11 @@ func TestCommandFire_WhenCooldown_ExpectOneAlert(t *testing.T) {
 			if json.Unmarshal(data, &frame) != nil {
 				continue
 			}
-			if frame["type"] == "alert" {
+			switch frame["type"] {
+			case "alert":
 				alerts <- struct{}{}
+			case "command_outcome":
+				outcomes <- frame
 			}
 		}
 	}()
@@ -138,6 +142,28 @@ func TestCommandFire_WhenCooldown_ExpectOneAlert(t *testing.T) {
 		t.Fatal("unexpected second alert within cooldown")
 	case <-time.After(300 * time.Millisecond):
 	}
+
+	var cooldownOutcome map[string]any
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		select {
+		case frame := <-outcomes:
+			if frame["message_id"] == "cmd-2" && frame["status"] == "cooldown" {
+				cooldownOutcome = frame
+			}
+		default:
+			time.Sleep(10 * time.Millisecond)
+		}
+		if cooldownOutcome != nil {
+			break
+		}
+	}
+	require.NotNil(t, cooldownOutcome)
+	require.Equal(t, "twitch", cooldownOutcome["message_platform"])
+	require.Equal(t, "cmd-2", cooldownOutcome["message_id"])
+	require.Equal(t, "gg", cooldownOutcome["trigger"])
+	require.Equal(t, "cooldown", cooldownOutcome["status"])
+	require.Greater(t, cooldownOutcome["cooldown_remaining_ms"], float64(0))
 }
 
 func TestViewerIngest_WhenCommand_ExpectMessageCountWithoutXP(t *testing.T) {
@@ -330,8 +356,77 @@ func TestConfig_HideCommandMessagesDefault_ExpectFalse(t *testing.T) {
 
 	cfg := config.Default()
 	require.False(t, cfg.HideCommandMessages)
+	require.False(t, cfg.HideCommandCooldownOverlay)
 	public := cfg.Public()
 	require.False(t, public.HideCommandMessages)
+	require.False(t, public.HideCommandCooldownOverlay)
+}
+
+func TestConfig_WhenHideCommandCooldownOverlayInvalid_ExpectFieldError(t *testing.T) {
+	t.Parallel()
+
+	fields := config.ValidateIncomingJSONFields([]byte(`{"hide_command_cooldown_overlay":"yes"}`))
+	require.Contains(t, fields, "hide_command_cooldown_overlay")
+}
+
+func TestRecentMessages_WhenCommandCooldown_ExpectCommandOutcomeRestore(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+
+	publish := func(id string) {
+		require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+			ID:       id,
+			Platform: "twitch",
+			UserID:   "42",
+			Username: "alice",
+			Message:  "!gg",
+		})))
+	}
+	publish("cmd-restore-1")
+	publish("cmd-restore-2")
+
+	require.Eventually(t, func() bool {
+		rec := httptest.NewRecorder()
+		env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=10", nil))
+		if rec.Code != http.StatusOK {
+			return false
+		}
+		var payload struct {
+			Messages []struct {
+				ID             string `json:"id"`
+				CommandOutcome *struct {
+					Trigger             string  `json:"trigger"`
+					Status              string  `json:"status"`
+					CooldownRemainingMs float64 `json:"cooldown_remaining_ms"`
+				} `json:"command_outcome"`
+			} `json:"messages"`
+		}
+		if json.Unmarshal(rec.Body.Bytes(), &payload) != nil {
+			return false
+		}
+		var first, second *struct {
+			ID             string `json:"id"`
+			CommandOutcome *struct {
+				Trigger             string  `json:"trigger"`
+				Status              string  `json:"status"`
+				CooldownRemainingMs float64 `json:"cooldown_remaining_ms"`
+			} `json:"command_outcome"`
+		}
+		for i := range payload.Messages {
+			switch payload.Messages[i].ID {
+			case "cmd-restore-1":
+				first = &payload.Messages[i]
+			case "cmd-restore-2":
+				second = &payload.Messages[i]
+			}
+		}
+		if first == nil || second == nil || first.CommandOutcome == nil || second.CommandOutcome == nil {
+			return false
+		}
+		return first.CommandOutcome.Status == "fired" &&
+			second.CommandOutcome.Status == "cooldown" &&
+			second.CommandOutcome.CooldownRemainingMs > 0
+	}, 2*time.Second, 25*time.Millisecond)
 }
 
 func TestConfig_WhenStreamerDisplayName_ExpectPublicAndPersisted(t *testing.T) {

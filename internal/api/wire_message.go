@@ -16,6 +16,7 @@ const (
 	wireMessageDeletedType  = "message_deleted"
 	wireOverlaySettingsType = "overlay_settings"
 	wireAlertType           = "alert"
+	wireCommandOutcomeType  = "command_outcome"
 )
 
 // wireChatMessage is the JSON payload sent to overlay WebSocket clients.
@@ -36,9 +37,19 @@ type wireChatMessage struct {
 }
 
 type wireOverlaySettings struct {
-	Type                string               `json:"type"`
-	Overlay             config.OverlayConfig `json:"overlay"`
-	HideCommandMessages bool                 `json:"hide_command_messages"`
+	Type                       string               `json:"type"`
+	Overlay                    config.OverlayConfig `json:"overlay"`
+	HideCommandMessages        bool                 `json:"hide_command_messages"`
+	HideCommandCooldownOverlay bool                 `json:"hide_command_cooldown_overlay"`
+}
+
+type wireCommandOutcome struct {
+	Type                string `json:"type"`
+	MessagePlatform     string `json:"message_platform"`
+	MessageID           string `json:"message_id"`
+	Trigger             string `json:"trigger"`
+	Status              string `json:"status"`
+	CooldownRemainingMs int    `json:"cooldown_remaining_ms"`
 }
 
 type wireMessageDeleted struct {
@@ -150,11 +161,30 @@ func chatMessageWirePayload(msg bus.ChatMessage, isCommand bool) ([]byte, error)
 	return data, nil
 }
 
+func commandOutcomeWirePayload(
+	messagePlatform, messageID, trigger, status string,
+	cooldownRemainingMs int,
+) ([]byte, error) {
+	data, err := json.Marshal(wireCommandOutcome{
+		Type:                wireCommandOutcomeType,
+		MessagePlatform:     messagePlatform,
+		MessageID:           messageID,
+		Trigger:             trigger,
+		Status:              status,
+		CooldownRemainingMs: cooldownRemainingMs,
+	})
+	if err != nil {
+		return nil, errors.Errorf("marshal command outcome wire event: %w", err)
+	}
+	return data, nil
+}
+
 func overlaySettingsWirePayload(cfg config.Config) ([]byte, error) {
 	data, err := json.Marshal(wireOverlaySettings{
-		Type:                wireOverlaySettingsType,
-		Overlay:             cfg.Overlay,
-		HideCommandMessages: cfg.HideCommandMessages,
+		Type:                       wireOverlaySettingsType,
+		Overlay:                    cfg.Overlay,
+		HideCommandMessages:        cfg.HideCommandMessages,
+		HideCommandCooldownOverlay: cfg.HideCommandCooldownOverlay,
 	})
 	if err != nil {
 		return nil, errors.Errorf("marshal overlay settings wire event: %w", err)

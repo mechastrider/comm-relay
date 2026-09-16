@@ -7,10 +7,10 @@
 > **Allowed fallout**: diagnostics counters/tests, public config DTO, handler tests
 > **Blocked**: platform chat send, aliases/typos, SQLite cooldown, overlay/admin markup (slice 2–3)
 
-- [ ] 1.1 Keep `Lookup` on the hub for `is_command` and consume cooldown only in ingest; add matcher remaining-ms plus a bounded in-memory outcome map keyed by platform + source id. Verify with `go test ./internal/command`.
-- [ ] 1.2 After `TryFire`, record `fired` or `cooldown`, broadcast `/ws` `command_outcome` (`message_platform`, `message_id`, `trigger`, `status`, `cooldown_remaining_ms`), and skip the frame when platform or id is missing. Verify with `go test ./internal/api` including two `!gg` within cooldown (one alert, second outcome `cooldown`).
-- [ ] 1.3 Persist `hide_command_cooldown_overlay` (default false) in `config.json` / public GET / `POST /api/config/update` / `overlay_settings`, rejecting non-booleans. Verify with `go test ./internal/config ./internal/api`.
-- [ ] 1.4 Attach optional `command_outcome` on recent-message GET from the in-memory map with remaining ms refreshed at read time. Verify reload-style API tests and that a new matcher has no outcomes.
+- [x] 1.1 Keep `Lookup` on the hub for `is_command` and consume cooldown only in ingest; add matcher remaining-ms plus a bounded in-memory outcome map keyed by platform + source id. Verify with `go test ./internal/command`.
+- [x] 1.2 After `TryFire`, record `fired` or `cooldown`, broadcast `/ws` `command_outcome` (`message_platform`, `message_id`, `trigger`, `status`, `cooldown_remaining_ms`), and skip the frame when platform or id is missing. Verify with `go test ./internal/api` including two `!gg` within cooldown (one alert, second outcome `cooldown`).
+- [x] 1.3 Persist `hide_command_cooldown_overlay` (default false) in `config.json` / public GET / `POST /api/config/update` / `overlay_settings`, rejecting non-booleans. Verify with `go test ./internal/config ./internal/api`.
+- [x] 1.4 Attach optional `command_outcome` on recent-message GET from the in-memory map with remaining ms refreshed at read time. Verify reload-style API tests and that a new matcher has no outcomes.
 
 ## 2. Overlay frozen cooldown row
 

@@ -94,3 +94,41 @@ func TestMatcher_WhenCooldownElapsed_ExpectSecondFire(t *testing.T) {
 
 	require.True(t, m.TryFire("twitch", "viewer-1", cmd))
 }
+
+func TestMatcher_WhenNew_ExpectNoOutcomes(t *testing.T) {
+	t.Parallel()
+
+	m := command.NewMatcher(openTestStore(t))
+	_, ok := m.MessageOutcome("twitch", "msg-1")
+	require.False(t, ok)
+}
+
+func TestMatcher_WhenOutcomeRecorded_ExpectRestoreWithRemainingMs(t *testing.T) {
+	t.Parallel()
+
+	m := command.NewMatcher(openTestStore(t))
+	cmd, ok := m.Lookup("!gg")
+	require.True(t, ok)
+
+	require.True(t, m.TryFire("twitch", "viewer-1", cmd))
+	outcome := m.RecordMessageOutcome("twitch", "msg-fired", "twitch", "viewer-1", cmd, true)
+	require.Equal(t, "gg", outcome.Trigger)
+	require.Equal(t, command.OutcomeStatusFired, outcome.Status)
+	require.Greater(t, outcome.CooldownRemainingMs, 0)
+
+	restored, ok := m.MessageOutcome("twitch", "msg-fired")
+	require.True(t, ok)
+	require.Equal(t, outcome.Trigger, restored.Trigger)
+	require.Equal(t, command.OutcomeStatusFired, restored.Status)
+	require.Greater(t, restored.CooldownRemainingMs, 0)
+
+	require.False(t, m.TryFire("twitch", "viewer-1", cmd))
+	cooldownOutcome := m.RecordMessageOutcome("twitch", "msg-cooldown", "twitch", "viewer-1", cmd, false)
+	require.Equal(t, command.OutcomeStatusCooldown, cooldownOutcome.Status)
+	require.Greater(t, cooldownOutcome.CooldownRemainingMs, 0)
+
+	cooldownRestored, ok := m.MessageOutcome("twitch", "msg-cooldown")
+	require.True(t, ok)
+	require.Equal(t, command.OutcomeStatusCooldown, cooldownRestored.Status)
+	require.Greater(t, cooldownRestored.CooldownRemainingMs, 0)
+}

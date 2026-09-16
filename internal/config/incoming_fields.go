@@ -18,6 +18,13 @@ func ValidateIncomingJSONFields(data []byte) FieldErrors {
 		}
 	}
 
+	if raw, ok := doc["hide_command_cooldown_overlay"]; ok {
+		var value bool
+		if err := json.Unmarshal(raw, &value); err != nil {
+			fields["hide_command_cooldown_overlay"] = "Hide command cooldown overlay setting must be true or false."
+		}
+	}
+
 	if len(fields) > 0 {
 		return fields
 	}
