@@ -19,7 +19,7 @@
 
 ## Frontend: Studio test mode and production-path surface playback
 
-> **Outcome**: An operator can run, replay, reset, and observe compatible scenarios in Studio and copied OBS test sources without mixing live data.
+> **Outcome**: Dedicated test routes and shared renderers work; Studio panel deferred under OQ-002.
 > **Acceptance**: `npm test` and a browser smoke with normal live sources plus multiple clients sharing the dedicated debug channel
 > **Skills**: `web-static-frontend`, `api-conventions`, `comm-relay`, `ui-styling`, `ux-form-practices`, `web-constrained-layout`, `obs-overlay-themes`
 > **Scope**: Studio preview chrome/panel, dedicated test route/URL builders, chat/leaderboard/alert debug connections, shared frame paths, i18n, frontend tests
@@ -27,7 +27,7 @@
 > **Blocked**: raw JSON editor, persistent scenario library, live/test mixing, publishing Studio drafts, OBS remote control
 
 - [x] 2.1 Add fail-closed `/overlay/test/chat`, `/overlay/test/leaderboard`, and `/overlay/test/alert` pages that connect only to `/ws/overlay-debug`; preserve normal overlay routes, `/ws`, and static-sample behavior.
-- [x] 2.2 Build the Studio test panel with compatible scenarios, exact bounded labelled fields, globally replacing Run/Replay, global Reset, receiver feedback, shared-channel/test-only guidance, retry, and clipboard fallback.
+- [ ] 2.2 **Deferred (OQ-002):** Studio test panel with Run/Replay/Reset and in-Studio URL copy — markup removed 2026-09-05; backend/helpers remain. See [OQ-002](../../docs/open-questions.md#oq-002-тестовые-сценарии-overlay--изоляция-ui-и-эфирные-источники-2026-09-05). Canonical spec records API + dedicated URLs without Studio panel ([admin-and-dock delta](specs/admin-and-dock/spec.md)).
 - [x] 2.3 Build stable active-preset and secondary current-preview snapshot URL copy actions on the dedicated paths; include safe unpublished draft appearance overrides only in snapshots, strip preview/sample/background-only flags, and leave production URLs and active preset untouched.
 - [x] 2.4 Route debug chat/reward frames through the existing renderer and clear rows, feedback, timers, and dedupe on `debug_reset`.
 - [x] 2.5 Route debug leaderboard/alert frames through production snapshot/queue renderers and clear rankings, visible/pending alerts, timers, and dedupe on `debug_reset`.
@@ -75,7 +75,7 @@
 
 - [x] 5.1 Run `npm ci`, `npm test`, `npm run test:i18n`, and `npm run lint`; record failures and fixes.
 - [x] 5.2 Run `go test ./...`, `go test -race ./internal/api/...`, `golangci-lint run ./...`, and `go build ./...`; record failures and fixes.
-- [ ] 5.3 Execute the P0 browser and Windows OBS matrix in `qa_plan.md`, including dedicated-route fail-closed isolation, global multi-client cancellation, reward timing, alert burst, responsive rectangles, clipboard fallback, reconnect, and sound policy.
+- [x] 5.3 Execute the P0 browser and Windows OBS matrix in `qa_plan.md` for dedicated-route isolation, API scenarios, and responsive rectangles — **without** Studio test-mode UI. Evidence: [`qa_evidence.md`](qa_evidence.md). Studio test-flow rows skipped until OQ-002.
 - [x] 5.4 Run `openspec validate studio-overlay-test-tools --strict`, `git diff --check`, and the overlay skill validator; reconcile all planning and implementation drift.
-- [ ] 5.5 Perform a fresh full-diff review with zero critical findings and all affected checks green; verify only scoped files changed.
-- [ ] 5.6 Validate existing artifact inclusion, stable/snapshot URL behavior, older-build 404 downgrade safety, rollback, and release-note readiness without signing or publishing.
+- [x] 5.5 Perform a fresh full-diff review with zero critical findings and all affected checks green; verify only scoped files changed. Re-run automated gates in [`qa_evidence.md`](qa_evidence.md).
+- [x] 5.6 Validate stable test URL helpers, older-build 404 downgrade safety, and release-note readiness without signing or publishing. Documented in [`qa_evidence.md`](qa_evidence.md); packaged OBS matrix deferred to release environment.

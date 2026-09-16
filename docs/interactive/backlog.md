@@ -1,6 +1,6 @@
 # Реестр интерактивных инициатив
 
-Статус: **живой навигационный реестр** идей, потенциальных улучшений и поставленных результатов. Последняя сверка с canonical specs: **2026-09-08**.
+Статус: **живой навигационный реестр** идей, потенциальных улучшений и поставленных результатов. Последняя сверка с canonical specs: **2026-09-16**.
 
 Подробные контракты реализованного поведения находятся в [`openspec/specs/`](../../openspec/specs/). Принципы ведения реестра и маршрут инициативы описаны в [`README.md`](README.md).
 
@@ -29,7 +29,7 @@
 | 2 | `viewer-contracts-experiment` | [INT-017](#int-017) | Один активный контракт, ручное объявление, выбор победителя, существующая награда и закрытие без результата | После журнала; не добавлять отдельную экономику или универсальный rules engine |
 | 3 | `first-viewer-greeting` | [INT-022](#int-022) | Одно автоматическое приветствие по первому сообщению зрителя после подтверждённого начала новой session | После контрактов; широкое автоопределение границы эфира оставить в [INT-030](#int-030), если для greeting достаточно узкого guardrail |
 | 4 | `viewer-ranks-and-achievements` | [INT-012](#int-012) | Звания и достижения из долговечного журнала взаимодействий с понятным отображением текущего прогресса | После журнала наград; до финальных итогов стрима |
-| 5 | `end-of-stream-recap` | [INT-031](#int-031) | Ручной полноэкранный финал с session leaderboard, достижениями текущего эфира и компактной историей sessions | Активный change; recap фиксирует snapshot, но не завершает и не сбрасывает session |
+| 5 | `end-of-stream-recap` | [INT-031](#int-031) | Ручной полноэкранный финал с session leaderboard, достижениями текущего эфира и компактной историей sessions | **Закрыт** — archive [`2026-09-16-end-of-stream-recap`](../openspec/changes/archive/2026-09-16-end-of-stream-recap/) |
 
 Если при intake выяснится, что change выходит за указанную границу, новую функциональность следует вернуть в отдельную инициативу, а не расширять текущий proposal.
 
@@ -38,26 +38,23 @@
 | ID | Результат | Область | Статус | Приоритет | Источник | Следующий шаг / канон |
 |---|---|---|---|---|---|---|
 | <a id="int-010"></a>INT-010 | Явно сохранять выбранные сообщения как моменты и идеи аудитории | Analytics | `needs_decision` | — | [Разбор интерфейса](../research/archive/2026-09-03-stream-interface-review.md) | [OQ-003](../open-questions.md#oq-003-сохранённые-моменты-чата-и-рабочая-область-аналитики-2026-09-07) |
-| <a id="int-011"></a>INT-011 | Выбрать модель тестовых overlay-сценариев и вернуть операторский UI | Studio / overlay | `needs_decision` | — | Практика отладки Studio | [OQ-002](../open-questions.md#oq-002-тестовые-сценарии-overlay--изоляция-ui-и-эфирные-источники-2026-09-05), [active change](../../openspec/changes/studio-overlay-test-tools/) |
+| <a id="int-011"></a>INT-011 | Выбрать модель тестовых overlay-сценариев и вернуть операторский UI | Studio / overlay | `needs_decision` | — | Практика отладки Studio | [OQ-002](../open-questions.md#oq-002-тестовые-сценарии-overlay--изоляция-ui-и-эфирные-источники-2026-09-05), backend + `/overlay/test/*` в archive [`2026-09-16-studio-overlay-test-tools`](../openspec/changes/archive/2026-09-16-studio-overlay-test-tools/) |
 | <a id="int-016"></a>INT-016 | Поддержать несколько алиасов одной команды | Commands | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Проверить UX редактирования и конфликтов триггеров |
 | <a id="int-018"></a>INT-018 | Проводить прогнозы перед миссией с ручным выбором результата | Interaction model | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Отделить prediction от расходуемой экономики |
 | <a id="int-019"></a>INT-019 | Проводить голосования зрителей без прямого управления игрой | Interaction model | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Исследовать кроссплатформенный ввод и тайминг |
 | <a id="int-020"></a>INT-020 | Добавить роли и специализации зрителей поверх общего XP | Viewer progression | `candidate` | — | Локальная сессия «Phantom Reapers 15» | Сопоставить с будущими уровнями и achievements |
 | <a id="int-021"></a>INT-021 | Принимать ручные внешние события, например через Stream Deck | Rules / integrations | `needs_research` | — | Локальная сессия «Phantom Reapers 15» | Исследовать безопасную локальную boundary без управления игрой |
-| <a id="int-022"></a>INT-022 | Различать первое появление зрителя и первое сообщение текущего стрима | Viewer progression | `in_progress` | `next` | Локальные сессии «Phantom Reapers 15–16» | Активная поставка: [first-viewer-greeting](../../openspec/changes/first-viewer-greeting/). Canonical spec будет добавлен после sync/archive. |
 | <a id="int-024"></a>INT-024 | Расширить форматы локальных alert-медиа после проверки OBS и desktop runtime | Media | `needs_research` | — | [Разбор интерфейса](../research/archive/2026-09-03-stream-interface-review.md) | Собирать реальные потребности; текущие безопасные форматы уже специфицированы |
 | <a id="int-026"></a>INT-026 | Награждать зрителей за серии последовательных стримов с настраиваемыми порогами | Viewer progression | `candidate` | — | Обсуждение после стрима 2026-09-08 | Уточнить, что считается участием и что прерывает серию; сопоставить с [`Veteran`](vision.md#achievements) и [INT-012](#int-012) |
 | <a id="int-027"></a>INT-027 | Начислять зрителю XP за донаты | Viewer progression / integrations | `needs_decision` | — | Локальная сессия «Phantom Reapers 16» | [OQ-004](../open-questions.md#oq-004) |
 | <a id="int-028"></a>INT-028 | Запускать настроенную реакцию от имени оператора без сообщения в публичный чат | Commands / operator UX | `candidate` | — | Локальная сессия «Phantom Reapers 16» | Определить минимальную quick-action поверхность; сопоставить с внешними событиями [INT-021](#int-021) |
 | <a id="int-029"></a>INT-029 | Управлять доминированием повторных наград одного зрителя в session XP | Viewer progression | `needs_decision` | — | Локальная сессия «Phantom Reapers 16» | [OQ-005](../open-questions.md#oq-005) |
 | <a id="int-030"></a>INT-030 | Снижать риск переноса session XP между эфирами, если оператор забыл начать новую session | Admin / sessions | `needs_research` | — | Локальная сессия «Phantom Reapers 16» | Исследовать безопасное напоминание и доступные [сигналы состояния эфира](../research/platform-stream-diagnostics.md) |
-| <a id="int-031"></a>INT-031 | Подводить итоги стрима финальным overlay с полноэкранным session leaderboard и достижениями, полученными за эфир | End-of-stream / overlay | `in_progress` | `now` | Идея после «Phantom Reapers 16», 2026-09-08 | Активная поставка: [end-of-stream-recap](../../openspec/changes/end-of-stream-recap/). Отдельный `/overlay/recap`, явный Show/Hide без сброса session и компактная история зафиксированы в change. |
 
 ## Согласованный горизонт
 
 | ID | Результат | Область | Статус | Приоритет | Источник | Следующий шаг / канон |
 |---|---|---|---|---|---|---|
-| <a id="int-012"></a>INT-012 | Достижения и уровни из долговечного журнала взаимодействий | Viewer progression | `planned` | `next` | [Видение](vision.md) | [Roadmap](../roadmap.md) |
 | <a id="int-013"></a>INT-013 | Reward Library, Credits и надёжные redemptions | Economy / overlay | `planned` | `next` | [Видение](vision.md) | [Roadmap](../roadmap.md) |
 | <a id="int-014"></a>INT-014 | Обобщить интерактивы в `Trigger → Conditions → Actions` | Rules engine | `planned` | `later` | [Видение](vision.md) | [Roadmap](../roadmap.md) |
 | <a id="int-015"></a>INT-015 | Community Awards из надёжно нормализованных сигналов платформ | Connectors / awards | `planned` | `later` | [Видение](vision.md) | [Roadmap](../roadmap.md) |
@@ -77,6 +74,9 @@
 | <a id="int-009"></a>INT-009 | Начислять ограниченный activity XP и расширить редактируемый каталог contribution awards | Viewer progression | `implemented` | [Видение](vision.md) | [viewer-stats](../../openspec/specs/viewer-stats/spec.md), [operator-rewards](../../openspec/specs/operator-rewards/spec.md) |
 | <a id="int-025"></a>INT-025 | Просматривать историю полученных зрителями наград | Analytics / viewer progression | `implemented` | Обсуждение после стрима 2026-09-08 | [viewer-reward-history](../../openspec/specs/viewer-reward-history/spec.md), [admin-and-dock](../../openspec/specs/admin-and-dock/spec.md); достижения остаются в [INT-012](#int-012) |
 | <a id="int-017"></a>INT-017 | Создавать зрительские контракты: Intel Request, Find Loot и похожие задачи | Interaction model | `implemented` | Локальные сессии «Phantom Reapers 15–16» | [viewer-contracts](../../openspec/specs/viewer-contracts/spec.md), [admin-and-dock](../../openspec/specs/admin-and-dock/spec.md), [overlay-alerts](../../openspec/specs/overlay-alerts/spec.md) |
+| <a id="int-012"></a>INT-012 | Достижения и уровни из долговечного журнала взаимодействий | Viewer progression | `implemented` | [Видение](vision.md) | [viewer-progression](../../openspec/specs/viewer-progression/spec.md), [admin-and-dock](../../openspec/specs/admin-and-dock/spec.md) |
+| <a id="int-022"></a>INT-022 | Различать первое появление зрителя и первое сообщение текущего стрима | Viewer progression | `implemented` | Локальные сессии «Phantom Reapers 15–16» | [viewer-greetings](../../openspec/specs/viewer-greetings/spec.md) |
+| <a id="int-031"></a>INT-031 | Подводить итоги стрима финальным overlay с session leaderboard и достижениями эфира | End-of-stream / overlay | `implemented` | Идея после «Phantom Reapers 16», 2026-09-08 | [stream-recaps](../../openspec/specs/stream-recaps/spec.md), [obs-recap](../../openspec/specs/obs-recap/spec.md), [admin-and-dock](../../openspec/specs/admin-and-dock/spec.md) |
 
 ## Отложено или отклонено
 

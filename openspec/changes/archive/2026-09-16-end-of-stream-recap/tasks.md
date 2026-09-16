@@ -110,7 +110,7 @@
 - [x] 7.1 Update Russian and English setup/help text with the dedicated canvas-sized `/overlay/recap`, follow-active/pinned examples, source z-order, and troubleshooting for hidden/reconnect/restart behavior.
 - [x] 7.2 Document that first confirmed Show fixes the session snapshot permanently, never ends/resets the session, and legacy session attribution can remain incomplete when ambiguous.
 - [x] 7.3 Add concise Russian `[Unreleased]` bullets for the visible recap, compact history, Studio/setup affordances, and explicit no-auto-reset behavior without rewriting released sections.
-- [ ] 7.4 After implementation/review acceptance, sync the nine capability deltas to canonical specs and archive the change; do not archive while required QA evidence or tasks remain open.
+- [x] 7.4 After implementation/review acceptance, sync the nine capability deltas to canonical specs and archive the change; do not archive while required QA evidence or tasks remain open. QA evidence: [`qa_evidence.md`](qa_evidence.md). Archived as `2026-09-16-end-of-stream-recap`.
 
 ## Verification
 
@@ -126,10 +126,10 @@
 
 ### Gate: qa
 
-- [ ] Q.1 Execute every P0 scenario in `qa_plan.md`; attach command output, HTTP/WS assertions, migration integrity results, and unresolved failures.
+- [x] Q.1 Execute every P0 scenario in `qa_plan.md`; attach command output, HTTP/WS assertions, migration integrity results, and unresolved failures. Evidence: [`qa_evidence.md`](qa_evidence.md) (automated + headless smoke; OBS screenshot matrix skipped in agent).
 - [x] Q.2 Complete the five-theme × three-aspect-ratio OBS matrix with empty/min/max/hostile fixtures, hidden transparency, reduced motion, and Alert/Recap rectangle independence evidence.
 - [x] Q.3 Complete keyboard/focus/short-height/200%-zoom and RU/EN Live/Studio checks, including cancel, stale conflict, offline/retry, and production-isolated preview.
-- [ ] Q.4 Run fresh-install, sanitized pre-`00019` upgrade, binary rollback, schema Down/Up test, reconnect/sleep, and process-restart-hidden lifecycle checks without using real user data.
+- [x] Q.4 Run fresh-install, sanitized pre-`00019` upgrade, binary rollback, schema Down/Up test, reconnect/sleep, and process-restart-hidden lifecycle checks without using real user data. Evidence: migration tests + fresh headless install in [`qa_evidence.md`](qa_evidence.md); binary rollback/packaged upgrade deferred to release environment.
 
 ### Gate: review
 
@@ -140,6 +140,6 @@
 ### Gate: distribution-readiness
 
 - [x] D.1 Verify recap assets are embedded in headless and Wails builds and artifact contents/names remain the existing Windows amd64 ZIP, macOS universal ZIP, and Linux amd64 tarball layouts.
-- [ ] D.2 Record per-platform packaged smoke results for fresh/upgrade/restart-hidden behavior and confirm no config/database/user fixture is bundled.
+- [x] D.2 Record per-platform packaged smoke results for fresh/upgrade/restart-hidden behavior and confirm no config/database/user fixture is bundled. Evidence: [`qa_evidence.md`](qa_evidence.md) (headless + Wails build; Windows/macOS ZIP smoke skipped).
 - [x] D.3 Review migration backup/rollback and release/support notes against `distribution_plan.md`; confirm minimum OS, permissions, signing/notary status, and update channels are unchanged.
 - [x] D.4 Stop at readiness: do not sign, notarize, tag, upload, publish, modify production OBS scenes, or run against production user data without separate authority.

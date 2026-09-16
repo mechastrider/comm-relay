@@ -8,9 +8,9 @@
 
 | ID | Status | Task | Связи |
 |---|---|---|---|
-| CR-023 | `blocked` | Overlay test tools — rework and UI | [Task](tasks/CR-023-overlay-test-tools-rework.md), [OQ-002](open-questions.md#oq-002-тестовые-сценарии-overlay--изоляция-ui-и-эфирные-источники-2026-09-05), [OpenSpec change](../openspec/changes/studio-overlay-test-tools/) |
+| CR-023 | `blocked` | Overlay test tools — rework and UI | [Task](tasks/CR-023-overlay-test-tools-rework.md), [OQ-002](open-questions.md#oq-002-тестовые-сценарии-overlay--изоляция-ui-и-эфирные-источники-2026-09-05), archive [`2026-09-16-studio-overlay-test-tools`](../openspec/changes/archive/2026-09-16-studio-overlay-test-tools/) (backend shipped; Studio UI deferred) |
 
-CR-023 останется `blocked`, пока человек не выберет модель тестирования overlay. Реализовывать один из вариантов из OQ-002 без такого решения нельзя.
+CR-023 останется `blocked`, пока человек не выберет модель тестирования overlay. Backend и dedicated test URLs уже в canonical specs; closeout recap и overlay-debug engineering — через OpenSpec archive, не через CR.
 
 ## История
 

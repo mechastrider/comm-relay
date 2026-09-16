@@ -42,7 +42,7 @@ API mutations SHALL use `POST /api/<resource>/<action>` with identifiers in the 
 - **THEN** the client calls `POST /api/viewers/avatar/clear` with JSON `id`
 
 ### Requirement: Reads, health, static, WebSocket, and OAuth callbacks may use GET
-The following GET routes SHALL remain available: `/`, `/overlay`, `/overlay/leaderboard`, `/overlay/alert`, `/dock/messages`, `/shared/`, `/health`, `/ws`, `/api/config`, `/api/status`, `/api/diagnostics`, `/api/messages/recent`, `/api/viewers`, `/api/viewers/get`, `/api/leaderboard`, `/api/commands`, `/api/awards`, `/api/reward-history`, `/overlay/assets/{filename}`, `/oauth/youtube/start`, and `/oauth/youtube/callback`.
+The following GET routes SHALL remain available: `/`, `/overlay`, `/overlay/leaderboard`, `/overlay/alert`, `/overlay/recap`, `/overlay/test/chat`, `/overlay/test/leaderboard`, `/overlay/test/alert`, `/dock/messages`, `/shared/`, `/health`, `/ws`, `/ws/overlay-debug`, `/api/config`, `/api/status`, `/api/diagnostics`, `/api/messages/recent`, `/api/viewers`, `/api/viewers/get`, `/api/sessions`, `/api/sessions/get`, `/api/stream-recaps/current`, `/api/leaderboard`, `/api/commands`, `/api/awards`, `/api/reward-history`, `/overlay/assets/{filename}`, `/oauth/youtube/start`, and `/oauth/youtube/callback`.
 
 #### Scenario: Status poll
 - **WHEN** the admin polls connector state
@@ -63,6 +63,14 @@ The following GET routes SHALL remain available: `/`, `/overlay`, `/overlay/lead
 #### Scenario: Alert page
 - **WHEN** OBS loads the banners Browser Source
 - **THEN** it uses `GET /overlay/alert`
+
+#### Scenario: Dedicated test chat page
+- **WHEN** OBS loads a Browser Source at `/overlay/test/chat`
+- **THEN** the page is served over GET and uses only the debug WebSocket route
+
+#### Scenario: Debug WebSocket upgrade
+- **WHEN** a test overlay client upgrades `/ws/overlay-debug`
+- **THEN** the connection is accepted separately from production `/ws`
 
 ### Requirement: JSON uses snake_case
 Request and response objects SHALL use snake_case field names (`server_port`, `display_name`, `avatar_url`, `max_messages`).
@@ -224,3 +232,67 @@ The API SHALL provide `GET /api/progression/levels`, `GET /api/progression/achie
 #### Scenario: Preview an unsaved achievement
 - **WHEN** a valid achievement preview is posted with one debug receiver connected
 - **THEN** the response reports one delivered client and production clients receive nothing
+
+### Requirement: Session history uses bounded GET reads
+`GET /api/sessions` SHALL accept an optional limit from 1 through 50 and opaque cursor and return newest-first session summaries plus optional `next_cursor`. `GET /api/sessions/get` SHALL require `id` as a query parameter and return one session detail or HTTP 404. Responses SHALL use snake_case, bounded ranking and achievement arrays, RFC3339 timestamps, and MUST NOT expose raw chat, source-message identifiers, filesystem paths, or hidden achievement definitions.
+
+#### Scenario: List first page
+- **WHEN** the admin requests `/api/sessions?limit=20`
+- **THEN** at most twenty summaries and an optional opaque continuation cursor are returned
+
+#### Scenario: Unknown session
+- **WHEN** `/api/sessions/get?id=missing` is requested
+- **THEN** the server returns HTTP 404 with a short JSON error
+
+### Requirement: Recap reads expose current state safely
+`GET /api/stream-recaps/current` SHALL return the open `session_id`, a bounded current-session `session` detail, runtime `visible`, and the stored current-session `snapshot` or null. A visible snapshot SHALL use the same bounded public wire shape sent to the overlay. The current `session` detail MAY continue reflecting normalized activity after an immutable snapshot was captured, while `snapshot` MUST remain unchanged. The read MUST NOT create or modify a snapshot.
+
+#### Scenario: Current session not captured
+- **WHEN** the current session has no recap
+- **THEN** the response identifies and summarizes the session with `visible` false and `snapshot` null
+
+### Requirement: Recap mutations use POST actions
+`POST /api/stream-recaps/show` SHALL require JSON `session_id`, atomically create or reuse the current-session snapshot, make it visible, broadcast state, and return `visible` true with the snapshot. `POST /api/stream-recaps/hide` SHALL accept `{}`, make recap hidden, broadcast state, and return `visible` false. Invalid JSON or ids SHALL return HTTP 400, stale/non-current session ids HTTP 409, unavailable storage HTTP 503, and unexpected failures HTTP 500 without leaking details.
+
+#### Scenario: Show current session
+- **WHEN** a valid current `session_id` is posted to `/api/stream-recaps/show`
+- **THEN** the response contains the committed bounded snapshot and `visible` true
+
+#### Scenario: Hide is idempotent
+- **WHEN** `/api/stream-recaps/hide` is called while recap is already hidden
+- **THEN** it succeeds with `visible` false and no snapshot is deleted
+
+#### Scenario: Old session cannot be replayed
+- **WHEN** a completed historical session id is posted to Show
+- **THEN** the request returns HTTP 409 and production visibility is unchanged
+
+### Requirement: The recap page is a supported static read
+`GET /overlay/recap` and its trailing-slash asset path SHALL be served alongside existing overlay pages without shadowing another route. The route MUST remain local and embeddable in OBS.
+
+#### Scenario: Open recap page
+- **WHEN** OBS requests `/overlay/recap`
+- **THEN** the server returns the recap document rather than the chat or alert page
+
+### Requirement: Overlay debug actions use typed POST-action routes
+
+The server SHALL expose `POST /api/overlay-debug/scenario/fire` and `POST /api/overlay-debug/session/reset` as local action routes. Fire JSON MUST use snake_case, require one of `message`, `rewarded_message`, `command_alert`, `leaderboard_update`, or `alert_burst` as `scenario`, and MAY include applicable `display_name`, `message`, `label`, and `points` overrides. `display_name` MUST be at most 64 characters, `message` at most 500, `label` at most 80, and `points` an integer from 1 through 1000. Neither action accepts a routing key. Unknown scenarios or invalid optional fields MUST return the standard UI-safe error envelope and broadcast no frame. Alert display durations and scenario timing are server-controlled implementation constants.
+
+#### Scenario: Fire a valid scenario
+- **WHEN** a client posts a supported `scenario` and valid optional fields
+- **THEN** the server returns HTTP 200 with `{"status":"started","run_id":"…","delivered_clients":N}` after the initial reset and immediate frames are enqueued and any delayed steps are scheduled
+- **AND** `delivered_clients` is the number of unique currently connected debug sockets whose send queues accepted the initial reset/immediate delivery
+
+#### Scenario: Reject arbitrary input
+- **WHEN** a client posts an unknown scenario or an over-limit sample string
+- **THEN** the server returns a UI-safe validation error
+- **AND** broadcasts no frame
+
+#### Scenario: Reset the global test channel
+- **WHEN** a client posts to the reset action
+- **THEN** the server globally cancels pending test steps, enqueues `debug_reset`, and returns HTTP 200 `{"status":"reset","delivered_clients":N}`
+- **AND** `delivered_clients` counts unique connected debug sockets whose send queues accepted the reset
+
+#### Scenario: Fire with no connected debug socket
+- **WHEN** a client posts a valid scenario while no debug socket is connected
+- **THEN** the server returns HTTP 200 with status `started`, a run ID, and `delivered_clients` equal to zero
+- **AND** schedules no delayed scenario step
