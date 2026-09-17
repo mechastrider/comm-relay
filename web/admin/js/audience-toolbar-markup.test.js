@@ -47,6 +47,18 @@ assert.doesNotMatch(
 assert.match(markup, /id="audience-sort-viewer"/, "Viewer sort button must exist");
 assert.match(markup, /id="audience-sort-xp"/, "XP sort button must exist");
 assert.match(markup, /id="audience-sort-messages"/, "Messages sort button must exist");
+assert.match(markup, /id="audience-sort-streams"/, "Streams sort button must exist");
+assert.match(markup, /audience-viewers-table__col-streams/, "Streams column must exist in colgroup");
+assert.match(
+  markup,
+  /XP and message columns follow the selected period\. Streams does not\./,
+  "Period hint fallback must say Streams is independent"
+);
+assert.match(
+  viewersSource,
+  /t\("viewers\.statStreams"\)[\s\S]*?Number\(viewer\.session_count\) \|\| 0/,
+  "viewer card must show lifetime session_count after period stats"
+);
 assert.match(
   markup,
   /class="data-table__numeric audience-viewers-table__sortable" aria-sort="none"/,

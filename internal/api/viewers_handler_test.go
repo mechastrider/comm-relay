@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/bus"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 func TestViewers_WhenMerge_ExpectSourceHidden(t *testing.T) {
@@ -215,6 +216,59 @@ func TestViewers_WhenGet_ExpectIdentities(t *testing.T) {
 	require.Equal(t, "twitch", payload.Identities[0].Platform)
 	require.Equal(t, "42", payload.Identities[0].UserID)
 	require.NotNil(t, payload.Platforms)
+}
+
+func TestViewers_WhenThreeSessions_ExpectSessionCountOnListAndGet(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	cfg := env.ConfigStore.Snapshot()
+	now := time.Now()
+	activity := store.ActivitySettings{
+		IntervalSeconds: cfg.ActivityIntervalSeconds,
+		SessionLimit:    cfg.ActivitySessionLimit,
+		XP:              cfg.ActivityXP,
+	}
+	identity := store.ChatIdentity{Platform: "twitch", UserID: "sessions", DisplayName: "Sessions"}
+	require.NoError(t, env.ViewerStore.ApplyChat(identity, activity, cfg.DayResetHour, now))
+	require.NoError(t, env.ViewerStore.StartSession(now.Add(time.Minute)))
+	require.NoError(t, env.ViewerStore.ApplyChat(identity, activity, cfg.DayResetHour, now.Add(2*time.Minute)))
+	require.NoError(t, env.ViewerStore.StartSession(now.Add(3*time.Minute)))
+	require.NoError(t, env.ViewerStore.ApplyChat(identity, activity, cfg.DayResetHour, now.Add(4*time.Minute)))
+
+	id, known := env.ViewerStore.ViewerIDForIdentity("twitch", "sessions")
+	require.True(t, known)
+
+	listRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(listRec, httptest.NewRequest(http.MethodGet, "/api/viewers", nil))
+	require.Equal(t, http.StatusOK, listRec.Code)
+
+	var listPayload struct {
+		Viewers []struct {
+			ID           string `json:"id"`
+			SessionCount int    `json:"session_count"`
+		} `json:"viewers"`
+	}
+	require.NoError(t, json.Unmarshal(listRec.Body.Bytes(), &listPayload))
+	require.NotEmpty(t, listPayload.Viewers)
+
+	var listCount int
+	for _, viewer := range listPayload.Viewers {
+		if viewer.ID == id {
+			listCount = viewer.SessionCount
+			break
+		}
+	}
+	require.Equal(t, 3, listCount)
+
+	getRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(getRec, httptest.NewRequest(http.MethodGet, "/api/viewers/get?id="+id, nil))
+	require.Equal(t, http.StatusOK, getRec.Code)
+
+	var getPayload struct {
+		SessionCount int `json:"session_count"`
+	}
+	require.NoError(t, json.Unmarshal(getRec.Body.Bytes(), &getPayload))
+	require.Equal(t, 3, getPayload.SessionCount)
+	require.Equal(t, listCount, getPayload.SessionCount)
 }
 
 func TestViewerIngest_WhenEmptyUserID_ExpectNoViewer(t *testing.T) {

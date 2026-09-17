@@ -125,6 +125,7 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 			COALESCE(vss.xp, 0),
 			COALESCE(vds.message_count, 0),
 			COALESCE(vds.xp, 0),
+			COALESCE(vsc.session_count, 0),
 			COALESCE(
 				NULLIF(v.display_name, ''),
 				(
@@ -162,7 +163,7 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 			COALESCE(`+CanonicalViewerPortraitSQL+`, '') AS last_seen_avatar_url
 		FROM viewers v
 		LEFT JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
-		LEFT JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?
+		LEFT JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?`+participatingSessionCountGroupedJoinSQL+`
 		WHERE v.hidden = 0
 		  AND (
 		    ? = ''
@@ -236,10 +237,11 @@ func (s *Store) Get(id string, dayResetHour int, now time.Time) (*Viewer, error)
 			COALESCE(vss.message_count, 0),
 			COALESCE(vss.xp, 0),
 			COALESCE(vds.message_count, 0),
-			COALESCE(vds.xp, 0)
+			COALESCE(vds.xp, 0),
+			COALESCE(vsc.session_count, 0)
 		FROM viewers v
 		LEFT JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
-		LEFT JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?
+		LEFT JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?`+participatingSessionCountGroupedJoinSQL+`
 		WHERE v.id = ? AND v.hidden = 0`, sessionID, nowDayKey, id)
 
 	viewer, err := scanViewerSummaryRow(row)
@@ -339,6 +341,7 @@ func scanViewerListRow(rows *sql.Rows) (Viewer, error) {
 		&viewer.SessionXP,
 		&viewer.DayMessageCount,
 		&viewer.DayXP,
+		&viewer.SessionCount,
 		&viewer.DisplayName,
 		&viewer.LastSeen.Platform,
 		&viewer.LastSeen.UserID,
@@ -384,6 +387,7 @@ func scanViewerSummaryRow(row *sql.Row) (Viewer, error) {
 		&viewer.SessionXP,
 		&viewer.DayMessageCount,
 		&viewer.DayXP,
+		&viewer.SessionCount,
 	); err != nil {
 		return Viewer{}, err
 	}

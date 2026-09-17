@@ -80,6 +80,7 @@ function updateSortHeaders() {
   updateSortHeader("audience-sort-viewer", "viewer");
   updateSortHeader("audience-sort-xp", "xp");
   updateSortHeader("audience-sort-messages", "messages");
+  updateSortHeader("audience-sort-streams", "streams");
 }
 
 function handleSortClick(column) {
@@ -400,7 +401,11 @@ function renderViewersTable(viewers) {
     messagesCell.className = "data-table__numeric";
     messagesCell.textContent = String(metrics.messages);
 
-    row.append(nameCell, platformCell, scoreCell, messagesCell);
+    const streamsCell = document.createElement("td");
+    streamsCell.className = "data-table__numeric";
+    streamsCell.textContent = String(Number(viewer.session_count) || 0);
+
+    row.append(nameCell, platformCell, scoreCell, messagesCell, streamsCell);
     row.addEventListener("keydown", handleTableRowKeydown);
     row.addEventListener("click", function (event) {
       if (event.target.closest("button")) {
@@ -691,6 +696,11 @@ function renderViewerDetail(viewer, rewardHistorySection) {
     });
     stats.append(dt, dd);
   });
+  const streamsDt = document.createElement("dt");
+  streamsDt.textContent = t("viewers.statStreams");
+  const streamsDd = document.createElement("dd");
+  streamsDd.textContent = String(Number(viewer.session_count) || 0);
+  stats.append(streamsDt, streamsDd);
 
   const progression = viewer.progression;
   const progressionSection = document.createElement("section");
@@ -1330,6 +1340,12 @@ export function initAudienceViewers() {
   if (sortMessagesButton) {
     sortMessagesButton.addEventListener("click", function () {
       handleSortClick("messages");
+    });
+  }
+  const sortStreamsButton = document.getElementById("audience-sort-streams");
+  if (sortStreamsButton) {
+    sortStreamsButton.addEventListener("click", function () {
+      handleSortClick("streams");
     });
   }
 

@@ -326,7 +326,7 @@
                   <span class="ui-tooltip" role="tooltip" data-i18n="stream.newStreamHint">Resets session viewer XP and the session leaderboard. Day and all-time stay.</span>
                 </button>
               </div>
-              <p id="audience-period-hint" class="field-hint audience-toolbar__hint" data-i18n="audience.periodHint">XP and message columns follow the selected period.</p>
+              <p id="audience-period-hint" class="field-hint audience-toolbar__hint" data-i18n="audience.periodHint">XP and message columns follow the selected period. Streams does not.</p>
             </header>
 
             <div id="audience-layout" class="audience-layout">
@@ -340,6 +340,7 @@
                       <col class="audience-viewers-table__col-platforms">
                       <col class="audience-viewers-table__col-score">
                       <col class="audience-viewers-table__col-messages">
+                      <col class="audience-viewers-table__col-streams">
                     </colgroup>
                     <thead class="audience-viewers-table__head">
                       <tr>
@@ -352,6 +353,9 @@
                         </th>
                         <th scope="col" class="data-table__numeric audience-viewers-table__sortable" aria-sort="none">
                           <button id="audience-sort-messages" class="audience-sort-button" type="button" data-i18n="audience.colMessages" data-i18n-aria-label="audience.sortMessages">Messages</button>
+                        </th>
+                        <th scope="col" class="data-table__numeric audience-viewers-table__sortable" aria-sort="none">
+                          <button id="audience-sort-streams" class="audience-sort-button" type="button" data-i18n="audience.colStreams" data-i18n-aria-label="audience.sortStreams">Streams</button>
                         </th>
                       </tr>
                     </thead>

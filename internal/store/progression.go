@@ -96,7 +96,7 @@ func progressionMetricQuery(viewerID string, metric ProgressionMetric, subjectID
 	case ProgressionMetricCommandCount:
 		return `SELECT COUNT(*) FROM interaction_events WHERE viewer_id = ? AND kind = 'command' AND command_id = ?`, []any{viewerID, subjectID}
 	case ProgressionMetricSessionCount:
-		return `SELECT COUNT(*) FROM viewer_session_stats WHERE viewer_id = ? AND message_count > 0`, []any{viewerID}
+		return participatingSessionCountMetricQuery(viewerID)
 	case ProgressionMetricContractWinCount:
 		return `SELECT COUNT(*) FROM viewer_contracts WHERE winner_viewer_id = ? AND status = 'awarded'`, []any{viewerID}
 	default:

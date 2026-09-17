@@ -176,6 +176,7 @@ type Viewer struct {
 	SessionXP                 int
 	DayMessageCount           int
 	DayXP                     int
+	SessionCount              int
 	LastSeenAt                time.Time
 	LastSeen                  LastSeenIdentity
 	Platforms                 []string
