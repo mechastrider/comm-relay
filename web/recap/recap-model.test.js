@@ -3,7 +3,14 @@ import test from "node:test";
 import { LOCALE_ENGLISH, LOCALE_RUSSIAN, setLocale, t } from "../shared/i18n.js";
 
 globalThis.window = { location: new URL("http://localhost/overlay/recap") };
-const { SAMPLE_RECAP, normalizeRecapSnapshot, recapContentLayout, visibleRecapFromFrame } = await import("./recap-model.js");
+const {
+  RECAP_WINDOW_ALL,
+  RECAP_WINDOW_SESSION,
+  SAMPLE_RECAP,
+  normalizeRecapSnapshot,
+  recapContentLayout,
+  visibleRecapFromFrame,
+} = await import("./recap-model.js");
 
 test("recap model bounds hostile data and keeps authored strings as plain values", function () {
   const snapshot = normalizeRecapSnapshot({
@@ -24,9 +31,30 @@ test("recap model bounds hostile data and keeps authored strings as plain values
 test("recap state accepts only stream recap frames and hides exactly", function () {
   assert.equal(visibleRecapFromFrame({ type: "leaderboard" }), undefined);
   assert.equal(visibleRecapFromFrame({ type: "stream_recap_state", visible: false, snapshot: SAMPLE_RECAP }), null);
-  const visible = visibleRecapFromFrame({ type: "stream_recap_state", visible: true, snapshot: SAMPLE_RECAP });
-  assert.equal(visible.id, "sample-recap");
-  assert.equal(visible.ranking.length, 5);
+  const visible = visibleRecapFromFrame({ type: "stream_recap_state", visible: true, window: "session", snapshot: SAMPLE_RECAP });
+  assert.equal(visible.window, RECAP_WINDOW_SESSION);
+  assert.equal(visible.snapshot.id, "sample-recap");
+  assert.equal(visible.snapshot.ranking.length, 5);
+  assert.equal(visibleRecapFromFrame({ type: "stream_recap_state", visible: true, window: "season" }), undefined);
+});
+
+test("all-time recap frames render without achievements", function () {
+  const frame = {
+    type: "stream_recap_state",
+    visible: true,
+    window: "all",
+    snapshot: null,
+    all_time: {
+      generated_at: "2026-09-01T12:00:00Z",
+      totals: { viewer_count: 2, message_count: 3, xp: 4 },
+      ranking: [{ rank: 1, display_name: "Scout", xp: 4, message_count: 3 }],
+    },
+  };
+  const visible = visibleRecapFromFrame(frame);
+  assert.equal(visible.window, RECAP_WINDOW_ALL);
+  assert.equal(visible.snapshot.achievement_groups.length, 0);
+  assert.equal(recapContentLayout(visible.snapshot, RECAP_WINDOW_ALL), "single");
+  assert.equal(visibleRecapFromFrame({ type: "stream_recap_state", visible: false, window: "all", all_time: frame.all_time }), null);
 });
 
 test("recap composition expands a sole populated section", function () {
@@ -34,6 +62,7 @@ test("recap composition expands a sole populated section", function () {
   assert.equal(recapContentLayout({ ranking: [], achievement_groups: [{}] }), "single");
   assert.equal(recapContentLayout({ ranking: [{}], achievement_groups: [{}] }), "split");
   assert.equal(recapContentLayout({ ranking: [], achievement_groups: [] }), "empty");
+  assert.equal(recapContentLayout({ ranking: [], achievement_groups: [{ name: "x" }] }, RECAP_WINDOW_ALL), "empty");
 });
 
 test("recap overlay labels are complete in Russian and English", function () {

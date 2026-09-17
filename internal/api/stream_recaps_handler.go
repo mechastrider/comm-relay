@@ -39,16 +39,26 @@ type streamRecapCurrentResponse struct {
 	SessionID string                `json:"session_id"`
 	Session   sessionDetailResponse `json:"session"`
 	Visible   bool                  `json:"visible"`
+	Window    *string               `json:"window"`
 	Snapshot  *recap.Snapshot       `json:"snapshot"`
+	AllTime   *recap.Presentation   `json:"all_time"`
 }
 
 type streamRecapShowResponse struct {
 	Visible  bool            `json:"visible"`
+	Window   string          `json:"window"`
 	Snapshot *recap.Snapshot `json:"snapshot"`
 }
 
+type streamRecapShowAllResponse struct {
+	Visible bool                `json:"visible"`
+	Window  string              `json:"window"`
+	AllTime *recap.Presentation `json:"all_time"`
+}
+
 type streamRecapHideResponse struct {
-	Visible bool `json:"visible"`
+	Visible bool    `json:"visible"`
+	Window  *string `json:"window"`
 }
 
 type streamRecapShowRequest struct {
@@ -116,11 +126,25 @@ func (h *streamRecapsHandler) handleCurrent(w http.ResponseWriter, r *http.Reque
 	}
 
 	state := h.controller.Current()
+
+	allTime, err := h.computeAllTimePresentation(customAvatarsEnabled)
+	if errors.Is(err, store.ErrStoreUnavailable) {
+		writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
+		return
+	}
+	if err != nil {
+		clog.Errorf(r.Context(), "compute all-time recap: %w", err)
+		writeError(w, http.StatusInternalServerError, "failed to load stream recap")
+		return
+	}
+
 	writeJSON(w, http.StatusOK, streamRecapCurrentResponse{
 		SessionID: sessionID,
 		Session:   sessionDetailFromStore(detail, storedSnapshot),
 		Visible:   state.Visible,
+		Window:    state.Window,
 		Snapshot:  storedSnapshot,
+		AllTime:   allTime,
 	})
 }
 
@@ -173,13 +197,16 @@ func (h *streamRecapsHandler) handleShow(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	clog.Info(r.Context(), "stream recap captured",
-		slog.String("session_id", sessionID),
-		slog.String("snapshot_id", state.Snapshot.ID),
-	)
+	if state.Snapshot != nil {
+		clog.Info(r.Context(), "stream recap captured",
+			slog.String("session_id", sessionID),
+			slog.String("snapshot_id", state.Snapshot.ID),
+		)
+	}
 
 	writeJSON(w, http.StatusOK, streamRecapShowResponse{
 		Visible:  state.Visible,
+		Window:   recap.WindowSession,
 		Snapshot: state.Snapshot,
 	})
 }
@@ -195,7 +222,52 @@ func (h *streamRecapsHandler) handleHide(w http.ResponseWriter, r *http.Request)
 
 	state := h.controller.Hide()
 
-	writeJSON(w, http.StatusOK, streamRecapHideResponse{Visible: state.Visible})
+	writeJSON(w, http.StatusOK, streamRecapHideResponse{
+		Visible: state.Visible,
+		Window:  state.Window,
+	})
+}
+
+func (h *streamRecapsHandler) handleShowAll(w http.ResponseWriter, r *http.Request) {
+	if h.viewerStore == nil {
+		writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
+		return
+	}
+	if h.controller == nil {
+		writeError(w, http.StatusServiceUnavailable, "stream recap unavailable")
+		return
+	}
+	if !decodeStreamRecapAction(w, r, &struct{}{}) {
+		return
+	}
+
+	customAvatarsEnabled := false
+	if h.configStore != nil {
+		customAvatarsEnabled = h.configStore.Snapshot().CustomAvatarsEnabled
+	}
+
+	state, err := h.controller.ShowAllAfter(func() (*recap.Presentation, error) {
+		return h.computeAllTimePresentation(customAvatarsEnabled)
+	})
+	if errors.Is(err, store.ErrStoreUnavailable) {
+		writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
+		return
+	}
+	if err != nil {
+		clog.Errorf(r.Context(), "show all-time stream recap: %w", err)
+		writeError(w, http.StatusInternalServerError, "failed to show all-time stream recap")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, streamRecapShowAllResponse{
+		Visible: state.Visible,
+		Window:  recap.WindowAll,
+		AllTime: state.AllTime,
+	})
+}
+
+func (h *streamRecapsHandler) computeAllTimePresentation(customAvatarsEnabled bool) (*recap.Presentation, error) {
+	return h.viewerStore.ComputeAllTimeRecapPresentation(customAvatarsEnabled)
 }
 
 func decodeStreamRecapAction(w http.ResponseWriter, r *http.Request, target any, supportedFields ...string) bool {

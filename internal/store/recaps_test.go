@@ -322,3 +322,20 @@ func TestLoadStreamRecap_WhenStoredPayloadRoundTrips_ExpectIdenticalJSON(t *test
 	require.NoError(t, err)
 	assert.Equal(t, encoded, reencoded)
 }
+
+func TestComputeAllTimeRecapPresentation_WhenXPOnlyAndMessagingViewer_ExpectUniqueCountOneWithBothXP(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Now().UTC().Truncate(time.Second)
+	awardOnly := store.ChatIdentity{Platform: "twitch", UserID: "award-only", DisplayName: "Award Only"}
+	_, err := s.ApplyAward(awardOnly, 40, testDayResetHour, now)
+	require.NoError(t, err)
+	chatter := store.ChatIdentity{Platform: "twitch", UserID: "chatter", DisplayName: "Chatter"}
+	require.NoError(t, s.ApplyChat(chatter, defaultActivity(), testDayResetHour, now))
+
+	presentation, err := s.ComputeAllTimeRecapPresentation(false)
+	require.NoError(t, err)
+	require.NotNil(t, presentation)
+	assert.Equal(t, 1, presentation.Totals.ViewerCount)
+	assert.Equal(t, 1, presentation.Totals.MessageCount)
+	assert.Equal(t, 41, presentation.Totals.XP)
+}

@@ -173,6 +173,67 @@ func (s *Store) buildStreamRecapSnapshotQuerierLocked(ctx context.Context, q con
 	return recapBuildSnapshot(sessionID, startedAt, capturedAt, detail)
 }
 
+// ComputeAllTimeRecapPresentation derives bounded all-time recap status without persisting it.
+func (s *Store) ComputeAllTimeRecapPresentation(customAvatarsEnabled bool) (*recap.Presentation, error) {
+	viewerCount, messageCount, xp, err := s.allTimeRecapTotals()
+	if err != nil {
+		return nil, err
+	}
+
+	entries, err := s.Leaderboard("all", defaultLeaderboardLimit, 0, time.Now().UTC(), customAvatarsEnabled)
+	if err != nil {
+		return nil, errors.Errorf("all-time recap ranking: %w", err)
+	}
+
+	ranking := make([]recap.RankingEntry, 0, len(entries))
+	for _, entry := range entries {
+		title := ""
+		if entry.Level != nil {
+			title = entry.Level.Title
+		}
+		ranking = append(ranking, recap.RankingEntry{
+			Rank:         entry.Rank,
+			DisplayName:  entry.DisplayName,
+			PortraitURL:  entry.AvatarURL,
+			XP:           entry.XP,
+			MessageCount: entry.MessageCount,
+			Title:        title,
+		})
+	}
+
+	return recap.NewPresentation(time.Now().UTC(), recap.Totals{
+		ViewerCount:  viewerCount,
+		MessageCount: messageCount,
+		XP:           xp,
+	}, ranking), nil
+}
+
+func (s *Store) allTimeRecapTotals() (viewerCount, messageCount, xp int, err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.db == nil {
+		return 0, 0, 0, ErrStoreUnavailable
+	}
+	err = s.db.QueryRow(`
+		SELECT COUNT(*)
+		FROM viewers v
+		WHERE v.hidden = 0
+		  AND v.message_count > 0`).Scan(&viewerCount)
+	if err != nil {
+		return 0, 0, 0, errors.Errorf("count all-time recap viewers: %w", err)
+	}
+	err = s.db.QueryRow(`
+		SELECT
+			COALESCE(SUM(v.message_count), 0),
+			COALESCE(SUM(v.xp), 0)
+		FROM viewers v
+		WHERE v.hidden = 0`).Scan(&messageCount, &xp)
+	if err != nil {
+		return 0, 0, 0, errors.Errorf("sum all-time recap totals: %w", err)
+	}
+	return viewerCount, messageCount, xp, nil
+}
+
 // SetRecapCaptureHookForTest installs a deterministic hook before the recap
 // insert. It must be configured before concurrent capture calls.
 func (s *Store) SetRecapCaptureHookForTest(hook func()) {

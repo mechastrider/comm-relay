@@ -521,3 +521,180 @@ func requireNoWSFrameWithin(t *testing.T, conn *websocket.Conn, wait time.Durati
 	err := conn.ReadJSON(&frame)
 	require.Error(t, err)
 }
+
+func TestStreamRecaps_ShowAll_WhenNoCapture_ExpectNoRecapRow(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	sessionID, err := env.ViewerStore.CurrentSessionID()
+	require.NoError(t, err)
+
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show-all", strings.NewReader(`{}`)))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	detail, err := env.ViewerStore.GetSession(sessionID, false)
+	require.NoError(t, err)
+	require.False(t, detail.HasRecap)
+}
+
+func TestStreamRecaps_ShowAllThenSessionShow_WhenCaptured_ExpectImmutableStoredSnapshot(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	sessionID, err := env.ViewerStore.CurrentSessionID()
+	require.NoError(t, err)
+
+	showRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(showRec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show", strings.NewReader(`{"session_id":"`+sessionID+`"}`)))
+	require.Equal(t, http.StatusOK, showRec.Code)
+	first, err := env.ViewerStore.LoadStreamRecap(sessionID)
+	require.NoError(t, err)
+	firstJSON, err := first.EncodePayload()
+	require.NoError(t, err)
+
+	allRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(allRec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show-all", strings.NewReader(`{}`)))
+	require.Equal(t, http.StatusOK, allRec.Code)
+
+	showAgainRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(showAgainRec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show", strings.NewReader(`{"session_id":"`+sessionID+`"}`)))
+	require.Equal(t, http.StatusOK, showAgainRec.Code)
+
+	second, err := env.ViewerStore.LoadStreamRecap(sessionID)
+	require.NoError(t, err)
+	secondJSON, err := second.EncodePayload()
+	require.NoError(t, err)
+	require.Equal(t, first.ID, second.ID)
+	require.Equal(t, first.CapturedAt, second.CapturedAt)
+	require.Equal(t, firstJSON, secondJSON)
+}
+
+func TestStreamRecaps_ShowAll_WhenInvalidBody_ExpectBadRequestAndHidden(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+
+	tests := []struct {
+		name string
+		body string
+	}{
+		{name: "empty", body: ""},
+		{name: "session id", body: `{"session_id":"current"}`},
+		{name: "unknown field", body: `{"unexpected":true}`},
+		{name: "trailing value", body: `{} {}`},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show-all", strings.NewReader(test.body)))
+			require.Equal(t, http.StatusBadRequest, rec.Code)
+			require.False(t, env.Recap.Current().Visible)
+		})
+	}
+}
+
+func TestStreamRecaps_ShowAllAgain_WhenAwardIncreasesXP_ExpectHigherTotals(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	now := time.Now().UTC()
+	identity := store.ChatIdentity{Platform: "twitch", UserID: "viewer", DisplayName: "Viewer"}
+	require.NoError(t, env.ViewerStore.ApplyChat(identity, store.ActivitySettings{IntervalSeconds: 0, SessionLimit: 0, XP: 1}, 6, now))
+
+	firstRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(firstRec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show-all", strings.NewReader(`{}`)))
+	require.Equal(t, http.StatusOK, firstRec.Code)
+	var first struct {
+		AllTime recap.Presentation `json:"all_time"`
+	}
+	require.NoError(t, json.Unmarshal(firstRec.Body.Bytes(), &first))
+	firstXP := first.AllTime.Totals.XP
+
+	_, err := env.ViewerStore.ApplyAward(identity, 25, 6, now.Add(time.Minute))
+	require.NoError(t, err)
+
+	secondRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(secondRec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show-all", strings.NewReader(`{}`)))
+	require.Equal(t, http.StatusOK, secondRec.Code)
+	var second struct {
+		AllTime recap.Presentation `json:"all_time"`
+	}
+	require.NoError(t, json.Unmarshal(secondRec.Body.Bytes(), &second))
+	require.Greater(t, second.AllTime.Totals.XP, firstXP)
+}
+
+func TestStreamRecaps_Hide_WhenAllTimeVisible_ExpectHiddenWithStoredSnapshot(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	sessionID, err := env.ViewerStore.CurrentSessionID()
+	require.NoError(t, err)
+
+	showRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(showRec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show", strings.NewReader(`{"session_id":"`+sessionID+`"}`)))
+	require.Equal(t, http.StatusOK, showRec.Code)
+
+	allRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(allRec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/show-all", strings.NewReader(`{}`)))
+	require.Equal(t, http.StatusOK, allRec.Code)
+
+	hideRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(hideRec, httptest.NewRequest(http.MethodPost, "/api/stream-recaps/hide", strings.NewReader(`{}`)))
+	require.Equal(t, http.StatusOK, hideRec.Code)
+	var hidePayload struct {
+		Visible bool    `json:"visible"`
+		Window  *string `json:"window"`
+	}
+	require.NoError(t, json.Unmarshal(hideRec.Body.Bytes(), &hidePayload))
+	require.False(t, hidePayload.Visible)
+	require.Nil(t, hidePayload.Window)
+
+	stored, err := env.ViewerStore.LoadStreamRecap(sessionID)
+	require.NoError(t, err)
+	require.NotNil(t, stored)
+}
+
+func TestStreamRecaps_WebSocket_WhenShowAllAndReconnect_ExpectAllTimeState(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	server := httptest.NewServer(env.Handler)
+	t.Cleanup(server.Close)
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
+
+	for range 3 {
+		_, _, err = conn.ReadMessage()
+		require.NoError(t, err)
+	}
+
+	showAllResp, err := http.Post(server.URL+"/api/stream-recaps/show-all", "application/json", strings.NewReader(`{}`))
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, showAllResp.StatusCode)
+	var showAllBody struct {
+		AllTime recap.Presentation `json:"all_time"`
+	}
+	require.NoError(t, json.NewDecoder(showAllResp.Body).Decode(&showAllBody))
+	require.NoError(t, showAllResp.Body.Close())
+
+	_, payload, err := conn.ReadMessage()
+	require.NoError(t, err)
+	var frame map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(payload, &frame))
+	require.Equal(t, json.RawMessage(`"`+wireStreamRecapStateType+`"`), frame["type"])
+	require.Equal(t, json.RawMessage("true"), frame["visible"])
+	require.Equal(t, json.RawMessage(`"`+recap.WindowAll+`"`), frame["window"])
+	require.Equal(t, json.RawMessage("null"), frame["snapshot"])
+	require.NotEqual(t, json.RawMessage("null"), frame["all_time"])
+
+	_ = conn.Close()
+	reconnect, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = reconnect.Close() })
+
+	var reconnectFrame map[string]json.RawMessage
+	for {
+		_, reconnectPayload, readErr := reconnect.ReadMessage()
+		require.NoError(t, readErr)
+		require.NoError(t, json.Unmarshal(reconnectPayload, &reconnectFrame))
+		if string(reconnectFrame["type"]) == `"`+wireStreamRecapStateType+`"` {
+			break
+		}
+	}
+	require.Equal(t, json.RawMessage("true"), reconnectFrame["visible"])
+	require.Equal(t, json.RawMessage(`"`+recap.WindowAll+`"`), reconnectFrame["window"])
+	require.Equal(t, json.RawMessage("null"), reconnectFrame["snapshot"])
+	require.JSONEq(t, string(frame["all_time"]), string(reconnectFrame["all_time"]))
+}

@@ -20,6 +20,9 @@
 .live-recap-dialog__body { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-color: var(--amber-dim) var(--surface-dark); padding: var(--primitive-space-4); }
 .live-recap-dialog__footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--primitive-space-2); padding: var(--primitive-space-4); border-top: 1px solid var(--border); background: var(--surface); }
 .live-recap-dialog__spacer { flex: 1 1 auto; }
+.live-recap-window-switch { display: flex; flex-wrap: wrap; gap: var(--primitive-space-3); margin-bottom: var(--primitive-space-4); padding: var(--primitive-space-3); border: 1px solid var(--border-dark); border-radius: var(--primitive-radius-2); background: var(--surface-dark); }
+.live-recap-window-switch__option { display: inline-flex; align-items: center; gap: var(--primitive-space-2); cursor: pointer; font-weight: 600; }
+.live-recap-window-switch__option input { accent-color: var(--amber); }
 .live-recap-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--primitive-space-2); margin: var(--primitive-space-4) 0; }
 .live-recap-totals > * { margin: 0; padding: var(--primitive-space-3); border: 1px solid var(--border); background: var(--surface-raised); }
 .live-recap-totals dt { color: var(--muted); font-size: var(--primitive-font-size-sm); font-weight: 700; text-transform: uppercase; }
