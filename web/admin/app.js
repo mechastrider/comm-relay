@@ -39,6 +39,7 @@ import {
   refreshRewardHistoryLocale,
   cancelViewerRewardHistory,
 } from "./js/reward-history.js";
+import { ensureAudienceArchiveLoaded, initAudienceArchive } from "./js/audience-archive.js";
 import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js?v=2";
 import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js?v=2";
 import { initGreetingsCatalog, ensureGreetingsLoaded } from "./js/greetings-catalog.js?v=2";
@@ -166,6 +167,7 @@ bindLocaleSelect();
 initAudienceViewers();
 initRewardHistory();
 window.addEventListener("admin-locale-applied", refreshRewardHistoryLocale);
+initAudienceArchive();
 initAudienceTabs({
   onTabChange: function (tab) {
     if (tab === "commands") {
@@ -174,6 +176,8 @@ initAudienceTabs({
       ensureGreetingsLoaded();
     } else if (tab === "awards") {
       ensureAwardsLoaded();
+    } else if (tab === "archive") {
+      ensureAudienceArchiveLoaded();
     } else if (tab === "history") {
       ensureRewardHistoryLoaded();
     } else if (tab === "progression") {

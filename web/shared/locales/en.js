@@ -760,6 +760,8 @@ export default {
   "audience.mergeMessage": "Merge {from} into {into}? This cannot be undone.",
   "audience.tabList": "Audience sections",
   "audience.tabViewers": "Viewers",
+  "audience.tabArchive": "Archive",
+  "audience.archiveHeading": "Stream archive",
   "audience.tabCommands": "Commands",
   "audience.tabAwards": "Awards",
   "audience.tabGreetings": "Greetings",

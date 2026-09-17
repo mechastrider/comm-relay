@@ -11,12 +11,10 @@ import {
   isHiddenRecapStateFrame,
   isAllTimeRecapStateFrame,
   isCurrentRecapStateFrame,
-  recapAllTimePresentation,
   recapDownloadFilename,
   recapDownloadPresentation,
   recapDisplayData,
   recapStateFrameApplies,
-  recapTotals,
   RECAP_WINDOW_ALL,
   RECAP_WINDOW_SESSION,
 } from "./live-recap-helpers.js";
@@ -31,6 +29,11 @@ import {
   openRecapDialog,
   resolveRecapShowConflict,
 } from "./live-recap-state.js";
+import {
+  createRecapHistoryRow,
+  formatRecapTime,
+  renderRecapSessionDetail,
+} from "./live-recap-session-render.js";
 
 let opener = null;
 let current = null;
@@ -53,14 +56,6 @@ let dialogState = { open: false, generation: 0, confirmation: false, showing: fa
 function isOpen() { return Boolean(dom.liveRecapDialog && dom.liveRecapDialog.open); }
 function region() { return dom.liveRecapBody; }
 function isUnavailable(error) { return !error.status || error.status === 503; }
-
-function formatTime(value) {
-  const date = new Date(value);
-  if (!value || Number.isNaN(date.getTime())) return t("recap.unknownTime");
-  return new Intl.DateTimeFormat(document.documentElement.lang === "en" ? "en-GB" : "ru-RU", {
-    dateStyle: "medium", timeStyle: "short", hourCycle: "h23",
-  }).format(date);
-}
 
 function setStatus(message, error) {
   if (!dom.liveRecapStatus) return;
@@ -98,75 +93,6 @@ function appendText(parent, tag, text, className) {
   return element;
 }
 
-function appendTotals(parent, totals) {
-  const list = document.createElement("dl");
-  list.className = "live-recap-totals";
-  [["recap.totalViewers", totals.viewer_count], ["recap.totalMessages", totals.message_count], ["recap.totalXP", totals.xp]].forEach(function ([key, value]) {
-    const item = document.createElement("div");
-    item.className = "live-recap-totals__item";
-    appendText(item, "dt", t(key));
-    appendText(item, "dd", String(value));
-    list.append(item);
-  });
-  parent.append(list);
-}
-
-function appendPortrait(parent, url, name) {
-  const holder = document.createElement("span");
-  holder.className = "live-recap-portrait";
-  const fallback = function () { holder.textContent = String(name || "?").trim().slice(0, 1).toUpperCase() || "?"; };
-  if (typeof url === "string" && url) {
-    const image = document.createElement("img");
-    image.src = url;
-    image.alt = "";
-    image.referrerPolicy = "no-referrer";
-    image.addEventListener("error", function () { image.remove(); fallback(); }, { once: true });
-    holder.append(image);
-  } else fallback();
-  parent.append(holder);
-}
-
-function appendRanking(parent, entries) {
-  if (!entries.length) return;
-  const section = document.createElement("section");
-  appendText(section, "h3", t("recap.topViewers"));
-  const list = document.createElement("ol");
-  list.className = "live-recap-ranking";
-  entries.forEach(function (entry) {
-    const item = document.createElement("li");
-    appendPortrait(item, entry.portrait_url, entry.display_name);
-    const copy = document.createElement("span");
-    copy.className = "live-recap-ranking__copy";
-    appendText(copy, "strong", entry.display_name || t("viewers.unnamed"));
-    if (entry.title) appendText(copy, "small", entry.title);
-    item.append(copy);
-    appendText(item, "span", t("recap.rankingMeta", { xp: String(entry.xp || 0), messages: String(entry.message_count || 0) }), "live-recap-ranking__meta");
-    list.append(item);
-  });
-  section.append(list);
-  parent.append(section);
-}
-
-function appendAchievements(parent, groups) {
-  if (!groups.length) return;
-  const section = document.createElement("section");
-  appendText(section, "h3", t("recap.achievements"));
-  const list = document.createElement("ul");
-  list.className = "live-recap-achievements";
-  groups.forEach(function (group) {
-    const item = document.createElement("li");
-    appendPortrait(item, group.viewer_portrait_url, group.viewer_display_name);
-    const copy = document.createElement("span");
-    appendText(copy, "strong", group.viewer_display_name || t("viewers.unnamed"));
-    appendText(copy, "span", group.name || "");
-    if (group.description) appendText(copy, "small", group.description);
-    item.append(copy);
-    list.append(item);
-  });
-  section.append(list);
-  parent.append(section);
-}
-
 function renderWindowSwitch(parent) {
   const group = document.createElement("div");
   group.className = "live-recap-window-switch";
@@ -193,32 +119,13 @@ function renderWindowSwitch(parent) {
 }
 
 function renderDetail(detail, historical, previewWindow) {
-  const data = recapDisplayData(detail);
   const body = region();
   if (!body) return;
-  const allTimePreview = previewWindow === RECAP_WINDOW_ALL;
-  const heading = appendText(body, "h3", allTimePreview ? t("recap.allTimeSummary") : (historical ? t("recap.sessionDetail") : t("recap.currentSummary")));
-  heading.tabIndex = -1;
-  if (!allTimePreview) {
-    appendText(body, "p", t("recap.startedAt", { time: formatTime(data.started_at) }), "field-hint");
-    if (data.snapshot && data.snapshot.captured_at) appendText(body, "p", t("recap.capturedAt", { time: formatTime(data.snapshot.captured_at) }), "field-hint");
-  } else if (current && current.all_time && current.all_time.generated_at) {
-    appendText(body, "p", t("recap.allTimeGeneratedAt", { time: formatTime(current.all_time.generated_at) }), "field-hint");
-  }
-  const presentation = allTimePreview ? recapAllTimePresentation(current && current.all_time) : null;
-  if (allTimePreview && !presentation) {
-    appendText(body, "p", t("recap.emptyAllTime"), "empty-state");
-    return;
-  }
-  const totalsSource = allTimePreview && presentation ? presentation : (data.snapshot || data);
-  appendTotals(body, recapTotals(totalsSource));
-  const source = allTimePreview && presentation ? presentation : (data.snapshot || data);
-  appendRanking(body, Array.isArray(source.ranking) ? source.ranking : []);
-  if (!allTimePreview) {
-    appendAchievements(body, Array.isArray(source.achievement_groups) ? source.achievement_groups : []);
-  }
-  const achievements = allTimePreview ? [] : (Array.isArray(source.achievement_groups) ? source.achievement_groups : []);
-  if (!source.ranking.length && !achievements.length) appendText(body, "p", allTimePreview ? t("recap.emptyAllTime") : t("recap.emptySession"), "empty-state");
+  renderRecapSessionDetail(body, detail, {
+    historical,
+    previewWindow,
+    current,
+  });
 }
 
 function renderCurrent() {
@@ -235,26 +142,16 @@ function renderConfirmation() {
   const body = region();
   const session = current && current.session ? recapDisplayData(current.session) : null;
   appendText(body, "h3", t("recap.confirmTitle"));
-  appendText(body, "p", t("recap.confirmSession", { id: session && session.id, time: formatTime(session && session.started_at) }), "field-hint");
-  const description = appendText(body, "p", t("recap.confirmPermanent", { time: formatTime(session && session.started_at) }));
+  appendText(body, "p", t("recap.confirmSession", { id: session && session.id, time: formatRecapTime(session && session.started_at) }), "field-hint");
+  const description = appendText(body, "p", t("recap.confirmPermanent", { time: formatRecapTime(session && session.started_at) }));
   description.id = "live-recap-confirm-description";
   appendText(body, "p", t("recap.confirmNoReset"), "field-hint");
 }
 
 function historyRow(summary) {
-  const data = recapDisplayData(summary);
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "live-recap-history-row";
-  button.dataset.sessionId = data.id;
-  appendText(button, "strong", formatTime(data.started_at));
-  const markers = [data.is_current ? t("recap.currentMarker") : t("recap.completedMarker")];
-  if (data.has_recap) markers.push(t("recap.capturedMarker"));
-  appendText(button, "span", markers.join(" · "), "field-hint");
-  const totals = recapTotals(data);
-  appendText(button, "span", t("recap.historyTotals", { viewers: String(totals.viewer_count), messages: String(totals.message_count), xp: String(totals.xp) }));
-  button.addEventListener("click", function () { openHistoryDetail(data.id, button); });
-  return button;
+  return createRecapHistoryRow(summary, function (id, button) {
+    openHistoryDetail(id, button);
+  });
 }
 
 function renderHistory() {
@@ -263,7 +160,12 @@ function renderHistory() {
     renderDetail(selectedDetail.detail, true);
     return;
   }
-  if (!history.length && historyLoaded) appendText(body, "p", t("recap.historyEmpty"), "empty-state");
+  if (!history.length && historyLoaded) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = t("recap.historyEmpty");
+    body.append(empty);
+  }
   const list = document.createElement("div");
   list.className = "live-recap-history";
   history.forEach(function (summary) { list.append(historyRow(summary)); });

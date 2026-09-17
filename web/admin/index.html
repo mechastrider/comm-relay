@@ -291,6 +291,7 @@
               <h1 id="workspace-audience-heading" class="workspace-heading" tabindex="-1" data-i18n="workspace.audienceHeading">Audience</h1>
               <div class="audience-tabs console-tabs" role="tablist" data-i18n-aria-label="audience.tabList" aria-label="Audience sections">
                 <button id="audience-viewers-tab" class="dialog-tab" type="button" role="tab" aria-selected="true" aria-controls="audience-viewers-panel" data-audience-tab="viewers" data-i18n="audience.tabViewers">Viewers</button>
+                <button id="audience-archive-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-archive-panel" tabindex="-1" data-audience-tab="archive" data-i18n="audience.tabArchive">Archive</button>
                 <button id="audience-history-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-history-panel" tabindex="-1" data-audience-tab="history" data-i18n="audience.tabHistory">Journal</button>
                 <button id="audience-progression-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-progression-panel" tabindex="-1" data-audience-tab="progression" data-i18n="audience.tabProgression">Progression</button>
                 <button id="audience-commands-tab" class="dialog-tab" type="button" role="tab" aria-selected="false" aria-controls="audience-commands-panel" data-audience-tab="commands" data-i18n="audience.tabCommands">Commands</button>
@@ -729,6 +730,19 @@
                   <p id="awards-editor-empty" class="empty-state audience-catalog-editor__empty" data-i18n="awards.selectOrCreate">Select an award or create one.</p>
                 </aside>
               </div>
+            </div>
+
+            <div id="audience-archive-panel" class="audience-panel audience-archive-panel" role="tabpanel" aria-labelledby="audience-archive-tab" hidden>
+              <header class="audience-archive__toolbar">
+                <h2 class="audience-archive__title" data-i18n="audience.archiveHeading">Archive</h2>
+                <div class="audience-archive__actions">
+                  <button id="audience-archive-back" type="button" class="btn-physical btn-small" data-i18n="recap.back" hidden>Back</button>
+                  <button id="audience-archive-download" type="button" class="btn-physical btn-small" data-i18n="recap.downloadImage" hidden>Download image</button>
+                  <button id="audience-archive-retry" type="button" class="btn-physical btn-small" data-i18n="state.retry" hidden>Retry</button>
+                </div>
+              </header>
+              <p id="audience-archive-status" class="audience-archive__status field-hint" role="status" hidden></p>
+              <div id="audience-archive-content" class="audience-archive__content" aria-busy="false"></div>
             </div>
 
             <div id="audience-history-panel" class="audience-panel audience-history-panel" role="tabpanel" aria-labelledby="audience-history-tab" hidden>

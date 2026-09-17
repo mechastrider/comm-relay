@@ -760,6 +760,8 @@ export default {
   "audience.mergeMessage": "Объединить {from} в {into}? Это действие нельзя отменить.",
   "audience.tabList": "Разделы аудитории",
   "audience.tabViewers": "Зрители",
+  "audience.tabArchive": "Архив",
+  "audience.archiveHeading": "Архив эфиров",
   "audience.tabCommands": "Команды",
   "audience.tabAwards": "Награды",
   "audience.tabGreetings": "Приветствия",
