@@ -15,3 +15,5 @@ LEFT JOIN (
 func participatingSessionCountMetricQuery(viewerID string) (string, []any) {
 	return `SELECT COUNT(*) FROM viewer_session_stats WHERE viewer_id = ? AND ` + participatingSessionStatsPredicate, []any{viewerID}
 }
+
+const participatingSessionCountSelectSQL = `COALESCE((SELECT COUNT(*) FROM viewer_session_stats WHERE viewer_id = v.id AND ` + participatingSessionStatsPredicate + `), 0)`

@@ -238,10 +238,10 @@ func (s *Store) Get(id string, dayResetHour int, now time.Time) (*Viewer, error)
 			COALESCE(vss.xp, 0),
 			COALESCE(vds.message_count, 0),
 			COALESCE(vds.xp, 0),
-			COALESCE(vsc.session_count, 0)
+			`+participatingSessionCountSelectSQL+`
 		FROM viewers v
 		LEFT JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
-		LEFT JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?`+participatingSessionCountGroupedJoinSQL+`
+		LEFT JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?
 		WHERE v.id = ? AND v.hidden = 0`, sessionID, nowDayKey, id)
 
 	viewer, err := scanViewerSummaryRow(row)

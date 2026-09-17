@@ -212,6 +212,17 @@ The API SHALL provide `GET /api/progression/levels`, `GET /api/progression/achie
 - **WHEN** the operator deletes a non-baseline level
 - **THEN** the client posts its `id` to `/api/progression/levels/delete` and no identifier appears in the path
 
+### Requirement: Viewer directory JSON includes session_count
+`GET /api/viewers` and `GET /api/viewers/get` SHALL include integer `session_count` on each returned viewer. The field SHALL be present even when the value is 0. Existing period counter field names MUST remain unchanged. Clients that ignore unknown members MUST keep working.
+
+#### Scenario: List includes the field
+- **WHEN** the admin lists viewers
+- **THEN** each viewer object includes `session_count` as an integer
+
+#### Scenario: Get includes the same value
+- **WHEN** the admin opens a known viewer via `GET /api/viewers/get`
+- **THEN** that viewer object includes the same `session_count` as the list row
+
 ### Requirement: Viewer progression reads do not expose locked secrets
 `GET /api/viewers/get` SHALL include current level, next-level progress, unlocked achievements, permitted in-progress achievements, and `progression_alerts_disabled`. `GET /api/viewers` SHALL include only the current level summary and the exclusion flag. Responses MUST omit locked secret definition and progress details.
 
