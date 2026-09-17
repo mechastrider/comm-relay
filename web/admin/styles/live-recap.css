@@ -24,9 +24,9 @@
 .live-recap-window-switch__option { display: inline-flex; align-items: center; gap: var(--primitive-space-2); cursor: pointer; font-weight: 600; }
 .live-recap-window-switch__option input { accent-color: var(--amber); }
 .live-recap-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--primitive-space-2); margin: var(--primitive-space-4) 0; }
-.live-recap-totals > * { margin: 0; padding: var(--primitive-space-3); border: 1px solid var(--border); background: var(--surface-raised); }
-.live-recap-totals dt { color: var(--muted); font-size: var(--primitive-font-size-sm); font-weight: 700; text-transform: uppercase; }
-.live-recap-totals dd { font-size: var(--primitive-font-size-lg); font-variant-numeric: tabular-nums; }
+.live-recap-totals__item { display: flex; flex-direction: column; gap: var(--primitive-space-1); margin: 0; padding: var(--primitive-space-3); border: 1px solid var(--border); background: var(--surface-raised); }
+.live-recap-totals dt { margin: 0; color: var(--muted); font-size: var(--primitive-font-size-sm); font-weight: 700; text-transform: uppercase; }
+.live-recap-totals dd { margin: 0; font-size: var(--primitive-font-size-lg); font-variant-numeric: tabular-nums; }
 .live-recap-dialog__body section { margin-top: var(--primitive-space-5); }
 .live-recap-dialog__body h3 { margin: 0 0 var(--primitive-space-3); overflow-wrap: anywhere; }
 .live-recap-ranking, .live-recap-achievements, .live-recap-history { display: grid; gap: var(--primitive-space-2); margin: 0; padding: 0; list-style: none; }

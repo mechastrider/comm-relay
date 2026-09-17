@@ -102,8 +102,11 @@ function appendTotals(parent, totals) {
   const list = document.createElement("dl");
   list.className = "live-recap-totals";
   [["recap.totalViewers", totals.viewer_count], ["recap.totalMessages", totals.message_count], ["recap.totalXP", totals.xp]].forEach(function ([key, value]) {
-    appendText(list, "dt", t(key));
-    appendText(list, "dd", String(value));
+    const item = document.createElement("div");
+    item.className = "live-recap-totals__item";
+    appendText(item, "dt", t(key));
+    appendText(item, "dd", String(value));
+    list.append(item);
   });
   parent.append(list);
 }
