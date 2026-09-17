@@ -306,6 +306,103 @@ export function validateCommandTrigger(trigger) {
   return null;
 }
 
+export const COMMAND_ALIAS_MAX_COUNT = 16;
+
+/**
+ * @param {unknown} aliases
+ * @returns {string}
+ */
+export function formatCommandAliasesForEditor(aliases) {
+  if (!Array.isArray(aliases) || aliases.length === 0) {
+    return "";
+  }
+  return aliases
+    .map(function (alias) {
+      return String(alias || "").trim().toLowerCase();
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function parseCommandAliasesText(text) {
+  const seen = new Set();
+  const result = [];
+  String(text || "")
+    .split(/\r?\n/)
+    .forEach(function (line) {
+      const slug = line.trim().toLowerCase();
+      if (!slug || seen.has(slug)) {
+        return;
+      }
+      seen.add(slug);
+      result.push(slug);
+    });
+  return result;
+}
+
+/**
+ * @param {string} slug
+ * @returns {string | null} validation message key or null when valid
+ */
+export function validateCommandAliasSlug(slug) {
+  const value = String(slug || "").trim().toLowerCase();
+  if (value === "") {
+    return null;
+  }
+  if (value.includes("!") || /\s/.test(value)) {
+    return "commands.aliasesInvalid";
+  }
+  if (!/^[a-z0-9_]{1,32}$/.test(value)) {
+    return "commands.aliasesInvalid";
+  }
+  return null;
+}
+
+/**
+ * @param {string} text
+ * @returns {string | null} validation message key or null when valid
+ */
+export function validateCommandAliasesText(text) {
+  const lines = String(text || "").split(/\r?\n/);
+  for (let index = 0; index < lines.length; index += 1) {
+    const trimmed = lines[index].trim();
+    if (trimmed === "") {
+      continue;
+    }
+    const errorKey = validateCommandAliasSlug(trimmed);
+    if (errorKey) {
+      return errorKey;
+    }
+  }
+  if (parseCommandAliasesText(text).length > COMMAND_ALIAS_MAX_COUNT) {
+    return "commands.aliasesTooMany";
+  }
+  return null;
+}
+
+/**
+ * @param {string} text
+ * @param {string} trigger
+ * @returns {string | null} validation message key or null when valid
+ */
+export function validateCommandAliasesAgainstTrigger(text, trigger) {
+  const normalizedTrigger = String(trigger || "").trim().toLowerCase();
+  if (normalizedTrigger === "") {
+    return null;
+  }
+  const aliases = parseCommandAliasesText(text);
+  for (let index = 0; index < aliases.length; index += 1) {
+    if (aliases[index] === normalizedTrigger) {
+      return "commands.aliasesMatchesTrigger";
+    }
+  }
+  return null;
+}
+
 /**
  * @param {number | string} points
  * @returns {string | null} validation message key or null when valid

@@ -95,6 +95,9 @@ func validateResolvedCommand(index int, cmd ResolvedCommand) error {
 	if err := validateTrigger(cmd.Trigger); err != nil {
 		return fmt.Errorf("%s: %w", prefix, err)
 	}
+	if err := validateResolvedAliases(prefix, cmd.Trigger, cmd.Aliases); err != nil {
+		return err
+	}
 	if strings.TrimSpace(cmd.ID) == "" {
 		return fmt.Errorf("%s: id is required after defaults merge", prefix)
 	}
@@ -147,6 +150,30 @@ func validateResolvedCommand(index int, cmd ResolvedCommand) error {
 		return fmt.Errorf("%s: %s", prefix, msg)
 	}
 
+	return nil
+}
+
+func validateResolvedAliases(prefix, trigger string, aliases []string) error {
+	if len(aliases) == 0 {
+		return nil
+	}
+	if len(aliases) > 16 {
+		return fmt.Errorf("%s: too many aliases", prefix)
+	}
+	seen := make(map[string]struct{}, len(aliases))
+	normalizedTrigger := normalizePackSlug(trigger)
+	for _, alias := range aliases {
+		if err := validateTrigger(alias); err != nil {
+			return fmt.Errorf("%s: %w", prefix, err)
+		}
+		if alias == normalizedTrigger {
+			return fmt.Errorf("%s: alias %q must not match trigger", prefix, alias)
+		}
+		if _, ok := seen[alias]; ok {
+			return fmt.Errorf("%s: duplicate alias %q", prefix, alias)
+		}
+		seen[alias] = struct{}{}
+	}
 	return nil
 }
 

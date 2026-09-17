@@ -303,11 +303,15 @@ Every workflow available before the redesign SHALL remain reachable from one of 
 - **THEN** each implemented pre-redesign workflow has a visible entry point and no mock-only command or splash control is presented as functional
 
 ### Requirement: Audience hosts two catalogs
-Audience SHALL offer Commands and Awards lists separate from the viewers people workspace. Each catalog SHALL support create, edit, enable (commands), cooldown (commands), points (awards), splash text, sound, custom image, custom sound file, volume, layout, image fit, image size, and delete. Catalog editors MUST NOT appear in the dock.
+Audience SHALL offer Commands and Awards lists separate from the viewers people workspace. Each catalog SHALL support create, edit, enable (commands), cooldown (commands), aliases (commands), points (awards), splash text, sound, custom image, custom sound file, volume, layout, image fit, image size, and delete. Catalog editors MUST NOT appear in the dock.
 
 #### Scenario: Open commands
 - **WHEN** the operator opens Audience Commands
 - **THEN** seeded or operator-defined commands are listed and can be edited without leaving `/`
+
+#### Scenario: Edit aliases
+- **WHEN** the operator opens the command editor for `heat`
+- **THEN** aliases can be added or cleared without leaving the editor
 
 ### Requirement: Catalog editors expose templates, media, and layout
 Command and award editors SHALL show the available template variables `{viewer}`, `{streamer}`, `{points}`, and `{message}`, insert the chosen variable into the splash field on activation, and show a preview that substitutes sample viewer `Alice`, the current `streamer_display_name` or a localized sample streamer name when empty, sample points, and a short sample message. The image area SHALL preview the effective alert graphic: the source-appropriate built-in emblem when no file is selected and the custom image after upload. Its localized helper text MUST explain that clearing a custom image restores the built-in graphic. Image upload SHALL use `kind` `alert_image` and offer a clear action. Sound SHALL keep the built-in select plus an optional custom file using `kind` `alert_sound`, a Play/Stop preview, and a volume control 0–100. Layout SHALL be a choice of card, banner, or fullscreen. Image fit SHALL be a choice of cover, contain, fill, or tile. Image size SHALL be a slider from 25–300 percent that scales the built-in or custom primary graphic inside the alert frame. File inputs MUST remain keyboard reachable and labeled, MUST expose a visible focus indicator, and dynamic field errors MUST be associated with their controls. Newly uploaded files SHALL be treated as provisional until save; clear, replacement, catalog navigation, normal page unload, and item deletion SHALL request reference-safe cleanup through the overlay-asset delete action. On a stacked narrow layout, pointer selection of a catalog item SHALL reveal the editor while list keyboard navigation SHALL retain focus in the list.
@@ -560,7 +564,7 @@ Settings SHALL expose policy, display duration, cooldown, dirty interval, award 
 - **THEN** controls wrap or compact without horizontal scrolling and icon-only variants have hover/focus tooltips and accessible names
 
 ### Requirement: Command editor supports leaderboard actions
-The Audience command editor SHALL let the operator choose Alert or Show leaderboard. Alert SHALL retain all current splash, media, sound, and duration fields. Show leaderboard SHALL keep trigger, enabled, and per-viewer cooldown controls, hide irrelevant alert presentation fields, and explain that the command shows the board for its configured global display duration. No leaderboard command SHALL be created automatically.
+The Audience command editor SHALL let the operator choose Alert or Show leaderboard. Alert SHALL retain all current splash, media, sound, and duration fields. Show leaderboard SHALL keep trigger, aliases, enabled, and per-viewer cooldown controls, hide irrelevant alert presentation fields, and explain that the command shows the board for its configured global display duration. No leaderboard command SHALL be created automatically.
 
 #### Scenario: Create leaderboard command
 - **WHEN** the operator creates enabled trigger `leaderboard` with action Show leaderboard and a 180-second cooldown
@@ -568,7 +572,22 @@ The Audience command editor SHALL let the operator choose Alert or Show leaderbo
 
 #### Scenario: Switch action without losing clarity
 - **WHEN** the operator changes an alert command to Show leaderboard
-- **THEN** irrelevant fields are no longer required and the visible form describes the new effect before save
+- **THEN** irrelevant fields are no longer required, aliases remain editable, and the visible form describes the new effect before save
+
+### Requirement: Command editor manages aliases
+The Audience command editor SHALL let the operator view and edit aliases for the selected command. Aliases SHALL use a dedicated labeled field (not mixed into the canonical trigger input), accept slug tokens without a leading `!`, and show field errors adjacent to that control on uniqueness or slug failures. Save MUST send the complete `aliases` list with create/update. The catalog list MAY show aliases as secondary text under the canonical `!trigger`. Overlay, dock, and Live Messages MUST NOT gain an aliases editor.
+
+#### Scenario: Save alias
+- **WHEN** the operator adds `heate` on command `heat` and saves
+- **THEN** the editor redisplays `heate` after reload and `!heate` can fire `heat`
+
+#### Scenario: Conflict shown on aliases
+- **WHEN** the operator saves an alias that collides with another command
+- **THEN** an accessible field error appears on the aliases control and unsaved input is preserved
+
+#### Scenario: Leaderboard command aliases
+- **WHEN** the operator edits a `show_leaderboard` command
+- **THEN** the aliases field remains available with trigger, enabled, and cooldown
 
 ### Requirement: Audience includes a global reward-history view
 Audience SHALL show a Journal tab immediately after Viewers and before the catalog-management tabs. The tab SHALL show a localized table of award time, viewer, reward name, and points in newest-first order. A labeled, searchable viewer choice SHALL filter the journal through the selected canonical viewer id, expose an explicit clear action that restores all viewers, and distinguish viewers whose display names match. Activating a viewer name in a journal entry SHALL apply the same filter. At narrow widths, the same semantic table SHALL present each entry as a stacked event row without horizontal scrolling while retaining its accessible column headings. It SHALL load fresh data when opened and provide explicit Refresh, loading, empty, error with Retry, and Load more states. Load more MUST append older entries without removing already rendered rows.

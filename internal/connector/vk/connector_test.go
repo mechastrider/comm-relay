@@ -106,7 +106,10 @@ func TestConnector_RunSession_PublishesMappedMessage(t *testing.T) {
 		require.Equal(t, bus.EventChatMessageReceived, ev.Type)
 		msg := ev.Message
 		require.Equal(t, "ping", msg.Message)
-		require.Equal(t, status.StateConnected, registry.VK().State)
+		// Connected is set after Publish; under -race the test can observe connecting first.
+		require.Eventually(t, func() bool {
+			return registry.VK().State == status.StateConnected
+		}, time.Second, 5*time.Millisecond)
 	case <-time.After(time.Second):
 		t.Fatal("timed out waiting for vk message")
 	}

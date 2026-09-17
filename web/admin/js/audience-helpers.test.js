@@ -6,6 +6,11 @@ import {
   sortAudienceViewers,
   validateDisplayName,
   validateCommandTrigger,
+  validateCommandAliasSlug,
+  validateCommandAliasesText,
+  validateCommandAliasesAgainstTrigger,
+  parseCommandAliasesText,
+  formatCommandAliasesForEditor,
   validateAwardPoints,
   viewerPeriodMetrics,
 } from "./audience-helpers.js";
@@ -71,6 +76,26 @@ assert.equal(validateCommandTrigger("lurk"), null);
 assert.equal(validateCommandTrigger(""), "commands.triggerRequired");
 assert.equal(validateCommandTrigger("!gg"), "commands.triggerInvalid");
 assert.equal(validateCommandTrigger("bad slug"), "commands.triggerInvalid");
+
+assert.deepEqual(parseCommandAliasesText("heate\nwarm\n"), ["heate", "warm"]);
+assert.deepEqual(parseCommandAliasesText("Dup\nDUP\n"), ["dup"]);
+assert.equal(formatCommandAliasesForEditor(["Warm", "heate"]), "warm\nheate");
+assert.equal(validateCommandAliasSlug("heat"), null);
+assert.equal(validateCommandAliasSlug("!nope"), "commands.aliasesInvalid");
+assert.equal(validateCommandAliasesText("ok\nbad slug"), "commands.aliasesInvalid");
+assert.equal(
+  validateCommandAliasesText(
+    Array.from({ length: 17 }, function (_, index) {
+      return "alias" + index;
+    }).join("\n")
+  ),
+  "commands.aliasesTooMany"
+);
+assert.equal(validateCommandAliasesAgainstTrigger("warm", "heat"), null);
+assert.equal(
+  validateCommandAliasesAgainstTrigger("heat\nwarm", "heat"),
+  "commands.aliasesMatchesTrigger"
+);
 
 assert.equal(validateAwardPoints(10), null);
 assert.equal(validateAwardPoints(0), "awards.pointsInvalid");

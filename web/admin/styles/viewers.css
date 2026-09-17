@@ -1185,6 +1185,18 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   font-weight: 500;
 }
 
+.audience-catalog-items__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.audience-catalog-items__aliases {
+  font-size: var(--primitive-font-size-xs);
+  color: var(--text-muted);
+}
+
 .audience-catalog-items__meta {
   font-size: var(--primitive-font-size-xs);
   color: var(--text-muted);

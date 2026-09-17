@@ -20,24 +20,32 @@ func newCommandsHandler(viewerStore *store.Store) *commandsHandler {
 }
 
 type commandResponse struct {
-	ID              string `json:"id"`
-	Action          string `json:"action"`
-	Trigger         string `json:"trigger"`
-	Enabled         bool   `json:"enabled"`
-	CooldownSeconds int    `json:"cooldown_seconds"`
-	SplashTemplate  string `json:"splash_template"`
-	Sound           string `json:"sound"`
-	DurationMs      int    `json:"duration_ms"`
-	ImageAsset      string `json:"image_asset,omitempty"`
-	SoundFile       string `json:"sound_file,omitempty"`
-	SoundVolume     int    `json:"sound_volume"`
-	Layout          string `json:"layout"`
-	ImageFit        string `json:"image_fit"`
-	ImageSizePct    int    `json:"image_size_pct"`
+	ID              string   `json:"id"`
+	Action          string   `json:"action"`
+	Trigger         string   `json:"trigger"`
+	Aliases         []string `json:"aliases"`
+	Enabled         bool     `json:"enabled"`
+	CooldownSeconds int      `json:"cooldown_seconds"`
+	SplashTemplate  string   `json:"splash_template"`
+	Sound           string   `json:"sound"`
+	DurationMs      int      `json:"duration_ms"`
+	ImageAsset      string   `json:"image_asset,omitempty"`
+	SoundFile       string   `json:"sound_file,omitempty"`
+	SoundVolume     int      `json:"sound_volume"`
+	Layout          string   `json:"layout"`
+	ImageFit        string   `json:"image_fit"`
+	ImageSizePct    int      `json:"image_size_pct"`
 }
 
 type commandsListResponse struct {
 	Commands []commandResponse `json:"commands"`
+}
+
+func commandAliasesFromStore(aliases []string) []string {
+	if aliases == nil {
+		return []string{}
+	}
+	return aliases
 }
 
 func commandFromStore(cmd store.Command) commandResponse {
@@ -45,6 +53,7 @@ func commandFromStore(cmd store.Command) commandResponse {
 		ID:              cmd.ID,
 		Action:          cmd.Action,
 		Trigger:         cmd.Trigger,
+		Aliases:         commandAliasesFromStore(cmd.Aliases),
 		Enabled:         cmd.Enabled,
 		CooldownSeconds: cmd.CooldownSeconds,
 		SplashTemplate:  cmd.SplashTemplate,
@@ -87,20 +96,21 @@ func (h *commandsHandler) handleList(w http.ResponseWriter, r *http.Request) {
 }
 
 type createCommandRequest struct {
-	ID              string `json:"id"`
-	Action          string `json:"action,omitempty"`
-	Trigger         string `json:"trigger"`
-	Enabled         bool   `json:"enabled"`
-	CooldownSeconds int    `json:"cooldown_seconds"`
-	SplashTemplate  string `json:"splash_template"`
-	Sound           string `json:"sound"`
-	DurationMs      int    `json:"duration_ms"`
-	ImageAsset      string `json:"image_asset,omitempty"`
-	SoundFile       string `json:"sound_file,omitempty"`
-	SoundVolume     *int   `json:"sound_volume,omitempty"`
-	Layout          string `json:"layout,omitempty"`
-	ImageFit        string `json:"image_fit,omitempty"`
-	ImageSizePct    *int   `json:"image_size_pct,omitempty"`
+	ID              string   `json:"id"`
+	Action          string   `json:"action,omitempty"`
+	Trigger         string   `json:"trigger"`
+	Aliases         []string `json:"aliases"`
+	Enabled         bool     `json:"enabled"`
+	CooldownSeconds int      `json:"cooldown_seconds"`
+	SplashTemplate  string   `json:"splash_template"`
+	Sound           string   `json:"sound"`
+	DurationMs      int      `json:"duration_ms"`
+	ImageAsset      string   `json:"image_asset,omitempty"`
+	SoundFile       string   `json:"sound_file,omitempty"`
+	SoundVolume     *int     `json:"sound_volume,omitempty"`
+	Layout          string   `json:"layout,omitempty"`
+	ImageFit        string   `json:"image_fit,omitempty"`
+	ImageSizePct    *int     `json:"image_size_pct,omitempty"`
 }
 
 func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +131,7 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		ID:              request.ID,
 		Action:          request.Action,
 		Trigger:         request.Trigger,
+		Aliases:         request.Aliases,
 		Enabled:         request.Enabled,
 		CooldownSeconds: request.CooldownSeconds,
 		SplashTemplate:  request.SplashTemplate,
@@ -149,6 +160,30 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	if errors.Is(err, store.ErrDuplicateAlias) {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
+			"aliases": "alias already exists",
+		})
+		return
+	}
+	if errors.Is(err, store.ErrAliasMatchesTrigger) {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
+			"aliases": "alias must not match trigger",
+		})
+		return
+	}
+	if errors.Is(err, store.ErrInvalidAlias) {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
+			"aliases": "invalid alias",
+		})
+		return
+	}
+	if errors.Is(err, store.ErrTooManyAliases) {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
+			"aliases": "too many aliases",
+		})
+		return
+	}
 	if errors.Is(err, store.ErrInvalidCommandAction) {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
 			"action": "choose alert or show leaderboard",
@@ -165,20 +200,21 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 type updateCommandRequest struct {
-	ID              string `json:"id"`
-	Action          string `json:"action,omitempty"`
-	Trigger         string `json:"trigger"`
-	Enabled         bool   `json:"enabled"`
-	CooldownSeconds int    `json:"cooldown_seconds"`
-	SplashTemplate  string `json:"splash_template"`
-	Sound           string `json:"sound"`
-	DurationMs      int    `json:"duration_ms"`
-	ImageAsset      string `json:"image_asset,omitempty"`
-	SoundFile       string `json:"sound_file,omitempty"`
-	SoundVolume     *int   `json:"sound_volume,omitempty"`
-	Layout          string `json:"layout,omitempty"`
-	ImageFit        string `json:"image_fit,omitempty"`
-	ImageSizePct    *int   `json:"image_size_pct,omitempty"`
+	ID              string   `json:"id"`
+	Action          string   `json:"action,omitempty"`
+	Trigger         string   `json:"trigger"`
+	Aliases         []string `json:"aliases"`
+	Enabled         bool     `json:"enabled"`
+	CooldownSeconds int      `json:"cooldown_seconds"`
+	SplashTemplate  string   `json:"splash_template"`
+	Sound           string   `json:"sound"`
+	DurationMs      int      `json:"duration_ms"`
+	ImageAsset      string   `json:"image_asset,omitempty"`
+	SoundFile       string   `json:"sound_file,omitempty"`
+	SoundVolume     *int     `json:"sound_volume,omitempty"`
+	Layout          string   `json:"layout,omitempty"`
+	ImageFit        string   `json:"image_fit,omitempty"`
+	ImageSizePct    *int     `json:"image_size_pct,omitempty"`
 }
 
 func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
@@ -203,6 +239,7 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		ID:              request.ID,
 		Action:          request.Action,
 		Trigger:         request.Trigger,
+		Aliases:         request.Aliases,
 		Enabled:         request.Enabled,
 		CooldownSeconds: request.CooldownSeconds,
 		SplashTemplate:  request.SplashTemplate,
@@ -232,6 +269,30 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	if errors.Is(err, store.ErrInvalidTrigger) {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
 			"trigger": "invalid trigger",
+		})
+		return
+	}
+	if errors.Is(err, store.ErrDuplicateAlias) {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
+			"aliases": "alias already exists",
+		})
+		return
+	}
+	if errors.Is(err, store.ErrAliasMatchesTrigger) {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
+			"aliases": "alias must not match trigger",
+		})
+		return
+	}
+	if errors.Is(err, store.ErrInvalidAlias) {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
+			"aliases": "invalid alias",
+		})
+		return
+	}
+	if errors.Is(err, store.ErrTooManyAliases) {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
+			"aliases": "too many aliases",
 		})
 		return
 	}

@@ -545,6 +545,202 @@ func TestCommandFire_WhenTemplateHasStreamerAndMessage_ExpectResolved(t *testing
 	require.True(t, sawAlert, "expected alert frame with resolved template")
 }
 
+func TestCommandFire_WhenAliasHeate_ExpectCanonicalOutcomeAndCooldown(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+
+	heat, err := env.ViewerStore.CreateCommand(store.CreateCommandInput{
+		Trigger:         "heat",
+		Aliases:         []string{"heate"},
+		Enabled:         true,
+		CooldownSeconds: 300,
+		SplashTemplate:  "Hot!",
+		Sound:           "chime",
+		DurationMs:      5000,
+	})
+	require.NoError(t, err)
+
+	publish := func(id, message string) {
+		require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+			ID:       id,
+			Platform: "twitch",
+			UserID:   "42",
+			Username: "alice",
+			Message:  message,
+		})))
+	}
+
+	publish("heat-canonical", "!heat")
+	publish("heat-alias", "!heate")
+
+	require.Eventually(t, func() bool {
+		rec := httptest.NewRecorder()
+		env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=20", nil))
+		if rec.Code != http.StatusOK {
+			return false
+		}
+		var payload struct {
+			Messages []struct {
+				ID             string `json:"id"`
+				IsCommand      bool   `json:"is_command"`
+				CommandOutcome *struct {
+					Trigger             string  `json:"trigger"`
+					Status              string  `json:"status"`
+					CooldownRemainingMs float64 `json:"cooldown_remaining_ms"`
+				} `json:"command_outcome"`
+			} `json:"messages"`
+		}
+		if json.Unmarshal(rec.Body.Bytes(), &payload) != nil {
+			return false
+		}
+		var canonicalOK, aliasOK bool
+		for _, msg := range payload.Messages {
+			switch msg.ID {
+			case "heat-canonical":
+				canonicalOK = msg.IsCommand &&
+					msg.CommandOutcome != nil &&
+					msg.CommandOutcome.Status == "fired" &&
+					msg.CommandOutcome.Trigger == heat.Trigger
+			case "heat-alias":
+				aliasOK = msg.IsCommand &&
+					msg.CommandOutcome != nil &&
+					msg.CommandOutcome.Status == "cooldown" &&
+					msg.CommandOutcome.Trigger == heat.Trigger &&
+					msg.CommandOutcome.CooldownRemainingMs > 0
+			}
+		}
+		return canonicalOK && aliasOK
+	}, 2*time.Second, 25*time.Millisecond)
+}
+
+func TestCommandFire_WhenUniqueTypoHeate_ExpectIsCommandAndCanonicalTrigger(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+
+	_, err := env.ViewerStore.CreateCommand(store.CreateCommandInput{
+		Trigger:        "heat",
+		Enabled:        true,
+		SplashTemplate: "Hot!",
+		Sound:          "chime",
+		DurationMs:     5000,
+	})
+	require.NoError(t, err)
+
+	srv := httptest.NewServer(env.Handler)
+	t.Cleanup(srv.Close)
+
+	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
+
+	time.Sleep(50 * time.Millisecond)
+
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		ID:       "typo-heate",
+		Platform: "twitch",
+		UserID:   "42",
+		Username: "alice",
+		Message:  "!heate",
+	})))
+
+	var sawMessage bool
+	var sawOutcome bool
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
+		_, data, readErr := conn.ReadMessage()
+		if readErr != nil {
+			continue
+		}
+		var frame map[string]any
+		if json.Unmarshal(data, &frame) != nil {
+			continue
+		}
+		switch frame["type"] {
+		case "message":
+			if frame["id"] == "typo-heate" {
+				sawMessage = true
+				require.Equal(t, true, frame["is_command"])
+			}
+		case "command_outcome":
+			if frame["message_id"] == "typo-heate" && frame["status"] == "fired" {
+				sawOutcome = true
+				require.Equal(t, "heat", frame["trigger"])
+			}
+		}
+		if sawMessage && sawOutcome {
+			return
+		}
+	}
+	require.True(t, sawMessage, "expected message with is_command")
+	require.True(t, sawOutcome, "expected fired command_outcome")
+}
+
+func TestCommandFire_WhenGoOrAmbiguousTypo_ExpectOrdinaryChat(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+
+	_, err := env.ViewerStore.CreateCommand(store.CreateCommandInput{
+		Trigger:        "heat",
+		Enabled:        true,
+		SplashTemplate: "Hot!",
+		Sound:          "chime",
+		DurationMs:     5000,
+	})
+	require.NoError(t, err)
+	_, err = env.ViewerStore.CreateCommand(store.CreateCommandInput{
+		Trigger:        "heal",
+		Enabled:        true,
+		SplashTemplate: "Heal!",
+		Sound:          "chime",
+		DurationMs:     5000,
+	})
+	require.NoError(t, err)
+
+	publish := func(id, message string) {
+		require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+			ID:       id,
+			Platform: "twitch",
+			UserID:   "42",
+			Username: "alice",
+			Message:  message,
+		})))
+	}
+	publish("cmd-go", "!go")
+	publish("cmd-ambiguous", "!heam")
+
+	require.Eventually(t, func() bool {
+		rec := httptest.NewRecorder()
+		env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=20", nil))
+		if rec.Code != http.StatusOK {
+			return false
+		}
+		var payload struct {
+			Messages []struct {
+				ID             string `json:"id"`
+				IsCommand      bool   `json:"is_command"`
+				CommandOutcome *struct {
+					Trigger string `json:"trigger"`
+				} `json:"command_outcome"`
+			} `json:"messages"`
+		}
+		if json.Unmarshal(rec.Body.Bytes(), &payload) != nil {
+			return false
+		}
+		var goMsg, ambMsg bool
+		for _, msg := range payload.Messages {
+			switch msg.ID {
+			case "cmd-go":
+				goMsg = !msg.IsCommand && msg.CommandOutcome == nil
+			case "cmd-ambiguous":
+				ambMsg = !msg.IsCommand && msg.CommandOutcome == nil
+			}
+		}
+		return goMsg && ambMsg
+	}, 2*time.Second, 25*time.Millisecond)
+}
+
 func TestRecentMessages_WhenHideCommandMessages_ExpectIsCommandOnRecent(t *testing.T) {
 	b := bus.New(0)
 	env := newTestEnv(t, b)

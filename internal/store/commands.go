@@ -3,6 +3,7 @@ package store
 import (
 	"database/sql"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -20,6 +21,8 @@ var allowedCatalogSounds = map[string]bool{
 }
 
 const defaultCatalogDurationMs = 5000
+
+const maxCommandAliases = 16
 
 // Supported command actions.
 const (
@@ -56,6 +59,157 @@ func validateCommandTrigger(trigger string) error {
 	}
 	if !commandTriggerPattern.MatchString(trigger) {
 		return ErrInvalidTrigger
+	}
+
+	return nil
+}
+
+func validateCommandAlias(alias string) error {
+	if alias == "" {
+		return ErrInvalidAlias
+	}
+	if strings.Contains(alias, "!") {
+		return ErrInvalidAlias
+	}
+	if strings.ContainsAny(alias, " \t") {
+		return ErrInvalidAlias
+	}
+	if !commandTriggerPattern.MatchString(alias) {
+		return ErrInvalidAlias
+	}
+
+	return nil
+}
+
+func normalizeCommandAliases(raw []string) ([]string, error) {
+	if len(raw) == 0 {
+		return []string{}, nil
+	}
+
+	seen := make(map[string]struct{}, len(raw))
+	out := make([]string, 0, len(raw))
+	for _, rawAlias := range raw {
+		alias := normalizeCommandTrigger(rawAlias)
+		if err := validateCommandAlias(alias); err != nil {
+			return nil, err
+		}
+		if _, ok := seen[alias]; ok {
+			return nil, ErrInvalidAlias
+		}
+		seen[alias] = struct{}{}
+		out = append(out, alias)
+	}
+	if len(out) > maxCommandAliases {
+		return nil, ErrTooManyAliases
+	}
+	sort.Strings(out)
+
+	return out, nil
+}
+
+func (s *Store) loadAllCommandAliasesLocked() (map[string][]string, error) {
+	rows, err := s.db.Query(`SELECT command_id, alias FROM command_aliases ORDER BY command_id, alias`)
+	if err != nil {
+		return nil, errors.Errorf("list command aliases: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	byCommand := make(map[string][]string)
+	for rows.Next() {
+		var commandID, alias string
+		if err := rows.Scan(&commandID, &alias); err != nil {
+			return nil, errors.Errorf("scan command alias: %w", err)
+		}
+		byCommand[commandID] = append(byCommand[commandID], alias)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errors.Errorf("iterate command aliases: %w", err)
+	}
+
+	return byCommand, nil
+}
+
+func (s *Store) loadCommandAliasesLocked(commandID string) ([]string, error) {
+	rows, err := s.db.Query(`SELECT alias FROM command_aliases WHERE command_id = ? ORDER BY alias`, commandID)
+	if err != nil {
+		return nil, errors.Errorf("list aliases for command %q: %w", commandID, err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var aliases []string
+	for rows.Next() {
+		var alias string
+		if err := rows.Scan(&alias); err != nil {
+			return nil, errors.Errorf("scan alias for command %q: %w", commandID, err)
+		}
+		aliases = append(aliases, alias)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errors.Errorf("iterate aliases for command %q: %w", commandID, err)
+	}
+	if aliases == nil {
+		return []string{}, nil
+	}
+
+	return aliases, nil
+}
+
+func (s *Store) checkCommandNameCollisionsLocked(excludeID, trigger string, aliases []string) error {
+	var otherAlias string
+	err := s.db.QueryRow(
+		`SELECT alias FROM command_aliases WHERE alias = ? AND command_id != ?`,
+		trigger,
+		excludeID,
+	).Scan(&otherAlias)
+	if err == nil {
+		return ErrDuplicateTrigger
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return errors.Errorf("check trigger alias collision: %w", err)
+	}
+
+	for _, alias := range aliases {
+		if alias == trigger {
+			return ErrAliasMatchesTrigger
+		}
+
+		var otherID string
+		triggerErr := s.db.QueryRow(`SELECT id FROM commands WHERE trigger = ? AND id != ?`, alias, excludeID).Scan(&otherID)
+		if triggerErr == nil {
+			return ErrDuplicateAlias
+		}
+		if !errors.Is(triggerErr, sql.ErrNoRows) {
+			return errors.Errorf("check alias trigger collision: %w", triggerErr)
+		}
+
+		var otherCommandID string
+		aliasErr := s.db.QueryRow(
+			`SELECT command_id FROM command_aliases WHERE alias = ? AND command_id != ?`,
+			alias,
+			excludeID,
+		).Scan(&otherCommandID)
+		if aliasErr == nil {
+			return ErrDuplicateAlias
+		}
+		if !errors.Is(aliasErr, sql.ErrNoRows) {
+			return errors.Errorf("check alias collision: %w", aliasErr)
+		}
+	}
+
+	return nil
+}
+
+func replaceCommandAliasesTx(tx *sql.Tx, commandID string, aliases []string) error {
+	if _, err := tx.Exec(`DELETE FROM command_aliases WHERE command_id = ?`, commandID); err != nil {
+		return errors.Errorf("delete command aliases: %w", err)
+	}
+	for _, alias := range aliases {
+		if _, err := tx.Exec(`INSERT INTO command_aliases (command_id, alias) VALUES (?, ?)`, commandID, alias); err != nil {
+			if isUniqueConstraint(err) {
+				return ErrDuplicateAlias
+			}
+			return errors.Errorf("insert command alias: %w", err)
+		}
 	}
 
 	return nil
@@ -150,8 +304,20 @@ func (s *Store) ListCommands() ([]Command, error) {
 		}
 		commands = append(commands, cmd)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, errors.Errorf("iterate commands: %w", err)
+	if rowsErr := rows.Err(); rowsErr != nil {
+		return nil, errors.Errorf("iterate commands: %w", rowsErr)
+	}
+
+	aliasesByCommand, err := s.loadAllCommandAliasesLocked()
+	if err != nil {
+		return nil, err
+	}
+	for i := range commands {
+		aliases := aliasesByCommand[commands[i].ID]
+		if aliases == nil {
+			aliases = []string{}
+		}
+		commands[i].Aliases = aliases
 	}
 
 	return commands, nil
@@ -175,6 +341,12 @@ func (s *Store) GetCommand(id string) (*Command, error) {
 		return nil, errors.Errorf("get command %q: %w", id, err)
 	}
 
+	aliases, err := s.loadCommandAliasesLocked(id)
+	if err != nil {
+		return nil, err
+	}
+	cmd.Aliases = aliases
+
 	return &cmd, nil
 }
 
@@ -183,6 +355,7 @@ type CreateCommandInput struct {
 	ID              string
 	Action          string
 	Trigger         string
+	Aliases         []string
 	Enabled         bool
 	CooldownSeconds int
 	SplashTemplate  string
@@ -205,6 +378,10 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 	trigger := normalizeCommandTrigger(input.Trigger)
 	if validationErr := validateCommandTrigger(trigger); validationErr != nil {
 		return nil, validationErr
+	}
+	aliases, err := normalizeCommandAliases(input.Aliases)
+	if err != nil {
+		return nil, err
 	}
 	if action == CommandActionAlert && strings.TrimSpace(input.SplashTemplate) == "" {
 		return nil, errors.New("splash template is required")
@@ -255,7 +432,16 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, err = s.db.Exec(`
+	if collisionErr := s.checkCommandNameCollisionsLocked(id, trigger, aliases); collisionErr != nil {
+		return nil, collisionErr
+	}
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, errors.Errorf("begin create command tx: %w", err)
+	}
+
+	_, err = tx.Exec(`
 		INSERT INTO commands (
 			id, action, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms,
 			image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
@@ -277,10 +463,20 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 		imageSizePct,
 	)
 	if err != nil {
+		_ = tx.Rollback()
 		if isUniqueConstraint(err) {
 			return nil, ErrDuplicateTrigger
 		}
 		return nil, errors.Errorf("insert command: %w", err)
+	}
+
+	if err := replaceCommandAliasesTx(tx, id, aliases); err != nil {
+		_ = tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, errors.Errorf("commit create command: %w", err)
 	}
 
 	return s.getCommandLocked(id)
@@ -291,6 +487,7 @@ type UpdateCommandInput struct {
 	ID              string
 	Action          string
 	Trigger         string
+	Aliases         []string
 	Enabled         bool
 	CooldownSeconds int
 	SplashTemplate  string
@@ -317,6 +514,10 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 	trigger := normalizeCommandTrigger(input.Trigger)
 	if validationErr := validateCommandTrigger(trigger); validationErr != nil {
 		return nil, validationErr
+	}
+	aliases, err := normalizeCommandAliases(input.Aliases)
+	if err != nil {
+		return nil, err
 	}
 	if action == CommandActionAlert && strings.TrimSpace(input.SplashTemplate) == "" {
 		return nil, errors.New("splash template is required")
@@ -373,7 +574,16 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 		imageSizePct = existing.ImageSizePct
 	}
 
-	result, err := s.db.Exec(`
+	if collisionErr := s.checkCommandNameCollisionsLocked(input.ID, trigger, aliases); collisionErr != nil {
+		return nil, collisionErr
+	}
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, errors.Errorf("begin update command tx: %w", err)
+	}
+
+	result, err := tx.Exec(`
 		UPDATE commands
 		SET action = ?, trigger = ?, enabled = ?, cooldown_seconds = ?, splash_template = ?, sound = ?, duration_ms = ?,
 		    image_asset = ?, sound_file = ?, sound_volume = ?, layout = ?, image_fit = ?, image_size_pct = ?
@@ -394,6 +604,7 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 		input.ID,
 	)
 	if err != nil {
+		_ = tx.Rollback()
 		if isUniqueConstraint(err) {
 			return nil, ErrDuplicateTrigger
 		}
@@ -402,10 +613,21 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 
 	rows, err := result.RowsAffected()
 	if err != nil {
+		_ = tx.Rollback()
 		return nil, errors.Errorf("rows affected after update command: %w", err)
 	}
 	if rows == 0 {
+		_ = tx.Rollback()
 		return nil, ErrCommandNotFound
+	}
+
+	if err := replaceCommandAliasesTx(tx, input.ID, aliases); err != nil {
+		_ = tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, errors.Errorf("commit update command: %w", err)
 	}
 
 	return s.getCommandLocked(input.ID)
@@ -445,6 +667,12 @@ func (s *Store) getCommandLocked(id string) (*Command, error) {
 	if err != nil {
 		return nil, errors.Errorf("get command %q: %w", id, err)
 	}
+
+	aliases, err := s.loadCommandAliasesLocked(id)
+	if err != nil {
+		return nil, err
+	}
+	cmd.Aliases = aliases
 
 	return &cmd, nil
 }

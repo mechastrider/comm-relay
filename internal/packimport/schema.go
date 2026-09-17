@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/muonsoft/errors"
@@ -77,27 +78,29 @@ type ResolvedGreeting struct {
 
 // CommandSpec is one chat command entry from pack.yaml.
 type CommandSpec struct {
-	ID              string `yaml:"id"`
-	Trigger         string `yaml:"trigger"`
-	Action          string `yaml:"action"`
-	Enabled         *bool  `yaml:"enabled"`
-	Splash          string `yaml:"splash"`
-	Sound           string `yaml:"sound"`
-	SoundFile       string `yaml:"sound_file"`
-	DurationMs      int    `yaml:"duration_ms"`
-	CooldownSeconds int    `yaml:"cooldown_seconds"`
-	Layout          string `yaml:"layout"`
-	ImageFit        string `yaml:"image_fit"`
-	SoundVolume     *int   `yaml:"sound_volume"`
-	ImageSizePct    *int   `yaml:"image_size_pct"`
-	Image           string `yaml:"image"`
-	Audio           string `yaml:"audio"`
+	ID              string   `yaml:"id"`
+	Trigger         string   `yaml:"trigger"`
+	Aliases         []string `yaml:"aliases"`
+	Action          string   `yaml:"action"`
+	Enabled         *bool    `yaml:"enabled"`
+	Splash          string   `yaml:"splash"`
+	Sound           string   `yaml:"sound"`
+	SoundFile       string   `yaml:"sound_file"`
+	DurationMs      int      `yaml:"duration_ms"`
+	CooldownSeconds int      `yaml:"cooldown_seconds"`
+	Layout          string   `yaml:"layout"`
+	ImageFit        string   `yaml:"image_fit"`
+	SoundVolume     *int     `yaml:"sound_volume"`
+	ImageSizePct    *int     `yaml:"image_size_pct"`
+	Image           string   `yaml:"image"`
+	Audio           string   `yaml:"audio"`
 }
 
 // ResolvedCommand merges defaults and per-command fields for import.
 type ResolvedCommand struct {
 	ID              string
 	Trigger         string
+	Aliases         []string
 	Action          string
 	Enabled         bool
 	SplashTemplate  string
@@ -277,6 +280,7 @@ func (p *Pack) resolveCommand(spec CommandSpec) ResolvedCommand {
 	return ResolvedCommand{
 		ID:              id,
 		Trigger:         strings.TrimSpace(spec.Trigger),
+		Aliases:         normalizePackAliases(spec.Aliases),
 		Action:          action,
 		Enabled:         enabled,
 		SplashTemplate:  strings.TrimSpace(spec.Splash),
@@ -304,16 +308,27 @@ func validateSchema(pack *Pack) error {
 		return errors.New("commands must contain at least one entry")
 	}
 
-	seenTriggers := make(map[string]struct{}, len(pack.Commands))
+	usedNames := make(map[string]struct{}, len(pack.Commands))
 	for i, spec := range pack.Commands {
-		trigger := strings.TrimSpace(spec.Trigger)
+		trigger := normalizePackSlug(spec.Trigger)
 		if trigger == "" {
 			return fmt.Errorf("commands[%d]: trigger is required", i)
 		}
-		if _, ok := seenTriggers[trigger]; ok {
+		if _, ok := usedNames[trigger]; ok {
 			return fmt.Errorf("commands[%d]: duplicate trigger %q", i, trigger)
 		}
-		seenTriggers[trigger] = struct{}{}
+		usedNames[trigger] = struct{}{}
+
+		for _, rawAlias := range spec.Aliases {
+			alias := normalizePackSlug(rawAlias)
+			if alias == "" {
+				return fmt.Errorf("commands[%d]: alias is required", i)
+			}
+			if _, ok := usedNames[alias]; ok {
+				return fmt.Errorf("commands[%d]: duplicate alias %q", i, alias)
+			}
+			usedNames[alias] = struct{}{}
+		}
 	}
 
 	if len(pack.Greetings) > 0 {
@@ -338,4 +353,20 @@ func validateSchema(pack *Pack) error {
 
 func validGreetingID(id string) bool {
 	return id == string(store.GreetingNewViewer) || id == string(store.GreetingReturningViewer)
+}
+
+func normalizePackSlug(value string) string {
+	return strings.TrimSpace(strings.ToLower(value))
+}
+
+func normalizePackAliases(raw []string) []string {
+	if len(raw) == 0 {
+		return []string{}
+	}
+	out := make([]string, 0, len(raw))
+	for _, alias := range raw {
+		out = append(out, normalizePackSlug(alias))
+	}
+	sort.Strings(out)
+	return out
 }
