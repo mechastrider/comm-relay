@@ -2,7 +2,13 @@ import * as dom from "./dom.js";
 import { apiURL, readJSON, mapHTTPError } from "./api.js";
 import { t } from "./i18n-ui.js";
 import { setRegionState } from "./shell-state.js";
-import { validateCommandTrigger } from "./audience-helpers.js";
+import {
+  validateCommandTrigger,
+  parseCommandAliasesText,
+  validateCommandAliasesText,
+  validateCommandAliasesAgainstTrigger,
+  formatCommandAliasesForEditor,
+} from "./audience-helpers.js";
 import { parseAudienceHash } from "./audience-tabs.js";
 import { parseWorkspaceHash } from "./workspace-router.js";
 import { neighboringCatalogSelection } from "./catalog-selection.js";
@@ -83,8 +89,34 @@ function setFieldError(input, element, message) {
   }
 }
 
+function setAliasesFieldError(message) {
+  setFieldError(dom.commandAliasesInput, dom.commandAliasesError, message);
+  if (dom.commandAliasesInput) {
+    dom.commandAliasesInput.setAttribute(
+      "aria-describedby",
+      message ? "command-aliases-hint command-aliases-error" : "command-aliases-hint"
+    );
+  }
+}
+
+function mapAliasesServerFieldError(raw) {
+  switch (String(raw || "").trim()) {
+    case "invalid alias":
+      return t("commands.aliasesInvalid");
+    case "alias already exists":
+      return t("commands.aliasesDuplicate");
+    case "alias must not match trigger":
+      return t("commands.aliasesMatchesTrigger");
+    case "too many aliases":
+      return t("commands.aliasesTooMany");
+    default:
+      return raw || "";
+  }
+}
+
 function clearFieldErrors() {
   setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
+  setAliasesFieldError("");
   setFieldError(dom.commandActionInput, dom.commandActionError, "");
   setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
   commandMedia.clearFieldErrors();
@@ -176,6 +208,21 @@ function renderCommandsList() {
     trigger.className = "audience-catalog-items__primary";
     trigger.textContent = "!" + String(cmd.trigger || "");
 
+    const labelCol = document.createElement("div");
+    labelCol.className = "audience-catalog-items__label";
+    labelCol.append(trigger);
+    const aliasList = Array.isArray(cmd.aliases) ? cmd.aliases : [];
+    if (aliasList.length > 0) {
+      const aliases = document.createElement("span");
+      aliases.className = "audience-catalog-items__aliases";
+      aliases.textContent = aliasList
+        .map(function (alias) {
+          return "!" + String(alias || "");
+        })
+        .join(", ");
+      labelCol.append(aliases);
+    }
+
     const meta = document.createElement("span");
     meta.className = "audience-catalog-items__meta";
     const actionKey = normalizeCommandAction(cmd.action) === "show_leaderboard"
@@ -184,7 +231,7 @@ function renderCommandsList() {
     meta.textContent = t(actionKey) + " · " +
       (cmd.enabled ? t("commands.enabledShort") : t("commands.disabledShort"));
 
-    item.append(trigger, meta);
+    item.append(labelCol, meta);
     item.addEventListener("click", function () {
       selectCommand(String(cmd.id || ""), false);
       focusCommandItem(String(cmd.id || ""));
@@ -274,6 +321,9 @@ function fillEditorFromCommand(cmd) {
   if (dom.commandTriggerInput) {
     dom.commandTriggerInput.value = String(cmd.trigger || "");
   }
+  if (dom.commandAliasesInput) {
+    dom.commandAliasesInput.value = formatCommandAliasesForEditor(cmd.aliases);
+  }
   if (dom.commandEnabledInput) {
     dom.commandEnabledInput.checked = Boolean(cmd.enabled);
   }
@@ -300,6 +350,7 @@ function fillEditorFromCommand(cmd) {
 function defaultNewCommand() {
   return {
     trigger: "",
+    aliases: [],
     enabled: true,
     action: "alert",
     cooldown_seconds: 30,
@@ -336,6 +387,7 @@ function readEditorPayload() {
   return buildCommandPayload(
     {
       trigger: dom.commandTriggerInput ? dom.commandTriggerInput.value : "",
+      aliases: parseCommandAliasesText(dom.commandAliasesInput ? dom.commandAliasesInput.value : ""),
       enabled: dom.commandEnabledInput ? dom.commandEnabledInput.checked : true,
       action: dom.commandActionInput ? dom.commandActionInput.value : "alert",
       cooldown_seconds: dom.commandCooldownInput ? Number(dom.commandCooldownInput.value) : 0,
@@ -372,6 +424,9 @@ function applyFieldErrors(fields) {
   }
   if (fields.trigger && dom.commandTriggerError) {
     setFieldError(dom.commandTriggerInput, dom.commandTriggerError, fields.trigger);
+  }
+  if (fields.aliases && dom.commandAliasesError) {
+    setAliasesFieldError(mapAliasesServerFieldError(fields.aliases));
   }
   if (fields.action && dom.commandActionError) {
     setFieldError(dom.commandActionInput, dom.commandActionError, fields.action);
@@ -465,6 +520,19 @@ async function saveCommand() {
     dom.commandTriggerInput?.focus();
     return;
   }
+  const aliasesText = dom.commandAliasesInput ? dom.commandAliasesInput.value : "";
+  const aliasesErrorKey = validateCommandAliasesText(aliasesText);
+  if (aliasesErrorKey) {
+    setAliasesFieldError(t(aliasesErrorKey));
+    dom.commandAliasesInput?.focus();
+    return;
+  }
+  const aliasesTriggerErrorKey = validateCommandAliasesAgainstTrigger(aliasesText, payload.trigger);
+  if (aliasesTriggerErrorKey) {
+    setAliasesFieldError(t(aliasesTriggerErrorKey));
+    dom.commandAliasesInput?.focus();
+    return;
+  }
   if (payload.action === "alert" && String(payload.splash_template || "").trim() === "") {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, t("catalog.splashRequired"));
     dom.commandSplashInput?.focus();
@@ -494,6 +562,9 @@ async function saveCommand() {
     const data = await readJSON(response);
     if (!response.ok) {
       applyFieldErrors(data && data.fields);
+      if (data && data.fields && data.fields.aliases) {
+        dom.commandAliasesInput?.focus();
+      }
       const message = mapHTTPError(response.status, data && data.error);
       throw new Error(message);
     }
@@ -614,6 +685,9 @@ export function initCommandsCatalog() {
   dom.commandTriggerInput?.addEventListener("input", function () {
     setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
     commandMedia.setGraphicIdentity(dom.commandTriggerInput?.value || "", dom.commandTriggerInput?.value || "");
+  });
+  dom.commandAliasesInput?.addEventListener("input", function () {
+    setAliasesFieldError("");
   });
   dom.commandActionInput?.addEventListener("change", updateCommandActionUI);
   dom.commandSplashInput?.addEventListener("input", function () {

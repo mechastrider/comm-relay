@@ -28,7 +28,7 @@ test("command action helpers preserve alerts and strip leaderboard presentation"
       { trigger: "leaders", enabled: true, action: "show_leaderboard", cooldown_seconds: 30 },
       { splash_template: "unused", duration_ms: 5000 }
     ),
-    { trigger: "leaders", enabled: true, action: "show_leaderboard", cooldown_seconds: 30 }
+    { trigger: "leaders", aliases: [], enabled: true, action: "show_leaderboard", cooldown_seconds: 30 }
   );
   assert.equal(
     buildCommandPayload(

@@ -15,6 +15,7 @@ export function buildCommandPayload(common, presentation) {
   const action = normalizeCommandAction(common && common.action);
   const payload = {
     trigger: String(common && common.trigger || ""),
+    aliases: Array.isArray(common && common.aliases) ? common.aliases : [],
     enabled: common ? Boolean(common.enabled) : true,
     action: action,
     cooldown_seconds: Number(common && common.cooldown_seconds),

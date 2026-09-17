@@ -81,8 +81,18 @@ func (v *ViewerIngest) Run(ctx context.Context, b *bus.Bus) {
 func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	var matchedCmd *store.Command
 	if v.matcher != nil {
-		if cmd, ok := v.matcher.Lookup(msg.Message); ok {
-			matchedCmd = cmd
+		match, parsed := v.matcher.LookupMatch(msg.Message)
+		if parsed && match.AmbiguousTypo {
+			clog.Debug(ctx, "command match skipped: ambiguous typo",
+				slog.String("token", match.Token),
+			)
+		}
+		if match.Command != nil {
+			matchedCmd = match.Command
+			clog.Debug(ctx, "command matched",
+				slog.String("match", match.Kind),
+				slog.String("trigger", matchedCmd.Trigger),
+			)
 		}
 	}
 

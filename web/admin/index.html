@@ -462,6 +462,12 @@
                       <p id="command-trigger-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div class="form__field">
+                      <label for="command-aliases-input" data-i18n="commands.aliasesLabel">Aliases</label>
+                      <textarea id="command-aliases-input" rows="3" autocomplete="off" spellcheck="false" aria-describedby="command-aliases-hint command-aliases-error"></textarea>
+                      <p id="command-aliases-hint" class="field-hint" data-i18n="commands.aliasesHint">One slug per line, without !.</p>
+                      <p id="command-aliases-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div class="form__field">
                       <label for="command-enabled-input">
                         <input id="command-enabled-input" type="checkbox">
                         <span data-i18n="commands.enabledLabel">Enabled</span>

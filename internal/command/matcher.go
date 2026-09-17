@@ -54,28 +54,118 @@ func ParseLine(line string) (trigger string, ok bool) {
 
 // Lookup matches an enabled command without consuming cooldown.
 func (m *Matcher) Lookup(line string) (*store.Command, bool) {
-	if m == nil || m.store == nil {
+	match, ok := m.LookupMatch(line)
+	if !ok || match.Command == nil {
 		return nil, false
 	}
+	return match.Command, true
+}
 
-	trigger, ok := ParseLine(line)
+// LookupMatch resolves a bang line to a command without consuming cooldown.
+func (m *Matcher) LookupMatch(line string) (LookupMatch, bool) {
+	if m == nil || m.store == nil {
+		return LookupMatch{}, false
+	}
+
+	token, ok := ParseLine(line)
 	if !ok {
-		return nil, false
+		return LookupMatch{}, false
 	}
 
 	commands, err := m.store.ListCommands()
 	if err != nil {
-		return nil, false
+		return LookupMatch{Token: token}, true
 	}
 
 	for i := range commands {
-		cmd := commands[i]
-		if cmd.Enabled && cmd.Trigger == trigger {
-			return &cmd, true
+		cmd := &commands[i]
+		if !cmd.Enabled || cmd.Trigger != token {
+			continue
+		}
+		return LookupMatch{Command: cmd, Kind: MatchKindExact, Token: token}, true
+	}
+
+	for i := range commands {
+		cmd := &commands[i]
+		if !cmd.Enabled {
+			continue
+		}
+		for _, alias := range cmd.Aliases {
+			if alias == token {
+				return LookupMatch{Command: cmd, Kind: MatchKindAlias, Token: token}, true
+			}
 		}
 	}
 
-	return nil, false
+	for i := range commands {
+		cmd := &commands[i]
+		if cmd.Enabled {
+			continue
+		}
+		if cmd.Trigger == token {
+			return LookupMatch{Token: token}, true
+		}
+		for _, alias := range cmd.Aliases {
+			if alias == token {
+				return LookupMatch{Token: token}, true
+			}
+		}
+	}
+
+	fuzzyIDs := fuzzyMatchCommandIDs(token, commands)
+	switch len(fuzzyIDs) {
+	case 0:
+		return LookupMatch{Token: token}, true
+	case 1:
+		id := fuzzyIDs[0]
+		for i := range commands {
+			if commands[i].ID == id {
+				return LookupMatch{
+					Command: &commands[i],
+					Kind:    MatchKindFuzzy,
+					Token:   token,
+				}, true
+			}
+		}
+		return LookupMatch{Token: token}, true
+	default:
+		return LookupMatch{Token: token, AmbiguousTypo: true}, true
+	}
+}
+
+func fuzzyMatchCommandIDs(token string, commands []store.Command) []string {
+	const minCanonicalLen = 4
+
+	seen := make(map[string]struct{})
+	var ids []string
+
+	for i := range commands {
+		cmd := commands[i]
+		if !cmd.Enabled || len(cmd.Trigger) < minCanonicalLen {
+			continue
+		}
+		names := make([]string, 0, 1+len(cmd.Aliases))
+		names = append(names, cmd.Trigger)
+		names = append(names, cmd.Aliases...)
+
+		matched := false
+		for _, name := range names {
+			if damerauLevenshtein(token, name) <= 1 {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			continue
+		}
+		if _, exists := seen[cmd.ID]; exists {
+			continue
+		}
+		seen[cmd.ID] = struct{}{}
+		ids = append(ids, cmd.ID)
+	}
+
+	return ids
 }
 
 // TryFire consumes cooldown and returns true when the command may perform its configured action.

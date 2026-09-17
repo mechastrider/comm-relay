@@ -172,6 +172,7 @@ func applyOne(s *store.Store, assetsDir string, byTrigger map[string]store.Comma
 			ID:              current.ID,
 			Action:          current.Action,
 			Trigger:         current.Trigger,
+			Aliases:         current.Aliases,
 			Enabled:         current.Enabled,
 			CooldownSeconds: current.CooldownSeconds,
 			SplashTemplate:  current.SplashTemplate,
@@ -219,6 +220,7 @@ type commandInput struct {
 	ID              string
 	Action          string
 	Trigger         string
+	Aliases         []string
 	Enabled         bool
 	CooldownSeconds int
 	SplashTemplate  string
@@ -237,6 +239,7 @@ func (c commandInput) toCreate() store.CreateCommandInput {
 		ID:              c.ID,
 		Action:          c.Action,
 		Trigger:         c.Trigger,
+		Aliases:         c.Aliases,
 		Enabled:         c.Enabled,
 		CooldownSeconds: c.CooldownSeconds,
 		SplashTemplate:  c.SplashTemplate,
@@ -256,6 +259,7 @@ func (c commandInput) toUpdate() store.UpdateCommandInput {
 		ID:              c.ID,
 		Action:          c.Action,
 		Trigger:         c.Trigger,
+		Aliases:         c.Aliases,
 		Enabled:         c.Enabled,
 		CooldownSeconds: c.CooldownSeconds,
 		SplashTemplate:  c.SplashTemplate,
@@ -275,6 +279,7 @@ func buildCommandInput(assetsDir string, cmd ResolvedCommand, action string) (co
 		ID:              cmd.ID,
 		Action:          action,
 		Trigger:         cmd.Trigger,
+		Aliases:         cmd.Aliases,
 		Enabled:         cmd.Enabled,
 		CooldownSeconds: cmd.CooldownSeconds,
 		SplashTemplate:  cmd.SplashTemplate,
@@ -321,6 +326,7 @@ func commandMatchesPack(current store.Command, cmd ResolvedCommand) bool {
 	}
 
 	return current.Trigger == cmd.Trigger &&
+		aliasesMatchPack(current.Aliases, cmd.Aliases) &&
 		current.Enabled == cmd.Enabled &&
 		current.Action == action &&
 		current.CooldownSeconds == cmd.CooldownSeconds &&
@@ -340,6 +346,21 @@ func soundMatchesPack(currentSoundFile string, cmd ResolvedCommand) bool {
 		return currentSoundFile != ""
 	}
 	return currentSoundFile == cmd.SoundFile
+}
+
+func aliasesMatchPack(current, pack []string) bool {
+	if len(current) == 0 && len(pack) == 0 {
+		return true
+	}
+	if len(current) != len(pack) {
+		return false
+	}
+	for i := range current {
+		if current[i] != pack[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func normalizeDurationMs(durationMs int) int {

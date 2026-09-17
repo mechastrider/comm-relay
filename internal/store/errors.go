@@ -18,6 +18,14 @@ var (
 	ErrDuplicateTrigger = errors.New("duplicate trigger")
 	// ErrInvalidTrigger is returned when a command trigger fails slug validation.
 	ErrInvalidTrigger = errors.New("invalid trigger")
+	// ErrDuplicateAlias is returned when a command alias collides with another trigger or alias.
+	ErrDuplicateAlias = errors.New("duplicate alias")
+	// ErrInvalidAlias is returned when a command alias fails slug validation or rules.
+	ErrInvalidAlias = errors.New("invalid alias")
+	// ErrAliasMatchesTrigger is returned when an alias equals the command's canonical trigger.
+	ErrAliasMatchesTrigger = errors.New("alias matches trigger")
+	// ErrTooManyAliases is returned when a command exceeds the alias cap.
+	ErrTooManyAliases = errors.New("too many aliases")
 	// ErrInvalidCommandAction is returned when a command action is unsupported.
 	ErrInvalidCommandAction = errors.New("invalid command action")
 	// ErrInvalidPoints is returned when award points are below one.

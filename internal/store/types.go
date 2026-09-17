@@ -34,6 +34,7 @@ type Command struct {
 	ID              string
 	Action          string
 	Trigger         string
+	Aliases         []string
 	Enabled         bool
 	CooldownSeconds int
 	SplashTemplate  string
