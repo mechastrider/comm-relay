@@ -1,6 +1,8 @@
 /** Pure state helpers for the Live recap dialog. */
 
 export const RECAP_HISTORY_LIMIT = 20;
+export const RECAP_WINDOW_SESSION = "session";
+export const RECAP_WINDOW_ALL = "all";
 
 /** @param {string | null | undefined} cursor */
 export function buildRecapHistoryURL(cursor) {
@@ -25,9 +27,12 @@ export function buildRecapHideBody() {
   return {};
 }
 
+export function buildRecapShowAllBody() {
+  return {};
+}
+
 /**
- * A visibility frame has authority only for the session already displayed by
- * Current stream. It must not replace a newer session after New stream.
+ * Session visibility frames apply only to the displayed current session.
  * @param {unknown} frame
  * @param {string} sessionID
  */
@@ -35,8 +40,79 @@ export function isCurrentRecapStateFrame(frame, sessionID) {
   return Boolean(
     frame && typeof frame === "object" && frame.type === "stream_recap_state" &&
     frame.snapshot && typeof frame.snapshot === "object" &&
-    frame.snapshot.session_id === sessionID
+    frame.snapshot.session_id === sessionID &&
+    (frame.window === RECAP_WINDOW_SESSION || frame.window == null)
   );
+}
+
+/** @param {unknown} frame */
+export function isAllTimeRecapStateFrame(frame) {
+  return Boolean(
+    frame && typeof frame === "object" && frame.type === "stream_recap_state" &&
+    frame.visible === true && frame.window === RECAP_WINDOW_ALL
+  );
+}
+
+/**
+ * Whether a recap state frame should update the open dialog for this session.
+ * @param {unknown} frame
+ * @param {string} sessionID
+ */
+export function recapStateFrameApplies(frame, sessionID) {
+  if (!frame || typeof frame !== "object" || frame.type !== "stream_recap_state") {
+    return false;
+  }
+  if (frame.visible === false) {
+    return true;
+  }
+  if (frame.window === RECAP_WINDOW_ALL) {
+    return true;
+  }
+  return isCurrentRecapStateFrame(frame, sessionID);
+}
+
+/** @param {unknown} value */
+export function recapAllTimePresentation(value) {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  return {
+    totals: recapTotals(value),
+    ranking: Array.isArray(value.ranking) ? value.ranking.slice(0, 5) : [],
+    achievement_groups: [],
+  };
+}
+
+/**
+ * @param {{ dialogWindow: string, snapshot: unknown, allTime: unknown }} input
+ */
+export function canDownloadRecapImage(input) {
+  const window = input && input.dialogWindow === RECAP_WINDOW_ALL ? RECAP_WINDOW_ALL : RECAP_WINDOW_SESSION;
+  if (window === RECAP_WINDOW_ALL) {
+    return Boolean(recapAllTimePresentation(input && input.allTime));
+  }
+  return Boolean(input && input.snapshot);
+}
+
+/** @param {string} dialogWindow */
+export function recapDownloadFilename(dialogWindow) {
+  return dialogWindow === RECAP_WINDOW_ALL ? "comm-relay-recap-all.png" : "comm-relay-recap-session.png";
+}
+
+/**
+ * @param {{ snapshot?: unknown, all_time?: unknown }} current
+ * @param {string} dialogWindow
+ */
+export function recapDownloadPresentation(current, dialogWindow) {
+  const window = dialogWindow === RECAP_WINDOW_ALL ? RECAP_WINDOW_ALL : RECAP_WINDOW_SESSION;
+  if (window === RECAP_WINDOW_ALL) {
+    return { window: RECAP_WINDOW_ALL, snapshot: recapAllTimePresentation(current && current.all_time) };
+  }
+  const snapshot = current && current.snapshot;
+  if (!snapshot || typeof snapshot !== "object") {
+    return { window: RECAP_WINDOW_SESSION, snapshot: null };
+  }
+  return { window: RECAP_WINDOW_SESSION, snapshot: snapshot };
 }
 
 /**

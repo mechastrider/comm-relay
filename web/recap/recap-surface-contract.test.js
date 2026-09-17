@@ -30,7 +30,7 @@ test("each recap theme owns a distinct visual grammar", function () {
 test("a sole recap section has a full-width composition track", function () {
   assert.match(css, /\.recap-content--single\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   assert.match(css, /@media \(max-aspect-ratio:\s*4 \/ 5\) \{[\s\S]*?\.recap-content--single\s*\{[^}]*grid-template-rows:\s*minmax\(0,\s*1fr\)/);
-  assert.match(render, /recapContentLayout\(snapshot\)/);
+  assert.match(render, /recapContentLayout\(snapshot, recapWindow\)/);
   assert.match(render, /recap-content--" \+ layout/);
 });
 
@@ -50,7 +50,16 @@ test("renderer only writes authored values through textContent and uses required
   assert.doesNotMatch(render, /innerHTML/);
   assert.match(render, /entry\.portrait_url/);
   assert.match(render, /group\.viewer_portrait_url/);
-  assert.match(render, /t\("recap\.overlayTitle"\)/);
+  assert.match(render, /t\("recap\.overlayTitle"\)|t\(allTime \? "recap\.overlayAllTimeTitle" : "recap\.overlayTitle"\)/);
+  assert.match(render, /recap\.overlayAllTimeTitle/);
   assert.match(render, /t\("recap\.overlayMessageCount"/);
   assert.doesNotMatch(render, /"STREAM RECAP"|"RECOGNITION"|"VIEWERS"|"MESSAGES"/);
+});
+
+test("production recap page stays transparent and has no download chrome", function () {
+  const html = readFileSync(new URL("./index.html", import.meta.url), "utf8");
+  assert.doesNotMatch(html, /download/i);
+  assert.doesNotMatch(js, /stream-recaps\/current|stream-recaps\/show/);
+  assert.match(js, /visibleRecapFromFrame/);
+  assert.match(model, /RECAP_WINDOW_ALL/);
 });

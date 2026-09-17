@@ -12,6 +12,10 @@ test("Live recap has a separate accessible constrained dialog", async function (
   assert.match(html, /id="live-recap-history-tab"[^>]*role="tab"/);
   assert.match(html, /id="live-recap-body"[^>]*aria-busy="false"/);
   assert.match(html, /id="live-recap-confirm"[^>]*hidden/);
+  assert.match(html, /id="live-recap-show-all"[^>]*data-i18n="recap\.showAllTime"/);
+  assert.match(html, /id="live-recap-download"[^>]*data-i18n="recap\.downloadImage"/);
   assert.match(html, /id="live-recap-retry"[^>]*hidden/);
+  assert.match(js, /live-recap-window-switch/);
+  assert.match(js, /encodeRecapSharePNG/);
   assert.match(js, /querySelectorAll\([^\n]+\)[\s\S]*?\.filter\(function \(element\) \{ return !element\.hidden && element\.getClientRects\(\)\.length > 0; \}\)/);
 });

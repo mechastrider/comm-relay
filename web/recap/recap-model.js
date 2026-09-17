@@ -48,6 +48,9 @@ function safePortrait(value) {
 
 // The backend validates this payload. The browser still narrows untrusted wire
 // data before it reaches the DOM so malformed frames cannot destabilize OBS.
+export const RECAP_WINDOW_SESSION = "session";
+export const RECAP_WINDOW_ALL = "all";
+
 export function normalizeRecapSnapshot(value) {
   if (!value || typeof value !== "object") {
     return null;
@@ -89,21 +92,70 @@ export function normalizeRecapSnapshot(value) {
   };
 }
 
+/** All-time presentation matches recap totals/ranking without achievements. */
+export function normalizeAllTimePresentation(value) {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  const totals = value.totals && typeof value.totals === "object" ? value.totals : {};
+  const ranking = Array.isArray(value.ranking) ? value.ranking.slice(0, 5) : [];
+  return {
+    id: "",
+    session_id: "",
+    captured_at: text(value.generated_at, ""),
+    totals: {
+      viewer_count: nonNegative(totals.viewer_count),
+      message_count: nonNegative(totals.message_count),
+      xp: nonNegative(totals.xp),
+    },
+    ranking: ranking.map(function (entry, index) {
+      const row = entry && typeof entry === "object" ? entry : {};
+      return {
+        rank: nonNegative(row.rank) || index + 1,
+        display_name: text(row.display_name, ""),
+        portrait_url: safePortrait(row.portrait_url),
+        xp: nonNegative(row.xp),
+        message_count: nonNegative(row.message_count),
+        title: text(row.title, ""),
+      };
+    }),
+    achievement_groups: [],
+  };
+}
+
+/**
+ * @returns {undefined} ignore frame
+ * @returns {null} hidden — clear overlay
+ * @returns {{ window: string, snapshot: object }} visible presentation
+ */
 export function visibleRecapFromFrame(frame) {
   if (!frame || frame.type !== "stream_recap_state") {
     return undefined;
   }
-  if (frame.visible !== true || !frame.snapshot) {
+  if (frame.visible !== true) {
     return null;
   }
-  return normalizeRecapSnapshot(frame.snapshot);
+  if (frame.window === RECAP_WINDOW_ALL) {
+    const snapshot = normalizeAllTimePresentation(frame.all_time);
+    return snapshot ? { window: RECAP_WINDOW_ALL, snapshot: snapshot } : null;
+  }
+  if (frame.window === RECAP_WINDOW_SESSION || frame.window == null) {
+    if (!frame.snapshot) {
+      return null;
+    }
+    const snapshot = normalizeRecapSnapshot(frame.snapshot);
+    return snapshot ? { window: RECAP_WINDOW_SESSION, snapshot: snapshot } : null;
+  }
+  return undefined;
 }
 
 // The renderer uses this explicit composition contract so a single populated
 // section gets the full available width instead of an empty sibling track.
-export function recapContentLayout(snapshot) {
+export function recapContentLayout(snapshot, window) {
   const ranking = Boolean(snapshot && Array.isArray(snapshot.ranking) && snapshot.ranking.length);
-  const achievements = Boolean(snapshot && Array.isArray(snapshot.achievement_groups) && snapshot.achievement_groups.length);
+  const achievements = window !== RECAP_WINDOW_ALL && Boolean(
+    snapshot && Array.isArray(snapshot.achievement_groups) && snapshot.achievement_groups.length
+  );
   if (!ranking && !achievements) return "empty";
   return ranking && achievements ? "split" : "single";
 }

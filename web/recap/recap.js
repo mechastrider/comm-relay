@@ -9,8 +9,8 @@ import {
   recapViewFromConfig,
 } from "/overlay/overlay-settings.js?v=8";
 import { readCachedLocale, setLocale, t } from "/shared/i18n.js?v=18";
-import { normalizeRecapSnapshot, SAMPLE_RECAP, visibleRecapFromFrame } from "./recap-model.js?v=1";
-import { renderRecap } from "./recap-render.js?v=2";
+import { normalizeRecapSnapshot, RECAP_WINDOW_SESSION, SAMPLE_RECAP, visibleRecapFromFrame } from "./recap-model.js?v=2";
+import { renderRecap } from "./recap-render.js?v=3";
 
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 30000;
@@ -25,7 +25,7 @@ let overlayAssetsRevision = Date.now();
 let socket = null;
 let reconnectTimer = null;
 let reconnectDelay = INITIAL_RECONNECT_MS;
-let visibleSnapshot = null;
+let visiblePresentation = null;
 
 setLocale(params.get("locale") || readCachedLocale());
 
@@ -70,26 +70,26 @@ function applyAppearance() {
 }
 
 function clearRecap() {
-  visibleSnapshot = null;
+  visiblePresentation = null;
   if (root) {
     root.textContent = "";
   }
 }
 
-function showRecap(snapshot) {
-  if (!root || !snapshot) {
+function showRecap(presentation) {
+  if (!root || !presentation || !presentation.snapshot) {
     return;
   }
-  visibleSnapshot = snapshot;
-  renderRecap(root, snapshot);
+  visiblePresentation = presentation;
+  renderRecap(root, presentation.snapshot, presentation.window);
 }
 
 function applyFrame(frame) {
   if (frame && frame.type === "overlay_settings" && frame.overlay && typeof frame.overlay === "object") {
     view = recapViewFromConfig({ overlay: frame.overlay }, params);
     applyAppearance();
-    if (visibleSnapshot) {
-      renderRecap(root, visibleSnapshot);
+    if (visiblePresentation) {
+      renderRecap(root, visiblePresentation.snapshot, visiblePresentation.window);
     }
     return;
   }
@@ -115,8 +115,8 @@ async function loadAppearance() {
     overlayAssetsRevision = Date.now();
     view = recapViewFromConfig(payload, params);
     applyAppearance();
-    if (visibleSnapshot) {
-      renderRecap(root, visibleSnapshot);
+    if (visiblePresentation) {
+      renderRecap(root, visiblePresentation.snapshot, visiblePresentation.window);
     }
   } catch {
     // Appearance falls back to the built-in theme while the overlay reconnects.
@@ -165,7 +165,7 @@ function connect() {
 async function start() {
   applyAppearance();
   if (sampleMode) {
-    showRecap(normalizeRecapSnapshot(SAMPLE_RECAP));
+    showRecap({ window: RECAP_WINDOW_SESSION, snapshot: normalizeRecapSnapshot(SAMPLE_RECAP) });
     return;
   }
   await loadAppearance();

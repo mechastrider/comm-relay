@@ -131,6 +131,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("GET /api/sessions/get", sessionsHandler.handleGet)
 	mux.HandleFunc("GET /api/stream-recaps/current", streamRecapsHandler.handleCurrent)
 	mux.HandleFunc("POST /api/stream-recaps/show", streamRecapsHandler.handleShow)
+	mux.HandleFunc("POST /api/stream-recaps/show-all", streamRecapsHandler.handleShowAll)
 	mux.HandleFunc("POST /api/stream-recaps/hide", streamRecapsHandler.handleHide)
 	mux.HandleFunc("GET /api/leaderboard", viewersHandler.handleLeaderboard)
 	mux.HandleFunc("GET /api/leaderboard/visibility", visibilityHandler.handleGet)

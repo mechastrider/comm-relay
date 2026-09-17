@@ -11,7 +11,9 @@ import (
 // State is the ephemeral runtime visibility state for production clients.
 type State struct {
 	Visible  bool
+	Window   *string
 	Snapshot *Snapshot
+	AllTime  *Presentation
 }
 
 // Publisher receives authoritative state after visibility transitions.
@@ -23,7 +25,9 @@ type Controller struct {
 	transitionMu   sync.Mutex
 	publishMu      sync.Mutex
 	visible        bool
+	window         *string
 	snapshot       *Snapshot
+	allTime        *Presentation
 	publish        Publisher
 	transitionHook func(string)
 	stateHook      func(string)
@@ -80,6 +84,24 @@ func (c *Controller) ShowAfter(capture func() (*Snapshot, error)) (State, error)
 	return state, nil
 }
 
+// ShowAllAfter serializes all-time presentation compute and runtime visibility.
+func (c *Controller) ShowAllAfter(compute func() (*Presentation, error)) (State, error) {
+	c.beforeTransition("show-all")
+	c.transitionMu.Lock()
+	presentation, err := compute()
+	if err != nil {
+		c.transitionMu.Unlock()
+		return State{}, err
+	}
+	state := c.showAllLocked(presentation)
+	c.afterStateTransition("show-all")
+	c.publishMu.Lock()
+	c.transitionMu.Unlock()
+	c.emit(state)
+	c.publishMu.Unlock()
+	return state, nil
+}
+
 // HideAfter serializes a successful external transition, such as committing a
 // new stream session, with the resulting hidden recap state.
 func (c *Controller) HideAfter(commit func() error) (State, error) {
@@ -102,6 +124,9 @@ func (c *Controller) showLocked(snapshot *Snapshot) State {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.visible = true
+	window := WindowSession
+	c.window = &window
+	c.allTime = nil
 	if snapshot != nil {
 		cloned := *snapshot
 		c.snapshot = &cloned
@@ -111,11 +136,29 @@ func (c *Controller) showLocked(snapshot *Snapshot) State {
 	return c.stateLocked()
 }
 
+func (c *Controller) showAllLocked(presentation *Presentation) State {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.visible = true
+	window := WindowAll
+	c.window = &window
+	c.snapshot = nil
+	if presentation != nil {
+		cloned := *presentation
+		c.allTime = &cloned
+	} else {
+		c.allTime = nil
+	}
+	return c.stateLocked()
+}
+
 func (c *Controller) hideLocked() State {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.visible = false
+	c.window = nil
 	c.snapshot = nil
+	c.allTime = nil
 	return c.stateLocked()
 }
 
@@ -155,15 +198,23 @@ func (c *Controller) HideOnNewStream() State {
 }
 
 func (c *Controller) stateLocked() State {
-	var snapshot *Snapshot
-	if c.visible && c.snapshot != nil {
+	state := State{Visible: c.visible}
+	if !c.visible {
+		return state
+	}
+	if c.window != nil {
+		window := *c.window
+		state.Window = &window
+	}
+	if c.window != nil && *c.window == WindowSession && c.snapshot != nil {
 		cloned := *c.snapshot
-		snapshot = &cloned
+		state.Snapshot = &cloned
 	}
-	return State{
-		Visible:  c.visible,
-		Snapshot: snapshot,
+	if c.window != nil && *c.window == WindowAll && c.allTime != nil {
+		cloned := *c.allTime
+		state.AllTime = &cloned
 	}
+	return state
 }
 
 func (c *Controller) emit(state State) {
@@ -176,9 +227,14 @@ func (c *Controller) emit(state State) {
 		sessionID = state.Snapshot.SessionID
 		snapshotID = state.Snapshot.ID
 	}
+	window := ""
+	if state.Window != nil {
+		window = *state.Window
+	}
 	clog.Info(context.Background(), "stream recap visibility changed",
 		slog.String("session_id", sessionID),
 		slog.String("snapshot_id", snapshotID),
+		slog.String("window", window),
 		slog.Bool("visible", state.Visible),
 	)
 }

@@ -1,6 +1,6 @@
 import { createChatRender } from "/shared/chat-render.js?v=12";
 import { t } from "/shared/i18n.js?v=18";
-import { recapContentLayout } from "./recap-model.js?v=1";
+import { RECAP_WINDOW_ALL, recapContentLayout } from "./recap-model.js?v=2";
 
 const renderer = createChatRender({ avatarFallback: "detailed" });
 
@@ -80,29 +80,31 @@ function achievements(snapshot) {
   return section;
 }
 
-export function renderRecap(root, snapshot) {
+export function renderRecap(root, snapshot, window) {
+  const recapWindow = window === RECAP_WINDOW_ALL ? RECAP_WINDOW_ALL : "session";
+  const allTime = recapWindow === RECAP_WINDOW_ALL;
   root.textContent = "";
   const recap = node("main", "recap");
   const header = node("header", "recap-header");
   header.append(
-    node("p", "recap-kicker", t("recap.overlayKicker")),
-    node("h1", "recap-title", t("recap.overlayTitle"))
+    node("p", "recap-kicker", t(allTime ? "recap.overlayAllTimeKicker" : "recap.overlayKicker")),
+    node("h1", "recap-title", t(allTime ? "recap.overlayAllTimeTitle" : "recap.overlayTitle"))
   );
   const totals = node("div", "recap-totals");
   totals.append(
     metric(t("recap.overlayViewers"), snapshot.totals.viewer_count),
     metric(t("recap.overlayMessages"), snapshot.totals.message_count),
-    metric(t("recap.overlaySessionXP"), snapshot.totals.xp)
+    metric(t(allTime ? "recap.overlayAllTimeXP" : "recap.overlaySessionXP"), snapshot.totals.xp)
   );
   header.appendChild(totals);
   recap.appendChild(header);
   const content = node("div", "recap-content");
-  const layout = recapContentLayout(snapshot);
+  const layout = recapContentLayout(snapshot, recapWindow);
   content.classList.add("recap-content--" + layout);
   if (snapshot.ranking.length > 0) {
     content.appendChild(ranking(snapshot));
   }
-  if (snapshot.achievement_groups.length > 0) {
+  if (!allTime && snapshot.achievement_groups.length > 0) {
     content.appendChild(achievements(snapshot));
   }
   if (layout !== "empty") {

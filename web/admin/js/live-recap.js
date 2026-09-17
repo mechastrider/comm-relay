@@ -5,12 +5,22 @@ import {
   buildRecapHideBody,
   buildRecapHistoryURL,
   buildRecapSessionURL,
+  buildRecapShowAllBody,
   buildRecapShowBody,
+  canDownloadRecapImage,
   isHiddenRecapStateFrame,
+  isAllTimeRecapStateFrame,
   isCurrentRecapStateFrame,
+  recapAllTimePresentation,
+  recapDownloadFilename,
+  recapDownloadPresentation,
   recapDisplayData,
+  recapStateFrameApplies,
   recapTotals,
+  RECAP_WINDOW_ALL,
+  RECAP_WINDOW_SESSION,
 } from "./live-recap-helpers.js";
+import { encodeRecapSharePNG, triggerRecapDownload } from "./recap-share-image.js";
 import {
   beginRecapShow,
   canApplyRecapDialogResult,
@@ -28,7 +38,9 @@ let history = [];
 let nextCursor = null;
 let selectedDetail = null;
 let view = "current";
+let dialogWindow = RECAP_WINDOW_SESSION;
 let busy = false;
+let encoding = false;
 let offline = false;
 let confirmation = false;
 let historyLoaded = false;
@@ -90,8 +102,11 @@ function appendTotals(parent, totals) {
   const list = document.createElement("dl");
   list.className = "live-recap-totals";
   [["recap.totalViewers", totals.viewer_count], ["recap.totalMessages", totals.message_count], ["recap.totalXP", totals.xp]].forEach(function ([key, value]) {
-    appendText(list, "dt", t(key));
-    appendText(list, "dd", String(value));
+    const item = document.createElement("div");
+    item.className = "live-recap-totals__item";
+    appendText(item, "dt", t(key));
+    appendText(item, "dd", String(value));
+    list.append(item);
   });
   parent.append(list);
 }
@@ -152,27 +167,68 @@ function appendAchievements(parent, groups) {
   parent.append(section);
 }
 
-function renderDetail(detail, historical) {
+function renderWindowSwitch(parent) {
+  const group = document.createElement("div");
+  group.className = "live-recap-window-switch";
+  group.setAttribute("role", "radiogroup");
+  group.setAttribute("aria-label", t("recap.windowSwitcher"));
+  [["session", "recap.windowSession"], ["all", "recap.windowAllTime"]].forEach(function ([value, labelKey]) {
+    const label = document.createElement("label");
+    label.className = "live-recap-window-switch__option";
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "live-recap-window";
+    input.value = value;
+    input.checked = dialogWindow === value;
+    input.disabled = busy || encoding;
+    input.addEventListener("change", function () {
+      if (!input.checked || busy || encoding) return;
+      dialogWindow = value === RECAP_WINDOW_ALL ? RECAP_WINDOW_ALL : RECAP_WINDOW_SESSION;
+      render();
+    });
+    label.append(input, document.createTextNode(t(labelKey)));
+    group.append(label);
+  });
+  parent.append(group);
+}
+
+function renderDetail(detail, historical, previewWindow) {
   const data = recapDisplayData(detail);
   const body = region();
   if (!body) return;
-  const heading = appendText(body, "h3", historical ? t("recap.sessionDetail") : t("recap.currentSummary"));
+  const allTimePreview = previewWindow === RECAP_WINDOW_ALL;
+  const heading = appendText(body, "h3", allTimePreview ? t("recap.allTimeSummary") : (historical ? t("recap.sessionDetail") : t("recap.currentSummary")));
   heading.tabIndex = -1;
-  appendText(body, "p", t("recap.startedAt", { time: formatTime(data.started_at) }), "field-hint");
-  if (data.snapshot && data.snapshot.captured_at) appendText(body, "p", t("recap.capturedAt", { time: formatTime(data.snapshot.captured_at) }), "field-hint");
-  appendTotals(body, recapTotals(data.snapshot || data));
-  const source = data.snapshot || data;
+  if (!allTimePreview) {
+    appendText(body, "p", t("recap.startedAt", { time: formatTime(data.started_at) }), "field-hint");
+    if (data.snapshot && data.snapshot.captured_at) appendText(body, "p", t("recap.capturedAt", { time: formatTime(data.snapshot.captured_at) }), "field-hint");
+  } else if (current && current.all_time && current.all_time.generated_at) {
+    appendText(body, "p", t("recap.allTimeGeneratedAt", { time: formatTime(current.all_time.generated_at) }), "field-hint");
+  }
+  const presentation = allTimePreview ? recapAllTimePresentation(current && current.all_time) : null;
+  if (allTimePreview && !presentation) {
+    appendText(body, "p", t("recap.emptyAllTime"), "empty-state");
+    return;
+  }
+  const totalsSource = allTimePreview && presentation ? presentation : (data.snapshot || data);
+  appendTotals(body, recapTotals(totalsSource));
+  const source = allTimePreview && presentation ? presentation : (data.snapshot || data);
   appendRanking(body, Array.isArray(source.ranking) ? source.ranking : []);
-  appendAchievements(body, Array.isArray(source.achievement_groups) ? source.achievement_groups : []);
-  if (!source.ranking.length && !source.achievement_groups.length) appendText(body, "p", t("recap.emptySession"), "empty-state");
+  if (!allTimePreview) {
+    appendAchievements(body, Array.isArray(source.achievement_groups) ? source.achievement_groups : []);
+  }
+  const achievements = allTimePreview ? [] : (Array.isArray(source.achievement_groups) ? source.achievement_groups : []);
+  if (!source.ranking.length && !achievements.length) appendText(body, "p", allTimePreview ? t("recap.emptyAllTime") : t("recap.emptySession"), "empty-state");
 }
 
 function renderCurrent() {
+  const body = region();
   if (!current || !current.session) {
-    appendText(region(), "p", t("recap.currentUnavailable"), "empty-state");
+    appendText(body, "p", t("recap.currentUnavailable"), "empty-state");
     return;
   }
-  renderDetail(current.session, false);
+  renderWindowSwitch(body);
+  renderDetail(current.session, false, dialogWindow);
 }
 
 function renderConfirmation() {
@@ -235,6 +291,12 @@ function render() {
   else renderCurrent();
   const session = current && current.session ? recapDisplayData(current.session) : null;
   const captured = Boolean(current && current.snapshot);
+  const sessionWindow = dialogWindow === RECAP_WINDOW_SESSION;
+  const canDownload = canDownloadRecapImage({
+    dialogWindow,
+    snapshot: current && current.snapshot,
+    allTime: current && current.all_time,
+  });
   if (dom.liveRecapBack) dom.liveRecapBack.hidden = !selectedDetail;
   if (dom.liveRecapRetry) dom.liveRecapRetry.hidden = !readRetry;
   if (dom.liveRecapCancel) {
@@ -242,17 +304,31 @@ function render() {
     dom.liveRecapCancel.disabled = dialogState.showing;
   }
   if (dom.liveRecapShow) {
-    dom.liveRecapShow.hidden = view !== "current" || confirmation;
-    dom.liveRecapShow.disabled = busy || offline || !session;
+    dom.liveRecapShow.hidden = view !== "current" || confirmation || !sessionWindow;
+    dom.liveRecapShow.disabled = busy || offline || encoding || !session;
     dom.liveRecapShow.textContent = captured ? t("recap.showAgain") : t("recap.show");
+  }
+  if (dom.liveRecapShowAll) {
+    dom.liveRecapShowAll.hidden = view !== "current" || confirmation || sessionWindow;
+    dom.liveRecapShowAll.disabled = busy || offline || encoding || !session;
   }
   if (dom.liveRecapConfirm) {
     dom.liveRecapConfirm.hidden = !confirmation;
-    dom.liveRecapConfirm.disabled = busy || offline || !session;
+    dom.liveRecapConfirm.disabled = busy || offline || encoding || !session;
   }
   if (dom.liveRecapHide) {
     dom.liveRecapHide.hidden = view !== "current" || confirmation || !(current && current.visible);
-    dom.liveRecapHide.disabled = busy || offline;
+    dom.liveRecapHide.disabled = busy || offline || encoding;
+  }
+  if (dom.liveRecapDownload) {
+    dom.liveRecapDownload.hidden = view !== "current" || confirmation;
+    dom.liveRecapDownload.disabled = busy || offline || encoding || !canDownload;
+    dom.liveRecapDownload.setAttribute("aria-disabled", dom.liveRecapDownload.disabled ? "true" : "false");
+    if (!canDownload && sessionWindow) {
+      dom.liveRecapDownload.title = t("recap.downloadNeedsCapture");
+    } else {
+      dom.liveRecapDownload.removeAttribute("title");
+    }
   }
   dom.liveRecapDialog.setAttribute(
     "aria-describedby",
@@ -286,6 +362,9 @@ async function loadCurrent(options) {
     const payload = await request("/api/stream-recaps/current", { signal: controller.signal });
     if (loadController !== controller || !canApplyRecapRead(dialogState, generation)) return null;
     current = payload;
+    if (payload && payload.window === RECAP_WINDOW_ALL) {
+      dialogWindow = RECAP_WINDOW_ALL;
+    }
     offline = false;
     readRetry = null;
     setStatus("");
@@ -375,6 +454,7 @@ async function showRecap() {
     const payload = await request("/api/stream-recaps/show", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(buildRecapShowBody(sessionID)) });
     if (!canApplyRecapDialogResult(dialogState, generation)) return;
     current.visible = payload.visible === true;
+    current.window = payload.window || RECAP_WINDOW_SESSION;
     current.snapshot = payload.snapshot || current.snapshot;
     if (current.session) current.session.snapshot = current.snapshot;
     confirmation = false;
@@ -395,6 +475,57 @@ async function showRecap() {
       dialogState = Object.assign({}, dialogState, { showing: false });
     }
     setBusy(false, generation);
+  }
+}
+
+async function showAllTimeRecap() {
+  if (busy || offline || encoding || !current || dialogState.showing) return;
+  const generation = dialogState.generation;
+  dialogState = beginRecapShow(dialogState);
+  setBusy(true, generation);
+  try {
+    const payload = await request("/api/stream-recaps/show-all", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildRecapShowAllBody()),
+    });
+    if (!canApplyRecapDialogResult(dialogState, generation)) return;
+    current.visible = payload.visible === true;
+    current.window = payload.window || RECAP_WINDOW_ALL;
+    if (payload.all_time) current.all_time = payload.all_time;
+    setStatus(t("recap.allTimeShown"));
+  } catch (error) {
+    if (!canApplyRecapDialogResult(dialogState, generation)) return;
+    offline = isUnavailable(error);
+    setStatus(offline ? t("recap.offline") : error.message, true);
+  } finally {
+    if (canApplyRecapRead(dialogState, generation)) {
+      dialogState = Object.assign({}, dialogState, { showing: false });
+    }
+    setBusy(false, generation);
+  }
+}
+
+async function downloadRecapImage() {
+  if (busy || offline || encoding || !current) return;
+  const presentation = recapDownloadPresentation(current, dialogWindow);
+  if (!presentation.snapshot) {
+    setStatus(t("recap.downloadNeedsCapture"), true);
+    return;
+  }
+  const generation = dialogState.generation;
+  encoding = true;
+  setStatus(t("recap.downloadProgress"));
+  render();
+  try {
+    const blob = await encodeRecapSharePNG(presentation);
+    triggerRecapDownload(blob, recapDownloadFilename(dialogWindow));
+    setStatus(t("recap.downloadDone"));
+  } catch {
+    setStatus(t("recap.downloadFailed"), true);
+  } finally {
+    encoding = false;
+    if (canApplyRecapRead(dialogState, generation)) render();
   }
 }
 
@@ -448,18 +579,20 @@ function trapFocus(event) {
 
 export function handleLiveRecapWire(frame) {
   if (!isOpen() || !current) return false;
+  if (!recapStateFrameApplies(frame, current.session_id)) return false;
   if (isHiddenRecapStateFrame(frame)) {
     current.visible = false;
-    // A null-snapshot frame can be Hide or New stream. Discarding a pending
-    // confirmation prevents a stale displayed session from being submitted.
     discardConfirmation();
     render();
     loadCurrent({ background: true });
     return true;
   }
-  if (!isCurrentRecapStateFrame(frame, current.session_id)) return false;
   current.visible = frame.visible === true;
-  if (frame.snapshot) {
+  if (frame.window) current.window = frame.window;
+  if (isAllTimeRecapStateFrame(frame) && frame.all_time) {
+    current.all_time = frame.all_time;
+  }
+  if (isCurrentRecapStateFrame(frame, current.session_id) && frame.snapshot) {
     current.snapshot = frame.snapshot;
     if (current.session) current.session.snapshot = frame.snapshot;
   }
@@ -475,7 +608,7 @@ export function initLiveRecap() {
   if (!dom.liveRecapButton || !dom.liveRecapDialog) return;
   dom.liveRecapButton.addEventListener("click", function () {
     opener = dom.liveRecapButton;
-    view = "current"; selectedDetail = null; confirmation = false; offline = false; readRetry = null;
+    view = "current"; dialogWindow = RECAP_WINDOW_SESSION; selectedDetail = null; confirmation = false; offline = false; readRetry = null; encoding = false;
     dialogState = openRecapDialog(dialogState);
     dom.liveRecapDialog.showModal();
     focusFirst();
@@ -497,6 +630,8 @@ export function initLiveRecap() {
     if (origin) origin.focus({ preventScroll: true });
   });
   dom.liveRecapHide.addEventListener("click", hideRecap);
+  if (dom.liveRecapShowAll) dom.liveRecapShowAll.addEventListener("click", showAllTimeRecap);
+  if (dom.liveRecapDownload) dom.liveRecapDownload.addEventListener("click", downloadRecapImage);
   dom.liveRecapRetry.addEventListener("click", function () { if (!busy && readRetry) readRetry(); });
   dom.liveRecapClose.addEventListener("click", closeDialog);
   dom.liveRecapDialog.addEventListener("cancel", function (event) { event.preventDefault(); closeDialog(); });
