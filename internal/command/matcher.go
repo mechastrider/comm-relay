@@ -10,9 +10,12 @@ import (
 
 // Matcher matches chat lines against the command catalog and tracks per-viewer cooldowns.
 type Matcher struct {
-	store    *store.Store
-	mu       sync.Mutex
-	cooldown map[cooldownKey]time.Time
+	store        *store.Store
+	mu           sync.Mutex
+	cooldown     map[cooldownKey]time.Time
+	outcomes     map[messageOutcomeKey]storedMessageOutcome
+	outcomeOrder []messageOutcomeKey
+	now          func() time.Time
 }
 
 type cooldownKey struct {
@@ -26,6 +29,8 @@ func NewMatcher(s *store.Store) *Matcher {
 	return &Matcher{
 		store:    s,
 		cooldown: make(map[cooldownKey]time.Time),
+		outcomes: make(map[messageOutcomeKey]storedMessageOutcome),
+		now:      time.Now,
 	}
 }
 
@@ -79,7 +84,6 @@ func (m *Matcher) TryFire(platform, userID string, cmd *store.Command) bool {
 		return false
 	}
 
-	now := time.Now()
 	key := cooldownKey{
 		platform:  strings.TrimSpace(platform),
 		userID:    strings.TrimSpace(userID),
@@ -89,6 +93,7 @@ func (m *Matcher) TryFire(platform, userID string, cmd *store.Command) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	now := m.now()
 	if cmd.CooldownSeconds > 0 {
 		if until, exists := m.cooldown[key]; exists && now.Before(until) {
 			return false

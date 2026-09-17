@@ -349,6 +349,9 @@ export function applyConfig(config) {
     if (dom.hideCommandMessagesInput) {
       dom.hideCommandMessagesInput.checked = Boolean(config.hide_command_messages);
     }
+    if (dom.hideCommandCooldownOverlayInput) {
+      dom.hideCommandCooldownOverlayInput.checked = Boolean(config.hide_command_cooldown_overlay);
+    }
     if (dom.customAvatarsEnabledInput) {
       dom.customAvatarsEnabledInput.checked = config.custom_avatars_enabled !== false;
     }
@@ -387,6 +390,9 @@ export function buildPayload() {
         : 6,
       hide_command_messages: dom.hideCommandMessagesInput
         ? dom.hideCommandMessagesInput.checked
+        : false,
+      hide_command_cooldown_overlay: dom.hideCommandCooldownOverlayInput
+        ? dom.hideCommandCooldownOverlayInput.checked
         : false,
       custom_avatars_enabled: dom.customAvatarsEnabledInput
         ? dom.customAvatarsEnabledInput.checked
@@ -481,6 +487,7 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
       activity_xp: latest.activity_xp,
       day_reset_hour: latest.day_reset_hour,
       hide_command_messages: Boolean(latest.hide_command_messages),
+      hide_command_cooldown_overlay: Boolean(latest.hide_command_cooldown_overlay),
       custom_avatars_enabled: latest.custom_avatars_enabled !== false,
       streamer_display_name: String(latest.streamer_display_name || "").trim(),
       leaderboard_visibility: leaderboardVisibilityFromConfig(latest),

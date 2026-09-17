@@ -17,8 +17,39 @@ import { invalidateLiveStatistics } from "./live-statistics.js";
 import { applyViewerProgressionFrame } from "./viewers.js";
 import { setRegionState } from "./shell-state.js";
 import { handleLiveRecapWire } from "./live-recap.js";
+import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=1";
 
 let messagesLoadInFlight = false;
+
+const commandOutcomeLive = createCommandOutcomeLive({
+  listRoot: dom.recentMessages,
+  translate: t,
+  findMessage: function (platform, id) {
+    const found = state.recentMessageCache.find(function (message) {
+      return isSameMessage(message, platform, id);
+    });
+    return found || null;
+  },
+  setMessageOutcome: function (platform, id, outcome) {
+    state.recentMessageCache = state.recentMessageCache.map(function (message) {
+      if (!isSameMessage(message, platform, id)) {
+        return message;
+      }
+      if (!outcome) {
+        const next = Object.assign({}, message);
+        delete next.command_outcome;
+        return next;
+      }
+      return Object.assign({}, message, { command_outcome: outcome });
+    });
+  },
+});
+
+if (typeof window !== "undefined") {
+  window.setInterval(function () {
+    commandOutcomeLive.tickCooldownLabels();
+  }, 1000);
+}
 
 export function setMessagesLoading(loading) {
   messagesLoadInFlight = loading;
@@ -191,7 +222,7 @@ export function wireToAdminMessage(wire) {
         ? wire.display_name
         : user;
 
-    return {
+    const msg = {
       id: typeof wire.id === "string" ? wire.id : "",
       platform: typeof wire.platform === "string" ? wire.platform : "",
       user_id: typeof wire.user_id === "string" ? wire.user_id : "",
@@ -204,6 +235,10 @@ export function wireToAdminMessage(wire) {
         ? wire.timestamp
         : new Date().toISOString(),
     };
+    if (wire.command_outcome && typeof wire.command_outcome === "object") {
+      msg.command_outcome = wire.command_outcome;
+    }
+    return commandOutcomeLive.normalizeMessage(msg);
   }
 
 export function maybePlayMessageSound(messages) {
@@ -382,6 +417,7 @@ export function buildMessageListItem(msg) {
 
     item.appendChild(buildAvatarImage(msg));
     item.appendChild(content);
+    commandOutcomeLive.decorateListItem(item, msg);
     return item;
   }
 
@@ -411,13 +447,14 @@ export function restoreMessagesScroll(panel, prevScrollTop, prevScrollHeight) {
 
 export function appendRecentMessage(msg) {
     const stickToBottom = isMessagesPanelNearBottom(messagesPanel());
+    const normalized = commandOutcomeLive.normalizeMessage(msg);
 
     dom.recentMessagesEmpty.hidden = true;
-    state.recentMessageCache.push(msg);
+    state.recentMessageCache.push(normalized);
     if (state.recentMessageCache.length > RECENT_MESSAGE_LIMIT) {
       state.recentMessageCache = state.recentMessageCache.slice(-RECENT_MESSAGE_LIMIT);
     }
-    dom.recentMessages.appendChild(buildMessageListItem(msg));
+    dom.recentMessages.appendChild(buildMessageListItem(normalized));
     while (dom.recentMessages.children.length > RECENT_MESSAGE_LIMIT) {
       dom.recentMessages.removeChild(dom.recentMessages.firstChild);
     }
@@ -434,7 +471,11 @@ export function renderRecentMessages(messages, options) {
     if (!force && fingerprint === state.renderedMessagesFingerprint && dom.recentMessages.children.length > 0) {
       return;
     }
-    state.recentMessageCache = Array.isArray(messages) ? messages.slice() : [];
+    state.recentMessageCache = Array.isArray(messages)
+      ? messages.map(function (message) {
+          return commandOutcomeLive.normalizeMessage(message);
+        })
+      : [];
 
     const panel = messagesPanel();
     const stickToBottom = isMessagesPanelNearBottom(panel);
@@ -469,6 +510,10 @@ export function handleWireMessage(wire) {
     }
     if (wire.type === "message_deleted") {
       removeMessageFromAdmin(wire.platform, wire.id);
+      return;
+    }
+    if (wire.type === "command_outcome") {
+      commandOutcomeLive.handleWire(wire);
       return;
     }
     if (wire.type === "leaderboard") {

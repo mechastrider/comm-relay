@@ -175,7 +175,15 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		return
 	}
 
-	if !v.matcher.TryFire(msg.Platform, msg.UserID, matchedCmd) {
+	fired := v.matcher.TryFire(msg.Platform, msg.UserID, matchedCmd)
+	outcome := v.matcher.RecordMessageOutcome(
+		msg.Platform, msg.ID,
+		msg.Platform, msg.UserID,
+		matchedCmd, fired,
+	)
+	v.broadcastCommandOutcome(ctx, msg, outcome)
+
+	if !fired {
 		observability.Default.RecordCommandSuppressed("cooldown")
 		clog.Debug(ctx, "command suppressed: cooldown",
 			slog.String("trigger", matchedCmd.Trigger),
@@ -240,6 +248,27 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		v.hub.Broadcast(alertPayload)
 	}
 	v.publishProgression(ctx, commandProgression, viewerID, cfg.DayResetHour)
+}
+
+func (v *ViewerIngest) broadcastCommandOutcome(ctx context.Context, msg bus.ChatMessage, outcome command.MessageOutcome) {
+	if v.hub == nil || outcome.Trigger == "" {
+		return
+	}
+	platform := strings.TrimSpace(msg.Platform)
+	messageID := strings.TrimSpace(msg.ID)
+	if platform == "" || messageID == "" {
+		return
+	}
+
+	payload, err := commandOutcomeWirePayload(
+		platform, messageID,
+		outcome.Trigger, outcome.Status, outcome.CooldownRemainingMs,
+	)
+	if err != nil {
+		clog.Errorf(ctx, "command outcome wire payload: %w", err)
+		return
+	}
+	v.hub.Broadcast(payload)
 }
 
 func (v *ViewerIngest) publishProgression(ctx context.Context, bundle store.ProgressionResultBundle, viewerID string, dayResetHour int) {

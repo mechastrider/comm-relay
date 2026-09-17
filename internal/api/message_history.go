@@ -121,17 +121,24 @@ func (h *MessageHistory) Recent(limit int) []adminMessage {
 	return out
 }
 
+type commandOutcomeJSON struct {
+	Trigger             string `json:"trigger"`
+	Status              string `json:"status"`
+	CooldownRemainingMs int    `json:"cooldown_remaining_ms"`
+}
+
 type adminMessage struct {
-	ID          string                `json:"id,omitempty"`
-	Platform    string                `json:"platform"`
-	UserID      string                `json:"user_id,omitempty"`
-	Username    string                `json:"username"`
-	DisplayName string                `json:"display_name,omitempty"`
-	Message     string                `json:"message"`
-	Fragments   []bus.MessageFragment `json:"fragments,omitempty"`
-	AvatarURL   string                `json:"avatar_url,omitempty"`
-	Timestamp   string                `json:"timestamp"`
-	IsCommand   bool                  `json:"is_command,omitempty"`
+	ID             string                `json:"id,omitempty"`
+	Platform       string                `json:"platform"`
+	UserID         string                `json:"user_id,omitempty"`
+	Username       string                `json:"username"`
+	DisplayName    string                `json:"display_name,omitempty"`
+	Message        string                `json:"message"`
+	Fragments      []bus.MessageFragment `json:"fragments,omitempty"`
+	AvatarURL      string                `json:"avatar_url,omitempty"`
+	Timestamp      string                `json:"timestamp"`
+	IsCommand      bool                  `json:"is_command,omitempty"`
+	CommandOutcome *commandOutcomeJSON   `json:"command_outcome,omitempty"`
 }
 
 func adminMessageFromChat(msg bus.ChatMessage) adminMessage {

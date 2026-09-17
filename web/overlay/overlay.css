@@ -230,6 +230,15 @@ body.overlay--compact {
   box-shadow: 0 0 0 3px rgba(244, 211, 94, 0.28), 0 0 18px rgba(244, 211, 94, 0.5);
 }
 
+.message--command-cooldown {
+  opacity: 0.72;
+  transform: translateY(0);
+  outline: 2px solid #8ecae6;
+  outline-offset: -2px;
+  box-shadow: 0 0 0 3px rgba(142, 202, 230, 0.22), 0 0 16px rgba(142, 202, 230, 0.45);
+  filter: saturate(0.85);
+}
+
 .message__reward-slot {
   position: absolute;
   top: var(--overlay-message-padding-y);
@@ -331,6 +340,10 @@ body.overlay-theme--dashboard.overlay-has-panel .message {
 
 body.overlay-theme--dashboard .message--rewarded {
   box-shadow: 0 0 0 3px rgba(244, 211, 94, 0.3), 0 0 18px rgba(244, 211, 94, 0.5);
+}
+
+body.overlay-theme--dashboard .message--command-cooldown {
+  box-shadow: 0 0 0 3px rgba(142, 202, 230, 0.28), 0 0 16px rgba(142, 202, 230, 0.45);
 }
 
 body.overlay-theme--dashboard .message__platform {
@@ -490,8 +503,21 @@ body.overlay-theme--g-rebels-popups .message--rewarded {
   outline-color: var(--hud-amber, var(--rebels-gold, #f4d35e));
 }
 
+body.overlay-theme--cockpit-panel .message--command-cooldown,
+body.overlay-theme--cockpit-popups .message--command-cooldown,
+body.overlay-theme--g-rebels-popups .message--command-cooldown {
+  opacity: 0.72;
+  filter: blur(0) saturate(0.85);
+  outline-color: var(--hud-cyan, #8ecae6);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .message--rewarded {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .message--command-cooldown {
     animation: none !important;
     transition: none !important;
   }
@@ -835,6 +861,11 @@ body .message.message--rewarded:not(.message--leaving) {
   animation: message-reward-pulse 0.72s ease-out 2;
 }
 
+body .message.message--command-cooldown:not(.message--leaving) {
+  opacity: 0.72;
+  animation: message-command-cooldown-pulse 0.9s ease-out 2;
+}
+
 @media (max-width: 980px) {
   body.overlay-theme--cockpit-panel .messages {
     padding-left: 80px;
@@ -884,6 +915,19 @@ body .message.message--rewarded:not(.message--leaving) {
   45% {
     outline-offset: 2px;
     filter: drop-shadow(0 0 8px rgba(244, 211, 94, 0.9));
+  }
+}
+
+@keyframes message-command-cooldown-pulse {
+  0%,
+  100% {
+    outline-offset: -2px;
+    filter: drop-shadow(0 0 0 rgba(142, 202, 230, 0));
+  }
+
+  45% {
+    outline-offset: 2px;
+    filter: drop-shadow(0 0 8px rgba(142, 202, 230, 0.85));
   }
 }
 

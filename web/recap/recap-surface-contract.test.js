@@ -8,7 +8,7 @@ const model = readFileSync(new URL("./recap-model.js", import.meta.url), "utf8")
 const render = readFileSync(new URL("./recap-render.js", import.meta.url), "utf8");
 
 test("recap is a dedicated full-canvas transparent surface with all themes", function () {
-  assert.match(css, /@import url\("\.\.\/overlay\.css\?v=23"\)/);
+  assert.match(css, /@import url\("\.\.\/overlay\.css\?v=24"\)/);
   assert.match(css, /#recap-root\s*\{[^}]*position:\s*fixed[^}]*inset:\s*0[^}]*overflow:\s*hidden/s);
   assert.match(css, /html, body \{[^}]*background:\s*transparent[^}]*overflow:\s*hidden/s);
   ["default", "dashboard", "cockpit-panel", "cockpit-popups", "g-rebels-popups"].forEach(function (theme) {

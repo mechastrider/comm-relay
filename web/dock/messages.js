@@ -1,6 +1,6 @@
 import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
 import { createRewardControl, messageCanBeRewarded } from "/shared/reward-picker.js?v=4";
-import { applyDomTranslations, setLocale, t } from "/shared/i18n.js?v=18";
+import { applyDomTranslations, setLocale, t } from "/shared/i18n.js?v=19";
 import {
   CONTRACT_CONTENT,
   LEADERBOARD_CONTENT,
@@ -13,6 +13,7 @@ import {
   visibilityControlState,
   visibilitySecondsRemaining,
 } from "/dock/messages/leaderboard-controls.js?v=2";
+import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=1";
 
 "use strict";
 
@@ -89,6 +90,30 @@ import {
   let timeLocale = "ru-RU";
   applyDockLocale(timeLocale);
   let timeFormatter = createTimeFormatter(timeLocale);
+
+  const commandOutcomeLive = createCommandOutcomeLive({
+    listRoot: list,
+    translate: t,
+    findMessage: function (platform, id) {
+      const found = messages.find(function (message) {
+        return isSameMessage(message, platform, id);
+      });
+      return found || null;
+    },
+    setMessageOutcome: function (platform, id, outcome) {
+      messages = messages.map(function (message) {
+        if (!isSameMessage(message, platform, id)) {
+          return message;
+        }
+        if (!outcome) {
+          const next = Object.assign({}, message);
+          delete next.command_outcome;
+          return next;
+        }
+        return Object.assign({}, message, { command_outcome: outcome });
+      });
+    },
+  });
 
   function showToolbarError(message) {
     if (!toolbarError) {
@@ -527,6 +552,7 @@ import {
     content.appendChild(text);
     item.appendChild(buildAvatar(message));
     item.appendChild(content);
+    commandOutcomeLive.decorateListItem(item, message);
     return item;
   }
 
@@ -563,7 +589,7 @@ import {
     const byKey = new Map();
     messages.concat(incoming).forEach(function (message) {
       if (message && typeof message === "object") {
-        byKey.set(messageKey(message), message);
+        byKey.set(messageKey(message), commandOutcomeLive.normalizeMessage(message));
       }
     });
     messages = Array.from(byKey.values())
@@ -614,7 +640,7 @@ import {
 
   function wireToMessage(wire) {
     const user = typeof wire.user === "string" ? wire.user : "";
-    return {
+    const msg = {
       id: typeof wire.id === "string" ? wire.id : "",
       platform: typeof wire.platform === "string" ? wire.platform : "",
       user_id: typeof wire.user_id === "string" ? wire.user_id : "",
@@ -629,6 +655,10 @@ import {
         ? wire.timestamp
         : new Date().toISOString(),
     };
+    if (wire.command_outcome && typeof wire.command_outcome === "object") {
+      msg.command_outcome = wire.command_outcome;
+    }
+    return commandOutcomeLive.normalizeMessage(msg);
   }
 
   async function loadRecentMessages() {
@@ -706,6 +736,8 @@ import {
           removeMessage(wire.platform, wire.id);
         } else if (wire && wire.type === "message") {
           mergeMessages([wireToMessage(wire)]);
+        } else if (wire && wire.type === "command_outcome") {
+          commandOutcomeLive.handleWire(wire);
         } else if (wire && wire.type === "leaderboard_visibility") {
           setVisibilitySnapshot(wire);
         } else if (wire && wire.type === "viewer_contract_state") {
@@ -762,6 +794,9 @@ import {
     activatePreset(presetSelect.value);
   });
   window.setInterval(renderVisibilityStatus, 1000);
+  window.setInterval(function () {
+    commandOutcomeLive.tickCooldownLabels();
+  }, 1000);
 
   renderMessages(true);
   Promise.all([loadDisplaySettings(), loadRecentMessages(), loadVisibility(), loadContractState()]).finally(connectWebSocket);

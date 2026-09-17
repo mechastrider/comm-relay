@@ -136,6 +136,7 @@ export function extractSectionValuesFromConfig(config, sectionId) {
         activity_xp: typeof cfg.activity_xp === "number" ? cfg.activity_xp : 1,
         day_reset_hour: typeof cfg.day_reset_hour === "number" ? cfg.day_reset_hour : 6,
         hide_command_messages: Boolean(cfg.hide_command_messages),
+        hide_command_cooldown_overlay: Boolean(cfg.hide_command_cooldown_overlay),
         custom_avatars_enabled: cfg.custom_avatars_enabled !== false,
         streamer_display_name: String(cfg.streamer_display_name || "").trim(),
         leaderboard_visibility: {
@@ -258,6 +259,7 @@ export function normalizeSectionValues(sectionId, values) {
       activity_xp: Number.parseInt(String(raw.activity_xp), 10),
       day_reset_hour: Number.parseInt(String(raw.day_reset_hour), 10),
       hide_command_messages: Boolean(raw.hide_command_messages),
+      hide_command_cooldown_overlay: Boolean(raw.hide_command_cooldown_overlay),
       custom_avatars_enabled: raw.custom_avatars_enabled !== false,
       streamer_display_name: String(raw.streamer_display_name || "").trim(),
       leaderboard_visibility: {
@@ -365,6 +367,7 @@ export function applySectionToConfig(basePayload, sectionId, sectionValues) {
     next.activity_xp = data.activity_xp;
     next.day_reset_hour = data.day_reset_hour;
     next.hide_command_messages = data.hide_command_messages;
+    next.hide_command_cooldown_overlay = data.hide_command_cooldown_overlay;
     next.custom_avatars_enabled = data.custom_avatars_enabled;
     next.streamer_display_name = data.streamer_display_name;
     next.leaderboard_visibility = data.leaderboard_visibility;
