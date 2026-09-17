@@ -24,7 +24,7 @@
 - [x] 4.3 `golangci-lint run ./...`
 - [x] 4.4 `npm ci && npm test && npm run test:i18n && npm run lint`
 - [x] 4.5 `openspec validate audience-session-count --strict`
-- [ ] 4.6 Browser smoke per `qa_plan.md` (P0): directory column, period independence, sort, card row; `/overlay` remains transparent.
+- [x] 4.6 Browser smoke per `qa_plan.md` (P0): directory column, period independence, sort, card row; `/overlay` remains transparent.
 
 ## Scope / Blocked
 
