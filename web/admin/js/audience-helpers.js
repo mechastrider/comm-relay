@@ -4,7 +4,7 @@
 
 export const AUDIENCE_SORT_STORAGE_KEY = "commRelay.audienceSort";
 
-/** @typedef {"viewer"|"xp"|"messages"} AudienceSortColumn */
+/** @typedef {"viewer"|"xp"|"messages"|"streams"} AudienceSortColumn */
 /** @typedef {"asc"|"desc"} AudienceSortDirection */
 /** @typedef {{ column: AudienceSortColumn|null, direction: AudienceSortDirection }} AudienceSortState */
 
@@ -20,7 +20,7 @@ export function normalizeAudienceSort(raw) {
   const column = value.column;
   const direction = value.direction;
   const normalizedColumn =
-    column === "viewer" || column === "xp" || column === "messages"
+    column === "viewer" || column === "xp" || column === "messages" || column === "streams"
       ? column
       : column === "score"
         ? "xp"
@@ -163,6 +163,15 @@ export function sortAudienceViewers(viewers, sort, period) {
       return String(left.id || "").localeCompare(String(right.id || ""), undefined, {
         sensitivity: "base",
       });
+    }
+
+    if (column === "streams") {
+      const leftValue = Number(left.session_count) || 0;
+      const rightValue = Number(right.session_count) || 0;
+      if (leftValue === rightValue) {
+        return 0;
+      }
+      return leftValue < rightValue ? -direction : direction;
     }
 
     const leftMetrics = viewerPeriodMetrics(left, period);

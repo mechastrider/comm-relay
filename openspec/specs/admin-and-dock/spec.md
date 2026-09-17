@@ -341,7 +341,7 @@ Command and award editors SHALL show the available template variables `{viewer}`
 - **THEN** the editor header and fields are brought into the viewport
 
 ### Requirement: Audience table headers are a distinct sortable surface
-The Audience viewers table header SHALL use a distinct surface or edge from the body while keeping header text contrast. XP and Messages SHALL be sort buttons. The unsorted table SHALL keep the server last-activity order. The first activation of a numeric column SHALL sort that column descending for the selected period; a second activation SHALL sort ascending; a third SHALL restore last-activity order. The active column SHALL expose `aria-sort` (`ascending`, `descending`, or `none`). The selected column and direction SHALL persist in the current browser or WebView and MUST NOT be written to SQLite or `config.json`. An invalid stored preference SHALL fall back to last-activity order. A previously stored Score sort preference SHALL be treated as XP.
+The Audience viewers table header SHALL use a distinct surface or edge from the body while keeping header text contrast. XP, Messages, and Streams SHALL be sort buttons. The unsorted table SHALL keep the server last-activity order. The first activation of a numeric column SHALL sort that column descending; a second activation SHALL sort ascending; a third SHALL restore last-activity order. XP and Messages sort using the selected period. Streams sort using lifetime `session_count` and MUST NOT follow the selected period. The active column SHALL expose `aria-sort` (`ascending`, `descending`, or `none`). The selected column and direction SHALL persist in the current browser or WebView and MUST NOT be written to SQLite or `config.json`. An invalid stored preference SHALL fall back to last-activity order. A previously stored Score sort preference SHALL be treated as XP.
 
 #### Scenario: First sort by score
 - **WHEN** the operator activates XP while the table is in last-activity order
@@ -354,6 +354,25 @@ The Audience viewers table header SHALL use a distinct surface or edge from the 
 #### Scenario: Restore sort preference
 - **WHEN** the operator sorted Messages descending, closed the console, and reopens Audience in the same browser or WebView
 - **THEN** Messages is again sorted descending for the current period
+
+#### Scenario: First sort by streams
+- **WHEN** the operator activates Streams while the table is in last-activity order
+- **THEN** rows are ordered by `session_count` descending and Streams reports `aria-sort` `descending`
+
+#### Scenario: Restore streams sort preference
+- **WHEN** the operator sorted Streams descending, closed the console, and reopens Audience in the same browser or WebView
+- **THEN** Streams is again sorted descending
+
+### Requirement: Audience directory shows participating streams
+The Audience viewers table SHALL include a localized Streams column (Russian **Эфиры**) that displays each viewer's `session_count`. Changing the session/day/all-time period MUST NOT change the Streams values. The period hint SHALL state that XP and message columns follow the selected period and that Streams does not.
+
+#### Scenario: Period filter leaves streams unchanged
+- **WHEN** the operator switches the Audience period from session to all-time
+- **THEN** Streams cell values stay the same while XP and Messages update to the selected period
+
+#### Scenario: Empty participation
+- **WHEN** a listed viewer has `session_count` 0
+- **THEN** the Streams cell shows 0
 
 ### Requirement: Audience row activation opens the viewer card
 A single pointer activation on an Audience viewer row SHALL open that viewer's card (wide inspector or compact sheet). The display name SHALL be a semantic button that opens the same card. Enter and Space on the focused row or name control SHALL open the same card. The Actions column MUST NOT be present. A decorative chevron MAY remain and MUST be hidden from assistive technology.
@@ -577,6 +596,17 @@ Audience SHALL show a Journal tab immediately after Viewers and before the catal
 #### Scenario: Load more
 - **WHEN** the current response has `next_cursor` and the operator activates Load more
 - **THEN** older entries are appended and the control reflects its busy state accessibly
+
+### Requirement: Viewer card shows participating streams
+The existing wide Audience inspector and compact viewer sheet SHALL show a localized lifetime streams statistic from `session_count` with the viewer's other summary statistics. The value MUST NOT depend on the Audience period filter. Loading or failing to load reward history MUST NOT hide this statistic.
+
+#### Scenario: Open a viewer who chatted in three streams
+- **WHEN** the operator opens a viewer whose `session_count` is 3
+- **THEN** the card shows 3 streams
+
+#### Scenario: Period change does not rewrite the card streams row
+- **WHEN** the operator changes the Audience period while a viewer card is open
+- **THEN** the streams statistic remains the same
 
 ### Requirement: Viewer detail includes that viewer's reward history
 The existing wide Audience inspector and compact viewer sheet SHALL include a Reward history section scoped to the selected canonical viewer immediately after the viewer's summary statistics and before profile-management controls. On wide screens, the inspector SHALL grow beyond its compact width so the history and controls use the available space. Reward entries SHALL use a stacked, wrapping layout without horizontal scrolling and show a bounded first page of the newest entries with cursor pagination. Loading or failing to load history MUST NOT hide the viewer's existing profile, statistics, identities, portrait, or merge controls. Changing or closing the selected viewer MUST prevent a late response from rendering under the wrong viewer.

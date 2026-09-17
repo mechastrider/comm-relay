@@ -38,6 +38,7 @@ export function nextActivePresetSelection(previousId, requestedId, ok) {
  * @property {number} [session_xp]
  * @property {number} [day_message_count]
  * @property {number} [day_xp]
+ * @property {number} [session_count]
  */
 
 /**

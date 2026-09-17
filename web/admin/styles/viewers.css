@@ -237,16 +237,17 @@
 }
 
 .audience-viewers-table__col-viewer {
-  width: 34%;
+  width: 30%;
 }
 
 .audience-viewers-table__col-platforms {
-  width: 26%;
+  width: 22%;
 }
 
 .audience-viewers-table__col-score,
-.audience-viewers-table__col-messages {
-  width: 20%;
+.audience-viewers-table__col-messages,
+.audience-viewers-table__col-streams {
+  width: 16%;
 }
 
 .audience-viewers-table th,

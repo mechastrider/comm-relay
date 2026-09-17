@@ -153,4 +153,58 @@ assert.deepEqual(
   ["a", "b"]
 );
 
+assert.deepEqual(normalizeAudienceSort({ column: "streams", direction: "asc" }), {
+  column: "streams",
+  direction: "asc",
+});
+
+const streamViewers = [
+  { id: "low", session_count: 1, session_xp: 100, session_message_count: 10 },
+  { id: "high", session_count: 5, session_xp: 1, session_message_count: 1 },
+];
+assert.deepEqual(
+  sortAudienceViewers(streamViewers, { column: "streams", direction: "desc" }, "session").map(function (viewer) {
+    return viewer.id;
+  }),
+  ["high", "low"]
+);
+assert.deepEqual(
+  sortAudienceViewers(streamViewers, { column: "streams", direction: "asc" }, "all").map(function (viewer) {
+    return viewer.id;
+  }),
+  ["low", "high"]
+);
+assert.deepEqual(nextAudienceSort({ column: "streams", direction: "desc" }, "streams"), {
+  column: "streams",
+  direction: "asc",
+});
+assert.deepEqual(nextAudienceSort({ column: "streams", direction: "asc" }, "streams"), {
+  column: null,
+  direction: "desc",
+});
+assert.deepEqual(nextAudienceSort({ column: null, direction: "desc" }, "streams"), {
+  column: "streams",
+  direction: "desc",
+});
+assert.equal(audienceSortAriaValue({ column: "streams", direction: "desc" }, "streams"), "descending");
+assert.equal(audienceSortAriaValue({ column: "streams", direction: "asc" }, "streams"), "ascending");
+assert.equal(audienceSortAriaValue({ column: "streams", direction: "desc" }, "xp"), "none");
+
+assert.equal(writeAudienceSort(storage, { column: "streams", direction: "desc" }), true);
+assert.deepEqual(readAudienceSort(storage), { column: "streams", direction: "desc" });
+
+assert.deepEqual(
+  sortAudienceViewers(
+    [
+      { id: "none", session_count: 0, session_xp: 50 },
+      { id: "some", session_count: 2, session_xp: 1 },
+    ],
+    { column: "streams", direction: "desc" },
+    "session"
+  ).map(function (viewer) {
+    return viewer.id;
+  }),
+  ["some", "none"]
+);
+
 console.log("audience-sort OK");

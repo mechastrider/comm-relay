@@ -42,4 +42,11 @@ func TestMerge_WhenCrossPlatformHistoryOverlaps_ConsolidatesSessionsAndWritesOne
 	var sourceRows int
 	require.NoError(t, s.db.QueryRow(`SELECT COUNT(*) FROM viewer_session_stats WHERE viewer_id = ?`, fromID).Scan(&sourceRows))
 	require.Zero(t, sourceRows)
+
+	got, err := s.Get(intoID, 6, now.Add(4*time.Minute))
+	require.NoError(t, err)
+	metric, err := s.ProgressionMetricValue(intoID, ProgressionMetricSessionCount, "")
+	require.NoError(t, err)
+	require.Equal(t, metric, got.SessionCount)
+	require.Equal(t, 2, got.SessionCount)
 }

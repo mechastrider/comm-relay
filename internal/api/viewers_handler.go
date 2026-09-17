@@ -74,6 +74,7 @@ type viewerSummaryResponse struct {
 	SessionXP                 int                        `json:"session_xp"`
 	DayMessageCount           int                        `json:"day_message_count"`
 	DayXP                     int                        `json:"day_xp"`
+	SessionCount              int                        `json:"session_count"`
 	LastSeenAt                string                     `json:"last_seen_at"`
 	LastSeen                  lastSeenResponse           `json:"last_seen"`
 	Platforms                 []string                   `json:"platforms"`
@@ -105,6 +106,7 @@ func viewerSummaryFromStore(viewer store.Viewer, includeIdentities bool, customA
 		SessionXP:                 viewer.SessionXP,
 		DayMessageCount:           viewer.DayMessageCount,
 		DayXP:                     viewer.DayXP,
+		SessionCount:              viewer.SessionCount,
 		LastSeenAt:                viewer.LastSeenAt.UTC().Format(time.RFC3339),
 		LastSeen: lastSeenResponse{
 			Platform:  viewer.LastSeen.Platform,
