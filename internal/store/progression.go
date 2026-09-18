@@ -11,19 +11,22 @@ import (
 )
 
 const (
-	maxProgressionDefinitions = 200
-	maxProgressionNameRunes   = 64
-	maxProgressionDescription = 240
-	maxProgressionTarget      = 1_000_000_000
+	progressionLevelSelectColumns = `id, title, min_xp, like_quota, buff_quota, announce, created_at, updated_at`
+	maxProgressionDefinitions     = 200
+	maxProgressionNameRunes       = 64
+	maxProgressionDescription     = 240
+	maxProgressionTarget          = 1_000_000_000
 )
 
 // CreateProgressionLevelInput describes a new XP title threshold.
 type CreateProgressionLevelInput struct {
-	ID       string
-	Title    string
-	MinXP    int
-	Announce bool
-	Now      time.Time
+	ID        string
+	Title     string
+	MinXP     int
+	LikeQuota int
+	BuffQuota int
+	Announce  bool
+	Now       time.Time
 }
 
 // UpdateProgressionLevelInput describes a replacement XP title threshold.
@@ -111,7 +114,7 @@ func (s *Store) ResolveProgressionLevel(xp int) (*ProgressionLevel, error) {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	level, err := scanProgressionLevel(s.db.QueryRow(`SELECT id, title, min_xp, announce, created_at, updated_at FROM progression_levels WHERE min_xp <= ? ORDER BY min_xp DESC, id DESC LIMIT 1`, xp))
+	level, err := scanProgressionLevel(s.db.QueryRow(`SELECT `+progressionLevelSelectColumns+` FROM progression_levels WHERE min_xp <= ? ORDER BY min_xp DESC, id DESC LIMIT 1`, xp))
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrProgressionLevelNotFound
 	}
@@ -132,7 +135,7 @@ func (s *Store) ViewerProgressionLevel(viewerID string) (*ProgressionLevel, erro
 	if err := s.db.QueryRow(`SELECT xp FROM viewers WHERE id = ?`, strings.TrimSpace(viewerID)).Scan(&xp); err != nil {
 		return nil, errors.Errorf("read viewer XP for progression level: %w", err)
 	}
-	level, err := scanProgressionLevel(s.db.QueryRow(`SELECT id, title, min_xp, announce, created_at, updated_at FROM progression_levels WHERE min_xp <= ? ORDER BY min_xp DESC, id DESC LIMIT 1`, xp))
+	level, err := scanProgressionLevel(s.db.QueryRow(`SELECT `+progressionLevelSelectColumns+` FROM progression_levels WHERE min_xp <= ? ORDER BY min_xp DESC, id DESC LIMIT 1`, xp))
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrProgressionLevelNotFound
 	}
@@ -164,7 +167,7 @@ func (s *Store) GetViewerProgression(viewerID string) (*ViewerProgression, error
 	if err == nil {
 		result.CurrentLevel = current
 	}
-	next, err := scanProgressionLevel(s.db.QueryRow(`SELECT id, title, min_xp, announce, created_at, updated_at FROM progression_levels WHERE min_xp > ? ORDER BY min_xp, id LIMIT 1`, xp))
+	next, err := scanProgressionLevel(s.db.QueryRow(`SELECT `+progressionLevelSelectColumns+` FROM progression_levels WHERE min_xp > ? ORDER BY min_xp, id LIMIT 1`, xp))
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, errors.Errorf("resolve next progression level: %w", err)
 	}
@@ -208,7 +211,7 @@ func (s *Store) GetViewerProgression(viewerID string) (*ViewerProgression, error
 func (s *Store) ListProgressionLevels() ([]ProgressionLevel, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	rows, err := s.db.Query(`SELECT id, title, min_xp, announce, created_at, updated_at FROM progression_levels ORDER BY min_xp, id`)
+	rows, err := s.db.Query(`SELECT ` + progressionLevelSelectColumns + ` FROM progression_levels ORDER BY min_xp, id`)
 	if err != nil {
 		return nil, errors.Errorf("list progression levels: %w", err)
 	}
@@ -233,6 +236,12 @@ func (s *Store) CreateProgressionLevel(input CreateProgressionLevelInput) (*Prog
 	if err != nil || input.MinXP < 0 || input.MinXP > maxProgressionTarget {
 		return nil, ErrProgressionValidation
 	}
+	if quotaErr := validateProgressionQuota(input.LikeQuota); quotaErr != nil {
+		return nil, quotaErr
+	}
+	if quotaErr := validateProgressionQuota(input.BuffQuota); quotaErr != nil {
+		return nil, quotaErr
+	}
 	id := strings.TrimSpace(input.ID)
 	if id == "" {
 		id = uuid.NewString()
@@ -243,7 +252,7 @@ func (s *Store) CreateProgressionLevel(input CreateProgressionLevelInput) (*Prog
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if _, err := s.db.Exec(`INSERT INTO progression_levels (id, title, min_xp, announce, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`, id, title, input.MinXP, boolInt(input.Announce), formatTime(now), formatTime(now)); err != nil {
+	if _, err := s.db.Exec(`INSERT INTO progression_levels (id, title, min_xp, like_quota, buff_quota, announce, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, id, title, input.MinXP, input.LikeQuota, input.BuffQuota, boolInt(input.Announce), formatTime(now), formatTime(now)); err != nil {
 		return nil, errors.Errorf("insert progression level: %w", err)
 	}
 	return s.getProgressionLevelLocked(id)
@@ -254,6 +263,12 @@ func (s *Store) UpdateProgressionLevel(input UpdateProgressionLevelInput) (*Prog
 	title, err := normalizeProgressionText(input.Title, maxProgressionNameRunes, true)
 	if err != nil || input.MinXP < 0 || input.MinXP > maxProgressionTarget {
 		return nil, ErrProgressionValidation
+	}
+	if quotaErr := validateProgressionQuota(input.LikeQuota); quotaErr != nil {
+		return nil, quotaErr
+	}
+	if quotaErr := validateProgressionQuota(input.BuffQuota); quotaErr != nil {
+		return nil, quotaErr
 	}
 	id := strings.TrimSpace(input.ID)
 	if id == "" {
@@ -272,7 +287,7 @@ func (s *Store) UpdateProgressionLevel(input UpdateProgressionLevelInput) (*Prog
 	if current.MinXP == 0 && input.MinXP != 0 {
 		return nil, ErrBaselineLevel
 	}
-	result, err := s.db.Exec(`UPDATE progression_levels SET title = ?, min_xp = ?, announce = ?, updated_at = ? WHERE id = ?`, title, input.MinXP, boolInt(input.Announce), formatTime(now), id)
+	result, err := s.db.Exec(`UPDATE progression_levels SET title = ?, min_xp = ?, like_quota = ?, buff_quota = ?, announce = ?, updated_at = ? WHERE id = ?`, title, input.MinXP, input.LikeQuota, input.BuffQuota, boolInt(input.Announce), formatTime(now), id)
 	if err != nil {
 		return nil, errors.Errorf("update progression level: %w", err)
 	}
@@ -304,7 +319,7 @@ func (s *Store) DeleteProgressionLevel(id string) error {
 }
 
 func (s *Store) getProgressionLevelLocked(id string) (*ProgressionLevel, error) {
-	level, err := scanProgressionLevel(s.db.QueryRow(`SELECT id, title, min_xp, announce, created_at, updated_at FROM progression_levels WHERE id = ?`, id))
+	level, err := scanProgressionLevel(s.db.QueryRow(`SELECT `+progressionLevelSelectColumns+` FROM progression_levels WHERE id = ?`, id))
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrProgressionLevelNotFound
 	}
@@ -318,7 +333,7 @@ func scanProgressionLevel(scanner interface{ Scan(...any) error }) (ProgressionL
 	var level ProgressionLevel
 	var announce int
 	var created, updated string
-	if err := scanner.Scan(&level.ID, &level.Title, &level.MinXP, &announce, &created, &updated); err != nil {
+	if err := scanner.Scan(&level.ID, &level.Title, &level.MinXP, &level.LikeQuota, &level.BuffQuota, &announce, &created, &updated); err != nil {
 		return ProgressionLevel{}, err
 	}
 	var err error

@@ -26,6 +26,8 @@ type commandResponse struct {
 	Aliases         []string `json:"aliases"`
 	Enabled         bool     `json:"enabled"`
 	CooldownSeconds int      `json:"cooldown_seconds"`
+	Points          *int     `json:"points,omitempty"`
+	AwardID         string   `json:"award_id,omitempty"`
 	SplashTemplate  string   `json:"splash_template"`
 	Sound           string   `json:"sound"`
 	DurationMs      int      `json:"duration_ms"`
@@ -56,9 +58,13 @@ func commandFromStore(cmd store.Command) commandResponse {
 		Aliases:         commandAliasesFromStore(cmd.Aliases),
 		Enabled:         cmd.Enabled,
 		CooldownSeconds: cmd.CooldownSeconds,
+		Points:          cmd.Points,
 		SplashTemplate:  cmd.SplashTemplate,
 		Sound:           cmd.Sound,
 		DurationMs:      cmd.DurationMs,
+	}
+	if cmd.AwardID != "" {
+		resp.AwardID = cmd.AwardID
 	}
 	if cmd.ImageAsset != "" {
 		resp.ImageAsset = cmd.ImageAsset
@@ -102,6 +108,8 @@ type createCommandRequest struct {
 	Aliases         []string `json:"aliases"`
 	Enabled         bool     `json:"enabled"`
 	CooldownSeconds int      `json:"cooldown_seconds"`
+	Points          *int     `json:"points,omitempty"`
+	AwardID         string   `json:"award_id,omitempty"`
 	SplashTemplate  string   `json:"splash_template"`
 	Sound           string   `json:"sound"`
 	DurationMs      int      `json:"duration_ms"`
@@ -134,6 +142,8 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		Aliases:         request.Aliases,
 		Enabled:         request.Enabled,
 		CooldownSeconds: request.CooldownSeconds,
+		Points:          request.Points,
+		AwardID:         request.AwardID,
 		SplashTemplate:  request.SplashTemplate,
 		Sound:           request.Sound,
 		DurationMs:      request.DurationMs,
@@ -144,6 +154,10 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		ImageFit:        request.ImageFit,
 		ImageSizePct:    catalogImageSizePctFromRequest(request.ImageSizePct),
 	})
+	if fields := store.CommandCatalogFields(err); len(fields) > 0 {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
+		return
+	}
 	if fields := store.CatalogMediaFields(err); len(fields) > 0 {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
 		return
@@ -186,7 +200,7 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	if errors.Is(err, store.ErrInvalidCommandAction) {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
-			"action": "choose alert or show leaderboard",
+			"action": "choose alert, show leaderboard, like, or buff",
 		})
 		return
 	}
@@ -206,6 +220,8 @@ type updateCommandRequest struct {
 	Aliases         []string `json:"aliases"`
 	Enabled         bool     `json:"enabled"`
 	CooldownSeconds int      `json:"cooldown_seconds"`
+	Points          *int     `json:"points,omitempty"`
+	AwardID         string   `json:"award_id,omitempty"`
 	SplashTemplate  string   `json:"splash_template"`
 	Sound           string   `json:"sound"`
 	DurationMs      int      `json:"duration_ms"`
@@ -242,6 +258,8 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		Aliases:         request.Aliases,
 		Enabled:         request.Enabled,
 		CooldownSeconds: request.CooldownSeconds,
+		Points:          request.Points,
+		AwardID:         request.AwardID,
 		SplashTemplate:  request.SplashTemplate,
 		Sound:           request.Sound,
 		DurationMs:      request.DurationMs,
@@ -252,6 +270,10 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		ImageFit:        request.ImageFit,
 		ImageSizePct:    catalogImageSizePctFromRequest(request.ImageSizePct),
 	})
+	if fields := store.CommandCatalogFields(err); len(fields) > 0 {
+		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
+		return
+	}
 	if fields := store.CatalogMediaFields(err); len(fields) > 0 {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
 		return
@@ -298,7 +320,7 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if errors.Is(err, store.ErrInvalidCommandAction) {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", map[string]string{
-			"action": "choose alert or show leaderboard",
+			"action": "choose alert, show leaderboard, like, or buff",
 		})
 		return
 	}

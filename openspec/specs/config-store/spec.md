@@ -32,8 +32,19 @@ On load, omitted newer fields SHALL be filled with current defaults without disc
 - **WHEN** a config file contains `points_per_message` 1
 - **THEN** ingest does not add 1 XP per message and activity defaults apply unless activity fields are already present
 
+### Requirement: Buff cap fields have additive defaults
+On load, omitted `buffs_per_award_per_viewer` SHALL default to 1 and omitted `buff_max_unique_viewers` SHALL default to 5 without discarding other operator values. Both MUST be integers ≥ 0. Public config JSON SHALL include them. They MUST NOT migrate into SQLite.
+
+#### Scenario: Legacy config without buff caps
+- **WHEN** a config file omits both buff cap fields
+- **THEN** the store uses per-viewer cap 1 and unique-viewer cap 5 and continues
+
+#### Scenario: Zero unique cap is stored
+- **WHEN** the operator saves `buff_max_unique_viewers` 0
+- **THEN** the value persists and successful buffing is disabled per `viewer-social-commands`
+
 ### Requirement: Invalid settings are rejected with field errors
-The system SHALL reject invalid settings before persisting them. Validation SHALL cover port range 1–65535, overlay message count ≥ 1, TTL ≥ 0, font size 12–48 px, known display modes and themes, required channel values when a platform is enabled, YouTube connection/chat modes, image-preview bounds, `day_reset_hour` as an integer 0–23, and `activity_interval_seconds`, `activity_session_limit`, and `activity_xp` as integers ≥ 0. Presence of `overlay.page_opacity` SHALL be rejected so the overlay page stays transparent for OBS.
+The system SHALL reject invalid settings before persisting them. Validation SHALL cover port range 1–65535, overlay message count ≥ 1, TTL ≥ 0, font size 12–48 px, known display modes and themes, required channel values when a platform is enabled, YouTube connection/chat modes, image-preview bounds, `day_reset_hour` as an integer 0–23, and `activity_interval_seconds`, `activity_session_limit`, and `activity_xp` as integers ≥ 0. Validation SHALL additionally cover `buffs_per_award_per_viewer` and `buff_max_unique_viewers` as integers ≥ 0. Presence of `overlay.page_opacity` SHALL be rejected so the overlay page stays transparent for OBS.
 
 #### Scenario: Enabled Twitch without channel
 - **WHEN** an update enables Twitch with an empty channel
@@ -50,6 +61,10 @@ The system SHALL reject invalid settings before persisting them. Validation SHAL
 #### Scenario: Day reset hour out of range
 - **WHEN** an update sets `day_reset_hour` to 24
 - **THEN** the save is rejected and the `day_reset_hour` field error is returned
+
+#### Scenario: Negative unique cap
+- **WHEN** an update sets `buff_max_unique_viewers` to -1
+- **THEN** the save is rejected and the `buff_max_unique_viewers` field error is returned
 
 ### Requirement: Public config exposes activity settings
 `GET /api/config` and successful config updates SHALL include `activity_interval_seconds`, `activity_session_limit`, and `activity_xp`. They MUST NOT present `points_per_message` as an operator-controlled progress setting.

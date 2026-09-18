@@ -19,7 +19,7 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 
 	commands, err := s.ListCommands()
 	require.NoError(t, err)
-	require.Len(t, commands, 2)
+	require.Len(t, commands, 4)
 
 	triggers := map[string]store.Command{}
 	for _, cmd := range commands {
@@ -43,7 +43,7 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 9)
+	require.Len(t, awards, 10)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
@@ -319,12 +319,14 @@ func TestAwards_WhenUpgradedFrom00002_ExpectExtraSeedsWithoutRewritingJokeAdvice
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 8)
+	require.Len(t, awards, 9)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
 		byID[award.ID] = award
 	}
+
+	require.Contains(t, byID, "viewer_like")
 
 	joke := byID["joke"]
 	assert.Equal(t, "Joke", joke.Name)

@@ -23,6 +23,8 @@ const (
 	InteractionEventAward InteractionEventKind = "award"
 	// InteractionEventActivity records a silent activity XP grant.
 	InteractionEventActivity InteractionEventKind = "activity"
+	// InteractionEventBuff records a viewer buff of an operator award.
+	InteractionEventBuff InteractionEventKind = "buff"
 )
 
 // InteractionEvent is a persisted command fire or operator award grant.
@@ -44,17 +46,19 @@ type InteractionEvent struct {
 
 // AppendInteractionEventInput describes one append-only interaction event.
 type AppendInteractionEventInput struct {
-	Kind            InteractionEventKind
-	ContractID      string
-	ViewerID        string
-	CommandID       string
-	CommandTrigger  string
-	AwardID         string
-	AwardName       string
-	Points          int
-	MessagePlatform string
-	MessageID       string
-	Now             time.Time
+	Kind              InteractionEventKind
+	ContractID        string
+	ViewerID          string
+	RecipientViewerID string
+	ParentEventID     string
+	CommandID         string
+	CommandTrigger    string
+	AwardID           string
+	AwardName         string
+	Points            int
+	MessagePlatform   string
+	MessageID         string
+	Now               time.Time
 }
 
 // ViewerIDForIdentity returns the canonical viewer id for a platform identity when known.
@@ -142,7 +146,7 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 		viewerID = input.ViewerID
 	}
 
-	var contractID, commandID, commandTrigger, awardID, awardName, messagePlatform, messageID any
+	var contractID, commandID, commandTrigger, awardID, awardName, messagePlatform, messageID, recipientViewerID, parentEventID any
 	if strings.TrimSpace(input.ContractID) != "" {
 		contractID = strings.TrimSpace(input.ContractID)
 	}
@@ -187,6 +191,23 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 		if points < 0 {
 			return errors.New("activity points must be non-negative")
 		}
+	case InteractionEventBuff:
+		commandID = nil
+		commandTrigger = nil
+		awardID = nil
+		awardName = nil
+		messagePlatform = nil
+		messageID = nil
+		recipient := strings.TrimSpace(input.RecipientViewerID)
+		parent := strings.TrimSpace(input.ParentEventID)
+		if recipient == "" || parent == "" {
+			return errors.New("recipient and parent event are required for buff events")
+		}
+		if points < minCommandBuffPoints {
+			return errors.New("buff points must be positive")
+		}
+		recipientViewerID = recipient
+		parentEventID = parent
 	default:
 		return errors.Errorf("unsupported interaction event kind %q", input.Kind)
 	}
@@ -209,8 +230,8 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 	if _, err := q.Exec(
 		`INSERT INTO interaction_events (
 			id, kind, contract_id, viewer_id, session_id, command_id, command_trigger, award_id, reward_name, points,
-			message_platform, message_id, created_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			message_platform, message_id, recipient_viewer_id, parent_event_id, created_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		string(input.Kind),
 		contractID,
@@ -223,6 +244,8 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 		points,
 		messagePlatform,
 		messageID,
+		recipientViewerID,
+		parentEventID,
 		createdAt,
 	); err != nil {
 		return errors.Errorf("insert interaction event: %w", err)

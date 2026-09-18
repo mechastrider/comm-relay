@@ -37,6 +37,8 @@ type Command struct {
 	Aliases         []string
 	Enabled         bool
 	CooldownSeconds int
+	Points          *int
+	AwardID         string
 	SplashTemplate  string
 	Sound           string
 	DurationMs      int
@@ -207,6 +209,8 @@ type ProgressionLevel struct {
 	ID        string
 	Title     string
 	MinXP     int
+	LikeQuota int
+	BuffQuota int
 	Announce  bool
 	CreatedAt time.Time
 	UpdatedAt time.Time

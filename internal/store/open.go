@@ -140,6 +140,13 @@ func Open(path string, opts OpenOptions) (*Store, error) {
 		}
 		return nil, errors.Errorf("ensure progression bootstrap: %w", err)
 	}
+	if err := s.ensureSocialCatalogBootstrapLocked(); err != nil {
+		closeErr := db.Close()
+		if closeErr != nil {
+			return nil, errors.Errorf("ensure social catalog bootstrap: %w (close database: %w)", err, closeErr)
+		}
+		return nil, errors.Errorf("ensure social catalog bootstrap: %w", err)
+	}
 
 	return s, nil
 }

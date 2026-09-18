@@ -23,6 +23,8 @@ type Config struct {
 	DayResetHour               int                         `json:"day_reset_hour"`
 	HideCommandMessages        bool                        `json:"hide_command_messages"`
 	HideCommandCooldownOverlay bool                        `json:"hide_command_cooldown_overlay"`
+	BuffsPerAwardPerViewer     int                         `json:"buffs_per_award_per_viewer"`
+	BuffMaxUniqueViewers       int                         `json:"buff_max_unique_viewers"`
 	CustomAvatarsEnabled       bool                        `json:"custom_avatars_enabled"`
 	StreamerDisplayName        string                      `json:"streamer_display_name"`
 	LeaderboardVisibility      LeaderboardVisibilityConfig `json:"leaderboard_visibility"`
@@ -44,6 +46,9 @@ const (
 	LeaderboardVisibilityDisplaySecondsDefault       = 15
 	LeaderboardVisibilityCooldownSecondsDefault      = 300
 	LeaderboardVisibilityDirtyIntervalSecondsDefault = 900
+
+	BuffsPerAwardPerViewerDefault = 1
+	BuffMaxUniqueViewersDefault   = 5
 )
 
 // LeaderboardVisibilityConfig controls the global production leaderboard lifecycle.
@@ -130,6 +135,8 @@ func Default() *Config {
 		ActivitySessionLimit:    10,
 		ActivityXP:              1,
 		DayResetHour:            6,
+		BuffsPerAwardPerViewer:  BuffsPerAwardPerViewerDefault,
+		BuffMaxUniqueViewers:    BuffMaxUniqueViewersDefault,
 		CustomAvatarsEnabled:    true,
 		LeaderboardVisibility:   defaultLeaderboardVisibility(),
 		Twitch: TwitchConfig{
@@ -239,12 +246,28 @@ func Load(path string) (*Config, error) {
 	if !leaderboardVisibilityPresent(data) {
 		cfg.LeaderboardVisibility = legacyLeaderboardVisibility()
 	}
+	if !buffCapSettingsPresent(data) {
+		def := Default()
+		cfg.BuffsPerAwardPerViewer = def.BuffsPerAwardPerViewer
+		cfg.BuffMaxUniqueViewers = def.BuffMaxUniqueViewers
+	}
 
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
+}
+
+func buffCapSettingsPresent(data []byte) bool {
+	var doc struct {
+		BuffsPerAwardPerViewer *json.RawMessage `json:"buffs_per_award_per_viewer"`
+		BuffMaxUniqueViewers   *json.RawMessage `json:"buff_max_unique_viewers"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	return doc.BuffsPerAwardPerViewer != nil || doc.BuffMaxUniqueViewers != nil
 }
 
 func leaderboardVisibilityPresent(data []byte) bool {

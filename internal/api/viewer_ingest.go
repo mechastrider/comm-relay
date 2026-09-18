@@ -185,15 +185,14 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		return
 	}
 
-	fired := v.matcher.TryFire(msg.Platform, msg.UserID, matchedCmd)
-	outcome := v.matcher.RecordMessageOutcome(
-		msg.Platform, msg.ID,
-		msg.Platform, msg.UserID,
-		matchedCmd, fired,
-	)
-	v.broadcastCommandOutcome(ctx, msg, outcome)
-
-	if !fired {
+	passedCooldown := v.matcher.TryFire(msg.Platform, msg.UserID, matchedCmd)
+	if !passedCooldown {
+		outcome := v.matcher.RecordMessageOutcome(
+			msg.Platform, msg.ID,
+			msg.Platform, msg.UserID,
+			matchedCmd, false,
+		)
+		v.broadcastCommandOutcome(ctx, msg, outcome)
 		observability.Default.RecordCommandSuppressed("cooldown")
 		clog.Debug(ctx, "command suppressed: cooldown",
 			slog.String("trigger", matchedCmd.Trigger),
@@ -202,6 +201,21 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		)
 		return
 	}
+
+	match, _ := v.matcher.LookupMatch(msg.Message)
+	operatorLocale := cfg.Admin.TimeLocale
+
+	if command.IsSocialAction(matchedCmd.Action) {
+		v.handleSocialCommand(ctx, msg, matchedCmd, match.Remainder, cfg, operatorLocale, now)
+		return
+	}
+
+	outcome := v.matcher.RecordMessageOutcome(
+		msg.Platform, msg.ID,
+		msg.Platform, msg.UserID,
+		matchedCmd, true,
+	)
+	v.broadcastCommandOutcome(ctx, msg, outcome)
 
 	observability.Default.RecordCommandFired()
 	clog.Info(ctx, "command fired",
@@ -224,6 +238,7 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		CommandID:      matchedCmd.ID,
 		CommandTrigger: matchedCmd.Trigger,
 		Points:         0,
+		Now:            now,
 	}
 	commandProgression, err := v.viewerStore.AppendInteractionEventResult(event)
 	if err != nil {
@@ -260,6 +275,115 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 	v.publishProgression(ctx, commandProgression, viewerID, cfg.DayResetHour)
 }
 
+func (v *ViewerIngest) handleSocialCommand(
+	ctx context.Context,
+	msg bus.ChatMessage,
+	matchedCmd *store.Command,
+	remainder string,
+	cfg config.Config,
+	operatorLocale string,
+	now time.Time,
+) {
+	result, err := v.viewerStore.ExecuteSocialCommand(store.SocialCommandInput{
+		GiverIdentity: store.ChatIdentity{
+			Platform:    msg.Platform,
+			UserID:      msg.UserID,
+			Username:    msg.Username,
+			DisplayName: msg.DisplayName,
+			AvatarURL:   msg.AvatarURL,
+		},
+		Command:                *matchedCmd,
+		Remainder:              remainder,
+		MessagePlatform:        msg.Platform,
+		MessageID:              msg.ID,
+		DayResetHour:           cfg.DayResetHour,
+		BuffsPerAwardPerViewer: cfg.BuffsPerAwardPerViewer,
+		BuffMaxUniqueViewers:   cfg.BuffMaxUniqueViewers,
+		Now:                    now,
+	})
+	if err != nil {
+		clog.Errorf(ctx, "execute social command: %w", err)
+		return
+	}
+
+	giverID, _ := v.viewerStore.ViewerIDForIdentity(msg.Platform, msg.UserID)
+
+	if result.Status == command.OutcomeStatusRejected {
+		reason := command.RejectReason(result.RejectReason)
+		label := command.ReasonLabel(reason, operatorLocale)
+		outcome := v.matcher.RecordRejectedOutcome(
+			msg.Platform, msg.ID,
+			msg.Platform, msg.UserID,
+			matchedCmd, string(reason), label,
+		)
+		v.broadcastCommandOutcome(ctx, msg, outcome)
+		observability.Default.RecordCommandSuppressed(string(reason))
+		logArgs := []any{
+			slog.String("trigger", matchedCmd.Trigger),
+			slog.String("reason", string(reason)),
+			slog.String("giver_viewer_id", giverID),
+		}
+		if result.RecipientViewerID != "" {
+			logArgs = append(logArgs, slog.String("recipient_viewer_id", result.RecipientViewerID))
+		}
+		clog.Info(ctx, "command rejected", logArgs...)
+		return
+	}
+
+	outcome := v.matcher.RecordMessageOutcome(
+		msg.Platform, msg.ID,
+		msg.Platform, msg.UserID,
+		matchedCmd, true,
+	)
+	v.broadcastCommandOutcome(ctx, msg, outcome)
+	observability.Default.RecordCommandFired()
+	clog.Info(ctx, "command fired",
+		slog.String("trigger", matchedCmd.Trigger),
+		slog.String("giver_viewer_id", giverID),
+		slog.String("recipient_viewer_id", result.RecipientViewerID),
+		slog.String("action", matchedCmd.Action),
+	)
+
+	if v.publisher != nil {
+		v.publisher.Schedule()
+	}
+	if result.MeaningfulRankChange && v.visibility != nil {
+		v.visibility.SubmitTrigger(leaderboard.ReasonRankChange)
+	} else if v.visibility != nil {
+		v.visibility.MarkDirty()
+	}
+
+	if matchedCmd.Action == store.CommandActionLike && v.hub != nil && result.LikeGrant != nil {
+		award, awardErr := v.viewerStore.GetAward(matchedCmd.AwardID)
+		if awardErr != nil {
+			clog.Errorf(ctx, "load like award for alert: %w", awardErr)
+		} else {
+			recipientName := command.DisplayName(result.RecipientIdentity.Username, result.RecipientIdentity.DisplayName)
+			text := command.SubstituteTemplate(award.SplashTemplate, command.TemplateVars{
+				Viewer:   recipientName,
+				Streamer: cfg.StreamerDisplayName,
+				Points:   award.Points,
+				Message:  msg.Message,
+			})
+			alertPayload, alertErr := awardAlertWirePayload(award, recipientName, result.LikeGrant.AvatarURL, text, award.Points, now, awardAlertContext{
+				MessagePlatform: msg.Platform,
+				MessageID:       msg.ID,
+			})
+			if alertErr != nil {
+				clog.Errorf(ctx, "like award alert wire payload: %w", alertErr)
+			} else {
+				v.hub.Broadcast(alertPayload)
+				observability.Default.RecordAwardGranted()
+			}
+		}
+	}
+
+	v.publishProgression(ctx, result.GiverProgression, giverID, cfg.DayResetHour)
+	if result.RecipientViewerID != "" {
+		v.publishProgression(ctx, result.RecipientProgression, result.RecipientViewerID, cfg.DayResetHour)
+	}
+}
+
 func (v *ViewerIngest) broadcastCommandOutcome(ctx context.Context, msg bus.ChatMessage, outcome command.MessageOutcome) {
 	if v.hub == nil || outcome.Trigger == "" {
 		return
@@ -273,6 +397,7 @@ func (v *ViewerIngest) broadcastCommandOutcome(ctx context.Context, msg bus.Chat
 	payload, err := commandOutcomeWirePayload(
 		platform, messageID,
 		outcome.Trigger, outcome.Status, outcome.CooldownRemainingMs,
+		outcome.Reason, outcome.ReasonLabel,
 	)
 	if err != nil {
 		clog.Errorf(ctx, "command outcome wire payload: %w", err)

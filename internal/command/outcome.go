@@ -23,6 +23,8 @@ type messageOutcomeKey struct {
 type storedMessageOutcome struct {
 	trigger         string
 	status          string
+	reason          string
+	reasonLabel     string
 	viewerPlatform  string
 	userID          string
 	commandID       string
@@ -33,6 +35,8 @@ type storedMessageOutcome struct {
 type MessageOutcome struct {
 	Trigger             string
 	Status              string
+	Reason              string
+	ReasonLabel         string
 	CooldownRemainingMs int
 }
 
@@ -76,6 +80,32 @@ func (m *Matcher) RecordMessageOutcome(
 	cmd *store.Command,
 	fired bool,
 ) MessageOutcome {
+	status := OutcomeStatusFired
+	if !fired {
+		status = OutcomeStatusCooldown
+	}
+	return m.recordMessageOutcome(messagePlatform, messageID, viewerPlatform, userID, cmd, status, "", "")
+}
+
+// RecordRejectedOutcome stores a rejected social command outcome.
+func (m *Matcher) RecordRejectedOutcome(
+	messagePlatform, messageID,
+	viewerPlatform, userID string,
+	cmd *store.Command,
+	reason, reasonLabel string,
+) MessageOutcome {
+	return m.recordMessageOutcome(
+		messagePlatform, messageID, viewerPlatform, userID, cmd,
+		OutcomeStatusRejected, reason, reasonLabel,
+	)
+}
+
+func (m *Matcher) recordMessageOutcome(
+	messagePlatform, messageID,
+	viewerPlatform, userID string,
+	cmd *store.Command,
+	status, reason, reasonLabel string,
+) MessageOutcome {
 	if m == nil || cmd == nil {
 		return MessageOutcome{}
 	}
@@ -85,11 +115,6 @@ func (m *Matcher) RecordMessageOutcome(
 	viewerPlatform = strings.TrimSpace(viewerPlatform)
 	userID = strings.TrimSpace(userID)
 
-	status := OutcomeStatusFired
-	if !fired {
-		status = OutcomeStatusCooldown
-	}
-
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -98,6 +123,8 @@ func (m *Matcher) RecordMessageOutcome(
 		m.outcomes[key] = storedMessageOutcome{
 			trigger:         cmd.Trigger,
 			status:          status,
+			reason:          strings.TrimSpace(reason),
+			reasonLabel:     strings.TrimSpace(reasonLabel),
 			viewerPlatform:  viewerPlatform,
 			userID:          userID,
 			commandID:       cmd.ID,
@@ -146,6 +173,8 @@ func (m *Matcher) messageOutcomeLocked(messagePlatform, messageID string) Messag
 	return MessageOutcome{
 		Trigger:             stored.trigger,
 		Status:              stored.status,
+		Reason:              stored.reason,
+		ReasonLabel:         stored.reasonLabel,
 		CooldownRemainingMs: remaining,
 	}
 }

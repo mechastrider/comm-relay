@@ -57,6 +57,8 @@ func (h *messagesHandler) recentMessages(limit int) []adminMessage {
 				Trigger:             outcome.Trigger,
 				Status:              outcome.Status,
 				CooldownRemainingMs: outcome.CooldownRemainingMs,
+				Reason:              outcome.Reason,
+				ReasonLabel:         outcome.ReasonLabel,
 			}
 		}
 	}

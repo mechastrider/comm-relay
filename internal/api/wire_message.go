@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/muonsoft/errors"
@@ -50,6 +51,8 @@ type wireCommandOutcome struct {
 	Trigger             string `json:"trigger"`
 	Status              string `json:"status"`
 	CooldownRemainingMs int    `json:"cooldown_remaining_ms"`
+	Reason              string `json:"reason,omitempty"`
+	ReasonLabel         string `json:"reason_label,omitempty"`
 }
 
 type wireMessageDeleted struct {
@@ -164,15 +167,23 @@ func chatMessageWirePayload(msg bus.ChatMessage, isCommand bool) ([]byte, error)
 func commandOutcomeWirePayload(
 	messagePlatform, messageID, trigger, status string,
 	cooldownRemainingMs int,
+	reason, reasonLabel string,
 ) ([]byte, error) {
-	data, err := json.Marshal(wireCommandOutcome{
+	payload := wireCommandOutcome{
 		Type:                wireCommandOutcomeType,
 		MessagePlatform:     messagePlatform,
 		MessageID:           messageID,
 		Trigger:             trigger,
 		Status:              status,
 		CooldownRemainingMs: cooldownRemainingMs,
-	})
+	}
+	if strings.TrimSpace(reason) != "" {
+		payload.Reason = reason
+	}
+	if strings.TrimSpace(reasonLabel) != "" {
+		payload.ReasonLabel = reasonLabel
+	}
+	data, err := json.Marshal(payload)
 	if err != nil {
 		return nil, errors.Errorf("marshal command outcome wire event: %w", err)
 	}

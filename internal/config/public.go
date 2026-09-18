@@ -9,6 +9,8 @@ type PublicConfig struct {
 	DayResetHour               int                         `json:"day_reset_hour"`
 	HideCommandMessages        bool                        `json:"hide_command_messages"`
 	HideCommandCooldownOverlay bool                        `json:"hide_command_cooldown_overlay"`
+	BuffsPerAwardPerViewer     int                         `json:"buffs_per_award_per_viewer"`
+	BuffMaxUniqueViewers       int                         `json:"buff_max_unique_viewers"`
 	CustomAvatarsEnabled       bool                        `json:"custom_avatars_enabled"`
 	StreamerDisplayName        string                      `json:"streamer_display_name"`
 	LeaderboardVisibility      LeaderboardVisibilityConfig `json:"leaderboard_visibility"`
@@ -31,6 +33,8 @@ func (c Config) Public() PublicConfig {
 		DayResetHour:               c.DayResetHour,
 		HideCommandMessages:        c.HideCommandMessages,
 		HideCommandCooldownOverlay: c.HideCommandCooldownOverlay,
+		BuffsPerAwardPerViewer:     c.BuffsPerAwardPerViewer,
+		BuffMaxUniqueViewers:       c.BuffMaxUniqueViewers,
 		CustomAvatarsEnabled:       c.CustomAvatarsEnabled,
 		StreamerDisplayName:        c.StreamerDisplayName,
 		LeaderboardVisibility:      c.LeaderboardVisibility,

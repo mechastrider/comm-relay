@@ -1,7 +1,16 @@
 "use strict";
 
+export const COMMAND_OUTCOME_REJECTED_DISPLAY_MS = 5000;
+
 /**
- * @typedef {{ trigger: string, status: "fired"|"cooldown", cooldown_expires_at_ms: number|null }} NormalizedCommandOutcome
+ * @typedef {{
+ *   trigger: string,
+ *   status: "fired"|"cooldown"|"rejected",
+ *   cooldown_expires_at_ms: number|null,
+ *   rejected_expires_at_ms?: number|null,
+ *   reason?: string,
+ *   reason_label?: string,
+ * }} NormalizedCommandOutcome
  */
 
 /**
@@ -25,18 +34,38 @@ export function commandOutcomeFromRecentField(raw, nowMs) {
   if (!raw || typeof raw !== "object") {
     return null;
   }
-  const status = raw.status === "fired" || raw.status === "cooldown" ? raw.status : "";
+  const status =
+    raw.status === "fired" || raw.status === "cooldown" || raw.status === "rejected"
+      ? raw.status
+      : "";
   if (status === "") {
     return null;
   }
   const trigger = typeof raw.trigger === "string" ? raw.trigger : "";
+  const now = typeof nowMs === "number" ? nowMs : Date.now();
   const remainingMs = typeof raw.cooldown_remaining_ms === "number" ? raw.cooldown_remaining_ms : 0;
+  const reason = typeof raw.reason === "string" ? raw.reason : "";
+  const reasonLabel = typeof raw.reason_label === "string" ? raw.reason_label : "";
+
+  if (status === "rejected") {
+    return {
+      trigger: trigger,
+      status: "rejected",
+      cooldown_expires_at_ms: null,
+      rejected_expires_at_ms: now + COMMAND_OUTCOME_REJECTED_DISPLAY_MS,
+      reason: reason,
+      reason_label: reasonLabel,
+    };
+  }
+
   return {
     trigger: trigger,
     status: status,
     cooldown_expires_at_ms: status === "cooldown"
-      ? (typeof nowMs === "number" ? nowMs : Date.now()) + Math.max(0, remainingMs)
+      ? now + Math.max(0, remainingMs)
       : null,
+    reason: reason,
+    reason_label: reasonLabel,
   };
 }
 
@@ -88,7 +117,46 @@ export function isCooldownOutcomeActive(outcome, nowMs) {
 /**
  * @param {NormalizedCommandOutcome|null|undefined} outcome
  * @param {number} nowMs
- * @returns {"accepted"|"cooldown"|""}
+ * @returns {boolean}
+ */
+export function isRejectedOutcomeActive(outcome, nowMs) {
+  if (!outcome || outcome.status !== "rejected") {
+    return false;
+  }
+  if (typeof outcome.rejected_expires_at_ms !== "number") {
+    return true;
+  }
+  return nowMs < outcome.rejected_expires_at_ms;
+}
+
+/**
+ * @param {NormalizedCommandOutcome|null|undefined} outcome
+ * @param {(key: string, params?: Record<string, unknown>) => string} translate
+ * @returns {string}
+ */
+export function commandOutcomeReasonLabel(outcome, translate) {
+  if (!outcome || outcome.status !== "rejected") {
+    return "";
+  }
+  const direct = String(outcome.reason_label || "").trim();
+  if (direct !== "") {
+    return direct;
+  }
+  const reason = String(outcome.reason || "").trim();
+  if (reason !== "") {
+    const key = "msg.commandReject." + reason;
+    const mapped = translate(key);
+    if (mapped !== key) {
+      return mapped;
+    }
+  }
+  return translate("msg.commandRejected");
+}
+
+/**
+ * @param {NormalizedCommandOutcome|null|undefined} outcome
+ * @param {number} nowMs
+ * @returns {"accepted"|"cooldown"|"rejected"|""}
  */
 export function commandOutcomeChromeKind(outcome, nowMs) {
   if (!outcome) {
@@ -99,6 +167,9 @@ export function commandOutcomeChromeKind(outcome, nowMs) {
   }
   if (isCooldownOutcomeActive(outcome, nowMs)) {
     return "cooldown";
+  }
+  if (isRejectedOutcomeActive(outcome, nowMs)) {
+    return "rejected";
   }
   return "";
 }
@@ -118,6 +189,7 @@ export function applyCommandOutcomeChrome(item, outcome, nowMs, translate) {
   const kind = commandOutcomeChromeKind(outcome, nowMs);
   item.classList.toggle("message-list__item--command-accepted", kind === "accepted");
   item.classList.toggle("message-list__item--command-cooldown", kind === "cooldown");
+  item.classList.toggle("message-list__item--command-rejected", kind === "rejected");
 
   let badge = item.querySelector("." + OUTCOME_BADGE_CLASS);
   if (kind === "") {
@@ -144,6 +216,15 @@ export function applyCommandOutcomeChrome(item, outcome, nowMs, translate) {
     badge.textContent = label;
     badge.setAttribute("aria-label", label);
     item.setAttribute("aria-label", label);
+    return;
+  }
+
+  if (kind === "rejected") {
+    const reasonText = commandOutcomeReasonLabel(outcome, translate);
+    const frozenLabel = translate("msg.commandRejectedFrozen");
+    badge.textContent = reasonText;
+    badge.setAttribute("aria-label", frozenLabel + ". " + reasonText);
+    item.setAttribute("aria-label", frozenLabel + ". " + reasonText);
     return;
   }
 

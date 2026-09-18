@@ -125,6 +125,8 @@ type commandOutcomeJSON struct {
 	Trigger             string `json:"trigger"`
 	Status              string `json:"status"`
 	CooldownRemainingMs int    `json:"cooldown_remaining_ms"`
+	Reason              string `json:"reason,omitempty"`
+	ReasonLabel         string `json:"reason_label,omitempty"`
 }
 
 type adminMessage struct {

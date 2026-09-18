@@ -22,13 +22,44 @@ import {
 
 test("command action helpers preserve alerts and strip leaderboard presentation", function () {
   assert.equal(normalizeCommandAction(undefined), "alert");
+  assert.equal(normalizeCommandAction("like"), "like");
+  assert.equal(normalizeCommandAction("buff"), "buff");
   assert.equal(commandUsesAlertPresentation("alert"), true);
+  assert.equal(commandUsesAlertPresentation("like"), false);
   assert.deepEqual(
     buildCommandPayload(
       { trigger: "leaders", enabled: true, action: "show_leaderboard", cooldown_seconds: 30 },
       { splash_template: "unused", duration_ms: 5000 }
     ),
     { trigger: "leaders", aliases: [], enabled: true, action: "show_leaderboard", cooldown_seconds: 30 }
+  );
+  assert.deepEqual(
+    buildCommandPayload(
+      { trigger: "like", enabled: true, action: "like", cooldown_seconds: 10, award_id: "viewer_like" },
+      { splash_template: "ignored" }
+    ),
+    {
+      trigger: "like",
+      aliases: [],
+      enabled: true,
+      action: "like",
+      cooldown_seconds: 10,
+      award_id: "viewer_like",
+    }
+  );
+  assert.deepEqual(
+    buildCommandPayload(
+      { trigger: "buff", enabled: true, action: "buff", cooldown_seconds: 5, points: 25 },
+      {}
+    ),
+    {
+      trigger: "buff",
+      aliases: [],
+      enabled: true,
+      action: "buff",
+      cooldown_seconds: 5,
+      points: 25,
+    }
   );
   assert.equal(
     buildCommandPayload(
@@ -65,6 +96,8 @@ const serverConfig = {
   activity_interval_seconds: 300,
   activity_session_limit: 10,
   activity_xp: 2,
+  buffs_per_award_per_viewer: 1,
+  buff_max_unique_viewers: 5,
   day_reset_hour: 8,
   network: { socks5: { address: "127.0.0.1:1080", username: "u", password: "secret" } },
   twitch: { enabled: true, channel: "tester" },
@@ -100,6 +133,8 @@ const basePayload = {
   activity_interval_seconds: 300,
   activity_session_limit: 10,
   activity_xp: 2,
+  buffs_per_award_per_viewer: 1,
+  buff_max_unique_viewers: 5,
   day_reset_hour: 8,
   network: { socks5: { address: "127.0.0.1:1080", username: "u", password: "" } },
   twitch: { enabled: true, channel: "tester" },
@@ -116,11 +151,15 @@ const dataValues = {
   day_reset_hour: 12,
   hide_command_messages: true,
   hide_command_cooldown_overlay: true,
+  buffs_per_award_per_viewer: 2,
+  buff_max_unique_viewers: 8,
 };
 const withData = applySectionToConfig(basePayload, "data", dataValues);
 assert.equal(withData.activity_interval_seconds, 120);
 assert.equal(withData.hide_command_messages, true);
 assert.equal(withData.hide_command_cooldown_overlay, true);
+assert.equal(withData.buffs_per_award_per_viewer, 2);
+assert.equal(withData.buff_max_unique_viewers, 8);
 assert.equal(withData.activity_session_limit, 5);
 assert.equal(withData.activity_xp, 3);
 assert.equal(withData.day_reset_hour, 12);
@@ -163,6 +202,11 @@ const dockMarkup = readFileSync(new URL("../../dock/index.html", import.meta.url
 const dockStyles = readFileSync(new URL("../../dock/messages.css", import.meta.url), "utf8");
 assert.match(adminMarkup, /id="leaderboard-visibility-policy"/);
 assert.match(adminMarkup, /id="command-action-input"/);
+assert.match(adminMarkup, /id="command-award-input"/);
+assert.match(adminMarkup, /id="command-points-input"/);
+assert.match(adminMarkup, /id="buffs-per-award-per-viewer"/);
+assert.match(adminMarkup, /id="buff-max-unique-viewers"/);
+assert.match(adminMarkup, /id="progression-level-like-quota"/);
 assert.match(adminMarkup, /id="hide-command-cooldown-overlay"/);
 assert.match(adminMarkup, /hide_command_cooldown_overlay/);
 assert.match(adminMarkup, /id="command-alert-fields"/);

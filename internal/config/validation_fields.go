@@ -48,6 +48,12 @@ func (c *Config) validateFields() error {
 	if c.ActivityXP < 0 {
 		fields["activity_xp"] = "Activity XP must be 0 or greater."
 	}
+	if c.BuffsPerAwardPerViewer < 0 {
+		fields["buffs_per_award_per_viewer"] = "Buffs per award per viewer must be 0 or greater."
+	}
+	if c.BuffMaxUniqueViewers < 0 {
+		fields["buff_max_unique_viewers"] = "Buff max unique viewers must be 0 or greater."
+	}
 	if c.DayResetHour < 0 || c.DayResetHour > 23 {
 		fields["day_reset_hour"] = "Day reset hour must be between 0 and 23."
 	}

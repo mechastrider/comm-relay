@@ -6,6 +6,7 @@ import {
   commandOutcomeMessageKey,
   findMessageListItemByPlatformId,
   isCooldownOutcomeActive,
+  isRejectedOutcomeActive,
   normalizeMessageCommandOutcome,
 } from "./command-outcome-ui.js";
 
@@ -96,15 +97,26 @@ export function createCommandOutcomeLive(options) {
       }
       const message = options.findMessage(platform, id);
       const outcome = message && message.command_outcome;
-      if (!outcome || outcome.status !== "cooldown") {
+      if (!outcome) {
         continue;
       }
-      if (!isCooldownOutcomeActive(outcome, now)) {
-        options.setMessageOutcome(platform, id, null);
-        applyCommandOutcomeChrome(item, null, now, options.translate);
+      if (outcome.status === "cooldown") {
+        if (!isCooldownOutcomeActive(outcome, now)) {
+          options.setMessageOutcome(platform, id, null);
+          applyCommandOutcomeChrome(item, null, now, options.translate);
+          continue;
+        }
+        applyCommandOutcomeChrome(item, outcome, now, options.translate);
         continue;
       }
-      applyCommandOutcomeChrome(item, outcome, now, options.translate);
+      if (outcome.status === "rejected") {
+        if (!isRejectedOutcomeActive(outcome, now)) {
+          options.setMessageOutcome(platform, id, null);
+          applyCommandOutcomeChrome(item, null, now, options.translate);
+          continue;
+        }
+        applyCommandOutcomeChrome(item, outcome, now, options.translate);
+      }
     }
   }
 

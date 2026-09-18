@@ -266,6 +266,9 @@ func TestCommands_WhenMigrationApplied_ExpectDefaultVolumeAndLayout(t *testing.T
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
 	require.NotEmpty(t, payload.Commands)
 	for _, cmd := range payload.Commands {
+		if cmd.ID != "gg" && cmd.ID != "hi" {
+			continue
+		}
 		require.Equal(t, 70, cmd.SoundVolume)
 		require.Equal(t, "fullscreen", cmd.Layout)
 	}

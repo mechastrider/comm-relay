@@ -28,19 +28,12 @@ const maxCommandAliases = 16
 const (
 	CommandActionAlert           = "alert"
 	CommandActionShowLeaderboard = "show_leaderboard"
+	CommandActionLike            = "like"
+	CommandActionBuff            = "buff"
 )
 
 func normalizeCommandAction(action string) (string, error) {
-	action = strings.TrimSpace(strings.ToLower(action))
-	if action == "" {
-		return CommandActionAlert, nil
-	}
-	switch action {
-	case CommandActionAlert, CommandActionShowLeaderboard:
-		return action, nil
-	default:
-		return "", ErrInvalidCommandAction
-	}
+	return normalizeCommandActionForSave(action)
 }
 
 func normalizeCommandTrigger(trigger string) string {
@@ -242,6 +235,8 @@ func scanCommand(scanner interface {
 	var enabled int
 	var imageAsset sql.NullString
 	var soundFile sql.NullString
+	var pointsRaw sql.NullInt64
+	var awardIDRaw sql.NullString
 
 	err := scanner.Scan(
 		&cmd.ID,
@@ -249,6 +244,8 @@ func scanCommand(scanner interface {
 		&cmd.Trigger,
 		&enabled,
 		&cmd.CooldownSeconds,
+		&pointsRaw,
+		&awardIDRaw,
 		&cmd.SplashTemplate,
 		&cmd.Sound,
 		&cmd.DurationMs,
@@ -264,9 +261,10 @@ func scanCommand(scanner interface {
 	}
 
 	cmd.Enabled = enabled != 0
-	cmd.Action, err = normalizeCommandAction(cmd.Action)
-	if err != nil {
-		return Command{}, err
+	cmd.Action = readStoredCommandAction(cmd.Action)
+	cmd.Points = scanCommandPoints(pointsRaw)
+	if awardIDRaw.Valid {
+		cmd.AwardID = awardIDRaw.String
 	}
 	if imageAsset.Valid {
 		cmd.ImageAsset = imageAsset.String
@@ -288,7 +286,7 @@ func (s *Store) ListCommands() ([]Command, error) {
 	defer s.mu.Unlock()
 
 	rows, err := s.db.Query(`
-		SELECT id, action, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
+		SELECT id, action, trigger, enabled, cooldown_seconds, points, award_id, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM commands
 		ORDER BY trigger`)
 	if err != nil {
@@ -329,7 +327,7 @@ func (s *Store) GetCommand(id string) (*Command, error) {
 	defer s.mu.Unlock()
 
 	row := s.db.QueryRow(`
-		SELECT id, action, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
+		SELECT id, action, trigger, enabled, cooldown_seconds, points, award_id, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM commands
 		WHERE id = ?`, id)
 
@@ -358,6 +356,8 @@ type CreateCommandInput struct {
 	Aliases         []string
 	Enabled         bool
 	CooldownSeconds int
+	Points          *int
+	AwardID         string
 	SplashTemplate  string
 	Sound           string
 	DurationMs      int
@@ -389,11 +389,17 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 	if input.CooldownSeconds < 0 {
 		return nil, errors.New("cooldown must be non-negative")
 	}
-	if action == CommandActionAlert {
+	switch action {
+	case CommandActionAlert:
 		if validationErr := validateCatalogSound(input.Sound); validationErr != nil {
 			return nil, validationErr
 		}
-	} else {
+		if fields := validateCommandMediaFields(
+			input.ImageAsset, input.SoundFile, input.SoundVolume, input.ImageSizePct, input.Layout, input.ImageFit,
+		); len(fields) > 0 {
+			return nil, catalogMediaValidationError(fields)
+		}
+	case CommandActionShowLeaderboard, CommandActionLike, CommandActionBuff:
 		input.SplashTemplate = ""
 		input.Sound = ""
 		input.DurationMs = defaultCatalogDurationMs
@@ -403,13 +409,6 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 		input.Layout = DefaultCatalogLayout
 		input.ImageFit = DefaultCatalogImageFit
 		input.ImageSizePct = DefaultCatalogImageSizePct
-	}
-	if action == CommandActionAlert {
-		if fields := validateCommandMediaFields(
-			input.ImageAsset, input.SoundFile, input.SoundVolume, input.ImageSizePct, input.Layout, input.ImageFit,
-		); len(fields) > 0 {
-			return nil, catalogMediaValidationError(fields)
-		}
 	}
 
 	id := strings.TrimSpace(input.ID)
@@ -435,6 +434,9 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 	if collisionErr := s.checkCommandNameCollisionsLocked(id, trigger, aliases); collisionErr != nil {
 		return nil, collisionErr
 	}
+	if socialErr := s.validateCommandSocialFieldsLocked(action, input.Points, input.AwardID); socialErr != nil {
+		return nil, socialErr
+	}
 
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -443,15 +445,17 @@ func (s *Store) CreateCommand(input CreateCommandInput) (*Command, error) {
 
 	_, err = tx.Exec(`
 		INSERT INTO commands (
-			id, action, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms,
+			id, action, trigger, enabled, cooldown_seconds, points, award_id, splash_template, sound, duration_ms,
 			image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		action,
 		trigger,
 		enabled,
 		input.CooldownSeconds,
+		commandPointsForInsert(action, input.Points),
+		commandAwardIDForInsert(action, input.AwardID),
 		input.SplashTemplate,
 		input.Sound,
 		durationMs,
@@ -490,6 +494,8 @@ type UpdateCommandInput struct {
 	Aliases         []string
 	Enabled         bool
 	CooldownSeconds int
+	Points          *int
+	AwardID         string
 	SplashTemplate  string
 	Sound           string
 	DurationMs      int
@@ -525,7 +531,8 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 	if input.CooldownSeconds < 0 {
 		return nil, errors.New("cooldown must be non-negative")
 	}
-	if action == CommandActionAlert {
+	switch action {
+	case CommandActionAlert:
 		if validationErr := validateCatalogSound(input.Sound); validationErr != nil {
 			return nil, validationErr
 		}
@@ -534,6 +541,16 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 		); len(fields) > 0 {
 			return nil, catalogMediaValidationError(fields)
 		}
+	case CommandActionLike, CommandActionBuff:
+		input.SplashTemplate = ""
+		input.Sound = ""
+		input.DurationMs = defaultCatalogDurationMs
+		input.ImageAsset = ""
+		input.SoundFile = ""
+		input.SoundVolume = DefaultCatalogSoundVolume
+		input.Layout = DefaultCatalogLayout
+		input.ImageFit = DefaultCatalogImageFit
+		input.ImageSizePct = DefaultCatalogImageSizePct
 	}
 
 	durationMs := normalizeDurationMs(input.DurationMs)
@@ -555,7 +572,8 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 	if err != nil {
 		return nil, err
 	}
-	if action == CommandActionShowLeaderboard {
+	switch action {
+	case CommandActionShowLeaderboard:
 		input.SplashTemplate = existing.SplashTemplate
 		input.Sound = existing.Sound
 		input.DurationMs = existing.DurationMs
@@ -572,10 +590,15 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 		layout = existing.Layout
 		imageFit = existing.ImageFit
 		imageSizePct = existing.ImageSizePct
+	case CommandActionLike, CommandActionBuff:
+		durationMs = defaultCatalogDurationMs
 	}
 
 	if collisionErr := s.checkCommandNameCollisionsLocked(input.ID, trigger, aliases); collisionErr != nil {
 		return nil, collisionErr
+	}
+	if socialErr := s.validateCommandSocialFieldsLocked(action, input.Points, input.AwardID); socialErr != nil {
+		return nil, socialErr
 	}
 
 	tx, err := s.db.Begin()
@@ -585,13 +608,16 @@ func (s *Store) UpdateCommand(input UpdateCommandInput) (*Command, error) {
 
 	result, err := tx.Exec(`
 		UPDATE commands
-		SET action = ?, trigger = ?, enabled = ?, cooldown_seconds = ?, splash_template = ?, sound = ?, duration_ms = ?,
+		SET action = ?, trigger = ?, enabled = ?, cooldown_seconds = ?, points = ?, award_id = ?,
+		    splash_template = ?, sound = ?, duration_ms = ?,
 		    image_asset = ?, sound_file = ?, sound_volume = ?, layout = ?, image_fit = ?, image_size_pct = ?
 		WHERE id = ?`,
 		action,
 		trigger,
 		enabled,
 		input.CooldownSeconds,
+		commandPointsForInsert(action, input.Points),
+		commandAwardIDForInsert(action, input.AwardID),
 		input.SplashTemplate,
 		input.Sound,
 		durationMs,
@@ -656,7 +682,7 @@ func (s *Store) DeleteCommand(id string) error {
 
 func (s *Store) getCommandLocked(id string) (*Command, error) {
 	row := s.db.QueryRow(`
-		SELECT id, action, trigger, enabled, cooldown_seconds, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
+		SELECT id, action, trigger, enabled, cooldown_seconds, points, award_id, splash_template, sound, duration_ms, image_asset, sound_file, sound_volume, layout, image_fit, image_size_pct
 		FROM commands
 		WHERE id = ?`, id)
 

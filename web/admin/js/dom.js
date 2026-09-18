@@ -293,6 +293,12 @@ export const commandEnabledInput = document.getElementById("command-enabled-inpu
 export const commandActionInput = document.getElementById("command-action-input");
 export const commandActionHint = document.getElementById("command-action-hint");
 export const commandActionError = document.getElementById("command-action-error");
+export const commandLikeFields = document.getElementById("command-like-fields");
+export const commandAwardInput = document.getElementById("command-award-input");
+export const commandAwardError = document.getElementById("command-award-error");
+export const commandBuffFields = document.getElementById("command-buff-fields");
+export const commandPointsInput = document.getElementById("command-points-input");
+export const commandPointsError = document.getElementById("command-points-error");
 export const commandAlertFields = document.getElementById("command-alert-fields");
 export const commandCooldownInput = document.getElementById("command-cooldown-input");
 export const commandSplashInput = document.getElementById("command-splash-input");
@@ -409,6 +415,8 @@ export const liveRecapRetry = document.getElementById("live-recap-retry");
 export const activityIntervalSecondsInput = document.getElementById("activity-interval-seconds");
 export const activitySessionLimitInput = document.getElementById("activity-session-limit");
 export const activityXPInput = document.getElementById("activity-xp");
+export const buffsPerAwardPerViewerInput = document.getElementById("buffs-per-award-per-viewer");
+export const buffMaxUniqueViewersInput = document.getElementById("buff-max-unique-viewers");
 export const hideCommandMessagesInput = document.getElementById("hide-command-messages");
 export const hideCommandCooldownOverlayInput = document.getElementById("hide-command-cooldown-overlay");
 export const customAvatarsEnabledInput = document.getElementById("custom-avatars-enabled");
@@ -467,6 +475,8 @@ export const fieldErrors = {
     activity_interval_seconds: document.getElementById("activity-interval-seconds-error"),
     activity_session_limit: document.getElementById("activity-session-limit-error"),
     activity_xp: document.getElementById("activity-xp-error"),
+    buffs_per_award_per_viewer: document.getElementById("buffs-per-award-per-viewer-error"),
+    buff_max_unique_viewers: document.getElementById("buff-max-unique-viewers-error"),
     leaderboard_visibility_policy: document.getElementById("leaderboard-visibility-policy-error"),
     leaderboard_visibility_display_seconds: document.getElementById("leaderboard-visibility-display-seconds-error"),
     leaderboard_visibility_cooldown_seconds: document.getElementById("leaderboard-visibility-cooldown-seconds-error"),
@@ -506,6 +516,8 @@ export const fieldInputs = {
     activity_interval_seconds: activityIntervalSecondsInput,
     activity_session_limit: activitySessionLimitInput,
     activity_xp: activityXPInput,
+    buffs_per_award_per_viewer: buffsPerAwardPerViewerInput,
+    buff_max_unique_viewers: buffMaxUniqueViewersInput,
     day_reset_hour: dayResetHourInput,
     streamer_display_name: streamerDisplayNameInput,
   };

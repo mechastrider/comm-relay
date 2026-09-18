@@ -109,7 +109,7 @@ func progressionLevelsForLeaderboard(db *sql.DB) ([]ProgressionLevel, error) {
 }
 
 func progressionLevelsForLeaderboardQuerier(ctx context.Context, q contextRowsQuerier) ([]ProgressionLevel, error) {
-	rows, err := q.QueryContext(ctx, `SELECT id, title, min_xp, announce, created_at, updated_at FROM progression_levels ORDER BY min_xp, id`)
+	rows, err := q.QueryContext(ctx, `SELECT `+progressionLevelSelectColumns+` FROM progression_levels ORDER BY min_xp, id`)
 	if err != nil {
 		return nil, errors.Errorf("list progression levels for leaderboard: %w", err)
 	}

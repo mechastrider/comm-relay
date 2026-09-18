@@ -26,7 +26,7 @@ func TestCommands_WhenListSeeds_ExpectEmptyAliasesArray(t *testing.T) {
 		} `json:"commands"`
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
-	require.Len(t, payload.Commands, 2)
+	require.Len(t, payload.Commands, 4)
 	for _, cmd := range payload.Commands {
 		require.NotNil(t, cmd.Aliases)
 		require.Empty(t, cmd.Aliases)
@@ -139,10 +139,13 @@ func TestCommands_WhenAliasCollidesWithSeedTrigger_ExpectFieldErrorAndUnchangedC
 		} `json:"commands"`
 	}
 	require.NoError(t, json.Unmarshal(listRec.Body.Bytes(), &listPayload))
-	require.Len(t, listPayload.Commands, 2)
-	triggers := []string{listPayload.Commands[0].Trigger, listPayload.Commands[1].Trigger}
-	require.Contains(t, triggers, "gg")
-	require.Contains(t, triggers, "hi")
+	require.Len(t, listPayload.Commands, 4)
+	triggers := map[string]bool{}
+	for _, cmd := range listPayload.Commands {
+		triggers[cmd.Trigger] = true
+	}
+	require.True(t, triggers["gg"])
+	require.True(t, triggers["hi"])
 }
 
 func TestCommands_WhenAliasEqualsOwnTrigger_ExpectFieldError(t *testing.T) {

@@ -197,6 +197,8 @@ func TestInteractionEventSchema_WhenInspected_ExpectNoMessageBodyColumn(t *testi
 		"points",
 		"message_platform",
 		"message_id",
+		"recipient_viewer_id",
+		"parent_event_id",
 		"created_at",
 	}, rows)
 	assert.NotContains(t, rows, "message_text")

@@ -183,7 +183,7 @@ func (s *Store) evaluateProgressionLocked(tx *sql.Tx, input ProgressionEvaluatio
 }
 
 func progressionLevelAtXP(q rowQuerier, xp int) (*ProgressionLevel, error) {
-	level, err := scanProgressionLevel(q.QueryRow(`SELECT id, title, min_xp, announce, created_at, updated_at FROM progression_levels WHERE min_xp <= ? ORDER BY min_xp DESC, id DESC LIMIT 1`, xp))
+	level, err := scanProgressionLevel(q.QueryRow(`SELECT `+progressionLevelSelectColumns+` FROM progression_levels WHERE min_xp <= ? ORDER BY min_xp DESC, id DESC LIMIT 1`, xp))
 	if err != nil {
 		return nil, err
 	}
