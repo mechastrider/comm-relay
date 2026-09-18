@@ -43,7 +43,8 @@ assert.equal(workspaceHash("about"), "#about");
 assert.equal(workspaceSectionId("live"), "workspace-live");
 assert.equal(workspaceSectionId("settings"), "workspace-settings");
 
-assert.equal(nextAudienceTab("viewers", "ArrowRight"), "history");
+assert.equal(nextAudienceTab("viewers", "ArrowRight"), "archive");
+assert.equal(nextAudienceTab("archive", "ArrowRight"), "history");
 assert.equal(nextAudienceTab("history", "ArrowRight"), "progression");
 assert.equal(nextAudienceTab("progression", "ArrowRight"), "commands");
 assert.equal(nextAudienceTab("awards", "ArrowRight"), "viewers");
