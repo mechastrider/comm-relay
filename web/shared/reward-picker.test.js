@@ -7,7 +7,9 @@ import {
   awardGrantStatus,
   createRewardControl,
   enableRewardRetry,
+  findLikeAward,
   messageCanBeRewarded,
+  pickerAwardsFromCatalog,
   restoreRewardTrigger,
   setRewardItemPending,
 } from "./reward-picker.js";
@@ -150,6 +152,19 @@ test("awardGrantRequest supports a message without source id or text", function 
     { platform: "youtube", user_id: "viewer", award_id: "joke" }
   );
   assert.equal(messageCanBeRewarded({ platform: "youtube", user_id: "viewer" }), true);
+});
+
+test("picker catalog omits streamer like award id", function () {
+  const catalog = [
+    { id: "like", name: "Streamer Like", points: 5 },
+    { id: "on_point", name: "On Point", points: 20 },
+    { id: "advice", name: "Advice", points: 25 },
+  ];
+  assert.equal(findLikeAward(catalog).id, "like");
+  assert.deepEqual(pickerAwardsFromCatalog(catalog).map(function (award) { return award.id; }), [
+    "on_point",
+    "advice",
+  ]);
 });
 
 test("awardGrantStatus is localized through the supplied formatter", function () {

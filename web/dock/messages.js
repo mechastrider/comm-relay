@@ -1,5 +1,9 @@
 import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
-import { createRewardControl, messageCanBeRewarded } from "/shared/reward-picker.js?v=4";
+import {
+  createGrantFeedbackElement,
+  mountMessageGrantActions,
+  prefetchAwards,
+} from "/shared/reward-picker.js?v=5";
 import { applyDomTranslations, setLocale, t } from "/shared/i18n.js?v=19";
 import {
   CONTRACT_CONTENT,
@@ -524,14 +528,14 @@ import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=1";
     const actions = document.createElement("div");
     actions.className = "message-list__actions";
 
-    if (messageCanBeRewarded(message)) {
-      actions.appendChild(createRewardControl(message, {
-        t: t,
-        resolveURL: function (path) { return path; },
-        displayName: displayName,
-        flipClass: "reward-picker--flip",
-      }));
-    }
+    const grantFeedback = createGrantFeedbackElement();
+
+    mountMessageGrantActions(actions, grantFeedback, message, {
+      t: t,
+      resolveURL: function (path) { return path; },
+      displayName: displayName,
+      flipClass: "reward-picker--flip",
+    });
 
     if (typeof message.id === "string" && message.id !== "") {
       const deleteButton = document.createElement("button");
@@ -550,6 +554,7 @@ import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=1";
     }
     content.appendChild(meta);
     content.appendChild(text);
+    content.appendChild(grantFeedback);
     item.appendChild(buildAvatar(message));
     item.appendChild(content);
     commandOutcomeLive.decorateListItem(item, message);
@@ -799,4 +804,13 @@ import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=1";
   }, 1000);
 
   renderMessages(true);
-  Promise.all([loadDisplaySettings(), loadRecentMessages(), loadVisibility(), loadContractState()]).finally(connectWebSocket);
+  Promise.all([
+    loadDisplaySettings(),
+    prefetchAwards(function (path) { return path; }),
+    loadRecentMessages(),
+    loadVisibility(),
+    loadContractState(),
+  ]).finally(function () {
+    renderMessages(false);
+    connectWebSocket();
+  });

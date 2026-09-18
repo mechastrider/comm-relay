@@ -3,6 +3,8 @@
 let awardsCache = null;
 let awardsCachePromise = null;
 
+const LIKE_AWARD_ID = "like";
+
 function trimString(value) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -37,6 +39,59 @@ export function awardGrantStatus(t, award) {
 
 export function awardGrantFailure(t) {
   return t("reward.grantFailed");
+}
+
+export function getCachedAwards() {
+  return awardsCache;
+}
+
+export function findLikeAward(awards) {
+  if (!Array.isArray(awards)) {
+    return null;
+  }
+  const found = awards.find(function (award) {
+    return award && award.id === LIKE_AWARD_ID;
+  });
+  return found || null;
+}
+
+export function pickerAwardsFromCatalog(awards) {
+  if (!Array.isArray(awards)) {
+    return [];
+  }
+  return awards.filter(function (award) {
+    return award && award.id !== LIKE_AWARD_ID;
+  });
+}
+
+export function createGrantFeedbackElement() {
+  const feedback = document.createElement("p");
+  feedback.className = "message-list__grant-feedback";
+  feedback.hidden = true;
+  return feedback;
+}
+
+export function createGrantFeedbackReporter(feedbackElement, t) {
+  return {
+    reportSuccess: function (award) {
+      if (!feedbackElement) {
+        return;
+      }
+      feedbackElement.hidden = false;
+      feedbackElement.setAttribute("role", "status");
+      feedbackElement.setAttribute("aria-live", "polite");
+      feedbackElement.textContent = awardGrantStatus(t, award);
+    },
+    reportFailure: function () {
+      if (!feedbackElement) {
+        return;
+      }
+      feedbackElement.hidden = false;
+      feedbackElement.setAttribute("role", "alert");
+      feedbackElement.removeAttribute("aria-live");
+      feedbackElement.textContent = awardGrantFailure(t);
+    },
+  };
 }
 
 function closePicker(picker, trigger) {
@@ -113,6 +168,10 @@ async function loadAwards(resolveURL) {
   return awardsCachePromise;
 }
 
+export function prefetchAwards(resolveURL) {
+  return loadAwards(resolveURL);
+}
+
 export function invalidateAwardsCache() {
   awardsCache = null;
   awardsCachePromise = null;
@@ -130,6 +189,136 @@ function buildPickerItem(award, onSelect) {
     onSelect(award, item);
   });
   return item;
+}
+
+function likeAwardLabel(award) {
+  const name = typeof award.name === "string" && award.name.trim() !== ""
+    ? award.name.trim()
+    : LIKE_AWARD_ID;
+  return name;
+}
+
+function createThumbsUpIcon() {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  const pathStem = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  pathStem.setAttribute("d", "M7 11v8");
+  const pathThumb = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  pathThumb.setAttribute(
+    "d",
+    "M11 11V7.5a2.5 2.5 0 0 1 5 0V11h3.2a1.5 1.5 0 0 1 1.4 2.1l-2.2 6.4A2 2 0 0 1 17.6 20H11"
+  );
+  svg.appendChild(pathStem);
+  svg.appendChild(pathThumb);
+  return svg;
+}
+
+function resolveFeedback(options, button) {
+  if (options.feedback) {
+    return options.feedback;
+  }
+  if (options.feedbackElement) {
+    return createGrantFeedbackReporter(options.feedbackElement, options.t);
+  }
+  let legacyNode = null;
+  return {
+    reportSuccess: function (award) {
+      if (!legacyNode && button.parentNode) {
+        legacyNode = document.createElement("p");
+        legacyNode.className = "message-list__grant-feedback";
+        button.parentNode.appendChild(legacyNode);
+      }
+      if (legacyNode) {
+        legacyNode.hidden = false;
+        legacyNode.setAttribute("role", "status");
+        legacyNode.setAttribute("aria-live", "polite");
+        legacyNode.textContent = awardGrantStatus(options.t, award);
+      }
+    },
+    reportFailure: function () {
+      if (!legacyNode && button.parentNode) {
+        legacyNode = document.createElement("p");
+        legacyNode.className = "message-list__grant-feedback";
+        button.parentNode.appendChild(legacyNode);
+      }
+      if (legacyNode) {
+        legacyNode.hidden = false;
+        legacyNode.setAttribute("role", "alert");
+        legacyNode.removeAttribute("aria-live");
+        legacyNode.textContent = awardGrantFailure(options.t);
+      }
+    },
+  };
+}
+
+async function postAwardGrant(message, award, resolveURL) {
+  const response = await fetch(resolveURL("/api/awards/grant"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(awardGrantRequest(message, award)),
+  });
+  if (!response.ok) {
+    throw new Error("grant failed");
+  }
+}
+
+export function createStreamerLikeControl(message, options) {
+  const likeAward = options.likeAward;
+  if (!likeAward) {
+    return null;
+  }
+  const resolveURL = options.resolveURL;
+  const label = likeAwardLabel(likeAward);
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "message-list__like message-list__icon-button has-tooltip";
+  button.setAttribute("aria-label", label);
+  button.appendChild(createThumbsUpIcon());
+
+  const tooltip = document.createElement("span");
+  tooltip.className = "ui-tooltip";
+  tooltip.textContent = label;
+  button.appendChild(tooltip);
+
+  const feedback = resolveFeedback(options, button);
+  let grantInFlight = false;
+
+  button.addEventListener("click", async function () {
+    if (grantInFlight || button.disabled) {
+      return;
+    }
+    grantInFlight = true;
+    button.disabled = true;
+    try {
+      await postAwardGrant(message, likeAward, resolveURL);
+      feedback.reportSuccess(likeAward);
+    } catch {
+      feedback.reportFailure();
+    } finally {
+      grantInFlight = false;
+      button.disabled = false;
+    }
+  });
+
+  return button;
+}
+
+export function mountMessageGrantActions(actionsContainer, feedbackElement, message, options) {
+  if (!messageCanBeRewarded(message) || !actionsContainer) {
+    return;
+  }
+  const awards = getCachedAwards();
+  const likeAward = findLikeAward(awards);
+  const grantOptions = Object.assign({}, options, { feedbackElement: feedbackElement });
+  if (likeAward) {
+    const likeControl = createStreamerLikeControl(message, Object.assign({}, grantOptions, { likeAward: likeAward }));
+    if (likeControl) {
+      actionsContainer.appendChild(likeControl);
+    }
+  }
+  actionsContainer.appendChild(createRewardControl(message, grantOptions));
 }
 
 export function createRewardControl(message, options) {
@@ -151,23 +340,11 @@ export function createRewardControl(message, options) {
   tooltip.textContent = t("reward.action");
   button.appendChild(tooltip);
 
+  const feedback = resolveFeedback(options, button);
+
   let activePicker = null;
   let dismissHandler = null;
-  let feedback = null;
   let grantInFlight = false;
-
-  function reportFeedback(message) {
-    if (!feedback) {
-      feedback = document.createElement("p");
-      feedback.className = "message-list__reward-feedback";
-      feedback.setAttribute("role", "status");
-      feedback.setAttribute("aria-live", "polite");
-      if (button.parentNode) {
-        button.parentNode.appendChild(feedback);
-      }
-    }
-    feedback.textContent = message;
-  }
 
   function dismissPicker() {
     if (grantInFlight) {
@@ -191,7 +368,6 @@ export function createRewardControl(message, options) {
     }
 
     button.disabled = true;
-    invalidateAwardsCache();
 
     const picker = document.createElement("div");
     picker.className = "reward-picker";
@@ -231,7 +407,7 @@ export function createRewardControl(message, options) {
 
     let awards;
     try {
-      awards = await loadAwards(resolveURL);
+      awards = pickerAwardsFromCatalog(await loadAwards(resolveURL));
     } catch {
       status.textContent = awardGrantFailure(t);
       status.setAttribute("role", "alert");
@@ -295,7 +471,6 @@ export function createRewardControl(message, options) {
     grantInFlight = true;
     button.disabled = true;
     setRewardItemPending(selectedItem, true);
-    const body = awardGrantRequest(message, award);
 
     let errorNode = activePicker && activePicker.querySelector(".reward-picker__error");
     if (errorNode) {
@@ -303,19 +478,12 @@ export function createRewardControl(message, options) {
     }
 
     try {
-      const response = await fetch(resolveURL("/api/awards/grant"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!response.ok) {
-        throw new Error("grant failed");
-      }
+      await postAwardGrant(message, award, resolveURL);
       grantInFlight = false;
       if (activePicker === requestPicker) {
         dismissPicker();
       }
-      reportFeedback(awardGrantStatus(t, award));
+      feedback.reportSuccess(award);
     } catch {
       grantInFlight = false;
       enableRewardRetry(button);

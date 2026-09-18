@@ -150,18 +150,24 @@
 
 .message-list__meta {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   color: var(--subtle);
   font-size: 12px;
 }
 
 .message-list__user {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
   color: var(--message-accent, var(--amber));
   font-size: 16px;
   font-weight: 800;
   letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-shadow: 0 0 14px color-mix(in srgb, var(--message-accent, var(--amber)) 22%, transparent);
 }
 
@@ -216,6 +222,7 @@
 
 .message-list__platform {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   min-height: 22px;
   padding: 2px 7px;
@@ -230,6 +237,7 @@
 }
 
 .message-list__time {
+  flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
 

@@ -9,9 +9,9 @@
 > **Allowed fallout**: starter catalog tests, catalog list tests, progression unlock tests
 > **Blocked**: dock Like icon, picker filter, overlay operator chrome, auto-grant, Goose tables, signing
 
-- [ ] 1.1 Add `on_point` to locale starter awards (20, ping, 5000 ms, RU/EN names and splash).
-- [ ] 1.2 One-time bootstrap: insert-if-absent `on_point` and `achievement_on_point`; pending locale then `1`; never rewrite or recreate after delete.
-- [ ] 1.3 Tests: fresh ten-award catalog; upgrade insert; keep existing `on_point`; delete+restart; tenth grant unlocks Sync without extra XP; ru-RU vs en-GB copy.
+- [x] 1.1 Add `on_point` to locale starter awards (20, ping, 5000 ms, RU/EN names and splash).
+- [x] 1.2 One-time bootstrap: insert-if-absent `on_point` and `achievement_on_point`; pending locale then `1`; never rewrite or recreate after delete.
+- [x] 1.3 Tests: fresh ten-award catalog; upgrade insert; keep existing `on_point`; delete+restart; tenth grant unlocks Sync without extra XP; ru-RU vs en-GB copy.
 
 ## Slice: Streamer Like icon and stable dock actions
 
@@ -22,10 +22,10 @@
 > **Allowed fallout**: reward-picker tests, dock CSS nowrap, i18n tests
 > **Blocked**: second On Point icon, picker reorder, overlay buttons, hotkeys, concept/roadmap expansion
 
-- [ ] 2.1 Prefetch awards on Live/dock load; render Like icon with aria-label when `like` exists; hide when absent or no `user_id`.
-- [ ] 2.2 Like posts the same grant body as Reward with `award_id` `like`; picker lists remaining types only.
-- [ ] 2.3 Move success/error out of wrapping `.message-list__actions` so the action cluster stays on one line in a narrow dock.
-- [ ] 2.4 RU/EN tooltip/aria and success copy; Russian `[Unreleased]` bullets for В точку, Синхрон, quick Like, and the dock jump fix.
+- [x] 2.1 Prefetch awards on Live/dock load; render Like icon with aria-label when `like` exists; hide when absent or no `user_id`.
+- [x] 2.2 Like posts the same grant body as Reward with `award_id` `like`; picker lists remaining types only.
+- [x] 2.3 Move success/error out of wrapping `.message-list__actions` so the action cluster stays on one line in a narrow dock.
+- [x] 2.4 RU/EN tooltip/aria and success copy; Russian `[Unreleased]` bullets for В точку, Синхрон, quick Like, and the dock jump fix.
 
 ## Verification
 
@@ -42,10 +42,10 @@ openspec validate on-point-and-quick-like --strict
 ```
 
 ## Gate: qa
-- [ ] Q.1 Execute `qa_plan.md` P0 Live + `/dock/messages` + overlay transparency; record no-wrap evidence or skip OBS packaging.
+- [x] Q.1 Execute `qa_plan.md` P0 Live + `/dock/messages` + overlay transparency; record no-wrap evidence or skip OBS packaging.
 
 ## Gate: review
-- [ ] R.1 Fresh diff review; CRITICAL=0; affected checks green.
+- [x] R.1 Fresh diff review; CRITICAL=0; affected checks green.
 
 ## Gate: distribution-readiness
-- [ ] D.1 Confirm no installer/signing/package-layout change; `go build ./...` succeeds; `openspec validate on-point-and-quick-like --strict`.
+- [x] D.1 Confirm no installer/signing/package-layout change; `go build ./...` succeeds; `openspec validate on-point-and-quick-like --strict`.

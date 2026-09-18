@@ -361,16 +361,17 @@ body {
 
 .message-list__meta {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 6px;
+  min-width: 0;
   color: #94949d;
   font-size: 11px;
 }
 
 .message-list__user {
+  flex: 1 1 auto;
   min-width: 0;
-  max-width: 100%;
   overflow: hidden;
   color: var(--message-accent, #e2b635);
   font-size: 14px;
@@ -423,6 +424,7 @@ body {
 }
 
 .message-list__platform {
+  flex-shrink: 0;
   padding: 1px 5px;
   border: 1px solid #3a3a40;
   border-radius: 3px;
@@ -435,13 +437,25 @@ body {
 }
 
 .message-list__time {
+  flex-shrink: 0;
   color: #777780;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .message-list__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
+  flex-shrink: 0;
+}
+
+.message-list__icon-button {
+  width: 28px;
+  min-width: 28px;
+  min-height: 28px;
 }
 
 .message-list__reward {

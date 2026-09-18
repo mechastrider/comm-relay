@@ -11,6 +11,7 @@ import {
   previewStreamerName,
   renderSplashPreview,
 } from "./catalog-template.js";
+import { invalidateAwardsCache } from "/shared/reward-picker.js?v=5";
 import { createCatalogMediaController } from "./catalog-media-ui.js?v=2";
 
 const awardMedia = createCatalogMediaController({
@@ -468,6 +469,7 @@ async function saveAward() {
     creatingNew = false;
     selectedAwardId = String(data.id || selectedAwardId || "");
     awardMedia.commitSavedRecord(data);
+    invalidateAwardsCache();
     await loadAwardsCatalog();
     selectAward(selectedAwardId, false);
   } catch (err) {
@@ -526,6 +528,7 @@ async function deleteAward() {
     creatingNew = false;
     awardMedia.releaseSavedAssets();
     closeDeletePrompt();
+    invalidateAwardsCache();
     await loadAwardsCatalog();
     syncEditorVisibility();
     if (selectedAwardId) {

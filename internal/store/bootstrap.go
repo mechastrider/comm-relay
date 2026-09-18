@@ -83,6 +83,16 @@ func prepareStarterCatalogBootstrap(db *sql.DB, gooseVersion int, locale string)
 			return rollbackStarterCatalogTransaction(tx, errors.Errorf("prepare social catalog bootstrap state: %w", err))
 		}
 	}
+	if gooseVersion < onPointCatalogIntroGooseVersion {
+		if _, err := tx.Exec(
+			`INSERT INTO store_bootstrap (key, value) VALUES (?, ?)
+			 ON CONFLICT(key) DO NOTHING`,
+			onPointCatalogBootstrapKey,
+			starterCatalogPendingPrefix+normalizeStarterLocale(locale),
+		); err != nil {
+			return rollbackStarterCatalogTransaction(tx, errors.Errorf("prepare on-point catalog bootstrap state: %w", err))
+		}
+	}
 
 	if err := tx.Commit(); err != nil {
 		return errors.Errorf("commit starter catalog bootstrap preparation: %w", err)
