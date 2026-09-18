@@ -318,6 +318,28 @@ The server SHALL expose `POST /api/overlay-debug/scenario/fire` and `POST /api/o
 - **THEN** the server returns HTTP 200 with status `started`, a run ID, and `delivered_clients` equal to zero
 - **AND** schedules no delayed scenario step
 
+### Requirement: Command catalog exposes social action fields
+`GET /api/commands` and successful `POST /api/commands/create` and `POST /api/commands/update` SHALL include `action` values `alert`, `show_leaderboard`, `like`, and `buff`. Like requests MUST include `award_id`; omitted or unknown ids SHALL return HTTP 400 with a field error on `award_id`. Buff requests MUST include `points` as an integer from 1 through 1000; omitted or out-of-range values SHALL return HTTP 400 with a field error on `points`. Alert and show-leaderboard saves MUST ignore or clear those social fields. Routes stay POST-action.
+
+#### Scenario: Create like via API
+- **WHEN** the client posts `POST /api/commands/create` with `trigger` `like`, `action` `like`, and `award_id` `viewer_like`
+- **THEN** `GET /api/commands` returns that action and award id
+
+#### Scenario: Buff points required
+- **WHEN** the client posts action `buff` without `points`
+- **THEN** the response is HTTP 400 with a field error on `points`
+
+### Requirement: Config and levels expose social policy
+`GET /api/config` and successful config updates SHALL include `buffs_per_award_per_viewer` and `buff_max_unique_viewers` as integers ≥ 0. Level get/create/update JSON SHALL include `like_quota` and `buff_quota` as integers 0–100. Unknown fields MUST still be rejected. Identifiers stay in query or JSON bodies.
+
+#### Scenario: Read defaults
+- **WHEN** the admin requests `GET /api/config` after additive defaults
+- **THEN** the JSON includes `buffs_per_award_per_viewer` 1 and `buff_max_unique_viewers` 5
+
+#### Scenario: Invalid cap
+- **WHEN** an update sets `buff_max_unique_viewers` to -1
+- **THEN** the save is rejected with a field error on `buff_max_unique_viewers`
+
 ### Requirement: Command JSON includes aliases
 `GET /api/commands` and successful `POST /api/commands/create` and `POST /api/commands/update` responses SHALL include `aliases` as a JSON array of slugs (empty array when none). Create and update requests MAY include `aliases`. Omitted `aliases` SHALL mean an empty list. Unknown fields MUST still be rejected. Duplicate, invalid, or colliding aliases MUST return HTTP 400 with a field error on `aliases`. A trigger that collides with another command's alias MUST return HTTP 400 with a field error on `trigger`. Routes stay POST-action; no new command endpoints.
 
@@ -342,7 +364,7 @@ The server SHALL expose `POST /api/overlay-debug/scenario/fire` and `POST /api/o
 - **THEN** the stored command has `aliases` `[]`
 
 ### Requirement: Recent messages include in-memory command outcomes
-`GET` recent-message responses SHALL include optional `command_outcome` on a message when the process still holds an outcome for that platform plus source id. The object SHALL use `trigger`, `status` (`fired` or `cooldown`), and integer `cooldown_remaining_ms` matching the live `command_outcome` frame at read time. Messages without a stored outcome MUST omit the field. A process restart MUST NOT reconstruct outcomes from SQLite.
+`GET` recent-message responses SHALL include optional `command_outcome` on a message when the process still holds an outcome for that platform plus source id. The object SHALL use `trigger`, `status` (`fired`, `cooldown`, or `rejected`), and integer `cooldown_remaining_ms` matching the live `command_outcome` frame at read time. When `status` is `rejected`, the object SHALL include `reason` and MAY include `reason_label` as on the WebSocket frame. Messages without a stored outcome MUST omit the field. A process restart MUST NOT reconstruct outcomes from SQLite.
 
 #### Scenario: Recent cooldown line
 - **WHEN** admin or dock loads recent messages during an active cooldown

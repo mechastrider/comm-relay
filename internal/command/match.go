@@ -18,5 +18,6 @@ type LookupMatch struct {
 	Command       *store.Command
 	Kind          string
 	Token         string
+	Remainder     string
 	AmbiguousTypo bool
 }

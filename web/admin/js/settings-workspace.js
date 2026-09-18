@@ -169,6 +169,12 @@ function collectSectionValuesFromDOM(sectionId) {
         ? Number.parseInt(dom.activitySessionLimitInput.value, 10)
         : 10,
       activity_xp: dom.activityXPInput ? Number.parseInt(dom.activityXPInput.value, 10) : 1,
+      buffs_per_award_per_viewer: dom.buffsPerAwardPerViewerInput
+        ? Number.parseInt(dom.buffsPerAwardPerViewerInput.value, 10)
+        : 1,
+      buff_max_unique_viewers: dom.buffMaxUniqueViewersInput
+        ? Number.parseInt(dom.buffMaxUniqueViewersInput.value, 10)
+        : 5,
       day_reset_hour: dom.dayResetHourInput
         ? Number.parseInt(dom.dayResetHourInput.value, 10)
         : 6,
@@ -337,6 +343,12 @@ function applySectionValuesToDOM(sectionId, values) {
     }
     if (dom.activityXPInput) {
       dom.activityXPInput.value = String(values.activity_xp);
+    }
+    if (dom.buffsPerAwardPerViewerInput) {
+      dom.buffsPerAwardPerViewerInput.value = String(values.buffs_per_award_per_viewer ?? 1);
+    }
+    if (dom.buffMaxUniqueViewersInput) {
+      dom.buffMaxUniqueViewersInput.value = String(values.buff_max_unique_viewers ?? 5);
     }
     if (dom.dayResetHourInput) {
       dom.dayResetHourInput.value = String(values.day_reset_hour);
@@ -543,6 +555,20 @@ function validateSettingsSection(sectionId, payload) {
     if (!Number.isFinite(payload.activity_xp) || payload.activity_xp < 0) {
       setFieldError("activity_xp", "Activity XP must be 0 or greater.");
       firstInvalid = firstInvalid || dom.activityXPInput;
+    }
+    if (
+      !Number.isFinite(payload.buffs_per_award_per_viewer) ||
+      payload.buffs_per_award_per_viewer < 0
+    ) {
+      setFieldError("buffs_per_award_per_viewer", t("iface.buffsPerAwardPerViewerError"));
+      firstInvalid = firstInvalid || dom.buffsPerAwardPerViewerInput;
+    }
+    if (
+      !Number.isFinite(payload.buff_max_unique_viewers) ||
+      payload.buff_max_unique_viewers < 0
+    ) {
+      setFieldError("buff_max_unique_viewers", t("iface.buffMaxUniqueViewersError"));
+      firstInvalid = firstInvalid || dom.buffMaxUniqueViewersInput;
     }
     if (
       !Number.isFinite(payload.day_reset_hour) ||

@@ -111,7 +111,7 @@ After a successful config update that changes `hide_command_messages` or `hide_c
 - **THEN** connected overlay clients receive the updated cooldown-visibility flag
 
 ### Requirement: Command outcomes use a dedicated WebSocket envelope
-The production `/ws` feed SHALL broadcast JSON with `type` `command_outcome`, `message_platform`, `message_id`, `trigger`, `status` (`fired` or `cooldown`), and integer `cooldown_remaining_ms` (≥ 0). `trigger` MUST be the canonical catalog trigger of the matched command when the chat line used an alias or unique one-edit typo. `message_platform` and `message_id` SHALL identify the matched chat line using the same platform plus source id as `message` / `message_deleted`. Frames for cooldown MUST include remaining milliseconds until that identity may fire the same command again. Frames for `fired` MAY set `cooldown_remaining_ms` to the command's configured cooldown in milliseconds (0 when the command has no cooldown). The `message` frame for that line SHALL set `is_command` true on exact trigger, exact alias, or unique typo match, and MUST remain ordinary (`is_command` absent or false) when the typo is ambiguous. Clients that ignore the type MUST continue processing `message`, `alert`, and other existing frames. The server MUST NOT consume command cooldown when tagging `is_command` on the `message` frame.
+The production `/ws` feed SHALL broadcast JSON with `type` `command_outcome`, `message_platform`, `message_id`, `trigger`, `status` (`fired`, `cooldown`, or `rejected`), and integer `cooldown_remaining_ms` (≥ 0). When `status` is `rejected`, the frame SHALL include `reason` as one of `missing_arg`, `not_found`, `ambiguous`, `self`, `no_award`, `quota`, `already_buffed`, or `award_full`, and MAY include locale-safe `reason_label` (`уточни` / `clarify` for `ambiguous`; short labels for other reasons). `trigger` MUST be the canonical catalog trigger of the matched command when the chat line used an alias or unique one-edit typo. `message_platform` and `message_id` SHALL identify the matched chat line using the same platform plus source id as `message` / `message_deleted`. Frames for cooldown MUST include remaining milliseconds until that identity may fire the same command again. Frames for `fired` MAY set `cooldown_remaining_ms` to the command's configured cooldown in milliseconds (0 when the command has no cooldown). Rejected frames SHALL set `cooldown_remaining_ms` to 0 unless a cooldown also applies. The `message` frame for that line SHALL set `is_command` true on exact trigger, exact alias, unique typo match, or a matched social command including rejections, and MUST remain ordinary (`is_command` absent or false) when the **command-trigger** typo is ambiguous. Clients that ignore the type MUST continue processing `message`, `alert`, and other existing frames. The server MUST NOT consume command cooldown when tagging `is_command` on the `message` frame.
 
 #### Scenario: Fired outcome
 - **WHEN** `!gg` fires for a Twitch line with source id `abc`
@@ -136,6 +136,15 @@ The production `/ws` feed SHALL broadcast JSON with `type` `command_outcome`, `m
 #### Scenario: Unrelated client
 - **WHEN** a leaderboard-only client receives `command_outcome`
 - **THEN** it does not treat the frame as a ranking snapshot or chat row
+
+#### Scenario: Rejected like without nick
+- **WHEN** Alice sends `!like` with no remainder
+- **THEN** clients receive `status` `rejected`, `reason` `missing_arg`, `trigger` `like`, and `is_command` true on the message
+
+#### Scenario: Ambiguous nick is still a command
+- **WHEN** Alice sends `!like alicx` and two session viewers sit at distance 1
+- **THEN** clients receive `status` `rejected` and `reason` `ambiguous`
+- **AND** the message frame has `is_command` true
 
 ### Requirement: Visibility uses a dedicated WebSocket envelope
 The production `/ws` feed SHALL broadcast `leaderboard_visibility` frames containing `state` (`hidden`, `timed`, or `pinned`), `policy`, boolean `visible`, nullable RFC3339 `visible_until`, and `reason` (`startup`, `policy`, `manual`, `award`, `rank_change`, `interval`, or `command`). Ranking `leaderboard` frames MUST remain data-only and MUST NOT imply visibility. Clients that ignore the new type SHALL continue processing existing frames.

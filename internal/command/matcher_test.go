@@ -25,23 +25,26 @@ func openTestStore(t *testing.T) *store.Store {
 func TestParseLine_WhenBangGG_ExpectTrigger(t *testing.T) {
 	t.Parallel()
 
-	trigger, ok := command.ParseLine("  !GG  ")
+	token, remainder, ok := command.ParseLine("  !GG  ")
 	require.True(t, ok)
-	require.Equal(t, "gg", trigger)
+	require.Equal(t, "gg", token)
+	require.Empty(t, remainder)
 }
 
 func TestParseLine_WhenNoBang_ExpectNoMatch(t *testing.T) {
 	t.Parallel()
 
-	_, ok := command.ParseLine("gg")
+	_, _, ok := command.ParseLine("gg")
 	require.False(t, ok)
 }
 
-func TestParseLine_WhenExtraWords_ExpectNoMatch(t *testing.T) {
+func TestParseLine_WhenExtraWords_ExpectTokenAndRemainder(t *testing.T) {
 	t.Parallel()
 
-	_, ok := command.ParseLine("!gg please")
-	require.False(t, ok)
+	token, remainder, ok := command.ParseLine("!gg please")
+	require.True(t, ok)
+	require.Equal(t, "gg", token)
+	require.Equal(t, "please", remainder)
 }
 
 func TestMatcher_WhenUnknownBang_ExpectNoMatch(t *testing.T) {

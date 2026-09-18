@@ -134,6 +134,10 @@ export function extractSectionValuesFromConfig(config, sectionId) {
         activity_session_limit:
           typeof cfg.activity_session_limit === "number" ? cfg.activity_session_limit : 10,
         activity_xp: typeof cfg.activity_xp === "number" ? cfg.activity_xp : 1,
+        buffs_per_award_per_viewer:
+          typeof cfg.buffs_per_award_per_viewer === "number" ? cfg.buffs_per_award_per_viewer : 1,
+        buff_max_unique_viewers:
+          typeof cfg.buff_max_unique_viewers === "number" ? cfg.buff_max_unique_viewers : 5,
         day_reset_hour: typeof cfg.day_reset_hour === "number" ? cfg.day_reset_hour : 6,
         hide_command_messages: Boolean(cfg.hide_command_messages),
         hide_command_cooldown_overlay: Boolean(cfg.hide_command_cooldown_overlay),
@@ -257,6 +261,8 @@ export function normalizeSectionValues(sectionId, values) {
       activity_interval_seconds: Number.parseInt(String(raw.activity_interval_seconds), 10),
       activity_session_limit: Number.parseInt(String(raw.activity_session_limit), 10),
       activity_xp: Number.parseInt(String(raw.activity_xp), 10),
+      buffs_per_award_per_viewer: Number.parseInt(String(raw.buffs_per_award_per_viewer), 10),
+      buff_max_unique_viewers: Number.parseInt(String(raw.buff_max_unique_viewers), 10),
       day_reset_hour: Number.parseInt(String(raw.day_reset_hour), 10),
       hide_command_messages: Boolean(raw.hide_command_messages),
       hide_command_cooldown_overlay: Boolean(raw.hide_command_cooldown_overlay),
@@ -365,6 +371,8 @@ export function applySectionToConfig(basePayload, sectionId, sectionValues) {
     next.activity_interval_seconds = data.activity_interval_seconds;
     next.activity_session_limit = data.activity_session_limit;
     next.activity_xp = data.activity_xp;
+    next.buffs_per_award_per_viewer = data.buffs_per_award_per_viewer;
+    next.buff_max_unique_viewers = data.buff_max_unique_viewers;
     next.day_reset_hour = data.day_reset_hour;
     next.hide_command_messages = data.hide_command_messages;
     next.hide_command_cooldown_overlay = data.hide_command_cooldown_overlay;

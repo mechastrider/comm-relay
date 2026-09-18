@@ -18,7 +18,7 @@ func TestStarterCatalog_WhenFreshRussianDatabase_ExpectLocalizedSeeds(t *testing
 
 	commands, err := s.ListCommands()
 	require.NoError(t, err)
-	require.Len(t, commands, 2)
+	require.Len(t, commands, 4)
 
 	byTrigger := map[string]store.Command{}
 	for _, cmd := range commands {
@@ -33,7 +33,7 @@ func TestStarterCatalog_WhenFreshRussianDatabase_ExpectLocalizedSeeds(t *testing
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 9)
+	require.Len(t, awards, 10)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
@@ -69,7 +69,7 @@ func TestStarterCatalog_WhenFreshEnglishDatabase_ExpectEnglishSeeds(t *testing.T
 
 	commands, err := s.ListCommands()
 	require.NoError(t, err)
-	require.Len(t, commands, 2)
+	require.Len(t, commands, 4)
 
 	byTrigger := map[string]store.Command{}
 	for _, cmd := range commands {
@@ -81,7 +81,7 @@ func TestStarterCatalog_WhenFreshEnglishDatabase_ExpectEnglishSeeds(t *testing.T
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 9)
+	require.Len(t, awards, 10)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
@@ -162,7 +162,7 @@ func TestStarterCatalog_WhenUpgradedExistingDatabase_ExpectCatalogUnchanged(t *t
 
 	commands, err := s.ListCommands()
 	require.NoError(t, err)
-	require.Len(t, commands, 2)
+	require.Len(t, commands, 4)
 
 	byTrigger := map[string]store.Command{}
 	for _, cmd := range commands {
@@ -374,7 +374,7 @@ func TestStarterCatalog_WhenUnsupportedLocale_ExpectRussianFallback(t *testing.T
 
 	commands, err := s.ListCommands()
 	require.NoError(t, err)
-	require.Len(t, commands, 2)
+	require.Len(t, commands, 4)
 
 	byTrigger := map[string]store.Command{}
 	for _, cmd := range commands {
@@ -388,7 +388,7 @@ func TestStarterCatalog_WhenLocaleEmpty_ExpectRussianFallback(t *testing.T) {
 
 	commands, err := s.ListCommands()
 	require.NoError(t, err)
-	require.Len(t, commands, 2)
+	require.Len(t, commands, 4)
 
 	byTrigger := map[string]store.Command{}
 	for _, cmd := range commands {

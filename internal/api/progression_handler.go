@@ -23,14 +23,23 @@ func newProgressionHandler(viewerStore *store.Store, hub *Hub) *progressionHandl
 }
 
 type progressionLevelResponse struct {
-	ID       string `json:"id"`
-	Title    string `json:"title"`
-	MinXP    int    `json:"min_xp"`
-	Announce bool   `json:"announce"`
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	MinXP     int    `json:"min_xp"`
+	LikeQuota int    `json:"like_quota"`
+	BuffQuota int    `json:"buff_quota"`
+	Announce  bool   `json:"announce"`
 }
 
 func progressionLevelFromStore(level store.ProgressionLevel) progressionLevelResponse {
-	return progressionLevelResponse{ID: level.ID, Title: level.Title, MinXP: level.MinXP, Announce: level.Announce}
+	return progressionLevelResponse{
+		ID:        level.ID,
+		Title:     level.Title,
+		MinXP:     level.MinXP,
+		LikeQuota: level.LikeQuota,
+		BuffQuota: level.BuffQuota,
+		Announce:  level.Announce,
+	}
 }
 
 type progressionAlertSettingsResponse struct {
@@ -167,10 +176,12 @@ func (h *progressionHandler) handleStatus(w http.ResponseWriter, r *http.Request
 }
 
 type progressionLevelRequest struct {
-	ID       string `json:"id"`
-	Title    string `json:"title"`
-	MinXP    int    `json:"min_xp"`
-	Announce bool   `json:"announce"`
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	MinXP     int    `json:"min_xp"`
+	LikeQuota int    `json:"like_quota"`
+	BuffQuota int    `json:"buff_quota"`
+	Announce  bool   `json:"announce"`
 }
 type progressionAchievementRequest struct {
 	ID           string `json:"id"`
@@ -232,7 +243,7 @@ func (h *progressionHandler) handleLevelCreate(w http.ResponseWriter, r *http.Re
 	if !ok {
 		return
 	}
-	item, err := h.viewerStore.CreateProgressionLevel(store.CreateProgressionLevelInput{ID: request.ID, Title: request.Title, MinXP: request.MinXP, Announce: request.Announce, Now: time.Now()})
+	item, err := h.viewerStore.CreateProgressionLevel(store.CreateProgressionLevelInput{ID: request.ID, Title: request.Title, MinXP: request.MinXP, LikeQuota: request.LikeQuota, BuffQuota: request.BuffQuota, Announce: request.Announce, Now: time.Now()})
 	if err != nil {
 		progressionMutationError(w, r, "create progression level", err)
 		return
@@ -248,7 +259,7 @@ func (h *progressionHandler) handleLevelUpdate(w http.ResponseWriter, r *http.Re
 	if !ok {
 		return
 	}
-	item, err := h.viewerStore.UpdateProgressionLevel(store.UpdateProgressionLevelInput{ID: request.ID, Title: request.Title, MinXP: request.MinXP, Announce: request.Announce, Now: time.Now()})
+	item, err := h.viewerStore.UpdateProgressionLevel(store.UpdateProgressionLevelInput{ID: request.ID, Title: request.Title, MinXP: request.MinXP, LikeQuota: request.LikeQuota, BuffQuota: request.BuffQuota, Announce: request.Announce, Now: time.Now()})
 	if err != nil {
 		progressionMutationError(w, r, "update progression level", err)
 		return

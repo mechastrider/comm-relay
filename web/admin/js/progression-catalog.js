@@ -99,7 +99,14 @@ function achievementCondition(item) {
 }
 
 function levelPayload() {
-  return { id: value("progression-level-id"), title: value("progression-level-title"), min_xp: number("progression-level-xp", -1), announce: checked("progression-level-announce") };
+  return {
+    id: value("progression-level-id"),
+    title: value("progression-level-title"),
+    min_xp: number("progression-level-xp", -1),
+    announce: checked("progression-level-announce"),
+    like_quota: number("progression-level-like-quota", 0),
+    buff_quota: number("progression-level-buff-quota", 0),
+  };
 }
 
 function fingerprint(payload) { return JSON.stringify(payload); }
@@ -139,6 +146,8 @@ function fillLevel(item) {
   el("progression-level-title").value = item?.title || "";
   el("progression-level-xp").value = String(item?.min_xp ?? 0);
   el("progression-level-announce").checked = item ? item.announce !== false : true;
+  el("progression-level-like-quota").value = String(item?.like_quota ?? 1);
+  el("progression-level-buff-quota").value = String(item?.buff_quota ?? 1);
   const baseline = item?.min_xp === 0;
   el("progression-level-xp").readOnly = baseline;
   el("progression-level-delete").disabled = baseline;
@@ -170,7 +179,10 @@ function fillAchievement(item) {
 }
 
 function render() {
-  renderList(el("progression-level-list"), levels, selectedLevelID, (item) => item.title + " · " + item.min_xp + " XP", function (item) {
+  renderList(el("progression-level-list"), levels, selectedLevelID, function (item) {
+    return item.title + " · " + item.min_xp + " XP · " +
+      t("progression.quotaListShort", { like: item.like_quota ?? 0, buff: item.buff_quota ?? 0 });
+  }, function (item) {
     allowLevelChange(document.activeElement).then(function (allowed) { if (allowed) { selectedLevelID = item.id; fillLevel(item); render(); } });
   });
   renderList(el("progression-achievement-list"), filteredAchievements(), selectedAchievementID, (item) => item.name + " · " + achievementCondition(item), function (item) {

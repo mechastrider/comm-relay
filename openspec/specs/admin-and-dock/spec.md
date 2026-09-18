@@ -64,7 +64,7 @@ Admin and dock SHALL share locale catalogs. The operator MAY choose Russian or E
 - **THEN** the matching recent command line shows frozen chrome and remaining time
 
 ### Requirement: Admin and dock show accepted versus frozen command lines
-Live Messages and `/dock/messages` SHALL mark a matched command line as accepted when its outcome is `fired`, including `show_leaderboard` with no splash, and as frozen when its outcome is `cooldown`. Frozen rows SHALL show a live countdown of remaining cooldown time. Accepted rows MUST NOT show a countdown. Overlay chat MUST NOT use this countdown. After a page reload, while the same process is still running, admin and dock SHALL restore those statuses from recent messages plus the process-local outcome map. A process restart SHALL clear restored outcomes, matching in-memory cooldown.
+Live Messages and `/dock/messages` SHALL mark a matched command line as accepted when its outcome is `fired`, including `show_leaderboard` with no splash, and as frozen when `command_outcome` is `rejected` or `cooldown`. Rejected rows SHALL show the localized reason label and MUST NOT show a cooldown countdown unless status is `cooldown`. Frozen cooldown rows SHALL show a live countdown of remaining cooldown time. Accepted rows MUST NOT show a countdown. Overlay chat MUST NOT use this countdown. After a page reload, while the same process is still running, admin and dock SHALL restore those statuses from recent messages plus the process-local outcome map, including rejected outcomes restored the same way as cooldown. A process restart SHALL clear restored outcomes, matching in-memory cooldown.
 
 #### Scenario: Accepted leaderboard command
 - **WHEN** `!leaderboard` fires
@@ -77,6 +77,10 @@ Live Messages and `/dock/messages` SHALL mark a matched command line as accepted
 #### Scenario: Reload while process lives
 - **WHEN** the operator reloads admin or dock before cooldown expires
 - **THEN** the frozen line still shows remaining time from the in-memory map
+
+#### Scenario: Ambiguous like in the dock
+- **WHEN** a dock client receives `rejected` / `ambiguous` for `!like alicx`
+- **THEN** that line shows frozen chrome and the clarify label
 
 ### Requirement: Settings can hide overlay cooldown rows
 Settings SHALL offer a boolean control for `hide_command_cooldown_overlay` next to `hide_command_messages`, saved through `POST /api/config/update`. Default SHALL be false (show a short overlay cooldown). Copy SHALL explain that this only hides frozen cooldown rows on `/overlay`, not admin or dock, and is independent of hiding successful command lines.
@@ -562,6 +566,31 @@ Settings SHALL expose policy, display duration, cooldown, dirty interval, award 
 #### Scenario: Narrow dock
 - **WHEN** the dock is 300 CSS pixels wide
 - **THEN** controls wrap or compact without horizontal scrolling and icon-only variants have hover/focus tooltips and accessible names
+
+### Requirement: Command editor supports like and buff actions
+The Audience command editor SHALL let the operator choose Alert, Show leaderboard, Like, or Buff. Like SHALL keep trigger, aliases, enabled, and cooldown, require an award-type selector (`award_id`), and hide splash presentation fields. Buff SHALL keep trigger, aliases, enabled, and cooldown, require a positive `points` field, and hide splash presentation fields. The catalog list MAY show the action as secondary text.
+
+#### Scenario: Create like command in Audience
+- **WHEN** the operator chooses Like, selects award `viewer_like`, and saves trigger `like`
+- **THEN** the catalog row is distinguishable as Like and `!like` matches after save
+
+#### Scenario: Create buff command in Audience
+- **WHEN** the operator chooses Buff, sets points 5, and saves trigger `buff`
+- **THEN** the catalog row is distinguishable as Buff and `!buff` matches after save
+
+### Requirement: Settings expose buff caps
+Settings SHALL offer integer controls for `buffs_per_award_per_viewer` (default 1) and `buff_max_unique_viewers` (default 5), saved through `POST /api/config/update`, with localized copy that these caps apply per operator award. Values MUST be integers ≥ 0. The dock MUST NOT edit these fields.
+
+#### Scenario: Save caps
+- **WHEN** the operator sets unique buffers to 8 and saves
+- **THEN** `POST /api/config/update` persists `buff_max_unique_viewers` 8
+
+### Requirement: Level editor exposes social quotas
+The Audience level editor SHALL show `like_quota` and `buff_quota` beside existing level fields, validate 0–100, and save through the existing level update action. The list MAY show quotas as secondary text.
+
+#### Scenario: Edit veteran quotas
+- **WHEN** the operator sets veteran `buff_quota` to 6 and saves
+- **THEN** later buffs from a veteran viewer use quota 6
 
 ### Requirement: Command editor supports leaderboard actions
 The Audience command editor SHALL let the operator choose Alert or Show leaderboard. Alert SHALL retain all current splash, media, sound, and duration fields. Show leaderboard SHALL keep trigger, aliases, enabled, and per-viewer cooldown controls, hide irrelevant alert presentation fields, and explain that the command shows the board for its configured global display duration. No leaderboard command SHALL be created automatically.

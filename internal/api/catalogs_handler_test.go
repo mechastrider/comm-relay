@@ -27,15 +27,19 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 		} `json:"commands"`
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
-	require.Len(t, payload.Commands, 2)
+	require.Len(t, payload.Commands, 4)
 
 	triggers := map[string]bool{}
 	for _, cmd := range payload.Commands {
 		triggers[cmd.Trigger] = true
-		require.Equal(t, "alert", cmd.Action)
+		if cmd.Trigger == "gg" || cmd.Trigger == "hi" {
+			require.Equal(t, "alert", cmd.Action)
+		}
 	}
 	require.True(t, triggers["gg"])
 	require.True(t, triggers["hi"])
+	require.True(t, triggers["like"])
+	require.True(t, triggers["buff"])
 
 	awardsRec := httptest.NewRecorder()
 	env.Handler.ServeHTTP(awardsRec, httptest.NewRequest(http.MethodGet, "/api/awards", nil))
@@ -47,7 +51,7 @@ func TestCommands_WhenFreshMigrate_ExpectSeedsInList(t *testing.T) {
 		} `json:"awards"`
 	}
 	require.NoError(t, json.Unmarshal(awardsRec.Body.Bytes(), &awardsPayload))
-	require.Len(t, awardsPayload.Awards, 9)
+	require.Len(t, awardsPayload.Awards, 10)
 
 	ids := map[string]bool{}
 	for _, award := range awardsPayload.Awards {

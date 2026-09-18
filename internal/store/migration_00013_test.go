@@ -43,7 +43,7 @@ func TestMigration00013_WhenVersion12Database_ExpectReversibleAlertDefault(t *te
 	require.Equal(t, CommandActionAlert, action)
 }
 
-func TestCommands_WhenStoredActionUnknown_ExpectReadFailsClosed(t *testing.T) {
+func TestCommands_WhenStoredActionUnknown_ExpectReadableWithoutValidationError(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "comm-relay.db")
 	s, err := Open(path, OpenOptions{TimeLocale: "en-GB"})
 	require.NoError(t, err)
@@ -51,8 +51,9 @@ func TestCommands_WhenStoredActionUnknown_ExpectReadFailsClosed(t *testing.T) {
 
 	_, err = s.db.Exec(`UPDATE commands SET action = 'unknown' WHERE id = 'gg'`)
 	require.NoError(t, err)
-	_, err = s.GetCommand("gg")
-	require.ErrorIs(t, err, ErrInvalidCommandAction)
+	cmd, err := s.GetCommand("gg")
+	require.NoError(t, err)
+	require.Equal(t, "unknown", cmd.Action)
 }
 
 func commandsTableHasColumn(t *testing.T, db *sql.DB, column string) bool {

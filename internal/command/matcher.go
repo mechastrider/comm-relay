@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mechastrider/comm-relay/internal/nicks"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
@@ -34,22 +35,29 @@ func NewMatcher(s *store.Store) *Matcher {
 	}
 }
 
-// ParseLine returns the command trigger when line is a whole-line bang command.
-func ParseLine(line string) (trigger string, ok bool) {
-	normalized := strings.ToLower(strings.TrimSpace(line))
+// ParseLine returns the first bang token and trimmed remainder (may contain spaces).
+func ParseLine(line string) (token, remainder string, ok bool) {
+	normalized := strings.TrimSpace(line)
 	if !strings.HasPrefix(normalized, "!") {
-		return "", false
+		return "", "", false
 	}
 
-	trigger = strings.TrimSpace(normalized[1:])
-	if trigger == "" {
-		return "", false
-	}
-	if strings.ContainsAny(trigger, " \t") {
-		return "", false
+	body := strings.TrimSpace(normalized[1:])
+	if body == "" {
+		return "", "", false
 	}
 
-	return trigger, true
+	sep := strings.IndexAny(body, " \t")
+	if sep < 0 {
+		return strings.ToLower(body), "", true
+	}
+
+	token = strings.ToLower(strings.TrimSpace(body[:sep]))
+	remainder = strings.TrimSpace(body[sep:])
+	if token == "" {
+		return "", "", false
+	}
+	return token, remainder, true
 }
 
 // Lookup matches an enabled command without consuming cooldown.
@@ -67,22 +75,57 @@ func (m *Matcher) LookupMatch(line string) (LookupMatch, bool) {
 		return LookupMatch{}, false
 	}
 
-	token, ok := ParseLine(line)
+	token, remainder, ok := ParseLine(line)
 	if !ok {
 		return LookupMatch{}, false
 	}
 
 	commands, err := m.store.ListCommands()
 	if err != nil {
-		return LookupMatch{Token: token}, true
+		return LookupMatch{Token: token, Remainder: remainder}, true
 	}
 
+	if match, matched := m.matchTokenInCatalog(token, remainder, commands); matched {
+		return match, true
+	}
+
+	fuzzyIDs := fuzzyMatchCommandIDs(token, commands)
+	switch len(fuzzyIDs) {
+	case 0:
+		return LookupMatch{Token: token, Remainder: remainder}, true
+	case 1:
+		id := fuzzyIDs[0]
+		for i := range commands {
+			if commands[i].ID != id {
+				continue
+			}
+			cmd := &commands[i]
+			if RequiresEmptyRemainder(cmd.Action) && strings.TrimSpace(remainder) != "" {
+				return LookupMatch{}, false
+			}
+			return LookupMatch{
+				Command:   cmd,
+				Kind:      MatchKindFuzzy,
+				Token:     token,
+				Remainder: remainder,
+			}, true
+		}
+		return LookupMatch{Token: token, Remainder: remainder}, true
+	default:
+		return LookupMatch{Token: token, Remainder: remainder, AmbiguousTypo: true}, true
+	}
+}
+
+func (m *Matcher) matchTokenInCatalog(token, remainder string, commands []store.Command) (LookupMatch, bool) {
 	for i := range commands {
 		cmd := &commands[i]
 		if !cmd.Enabled || cmd.Trigger != token {
 			continue
 		}
-		return LookupMatch{Command: cmd, Kind: MatchKindExact, Token: token}, true
+		if RequiresEmptyRemainder(cmd.Action) && strings.TrimSpace(remainder) != "" {
+			return LookupMatch{}, false
+		}
+		return LookupMatch{Command: cmd, Kind: MatchKindExact, Token: token, Remainder: remainder}, true
 	}
 
 	for i := range commands {
@@ -91,9 +134,13 @@ func (m *Matcher) LookupMatch(line string) (LookupMatch, bool) {
 			continue
 		}
 		for _, alias := range cmd.Aliases {
-			if alias == token {
-				return LookupMatch{Command: cmd, Kind: MatchKindAlias, Token: token}, true
+			if alias != token {
+				continue
 			}
+			if RequiresEmptyRemainder(cmd.Action) && strings.TrimSpace(remainder) != "" {
+				return LookupMatch{}, false
+			}
+			return LookupMatch{Command: cmd, Kind: MatchKindAlias, Token: token, Remainder: remainder}, true
 		}
 	}
 
@@ -103,34 +150,16 @@ func (m *Matcher) LookupMatch(line string) (LookupMatch, bool) {
 			continue
 		}
 		if cmd.Trigger == token {
-			return LookupMatch{Token: token}, true
+			return LookupMatch{Token: token, Remainder: remainder}, true
 		}
 		for _, alias := range cmd.Aliases {
 			if alias == token {
-				return LookupMatch{Token: token}, true
+				return LookupMatch{Token: token, Remainder: remainder}, true
 			}
 		}
 	}
 
-	fuzzyIDs := fuzzyMatchCommandIDs(token, commands)
-	switch len(fuzzyIDs) {
-	case 0:
-		return LookupMatch{Token: token}, true
-	case 1:
-		id := fuzzyIDs[0]
-		for i := range commands {
-			if commands[i].ID == id {
-				return LookupMatch{
-					Command: &commands[i],
-					Kind:    MatchKindFuzzy,
-					Token:   token,
-				}, true
-			}
-		}
-		return LookupMatch{Token: token}, true
-	default:
-		return LookupMatch{Token: token, AmbiguousTypo: true}, true
-	}
+	return LookupMatch{}, false
 }
 
 func fuzzyMatchCommandIDs(token string, commands []store.Command) []string {
@@ -150,7 +179,7 @@ func fuzzyMatchCommandIDs(token string, commands []store.Command) []string {
 
 		matched := false
 		for _, name := range names {
-			if damerauLevenshtein(token, name) <= 1 {
+			if nicks.DamerauLevenshtein(token, name) <= 1 {
 				matched = true
 				break
 			}

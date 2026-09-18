@@ -401,6 +401,9 @@
                     <label for="progression-level-title" data-i18n="progression.title">Title</label><input id="progression-level-title" type="text" maxlength="64" required>
                     <label for="progression-level-xp" data-i18n="progression.minXP">Minimum XP</label><input id="progression-level-xp" type="number" min="0" required aria-describedby="progression-level-baseline-hint progression-level-error"><p id="progression-level-baseline-hint" class="field-hint" hidden data-i18n="progression.baselineProtected">The baseline title cannot be moved or deleted.</p><p id="progression-level-error" class="field-hint notice--error" role="alert" hidden></p>
                     <label class="checkbox"><input id="progression-level-announce" type="checkbox" checked><span data-i18n="progression.announce">Announce in OBS</span></label>
+                    <label for="progression-level-like-quota" data-i18n="progression.likeQuota">Like uses per stream</label><input id="progression-level-like-quota" type="number" min="0" max="100" step="1" value="1" aria-describedby="progression-level-quota-hint">
+                    <label for="progression-level-buff-quota" data-i18n="progression.buffQuota">Buff uses per stream</label><input id="progression-level-buff-quota" type="number" min="0" max="100" step="1" value="1" aria-describedby="progression-level-quota-hint">
+                    <p id="progression-level-quota-hint" class="field-hint" data-i18n="progression.quotaHint">Session limits for !like and !buff at this level (0–100).</p>
                     <div class="progression-form__actions"><button class="btn-physical btn-small" type="submit" data-i18n="catalog.save">Save</button><button id="progression-level-test" class="btn-physical btn-small" type="button" data-i18n="catalog.test">Test</button><button id="progression-level-delete" class="btn-physical btn-danger btn-small" type="button" data-i18n="catalog.delete">Delete</button></div>
                   </form>
                 </section>
@@ -479,13 +482,23 @@
                       <select id="command-action-input">
                         <option value="alert" data-i18n="commands.actionAlert">Show alert</option>
                         <option value="show_leaderboard" data-i18n="commands.actionLeaderboard">Show leaderboard</option>
+                        <option value="like" data-i18n="commands.actionLike">Like (viewer award)</option>
+                        <option value="buff" data-i18n="commands.actionBuff">Buff (operator award)</option>
                       </select>
                       <p id="command-action-hint" class="field-hint" data-i18n="commands.actionHint">Choose what CommRelay does when this command is used.</p>
                       <p id="command-action-error" class="field-error" role="alert" hidden></p>
                     </div>
-                    <div class="form__field">
-                      <label for="command-cooldown-input" data-i18n="commands.cooldownLabel">Cooldown (seconds)</label>
-                      <input id="command-cooldown-input" type="number" min="0" step="1" value="30" required>
+                    <div id="command-like-fields" class="form__field" hidden>
+                      <label for="command-award-input" data-i18n="commands.likeAwardLabel">Award type</label>
+                      <select id="command-award-input" aria-describedby="command-award-hint command-award-error"></select>
+                      <p id="command-award-hint" class="field-hint" data-i18n="commands.likeAwardHint">Viewer receives this award type when the command succeeds.</p>
+                      <p id="command-award-error" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <div id="command-buff-fields" class="form__field" hidden>
+                      <label for="command-points-input" data-i18n="commands.buffPointsLabel">Buff points</label>
+                      <input id="command-points-input" type="number" min="1" max="1000" step="1" inputmode="numeric" aria-describedby="command-points-hint command-points-error">
+                      <p id="command-points-hint" class="field-hint" data-i18n="commands.buffPointsHint">XP added to the latest operator award (1–1000).</p>
+                      <p id="command-points-error" class="field-error" role="alert" hidden></p>
                     </div>
                     <div id="command-alert-fields">
                     <div class="form__field">
@@ -574,6 +587,10 @@
                       <label for="command-duration-input" data-i18n="catalog.durationLabel">Duration (ms)</label>
                       <input id="command-duration-input" type="number" min="1" step="1" value="5000" required>
                     </div>
+                    </div>
+                    <div class="form__field">
+                      <label for="command-cooldown-input" data-i18n="commands.cooldownLabel">Cooldown (seconds)</label>
+                      <input id="command-cooldown-input" type="number" min="0" step="1" value="30" required>
                     </div>
                   </form>
                   <p id="commands-editor-empty" class="empty-state audience-catalog-editor__empty" data-i18n="commands.selectOrCreate">Select a command or create one.</p>
@@ -2321,6 +2338,18 @@
               <input id="activity-xp" name="activity_xp" type="number" min="0" step="1" inputmode="numeric">
               <p class="field-hint" data-i18n="iface.activityXPHint">XP added silently when a viewer becomes eligible. Chat lines alone no longer add unbounded XP.</p>
               <p id="activity-xp-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="buffs-per-award-per-viewer" data-i18n="iface.buffsPerAwardPerViewer">Buffs per award per viewer</label>
+              <input id="buffs-per-award-per-viewer" name="buffs_per_award_per_viewer" type="number" min="0" step="1" inputmode="numeric" aria-describedby="buffs-per-award-per-viewer-hint buffs-per-award-per-viewer-error">
+              <p id="buffs-per-award-per-viewer-hint" class="field-hint" data-i18n="iface.buffsPerAwardPerViewerHint">How many times one viewer can buff each operator award per stream.</p>
+              <p id="buffs-per-award-per-viewer-error" class="field-error" role="alert" hidden></p>
+            </div>
+            <div class="form__field">
+              <label for="buff-max-unique-viewers" data-i18n="iface.buffMaxUniqueViewers">Max unique buff viewers</label>
+              <input id="buff-max-unique-viewers" name="buff_max_unique_viewers" type="number" min="0" step="1" inputmode="numeric" aria-describedby="buff-max-unique-viewers-hint buff-max-unique-viewers-error">
+              <p id="buff-max-unique-viewers-hint" class="field-hint" data-i18n="iface.buffMaxUniqueViewersHint">Distinct viewers who can buff each operator award per stream (0 disables buffing).</p>
+              <p id="buff-max-unique-viewers-error" class="field-error" role="alert" hidden></p>
             </div>
             <div class="form__field">
               <label for="day-reset-hour" data-i18n="iface.dayResetHour">Day reset hour</label>

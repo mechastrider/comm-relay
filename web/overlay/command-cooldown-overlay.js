@@ -16,6 +16,10 @@ export function commandOutcomeKeyFromFrame(outcome) {
   return commandOutcomeMessageKey(outcome.message_platform, outcome.message_id);
 }
 
+export function isCommandOutcomeFreezeStatus(status) {
+  return status === "cooldown" || status === "rejected";
+}
+
 export function shouldIgnoreCommandOutcome(outcome, hideCommandCooldownOverlay) {
   if (hideCommandCooldownOverlay) {
     return true;
@@ -23,7 +27,7 @@ export function shouldIgnoreCommandOutcome(outcome, hideCommandCooldownOverlay) 
   if (!outcome || typeof outcome !== "object") {
     return true;
   }
-  return outcome.status !== "cooldown";
+  return !isCommandOutcomeFreezeStatus(outcome.status);
 }
 
 export function shouldHoldCommandMessageForOutcome(
@@ -63,7 +67,7 @@ export function planCommandOutcomeHandling(
       removeVisibleEntry: hideCommandMessages && hasEntry,
     };
   }
-  if (outcome.status !== "cooldown") {
+  if (!isCommandOutcomeFreezeStatus(outcome.status)) {
     return { action: "ignore", key: key };
   }
   if (hideCommandCooldownOverlay) {

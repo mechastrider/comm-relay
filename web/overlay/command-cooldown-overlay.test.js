@@ -18,16 +18,27 @@ import {
   takePendingCommandMessage,
 } from "./command-cooldown-overlay.js";
 
-test("shouldIgnoreCommandOutcome honors hide flag and cooldown status only", function () {
+test("shouldIgnoreCommandOutcome honors hide flag and freeze statuses", function () {
   const cooldown = {
     type: "command_outcome",
     message_platform: "twitch",
     message_id: "1",
     status: "cooldown",
   };
+  const rejected = { ...cooldown, status: "rejected" };
   assert.equal(shouldIgnoreCommandOutcome(cooldown, false), false);
+  assert.equal(shouldIgnoreCommandOutcome(rejected, false), false);
   assert.equal(shouldIgnoreCommandOutcome(cooldown, true), true);
+  assert.equal(shouldIgnoreCommandOutcome(rejected, true), true);
   assert.equal(shouldIgnoreCommandOutcome({ ...cooldown, status: "fired" }, false), true);
+});
+
+test("rejected outcome follows cooldown overlay plan when hide flag is off", function () {
+  const outcome = { status: "rejected", message_platform: "twitch", message_id: "r1" };
+  const plan = planCommandOutcomeHandling(outcome, false, false, true, false);
+  assert.equal(plan.action, "cooldown_apply");
+  const suppressed = planCommandOutcomeHandling(outcome, true, false, true, false);
+  assert.equal(suppressed.action, "cooldown_suppressed");
 });
 
 test("attach-before-message buffers by platform and id then applies on render", function () {

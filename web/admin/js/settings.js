@@ -341,6 +341,16 @@ export function applyConfig(config) {
         typeof config.activity_xp === "number" ? config.activity_xp : 1
       );
     }
+    if (dom.buffsPerAwardPerViewerInput) {
+      dom.buffsPerAwardPerViewerInput.value = String(
+        typeof config.buffs_per_award_per_viewer === "number" ? config.buffs_per_award_per_viewer : 1
+      );
+    }
+    if (dom.buffMaxUniqueViewersInput) {
+      dom.buffMaxUniqueViewersInput.value = String(
+        typeof config.buff_max_unique_viewers === "number" ? config.buff_max_unique_viewers : 5
+      );
+    }
     if (dom.dayResetHourInput) {
       dom.dayResetHourInput.value = String(
         typeof config.day_reset_hour === "number" ? config.day_reset_hour : 6
@@ -385,6 +395,12 @@ export function buildPayload() {
         ? Number.parseInt(dom.activitySessionLimitInput.value, 10)
         : 10,
       activity_xp: dom.activityXPInput ? Number.parseInt(dom.activityXPInput.value, 10) : 1,
+      buffs_per_award_per_viewer: dom.buffsPerAwardPerViewerInput
+        ? Number.parseInt(dom.buffsPerAwardPerViewerInput.value, 10)
+        : 1,
+      buff_max_unique_viewers: dom.buffMaxUniqueViewersInput
+        ? Number.parseInt(dom.buffMaxUniqueViewersInput.value, 10)
+        : 5,
       day_reset_hour: dom.dayResetHourInput
         ? Number.parseInt(dom.dayResetHourInput.value, 10)
         : 6,
@@ -485,6 +501,10 @@ export function composeConfigUpdateFromServer(serverConfig, overlayAppearance) {
       activity_interval_seconds: latest.activity_interval_seconds,
       activity_session_limit: latest.activity_session_limit,
       activity_xp: latest.activity_xp,
+      buffs_per_award_per_viewer:
+        typeof latest.buffs_per_award_per_viewer === "number" ? latest.buffs_per_award_per_viewer : 1,
+      buff_max_unique_viewers:
+        typeof latest.buff_max_unique_viewers === "number" ? latest.buff_max_unique_viewers : 5,
       day_reset_hour: latest.day_reset_hour,
       hide_command_messages: Boolean(latest.hide_command_messages),
       hide_command_cooldown_overlay: Boolean(latest.hide_command_cooldown_overlay),

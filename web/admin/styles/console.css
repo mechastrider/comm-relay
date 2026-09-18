@@ -178,6 +178,12 @@
   filter: saturate(0.72);
 }
 
+.message-list__item--command-rejected {
+  border-left-color: #9a6b3d;
+  opacity: 0.88;
+  filter: saturate(0.72);
+}
+
 .message-list__command-outcome {
   display: inline-flex;
   align-items: center;
@@ -201,6 +207,11 @@
 .message-list__item--command-cooldown .message-list__command-outcome {
   border-color: rgba(107, 122, 148, 0.55);
   color: #b8c2d4;
+}
+
+.message-list__item--command-rejected .message-list__command-outcome {
+  border-color: rgba(154, 107, 61, 0.55);
+  color: #d4b896;
 }
 
 .message-list__platform {

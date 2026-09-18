@@ -22,6 +22,8 @@ import {
   buildCommandPayload,
   commandUsesAlertPresentation,
   normalizeCommandAction,
+  COMMAND_ACTION_LIKE,
+  COMMAND_ACTION_BUFF,
 } from "./command-action.js";
 
 const commandMedia = createCatalogMediaController({
@@ -59,6 +61,8 @@ const FETCH_TIMEOUT_MS = 15000;
 
 /** @type {Array<Record<string, unknown>>} */
 let commandsCache = [];
+/** @type {Array<Record<string, unknown>>} */
+let commandAwardsCache = [];
 let selectedCommandId = null;
 let creatingNew = false;
 let listLoadInFlight = null;
@@ -72,6 +76,52 @@ let pendingSelectionAfterDelete = null;
 function isCommandsVisible() {
   return parseWorkspaceHash(window.location.hash) === "audience" &&
     parseAudienceHash(window.location.hash) === "commands";
+}
+
+function commandActionListKey(action) {
+  const normalized = normalizeCommandAction(action);
+  if (normalized === "show_leaderboard") {
+    return "commands.actionLeaderboardShort";
+  }
+  if (normalized === COMMAND_ACTION_LIKE) {
+    return "commands.actionLikeShort";
+  }
+  if (normalized === COMMAND_ACTION_BUFF) {
+    return "commands.actionBuffShort";
+  }
+  return "commands.actionAlertShort";
+}
+
+function renderCommandAwardOptions(selectedId) {
+  if (!dom.commandAwardInput) {
+    return;
+  }
+  const previous = selectedId != null ? String(selectedId) : dom.commandAwardInput.value;
+  dom.commandAwardInput.textContent = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = t("commands.likeAwardPlaceholder");
+  dom.commandAwardInput.append(placeholder);
+  commandAwardsCache.forEach(function (award) {
+    const option = document.createElement("option");
+    option.value = String(award.id || "");
+    option.textContent = String(award.name || award.id || "");
+    dom.commandAwardInput.append(option);
+  });
+  dom.commandAwardInput.value = previous;
+}
+
+async function loadCommandAwardsCache() {
+  const response = await fetch(apiURL("/api/awards"), {
+    headers: { Accept: "application/json" },
+  });
+  const payload = await readJSON(response);
+  if (!response.ok) {
+    const message = mapHTTPError(response.status, payload && payload.error);
+    throw new Error(message);
+  }
+  commandAwardsCache = Array.isArray(payload.awards) ? payload.awards : [];
+  renderCommandAwardOptions();
 }
 
 function setFieldError(input, element, message) {
@@ -118,6 +168,8 @@ function clearFieldErrors() {
   setFieldError(dom.commandTriggerInput, dom.commandTriggerError, "");
   setAliasesFieldError("");
   setFieldError(dom.commandActionInput, dom.commandActionError, "");
+  setFieldError(dom.commandAwardInput, dom.commandAwardError, "");
+  setFieldError(dom.commandPointsInput, dom.commandPointsError, "");
   setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
   commandMedia.clearFieldErrors();
 }
@@ -225,9 +277,7 @@ function renderCommandsList() {
 
     const meta = document.createElement("span");
     meta.className = "audience-catalog-items__meta";
-    const actionKey = normalizeCommandAction(cmd.action) === "show_leaderboard"
-      ? "commands.actionLeaderboardShort"
-      : "commands.actionAlertShort";
+    const actionKey = commandActionListKey(cmd.action);
     meta.textContent = t(actionKey) + " · " +
       (cmd.enabled ? t("commands.enabledShort") : t("commands.disabledShort"));
 
@@ -330,6 +380,13 @@ function fillEditorFromCommand(cmd) {
   if (dom.commandActionInput) {
     dom.commandActionInput.value = normalizeCommandAction(cmd.action);
   }
+  if (dom.commandAwardInput) {
+    renderCommandAwardOptions(cmd.award_id);
+    dom.commandAwardInput.value = String(cmd.award_id || "");
+  }
+  if (dom.commandPointsInput) {
+    dom.commandPointsInput.value = String(cmd.points != null ? cmd.points : 25);
+  }
   if (dom.commandCooldownInput) {
     dom.commandCooldownInput.value = String(cmd.cooldown_seconds != null ? cmd.cooldown_seconds : 30);
   }
@@ -384,26 +441,40 @@ function selectCommand(id, isNew) {
 }
 
 function readEditorPayload() {
+  const action = dom.commandActionInput ? dom.commandActionInput.value : "alert";
   return buildCommandPayload(
     {
       trigger: dom.commandTriggerInput ? dom.commandTriggerInput.value : "",
       aliases: parseCommandAliasesText(dom.commandAliasesInput ? dom.commandAliasesInput.value : ""),
       enabled: dom.commandEnabledInput ? dom.commandEnabledInput.checked : true,
-      action: dom.commandActionInput ? dom.commandActionInput.value : "alert",
+      action: action,
       cooldown_seconds: dom.commandCooldownInput ? Number(dom.commandCooldownInput.value) : 0,
+      award_id: dom.commandAwardInput ? dom.commandAwardInput.value : "",
+      points: dom.commandPointsInput ? Number(dom.commandPointsInput.value) : 0,
     },
-    Object.assign({
-      splash_template: dom.commandSplashInput ? dom.commandSplashInput.value : "",
-      sound: dom.commandSoundInput ? dom.commandSoundInput.value : "",
-      duration_ms: dom.commandDurationInput ? Number(dom.commandDurationInput.value) : 5000,
-    }, commandMedia.readPayload())
+    commandUsesAlertPresentation(action)
+      ? Object.assign({
+          splash_template: dom.commandSplashInput ? dom.commandSplashInput.value : "",
+          sound: dom.commandSoundInput ? dom.commandSoundInput.value : "",
+          duration_ms: dom.commandDurationInput ? Number(dom.commandDurationInput.value) : 5000,
+        }, commandMedia.readPayload())
+      : undefined
   );
 }
 
 function updateCommandActionUI() {
-  const usesAlert = commandUsesAlertPresentation(dom.commandActionInput?.value);
+  const action = normalizeCommandAction(dom.commandActionInput?.value);
+  const usesAlert = commandUsesAlertPresentation(action);
+  const usesLike = action === COMMAND_ACTION_LIKE;
+  const usesBuff = action === COMMAND_ACTION_BUFF;
   if (dom.commandAlertFields) {
     dom.commandAlertFields.hidden = !usesAlert;
+  }
+  if (dom.commandLikeFields) {
+    dom.commandLikeFields.hidden = !usesLike;
+  }
+  if (dom.commandBuffFields) {
+    dom.commandBuffFields.hidden = !usesBuff;
   }
   if (dom.commandSplashInput) {
     dom.commandSplashInput.required = usesAlert;
@@ -411,10 +482,22 @@ function updateCommandActionUI() {
   if (dom.commandDurationInput) {
     dom.commandDurationInput.required = usesAlert;
   }
+  if (dom.commandAwardInput) {
+    dom.commandAwardInput.required = false;
+  }
+  if (dom.commandPointsInput) {
+    dom.commandPointsInput.required = false;
+  }
   if (dom.commandActionHint) {
-    dom.commandActionHint.textContent = usesAlert
-      ? t("commands.actionAlertHint")
-      : t("commands.actionLeaderboardHint");
+    let hintKey = "commands.actionAlertHint";
+    if (action === "show_leaderboard") {
+      hintKey = "commands.actionLeaderboardHint";
+    } else if (usesLike) {
+      hintKey = "commands.actionLikeHint";
+    } else if (usesBuff) {
+      hintKey = "commands.actionBuffHint";
+    }
+    dom.commandActionHint.textContent = t(hintKey);
   }
 }
 
@@ -434,6 +517,12 @@ function applyFieldErrors(fields) {
   if (fields.splash_template && dom.commandSplashError) {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, fields.splash_template);
   }
+  if (fields.award_id && dom.commandAwardError) {
+    setFieldError(dom.commandAwardInput, dom.commandAwardError, fields.award_id);
+  }
+  if (fields.points && dom.commandPointsError) {
+    setFieldError(dom.commandPointsInput, dom.commandPointsError, fields.points);
+  }
   commandMedia.applyFieldErrors(fields);
 }
 
@@ -444,6 +533,7 @@ async function fetchCommandsList() {
   }, FETCH_TIMEOUT_MS);
 
   try {
+    await loadCommandAwardsCache();
     const response = await fetch(apiURL("/api/commands"), {
       signal: controller.signal,
       headers: { Accept: "application/json" },
@@ -537,6 +627,19 @@ async function saveCommand() {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, t("catalog.splashRequired"));
     dom.commandSplashInput?.focus();
     return;
+  }
+  if (payload.action === "like" && String(payload.award_id || "").trim() === "") {
+    setFieldError(dom.commandAwardInput, dom.commandAwardError, t("commands.likeAwardRequired"));
+    dom.commandAwardInput?.focus();
+    return;
+  }
+  if (payload.action === "buff") {
+    const points = Number(payload.points);
+    if (!Number.isFinite(points) || points < 1 || points > 1000) {
+      setFieldError(dom.commandPointsInput, dom.commandPointsError, t("commands.buffPointsInvalid"));
+      dom.commandPointsInput?.focus();
+      return;
+    }
   }
   if (dom.commandsEditorForm && !dom.commandsEditorForm.reportValidity()) {
     return;
@@ -690,6 +793,12 @@ export function initCommandsCatalog() {
     setAliasesFieldError("");
   });
   dom.commandActionInput?.addEventListener("change", updateCommandActionUI);
+  dom.commandAwardInput?.addEventListener("change", function () {
+    setFieldError(dom.commandAwardInput, dom.commandAwardError, "");
+  });
+  dom.commandPointsInput?.addEventListener("input", function () {
+    setFieldError(dom.commandPointsInput, dom.commandPointsError, "");
+  });
   dom.commandSplashInput?.addEventListener("input", function () {
     setFieldError(dom.commandSplashInput, dom.commandSplashError, "");
     updateCommandSplashPreview();
@@ -749,6 +858,7 @@ export function initCommandsCatalog() {
 
   window.addEventListener("admin-locale-applied", function () {
     renderCommandsList();
+    renderCommandAwardOptions();
     updateCommandActionUI();
   });
 

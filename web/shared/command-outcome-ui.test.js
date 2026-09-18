@@ -5,7 +5,9 @@ import {
   commandOutcomeFromWire,
   cooldownSecondsRemaining,
   commandOutcomeChromeKind,
+  commandOutcomeReasonLabel,
   isCooldownOutcomeActive,
+  isRejectedOutcomeActive,
   commandOutcomeMessageKey,
 } from "./command-outcome-ui.js";
 
@@ -30,6 +32,8 @@ test("wire outcome maps cooldown remaining to expiry", function () {
       trigger: "gg",
       status: "cooldown",
       cooldown_expires_at_ms: 3500,
+      reason: "",
+      reason_label: "",
     },
   });
 });
@@ -54,4 +58,40 @@ test("fired outcome is accepted chrome without countdown", function () {
   }, 0);
   assert.equal(commandOutcomeChromeKind(outcome, 0), "accepted");
   assert.equal(isCooldownOutcomeActive(outcome, 0), false);
+});
+
+test("rejected outcome uses reason label and expires after display window", function () {
+  const outcome = commandOutcomeFromRecentField({
+    trigger: "like",
+    status: "rejected",
+    reason: "ambiguous",
+    reason_label: "clarify",
+  }, 1000);
+  assert.equal(commandOutcomeChromeKind(outcome, 1000), "rejected");
+  assert.equal(isRejectedOutcomeActive(outcome, 1000), true);
+  assert.equal(isRejectedOutcomeActive(outcome, 7000), false);
+  assert.equal(
+    commandOutcomeReasonLabel(outcome, function (key) {
+      return key === "msg.commandReject.ambiguous" ? "Clarify" : key;
+    }),
+    "clarify"
+  );
+});
+
+test("unknown reject reason falls back to i18n map", function () {
+  const outcome = commandOutcomeFromRecentField({
+    trigger: "buff",
+    status: "rejected",
+    reason: "quota",
+  }, 0);
+  const label = commandOutcomeReasonLabel(outcome, function (key) {
+    if (key === "msg.commandReject.quota") {
+      return "Quota";
+    }
+    if (key === "msg.commandRejected") {
+      return "Rejected";
+    }
+    return key;
+  });
+  assert.equal(label, "Quota");
 });

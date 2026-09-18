@@ -7,7 +7,7 @@ Lets the operator define chat commands that the server matches on ingested lines
 ## Requirements
 
 ### Requirement: Operator can manage a command catalog
-The system SHALL persist chat commands in local SQLite. Each command SHALL have a unique trigger slug, optional unique aliases, enabled flag, per-viewer cooldown seconds, and `action` of `alert` or `show_leaderboard`. Alert commands SHALL retain the current required splash template, sound, duration, optional media, volume, layout, image-fit, and image-size fields. Show-leaderboard commands SHALL require no splash presentation and SHALL use global leaderboard display duration. `GET /api/commands` and existing POST-action mutations SHALL expose and accept `action` and `aliases`; omitted action SHALL mean `alert` for backward compatibility; omitted aliases SHALL mean none. Empty media fields SHALL continue to clear alert assets. The operator MUST be able to delete any command.
+The system SHALL persist chat commands in local SQLite. Each command SHALL have a unique trigger slug, optional unique aliases, enabled flag, per-viewer cooldown seconds, and `action` of `alert`, `show_leaderboard`, `like`, or `buff`. Alert commands SHALL retain the current required splash template, sound, duration, optional media, volume, layout, image-fit, and image-size fields. Show-leaderboard commands SHALL require no splash presentation and SHALL use global leaderboard display duration. Like commands SHALL require `award_id` of an existing award type. Buff commands SHALL require positive integer `points` and MUST NOT require splash presentation. `GET /api/commands` and existing POST-action mutations SHALL expose and accept `action` and `aliases`; omitted action SHALL mean `alert` for backward compatibility; omitted aliases SHALL mean none. Empty media fields SHALL continue to clear alert assets. The operator MUST be able to delete any command.
 
 #### Scenario: Existing alert command
 - **WHEN** an existing command row is read after upgrade
@@ -36,6 +36,33 @@ The system SHALL persist chat commands in local SQLite. Each command SHALL have 
 #### Scenario: Duplicate trigger rejected
 - **WHEN** the operator creates another command using an existing trigger or alias
 - **THEN** the request fails with HTTP 400 and a field error on `trigger` or `aliases` as appropriate regardless of action
+
+#### Scenario: Create buff command
+- **WHEN** the operator creates trigger `buff` with action `buff` and `points` 5
+- **THEN** `GET /api/commands` returns that action and points and `!buff` can match after save
+
+#### Scenario: Create like command
+- **WHEN** the operator creates trigger `like` with action `like` and `award_id` `viewer_like`
+- **THEN** `GET /api/commands` returns that binding and `!like bob` can match after save
+
+#### Scenario: Invalid like binding
+- **WHEN** the operator saves action `like` without an existing `award_id`
+- **THEN** the request fails with HTTP 400 and a field error on `award_id`
+
+### Requirement: Social command actions may take a nick remainder
+Commands with `action` `like` or `buff` SHALL match a leading bang trigger (canonical, alias, or unique typo) plus an optional remainder. The remainder is not extra words: it is the nick payload defined by `viewer-social-commands`. Commands with `action` `alert` or `show_leaderboard` MUST keep whole-line matching; extra words SHALL remain ordinary chat with no outcome.
+
+#### Scenario: Buff with nick is a command
+- **WHEN** enabled buff command trigger `buff` receives `!buff Alice`
+- **THEN** the line is a matched command (`is_command` true) and is not ordinary chat
+
+#### Scenario: Alert with extra words stays ordinary
+- **WHEN** enabled alert command `gg` receives `!gg Alice`
+- **THEN** the line remains ordinary chat and no command outcome is published
+
+#### Scenario: Like typo still uses canonical trigger
+- **WHEN** enabled like command trigger `like` has no alias `lik` and a unique distance-1 token `lik` is sent as `!lik bob`
+- **THEN** `command_outcome.trigger` is `like` if the canonical trigger length is at least 4 and the unique-typo rule otherwise matches
 
 ### Requirement: Commands may declare unique aliases
 Each command MAY persist zero or more additional trigger slugs (`aliases`) besides its canonical `trigger`. Every alias SHALL use the same slug rules as `trigger` (`[a-z0-9_]{1,32}`, no `!`, no whitespace). The system MUST reject a save when any alias equals that command's canonical trigger, duplicates another alias on the same command, or collides with any other command's trigger or alias, enabled or disabled. Omitted `aliases` on create or update SHALL mean an empty list. At most 16 aliases SHALL be stored per command.
@@ -187,11 +214,16 @@ Each command SHALL have a cooldown in seconds (≥ 0). After a successful fire f
 - **THEN** the second match publishes status `cooldown` and remaining milliseconds greater than zero
 
 ### Requirement: Commands never change score
-Firing a command MUST NOT increment or decrement `xp`. `message_count` SHALL still increment for a matched line that has a stable identity, same as ordinary chat. That counted line MAY still be eligible for a silent activity grant under viewer-stats rules.
+Firing `alert` or `show_leaderboard` MUST NOT increment or decrement `xp`. Firing `like` or `buff` MUST NOT change the **giver's** `xp`. Recipient XP for those actions SHALL follow `viewer-social-commands` and `viewer-stats`. `message_count` SHALL still increment for a matched line that has a stable identity.
 
 #### Scenario: Gg from a known viewer
 - **WHEN** a counted identity fires `!gg` after already receiving activity XP this interval
 - **THEN** that viewer's `message_count` increases and `xp` is unchanged by the command fire itself
+
+#### Scenario: Like does not pay the giver
+- **WHEN** Alice successfully likes Bob
+- **THEN** Alice's XP is unchanged by that like
+- **AND** Bob's XP increases by the bound award points
 
 ### Requirement: Overlay can hide command lines globally
 `hide_command_messages` SHALL be a global operator setting (default false). The server SHALL mark matched command lines on the WebSocket `message` frame (field `is_command` true). When the setting is true, `/overlay` MUST NOT render **successful** command lines. Admin and dock MUST still show them. Changing the setting SHALL apply to new lines without requiring a process restart. Cooldown overlay rows SHALL follow `hide_command_cooldown_overlay` instead of this flag.
@@ -205,7 +237,7 @@ Firing a command MUST NOT increment or decrement `xp`. `message_count` SHALL sti
 - **THEN** the chat overlay shows the line and the alert overlay still shows the splash
 
 ### Requirement: Matched commands publish a fired or cooldown outcome
-After an enabled command matches a whole bang line with a stable identity, the server SHALL decide exactly one outcome: `fired` when cooldown allows the configured action, or `cooldown` when the same identity is still inside that command's cooldown. The server MUST publish that outcome to connected clients. A `fired` outcome SHALL still enqueue the alert or request leaderboard visibility as today. A `cooldown` outcome MUST NOT enqueue an alert, MUST NOT request leaderboard visibility, MUST NOT write an interaction event, and MUST NOT reply on a streaming platform. Unknown, disabled, parameterized, extra-word, or non-bang lines MUST remain ordinary chat and MUST NOT receive an outcome. Empty-identity skips MUST keep current diagnostics and MUST NOT produce viewer-facing overlay feedback.
+After an enabled command matches with a stable identity, the server SHALL decide exactly one outcome: `fired`, `cooldown`, or `rejected` (social actions only, per `viewer-social-commands`). Unknown, disabled, extra-word (non-social), or non-bang lines MUST remain ordinary chat and MUST NOT receive an outcome. The server MUST NOT reply on a streaming platform. A `fired` outcome SHALL still enqueue the alert or request leaderboard visibility as today, or apply social effects per `viewer-social-commands`. A `cooldown` outcome MUST NOT enqueue an alert, MUST NOT request leaderboard visibility, MUST NOT write an interaction event, and MUST NOT reply on a streaming platform. Empty-identity skips MUST keep current diagnostics and MUST NOT produce viewer-facing overlay feedback.
 
 #### Scenario: First bang fires
 - **WHEN** a viewer with a stable identity sends `!gg` outside cooldown
@@ -222,6 +254,10 @@ After an enabled command matches a whole bang line with a stable identity, the s
 #### Scenario: Unknown bang stays ordinary
 - **WHEN** a viewer sends `!unknown`
 - **THEN** the line remains ordinary chat and no command outcome is published
+
+#### Scenario: Social rejection is still an outcome
+- **WHEN** a viewer with a stable identity sends `!like` with no nick
+- **THEN** clients receive status `rejected` and the line is `is_command` true
 
 ### Requirement: Overlay cooldown visibility is independent of hiding successful commands
 `hide_command_messages` SHALL continue to hide **successful** matched command lines from `/overlay` when true. A separate operator flag `hide_command_cooldown_overlay` SHALL control cooldown rows on `/overlay` (default false: show a short frozen cooldown row). When `hide_command_cooldown_overlay` is false, a cooldown row MUST appear on `/overlay` for a fixed short duration even if `hide_command_messages` is true. Admin and dock MUST always show matched command lines regardless of either flag.

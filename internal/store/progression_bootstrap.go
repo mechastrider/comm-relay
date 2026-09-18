@@ -11,6 +11,58 @@ import (
 type progressionStarterLevel struct {
 	ID, Title string
 	MinXP     int
+	LikeQuota int
+	BuffQuota int
+}
+
+func progressionStarterLevels(locale string) []progressionStarterLevel {
+	levels := []struct {
+		id string
+		xp int
+	}{
+		{"recruit", 0}, {"regular", 100}, {"veteran", 500}, {"elite", 1500}, {"legend", 5000},
+	}
+	out := make([]progressionStarterLevel, 0, len(levels))
+	for i, level := range levels {
+		out = append(out, progressionStarterLevel{
+			ID:        level.id,
+			Title:     progressionStarterLevelTitle(locale, level.id),
+			MinXP:     level.xp,
+			LikeQuota: i + 1,
+			BuffQuota: i + 1,
+		})
+	}
+	return out
+}
+
+func progressionStarterLevelTitle(locale, id string) string {
+	if normalizeStarterLocale(locale) == "en-GB" {
+		switch id {
+		case "recruit":
+			return "Recruit"
+		case "regular":
+			return "Regular"
+		case "veteran":
+			return "Veteran"
+		case "elite":
+			return "Elite"
+		case "legend":
+			return "Legend"
+		}
+	}
+	switch id {
+	case "recruit":
+		return "Новобранец"
+	case "regular":
+		return "Завсегдатай"
+	case "veteran":
+		return "Ветеран"
+	case "elite":
+		return "Элита"
+	case "legend":
+		return "Легенда"
+	}
+	return id
 }
 
 type progressionStarterAchievement struct {
@@ -18,13 +70,6 @@ type progressionStarterAchievement struct {
 	Metric                  ProgressionMetric
 	SubjectID, SubjectLabel string
 	Target                  int
-}
-
-func progressionStarterLevels(locale string) []progressionStarterLevel {
-	if normalizeStarterLocale(locale) == "en-GB" {
-		return []progressionStarterLevel{{"recruit", "Recruit", 0}, {"regular", "Regular", 100}, {"veteran", "Veteran", 500}, {"elite", "Elite", 1500}, {"legend", "Legend", 5000}}
-	}
-	return []progressionStarterLevel{{"recruit", "Новобранец", 0}, {"regular", "Завсегдатай", 100}, {"veteran", "Ветеран", 500}, {"elite", "Элита", 1500}, {"legend", "Легенда", 5000}}
 }
 
 func progressionStarterAchievements(locale string) []progressionStarterAchievement {
@@ -87,7 +132,7 @@ func (s *Store) ensureProgressionBootstrapLocked(locale string) error {
 		return errors.Errorf("begin progression bootstrap: %w", err)
 	}
 	for _, level := range progressionStarterLevels(locale) {
-		if _, err := tx.Exec(`INSERT INTO progression_levels (id, title, min_xp, announce, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?) ON CONFLICT(id) DO NOTHING`, level.ID, level.Title, level.MinXP, formatTime(now), formatTime(now)); err != nil {
+		if _, err := tx.Exec(`INSERT INTO progression_levels (id, title, min_xp, like_quota, buff_quota, announce, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?) ON CONFLICT(id) DO NOTHING`, level.ID, level.Title, level.MinXP, level.LikeQuota, level.BuffQuota, formatTime(now), formatTime(now)); err != nil {
 			return rollbackStarterCatalogTransaction(tx, errors.Errorf("insert starter progression level %q: %w", level.ID, err))
 		}
 	}
