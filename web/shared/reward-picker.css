@@ -31,6 +31,7 @@
   font: inherit;
   font-size: 12px;
   text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .reward-picker__item:hover,

@@ -9,6 +9,7 @@ import {
   createMessageDeleteControl,
   createStreamerLikeControl,
   enableRewardRetry,
+  rewardPickerPlacement,
   findLikeAward,
   invalidateAwardsCache,
   isAwardGranted,
@@ -412,4 +413,27 @@ test("http 409 marks like granted without retry copy", async function () {
     globalThis.document = originalDocument;
     globalThis.fetch = originalFetch;
   }
+});
+
+test("reward picker grows left from a right-edge dock icon and stays in the panel", function () {
+  const placement = rewardPickerPlacement(
+    { left: 350, width: 28, right: 378, top: 40, bottom: 68 },
+    { left: 0, width: 400, right: 400, top: 0, bottom: 700 },
+    280
+  );
+
+  assert.equal(placement.width, 280);
+  assert.equal(placement.left, 98);
+  assert.ok(placement.left >= 8);
+  assert.ok(placement.left + placement.width <= 392);
+});
+
+test("reward picker clamps to the left when the trigger is near the panel start", function () {
+  const placement = rewardPickerPlacement(
+    { left: 10, width: 80, right: 90 },
+    { left: 0, right: 400 }
+  );
+
+  assert.equal(placement.left, 8);
+  assert.equal(placement.width, 280);
 });

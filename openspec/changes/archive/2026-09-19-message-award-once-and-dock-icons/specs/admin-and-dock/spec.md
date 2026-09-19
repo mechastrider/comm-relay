@@ -20,7 +20,7 @@ Live Messages and `/dock/messages` SHALL mark a matched command line as accepted
 - **THEN** the frozen line still shows remaining time from the in-memory map
 
 ### Requirement: Messages offer Reward next to delete
-Live Messages and `/dock/messages` SHALL show a Reward control on rows that have a stable `user_id`, in addition to delete when a source `id` exists. Reward SHALL open a picker of award types other than `like`, not a stack of per-type buttons on the row. When award id `like` exists, those same rows SHALL also show a Streamer Like control as an icon button with a visible accessible name, placed with Reward and Delete, that grants `like` without opening the picker. On `/dock/messages` only, Reward SHALL be an icon-only medal button and Delete SHALL be an icon-only trash button, each with a localized accessible name and hover/focus tooltip matching Streamer Like. Live Messages SHALL keep visible text labels on Reward and Delete. The picker MUST be usable in a height-capped dock: header stays put, the list scrolls. Action controls on a row MUST remain on one unwrapped cluster; grant feedback and command-status controls MUST NOT wrap Reward, Streamer Like, or Delete onto a new line. Command-status checkmark or snowflake SHALL sit immediately left of that action cluster and MUST NOT use action-button chrome.
+Live Messages and `/dock/messages` SHALL show a Reward control on rows that have a stable `user_id`, in addition to delete when a source `id` exists. Reward SHALL open a picker of award types other than `like`, not a stack of per-type buttons on the row. When award id `like` exists, those same rows SHALL also show a Streamer Like control as an icon button with a visible accessible name, placed with Reward and Delete, that grants `like` without opening the picker. On `/dock/messages` only, Reward SHALL be an icon-only medal button and Delete SHALL be an icon-only trash button, each with a localized accessible name and hover/focus tooltip matching Streamer Like. Live Messages SHALL keep visible text labels on Reward and Delete. The picker MUST be usable in a height-capped dock: header stays put, the list scrolls, and the menu MUST stay fully inside the dock viewport even when Reward is a 28px icon on the right edge (it MAY grow left from that control). Action controls on a row MUST remain on one unwrapped cluster; grant feedback and command-status controls MUST NOT wrap Reward, Streamer Like, or Delete onto a new line. Command-status checkmark or snowflake SHALL sit immediately left of that action cluster and MUST NOT use action-button chrome.
 
 #### Scenario: Reward then delete still available
 - **WHEN** a message has both source `id` and `user_id`
@@ -30,6 +30,11 @@ Live Messages and `/dock/messages` SHALL show a Reward control on rows that have
 - **WHEN** a dock row has identity and a source id
 - **THEN** Streamer Like, Reward, and Delete are icon buttons with accessible names
 - **AND** Reward and Delete have no visible text label
+
+#### Scenario: Dock picker stays in viewport
+- **WHEN** the operator opens Reward from the medal icon at the right edge of a ~400px dock
+- **THEN** the picker stays fully inside the dock viewport
+- **AND** award names are not clipped by the panel edge
 
 #### Scenario: Live keeps labels
 - **WHEN** the same row is shown in Live Messages

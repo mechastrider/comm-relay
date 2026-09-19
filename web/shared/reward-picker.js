@@ -5,6 +5,54 @@ let awardsCachePromise = null;
 
 const LIKE_AWARD_ID = "like";
 const SVG_NS = "http://www.w3.org/2000/svg";
+const PICKER_MARGIN_PX = 8;
+const PICKER_MIN_WIDTH_PX = 160;
+const PICKER_PREFERRED_WIDTH_PX = 280;
+
+function finiteNumber(value, fallback) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+/**
+ * Keep a fixed picker inside a panel/viewport, growing left from a right-edge icon trigger.
+ *
+ * @param {{ left?: number, width?: number, right?: number }} triggerRect
+ * @param {{ left?: number, width?: number, right?: number }} panelRect
+ * @param {number} [measuredWidth]
+ * @returns {{ left: number, width: number }}
+ */
+export function rewardPickerPlacement(triggerRect, panelRect, measuredWidth) {
+  const trigger = triggerRect && typeof triggerRect === "object" ? triggerRect : {};
+  const panel = panelRect && typeof panelRect === "object" ? panelRect : {};
+  const panelLeft = finiteNumber(panel.left, 0);
+  const panelRight = finiteNumber(
+    panel.right,
+    panelLeft + finiteNumber(panel.width, 1024)
+  );
+  const available = Math.max(0, panelRight - panelLeft - PICKER_MARGIN_PX * 2);
+  const preferred = finiteNumber(measuredWidth, 0) > 0
+    ? measuredWidth
+    : PICKER_PREFERRED_WIDTH_PX;
+  const width = Math.max(
+    Math.min(PICKER_MIN_WIDTH_PX, available),
+    Math.min(preferred, available, PICKER_PREFERRED_WIDTH_PX)
+  );
+  const minLeft = panelLeft + PICKER_MARGIN_PX;
+  const maxLeft = panelRight - PICKER_MARGIN_PX - width;
+  const triggerRight = finiteNumber(
+    trigger.right,
+    finiteNumber(trigger.left, 0) + finiteNumber(trigger.width, 0)
+  );
+  let left = triggerRight - width;
+  if (maxLeft < minLeft) {
+    left = minLeft;
+  } else if (left < minLeft) {
+    left = minLeft;
+  } else if (left > maxLeft) {
+    left = maxLeft;
+  }
+  return { left: left, width: width };
+}
 
 function trimString(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -187,6 +235,13 @@ function positionPicker(picker, trigger, flipClass) {
   const triggerRect = trigger.getBoundingClientRect();
   const panel = trigger.closest(".message-panel") || document.documentElement;
   const panelRect = panel.getBoundingClientRect();
+  const measuredWidth = finiteNumber(picker.offsetWidth, 0) || finiteNumber(picker.scrollWidth, 0);
+  const placement = rewardPickerPlacement(triggerRect, panelRect, measuredWidth);
+  picker.style.left = String(placement.left) + "px";
+  picker.style.width = String(placement.width) + "px";
+  picker.style.minWidth = String(Math.min(PICKER_MIN_WIDTH_PX, placement.width)) + "px";
+  picker.style.maxWidth = String(placement.width) + "px";
+
   const maxHeight = Math.max(120, panelRect.bottom - triggerRect.bottom - 12);
   const flipMaxHeight = Math.max(120, triggerRect.top - panelRect.top - 12);
 
@@ -546,9 +601,8 @@ export function createRewardControl(message, options) {
 
     const triggerRect = button.getBoundingClientRect();
     picker.style.position = "fixed";
-    picker.style.left = String(Math.max(8, triggerRect.left)) + "px";
     picker.style.top = String(triggerRect.bottom + 4) + "px";
-    picker.style.minWidth = String(Math.max(160, triggerRect.width)) + "px";
+    positionPicker(picker, button, flipClass);
 
     dismissHandler = function (event) {
       if (event.type === "keydown") {

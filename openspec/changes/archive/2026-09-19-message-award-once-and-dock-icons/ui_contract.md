@@ -28,6 +28,8 @@ Status is not a button: no action-button border/background. Accepted = checkmark
 
 Dock Reward: 28×28 medal (circle + ribbon), tooltip “Награда” / “Reward”. Dock Delete: 28×28 trash, existing delete accessible name, red token like today’s delete text button.
 
+The Reward picker is `position: fixed` and MUST stay fully inside the message panel / dock viewport. Align it to the Reward control’s right edge and grow left so a 28px icon on a ~400px dock does not clip names. Cap width at 280px or the remaining inner width, whichever is smaller.
+
 Live Reward/Delete keep uppercase text labels.
 
 Grant feedback stays under the message text, not inside the action flex.
