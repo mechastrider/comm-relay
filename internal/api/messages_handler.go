@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -9,20 +10,22 @@ import (
 	"github.com/muonsoft/clog"
 
 	"github.com/mechastrider/comm-relay/internal/command"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 type messagesHandler struct {
-	history *MessageHistory
-	hub     *Hub
-	matcher *command.Matcher
+	history     *MessageHistory
+	hub         *Hub
+	matcher     *command.Matcher
+	viewerStore *store.Store
 }
 
-func newMessagesHandler(history *MessageHistory, hub *Hub) *messagesHandler {
+func newMessagesHandler(history *MessageHistory, hub *Hub, viewerStore *store.Store) *messagesHandler {
 	var matcher *command.Matcher
 	if hub != nil {
 		matcher = hub.matcher
 	}
-	return &messagesHandler{history: history, hub: hub, matcher: matcher}
+	return &messagesHandler{history: history, hub: hub, matcher: matcher, viewerStore: viewerStore}
 }
 
 type recentMessagesResponse struct {
@@ -38,12 +41,13 @@ func (h *messagesHandler) handleRecent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, recentMessagesResponse{
-		Messages: h.recentMessages(limit),
+		Messages: h.recentMessages(r.Context(), limit),
 	})
 }
 
-func (h *messagesHandler) recentMessages(limit int) []adminMessage {
+func (h *messagesHandler) recentMessages(ctx context.Context, limit int) []adminMessage {
 	messages := h.history.Recent(limit)
+	h.attachGrantedAwardIDs(ctx, messages)
 	if h.matcher == nil {
 		return messages
 	}
@@ -64,6 +68,36 @@ func (h *messagesHandler) recentMessages(limit int) []adminMessage {
 	}
 
 	return messages
+}
+
+func (h *messagesHandler) attachGrantedAwardIDs(ctx context.Context, messages []adminMessage) {
+	if h.viewerStore == nil || len(messages) == 0 {
+		return
+	}
+
+	refs := make([]store.MessageRef, 0, len(messages))
+	for _, message := range messages {
+		if message.Platform == "" || message.ID == "" {
+			continue
+		}
+		refs = append(refs, store.MessageRef{Platform: message.Platform, ID: message.ID})
+	}
+	if len(refs) == 0 {
+		return
+	}
+
+	granted, err := h.viewerStore.GrantedAwardIDsForMessages(refs)
+	if err != nil {
+		clog.Errorf(ctx, "list granted award ids for recent messages: %w", err)
+		return
+	}
+	for i := range messages {
+		ids := granted[store.MessageRef{Platform: messages[i].Platform, ID: messages[i].ID}]
+		if len(ids) == 0 {
+			continue
+		}
+		messages[i].GrantedAwardIDs = ids
+	}
 }
 
 type deleteMessageRequest struct {

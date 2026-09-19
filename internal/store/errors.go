@@ -32,6 +32,9 @@ var (
 	ErrInvalidPoints = errors.New("invalid points")
 	// ErrInvalidIdentity is returned when platform or user_id is empty for award grants.
 	ErrInvalidIdentity = errors.New("invalid identity")
+	// ErrAwardAlreadyGranted is returned when the same award type was already
+	// granted for a source message.
+	ErrAwardAlreadyGranted = errors.New("award already granted")
 	// ErrInvalidAwardName is returned when an award-event snapshot is empty.
 	ErrInvalidAwardName = errors.New("invalid award name")
 	// ErrInvalidRewardHistoryLimit is returned for a history page outside its supported bounds.

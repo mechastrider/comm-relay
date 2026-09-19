@@ -2,7 +2,7 @@ import { createChatRender, safeImageURL, appendText } from '/shared/chat-render.
 import {
   createGrantFeedbackElement,
   mountMessageGrantActions,
-} from '/shared/reward-picker.js?v=5';
+} from '/shared/reward-picker.js?v=6';
 import * as dom from './dom.js';
 import { state } from './state.js';
 import {
@@ -20,7 +20,7 @@ import { invalidateLiveStatistics } from "./live-statistics.js";
 import { applyViewerProgressionFrame } from "./viewers.js";
 import { setRegionState } from "./shell-state.js";
 import { handleLiveRecapWire } from "./live-recap.js";
-import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=1";
+import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=3";
 
 let messagesLoadInFlight = false;
 

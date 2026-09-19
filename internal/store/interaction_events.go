@@ -61,6 +61,85 @@ type AppendInteractionEventInput struct {
 	Now               time.Time
 }
 
+// MessageRef identifies a source chat message by platform and connector id.
+type MessageRef struct {
+	Platform string
+	ID       string
+}
+
+// GrantedAwardIDsForMessages returns unique award ids granted on each source
+// message, oldest grant first. Messages with no award events are omitted.
+func (s *Store) GrantedAwardIDsForMessages(refs []MessageRef) (map[MessageRef][]string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	keys := make([]MessageRef, 0, len(refs))
+	seen := make(map[MessageRef]struct{}, len(refs))
+	for _, ref := range refs {
+		ref.Platform = strings.TrimSpace(ref.Platform)
+		ref.ID = strings.TrimSpace(ref.ID)
+		if ref.Platform == "" || ref.ID == "" {
+			continue
+		}
+		if _, ok := seen[ref]; ok {
+			continue
+		}
+		seen[ref] = struct{}{}
+		keys = append(keys, ref)
+	}
+	if len(keys) == 0 {
+		return map[MessageRef][]string{}, nil
+	}
+
+	var b strings.Builder
+	args := make([]any, 0, 1+len(keys)*2)
+	b.WriteString(`SELECT message_platform, message_id, award_id, id
+		FROM interaction_events
+		WHERE kind = ? AND (`)
+	args = append(args, string(InteractionEventAward))
+	for i, ref := range keys {
+		if i > 0 {
+			b.WriteString(" OR ")
+		}
+		b.WriteString("(message_platform = ? AND message_id = ?)")
+		args = append(args, ref.Platform, ref.ID)
+	}
+	b.WriteString(") ORDER BY created_at ASC, id ASC")
+
+	rows, err := s.db.Query(b.String(), args...)
+	if err != nil {
+		return nil, errors.Errorf("list granted award ids: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	granted := make(map[MessageRef][]string, len(keys))
+	seenIDs := make(map[MessageRef]map[string]struct{}, len(keys))
+	for rows.Next() {
+		var platform, messageID, awardID, eventID string
+		if scanErr := rows.Scan(&platform, &messageID, &awardID, &eventID); scanErr != nil {
+			return nil, errors.Errorf("scan granted award id: %w", scanErr)
+		}
+		awardID = strings.TrimSpace(awardID)
+		if awardID == "" {
+			continue
+		}
+		ref := MessageRef{Platform: platform, ID: messageID}
+		if seenIDs[ref] == nil {
+			seenIDs[ref] = make(map[string]struct{})
+		}
+		if _, ok := seenIDs[ref][awardID]; ok {
+			continue
+		}
+		seenIDs[ref][awardID] = struct{}{}
+		granted[ref] = append(granted[ref], awardID)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errors.Errorf("iterate granted award ids: %w", err)
+	}
+
+	return granted, nil
+}
+
 // ViewerIDForIdentity returns the canonical viewer id for a platform identity when known.
 func (s *Store) ViewerIDForIdentity(platform, userID string) (string, bool) {
 	platform = strings.TrimSpace(platform)

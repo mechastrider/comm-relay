@@ -9,9 +9,9 @@
 > **Allowed fallout**: store/API tests, error sentinel, recent-message JSON
 > **Blocked**: Goose UNIQUE index, session XP caps, new routes, overlay buttons
 
-- [ ] 1.1 In the grant transaction, conflict when a non-empty source message already has that `award_id`; map to HTTP 409 with a UI-safe body; no XP/event/alert.
-- [ ] 1.2 Attach `granted_award_ids` (oldest-first unique award ids) on recent messages that have matching award events; omit when none.
-- [ ] 1.3 Tests: Like twice → 409; Joke then Advice both succeed; missing `message_id` allows repeats; concurrent same-type one 409; recent JSON shape.
+- [x] 1.1 In the grant transaction, conflict when a non-empty source message already has that `award_id`; map to HTTP 409 with a UI-safe body; no XP/event/alert.
+- [x] 1.2 Attach `granted_award_ids` (oldest-first unique award ids) on recent messages that have matching award events; omit when none.
+- [x] 1.3 Tests: Like twice → 409; Joke then Advice both succeed; missing `message_id` allows repeats; concurrent same-type one 409; recent JSON shape.
 
 ## Slice: dock icon actions and command status glyphs
 
@@ -22,10 +22,10 @@
 > **Allowed fallout**: node tests, dock CSS, RU/EN already-granted copy
 > **Blocked**: Live icon-only Reward/Delete, overlay operator chrome, hotkeys
 
-- [ ] 2.1 Dock-only icon Reward (simple medal) and Delete (trash); Live labels unchanged; aria-label + tooltip.
-- [ ] 2.2 Apply `granted_award_ids` and local/409 grants: disable Like for `like`; keep Reward; mark granted picker types not choosable.
-- [ ] 2.3 Replace accepted text chip with a non-button checkmark; frozen rows get a snowflake plus existing compact countdown or reject label; not in tab order as a button.
-- [ ] 2.4 Node tests for picker granted state, dock icon markup, and check/snowflake chrome; dock ~400px nowrap.
+- [x] 2.1 Dock-only icon Reward (simple medal) and Delete (trash); Live labels unchanged; aria-label + tooltip.
+- [x] 2.2 Apply `granted_award_ids` and local/409 grants: disable Like for `like`; keep Reward; mark granted picker types not choosable.
+- [x] 2.3 Replace accepted text chip with a non-button checkmark; frozen rows get a snowflake plus existing compact countdown or reject label; not in tab order as a button.
+- [x] 2.4 Node tests for picker granted state, dock icon markup, and check/snowflake chrome; dock ~400px nowrap.
 
 ## Slice: streamer-facing notes
 
@@ -36,7 +36,7 @@
 > **Allowed fallout**: none
 > **Blocked**: concept/roadmap/OQ-005 edits
 
-- [ ] 3.1 Add concise Russian Unreleased bullets for: one award type per chat line; dock medal/trash icons; checkmark vs snowflake command status.
+- [x] 3.1 Add concise Russian Unreleased bullets for: one award type per chat line; dock medal/trash icons; checkmark vs snowflake command status.
 
 ## Verification
 
@@ -53,10 +53,10 @@ openspec validate message-award-once-and-dock-icons --strict
 ```
 
 ## Gate: qa
-- [ ] Q.1 Execute `qa_plan.md` P0 Live + `/dock/messages` + overlay transparency; screenshot dock icons and check/snowflake; skip OBS packaging.
+- [x] Q.1 Execute `qa_plan.md` P0 Live + `/dock/messages` + overlay transparency; screenshot dock icons and check/snowflake; skip OBS packaging.
 
 ## Gate: review
-- [ ] R.1 Fresh diff review; CRITICAL=0; affected checks green.
+- [x] R.1 Fresh diff review; CRITICAL=0; affected checks green.
 
 ## Gate: distribution-readiness
-- [ ] D.1 Confirm no installer/signing/package-layout change; `go build ./...` succeeds; `openspec validate message-award-once-and-dock-icons --strict`.
+- [x] D.1 Confirm no installer/signing/package-layout change; `go build ./...` succeeds; `openspec validate message-award-once-and-dock-icons --strict`.

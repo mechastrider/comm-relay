@@ -11,7 +11,7 @@ import {
   previewStreamerName,
   renderSplashPreview,
 } from "./catalog-template.js";
-import { invalidateAwardsCache } from "/shared/reward-picker.js?v=5";
+import { invalidateAwardsCache } from "/shared/reward-picker.js?v=6";
 import { createCatalogMediaController } from "./catalog-media-ui.js?v=2";
 
 const awardMedia = createCatalogMediaController({

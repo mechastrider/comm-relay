@@ -190,34 +190,8 @@
   filter: saturate(0.72);
 }
 
-.message-list__command-outcome {
-  display: inline-flex;
-  align-items: center;
-  min-height: 22px;
-  padding: 2px 8px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  background: var(--surface-raised);
-  color: var(--text);
+.message-list__command-outcome-label {
   font-size: 11px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-}
-
-.message-list__item--command-accepted .message-list__command-outcome {
-  border-color: rgba(61, 154, 98, 0.45);
-  color: #8fd4a8;
-}
-
-.message-list__item--command-cooldown .message-list__command-outcome {
-  border-color: rgba(107, 122, 148, 0.55);
-  color: #b8c2d4;
-}
-
-.message-list__item--command-rejected .message-list__command-outcome {
-  border-color: rgba(154, 107, 61, 0.55);
-  color: #d4b896;
 }
 
 .message-list__platform {

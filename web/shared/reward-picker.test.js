@@ -6,8 +6,13 @@ import {
   awardGrantRequest,
   awardGrantStatus,
   createRewardControl,
+  createMessageDeleteControl,
+  createStreamerLikeControl,
   enableRewardRetry,
   findLikeAward,
+  invalidateAwardsCache,
+  isAwardGranted,
+  markAwardGranted,
   messageCanBeRewarded,
   pickerAwardsFromCatalog,
   restoreRewardTrigger,
@@ -32,6 +37,17 @@ class FakeElement {
       add: (...names) => { this.className += (this.className ? " " : "") + names.join(" "); },
       remove: (...names) => {
         this.className = this.className.split(" ").filter((name) => !names.includes(name)).join(" ");
+      },
+      toggle: (name, force) => {
+        const has = this.className.split(" ").includes(name);
+        if (force === false || (force === undefined && has)) {
+          this.classList.remove(name);
+          return false;
+        }
+        if (!has) {
+          this.classList.add(name);
+        }
+        return true;
       },
     };
   }
@@ -61,6 +77,12 @@ class FakeElement {
     child.parentNode = null;
   }
 
+  remove() {
+    if (this.parentNode) {
+      this.parentNode.removeChild(this);
+    }
+  }
+
   insertBefore(child, before) {
     child.parentNode = this;
     const index = this.children.indexOf(before);
@@ -77,8 +99,12 @@ class FakeElement {
   closest() { return this.documentRef.documentElement; }
   contains(target) { return target === this || this.children.some((child) => child.contains(target)); }
   querySelector(selector) {
-    const className = selector.startsWith(".") ? selector.slice(1) : "";
-    if (this.className.split(" ").includes(className)) {
+    if (selector.startsWith(".")) {
+      const className = selector.slice(1);
+      if (this.className.split(" ").includes(className)) {
+        return this;
+      }
+    } else if (this.tagName === selector) {
       return this;
     }
     for (const child of this.children) {
@@ -94,6 +120,7 @@ function fakeDocument() {
   const documentRef = {
     activeElement: null,
     createElement(tagName) { return new FakeElement(tagName, documentRef); },
+    createElementNS(_ns, tagName) { return new FakeElement(tagName, documentRef); },
     addEventListener(type, listener) { listeners.set(type, listener); },
     removeEventListener(type) { listeners.delete(type); },
     dispatch(type, event = {}) { listeners.get(type)?.({ type, preventDefault() {}, ...event }); },
@@ -239,6 +266,148 @@ test("Escape and outside click cannot dismiss a pending picker or trigger a seco
     assert.equal(documentRef.body.querySelector(".reward-picker"), null);
     assert.equal(button.disabled, false);
     assert.equal(button.getAttribute("aria-expanded"), "false");
+  } finally {
+    invalidateAwardsCache();
+    globalThis.document = originalDocument;
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("granted award ids restore and mark local grants", function () {
+  const message = { granted_award_ids: ["like"] };
+  assert.equal(isAwardGranted(message, "like"), true);
+  assert.equal(isAwardGranted(message, "joke"), false);
+  markAwardGranted(message, "joke");
+  assert.deepEqual(message.granted_award_ids, ["like", "joke"]);
+});
+
+test("dock reward and delete are icon buttons with accessible names", function () {
+  const originalDocument = globalThis.document;
+  const documentRef = fakeDocument();
+  globalThis.document = documentRef;
+  try {
+    const reward = createRewardControl(
+      { platform: "twitch", user_id: "42", id: "msg" },
+      { t: (key) => key === "reward.action" ? "Reward" : key, resolveURL: (path) => path, displayName: () => "Nova", iconOnly: true }
+    );
+    assert.match(reward.className, /message-list__icon-button/);
+    assert.equal(reward.getAttribute("aria-label"), "reward.actionAria");
+    assert.ok(reward.querySelector("svg"));
+    assert.ok(reward.querySelector("circle"));
+    assert.equal(reward._textContent, "");
+    assert.equal(reward.querySelector(".ui-tooltip").textContent, "Reward");
+
+    const del = createMessageDeleteControl(
+      { platform: "twitch", user_id: "42", id: "msg" },
+      { t: (key) => key === "dock.delete" ? "Delete" : key, displayName: () => "Nova", iconOnly: true, labelKey: "dock.delete", ariaKey: "dock.deleteAria" }
+    );
+    assert.match(del.className, /message-list__icon-button--delete/);
+    assert.equal(del.getAttribute("aria-label"), "dock.deleteAria");
+    assert.ok(del.querySelector("svg"));
+    assert.doesNotMatch(del.className, /undefined/);
+  } finally {
+    globalThis.document = originalDocument;
+  }
+});
+
+test("live reward keeps a visible text label", function () {
+  const originalDocument = globalThis.document;
+  const documentRef = fakeDocument();
+  globalThis.document = documentRef;
+  try {
+    const reward = createRewardControl(
+      { platform: "twitch", user_id: "42", id: "msg" },
+      { t: (key) => key === "reward.action" ? "Reward" : key, resolveURL: (path) => path, displayName: () => "Nova" }
+    );
+    assert.equal(reward._textContent, "Reward");
+    assert.doesNotMatch(reward.className, /message-list__icon-button/);
+  } finally {
+    globalThis.document = originalDocument;
+  }
+});
+
+test("streamer like is inactive when like is already granted", function () {
+  const originalDocument = globalThis.document;
+  const documentRef = fakeDocument();
+  globalThis.document = documentRef;
+  try {
+    const button = createStreamerLikeControl(
+      { platform: "twitch", user_id: "42", id: "msg", granted_award_ids: ["like"] },
+      {
+        likeAward: { id: "like", name: "Streamer Like", points: 5 },
+        t: (key) => key,
+        resolveURL: (path) => path,
+      }
+    );
+    assert.equal(button.disabled, true);
+    assert.match(button.className, /is-used/);
+  } finally {
+    globalThis.document = originalDocument;
+  }
+});
+
+test("picker lists granted types but they are not choosable", async function () {
+  const originalDocument = globalThis.document;
+  const originalFetch = globalThis.fetch;
+  const documentRef = fakeDocument();
+  let grantCalls = 0;
+  globalThis.document = documentRef;
+  globalThis.fetch = async function (url) {
+    if (String(url).endsWith("/api/awards")) {
+      return { ok: true, json: async () => ({ awards: [{ id: "advice", name: "Advice", points: 25 }, { id: "joke", name: "Joke", points: 10 }] }) };
+    }
+    grantCalls += 1;
+    return { ok: true };
+  };
+  try {
+    invalidateAwardsCache();
+    const button = createRewardControl(
+      { platform: "twitch", user_id: "42", id: "msg", granted_award_ids: ["advice"] },
+      { t: (key) => key, resolveURL: (path) => path, displayName: () => "Nova" }
+    );
+    documentRef.body.appendChild(button);
+    button.dispatch("click");
+    await settle();
+    const picker = documentRef.body.querySelector(".reward-picker");
+    const items = picker.children[0].children;
+    const adviceItem = items.find((child) => child.dataset.awardId === "advice");
+    const jokeItem = items.find((child) => child.dataset.awardId === "joke");
+    assert.equal(adviceItem.disabled, true);
+    assert.match(adviceItem.className, /is-granted/);
+    assert.equal(jokeItem.disabled, false);
+    adviceItem.dispatch("click");
+    await settle();
+    assert.equal(grantCalls, 0);
+  } finally {
+    invalidateAwardsCache();
+    globalThis.document = originalDocument;
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("http 409 marks like granted without retry copy", async function () {
+  const originalDocument = globalThis.document;
+  const originalFetch = globalThis.fetch;
+  const documentRef = fakeDocument();
+  globalThis.document = documentRef;
+  globalThis.fetch = async function () {
+    return { ok: false, status: 409 };
+  };
+  try {
+    const message = { platform: "twitch", user_id: "42", id: "msg" };
+    const feedback = documentRef.createElement("p");
+    const button = createStreamerLikeControl(message, {
+      likeAward: { id: "like", name: "Streamer Like", points: 5 },
+      t: (key) => key,
+      resolveURL: (path) => path,
+      feedbackElement: feedback,
+    });
+    button.dispatch("click");
+    await settle();
+    assert.equal(isAwardGranted(message, "like"), true);
+    assert.equal(button.disabled, true);
+    assert.equal(feedback.getAttribute("role"), "status");
+    assert.equal(feedback.textContent, "reward.alreadyGranted");
   } finally {
     globalThis.document = originalDocument;
     globalThis.fetch = originalFetch;

@@ -983,12 +983,14 @@ export default {
   "msg.commandReject.award_full": "Award full",
   "msg.commandCooldownFrozen": "Command on cooldown",
   "msg.commandCooldownRemaining": "{seconds}s left",
+  "msg.commandCooldownShort": "{seconds}s",
 
   "reward.action": "Reward",
   "reward.actionAria": "Reward {user}",
   "reward.loading": "Loading awards…",
   "reward.emptyCatalog": "Add award types in Audience → Awards.",
   "reward.grantFailed": "Could not grant the award.",
+  "reward.alreadyGranted": "That award was already granted on this message.",
   "reward.grantSucceeded": "{award} granted: +{points} points.",
 
   "dock.waiting": "Waiting for chat messages",

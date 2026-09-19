@@ -63,7 +63,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	overlayAssets := newOverlayAssetsHandler(opts.Store, opts.ViewerStore)
 	statusHandler := newStatusHandler(opts.Store, registry)
 	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt, opts.EmoteCache)
-	messagesHandler := newMessagesHandler(opts.History, opts.Hub)
+	messagesHandler := newMessagesHandler(opts.History, opts.Hub, opts.ViewerStore)
 	oauthState := newOAuthStateStore()
 	youtubeOAuth := newYouTubeOAuthHandler(opts.Store, oauthState)
 	supportOpen := newSupportOpenHandler()

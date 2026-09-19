@@ -8,7 +8,7 @@ import {
   isCooldownOutcomeActive,
   isRejectedOutcomeActive,
   normalizeMessageCommandOutcome,
-} from "./command-outcome-ui.js";
+} from "./command-outcome-ui.js?v=2";
 
 /**
  * @typedef {import("./command-outcome-ui.js").NormalizedCommandOutcome} NormalizedCommandOutcome

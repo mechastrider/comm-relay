@@ -37,7 +37,7 @@ import {
   setMessagesLoadError,
   clearMessagesLoadError,
 } from './messages.js';
-import { prefetchAwards } from '/shared/reward-picker.js?v=5';
+import { prefetchAwards } from '/shared/reward-picker.js?v=6';
 import { renderDiagnostics } from './status.js';
 import { applyAdminLocale, localeFromConfig, t } from './i18n-ui.js';
 

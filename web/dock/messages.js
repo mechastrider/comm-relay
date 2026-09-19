@@ -1,10 +1,11 @@
 import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
 import {
   createGrantFeedbackElement,
+  createMessageDeleteControl,
   mountMessageGrantActions,
   prefetchAwards,
-} from "/shared/reward-picker.js?v=5";
-import { applyDomTranslations, setLocale, t } from "/shared/i18n.js?v=19";
+} from "/shared/reward-picker.js?v=6";
+import { applyDomTranslations, setLocale, t } from "/shared/i18n.js?v=21";
 import {
   CONTRACT_CONTENT,
   LEADERBOARD_CONTENT,
@@ -17,7 +18,7 @@ import {
   visibilityControlState,
   visibilitySecondsRemaining,
 } from "/dock/messages/leaderboard-controls.js?v=2";
-import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=1";
+import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=3";
 
 "use strict";
 
@@ -535,18 +536,18 @@ import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=1";
       resolveURL: function (path) { return path; },
       displayName: displayName,
       flipClass: "reward-picker--flip",
+      iconOnly: true,
     });
 
     if (typeof message.id === "string" && message.id !== "") {
-      const deleteButton = document.createElement("button");
-      deleteButton.className = "message-list__delete";
-      deleteButton.type = "button";
-      deleteButton.textContent = t("dock.delete");
-      deleteButton.setAttribute("aria-label", t("dock.deleteAria", { user: displayName(message) }));
-      deleteButton.addEventListener("click", function () {
-        deleteMessage(message, deleteButton);
-      });
-      actions.appendChild(deleteButton);
+      actions.appendChild(createMessageDeleteControl(message, {
+        t: t,
+        displayName: displayName,
+        iconOnly: true,
+        labelKey: "dock.delete",
+        ariaKey: "dock.deleteAria",
+        onDelete: deleteMessage,
+      }));
     }
 
     if (actions.childElementCount > 0) {

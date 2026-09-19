@@ -91,6 +91,16 @@ func (s *Store) applyAwardLocked(identity ChatIdentity, points int, dayResetHour
 		_ = tx.Rollback()
 	}()
 
+	if event != nil && event.Kind == InteractionEventAward {
+		alreadyGranted, lookupErr := awardAlreadyGrantedLocked(tx, event.MessagePlatform, event.MessageID, event.AwardID)
+		if lookupErr != nil {
+			return nil, lookupErr
+		}
+		if alreadyGranted {
+			return nil, ErrAwardAlreadyGranted
+		}
+	}
+
 	beforeRanks, err := captureTopThree(tx, sessionID, dayKey)
 	if err != nil {
 		return nil, err
@@ -206,4 +216,35 @@ func (s *Store) mergeExistingIdentityLocked(tx *sql.Tx, identity ChatIdentity) (
 	}
 
 	return identity, nil
+}
+
+func awardAlreadyGrantedLocked(tx *sql.Tx, platform, messageID, awardID string) (bool, error) {
+	platform = strings.TrimSpace(platform)
+	messageID = strings.TrimSpace(messageID)
+	awardID = strings.TrimSpace(awardID)
+	if messageID == "" || awardID == "" {
+		return false, nil
+	}
+
+	var exists int
+	err := tx.QueryRow(
+		`SELECT 1 FROM interaction_events
+		 WHERE kind = ?
+		   AND message_platform = ?
+		   AND message_id = ?
+		   AND award_id = ?
+		 LIMIT 1`,
+		string(InteractionEventAward),
+		platform,
+		messageID,
+		awardID,
+	).Scan(&exists)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, errors.Errorf("lookup existing award grant: %w", err)
+	}
+
+	return true, nil
 }

@@ -129,6 +129,25 @@
   opacity: 0.55;
 }
 
+.message-list__icon-button.is-used,
+.message-list__icon-button.is-used:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.message-list__icon-button--delete {
+  border-color: #71383d;
+  background: #26171a;
+  color: #ffb8be;
+}
+
+.message-list__icon-button--delete:hover,
+.message-list__icon-button--delete:focus-visible {
+  border-color: #c95d66;
+  background: #3a1d21;
+  color: #fff;
+}
+
 .message-list__grant-feedback {
   margin: 0;
   color: #c8e6a0;
@@ -136,4 +155,60 @@
   font-weight: 600;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+.reward-picker__item.is-granted,
+.reward-picker__item.is-granted:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.message-list__command-outcome {
+  flex: 0 0 auto;
+  display: inline-grid;
+  width: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 4px;
+  place-items: center;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #8fd4a8;
+  pointer-events: none;
+}
+
+.message-list__command-outcome--accepted {
+  color: #8fd4a8;
+}
+
+.message-list__command-outcome--frozen {
+  width: auto;
+  min-width: 28px;
+  grid-auto-flow: column;
+  gap: 3px;
+  padding: 4px 6px 4px 4px;
+  color: #b8c2d4;
+}
+
+.message-list__item--command-rejected .message-list__command-outcome--frozen {
+  color: #d4b896;
+}
+
+.message-list__command-outcome svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.message-list__command-outcome-label {
+  font-size: 9px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
