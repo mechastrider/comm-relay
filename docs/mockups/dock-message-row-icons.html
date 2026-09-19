@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Эскиз: иконки строк OBS dock</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, "Segoe UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #0c0c10;
+      color: #f0f0f3;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .lede {
+      margin: 0 0 20px;
+      max-width: 560px;
+      color: #94949d;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .dock {
+      width: 420px;
+      padding: 10px;
+      border: 1px solid #34343a;
+      border-radius: 4px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(212, 160, 23, 0.08), transparent 42%),
+        #101014;
+    }
+    .caption {
+      margin: 16px 0 8px;
+      color: #d4a017;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .caption:first-child { margin-top: 0; }
+    .message-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .message-list__item {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 9px;
+      padding: 9px 10px 10px;
+      border: 1px solid #333;
+      border-left: 3px solid var(--message-accent, #d4a017);
+      border-radius: 3px;
+      background:
+        linear-gradient(90deg, color-mix(in srgb, var(--message-accent, #d4a017) 13%, transparent), transparent 45%),
+        rgba(20, 20, 23, 0.96);
+    }
+    .message-list__item--command-accepted {
+      border-left-color: #3d9a62;
+    }
+    .message-list__item--command-cooldown {
+      border-left-color: #6b7a94;
+      opacity: 0.88;
+      filter: saturate(0.72);
+    }
+    .message-list__item--command-rejected {
+      border-left-color: #9a6b3d;
+      opacity: 0.88;
+      filter: saturate(0.72);
+    }
+    .message-list__avatar {
+      width: 38px;
+      height: 38px;
+      border: 1px solid color-mix(in srgb, var(--message-accent, #d4a017) 65%, #111);
+      border-radius: 5px;
+      background: #151518;
+    }
+    .message-list__content { display: grid; min-width: 0; gap: 4px; }
+    .message-list__meta {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      color: #94949d;
+      font-size: 11px;
+    }
+    .message-list__user {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      color: var(--message-accent, #e2b635);
+      font-size: 14px;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .message-list__platform {
+      flex-shrink: 0;
+      padding: 1px 5px;
+      border: 1px solid #3a3a40;
+      border-radius: 3px;
+      background: #202025;
+      color: #aaaab3;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+    .message-list__time {
+      flex-shrink: 0;
+      color: #777780;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .message-list__actions {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .message-list__icon-button,
+    .message-list__status {
+      flex: 0 0 auto;
+      display: inline-grid;
+      width: 28px;
+      min-width: 28px;
+      min-height: 28px;
+      padding: 4px;
+      place-items: center;
+      border-radius: 3px;
+    }
+    .message-list__icon-button {
+      border: 1px solid #4a5f2f;
+      background: #1a2414;
+      color: #c8e6a0;
+      cursor: default;
+    }
+    .message-list__icon-button svg,
+    .message-list__status svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.8;
+    }
+    .message-list__icon-button--delete {
+      border-color: #71383d;
+      background: #26171a;
+      color: #ffb8be;
+    }
+    .message-list__icon-button.is-used {
+      opacity: 0.45;
+    }
+    .message-list__status {
+      border: 0;
+      background: transparent;
+      pointer-events: none;
+    }
+    .message-list__status--accepted { color: #8fd4a8; }
+    .message-list__status--frozen {
+      width: auto;
+      min-width: 28px;
+      grid-auto-flow: column;
+      gap: 3px;
+      padding: 4px 6px 4px 4px;
+      color: #b8c2d4;
+    }
+    .message-list__item--command-rejected .message-list__status--frozen {
+      color: #d4b896;
+    }
+    .message-list__status-label {
+      font-size: 9px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    .message-list__text {
+      margin: 0;
+      color: #f0f0f3;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+    .message-list__grant-feedback {
+      margin: 0;
+      color: #c8e6a0;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+    .note {
+      margin-top: 18px;
+      max-width: 420px;
+      color: #777780;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <h1>OBS dock · эскиз строк</h1>
+  <p class="lede">Статус команды — не кнопка: галочка или снежинка слева от кластера. Награда и удалить — иконки 28×28, как лайк. Подпись кулдауна и отказа остаётся короткой рядом со снежинкой.</p>
+
+  <div class="dock">
+    <p class="caption">Обычное сообщение</p>
+    <ul class="message-list">
+      <li class="message-list__item" style="--message-accent:#e2b635">
+        <div class="message-list__avatar"></div>
+        <div class="message-list__content">
+          <div class="message-list__meta">
+            <span class="message-list__user">Nova</span>
+            <span class="message-list__platform">twitch</span>
+            <time class="message-list__time">12:48</time>
+            <div class="message-list__actions">
+              <span class="message-list__icon-button" title="Лайк от стримера">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v8"/><path d="M11 11V7.5a2.5 2.5 0 0 1 5 0V11h3.2a1.5 1.5 0 0 1 1.4 2.1l-2.2 6.4A2 2 0 0 1 17.6 20H11"/></svg>
+              </span>
+              <span class="message-list__icon-button" title="Награда">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5.5"/><path d="M8.2 13.4 7 21l5-3 5 3-1.2-7.6"/></svg>
+              </span>
+              <span class="message-list__icon-button message-list__icon-button--delete" title="Удалить">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M7 7l1 13h8l1-13"/></svg>
+              </span>
+            </div>
+          </div>
+          <p class="message-list__text">отличный тайминг на захвате</p>
+        </div>
+      </li>
+    </ul>
+
+    <p class="caption">Команда принята</p>
+    <ul class="message-list">
+      <li class="message-list__item message-list__item--command-accepted" style="--message-accent:#e2b635">
+        <div class="message-list__avatar"></div>
+        <div class="message-list__content">
+          <div class="message-list__meta">
+            <span class="message-list__user">Nova</span>
+            <span class="message-list__platform">twitch</span>
+            <time class="message-list__time">12:48</time>
+            <div class="message-list__actions">
+              <span class="message-list__status message-list__status--accepted" title="Команда принята">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13.2 9.2 18 19 7"/></svg>
+              </span>
+              <span class="message-list__icon-button" title="Лайк от стримера">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v8"/><path d="M11 11V7.5a2.5 2.5 0 0 1 5 0V11h3.2a1.5 1.5 0 0 1 1.4 2.1l-2.2 6.4A2 2 0 0 1 17.6 20H11"/></svg>
+              </span>
+              <span class="message-list__icon-button" title="Награда">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5.5"/><path d="M8.2 13.4 7 21l5-3 5 3-1.2-7.6"/></svg>
+              </span>
+              <span class="message-list__icon-button message-list__icon-button--delete" title="Удалить">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M7 7l1 13h8l1-13"/></svg>
+              </span>
+            </div>
+          </div>
+          <p class="message-list__text">!gg</p>
+        </div>
+      </li>
+    </ul>
+
+    <p class="caption">После лайка на этой строке</p>
+    <ul class="message-list">
+      <li class="message-list__item message-list__item--command-accepted" style="--message-accent:#e2b635">
+        <div class="message-list__avatar"></div>
+        <div class="message-list__content">
+          <div class="message-list__meta">
+            <span class="message-list__user">Nova</span>
+            <span class="message-list__platform">twitch</span>
+            <time class="message-list__time">12:48</time>
+            <div class="message-list__actions">
+              <span class="message-list__status message-list__status--accepted" title="Команда принята">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13.2 9.2 18 19 7"/></svg>
+              </span>
+              <span class="message-list__icon-button is-used" title="Лайк уже выдан">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v8"/><path d="M11 11V7.5a2.5 2.5 0 0 1 5 0V11h3.2a1.5 1.5 0 0 1 1.4 2.1l-2.2 6.4A2 2 0 0 1 17.6 20H11"/></svg>
+              </span>
+              <span class="message-list__icon-button" title="Награда">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5.5"/><path d="M8.2 13.4 7 21l5-3 5 3-1.2-7.6"/></svg>
+              </span>
+              <span class="message-list__icon-button message-list__icon-button--delete" title="Удалить">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M7 7l1 13h8l1-13"/></svg>
+              </span>
+            </div>
+          </div>
+          <p class="message-list__text">!gg</p>
+          <p class="message-list__grant-feedback">Награда «Лайк от стримера» выдана: +5 очк.</p>
+        </div>
+      </li>
+    </ul>
+
+    <p class="caption">Заморожено · кулдаун</p>
+    <ul class="message-list">
+      <li class="message-list__item message-list__item--command-cooldown" style="--message-accent:#e2b635">
+        <div class="message-list__avatar"></div>
+        <div class="message-list__content">
+          <div class="message-list__meta">
+            <span class="message-list__user">Nova</span>
+            <span class="message-list__platform">twitch</span>
+            <time class="message-list__time">12:49</time>
+            <div class="message-list__actions">
+              <span class="message-list__status message-list__status--frozen" title="Команда заморожена. Осталось 12 с">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5.6 6.5 18.4 17.5M18.4 6.5 5.6 17.5"/><path d="m9 5 3-2 3 2M9 19l3 2 3-2M4 9.5l-1.5 2.5L4 14.5M20 9.5l1.5 2.5L20 14.5"/></svg>
+                <span class="message-list__status-label">12 с</span>
+              </span>
+              <span class="message-list__icon-button" title="Лайк от стримера">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v8"/><path d="M11 11V7.5a2.5 2.5 0 0 1 5 0V11h3.2a1.5 1.5 0 0 1 1.4 2.1l-2.2 6.4A2 2 0 0 1 17.6 20H11"/></svg>
+              </span>
+              <span class="message-list__icon-button" title="Награда">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5.5"/><path d="M8.2 13.4 7 21l5-3 5 3-1.2-7.6"/></svg>
+              </span>
+              <span class="message-list__icon-button message-list__icon-button--delete" title="Удалить">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M7 7l1 13h8l1-13"/></svg>
+              </span>
+            </div>
+          </div>
+          <p class="message-list__text">!gg</p>
+        </div>
+      </li>
+    </ul>
+
+    <p class="caption">Заморожено · отказ</p>
+    <ul class="message-list">
+      <li class="message-list__item message-list__item--command-rejected" style="--message-accent:#e2b635">
+        <div class="message-list__avatar"></div>
+        <div class="message-list__content">
+          <div class="message-list__meta">
+            <span class="message-list__user">Nova</span>
+            <span class="message-list__platform">twitch</span>
+            <time class="message-list__time">12:50</time>
+            <div class="message-list__actions">
+              <span class="message-list__status message-list__status--frozen" title="Команда заморожена. уточни">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5.6 6.5 18.4 17.5M18.4 6.5 5.6 17.5"/><path d="m9 5 3-2 3 2M9 19l3 2 3-2M4 9.5l-1.5 2.5L4 14.5M20 9.5l1.5 2.5L20 14.5"/></svg>
+                <span class="message-list__status-label">уточни</span>
+              </span>
+              <span class="message-list__icon-button" title="Лайк от стримера">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v8"/><path d="M11 11V7.5a2.5 2.5 0 0 1 5 0V11h3.2a1.5 1.5 0 0 1 1.4 2.1l-2.2 6.4A2 2 0 0 1 17.6 20H11"/></svg>
+              </span>
+              <span class="message-list__icon-button" title="Награда">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5.5"/><path d="M8.2 13.4 7 21l5-3 5 3-1.2-7.6"/></svg>
+              </span>
+              <span class="message-list__icon-button message-list__icon-button--delete" title="Удалить">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M7 7l1 13h8l1-13"/></svg>
+              </span>
+            </div>
+          </div>
+          <p class="message-list__text">!like alicx</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <p class="note">Галочка и снежинка без рамки кнопки. Секунды и «уточни» остаются, потому что одной иконки мало. Лайк после выдачи тускнеет; медаль открывает остальные типы.</p>
+</body>
+</html>
