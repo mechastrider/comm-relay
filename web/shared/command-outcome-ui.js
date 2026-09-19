@@ -175,6 +175,42 @@ export function commandOutcomeChromeKind(outcome, nowMs) {
 }
 
 const OUTCOME_BADGE_CLASS = "message-list__command-outcome";
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function createOutcomeIcon(paths) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  paths.forEach(function (d) {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    svg.appendChild(path);
+  });
+  return svg;
+}
+
+function createCheckIcon() {
+  return createOutcomeIcon(["M5 13.2 9.2 18 19 7"]);
+}
+
+function createSnowflakeIcon() {
+  return createOutcomeIcon([
+    "M12 3v18",
+    "M5.6 6.5 18.4 17.5",
+    "M18.4 6.5 5.6 17.5",
+    "m9 5 3-2 3 2",
+    "M9 19l3 2 3-2",
+    "M4 9.5l-1.5 2.5L4 14.5",
+    "M20 9.5l1.5 2.5L20 14.5",
+  ]);
+}
+
+function replaceBadgeContent(badge, children) {
+  badge.textContent = "";
+  children.forEach(function (child) {
+    badge.appendChild(child);
+  });
+}
 
 /**
  * @param {HTMLElement} item
@@ -204,36 +240,56 @@ export function applyCommandOutcomeChrome(item, outcome, nowMs, translate) {
   if (!meta) {
     return;
   }
+  const actions = meta.querySelector(".message-list__actions");
   if (!badge) {
     badge = document.createElement("span");
     badge.className = OUTCOME_BADGE_CLASS;
     badge.setAttribute("role", "status");
-    meta.appendChild(badge);
+    if (actions) {
+      meta.insertBefore(badge, actions);
+    } else {
+      meta.appendChild(badge);
+    }
+  } else if (actions && badge.nextSibling !== actions) {
+    meta.insertBefore(badge, actions);
   }
 
   if (kind === "accepted") {
     const label = translate("msg.commandAccepted");
-    badge.textContent = label;
+    badge.className = OUTCOME_BADGE_CLASS + " message-list__command-outcome--accepted";
+    replaceBadgeContent(badge, [createCheckIcon()]);
     badge.setAttribute("aria-label", label);
+    badge.setAttribute("title", label);
     item.setAttribute("aria-label", label);
     return;
   }
 
+  badge.className = OUTCOME_BADGE_CLASS + " message-list__command-outcome--frozen";
+  const compact = document.createElement("span");
+  compact.className = "message-list__command-outcome-label";
+
   if (kind === "rejected") {
     const reasonText = commandOutcomeReasonLabel(outcome, translate);
     const frozenLabel = translate("msg.commandRejectedFrozen");
-    badge.textContent = reasonText;
-    badge.setAttribute("aria-label", frozenLabel + ". " + reasonText);
-    item.setAttribute("aria-label", frozenLabel + ". " + reasonText);
+    compact.textContent = reasonText;
+    replaceBadgeContent(badge, [createSnowflakeIcon(), compact]);
+    const accessible = frozenLabel + ". " + reasonText;
+    badge.setAttribute("aria-label", accessible);
+    badge.setAttribute("title", accessible);
+    item.setAttribute("aria-label", accessible);
     return;
   }
 
   const seconds = cooldownSecondsRemaining(outcome.cooldown_expires_at_ms, nowMs);
   const remainingLabel = translate("msg.commandCooldownRemaining", { seconds: seconds });
+  const shortLabel = translate("msg.commandCooldownShort", { seconds: seconds });
   const frozenLabel = translate("msg.commandCooldownFrozen");
-  badge.textContent = remainingLabel;
-  badge.setAttribute("aria-label", frozenLabel + ". " + remainingLabel);
-  item.setAttribute("aria-label", frozenLabel + ". " + remainingLabel);
+  compact.textContent = shortLabel;
+  replaceBadgeContent(badge, [createSnowflakeIcon(), compact]);
+  const accessible = frozenLabel + ". " + remainingLabel;
+  badge.setAttribute("aria-label", accessible);
+  badge.setAttribute("title", accessible);
+  item.setAttribute("aria-label", accessible);
 }
 
 /**

@@ -983,12 +983,14 @@ export default {
   "msg.commandReject.award_full": "Награда заполнена",
   "msg.commandCooldownFrozen": "Команда на кулдауне",
   "msg.commandCooldownRemaining": "осталось {seconds} с",
+  "msg.commandCooldownShort": "{seconds} с",
 
   "reward.action": "Награда",
   "reward.actionAria": "Наградить {user}",
   "reward.loading": "Загрузка наград…",
   "reward.emptyCatalog": "Добавьте типы наград в Аудитория → Награды.",
   "reward.grantFailed": "Не удалось выдать награду.",
+  "reward.alreadyGranted": "Эта награда уже выдана на этом сообщении.",
   "reward.grantSucceeded": "Награда «{award}» выдана: +{points} очк.",
 
   "dock.waiting": "Ожидание сообщений чата",

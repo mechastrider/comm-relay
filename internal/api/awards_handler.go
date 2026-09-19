@@ -355,6 +355,15 @@ func (h *awardsHandler) handleGrant(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "platform and user_id are required")
 		return
 	}
+	if errors.Is(err, store.ErrAwardAlreadyGranted) {
+		clog.Info(r.Context(), "award already granted",
+			slog.String("award_id", award.ID),
+			slog.String("platform", platform),
+			slog.String("message_id", messageID),
+		)
+		writeError(w, http.StatusConflict, "award already granted")
+		return
+	}
 	if err != nil {
 		clog.Errorf(r.Context(), "apply award: %w", err)
 		writeError(w, http.StatusInternalServerError, "failed to grant award")

@@ -37,6 +37,7 @@ import {
   setMessagesLoadError,
   clearMessagesLoadError,
 } from './messages.js';
+import { prefetchAwards } from '/shared/reward-picker.js?v=6';
 import { renderDiagnostics } from './status.js';
 import { applyAdminLocale, localeFromConfig, t } from './i18n-ui.js';
 
@@ -937,9 +938,13 @@ export async function loadRecentMessages(options) {
       setMessagesLoading(true);
     }
     try {
-      const response = await fetch(
-        apiURL("/api/messages/recent?limit=" + String(RECENT_MESSAGE_LIMIT))
-      );
+      const results = await Promise.all([
+        prefetchAwards(apiURL).catch(function () {
+          return null;
+        }),
+        fetch(apiURL("/api/messages/recent?limit=" + String(RECENT_MESSAGE_LIMIT))),
+      ]);
+      const response = results[1];
       const payload = await readJSON(response);
       if (!response.ok) {
         throw new Error(mapHTTPError(response.status, payload && payload.error));

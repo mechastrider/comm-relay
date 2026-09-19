@@ -40,7 +40,7 @@ func TestProgressionBootstrap_WhenFreshAndUpgraded_ExpectStableLocaleCatalog(t *
 			assert.True(t, levels[0].Announce)
 			achievements, err := s.ListAchievements()
 			require.NoError(t, err)
-			require.Len(t, achievements, 11)
+			require.Len(t, achievements, 12)
 			assert.NoError(t, s.Close())
 		})
 	}

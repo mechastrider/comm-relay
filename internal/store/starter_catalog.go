@@ -102,6 +102,7 @@ func englishStarterAwards() []starterAwardSeed {
 		{ID: "intel", Name: "Intel", Points: 30, SplashTemplate: "Intel for {viewer}! +{points}", Sound: "chime", DurationMs: 5000},
 		{ID: "expert", Name: "Expert", Points: 40, SplashTemplate: "Expert for {viewer}! +{points}", Sound: "alert", DurationMs: 5000},
 		{ID: "meme", Name: "Meme", Points: 20, SplashTemplate: "Meme for {viewer}! +{points}", Sound: "soft", DurationMs: 5000},
+		{ID: "on_point", Name: "On Point", Points: 20, SplashTemplate: "On Point: {viewer}! +{points}", Sound: "ping", DurationMs: 5000},
 		{ID: "clutch", Name: "Clutch Help", Points: 50, SplashTemplate: "Clutch Help for {viewer}! +{points}", Sound: "alert", DurationMs: 5000},
 		{ID: "mvp", Name: "MVP", Points: 100, SplashTemplate: "MVP for {viewer}! +{points}", Sound: "chime", DurationMs: 5000},
 	}
@@ -116,6 +117,7 @@ func russianStarterAwards() []starterAwardSeed {
 		{ID: "intel", Name: "Информация", Points: 30, SplashTemplate: "Информация от {viewer}! +{points}", Sound: "chime", DurationMs: 5000},
 		{ID: "expert", Name: "Эксперт", Points: 40, SplashTemplate: "Эксперт: {viewer}! +{points}", Sound: "alert", DurationMs: 5000},
 		{ID: "meme", Name: "Мем", Points: 20, SplashTemplate: "Мем для {viewer}! +{points}", Sound: "soft", DurationMs: 5000},
+		{ID: "on_point", Name: "В точку", Points: 20, SplashTemplate: "В точку: {viewer}! +{points}", Sound: "ping", DurationMs: 5000},
 		{ID: "clutch", Name: "Решающая помощь", Points: 50, SplashTemplate: "Решающая помощь от {viewer}! +{points}", Sound: "alert", DurationMs: 5000},
 		{ID: "mvp", Name: "MVP", Points: 100, SplashTemplate: "MVP: {viewer}! +{points}", Sound: "chime", DurationMs: 5000},
 	}

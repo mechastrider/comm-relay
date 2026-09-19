@@ -3,8 +3,107 @@
 let awardsCache = null;
 let awardsCachePromise = null;
 
+const LIKE_AWARD_ID = "like";
+const SVG_NS = "http://www.w3.org/2000/svg";
+const PICKER_MARGIN_PX = 8;
+const PICKER_MIN_WIDTH_PX = 160;
+const PICKER_PREFERRED_WIDTH_PX = 280;
+
+function finiteNumber(value, fallback) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+/**
+ * Keep a fixed picker inside a panel/viewport, growing left from a right-edge icon trigger.
+ *
+ * @param {{ left?: number, width?: number, right?: number }} triggerRect
+ * @param {{ left?: number, width?: number, right?: number }} panelRect
+ * @param {number} [measuredWidth]
+ * @returns {{ left: number, width: number }}
+ */
+export function rewardPickerPlacement(triggerRect, panelRect, measuredWidth) {
+  const trigger = triggerRect && typeof triggerRect === "object" ? triggerRect : {};
+  const panel = panelRect && typeof panelRect === "object" ? panelRect : {};
+  const panelLeft = finiteNumber(panel.left, 0);
+  const panelRight = finiteNumber(
+    panel.right,
+    panelLeft + finiteNumber(panel.width, 1024)
+  );
+  const available = Math.max(0, panelRight - panelLeft - PICKER_MARGIN_PX * 2);
+  const preferred = finiteNumber(measuredWidth, 0) > 0
+    ? measuredWidth
+    : PICKER_PREFERRED_WIDTH_PX;
+  const width = Math.max(
+    Math.min(PICKER_MIN_WIDTH_PX, available),
+    Math.min(preferred, available, PICKER_PREFERRED_WIDTH_PX)
+  );
+  const minLeft = panelLeft + PICKER_MARGIN_PX;
+  const maxLeft = panelRight - PICKER_MARGIN_PX - width;
+  const triggerRight = finiteNumber(
+    trigger.right,
+    finiteNumber(trigger.left, 0) + finiteNumber(trigger.width, 0)
+  );
+  let left = triggerRight - width;
+  if (maxLeft < minLeft) {
+    left = minLeft;
+  } else if (left < minLeft) {
+    left = minLeft;
+  } else if (left > maxLeft) {
+    left = maxLeft;
+  }
+  return { left: left, width: width };
+}
+
 function trimString(value) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function asAwardIdList(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const ids = [];
+  const seen = new Set();
+  value.forEach(function (id) {
+    const trimmed = trimString(id);
+    if (trimmed === "" || seen.has(trimmed)) {
+      return;
+    }
+    seen.add(trimmed);
+    ids.push(trimmed);
+  });
+  return ids;
+}
+
+export function grantedAwardIdsFromMessage(message) {
+  if (!message || typeof message !== "object") {
+    return [];
+  }
+  return asAwardIdList(message.granted_award_ids);
+}
+
+export function isAwardGranted(message, awardId) {
+  const id = trimString(awardId);
+  if (id === "") {
+    return false;
+  }
+  return grantedAwardIdsFromMessage(message).includes(id);
+}
+
+export function markAwardGranted(message, awardId) {
+  const id = trimString(awardId);
+  if (!message || typeof message !== "object" || id === "") {
+    return;
+  }
+  const ids = grantedAwardIdsFromMessage(message);
+  if (!ids.includes(id)) {
+    ids.push(id);
+  }
+  message.granted_award_ids = ids;
+}
+
+export function isAwardGrantConflict(error) {
+  return Boolean(error && error.alreadyGranted);
 }
 
 export function messageCanBeRewarded(message) {
@@ -39,6 +138,72 @@ export function awardGrantFailure(t) {
   return t("reward.grantFailed");
 }
 
+export function awardAlreadyGrantedStatus(t) {
+  return t("reward.alreadyGranted");
+}
+
+export function getCachedAwards() {
+  return awardsCache;
+}
+
+export function findLikeAward(awards) {
+  if (!Array.isArray(awards)) {
+    return null;
+  }
+  const found = awards.find(function (award) {
+    return award && award.id === LIKE_AWARD_ID;
+  });
+  return found || null;
+}
+
+export function pickerAwardsFromCatalog(awards) {
+  if (!Array.isArray(awards)) {
+    return [];
+  }
+  return awards.filter(function (award) {
+    return award && award.id !== LIKE_AWARD_ID;
+  });
+}
+
+export function createGrantFeedbackElement() {
+  const feedback = document.createElement("p");
+  feedback.className = "message-list__grant-feedback";
+  feedback.hidden = true;
+  return feedback;
+}
+
+export function createGrantFeedbackReporter(feedbackElement, t) {
+  return {
+    reportSuccess: function (award) {
+      if (!feedbackElement) {
+        return;
+      }
+      feedbackElement.hidden = false;
+      feedbackElement.setAttribute("role", "status");
+      feedbackElement.setAttribute("aria-live", "polite");
+      feedbackElement.textContent = awardGrantStatus(t, award);
+    },
+    reportAlreadyGranted: function () {
+      if (!feedbackElement) {
+        return;
+      }
+      feedbackElement.hidden = false;
+      feedbackElement.setAttribute("role", "status");
+      feedbackElement.setAttribute("aria-live", "polite");
+      feedbackElement.textContent = awardAlreadyGrantedStatus(t);
+    },
+    reportFailure: function () {
+      if (!feedbackElement) {
+        return;
+      }
+      feedbackElement.hidden = false;
+      feedbackElement.setAttribute("role", "alert");
+      feedbackElement.removeAttribute("aria-live");
+      feedbackElement.textContent = awardGrantFailure(t);
+    },
+  };
+}
+
 function closePicker(picker, trigger) {
   if (picker && picker.parentNode) {
     picker.parentNode.removeChild(picker);
@@ -70,6 +235,13 @@ function positionPicker(picker, trigger, flipClass) {
   const triggerRect = trigger.getBoundingClientRect();
   const panel = trigger.closest(".message-panel") || document.documentElement;
   const panelRect = panel.getBoundingClientRect();
+  const measuredWidth = finiteNumber(picker.offsetWidth, 0) || finiteNumber(picker.scrollWidth, 0);
+  const placement = rewardPickerPlacement(triggerRect, panelRect, measuredWidth);
+  picker.style.left = String(placement.left) + "px";
+  picker.style.width = String(placement.width) + "px";
+  picker.style.minWidth = String(Math.min(PICKER_MIN_WIDTH_PX, placement.width)) + "px";
+  picker.style.maxWidth = String(placement.width) + "px";
+
   const maxHeight = Math.max(120, panelRect.bottom - triggerRect.bottom - 12);
   const flipMaxHeight = Math.max(120, triggerRect.top - panelRect.top - 12);
 
@@ -113,12 +285,16 @@ async function loadAwards(resolveURL) {
   return awardsCachePromise;
 }
 
+export function prefetchAwards(resolveURL) {
+  return loadAwards(resolveURL);
+}
+
 export function invalidateAwardsCache() {
   awardsCache = null;
   awardsCachePromise = null;
 }
 
-function buildPickerItem(award, onSelect) {
+function buildPickerItem(award, onSelect, granted) {
   const item = document.createElement("button");
   item.type = "button";
   item.className = "reward-picker__item";
@@ -126,10 +302,238 @@ function buildPickerItem(award, onSelect) {
   const name = typeof award.name === "string" ? award.name : award.id;
   const points = typeof award.points === "number" ? award.points : 0;
   item.textContent = name + " (+" + String(points) + ")";
+  if (granted) {
+    item.disabled = true;
+    item.classList.add("is-granted");
+    item.setAttribute("aria-disabled", "true");
+    return item;
+  }
   item.addEventListener("click", function () {
     onSelect(award, item);
   });
   return item;
+}
+
+function likeAwardLabel(award) {
+  const name = typeof award.name === "string" && award.name.trim() !== ""
+    ? award.name.trim()
+    : LIKE_AWARD_ID;
+  return name;
+}
+
+function createStrokeIcon(paths) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  paths.forEach(function (d) {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    svg.appendChild(path);
+  });
+  return svg;
+}
+
+function createThumbsUpIcon() {
+  const svg = createStrokeIcon([
+    "M7 11v8",
+    "M11 11V7.5a2.5 2.5 0 0 1 5 0V11h3.2a1.5 1.5 0 0 1 1.4 2.1l-2.2 6.4A2 2 0 0 1 17.6 20H11",
+  ]);
+  return svg;
+}
+
+function createMedalIcon() {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  const circle = document.createElementNS(SVG_NS, "circle");
+  circle.setAttribute("cx", "12");
+  circle.setAttribute("cy", "8");
+  circle.setAttribute("r", "5.5");
+  svg.appendChild(circle);
+  const ribbon = document.createElementNS(SVG_NS, "path");
+  ribbon.setAttribute("d", "M8.2 13.4 7 21l5-3 5 3-1.2-7.6");
+  svg.appendChild(ribbon);
+  return svg;
+}
+
+function createTrashIcon() {
+  return createStrokeIcon([
+    "M4 7h16",
+    "M9 7V5h6v2",
+    "M7 7l1 13h8l1-13",
+  ]);
+}
+
+function appendTooltip(button, label) {
+  const tooltip = document.createElement("span");
+  tooltip.className = "ui-tooltip";
+  tooltip.textContent = label;
+  button.appendChild(tooltip);
+}
+
+function applyLikeGrantedChrome(button) {
+  if (!button) {
+    return;
+  }
+  button.disabled = true;
+  button.classList.add("is-used");
+}
+
+function resolveFeedback(options, button) {
+  if (options.feedback) {
+    return options.feedback;
+  }
+  if (options.feedbackElement) {
+    return createGrantFeedbackReporter(options.feedbackElement, options.t);
+  }
+  let legacyNode = null;
+  function ensureLegacy() {
+    if (!legacyNode && button.parentNode) {
+      legacyNode = document.createElement("p");
+      legacyNode.className = "message-list__grant-feedback";
+      button.parentNode.appendChild(legacyNode);
+    }
+    return legacyNode;
+  }
+  return {
+    reportSuccess: function (award) {
+      const node = ensureLegacy();
+      if (node) {
+        node.hidden = false;
+        node.setAttribute("role", "status");
+        node.setAttribute("aria-live", "polite");
+        node.textContent = awardGrantStatus(options.t, award);
+      }
+    },
+    reportAlreadyGranted: function () {
+      const node = ensureLegacy();
+      if (node) {
+        node.hidden = false;
+        node.setAttribute("role", "status");
+        node.setAttribute("aria-live", "polite");
+        node.textContent = awardAlreadyGrantedStatus(options.t);
+      }
+    },
+    reportFailure: function () {
+      const node = ensureLegacy();
+      if (node) {
+        node.hidden = false;
+        node.setAttribute("role", "alert");
+        node.removeAttribute("aria-live");
+        node.textContent = awardGrantFailure(options.t);
+      }
+    },
+  };
+}
+
+async function postAwardGrant(message, award, resolveURL) {
+  const response = await fetch(resolveURL("/api/awards/grant"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(awardGrantRequest(message, award)),
+  });
+  if (response.status === 409) {
+    const error = new Error("award already granted");
+    error.alreadyGranted = true;
+    throw error;
+  }
+  if (!response.ok) {
+    throw new Error("grant failed");
+  }
+}
+
+export function createStreamerLikeControl(message, options) {
+  const likeAward = options.likeAward;
+  if (!likeAward) {
+    return null;
+  }
+  const resolveURL = options.resolveURL;
+  const label = likeAwardLabel(likeAward);
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "message-list__like message-list__icon-button has-tooltip";
+  button.setAttribute("aria-label", label);
+  button.appendChild(createThumbsUpIcon());
+  appendTooltip(button, label);
+
+  const feedback = resolveFeedback(options, button);
+  let grantInFlight = false;
+
+  if (isAwardGranted(message, LIKE_AWARD_ID)) {
+    applyLikeGrantedChrome(button);
+  }
+
+  button.addEventListener("click", async function () {
+    if (grantInFlight || button.disabled || isAwardGranted(message, LIKE_AWARD_ID)) {
+      return;
+    }
+    grantInFlight = true;
+    button.disabled = true;
+    try {
+      await postAwardGrant(message, likeAward, resolveURL);
+      markAwardGranted(message, LIKE_AWARD_ID);
+      applyLikeGrantedChrome(button);
+      feedback.reportSuccess(likeAward);
+    } catch (error) {
+      if (isAwardGrantConflict(error)) {
+        markAwardGranted(message, LIKE_AWARD_ID);
+        applyLikeGrantedChrome(button);
+        feedback.reportAlreadyGranted();
+      } else {
+        feedback.reportFailure();
+        button.disabled = false;
+      }
+    } finally {
+      grantInFlight = false;
+    }
+  });
+
+  return button;
+}
+
+export function mountMessageGrantActions(actionsContainer, feedbackElement, message, options) {
+  if (!messageCanBeRewarded(message) || !actionsContainer) {
+    return;
+  }
+  const awards = getCachedAwards();
+  const likeAward = findLikeAward(awards);
+  const grantOptions = Object.assign({}, options, { feedbackElement: feedbackElement });
+  if (likeAward) {
+    const likeControl = createStreamerLikeControl(message, Object.assign({}, grantOptions, { likeAward: likeAward }));
+    if (likeControl) {
+      actionsContainer.appendChild(likeControl);
+    }
+  }
+  actionsContainer.appendChild(createRewardControl(message, grantOptions));
+}
+
+export function createMessageDeleteControl(message, options) {
+  const t = options.t;
+  const displayName = options.displayName;
+  const labelKey = options.labelKey || "msg.delete";
+  const ariaKey = options.ariaKey || "msg.deleteAria";
+  const label = t(labelKey);
+  const ariaLabel = t(ariaKey, { user: displayName(message) });
+
+  const button = document.createElement("button");
+  button.type = "button";
+  if (options.iconOnly) {
+    button.className = "message-list__delete message-list__icon-button message-list__icon-button--delete has-tooltip";
+    button.setAttribute("aria-label", ariaLabel);
+    button.appendChild(createTrashIcon());
+    appendTooltip(button, label);
+  } else {
+    button.className = "message-list__delete";
+    button.textContent = label;
+    button.setAttribute("aria-label", ariaLabel);
+  }
+  button.addEventListener("click", function () {
+    if (typeof options.onDelete === "function") {
+      options.onDelete(message, button);
+    }
+  });
+  return button;
 }
 
 export function createRewardControl(message, options) {
@@ -137,37 +541,27 @@ export function createRewardControl(message, options) {
   const resolveURL = options.resolveURL;
   const displayName = options.displayName;
   const flipClass = options.flipClass || "reward-picker--flip";
+  const iconOnly = Boolean(options.iconOnly);
 
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "message-list__reward has-tooltip";
-  button.textContent = t("reward.action");
+  if (iconOnly) {
+    button.className = "message-list__reward message-list__icon-button has-tooltip";
+    button.appendChild(createMedalIcon());
+  } else {
+    button.className = "message-list__reward has-tooltip";
+    button.textContent = t("reward.action");
+  }
   button.setAttribute("aria-label", t("reward.actionAria", { user: displayName(message) }));
   button.setAttribute("aria-haspopup", "menu");
   button.setAttribute("aria-expanded", "false");
+  appendTooltip(button, t("reward.action"));
 
-  const tooltip = document.createElement("span");
-  tooltip.className = "ui-tooltip";
-  tooltip.textContent = t("reward.action");
-  button.appendChild(tooltip);
+  const feedback = resolveFeedback(options, button);
 
   let activePicker = null;
   let dismissHandler = null;
-  let feedback = null;
   let grantInFlight = false;
-
-  function reportFeedback(message) {
-    if (!feedback) {
-      feedback = document.createElement("p");
-      feedback.className = "message-list__reward-feedback";
-      feedback.setAttribute("role", "status");
-      feedback.setAttribute("aria-live", "polite");
-      if (button.parentNode) {
-        button.parentNode.appendChild(feedback);
-      }
-    }
-    feedback.textContent = message;
-  }
 
   function dismissPicker() {
     if (grantInFlight) {
@@ -191,7 +585,6 @@ export function createRewardControl(message, options) {
     }
 
     button.disabled = true;
-    invalidateAwardsCache();
 
     const picker = document.createElement("div");
     picker.className = "reward-picker";
@@ -208,9 +601,8 @@ export function createRewardControl(message, options) {
 
     const triggerRect = button.getBoundingClientRect();
     picker.style.position = "fixed";
-    picker.style.left = String(Math.max(8, triggerRect.left)) + "px";
     picker.style.top = String(triggerRect.bottom + 4) + "px";
-    picker.style.minWidth = String(Math.max(160, triggerRect.width)) + "px";
+    positionPicker(picker, button, flipClass);
 
     dismissHandler = function (event) {
       if (event.type === "keydown") {
@@ -231,7 +623,7 @@ export function createRewardControl(message, options) {
 
     let awards;
     try {
-      awards = await loadAwards(resolveURL);
+      awards = pickerAwardsFromCatalog(await loadAwards(resolveURL));
     } catch {
       status.textContent = awardGrantFailure(t);
       status.setAttribute("role", "alert");
@@ -258,36 +650,44 @@ export function createRewardControl(message, options) {
     const items = awards.map(function (award) {
       return buildPickerItem(award, function (selectedAward, selectedItem) {
         grantSelected(selectedAward, selectedItem);
-      });
+      }, isAwardGranted(message, award && award.id));
     });
     items.forEach(function (item) { list.appendChild(item); });
     picker.appendChild(list);
     positionPicker(picker, button, flipClass);
     enableRewardRetry(button);
-    items[0].focus();
+    const choosable = items.filter(function (item) { return !item.disabled; });
+    if (choosable.length > 0) {
+      choosable[0].focus();
+    } else {
+      picker.focus();
+    }
 
     picker.addEventListener("keydown", function (event) {
-      const currentIndex = items.indexOf(document.activeElement);
+      if (choosable.length === 0) {
+        return;
+      }
+      const currentIndex = choosable.indexOf(document.activeElement);
       if (event.key === "ArrowDown") {
         event.preventDefault();
-        const next = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
-        items[next].focus();
+        const next = currentIndex < choosable.length - 1 ? currentIndex + 1 : 0;
+        choosable[next].focus();
       } else if (event.key === "ArrowUp") {
         event.preventDefault();
-        const prev = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
-        items[prev].focus();
+        const prev = currentIndex > 0 ? currentIndex - 1 : choosable.length - 1;
+        choosable[prev].focus();
       } else if (event.key === "Home") {
         event.preventDefault();
-        items[0].focus();
+        choosable[0].focus();
       } else if (event.key === "End") {
         event.preventDefault();
-        items[items.length - 1].focus();
+        choosable[choosable.length - 1].focus();
       }
     });
   }
 
   async function grantSelected(award, selectedItem) {
-    if (!award || grantInFlight || !activePicker) {
+    if (!award || grantInFlight || !activePicker || isAwardGranted(message, award.id)) {
       return;
     }
 
@@ -295,7 +695,6 @@ export function createRewardControl(message, options) {
     grantInFlight = true;
     button.disabled = true;
     setRewardItemPending(selectedItem, true);
-    const body = awardGrantRequest(message, award);
 
     let errorNode = activePicker && activePicker.querySelector(".reward-picker__error");
     if (errorNode) {
@@ -303,21 +702,23 @@ export function createRewardControl(message, options) {
     }
 
     try {
-      const response = await fetch(resolveURL("/api/awards/grant"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!response.ok) {
-        throw new Error("grant failed");
-      }
+      await postAwardGrant(message, award, resolveURL);
+      markAwardGranted(message, award.id);
       grantInFlight = false;
       if (activePicker === requestPicker) {
         dismissPicker();
       }
-      reportFeedback(awardGrantStatus(t, award));
-    } catch {
+      feedback.reportSuccess(award);
+    } catch (error) {
       grantInFlight = false;
+      if (isAwardGrantConflict(error)) {
+        markAwardGranted(message, award.id);
+        if (activePicker === requestPicker) {
+          dismissPicker();
+        }
+        feedback.reportAlreadyGranted();
+        return;
+      }
       enableRewardRetry(button);
       setRewardItemPending(selectedItem, false);
       if (selectedItem) {

@@ -33,7 +33,7 @@ func TestStarterCatalog_WhenFreshRussianDatabase_ExpectLocalizedSeeds(t *testing
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 10)
+	require.Len(t, awards, 11)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
@@ -62,6 +62,10 @@ func TestStarterCatalog_WhenFreshRussianDatabase_ExpectLocalizedSeeds(t *testing
 	assert.Equal(t, "Решающая помощь от {viewer}! +{points}", byID["clutch"].SplashTemplate)
 	assert.Equal(t, "MVP", byID["mvp"].Name)
 	assert.Equal(t, "MVP: {viewer}! +{points}", byID["mvp"].SplashTemplate)
+	assert.Equal(t, "В точку", byID["on_point"].Name)
+	assert.Equal(t, 20, byID["on_point"].Points)
+	assert.Equal(t, "В точку: {viewer}! +{points}", byID["on_point"].SplashTemplate)
+	assert.Equal(t, "ping", byID["on_point"].Sound)
 }
 
 func TestStarterCatalog_WhenFreshEnglishDatabase_ExpectEnglishSeeds(t *testing.T) {
@@ -81,7 +85,7 @@ func TestStarterCatalog_WhenFreshEnglishDatabase_ExpectEnglishSeeds(t *testing.T
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 10)
+	require.Len(t, awards, 11)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
@@ -99,6 +103,10 @@ func TestStarterCatalog_WhenFreshEnglishDatabase_ExpectEnglishSeeds(t *testing.T
 	assert.Equal(t, 25, byID["advice"].Points)
 	assert.Equal(t, "Clutch Help", byID["clutch"].Name)
 	assert.Equal(t, "Clutch Help for {viewer}! +{points}", byID["clutch"].SplashTemplate)
+	assert.Equal(t, "On Point", byID["on_point"].Name)
+	assert.Equal(t, 20, byID["on_point"].Points)
+	assert.Equal(t, "On Point: {viewer}! +{points}", byID["on_point"].SplashTemplate)
+	assert.Equal(t, "ping", byID["on_point"].Sound)
 }
 
 func TestStarterCatalog_WhenUpgradedExistingDatabase_ExpectCatalogUnchanged(t *testing.T) {

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -555,4 +556,221 @@ func TestAwardGrant_WhenGranted_ExpectLeaderboardSnapshot(t *testing.T) {
 	}
 
 	t.Fatal("expected leaderboard frame with updated score")
+}
+
+func postAwardGrant(t *testing.T, handler http.Handler, body string) *httptest.ResponseRecorder {
+	t.Helper()
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/awards/grant", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	handler.ServeHTTP(rec, req)
+	return rec
+}
+
+func TestAwardGrant_WhenLikeTwiceOnSameMessage_Expect409(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+
+	viewerID := seedViewer(t, env, "twitch", "42", "Alice")
+
+	first := postAwardGrant(t, env.Handler, `{
+		"platform":"twitch",
+		"user_id":"42",
+		"award_id":"like",
+		"message_id":"msg-like"
+	}`)
+	require.Equal(t, http.StatusOK, first.Code)
+
+	second := postAwardGrant(t, env.Handler, `{
+		"platform":"twitch",
+		"user_id":"42",
+		"award_id":"like",
+		"message_id":"msg-like"
+	}`)
+	require.Equal(t, http.StatusConflict, second.Code)
+	require.JSONEq(t, `{"error":"award already granted"}`, second.Body.String())
+
+	getRec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(getRec, httptest.NewRequest(http.MethodGet, "/api/viewers/get?id="+viewerID, nil))
+	require.Equal(t, http.StatusOK, getRec.Code)
+	var viewer struct {
+		XP int `json:"xp"`
+	}
+	require.NoError(t, json.Unmarshal(getRec.Body.Bytes(), &viewer))
+	require.Equal(t, 6, viewer.XP)
+
+	events, err := env.ViewerStore.ListInteractionEventsByViewer(viewerID)
+	require.NoError(t, err)
+	awardEvents := 0
+	for _, event := range events {
+		if event.Kind == store.InteractionEventAward && event.AwardID == "like" {
+			awardEvents++
+		}
+	}
+	require.Equal(t, 1, awardEvents)
+}
+
+func TestAwardGrant_WhenMissingMessageID_ExpectRepeatsAllowed(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	seedViewer(t, env, "twitch", "42", "Alice")
+
+	first := postAwardGrant(t, env.Handler, `{"platform":"twitch","user_id":"42","award_id":"joke"}`)
+	require.Equal(t, http.StatusOK, first.Code)
+	second := postAwardGrant(t, env.Handler, `{"platform":"twitch","user_id":"42","award_id":"joke"}`)
+	require.Equal(t, http.StatusOK, second.Code)
+}
+
+func TestAwardGrant_WhenConcurrentSameType_ExpectOneConflict(t *testing.T) {
+	env := newTestEnv(t, bus.New(0))
+	seedViewer(t, env, "twitch", "42", "Alice")
+
+	const body = `{"platform":"twitch","user_id":"42","award_id":"like","message_id":"msg-race"}`
+	codes := make(chan int, 2)
+	var wg sync.WaitGroup
+	for range 2 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			rec := postAwardGrant(t, env.Handler, body)
+			codes <- rec.Code
+		}()
+	}
+	wg.Wait()
+	close(codes)
+
+	var okCount, conflictCount int
+	for code := range codes {
+		switch code {
+		case http.StatusOK:
+			okCount++
+		case http.StatusConflict:
+			conflictCount++
+		default:
+			t.Fatalf("unexpected status %d", code)
+		}
+	}
+	require.Equal(t, 1, okCount)
+	require.Equal(t, 1, conflictCount)
+}
+
+func TestMessagesRecent_WhenLikeGranted_ExpectGrantedAwardIDs(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+	seedViewer(t, env, "twitch", "99", "Bob")
+
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		ID:          "abc",
+		Platform:    "twitch",
+		UserID:      "99",
+		Username:    "bob",
+		DisplayName: "Bob",
+		Message:     "hello",
+	})))
+	require.Eventually(t, func() bool {
+		rec := httptest.NewRecorder()
+		env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=5", nil))
+		return rec.Code == http.StatusOK && strings.Contains(rec.Body.String(), `"id":"abc"`)
+	}, 2*time.Second, 25*time.Millisecond)
+
+	grant := postAwardGrant(t, env.Handler, `{
+		"platform":"twitch",
+		"user_id":"99",
+		"award_id":"like",
+		"message_id":"abc"
+	}`)
+	require.Equal(t, http.StatusOK, grant.Code)
+
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=5", nil))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var payload struct {
+		Messages []map[string]any `json:"messages"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	var found map[string]any
+	for _, message := range payload.Messages {
+		if message["id"] == "abc" {
+			found = message
+			break
+		}
+	}
+	require.NotNil(t, found)
+	ids, ok := found["granted_award_ids"].([]any)
+	require.True(t, ok)
+	require.Equal(t, []any{"like"}, ids)
+}
+
+func TestMessagesRecent_WhenOrdinaryChat_ExpectNoGrantedAwardIDs(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		ID:          "plain",
+		Platform:    "twitch",
+		UserID:      "7",
+		Username:    "nova",
+		DisplayName: "Nova",
+		Message:     "hi",
+	})))
+	require.Eventually(t, func() bool {
+		rec := httptest.NewRecorder()
+		env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=5", nil))
+		if rec.Code != http.StatusOK {
+			return false
+		}
+		var payload struct {
+			Messages []map[string]any `json:"messages"`
+		}
+		if json.Unmarshal(rec.Body.Bytes(), &payload) != nil {
+			return false
+		}
+		for _, message := range payload.Messages {
+			if message["id"] == "plain" {
+				_, has := message["granted_award_ids"]
+				return !has
+			}
+		}
+		return false
+	}, 2*time.Second, 25*time.Millisecond)
+}
+
+func TestMessagesRecent_WhenJokeThenAdvice_ExpectGrantedAwardIDsOrder(t *testing.T) {
+	b := bus.New(0)
+	env := newTestEnv(t, b)
+	seedViewer(t, env, "twitch", "42", "Alice")
+
+	require.NoError(t, b.Publish(bus.ChatMessageReceived(bus.ChatMessage{
+		ID:          "msg-1",
+		Platform:    "twitch",
+		UserID:      "42",
+		Username:    "alice",
+		DisplayName: "Alice",
+		Message:     "callout",
+	})))
+	require.Eventually(t, func() bool {
+		rec := httptest.NewRecorder()
+		env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=5", nil))
+		return rec.Code == http.StatusOK && strings.Contains(rec.Body.String(), `"id":"msg-1"`)
+	}, 2*time.Second, 25*time.Millisecond)
+
+	require.Equal(t, http.StatusOK, postAwardGrant(t, env.Handler, `{"platform":"twitch","user_id":"42","award_id":"joke","message_id":"msg-1"}`).Code)
+	require.Equal(t, http.StatusOK, postAwardGrant(t, env.Handler, `{"platform":"twitch","user_id":"42","award_id":"advice","message_id":"msg-1"}`).Code)
+
+	rec := httptest.NewRecorder()
+	env.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/messages/recent?limit=5", nil))
+	require.Equal(t, http.StatusOK, rec.Code)
+	var payload struct {
+		Messages []map[string]any `json:"messages"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	var found map[string]any
+	for _, message := range payload.Messages {
+		if message["id"] == "msg-1" {
+			found = message
+			break
+		}
+	}
+	require.NotNil(t, found)
+	require.Equal(t, []any{"joke", "advice"}, found["granted_award_ids"])
 }

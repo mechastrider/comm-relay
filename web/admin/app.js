@@ -41,7 +41,7 @@ import {
 } from "./js/reward-history.js";
 import { ensureAudienceArchiveLoaded, initAudienceArchive } from "./js/audience-archive.js";
 import { initCommandsCatalog, ensureCommandsLoaded } from "./js/commands-catalog.js?v=2";
-import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js?v=2";
+import { initAwardsCatalog, ensureAwardsLoaded } from "./js/awards-catalog.js?v=3";
 import { initGreetingsCatalog, ensureGreetingsLoaded } from "./js/greetings-catalog.js?v=2";
 import { initProgressionCatalog, ensureProgressionLoaded } from "./js/progression-catalog.js";
 import { connectMessageWebSocket, disconnectMessageWebSocket, renderAdminConnectionState } from "./js/ws.js";

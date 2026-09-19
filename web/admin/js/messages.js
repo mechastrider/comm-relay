@@ -1,5 +1,8 @@
 import { createChatRender, safeImageURL, appendText } from '/shared/chat-render.js?v=12';
-import { createRewardControl, messageCanBeRewarded } from '/shared/reward-picker.js?v=4';
+import {
+  createGrantFeedbackElement,
+  mountMessageGrantActions,
+} from '/shared/reward-picker.js?v=6';
 import * as dom from './dom.js';
 import { state } from './state.js';
 import {
@@ -17,7 +20,7 @@ import { invalidateLiveStatistics } from "./live-statistics.js";
 import { applyViewerProgressionFrame } from "./viewers.js";
 import { setRegionState } from "./shell-state.js";
 import { handleLiveRecapWire } from "./live-recap.js";
-import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=1";
+import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=3";
 
 let messagesLoadInFlight = false;
 
@@ -382,13 +385,13 @@ export function buildMessageListItem(msg) {
     const actions = document.createElement("div");
     actions.className = "message-list__actions";
 
-    if (messageCanBeRewarded(msg)) {
-      actions.appendChild(createRewardControl(msg, {
-        t: t,
-        resolveURL: apiURL,
-        displayName: messageDisplayName,
-      }));
-    }
+    const grantFeedback = createGrantFeedbackElement();
+
+    mountMessageGrantActions(actions, grantFeedback, msg, {
+      t: t,
+      resolveURL: apiURL,
+      displayName: messageDisplayName,
+    });
 
     if (typeof msg.id === "string" && msg.id !== "") {
       const deleteButton = document.createElement("button");
@@ -414,6 +417,7 @@ export function buildMessageListItem(msg) {
     content.className = "message-list__content";
     content.appendChild(meta);
     content.appendChild(text);
+    content.appendChild(grantFeedback);
 
     item.appendChild(buildAvatarImage(msg));
     item.appendChild(content);

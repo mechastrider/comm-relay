@@ -374,6 +374,28 @@ The server SHALL expose `POST /api/overlay-debug/scenario/fire` and `POST /api/o
 - **WHEN** a recent line was never a matched command
 - **THEN** the message object has no `command_outcome` field
 
+### Requirement: Grant conflict is HTTP 409
+`POST /api/awards/grant` SHALL return HTTP 409 with a UI-safe JSON error when the same `award_id` was already granted for the request's `platform` and non-empty `message_id`. The response MUST NOT leak internals. Successful grants and existing 400/500 mappings remain unchanged.
+
+#### Scenario: Duplicate like
+- **WHEN** the client posts a second grant with the same `platform`, `message_id`, and `award_id` `like`
+- **THEN** the response is HTTP 409 and no new award JSON success body is returned
+
+### Requirement: Recent messages include granted award ids
+`GET /api/messages/recent` SHALL include `granted_award_ids` on a message when at least one durable award event records that message's `platform` and source `id`. The field SHALL be a JSON array of award ids, unique, in grant order from oldest to newest. Messages with no such events MUST omit the field. The array MUST NOT include buff events, command events, or award events that lack a matching source message id. A process restart SHALL still restore ids from SQLite.
+
+#### Scenario: Restored like
+- **WHEN** the operator granted `like` on message `twitch`/`abc` and later loads recent messages
+- **THEN** that message object includes `granted_award_ids` `["like"]`
+
+#### Scenario: Two types
+- **WHEN** Joke then Advice were granted on the same source message
+- **THEN** `granted_award_ids` is `["joke","advice"]`
+
+#### Scenario: Ordinary chat
+- **WHEN** a recent line has never received an award
+- **THEN** the message object has no `granted_award_ids` field
+
 ### Requirement: All-time recap show is a POST action
 `POST /api/stream-recaps/show-all` SHALL accept `{}`, compute the bounded all-time presentation, make recap visible with `window` `all`, broadcast state, and return `visible` true, `window` `all`, and `all_time`. The request MUST NOT require a `session_id`, MUST NOT write `stream_recaps`, and MUST NOT change session counters. Invalid JSON SHALL return HTTP 400, unavailable storage HTTP 503, and unexpected failures HTTP 500 without leaking details.
 

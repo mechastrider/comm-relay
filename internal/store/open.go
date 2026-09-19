@@ -147,6 +147,13 @@ func Open(path string, opts OpenOptions) (*Store, error) {
 		}
 		return nil, errors.Errorf("ensure social catalog bootstrap: %w", err)
 	}
+	if err := s.ensureOnPointCatalogBootstrapLocked(resolvedOpenLocale(opts.TimeLocale)); err != nil {
+		closeErr := db.Close()
+		if closeErr != nil {
+			return nil, errors.Errorf("ensure on-point catalog bootstrap: %w (close database: %w)", err, closeErr)
+		}
+		return nil, errors.Errorf("ensure on-point catalog bootstrap: %w", err)
+	}
 
 	return s, nil
 }

@@ -43,7 +43,7 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 10)
+	require.Len(t, awards, 11)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
@@ -104,6 +104,13 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 	assert.Equal(t, 100, mvp.Points)
 	assert.Equal(t, "MVP for {viewer}! +{points}", mvp.SplashTemplate)
 	assert.Equal(t, "chime", mvp.Sound)
+
+	onPoint := byID["on_point"]
+	assert.Equal(t, "On Point", onPoint.Name)
+	assert.Equal(t, 20, onPoint.Points)
+	assert.Equal(t, "On Point: {viewer}! +{points}", onPoint.SplashTemplate)
+	assert.Equal(t, "ping", onPoint.Sound)
+	assert.Equal(t, 5000, onPoint.DurationMs)
 }
 
 func TestCommands_WhenCreateShowLeaderboard_ExpectNoAlertPresentationRequired(t *testing.T) {
@@ -319,7 +326,7 @@ func TestAwards_WhenUpgradedFrom00002_ExpectExtraSeedsWithoutRewritingJokeAdvice
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 9)
+	require.Len(t, awards, 10)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
@@ -327,6 +334,7 @@ func TestAwards_WhenUpgradedFrom00002_ExpectExtraSeedsWithoutRewritingJokeAdvice
 	}
 
 	require.Contains(t, byID, "viewer_like")
+	require.Contains(t, byID, "on_point")
 
 	joke := byID["joke"]
 	assert.Equal(t, "Joke", joke.Name)

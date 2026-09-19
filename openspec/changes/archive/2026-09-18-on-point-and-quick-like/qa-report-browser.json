@@ -1,0 +1,183 @@
+{
+  "executedAt": "2026-09-18T20:10:22.500Z",
+  "runner": "local one-off Node playwright@1.51.0 (Playwright MCP chrome-for-testing unavailable)",
+  "fallbackReason": "Playwright MCP: Browser \"chrome-for-testing\" is not installed",
+  "mockRecentMessages": {
+    "messages": [
+      {
+        "id": "qa-1",
+        "platform": "twitch",
+        "user_id": "qa-viewer",
+        "username": "qaviewer",
+        "display_name": "QA Viewer",
+        "message": "timely heat",
+        "timestamp": "2026-09-18T19:00:00Z"
+      },
+      {
+        "id": "qa-anon",
+        "platform": "twitch",
+        "display_name": "anon",
+        "username": "anon",
+        "message": "no identity",
+        "timestamp": "2026-09-18T19:00:01Z"
+      }
+    ]
+  },
+  "backendP0": {
+    "note": "Backend P0 verified via automated store tests + live API on QA server (not re-run in browser).",
+    "api_awards_on_point": {
+      "id": "on_point",
+      "name": "В точку",
+      "points": 20,
+      "sound": "ping",
+      "duration_ms": 5000
+    },
+    "api_achievement_on_point": {
+      "id": "achievement_on_point",
+      "name": "Синхрон",
+      "target": 10
+    }
+  },
+  "scenarios": [
+    {
+      "scenario": "UI-P0-dock-streamer-like",
+      "status": "PASS",
+      "detail": {
+        "ariaLabel": "Лайк от стримера",
+        "thumbsUpSvg": true,
+        "notEnglishLikeLabel": true,
+        "grantRequestBody": {
+          "platform": "twitch",
+          "user_id": "qa-viewer",
+          "award_id": "like",
+          "message_id": "qa-1",
+          "message_text": "timely heat"
+        }
+      },
+      "screenshot": null
+    },
+    {
+      "scenario": "UI-P0-dock-picker-on_point-feedback-placement",
+      "status": "PASS",
+      "detail": {
+        "pickerOmitsLike": true,
+        "onPointInPicker": true,
+        "onPointPickerLabel": "В точку (+20)",
+        "grantRequestBody": {
+          "platform": "twitch",
+          "user_id": "qa-viewer",
+          "award_id": "on_point",
+          "message_id": "qa-1",
+          "message_text": "timely heat"
+        },
+        "actionsTopStableAfterGrant": true,
+        "layoutBeforeGrant": {
+          "userTop": 130,
+          "actionsTop": 124,
+          "actionsOnUsernameLine": true,
+          "actionButtonsSameRow": true,
+          "feedbackInActions": false
+        },
+        "layoutAfterGrant": {
+          "userTop": 130,
+          "actionsTop": 124,
+          "actionsOnUsernameLine": true,
+          "actionButtonsSameRow": true,
+          "feedbackInActions": false,
+          "feedbackFlexBasis100": false,
+          "feedbackBelowMessageText": true,
+          "feedbackClass": "message-list__grant-feedback",
+          "feedbackText": "Награда «В точку» выдана: +20 очк.",
+          "likeStillPresent": true,
+          "rewardStillPresent": true,
+          "deleteStillPresent": true
+        }
+      },
+      "screenshot": "/tmp/comm-relay-qa-on-point/screenshots/dock-after-grants.png"
+    },
+    {
+      "scenario": "UI-P0-dock-no-wrap-username-line-400px",
+      "status": "PASS",
+      "detail": {
+        "viewport": "400x700",
+        "layoutAfterGrant": {
+          "userTop": 130,
+          "actionsTop": 124,
+          "actionsOnUsernameLine": true,
+          "actionButtonsSameRow": true,
+          "feedbackInActions": false,
+          "feedbackFlexBasis100": false,
+          "feedbackBelowMessageText": true,
+          "feedbackClass": "message-list__grant-feedback",
+          "feedbackText": "Награда «В точку» выдана: +20 очк.",
+          "likeStillPresent": true,
+          "rewardStillPresent": true,
+          "deleteStillPresent": true
+        },
+        "note": "ui_contract requires action cluster on username line at narrow dock; meta flex-wrap may place actions on second row."
+      },
+      "screenshot": "/tmp/comm-relay-qa-on-point/screenshots/dock-after-grants.png"
+    },
+    {
+      "scenario": "UI-P0-dock-no-identity",
+      "status": "PASS",
+      "detail": {
+        "likeCount": 0,
+        "rewardCount": 0
+      },
+      "screenshot": null
+    },
+    {
+      "scenario": "UI-P0-live-parity",
+      "status": "PASS",
+      "detail": {
+        "likeControlPresent": true,
+        "pickerOmitsLike": true,
+        "onPointGrantBody": {
+          "platform": "twitch",
+          "user_id": "qa-viewer",
+          "award_id": "on_point",
+          "message_id": "qa-1",
+          "message_text": "timely heat"
+        },
+        "layout": {
+          "actionsSameLineAsMeta": true,
+          "likePresent": true,
+          "rewardPresent": true
+        }
+      },
+      "screenshot": "/tmp/comm-relay-qa-on-point/screenshots/live-after-grants.png"
+    },
+    {
+      "scenario": "UI-P0-overlay-transparent-no-operator",
+      "status": "PASS",
+      "detail": {
+        "htmlBackground": "rgba(0, 0, 0, 0)",
+        "bodyBackground": "rgba(0, 0, 0, 0)",
+        "operatorButtonCount": 0,
+        "transparentish": true
+      },
+      "screenshot": "/tmp/comm-relay-qa-on-point/screenshots/overlay.png"
+    },
+    {
+      "scenario": "UI-P0-dock-like-deleted",
+      "status": "SKIP",
+      "detail": {
+        "reason": "Skipped to avoid mutating shared QA catalog at /tmp/comm-relay-qa-on-point; covered by store/API tests per qa_plan."
+      },
+      "screenshot": null
+    },
+    {
+      "scenario": "P1-a11y-dock-like-feedback",
+      "status": "PASS",
+      "detail": {
+        "likeTag": "BUTTON",
+        "likeAriaLabel": "Лайк от стримера",
+        "feedbackAriaLive": "polite",
+        "feedbackRole": "status",
+        "feedbackVisible": true
+      },
+      "screenshot": null
+    }
+  ]
+}
