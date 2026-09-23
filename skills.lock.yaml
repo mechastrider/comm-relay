@@ -2,7 +2,7 @@ version: 4
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 5decc3a9090bfc94da396ea536b711aa93457f1e
+    commit: 9a8dd184f73f340c42a1b8ab057b0bcc35df7270
 preset: desktop-app
 include:
     - theme: backend/go
@@ -30,7 +30,6 @@ selected_packages:
     - agentmem-onboarding
     - banner-design
     - brand
-    - change-orchestration
     - closeout
     - codex-orchestration
     - cursor-orchestration
@@ -53,7 +52,6 @@ selected_packages:
     - runnable-background-processes
     - skill-authoring
     - slides
-    - task-delegation
     - ui-styling
     - ui-ux-pro-max
     - ux-form-practices
@@ -101,16 +99,6 @@ packages:
               src: .
               dest: .agents/skills/brand
               installed_hash: sha256:c8147a97089bb75c27c31155ab38fe764f176d72ac7abd714626a99c13ee301e
-    change-orchestration:
-        hub_path: process/change-orchestration
-        upstream_hash: sha256:0b42821374702a0bd6b258bb1f5e71380d36fe02b6339cf19688bc7c30bb0ec3
-        artifacts:
-            - id: skill
-              kind: skill
-              mode: tree
-              src: .
-              dest: .agents/skills/change-orchestration
-              installed_hash: sha256:0b42821374702a0bd6b258bb1f5e71380d36fe02b6339cf19688bc7c30bb0ec3
     closeout:
         hub_path: devtools/closeout
         upstream_hash: sha256:5a27c7df3ffe03131b5a986696d097a562dc54e2a16542dfe0139fcd18474a87
@@ -123,17 +111,17 @@ packages:
               installed_hash: sha256:5a27c7df3ffe03131b5a986696d097a562dc54e2a16542dfe0139fcd18474a87
     codex-orchestration:
         hub_path: process/codex-orchestration
-        upstream_hash: sha256:85f8d5f1885821408d7dade68485ffe685cabfdd1e42231ea0e5405a09a3fb31
+        upstream_hash: sha256:019c23a9785514f74384e5153f26fd330c50fb20a73abfbcbf4a72b701e51734
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/codex-orchestration
-              installed_hash: sha256:85f8d5f1885821408d7dade68485ffe685cabfdd1e42231ea0e5405a09a3fb31
+              installed_hash: sha256:019c23a9785514f74384e5153f26fd330c50fb20a73abfbcbf4a72b701e51734
     cursor-orchestration:
         hub_path: process/cursor-orchestration
-        upstream_hash: sha256:1a2a45d32a841f4d8f68fbc8b681dade7967fcd6c92d8d705882ba07f9e88d5b
+        upstream_hash: sha256:7ce3d1ed3e64a34fcfd3873883e8bbb2e77f15b9b721614bd100548060033d76
         artifacts:
             - id: cursor-orchestration-command
               kind: command
@@ -150,7 +138,7 @@ packages:
               dest: .cursor/skills/cursor-orchestration
               providers:
                 - cursor
-              installed_hash: sha256:98f27108e9eea09ed666599547e0e71e024decfe0288405ccd91b8fe19e53a26
+              installed_hash: sha256:85641f5ae002fd66b64ce9e959845a234a267bf9f61927aeb24a12767a5bbae8
     database-migrations:
         hub_path: databases/database-migrations
         upstream_hash: sha256:f22b97a00e2ebd47d4c5242304a4dfa7cdbc6844b5e661e816f4bc4e9ee0fe27
@@ -347,16 +335,6 @@ packages:
               src: .
               dest: .agents/skills/slides
               installed_hash: sha256:cf265eda682febc515b73ec146b264c37e38efb27b8b9442c5246ebde84cb55b
-    task-delegation:
-        hub_path: devtools/task-delegation
-        upstream_hash: sha256:48ce6d31dc71188a9ecd65dd2db53fd3080662bec2980680c49df49d490f755f
-        artifacts:
-            - id: skill
-              kind: skill
-              mode: tree
-              src: .
-              dest: .agents/skills/task-delegation
-              installed_hash: sha256:48ce6d31dc71188a9ecd65dd2db53fd3080662bec2980680c49df49d490f755f
     ui-styling:
         hub_path: frontend/design/ui-styling
         upstream_hash: sha256:0f5f1dfb5b62c2eb5e14046583e703f453a516f66f7d0f5620bb70f6e38e64b1
@@ -409,11 +387,11 @@ packages:
               installed_hash: sha256:442d2be25eede4bb75e16859818c39461665772559198cb814047b0fe80ccbe8
     work-intake:
         hub_path: process/work-intake
-        upstream_hash: sha256:771dece6998a5f85a18b77f56930ddadc6eb9400117e10002192439c23356bc9
+        upstream_hash: sha256:f57f6930dac1445ea8815a4101b578f14cc17e4b75b789f2fe8527c6b90eeb39
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/work-intake
-              installed_hash: sha256:771dece6998a5f85a18b77f56930ddadc6eb9400117e10002192439c23356bc9
+              installed_hash: sha256:f57f6930dac1445ea8815a4101b578f14cc17e4b75b789f2fe8527c6b90eeb39

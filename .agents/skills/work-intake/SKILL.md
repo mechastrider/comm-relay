@@ -59,8 +59,6 @@ tests, logs, or safe read-only commands can answer. Typical work:
   them;
 - reproduce a symptom or trace the relevant execution path when safe;
 - read active OpenSpec changes and main specs to detect overlap or conflict;
-- read `docs/open-questions.md` for related `open` product/UX items (skill
-  **open-questions**) before asking the human to re-decide settled behavior;
 - identify existing verification and release mechanics;
 - distinguish observed facts, inferences, assumptions, and unknowns.
 
@@ -79,13 +77,12 @@ assumptions.
 | Maturity | Evidence | Route |
 |----------|----------|-------|
 | **Research** | The problem, cause, or desired outcome is still unclear | Continue exploration; no implementation yet |
-| **Shaping** | The problem is understood, but scope, behavior, or approach still has material alternatives | Produce options and a recommended change brief; if the blocker is unresolved product/UX (by-design behavior, discoverability, competing defaults), capture or update an entry in `docs/open-questions.md` per skill **open-questions** instead of opening an OpenSpec change |
+| **Shaping** | The problem is understood, but scope, behavior, or approach still has material alternatives | Produce options and a recommended change brief |
 | **Ready** | Outcome, scope, acceptance, and blocking decisions are clear | Classify profile/tier and select a planning route |
 | **Execution** | A plan or OpenSpec change already exists and is coherent | Route to update, apply, verify, or orchestration |
 
 Research may legitimately end with “no change needed,” a documentation answer,
-an open-question capture (skill **open-questions**), or a follow-up investigation.
-Do not force every inquiry into implementation.
+or a follow-up investigation. Do not force every inquiry into implementation.
 
 ## Step 4 — Build the change brief
 
@@ -222,13 +219,14 @@ Use the profile schema and the outer orchestrator selected by the user or
 project:
 
 - **cursor-orchestration** for the Cursor-native Grok + Composer workflow;
-- **codex-orchestration** for the Codex-native Sol + Terra workflow;
-- **change-orchestration** for a Codex/Claude parent with Cursor workers.
+- **codex-orchestration** for the Codex-native session-capped GPT-6 workflow.
 
 An explicit invocation of any of these orchestration skills confirms its full
 cycle.
-Ambient “start this task” language does not auto-select a provider-specific
-orchestrator.
+Ambient “start this task” or “delegate this task” language does not auto-select
+a provider-specific orchestrator. Start Cursor only when the user explicitly
+requests Cursor execution or invokes its orchestration workflow; availability,
+project defaults, and use of Herdr alone do not authorize that choice.
 
 ### Tier 4 — Product foundation
 

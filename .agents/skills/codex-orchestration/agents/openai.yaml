@@ -1,6 +1,6 @@
 interface:
   display_name: "Codex orchestration"
-  short_description: "Run the native Sol and Terra change loop"
+  short_description: "Orchestrate within the session model and reasoning ceiling"
   default_prompt: "Use $codex-orchestration to plan, implement, verify, review, and close out this project change."
 
 policy:

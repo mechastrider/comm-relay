@@ -6,7 +6,7 @@ This document covers local development, desktop builds, and the release workflow
 
 ## Requirements
 
-- **Go 1.26.3+** — pinned in [`go.mod`](../go.mod).
+- **Go 1.27.1+** — pinned in [`go.mod`](../go.mod).
 - **Node.js 22+** — used for static UI checks and live reload.
 - [Task](https://taskfile.dev/) — recommended for the complete development loop.
 - [Wails v2](https://wails.io/) — required only for desktop builds.
@@ -26,7 +26,7 @@ npm run lint
 Install and run the same Go linter used in CI:
 
 ```bash
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
 golangci-lint run ./...
 ```
 
@@ -88,7 +88,7 @@ The resulting binary is placed in `cmd/comm-relay-desktop/build/bin/`.
 
 ### Windows
 
-- Requires **Go 1.26.3+** and **WebView2** (normally already installed on Windows 11).
+- Requires **Go 1.27.1+** and **WebView2** (normally already installed on Windows 11).
 - Wails does not require an additional SDK.
 - Check the environment with `wails doctor`.
 
@@ -108,7 +108,7 @@ The **Browser** source and **Custom Browser Docks** are not available in every O
 
 ### macOS
 
-- Requires **Go 1.26.3+** and **Xcode Command Line Tools** (`xcode-select --install`).
+- Requires **Go 1.27.1+** and **Xcode Command Line Tools** (`xcode-select --install`).
 - Build for the current machine with `wails build`.
 - Build a universal binary as in CI with `wails build -platform darwin/universal`.
 - Open an unsigned local build through **Open** in the Finder context menu or from the terminal.

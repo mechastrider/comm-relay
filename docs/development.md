@@ -6,7 +6,7 @@
 
 ## Требования
 
-- **Go 1.26.3+** — версия зафиксирована в [`go.mod`](../go.mod).
+- **Go 1.27.1+** — версия зафиксирована в [`go.mod`](../go.mod).
 - **Node.js 22+** — нужен для проверки и live reload статического интерфейса.
 - [Task](https://taskfile.dev/) — рекомендуется для полного dev-цикла.
 - [Wails v2](https://wails.io/) — нужен только для сборки desktop-приложения.
@@ -26,7 +26,7 @@ npm run lint
 Линтер Go как в CI:
 
 ```bash
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
 golangci-lint run ./...
 ```
 
@@ -88,7 +88,7 @@ wails build
 
 ### Windows
 
-- Нужны **Go 1.26.3+** и **WebView2** (в Windows 11 обычно уже установлен).
+- Нужны **Go 1.27.1+** и **WebView2** (в Windows 11 обычно уже установлен).
 - Дополнительные SDK для Wails не нужны.
 - Проверка окружения: `wails doctor`.
 
@@ -108,7 +108,7 @@ sudo apt install build-essential pkg-config \
 
 ### macOS
 
-- Нужны **Go 1.26.3+** и **Xcode Command Line Tools** (`xcode-select --install`).
+- Нужны **Go 1.27.1+** и **Xcode Command Line Tools** (`xcode-select --install`).
 - Сборка под текущую машину: `wails build`.
 - Универсальная сборка как в CI: `wails build -platform darwin/universal`.
 - Неподписанную локальную сборку открывайте через **Open** в контекстном меню Finder или из терминала.

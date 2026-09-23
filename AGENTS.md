@@ -200,7 +200,7 @@ Before reporting a task as done:
 
 ## Cursor Cloud specific instructions
 
-CommRelay is a **single Go binary** — no Docker, Node, or database. The VM needs **Go 1.26.3+** (see `go.mod`).
+CommRelay is a **single Go binary** — no Docker, Node, or database. The VM needs **Go 1.27.1+** (see `go.mod`).
 
 ### Dependencies and checks
 
@@ -209,7 +209,7 @@ Standard commands from the repo root (documented in **Completion Checklist** abo
 - Refresh modules: `go mod download`
 - Tests: `go test ./...` (use `-race` when changing concurrency)
 - Build: `go build -o comm-relay ./cmd/comm-relay-server` or `go build ./...`
-- **golangci-lint** v2.12.2: `golangci-lint run ./...` (install: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2`)
+- **golangci-lint** v2.13.2: `golangci-lint run ./...` (install: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2`)
 - **ESLint** (static web under `web/`): `npm ci && npm run lint` (Node 22+; config: `eslint.config.js`)
 
 ### Running the server
