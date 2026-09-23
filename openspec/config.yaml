@@ -1,7 +1,7 @@
 schema: desktop-change
 
 context: |
-  Tech stack: Go 1.26, net/http, gorilla/websocket, go-twitch-irc, Wails v2 desktop
+  Tech stack: Go 1.27, net/http, gorilla/websocket, go-twitch-irc, Wails v2 desktop
   Domain: local multi-platform streaming chat relay for OBS Browser Source (Twitch, YouTube Live, VK Live)
   Deployment: single local process; no cloud relay; HTTP + WebSocket on localhost (default 127.0.0.1:17877)
   API: POST-action (POST /api/<resource>/<action>), snake_case JSON; GET allowed for reads, static, health, WebSocket upgrade, and OAuth callbacks

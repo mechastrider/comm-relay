@@ -26,8 +26,9 @@ tooling.
 ## Activation gate (mandatory)
 
 Run **only** when the user names `cursor-orchestration` or
-`/cursor-orchestration`. Ambient “start the task” language belongs to
-**work-intake**.
+`/cursor-orchestration`. Ambient “start the task” or “delegate this task” language belongs to
+**work-intake**. Project defaults, available tools, and a request to use Herdr
+do not substitute for an explicit user request to run Cursor.
 
 Announce at start: Tier/Process, parent Grok 4.6, worker Composer 2.5.
 
@@ -121,6 +122,30 @@ For `web-change`, instantiate `tasks.md` with typed slices (`domain-api` |
 forbidden. Write `qa_plan.md` or its explicit Skip. Confirm apply-ready. Then
 run the Open Questions stop.
 
+## Delegation contract
+
+Give each worker a self-contained task: outcome, relevant repository and planning
+context, dirty baseline, allowed areas and necessary fallout, non-goals,
+acceptance criteria, focused verification commands, and required result evidence.
+Do not assume it has the parent's conversation. When a file packet is useful,
+store it under `.agent-orchestration/tasks/` as ignored scratch space; durable
+specs and decisions stay in the project's planning system.
+
+Review the complete slice diff before sending corrections and batch related
+findings into one repair request. Workers run focused checks; the parent
+independently reruns decisive acceptance and owns broad milestone/final suites.
+Avoid repeating broad suites for every small slice unless the change affects
+the build or test harness. Checkpoint reviewed green milestones using the
+project's commit policy; carry durable state into a fresh parent session when
+needed. Repeated tiny jobs or repeated packet context are signals to combine
+adjacent work, not reasons to create more workers.
+
+Slice by complete semantic outcome, including call sites, tests, fixtures, and
+cross-layer fallout. Typed labels describe the work; they do not require one job
+per layer or checklist item. Combine adjacent tasks sharing one contract; split
+independently rerunnable verification matrices when needed. Run one writer at a
+time and review and verify its result before starting the next.
+
 ## Step 2 — Implement by Tier
 
 ### Tier 1 — direct
@@ -146,7 +171,8 @@ This orchestrator runs the typed implement slices and browser directly:
 
 1. Parent orchestrates. Each incomplete implement slice starts a `Task`
    (`generalPurpose`, `model: composer-2.5`).
-2. After each child, run **Acceptance** commands **as written**.
+2. After each child, inspect the full diff and run **Acceptance** commands
+   **as written**.
 3. One retry on fail; still failing → STOP `STOPPED@implement-<slice>`.
 4. Browser executes `qa_plan.md`. Partial with P1 on the happy path: re-run
    affected scenarios or list E2E gaps. **P0 blocks review**.

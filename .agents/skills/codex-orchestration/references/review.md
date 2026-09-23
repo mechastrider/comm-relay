@@ -1,7 +1,8 @@
-# Independent Sol review
+# Independent review
 
-Review happens after implementation and profile QA in a fresh, read-only Sol
-context. It supplements OpenSpec validation and project verification; it does
+Review happens after implementation and profile QA in a fresh, read-only
+context on the resolved review model (the parent model by default; see
+[model routing](model-routing.md)). It supplements OpenSpec validation and project verification; it does
 not replace either.
 
 ## Inputs
