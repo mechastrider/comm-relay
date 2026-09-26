@@ -699,7 +699,9 @@ export default {
   "recap.downloadImage": "Скачать картинку",
   "recap.downloadNeedsCapture": "Сначала зафиксируйте итоги стрима, чтобы скачать это окно.",
   "recap.downloadProgress": "Готовим PNG…",
-  "recap.downloadDone": "Скачивание PNG началось.",
+  "recap.downloadDone": "PNG сохранён.",
+  "recap.downloadCancelled": "Сохранение отменено.",
+  "recap.saveDialogTitle": "Сохранить изображение итогов",
   "recap.downloadFailed": "Не удалось создать PNG. Попробуйте ещё раз.",
 
   "viewers.listHeading": "Список зрителей",

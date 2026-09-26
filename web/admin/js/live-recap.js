@@ -421,8 +421,12 @@ async function downloadRecapImage() {
   render();
   try {
     const blob = await encodeRecapSharePNG(presentation);
-    triggerRecapDownload(blob, recapDownloadFilename(dialogWindow));
-    setStatus(t("recap.downloadDone"));
+    const result = await triggerRecapDownload(blob, recapDownloadFilename(dialogWindow), t("recap.saveDialogTitle"));
+    if (result.cancelled) {
+      setStatus(t("recap.downloadCancelled"));
+    } else {
+      setStatus(t("recap.downloadDone"));
+    }
   } catch {
     setStatus(t("recap.downloadFailed"), true);
   } finally {

@@ -1,6 +1,7 @@
 import { RECAP_WINDOW_ALL, RECAP_WINDOW_SESSION } from "/overlay/recap/recap-model.js?v=2";
 import { renderRecap } from "/overlay/recap/recap-render.js?v=3";
 import { readCachedLocale, setLocale } from "/shared/i18n.js?v=18";
+import { saveBlobWithDialog } from "/shared/desktop-save.js?v=1";
 
 const SHARE_WIDTH = 1920;
 const SHARE_HEIGHT = 1080;
@@ -155,14 +156,11 @@ export async function encodeRecapSharePNG(input) {
   });
 }
 
-export function triggerRecapDownload(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.rel = "noopener";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+/**
+ * @param {Blob} blob
+ * @param {string} filename
+ * @param {string} [dialogTitle]
+ */
+export function triggerRecapDownload(blob, filename, dialogTitle) {
+  return saveBlobWithDialog(blob, filename, dialogTitle);
 }

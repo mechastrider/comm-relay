@@ -2,7 +2,7 @@ version: 4
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 9a8dd184f73f340c42a1b8ab057b0bcc35df7270
+    commit: b911c586edbcdb64e509c17a6e13f7b7a239b217
 preset: desktop-app
 include:
     - theme: backend/go
@@ -61,67 +61,67 @@ selected_packages:
 packages:
     agent-memory-usage:
         hub_path: devtools/agent-memory-usage
-        upstream_hash: sha256:78d0a36fb2d7bdf1341dcd977332a2af077d6a65122a6216ef498d2b6e78060c
+        upstream_hash: sha256:adc176429de7f266b77b619cc270e3a119782487666e985f49afdcea00eaaca5
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/agent-memory-usage
-              installed_hash: sha256:78d0a36fb2d7bdf1341dcd977332a2af077d6a65122a6216ef498d2b6e78060c
+              installed_hash: sha256:adc176429de7f266b77b619cc270e3a119782487666e985f49afdcea00eaaca5
     agentmem-onboarding:
         hub_path: devtools/agentmem-onboarding
-        upstream_hash: sha256:ffe3203eac7725247536cd61ae569ba2a2daffabcf85fdfc947473dd90896798
+        upstream_hash: sha256:0af54ae7c64d37da5ae68b2127e43ac58159c85c5a6a18e779f32d51450d30c8
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/agentmem-onboarding
-              installed_hash: sha256:ffe3203eac7725247536cd61ae569ba2a2daffabcf85fdfc947473dd90896798
+              installed_hash: sha256:0af54ae7c64d37da5ae68b2127e43ac58159c85c5a6a18e779f32d51450d30c8
     banner-design:
         hub_path: frontend/design/banner-design
-        upstream_hash: sha256:8eaffdff06bd5fca67554fed470ea2472299e9fc4afa6393b4ebcbd9d809e8e5
+        upstream_hash: sha256:312dda4219d464d675e6b51e3e6af0698c49d424aa7806e86bd562c4c64c3c03
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/banner-design
-              installed_hash: sha256:8eaffdff06bd5fca67554fed470ea2472299e9fc4afa6393b4ebcbd9d809e8e5
+              installed_hash: sha256:312dda4219d464d675e6b51e3e6af0698c49d424aa7806e86bd562c4c64c3c03
     brand:
         hub_path: frontend/design/brand
-        upstream_hash: sha256:c8147a97089bb75c27c31155ab38fe764f176d72ac7abd714626a99c13ee301e
+        upstream_hash: sha256:9f76d9329183817fedbbba3b352f2ef7efeff7f9bc5b977b1df5c39e6360638f
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/brand
-              installed_hash: sha256:c8147a97089bb75c27c31155ab38fe764f176d72ac7abd714626a99c13ee301e
+              installed_hash: sha256:9f76d9329183817fedbbba3b352f2ef7efeff7f9bc5b977b1df5c39e6360638f
     closeout:
         hub_path: devtools/closeout
-        upstream_hash: sha256:5a27c7df3ffe03131b5a986696d097a562dc54e2a16542dfe0139fcd18474a87
+        upstream_hash: sha256:266ec93fd852ab5e7c551dfb3e41e441e0f9eb71f1b4dc9d9cd3df13bcbc5d0c
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/closeout
-              installed_hash: sha256:5a27c7df3ffe03131b5a986696d097a562dc54e2a16542dfe0139fcd18474a87
+              installed_hash: sha256:266ec93fd852ab5e7c551dfb3e41e441e0f9eb71f1b4dc9d9cd3df13bcbc5d0c
     codex-orchestration:
         hub_path: process/codex-orchestration
-        upstream_hash: sha256:019c23a9785514f74384e5153f26fd330c50fb20a73abfbcbf4a72b701e51734
+        upstream_hash: sha256:d87d6ea7a3c105194af42112f71b6e1a212a1bd69bc4182fe45e37094528c572
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/codex-orchestration
-              installed_hash: sha256:019c23a9785514f74384e5153f26fd330c50fb20a73abfbcbf4a72b701e51734
+              installed_hash: sha256:d87d6ea7a3c105194af42112f71b6e1a212a1bd69bc4182fe45e37094528c572
     cursor-orchestration:
         hub_path: process/cursor-orchestration
-        upstream_hash: sha256:7ce3d1ed3e64a34fcfd3873883e8bbb2e77f15b9b721614bd100548060033d76
+        upstream_hash: sha256:2203a8f185df5a98e51c7a9b4c93090f2724c4ed303d0b470c8d70f644eac8e2
         artifacts:
             - id: cursor-orchestration-command
               kind: command
@@ -130,7 +130,7 @@ packages:
               dest: .cursor/commands/cursor-orchestration.md
               providers:
                 - cursor
-              installed_hash: sha256:0ae53d06221c73d8f5337021f261ef7d6799d2aa5d1935e2b3bacc3339b026dc
+              installed_hash: sha256:ea634d3046a19b8048c9d4b4ee845de3e2e82593eb8d62240bd2d55be58824e5
             - id: cursor-orchestration-skill
               kind: skill
               mode: tree
@@ -138,260 +138,260 @@ packages:
               dest: .cursor/skills/cursor-orchestration
               providers:
                 - cursor
-              installed_hash: sha256:85641f5ae002fd66b64ce9e959845a234a267bf9f61927aeb24a12767a5bbae8
+              installed_hash: sha256:78c7b3327ed3386191e8bb683e210205811666e2c70b58ee0c34f1faec3f73d5
     database-migrations:
         hub_path: databases/database-migrations
-        upstream_hash: sha256:f22b97a00e2ebd47d4c5242304a4dfa7cdbc6844b5e661e816f4bc4e9ee0fe27
+        upstream_hash: sha256:0966333f14b01b6f21b376d89627897ef25868d9a3296412bc7557b1594ee050
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/database-migrations
-              installed_hash: sha256:f22b97a00e2ebd47d4c5242304a4dfa7cdbc6844b5e661e816f4bc4e9ee0fe27
+              installed_hash: sha256:0966333f14b01b6f21b376d89627897ef25868d9a3296412bc7557b1594ee050
     design:
         hub_path: frontend/design/design
-        upstream_hash: sha256:abf12bf2bcfb2cf73106808e106b9706b193bda419bb9ea884d4c6279d821a59
+        upstream_hash: sha256:ecc68776c18300b0d1c040be01e548c10ad71a4e7f185c27aa6a20fe0171134e
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/design
-              installed_hash: sha256:abf12bf2bcfb2cf73106808e106b9706b193bda419bb9ea884d4c6279d821a59
+              installed_hash: sha256:ecc68776c18300b0d1c040be01e548c10ad71a4e7f185c27aa6a20fe0171134e
     design-system:
         hub_path: frontend/design/design-system
-        upstream_hash: sha256:6b6848e27394d51319aa26b6339a7e6aa3e9dd6c9c3c6d1dc6d7d7b1583715a8
+        upstream_hash: sha256:6338bc3dacb843e0f61a9381161631005f53ed734fc45dd459a55061c4ed89f3
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/design-system
-              installed_hash: sha256:6b6848e27394d51319aa26b6339a7e6aa3e9dd6c9c3c6d1dc6d7d7b1583715a8
+              installed_hash: sha256:6338bc3dacb843e0f61a9381161631005f53ed734fc45dd459a55061c4ed89f3
     golang-errors:
         hub_path: backend/go/golang-errors
-        upstream_hash: sha256:e115898c085144a234c46cf6743fbbde3919a40f4b20832ba7ce313d721e51d2
+        upstream_hash: sha256:eb20fb6b456e20162d4396b3104a313faff77ab370a1720e143fd6910d0f329e
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/golang-errors
-              installed_hash: sha256:e115898c085144a234c46cf6743fbbde3919a40f4b20832ba7ce313d721e51d2
+              installed_hash: sha256:eb20fb6b456e20162d4396b3104a313faff77ab370a1720e143fd6910d0f329e
     golang-logging:
         hub_path: backend/go/golang-logging
-        upstream_hash: sha256:6f5695589619917cb84ff376318227d1413e688239f0e04ef5f91f9f91a28d1d
+        upstream_hash: sha256:28741dd80ee5afb9eecb1d3aed4026771e726770597b0cb678dfce373d6286cf
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/golang-logging
-              installed_hash: sha256:6f5695589619917cb84ff376318227d1413e688239f0e04ef5f91f9f91a28d1d
+              installed_hash: sha256:28741dd80ee5afb9eecb1d3aed4026771e726770597b0cb678dfce373d6286cf
     golang-tests:
         hub_path: backend/go/golang-tests
-        upstream_hash: sha256:2f21e771dd7a3e3e9eb3996138dbe8e15d5446c7aded132e1d893179fbc896dd
+        upstream_hash: sha256:230e986a2acdb80222c97b4ea5b4a380af72ced5ee67d66f91f977640a40ab2a
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/golang-tests
-              installed_hash: sha256:2f21e771dd7a3e3e9eb3996138dbe8e15d5446c7aded132e1d893179fbc896dd
+              installed_hash: sha256:230e986a2acdb80222c97b4ea5b4a380af72ced5ee67d66f91f977640a40ab2a
     golang-validation:
         hub_path: backend/go/golang-validation
-        upstream_hash: sha256:e5fc59d69c113656728dd5d225e1677fdb9c564ed265356360024b71d59aa012
+        upstream_hash: sha256:c916beafe7383c26082931553090b7d5e7443e8dee707e9be190be1d0d9c750e
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/golang-validation
-              installed_hash: sha256:e5fc59d69c113656728dd5d225e1677fdb9c564ed265356360024b71d59aa012
+              installed_hash: sha256:c916beafe7383c26082931553090b7d5e7443e8dee707e9be190be1d0d9c750e
     improve:
         hub_path: frontend/design/improve
-        upstream_hash: sha256:20fe2dad0e22ab6409aece8a1222408ecbd81ac80279110016573ef5bdddc9fc
+        upstream_hash: sha256:3c2df470121eb4a3b684c0bfff51800f3afa4f1c82333a1a5e0b68cad9b730c1
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/improve
-              installed_hash: sha256:20fe2dad0e22ab6409aece8a1222408ecbd81ac80279110016573ef5bdddc9fc
+              installed_hash: sha256:3c2df470121eb4a3b684c0bfff51800f3afa4f1c82333a1a5e0b68cad9b730c1
     mcp-tool-input-schema:
         hub_path: integration/mcp-tool-input-schema
-        upstream_hash: sha256:557f6ec7f118bd436d12a443bde3be17aa0201209ff1140630e53c4824d43c3f
+        upstream_hash: sha256:295895b2b81856dc8dd8dfa70bbcbc7e137e28be04a352265b57f76d7febf622
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/mcp-tool-input-schema
-              installed_hash: sha256:557f6ec7f118bd436d12a443bde3be17aa0201209ff1140630e53c4824d43c3f
+              installed_hash: sha256:295895b2b81856dc8dd8dfa70bbcbc7e137e28be04a352265b57f76d7febf622
     openspec-apply-change:
         hub_path: process/openspec-apply-change
-        upstream_hash: sha256:ced3fe15f17d7ea871932f031699bd34da209e8eaeabfb3a2a5192c8426fd3d2
+        upstream_hash: sha256:469ac6164e6b57e6a29cf1da4c58c0a6223c0d7f7bf022d95e62e04968c9de8c
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-apply-change
-              installed_hash: sha256:ced3fe15f17d7ea871932f031699bd34da209e8eaeabfb3a2a5192c8426fd3d2
+              installed_hash: sha256:469ac6164e6b57e6a29cf1da4c58c0a6223c0d7f7bf022d95e62e04968c9de8c
     openspec-archive-change:
         hub_path: process/openspec-archive-change
-        upstream_hash: sha256:1262e80d26c2e79f55a8da1f4e7322324e77763c6da005354f0eb2d96ed2c573
+        upstream_hash: sha256:3871b63ac5876d0401035e60721741ad770e3e87eddad65f3a2a55105ff215b7
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-archive-change
-              installed_hash: sha256:1262e80d26c2e79f55a8da1f4e7322324e77763c6da005354f0eb2d96ed2c573
+              installed_hash: sha256:3871b63ac5876d0401035e60721741ad770e3e87eddad65f3a2a55105ff215b7
     openspec-explore:
         hub_path: process/openspec-explore
-        upstream_hash: sha256:91c08d6757ba1351d99e5ee2c432e8a34ba275f83170e7a8e80689cddb52ce94
+        upstream_hash: sha256:6427a5bfcd9de86cde83095b01a4672fae4194729ae28c1b883d56696a036c04
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-explore
-              installed_hash: sha256:91c08d6757ba1351d99e5ee2c432e8a34ba275f83170e7a8e80689cddb52ce94
+              installed_hash: sha256:6427a5bfcd9de86cde83095b01a4672fae4194729ae28c1b883d56696a036c04
     openspec-propose:
         hub_path: process/openspec-propose
-        upstream_hash: sha256:3f28abdbd332722dd1edb3b9caba7aba69f37af179950b00635713e84ebcec4d
+        upstream_hash: sha256:185f2ee11842d5f9c7a170801cc1b7ec3b6d71a97dcfeb0f6472c22e62b0be53
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-propose
-              installed_hash: sha256:3f28abdbd332722dd1edb3b9caba7aba69f37af179950b00635713e84ebcec4d
+              installed_hash: sha256:185f2ee11842d5f9c7a170801cc1b7ec3b6d71a97dcfeb0f6472c22e62b0be53
     openspec-sync-specs:
         hub_path: process/openspec-sync-specs
-        upstream_hash: sha256:bba2fb69fe34e0148effa3720aa16020ee19ed327140aad7a3aa07d4a3af4822
+        upstream_hash: sha256:45b30b9cf2bd8486ed97b72cb4408ccb83182522ecf9482d81119d0971189d2a
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-sync-specs
-              installed_hash: sha256:bba2fb69fe34e0148effa3720aa16020ee19ed327140aad7a3aa07d4a3af4822
+              installed_hash: sha256:45b30b9cf2bd8486ed97b72cb4408ccb83182522ecf9482d81119d0971189d2a
     openspec-update-change:
         hub_path: process/openspec-update-change
-        upstream_hash: sha256:070f8b09c3a88c4bf01c173f9c0d8ddd04a4f0d8e797b109f3068c0e32da7c29
+        upstream_hash: sha256:9f90b71f267e9004741b2a1d220b452c4c32c6e81d903b3c8a53b189f92c4c91
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-update-change
-              installed_hash: sha256:070f8b09c3a88c4bf01c173f9c0d8ddd04a4f0d8e797b109f3068c0e32da7c29
+              installed_hash: sha256:9f90b71f267e9004741b2a1d220b452c4c32c6e81d903b3c8a53b189f92c4c91
     openspec-workflow:
         hub_path: process/openspec-workflow
-        upstream_hash: sha256:5c0f1daa05673560d6c0ba9def24fce571e2780c21abc5b407273355171b5096
+        upstream_hash: sha256:36b66a2e4a67115e5cb61dd135c2d812cf27a1771808f377df6999928ab8c381
         artifacts:
             - id: desktop-change-schema
               kind: schema
               mode: tree
               src: schemas/desktop-change
               dest: openspec/schemas/desktop-change
-              installed_hash: sha256:750464eee09bb8df9379e622f163ff2e33de3f07ff2af131f13bc50209edf740
+              installed_hash: sha256:815362fe6774be126f5a20e81e7bda7a274df7dbd649102f18fe624855d0e44a
             - id: qa-report-template
               kind: template
               mode: file
               src: templates/qa-report.md
               dest: openspec/templates/qa-report.md
-              installed_hash: sha256:def7698d846e1b5a17bdf2fd7f57e27758bc9f1b526f03b438d296bd3ee07f54
+              installed_hash: sha256:507485fb9a607bede622cd742b39e36718f1140072c90a9884badb57cd782928
     runnable-background-processes:
         hub_path: backend/go/runnable-background-processes
-        upstream_hash: sha256:53586052b6b8479a41fa372fbfc54ff155759895bc8871225b9786b95833fe2f
+        upstream_hash: sha256:35915bbef6e058e651509c3fb374f20b775e17c48caf8d1f77fd2a7ee1a22b9e
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/runnable-background-processes
-              installed_hash: sha256:53586052b6b8479a41fa372fbfc54ff155759895bc8871225b9786b95833fe2f
+              installed_hash: sha256:35915bbef6e058e651509c3fb374f20b775e17c48caf8d1f77fd2a7ee1a22b9e
     skill-authoring:
         hub_path: devtools/skill-authoring
-        upstream_hash: sha256:c9c83732555c674095cf70d291810513c98c42436115955ae95a494c4fddc265
+        upstream_hash: sha256:146abb2ea5246a802291a856b748b96ad216342c9ef70509902721f6f950ddcc
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/skill-authoring
-              installed_hash: sha256:c9c83732555c674095cf70d291810513c98c42436115955ae95a494c4fddc265
+              installed_hash: sha256:146abb2ea5246a802291a856b748b96ad216342c9ef70509902721f6f950ddcc
     slides:
         hub_path: frontend/design/slides
-        upstream_hash: sha256:cf265eda682febc515b73ec146b264c37e38efb27b8b9442c5246ebde84cb55b
+        upstream_hash: sha256:f7a0952c93da19cfd81b083d6418b859558b054c98653bdf3a3e343f6b57c308
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/slides
-              installed_hash: sha256:cf265eda682febc515b73ec146b264c37e38efb27b8b9442c5246ebde84cb55b
+              installed_hash: sha256:f7a0952c93da19cfd81b083d6418b859558b054c98653bdf3a3e343f6b57c308
     ui-styling:
         hub_path: frontend/design/ui-styling
-        upstream_hash: sha256:0f5f1dfb5b62c2eb5e14046583e703f453a516f66f7d0f5620bb70f6e38e64b1
+        upstream_hash: sha256:9c864ce5652ffa0141ef77d7c6c5e5b74eeaf1503037e00e92c839927620e2f4
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/ui-styling
-              installed_hash: sha256:0f5f1dfb5b62c2eb5e14046583e703f453a516f66f7d0f5620bb70f6e38e64b1
+              installed_hash: sha256:9c864ce5652ffa0141ef77d7c6c5e5b74eeaf1503037e00e92c839927620e2f4
     ui-ux-pro-max:
         hub_path: frontend/design/ui-ux-pro-max
-        upstream_hash: sha256:845bd0a1875a683db344ca2f3bc44c7859c79553e92bed06996ebd6ea5e40c67
+        upstream_hash: sha256:0967a5d3ca5f323be2eb38e2b4b1a789dae5fc7e6cda3f8f2e0fa42c3258ccf1
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/ui-ux-pro-max
-              installed_hash: sha256:845bd0a1875a683db344ca2f3bc44c7859c79553e92bed06996ebd6ea5e40c67
+              installed_hash: sha256:0967a5d3ca5f323be2eb38e2b4b1a789dae5fc7e6cda3f8f2e0fa42c3258ccf1
     ux-form-practices:
         hub_path: frontend/ux/ux-form-practices
-        upstream_hash: sha256:d272129c6d0fcebb416696df9cbe5753573982ccf65c65e9c7ad89280fc31ce3
+        upstream_hash: sha256:7c8fd12142dfa21adb384496e5ef9ea8f968ac0886aa2cce2e136d274d795235
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/ux-form-practices
-              installed_hash: sha256:d272129c6d0fcebb416696df9cbe5753573982ccf65c65e9c7ad89280fc31ce3
+              installed_hash: sha256:7c8fd12142dfa21adb384496e5ef9ea8f968ac0886aa2cce2e136d274d795235
     web-constrained-layout:
         hub_path: frontend/web/web-constrained-layout
-        upstream_hash: sha256:364e7c444e95b7682cca32e3ed2e91075c326ddfabfe3b04308eab442f408da4
+        upstream_hash: sha256:87e98d34dbd394b9b276d31d80de74496aa918bcb847c0e037ea27de5f7b919c
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/web-constrained-layout
-              installed_hash: sha256:364e7c444e95b7682cca32e3ed2e91075c326ddfabfe3b04308eab442f408da4
+              installed_hash: sha256:87e98d34dbd394b9b276d31d80de74496aa918bcb847c0e037ea27de5f7b919c
     web-static-frontend:
         hub_path: frontend/web/web-static-frontend
-        upstream_hash: sha256:442d2be25eede4bb75e16859818c39461665772559198cb814047b0fe80ccbe8
+        upstream_hash: sha256:dd5f502f4abb0fdb1a8bbe309ee42028750d4d9a5a24d66f23f1bbe46db63dfc
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/web-static-frontend
-              installed_hash: sha256:442d2be25eede4bb75e16859818c39461665772559198cb814047b0fe80ccbe8
+              installed_hash: sha256:dd5f502f4abb0fdb1a8bbe309ee42028750d4d9a5a24d66f23f1bbe46db63dfc
     work-intake:
         hub_path: process/work-intake
-        upstream_hash: sha256:f57f6930dac1445ea8815a4101b578f14cc17e4b75b789f2fe8527c6b90eeb39
+        upstream_hash: sha256:84b6aabe8de76a3792a3e1523b71fe198a1a579f6d7760ce5fe38d5237fbcc46
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/work-intake
-              installed_hash: sha256:f57f6930dac1445ea8815a4101b578f14cc17e4b75b789f2fe8527c6b90eeb39
+              installed_hash: sha256:84b6aabe8de76a3792a3e1523b71fe198a1a579f6d7760ce5fe38d5237fbcc46

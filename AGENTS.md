@@ -69,7 +69,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 
 | Skill | Use when |
 |-------|----------|
-| `comm-relay` | Product behavior, `ChatMessage`, platforms, overlay/OBS requirements |
+| `comm-relay` | Product behavior, `ChatMessage`, platforms, overlay/OBS requirements; **desktop web shell** paths (`desktop-save.js`, Wails `DesktopAPI`) |
 | `backend-structure` | Adding packages under `cmd/`, `internal/` |
 | `api-conventions` | HTTP routes, WebSocket `/ws`, JSON shapes — **API is POST-action, never REST** — mutations are `POST /api/<resource>/<action>`; no `PUT`/`DELETE`/`PATCH` or `{id}` paths (guarded by `internal/api/router_guard_test.go`). |
 
@@ -90,7 +90,7 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 
 | Skill | Use when |
 |-------|----------|
-| `web-static-frontend` | Admin panel and OBS overlay under `web/` |
+| `web-static-frontend` | Admin panel and OBS overlay under `web/` (hub; packaged-shell ESLint in skill `references/`) |
 | `web-constrained-layout` | Height-capped admin dialogs and split panes (scroll the body; do not clip). Shared web layout skill — not desktop windowing. |
 | `ux-form-practices` | Connect forms, settings, accessibility |
 

@@ -108,6 +108,21 @@ When touching architecture, consider documenting decisions for:
 
 Settled: YouTube OAuth via admin Connect + system browser; VK via public live WebSocket; emoji via provider cache; JSON for operator settings and SQLite for viewers/stats (`docs/roadmap.md`).
 
+## Desktop web shell (Wails)
+
+Generic rules: [web-static-frontend](../web-static-frontend/SKILL.md) (packaged shell + ESLint reference). CommRelay wiring:
+
+| Concern | Location |
+|--------|----------|
+| ESLint guards (no `alert`/`confirm`/`prompt` in admin/dock; blob save only via shared module) | `eslint.config.js` |
+| Shared save (Wails `DesktopAPI` + browser `<a download>` fallback) | `web/shared/desktop-save.js` |
+| Recap PNG export entry | `web/admin/js/recap-share-image.js` → `saveBlobWithDialog` |
+| Native save dialog + PNG write | `internal/desktopbridge`, `DesktopAPI.SavePNGFile` in `cmd/comm-relay-desktop/main_wails.go` |
+| Loopback IPC after admin navigation | `BindingsAllowedOrigins: "http://127.0.0.1:*,http://localhost:*"` in `main_wails.go` |
+| Contract tests | `web/shared/desktop-save.test.js`, `web/admin/js/recap-share-image.test.js` |
+
+New operator file exports: extend `DesktopAPI` / `desktopbridge`, call from `desktop-save.js` (or a sibling helper), update contract tests — do not add `URL.createObjectURL` in feature modules.
+
 ## Related skills
 
 - Layout: [backend-structure](../backend-structure/SKILL.md)

@@ -19,6 +19,7 @@ test("share card encode fills an opaque canvas and reuses recap renderer", funct
   assert.doesNotMatch(share, /document\.body\.appendChild\(mount\)/);
   assert.doesNotMatch(share, /createObjectURL\(svg/);
   assert.match(share, /toBlob/);
+  assert.match(share, /desktop-save\.js/);
   assert.doesNotMatch(share, /innerHTML/);
   assert.doesNotMatch(share, /html2canvas/);
   assert.match(render, /\.textContent = String\(value\)/);

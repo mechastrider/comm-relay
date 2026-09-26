@@ -194,8 +194,12 @@ async function downloadArchiveImage() {
   syncChrome();
   try {
     const blob = await encodeRecapSharePNG(presentation);
-    triggerRecapDownload(blob, recapDownloadFilename(RECAP_WINDOW_SESSION));
-    setStatus(t("recap.downloadDone"));
+    const result = await triggerRecapDownload(blob, recapDownloadFilename(RECAP_WINDOW_SESSION), t("recap.saveDialogTitle"));
+    if (result.cancelled) {
+      setStatus(t("recap.downloadCancelled"));
+    } else {
+      setStatus(t("recap.downloadDone"));
+    }
   } catch {
     setStatus(t("recap.downloadFailed"), true);
   } finally {

@@ -699,7 +699,9 @@ export default {
   "recap.downloadImage": "Download image",
   "recap.downloadNeedsCapture": "Capture the session recap before downloading this window.",
   "recap.downloadProgress": "Preparing PNG…",
-  "recap.downloadDone": "PNG download started.",
+  "recap.downloadDone": "PNG saved.",
+  "recap.downloadCancelled": "Save cancelled.",
+  "recap.saveDialogTitle": "Save recap image",
   "recap.downloadFailed": "Could not create the PNG. Try again.",
 
   "viewers.listHeading": "Viewer list",

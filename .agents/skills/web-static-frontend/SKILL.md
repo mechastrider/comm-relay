@@ -1,6 +1,6 @@
 ---
 name: web-static-frontend
-description: Static frontend conventions (HTML/CSS/vanilla JS, no framework) — page structure, client WebSocket, JS style, security.
+description: Static frontend conventions (HTML/CSS/vanilla JS, no framework) — page structure, client WebSocket, JS style, security, embedded desktop webviews.
 ---
 
 # Static frontend (HTML/CSS/vanilla JS)
@@ -24,6 +24,8 @@ web/
     └── widget.css      # transparent background, animations (when embedded)
 ```
 
+Consumer repos map their real folders (admin, overlay, dock, etc.) in `AGENTS.md`; keep this skill path-agnostic.
+
 ## Overlay / widget pages
 
 Static pages embedded in another host (browser source, iframe, kiosk display):
@@ -38,7 +40,7 @@ Static pages embedded in another host (browser source, iframe, kiosk display):
 
 Admin or operator UI served as static HTML:
 
-- Fetch `/api/status` and config endpoints with `fetch`.
+- Fetch status and config endpoints with `fetch`.
 - Show connection state (connected / reconnecting / error) for each integration.
 - Link to OAuth or setup URLs when the backend exposes them.
 - Keep layout usable at desktop widths (~1280px); avoid marketing chrome.
@@ -47,7 +49,7 @@ Admin or operator UI served as static HTML:
 ## JavaScript style
 
 - Prefer small functions; avoid global pollution except one `init()` entry.
-- `async/await` for API calls; handle `response.ok` and parse `{"error":"..."}`.
+- `async/await` for API calls; handle `response.ok` and parse structured error bodies.
 - No build step required for MVP (optional minify later).
 
 ## Security
@@ -55,11 +57,22 @@ Admin or operator UI served as static HTML:
 - Treat admin pages as trusted only in their intended deployment context; still avoid `innerHTML` with unsanitized user content — use `textContent` or escape.
 - Widget pages displaying live messages over WebSocket: escape HTML entities in usernames and message bodies.
 
+## Packaged desktop shell (embedded webview)
+
+When the same static UI runs inside a **desktop wrapper** (Wails, Tauri, Electron, etc.) that loads loopback HTTP or bundled assets:
+
+- **Do not use `alert`, `confirm`, or `prompt`** in operator-facing admin or dock code. Webviews handle them poorly; use in-app `<dialog>` or shared modal helpers instead. Enforce with ESLint (`no-restricted-globals` / `no-restricted-properties`) on those trees — see [references/eslint-packaged-shell.md](references/eslint-packaged-shell.md).
+- **Blob and file downloads** — do not scatter `<a download>` or `URL.createObjectURL` across feature modules. Route saves through **one shared module** that:
+  - calls a **native save API** when the shell exposes bindings (save dialog + write bytes), and
+  - falls back to anchor download in a normal browser.
+  Keep `createObjectURL` and `link.download` inside that module only; block them elsewhere with ESLint `no-restricted-syntax`.
+- **Native bridge** — document in the consumer repo where bindings live, which origins are allowed for IPC after navigation to loopback URLs, and how contract tests guard the bridge (static reads of shell entry + shared save module are enough for MVP).
+- **Project paths and class names** belong in `AGENTS.md` or a product-local skill, not here.
+
 ## Related
 
 - Forms: [ux-form-practices](../../ux/ux-form-practices/SKILL.md)
 - Capped overlays and split panes: [web-constrained-layout](../web-constrained-layout/SKILL.md)
-- API shape: [api-conventions](../../../backend/go/api-conventions/SKILL.md)
 
 ## Checklist
 
@@ -67,5 +80,6 @@ Admin or operator UI served as static HTML:
 - [ ] WebSocket reconnect with backoff
 - [ ] Message limit and TTL behavior documented
 - [ ] XSS-safe text rendering
-- [ ] API field names snake_case
+- [ ] API JSON naming documented in the consumer repo
 - [ ] Capped overlays follow `web-constrained-layout` (scroll the body, do not clip)
+- [ ] Packaged shell: no native blocking dialogs in admin/dock; centralized blob save + ESLint guards

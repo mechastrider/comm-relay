@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/muonsoft/clog"
+	"github.com/muonsoft/errors"
 	"github.com/pior/runnable"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -25,9 +26,24 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/bootstrap"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/desktopbridge"
 	"github.com/mechastrider/comm-relay/internal/desktopentry"
 	"github.com/mechastrider/comm-relay/internal/logging"
 )
+
+// DesktopAPI exposes native integrations to the admin WebView (Wails bindings).
+type DesktopAPI struct {
+	app *desktopApp
+}
+
+// SavePNGFile opens a native save dialog and writes a PNG payload.
+// Returns an empty path when the user cancels.
+func (api *DesktopAPI) SavePNGFile(dialogTitle, defaultFilename, pngBase64 string) (string, error) {
+	if api == nil || api.app == nil || api.app.wailsCtx == nil {
+		return "", errors.New("desktop api not ready")
+	}
+	return desktopbridge.WritePNGWithSaveDialog(api.app.wailsCtx, dialogTitle, defaultFilename, pngBase64)
+}
 
 //go:embed frontend
 var frontendAssets embed.FS
@@ -202,6 +218,7 @@ func main() {
 	flag.Parse()
 
 	app := &desktopApp{debug: debugFlag}
+	desktopAPI := &DesktopAPI{app: app}
 
 	err := wails.Run(&options.App{
 		Title:             "CommRelay",
@@ -218,6 +235,10 @@ func main() {
 		OnStartup:  app.startup,
 		OnDomReady: app.domReady,
 		OnShutdown: app.shutdown,
+		Bind: []interface{}{
+			desktopAPI,
+		},
+		BindingsAllowedOrigins: "http://127.0.0.1:*,http://localhost:*",
 		Linux: &linux.Options{
 			Icon:             appIcon,
 			ProgramName:      "CommRelay",
