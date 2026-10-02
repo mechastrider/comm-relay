@@ -1,21 +1,19 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { ApiError, post, request, upload } from "./api";
+import { ApiError, NetworkError, post, request, upload } from "./api";
 
 afterEach(() => vi.unstubAllGlobals());
 test("preserves structured field errors instead of losing them on failed mutations", async () => {
   vi.stubGlobal(
     "fetch",
-    vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            error: "Invalid channel",
-            fields: { twitch_channel: "Required" },
-          }),
-          { status: 422 },
-        ),
+    vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: "Invalid channel",
+          fields: { twitch_channel: "Required" },
+        }),
+        { status: 422 },
       ),
+    ),
   );
   await expect(post("/api/config/update", {})).rejects.toMatchObject({
     status: 422,
@@ -52,4 +50,21 @@ test("non-JSON failures retain their HTTP status", async () => {
     vi.fn().mockResolvedValue(new Response("Unavailable", { status: 503 })),
   );
   await expect(request("/api/config")).rejects.toBeInstanceOf(ApiError);
+});
+
+test("classifies transport failures but preserves cancellation", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockRejectedValue(new TypeError("Failed to fetch")),
+  );
+  await expect(post("/api/config/update", {})).rejects.toBeInstanceOf(
+    NetworkError,
+  );
+  const controller = new AbortController();
+  controller.abort();
+  const cause = new DOMException("Aborted", "AbortError");
+  vi.stubGlobal("fetch", vi.fn().mockRejectedValue(cause));
+  await expect(
+    request("/api/config", { signal: controller.signal }),
+  ).rejects.toBe(cause);
 });

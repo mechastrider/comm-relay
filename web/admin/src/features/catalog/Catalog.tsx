@@ -174,7 +174,11 @@ export function Catalog({ kind }: { kind: Kind }) {
                     : "")
                 }
                 aria-selected={item.id === activeID}
-                tabIndex={item.id === activeID ? 0 : -1}
+                tabIndex={
+                  item.id === activeID ||
+                  (index === 0 && !catalog.some((entry) => entry.id === activeID))
+                    ? 0 : -1
+                }
                 data-command-id={kind === "commands" ? item.id : undefined}
                 data-award-id={kind === "awards" ? item.id : undefined}
                 onClick={() => select(item.id)}

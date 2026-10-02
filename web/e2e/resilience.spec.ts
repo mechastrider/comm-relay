@@ -36,7 +36,7 @@ test("failed save preserves draft and retry; fresh config preserves concurrent s
     ).ok(),
   ).toBeTruthy();
   await page.locator("[data-section-save]").click();
-  await expect(page.locator("[data-section-save]")).toBeDisabled();
+  await expect(page.locator(".settings-section > .notice")).toHaveText("Section saved.");
   const saved = await (
     await page.request.get(runtime.url + "/api/config")
   ).json();
@@ -160,8 +160,14 @@ test("OBS surfaces and dock still load independently with transparent overlay ba
     "/overlay/recap",
     "/dock/messages",
   ]) {
+    // Wait for the real socket handshake/frame before leaving this surface.
+    // Immediate navigation can abort an in-flight Firefox handshake.
+    const connected = page.waitForEvent("websocket").then((socket) =>
+      socket.waitForEvent("framereceived"),
+    );
     const response = await page.goto(runtime.url + route);
     expect(response?.status()).toBe(200);
+    await connected;
     if (route.startsWith("/overlay")) {
       expect(
         await page.evaluate(

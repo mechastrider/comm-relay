@@ -11,7 +11,7 @@
   /* Semantic text */
   --color-text-primary: var(--primitive-gray-100);
   --color-text-secondary: var(--primitive-gray-150);
-  --color-text-muted: var(--primitive-gray-200);
+  --color-text-muted: var(--primitive-gray-150);
   --color-text-accent: var(--primitive-amber-500);
   --color-text-success: var(--primitive-green-500);
   --color-text-warning: var(--primitive-yellow-500);
