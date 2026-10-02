@@ -458,7 +458,6 @@ export function ViewerDetail({
           id="audience-inspector"
           className="audience-inspector"
           aria-labelledby="audience-inspector-heading"
-          aria-modal={false}
         >
           {content}
         </aside>

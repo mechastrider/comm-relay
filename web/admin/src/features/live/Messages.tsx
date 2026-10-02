@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import { useLocale } from "../../app/locale";
 import { useRuntime } from "../../app/runtime";
 import { useResource } from "../../services/resource";
@@ -80,6 +81,11 @@ export function Messages() {
   const { t } = useLocale();
   const { config } = useRuntime();
   const { messages, loading, error, refresh } = useMessages();
+  const needsSetup =
+    !!config &&
+    !config.twitch.enabled &&
+    !config.youtube.enabled &&
+    !config.vk.enabled;
   const { data: catalog } = useResource<{ awards: Award[] }>("/api/awards");
   const [now, setNow] = useState(Date.now);
   const panel = useRef<HTMLDivElement>(null);
@@ -133,10 +139,20 @@ export function Messages() {
           />
         ))}
       </ul>
-      {!loading && messages.length === 0 && (
-        <p id="recent-messages-empty" className="empty-state live-region-empty">
-          {t("shell.noMessagesYet")}
-        </p>
+      {!loading && !error && messages.length === 0 && (
+        <div
+          id="recent-messages-empty"
+          className="empty-state live-region-empty"
+        >
+          <p>
+            {t(needsSetup ? "shell.connectChatHint" : "shell.noMessagesYet")}
+          </p>
+          {needsSetup && (
+            <Link className="btn-physical btn-small" to="/settings/platforms">
+              {t("shell.connectPlatform")}
+            </Link>
+          )}
+        </div>
       )}
       {loading && (
         <p id="live-messages-loading" className="empty-state">

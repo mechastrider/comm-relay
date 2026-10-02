@@ -30,11 +30,11 @@ async function stop(child: ChildProcess) {
 }
 
 export const test = base.extend<{
+  viewerCount: number;
   runtime: { url: string; restart: () => Promise<void> };
 }>({
-  // Playwright requires object destructuring for fixture dependency discovery.
-  // eslint-disable-next-line no-empty-pattern
-  runtime: async ({}, use, info) => {
+  viewerCount: [3, { option: true }],
+  runtime: async ({ viewerCount }, use, info) => {
     const dir = await mkdtemp(join(tmpdir(), "comm-relay-e2e-"));
     const bin = join(tmpdir(), "comm-relay-e2e-bin");
     const ext = process.platform === "win32" ? ".exe" : "";
@@ -96,6 +96,10 @@ export const test = base.extend<{
           "Night Owl",
           "PixelFox",
           "<b>HTML</b> & quotes",
+          ...Array.from(
+            { length: Math.max(0, viewerCount - 3) },
+            (_, index) => `Viewer ${String(index).padStart(4, "0")}`,
+          ),
         ].entries()) {
           const id = "e2e-viewer-" + index;
           insert.run(id, name, 10 + index, 20 + index, at, at);

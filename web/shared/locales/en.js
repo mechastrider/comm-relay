@@ -1,5 +1,19 @@
 /** English UI strings for CommRelay admin and OBS dock. */
 export default {
+  "shell.runtime": "Application status",
+  "shell.connectChatHint": "Connect a chat platform to see messages here.",
+  "shell.connectPlatform": "Connect a platform",
+  "settings.saveConnectionFailed": "Could not reach CommRelay. Your edits are still in the form. Check that the application is running and select Save again.",
+  "audience.pageRange": "{start}–{end} of {total} viewers",
+  "audience.previousPage": "Previous page",
+  "audience.nextPage": "Next page",
+  "audience.pagination": "Viewer pages",
+  "progression.subjectChoose": "Choose an award or command",
+  "progression.subjectUnavailable": "Unavailable: {id}",
+  "progression.subjectLoadFailed": "Could not load awards and commands. Your current value is preserved.",
+  "progression.subjectHint": "Choose an award by name or a command by its trigger.",
+  "progression.subjectMissingHint": "The saved award or command is unavailable. Its value is unchanged; choose a replacement if needed.",
+
   "shell.brandKicker": "LOCAL OBS COMM RELAY",
   "shell.save": "Save",
   "shell.systemStatus": "System status",
@@ -412,7 +426,7 @@ export default {
   "progression.metricCommands": "Commands",
   "progression.metricSessions": "Sessions",
   "progression.metricContracts": "Contracts won",
-  "progression.subject": "Award or command ID",
+  "progression.subject": "Award or command",
   "progression.target": "Target",
   "progression.enabled": "Enabled",
   "progression.secret": "Secret until unlocked",

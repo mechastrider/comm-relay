@@ -909,6 +909,7 @@ export function AwardFields({
         <div className="catalog-media-row">
           <div
             id="award-image-preview"
+            role="group"
             className="catalog-media-preview"
             aria-labelledby="award-image-label"
           >
@@ -1397,6 +1398,7 @@ export function GreetingFields({
           <div className="catalog-media-row">
             <div
               id="greeting-image-preview"
+              role="group"
               className="catalog-media-preview"
               aria-labelledby="greeting-image-label"
             >

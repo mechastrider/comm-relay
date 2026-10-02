@@ -160,16 +160,16 @@ func (h *viewersHandler) handleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	levels, err := h.viewerStore.ViewerProgressionLevels(viewers)
+	if err != nil {
+		clog.Errorf(r.Context(), "resolve directory progression levels: %w", err)
+		writeError(w, http.StatusInternalServerError, "failed to list viewers")
+		return
+	}
 	out := make([]viewerSummaryResponse, 0, len(viewers))
 	for _, viewer := range viewers {
 		item := viewerSummaryFromStore(viewer, false, customAvatarsEnabled)
-		level, levelErr := h.viewerStore.ViewerProgressionLevel(viewer.ID)
-		if levelErr != nil {
-			clog.Errorf(r.Context(), "resolve viewer progression level: %w", levelErr)
-			writeError(w, http.StatusInternalServerError, "failed to list viewers")
-			return
-		}
-		levelResponse := progressionLevelFromStore(*level)
+		levelResponse := progressionLevelFromStore(levels[viewer.ID])
 		item.CurrentLevel = &levelResponse
 		out = append(out, item)
 	}

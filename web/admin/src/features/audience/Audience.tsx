@@ -58,6 +58,7 @@ export function Audience() {
               : "audience-" + selected + "-panel")
           }
           role="tabpanel"
+          tabIndex={0}
           aria-labelledby={`audience-${selected}-tab`}
         >
           <Outlet />

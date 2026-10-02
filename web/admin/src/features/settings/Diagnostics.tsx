@@ -120,7 +120,11 @@ export function DiagnosticsView() {
       >
         {oauthLabel}
       </p>
-      <div className="detail-stack" aria-label={t("shell.connectorDetails")}>
+      <div
+        className="detail-stack"
+        role="group"
+        aria-label={t("shell.connectorDetails")}
+      >
         {Object.entries(data?.connectors ?? {}).map(([name, status]) => (
           <div
             key={name}

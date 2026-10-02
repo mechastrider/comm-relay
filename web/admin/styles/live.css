@@ -248,3 +248,21 @@
     min-width: 18rem;
   }
 }
+
+.message-panel > .live-region-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--primitive-space-4);
+}
+
+.live-region-empty > p {
+  margin: 0;
+}
+
+.live-region-empty > .btn-physical {
+  flex: 0 0 auto;
+  align-self: center;
+  width: auto;
+  max-width: 100%;
+}

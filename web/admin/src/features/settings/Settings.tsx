@@ -5,7 +5,7 @@ import { useRuntime } from "../../app/runtime";
 import { useLocale } from "../../app/locale";
 import { Dialog } from "../../components/Dialog";
 import { Tabs } from "../../components/Tabs";
-import { ApiError, post } from "../../services/api";
+import { ApiError, NetworkError, post } from "../../services/api";
 import { playSound, unlockAudio } from "../../services/sound";
 import {
   sectionValues,
@@ -45,7 +45,14 @@ export function Settings() {
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [feedback, setFeedback] = useState("");
+  const [sectionFeedback, setSectionFeedback] = useState<{
+    section: string;
+    text: string;
+  } | null>(null);
+  const feedback =
+    sectionFeedback?.section === section ? sectionFeedback.text : "";
+  const setFeedback = (text: string) =>
+    setSectionFeedback(text ? { section, text } : null);
   const [resetOpen, setResetOpen] = useState(false);
   const oauth = useRef<AbortController | null>(null);
   useEffect(() => () => oauth.current?.abort(), []);
@@ -130,7 +137,11 @@ export function Settings() {
         );
       }
       setFeedback(
-        cause instanceof Error ? cause.message : t("banner.cannotReach"),
+        cause instanceof NetworkError
+          ? t("settings.saveConnectionFailed")
+          : cause instanceof Error
+            ? cause.message
+            : t("banner.cannotReach"),
       );
     } finally {
       inFlight.current = false;
@@ -164,7 +175,9 @@ export function Settings() {
           result.opened
             ? t("banner.youtubeSignIn")
             : result.authorization_url
-              ? t("banner.youtubeOpenLink", { url: result.authorization_url })
+              ? t("banner.youtubeOpenLink", {
+                  url: result.authorization_url,
+                })
               : t("banner.youtubeBrowserFailed"),
         );
         if (result.opened || result.authorization_url) {
@@ -189,7 +202,9 @@ export function Settings() {
                 resolve();
               };
               const timer = setTimeout(done, 1000);
-              controller.signal.addEventListener("abort", done, { once: true });
+              controller.signal.addEventListener("abort", done, {
+                once: true,
+              });
             });
           }
           if (!controller.signal.aborted)

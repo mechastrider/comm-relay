@@ -18,6 +18,13 @@ export class ApiError extends Error {
   }
 }
 
+export class NetworkError extends Error {
+  constructor(cause: unknown) {
+    super("Connection unavailable", { cause });
+    this.name = "NetworkError";
+  }
+}
+
 export async function request<T>(
   path: string,
   init: RequestInit = {},
@@ -25,7 +32,17 @@ export async function request<T>(
   const headers = new Headers(init.headers);
   if (init.body && !(init.body instanceof FormData))
     headers.set("Content-Type", "application/json");
-  const response = await fetch(path, { ...init, headers });
+  let response: Response;
+  try {
+    response = await fetch(path, { ...init, headers });
+  } catch (cause) {
+    if (
+      init.signal?.aborted ||
+      (cause instanceof Error && cause.name === "AbortError")
+    )
+      throw cause;
+    throw new NetworkError(cause);
+  }
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const details =

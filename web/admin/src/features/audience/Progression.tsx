@@ -5,6 +5,7 @@ import { useLocale } from "../../app/locale";
 import { Dialog } from "../../components/Dialog";
 import { ApiError, post } from "../../services/api";
 import { useResource } from "../../services/resource";
+import type { CatalogRecord } from "../catalog/types";
 import { ProgressionView } from "./ProgressionView";
 import {
   valuesFor,
@@ -26,6 +27,8 @@ interface Draft {
 }
 export function Progression() {
   const { t } = useLocale();
+  const awards = useResource<{ awards: CatalogRecord[] }>("/api/awards");
+  const commands = useResource<{ commands: CatalogRecord[] }>("/api/commands");
   const levels = useResource<{ levels: Level[] }>("/api/progression/levels");
   const achievements = useResource<{ achievements: Achievement[] }>(
     "/api/progression/achievements",
@@ -124,7 +127,14 @@ export function Progression() {
         ...previous,
         [group]: {
           baseline: draft.baseline,
-          values: { ...draft.values, [id]: value },
+          values: {
+            ...draft.values,
+            [id]: value,
+            ...(id === "progression-achievement-metric" &&
+            draft.values[id] !== value
+              ? { "progression-achievement-subject": "" }
+              : {}),
+          },
         },
       };
     });
@@ -183,6 +193,22 @@ export function Progression() {
     setError("");
     setErrors({});
     const payload = payloadFor(group, values);
+    if (group === "achievement") {
+      const catalog =
+        payload.metric === "award_count"
+          ? awards.data?.awards
+          : commands.data?.commands;
+      const item = catalog?.find((entry) => entry.id === payload.subject_id);
+      payload.subject_label = item
+        ? (payload.metric === "award_count"
+            ? item.name
+            : `!${item.trigger || item.id}`) || item.id
+        : payload.subject_id === achievement.revision.subject_id
+          ? achievement.revision.subject_label || String(payload.subject_id)
+          : String(payload.subject_id);
+      if (!["award_count", "command_count"].includes(String(payload.metric)))
+        payload.subject_label = "";
+    }
     try {
       if (group === "settings") {
         settings.receive(
@@ -358,7 +384,16 @@ export function Progression() {
       session_count: "progression.metricSessions",
       contract_win_count: "progression.metricContracts",
     };
-    const subject = revision.subject_label || revision.subject_id || "";
+    const catalog =
+      revision.metric === "award_count"
+        ? awards.data?.awards
+        : commands.data?.commands;
+    const item = catalog?.find((entry) => entry.id === revision.subject_id);
+    const subject = item
+      ? (revision.metric === "award_count"
+          ? item.name
+          : `!${item.trigger || item.id}`) || item.id
+      : revision.subject_label || revision.subject_id || "";
     return t("progression.condition", {
       target: revision.target || 1,
       subject: subject ? subject + " " : "",
@@ -395,11 +430,38 @@ export function Progression() {
         "audience-catalog-items__item" +
         (selected ? " audience-catalog-items__item--selected" : "")
       }
-      tabIndex={selected ? 0 : -1}
+      tabIndex={
+        selected ||
+        ((group === "level" ? levelID : achievementID) === "" &&
+          id === (group === "level" ? list[0]?.id : filtered[0]?.id))
+          ? 0
+          : -1
+      }
       aria-selected={selected}
       onClick={() => choose(group, id)}
       onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
+        if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+          event.preventDefault();
+          const options = Array.from(
+            event.currentTarget.parentElement?.querySelectorAll<HTMLElement>(
+              '[role="option"]',
+            ) ?? [],
+          );
+          const index = options.indexOf(event.currentTarget);
+          const next =
+            event.key === "Home"
+              ? 0
+              : event.key === "End"
+                ? options.length - 1
+                : Math.max(
+                    0,
+                    Math.min(
+                      options.length - 1,
+                      index + (event.key === "ArrowDown" ? 1 : -1),
+                    ),
+                  );
+          options[next]?.focus();
+        } else if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           choose(group, id);
         }
@@ -476,6 +538,30 @@ export function Progression() {
               : "")
         }
         failed={failed}
+        subjectOptions={
+          (String(values["progression-achievement-metric"]) === "award_count"
+            ? awards.data?.awards
+            : commands.data?.commands
+          )?.map((item) => ({
+            id: item.id,
+            label:
+              (String(values["progression-achievement-metric"]) ===
+              "award_count"
+                ? item.name
+                : `!${item.trigger || item.id}`) || item.id,
+          })) ?? []
+        }
+        subjectLoading={
+          awards.loading ||
+          commands.loading ||
+          (!awards.data && !awards.error) ||
+          (!commands.data && !commands.error)
+        }
+        subjectError={!!(awards.error || commands.error)}
+        retrySubjects={() => {
+          void awards.refresh();
+          void commands.refresh();
+        }}
       />
       <Dialog
         id="discard-changes-dialog"

@@ -1,6 +1,6 @@
 import { preferenceStorage } from "../../services/storage";
 import { useReportSaveStatus } from "../../app/save-status";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useBlocker, useNavigate } from "react-router";
 import { useLocale } from "../../app/locale";
 import { useNavigation, type Period } from "../../app/navigation";
@@ -20,6 +20,9 @@ import {
   sortAudienceViewers,
   viewerPeriodMetrics,
 } from "./viewer-model";
+const PAGE_SIZE = 50;
+const EMPTY_VIEWERS: Viewer[] = [];
+
 export function Viewers() {
   const { t } = useLocale(),
     { period, setPeriod, setLiveTab } = useNavigation(),
@@ -50,6 +53,8 @@ export function Viewers() {
     else setSelected("");
   }, [directory.data, directory.loading, selected, dirty, busy]);
   const opener = useRef<HTMLElement | null>(null);
+  const [page, setPage] = useState(0);
+  const [pendingPage, setPendingPage] = useState<number | null>(null);
   useEffect(() => {
     const timer = setTimeout(() => setQuery(search.trim()), 250);
     return () => clearTimeout(timer);
@@ -62,8 +67,27 @@ export function Viewers() {
       }),
     [subscribe, refresh],
   );
-  const viewers = directory.data?.viewers ?? [];
-  const sorted = sortAudienceViewers(viewers, sort, period) as Viewer[];
+  const viewers = directory.data?.viewers ?? EMPTY_VIEWERS;
+  const sorted = useMemo(
+    () => sortAudienceViewers(viewers, sort, period) as Viewer[],
+    [viewers, sort, period],
+  );
+  const currentPage = Math.min(
+    page,
+    Math.max(0, Math.ceil(sorted.length / PAGE_SIZE) - 1),
+  );
+  const visible = sorted.slice(
+    currentPage * PAGE_SIZE,
+    (currentPage + 1) * PAGE_SIZE,
+  );
+  const goToPage = (next: number) => {
+    if (dirty || busy) {
+      setPendingPage(next);
+      return;
+    }
+    setSelected("");
+    setPage(next);
+  };
   const choose = (id: string) => {
     if (id === selected) return;
     if (dirty || busy) {
@@ -72,9 +96,10 @@ export function Viewers() {
     }
     setSelected(id);
     if (!id)
-      requestAnimationFrame(
-        () => opener.current?.isConnected && opener.current.focus(),
-      );
+      requestAnimationFrame(() => {
+        if (opener.current?.isConnected) opener.current.focus();
+        else document.getElementById("audience-table-heading")?.focus();
+      });
   };
   const open = (viewer: Viewer, element: HTMLElement) => {
     opener.current = element;
@@ -82,6 +107,7 @@ export function Viewers() {
   };
   const cancel = () => {
     setPending(null);
+    setPendingPage(null);
     if (blocker.state === "blocked") blocker.reset();
   };
   const sortHeader = (
@@ -103,6 +129,7 @@ export function Viewers() {
         onClick={() => {
           const next = nextAudienceSort(sort, column);
           setSort(next);
+          setPage(0);
           writeAudienceSort(preferenceStorage(), next);
         }}
       >
@@ -122,7 +149,10 @@ export function Viewers() {
               autoComplete="off"
               placeholder={t("viewers.searchPlaceholder")}
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(0);
+              }}
             />
           </div>
           <div className="audience-toolbar__filters form__field">
@@ -131,7 +161,10 @@ export function Viewers() {
               id="audience-period"
               aria-describedby="audience-period-hint"
               value={period}
-              onChange={(event) => setPeriod(event.target.value as Period)}
+              onChange={(event) => {
+                setPeriod(event.target.value as Period);
+                setPage(0);
+              }}
             >
               {(["session", "day", "all"] as const).map((value) => (
                 <option key={value} value={value}>
@@ -197,7 +230,11 @@ export function Viewers() {
           className="audience-table-region"
           aria-labelledby="audience-table-heading"
         >
-          <h2 id="audience-table-heading" className="visually-hidden">
+          <h2
+            id="audience-table-heading"
+            className="visually-hidden"
+            tabIndex={-1}
+          >
             {t("audience.tableHeading")}
           </h2>
           <div className="audience-table-body">
@@ -229,7 +266,7 @@ export function Viewers() {
                 </tr>
               </thead>
               <tbody id="audience-viewers-table-body">
-                {sorted.map((viewer, index) => {
+                {visible.map((viewer, index) => {
                   const metrics = viewerPeriodMetrics(viewer, period);
                   return (
                     <tr
@@ -262,7 +299,7 @@ export function Viewers() {
                             Math.max(
                               0,
                               Math.min(
-                                sorted.length - 1,
+                                visible.length - 1,
                                 index + (event.key === "ArrowDown" ? 1 : -1),
                               ),
                             )
@@ -319,6 +356,38 @@ export function Viewers() {
                 })}
               </tbody>
             </table>
+            {sorted.length > 0 && (
+              <nav
+                className="audience-pagination"
+                aria-label={t("audience.pagination")}
+              >
+                <p role="status">
+                  {t("audience.pageRange", {
+                    start: currentPage * PAGE_SIZE + 1,
+                    end: Math.min((currentPage + 1) * PAGE_SIZE, sorted.length),
+                    total: sorted.length,
+                  })}
+                </p>
+                <button
+                  className="btn-physical btn-small"
+                  disabled={currentPage === 0 || directory.loading || busy}
+                  onClick={() => goToPage(currentPage - 1)}
+                >
+                  {t("audience.previousPage")}
+                </button>
+                <button
+                  className="btn-physical btn-small"
+                  disabled={
+                    (currentPage + 1) * PAGE_SIZE >= sorted.length ||
+                    directory.loading ||
+                    busy
+                  }
+                  onClick={() => goToPage(currentPage + 1)}
+                >
+                  {t("audience.nextPage")}
+                </button>
+              </nav>
+            )}
             {!sorted.length && !directory.error && (
               <div
                 id="audience-table-empty"
@@ -384,7 +453,11 @@ export function Viewers() {
       <Dialog
         id="discard-changes-dialog"
         className="prompt-dialog"
-        open={pending !== null || blocker.state === "blocked"}
+        open={
+          pending !== null ||
+          pendingPage !== null ||
+          blocker.state === "blocked"
+        }
         onClose={cancel}
         title={t("dialog.discardUnsavedTitle")}
         actions={
@@ -402,7 +475,11 @@ export function Viewers() {
               disabled={busy}
               onClick={() => {
                 setDirty(false);
-                if (pending !== null) {
+                if (pendingPage !== null) {
+                  setSelected("");
+                  setPage(pendingPage);
+                  setPendingPage(null);
+                } else if (pending !== null) {
                   setSelected(pending);
                   setPending(null);
                 } else if (blocker.state === "blocked") blocker.proceed();

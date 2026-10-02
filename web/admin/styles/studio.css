@@ -1161,6 +1161,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .studio-surface-rail--collapsed .studio-add-to-obs-open__label {
+    flex: 1 1 auto;
+  }
+
   .studio-surface-rail--collapsed .studio-surface-item__copy,
   .studio-surface-rail--collapsed .studio-add-to-obs-open__label,
   .studio-surface-rail--collapsed .studio-setup-reminder {

@@ -13,6 +13,10 @@ export function ProgressionView({
   condition,
   status,
   failed,
+  subjectOptions,
+  subjectLoading,
+  subjectError,
+  retrySubjects,
 }: {
   values: Record<string, string | boolean>;
   errors: Record<string, string>;
@@ -26,8 +30,19 @@ export function ProgressionView({
   condition: string;
   status: string;
   failed: boolean;
+  subjectOptions: { id: string; label: string }[];
+  subjectLoading: boolean;
+  subjectError: boolean;
+  retrySubjects: () => void;
 }) {
   const { t } = useLocale();
+  const subject = String(values["progression-achievement-subject"] ?? "");
+  const needsSubject = ["award_count", "command_count"].includes(
+    String(values["progression-achievement-metric"]),
+  );
+  const missingSubject =
+    !!subject && !subjectOptions.some((item) => item.id === subject);
+
   return (
     <div className="progression-grid">
       <section
@@ -51,6 +66,7 @@ export function ProgressionView({
         </header>
         <ul
           id="progression-level-list"
+          aria-labelledby="progression-levels-heading"
           className="audience-catalog-items"
           role="listbox"
         >
@@ -352,6 +368,7 @@ export function ProgressionView({
         </p>
         <ul
           id="progression-achievement-list"
+          aria-labelledby="progression-achievements-heading"
           className="audience-catalog-items"
           role="listbox"
         >
@@ -505,18 +522,56 @@ export function ProgressionView({
             >
               {t("progression.subject")}
             </label>
-            <input
+            <select
               id="progression-achievement-subject"
-              type="text"
-              maxLength={128}
-              value={String(values["progression-achievement-subject"] ?? "")}
+              value={subject}
               onChange={(event) =>
                 change("progression-achievement-subject", event.target.value)
               }
-              disabled={busy}
+              disabled={busy || subjectLoading || !needsSubject}
+              required={needsSubject}
               aria-invalid={!!errors["progression-achievement-subject"]}
-              aria-describedby={"progression-achievement-subject-error"}
-            />
+              aria-describedby="progression-achievement-subject-error progression-subject-hint"
+            >
+              <option value="">
+                {t(
+                  subjectLoading
+                    ? "state.loading"
+                    : "progression.subjectChoose",
+                )}
+              </option>
+              {missingSubject && (
+                <option value={subject}>
+                  {subjectLoading || subjectError
+                    ? subject
+                    : t("progression.subjectUnavailable", { id: subject })}
+                </option>
+              )}
+              {subjectOptions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+            <p id="progression-subject-hint" className="field-hint">
+              {t(
+                missingSubject && !subjectLoading && !subjectError
+                  ? "progression.subjectMissingHint"
+                  : "progression.subjectHint",
+              )}
+            </p>
+            {subjectError && (
+              <div role="alert" className="notice notice--error">
+                <p>{t("progression.subjectLoadFailed")}</p>
+                <button
+                  type="button"
+                  className="btn-physical btn-small"
+                  onClick={retrySubjects}
+                >
+                  {t("state.retry")}
+                </button>
+              </div>
+            )}
             <p
               id="progression-achievement-subject-error"
               className="field-error"
