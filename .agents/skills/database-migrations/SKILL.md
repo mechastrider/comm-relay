@@ -60,3 +60,19 @@ a different point in history.
 - CI check for duplicate version prefixes
 - Never rename or renumber an already-applied migration
 - Reproduce production version state before any migration repair
+
+## Older writers and first-run data
+
+An additive schema may remain writable by an older application binary. If downgrade
+or mixed-version operation is supported, backfilling existing rows does not protect
+against later legacy writes. Enforce new read invariants through compatible database
+defaults/constraints/triggers or an explicit version boundary. Test migration → old
+writer insert/update → new reader. If old writers are unsupported, reject their use
+explicitly rather than implying compatibility from an additive migration.
+
+For optional starter catalogs, distinguish a genuinely new database from an adopted
+existing one before migrations erase that distinction. Persist one-time bootstrap
+intent using a crash-safe protocol. Missing metadata on an upgraded database must
+not alone authorize reseeding or replacing user content. Cover fresh initialization,
+existing/adopted state, interrupted initialization and idempotent reruns. Keep the
+product's opt-in/reset policy separate from schema migration.

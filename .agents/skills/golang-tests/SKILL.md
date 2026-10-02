@@ -100,3 +100,33 @@ Use absolute paths with MemMapFs (`/` as base). Follow existing `seedMemFS`-styl
 - [ ] testify `require` / `assert`, not bare `t.Fatal` except in helpers
 - [ ] JSON assertions via `assertjson` + `HasJSON`
 - [ ] Store/filesystem unit tests use afero when testing storage directly
+
+## Test the claimed contract
+
+- For branch N of a fallback chain, make every preceding branch miss. Assert both
+  a successful fallback and rejection under the same setup; a success from an
+  earlier stub proves nothing about the fallback.
+- Fakes must expose the same domain error identity and wrapping contract as real
+  repositories. Independently allocated sentinels can make unit behavior differ
+  from production; cover the adapter-to-domain mapping too.
+- For wire contracts such as `items: []` versus `items: null`, inspect raw JSON.
+  Decoding both into an empty slice and comparing length erases the distinction.
+- Test middleware-dependent behavior through the wrapped handler: auth-enabled
+  routing and incremental SSE can fail while a bare handler passes. For SSE,
+  observe a first event before releasing the producer to finish the response.
+- Lifecycle commands need a round trip: install → clean → upstream change → dirty
+  → update → clean. Include interrupted or conflicting state when the command
+  claims recovery behavior.
+
+## Environment and filesystem determinism
+
+Isolate configuration/cache locations used by the platform, including HOME/XDG or
+Windows equivalents where relevant. Use test-scoped environment setters and avoid
+parallel tests when mutating process-wide environment. Do not consult real user
+credentials or caches to establish an empty-state fixture.
+
+For generic I/O failure tests, prefer structural blockers (a file where a directory
+should be) or injected filesystem errors over permission bits: privileged users
+and different operating systems can bypass those assumptions. Test actual permission
+semantics separately when they are the contract. Register store/file cleanup before
+returning helpers, especially when Windows file locking affects temporary directories.

@@ -1,0 +1,29 @@
+# NOTICE — adapted skill "structural-code-review"
+
+Adapted from Cursor's thermo-nuclear-code-quality-review in cursor-team-kit.
+This adaptation is not affiliated with, endorsed by, or sponsored by Cursor.
+
+- Source: cursor/plugins/cursor-team-kit/skills/thermo-nuclear-code-quality-review
+- Upstream: https://github.com/cursor/plugins
+- Ref: c47b12849e43f18d5c374c7069c744cc55b0ea00
+- License: MIT; Copyright (c) 2026 Cursor (see LICENSE).
+
+The catalog hash covers the pristine upstream SKILL.md and cursor-team-kit/LICENSE
+placed at the skill root, using agentmem HashPath (sorted paths and bytes,
+NUL-delimited). NOTICE and the adaptation below are excluded from that source hash.
+
+Hub integration adaptations:
+- Rename the skill to structural-code-review to coexist with the upstream skill.
+- Preserve the original review body verbatim apart from its title and the added
+  Invocation and context section: core prompt, standards, review questions,
+  aggressive findings, remedies, tone examples, output priorities, and approval bar.
+- Add a short provider-neutral invocation/context note; do not vendor the separate
+  Cursor Task-agent wrapper. Clarify that review alone does not authorize edits or
+  external PR actions, without changing the rubric's restructuring ambitions.
+- Remove disable-model-invocation from portable frontmatter. Restrict use in the
+  description/body to requested structural audits or explicitly selected workflows.
+  This is a semantic trigger boundary, not a portable host-enforced invocation flag.
+
+Maintain this as an intentional adaptation. When re-vendoring, inspect upstream
+changes, reapply these adaptations, and update the pinned ref and source hash.
+Do not update it through the memory service.
