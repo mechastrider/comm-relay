@@ -1,0 +1,243 @@
+{
+  "twitch-enabled": {
+    "section": "platforms",
+    "path": "twitch.enabled",
+    "kind": "boolean"
+  },
+  "twitch-channel": {
+    "section": "platforms",
+    "path": "twitch.channel",
+    "kind": "string"
+  },
+  "youtube-enabled": {
+    "section": "platforms",
+    "path": "youtube.enabled",
+    "kind": "boolean"
+  },
+  "youtube-connection-mode": {
+    "section": "platforms",
+    "path": "youtube.connection_mode",
+    "kind": "string"
+  },
+  "youtube-channel-handle": {
+    "section": "platforms",
+    "path": "youtube.channel_handle",
+    "kind": "string"
+  },
+  "youtube-video-input": {
+    "section": "platforms",
+    "path": "youtube.video_input",
+    "kind": "string"
+  },
+  "youtube-chat-mode": {
+    "section": "platforms",
+    "path": "youtube.chat_mode",
+    "kind": "string"
+  },
+  "youtube-client-id": {
+    "section": "platforms",
+    "path": "youtube.oauth.client_id",
+    "kind": "string"
+  },
+  "youtube-client-secret": {
+    "section": "platforms",
+    "path": "youtube.oauth.client_secret",
+    "kind": "string"
+  },
+  "youtube-use-proxy": {
+    "section": "platforms",
+    "path": "youtube.use_proxy",
+    "kind": "boolean"
+  },
+  "vk-enabled": {
+    "section": "platforms",
+    "path": "vk.enabled",
+    "kind": "boolean"
+  },
+  "vk-channel": {
+    "section": "platforms",
+    "path": "vk.channel",
+    "kind": "string"
+  },
+  "vk-use-proxy": {
+    "section": "platforms",
+    "path": "vk.use_proxy",
+    "kind": "boolean"
+  },
+  "server-port": {
+    "section": "network",
+    "path": "server_port",
+    "kind": "number"
+  },
+  "network-socks5-address": {
+    "section": "network",
+    "path": "network.socks5.address",
+    "kind": "string"
+  },
+  "network-socks5-username": {
+    "section": "network",
+    "path": "network.socks5.username",
+    "kind": "string"
+  },
+  "network-socks5-password": {
+    "section": "network",
+    "path": "network.socks5.password",
+    "kind": "string"
+  },
+  "activity-interval-seconds": {
+    "section": "data",
+    "path": "activity_interval_seconds",
+    "kind": "number"
+  },
+  "activity-session-limit": {
+    "section": "data",
+    "path": "activity_session_limit",
+    "kind": "number"
+  },
+  "activity-xp": {
+    "section": "data",
+    "path": "activity_xp",
+    "kind": "number"
+  },
+  "buffs-per-award-per-viewer": {
+    "section": "data",
+    "path": "buffs_per_award_per_viewer",
+    "kind": "number"
+  },
+  "buff-max-unique-viewers": {
+    "section": "data",
+    "path": "buff_max_unique_viewers",
+    "kind": "number"
+  },
+  "day-reset-hour": {
+    "section": "data",
+    "path": "day_reset_hour",
+    "kind": "number"
+  },
+  "streamer-display-name": {
+    "section": "data",
+    "path": "streamer_display_name",
+    "kind": "string"
+  },
+  "hide-command-messages": {
+    "section": "data",
+    "path": "hide_command_messages",
+    "kind": "boolean"
+  },
+  "hide-command-cooldown-overlay": {
+    "section": "data",
+    "path": "hide_command_cooldown_overlay",
+    "kind": "boolean"
+  },
+  "custom-avatars-enabled": {
+    "section": "data",
+    "path": "custom_avatars_enabled",
+    "kind": "boolean"
+  },
+  "leaderboard-visibility-policy": {
+    "section": "data",
+    "path": "leaderboard_visibility.policy",
+    "kind": "string"
+  },
+  "leaderboard-visibility-display-seconds": {
+    "section": "data",
+    "path": "leaderboard_visibility.display_seconds",
+    "kind": "number"
+  },
+  "leaderboard-visibility-cooldown-seconds": {
+    "section": "data",
+    "path": "leaderboard_visibility.cooldown_seconds",
+    "kind": "number"
+  },
+  "leaderboard-visibility-dirty-interval-seconds": {
+    "section": "data",
+    "path": "leaderboard_visibility.dirty_interval_seconds",
+    "kind": "number"
+  },
+  "leaderboard-visibility-show-on-award": {
+    "section": "data",
+    "path": "leaderboard_visibility.show_on_award",
+    "kind": "boolean"
+  },
+  "leaderboard-visibility-show-on-rank-change": {
+    "section": "data",
+    "path": "leaderboard_visibility.show_on_rank_change",
+    "kind": "boolean"
+  },
+  "time-locale": {
+    "section": "application",
+    "path": "admin.time_locale",
+    "kind": "string"
+  },
+  "message-sound-enabled": {
+    "section": "application",
+    "path": "admin.message_sound.enabled",
+    "kind": "boolean"
+  },
+  "message-sound-volume": {
+    "section": "application",
+    "path": "admin.message_sound.volume",
+    "kind": "number",
+    "scale": 100
+  },
+  "message-sound-type": {
+    "section": "application",
+    "path": "admin.message_sound.sound",
+    "kind": "string"
+  },
+  "emotes-twitch": {
+    "section": "application",
+    "path": "rich_chat.emotes.twitch",
+    "kind": "boolean"
+  },
+  "emotes-youtube": {
+    "section": "application",
+    "path": "rich_chat.emotes.youtube",
+    "kind": "boolean"
+  },
+  "emotes-vk": {
+    "section": "application",
+    "path": "rich_chat.emotes.vk",
+    "kind": "boolean"
+  },
+  "emotes-ffz": {
+    "section": "application",
+    "path": "rich_chat.emotes.ffz",
+    "kind": "boolean"
+  },
+  "emotes-bttv": {
+    "section": "application",
+    "path": "rich_chat.emotes.bttv",
+    "kind": "boolean"
+  },
+  "emotes-7tv": {
+    "section": "application",
+    "path": "rich_chat.emotes.7tv",
+    "kind": "boolean"
+  },
+  "image-previews-enabled": {
+    "section": "application",
+    "path": "rich_chat.image_previews.enabled",
+    "kind": "boolean"
+  },
+  "image-previews-allowed-hosts": {
+    "section": "application",
+    "path": "rich_chat.image_previews.allowed_hosts",
+    "kind": "lines"
+  },
+  "image-previews-max-width": {
+    "section": "application",
+    "path": "rich_chat.image_previews.max_width_px",
+    "kind": "number"
+  },
+  "image-previews-max-height": {
+    "section": "application",
+    "path": "rich_chat.image_previews.max_height_px",
+    "kind": "number"
+  },
+  "image-previews-max-per-message": {
+    "section": "application",
+    "path": "rich_chat.image_previews.max_per_message",
+    "kind": "number"
+  }
+}

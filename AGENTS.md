@@ -22,7 +22,7 @@ comm-relay/
 │   ├── connector/        # platform connectors (twitch, youtube, …)
 │   ├── api/              # HTTP routes, WebSocket /ws, static admin/overlay
 │   └── overlay/          # embedded or served static assets (optional split)
-├── web/                  # static admin + overlay + dock (HTML/CSS/JS, no React)
+├── web/                  # React/TypeScript admin; static HTML/CSS/JS overlay + dock
 ├── openspec/             # spec-driven planning (config, specs, changes)
 ├── docs/
 │   ├── concept.md
@@ -86,11 +86,11 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 | `runnable-background-processes` | Connectors and workers via `pior/runnable` |
 | `connector-oauth` | YouTube (and similar) OAuth flows in the admin UI |
 
-### Frontend (MVP)
+### Frontend
 
 | Skill | Use when |
 |-------|----------|
-| `web-static-frontend` | Admin panel and OBS overlay under `web/` (hub; packaged-shell ESLint in skill `references/`) |
+| `web-static-frontend` | Static OBS overlay/dock and packaged-shell constraints. Admin uses React/TypeScript; preserve API and surface contracts. |
 | `web-constrained-layout` | Height-capped admin dialogs and split panes (scroll the body; do not clip). Shared web layout skill — not desktop windowing. |
 | `ux-form-practices` | Connect forms, settings, accessibility |
 
@@ -190,7 +190,7 @@ Before reporting a task as done:
 - `gofmt` / `goimports` on touched Go files.
 - `go test ./...` (or targeted packages); `-race` when changing concurrency.
 - `golangci-lint run ./...` (config: `.golangci.yml`, v2).
-- If you changed `web/**/*.js`: `npm ci` (once) and `npm run lint`.
+- For frontend edits: `npm ci` (once), `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and relevant Playwright regression (`npm run test:e2e`). Build before Go embeds the admin.
 - If you touched ingest, bus, commands, awards, connectors, or WebSocket delivery: verify logging and `pipeline` counters per skill `comm-relay-observability`.
 - If the change is user-visible product behavior (see Core Principle 6 and skill `changelog`): update `CHANGELOG.md` under `[Unreleased]`. Skip changelog for marketing assets, README promo images, and no-behavior refactors of admin/overlay code.
 - If preparing a release: move `[Unreleased]` into a versioned section, set the date, and keep README artifact names/install steps in sync.
@@ -200,7 +200,7 @@ Before reporting a task as done:
 
 ## Cursor Cloud specific instructions
 
-CommRelay is a **single Go binary** — no Docker, Node, or database. The VM needs **Go 1.27.1+** (see `go.mod`).
+CommRelay is a **single Go binary** at runtime — no Docker or Node runtime; SQLite is embedded. Frontend builds require Node 24+. The VM needs **Go 1.27.1+** (see `go.mod`).
 
 ### Dependencies and checks
 
@@ -208,15 +208,15 @@ Standard commands from the repo root (documented in **Completion Checklist** abo
 
 - Refresh modules: `go mod download`
 - Tests: `go test ./...` (use `-race` when changing concurrency)
-- Build: `go build -o comm-relay ./cmd/comm-relay-server` or `go build ./...`
+- Build: `npm ci && npm run build`, then `go build -o comm-relay ./cmd/comm-relay-server` or `go build ./...`
 - **golangci-lint** v2.13.2: `golangci-lint run ./...` (install: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2`)
-- **ESLint** (static web under `web/`): `npm ci && npm run lint` (Node 22+; config: `eslint.config.js`)
+- **Frontend** (React admin and static OBS surfaces): `npm ci && npm run typecheck && npm run lint` (Node 24+; config: `eslint.config.js`)
 
 ### Running the server
 
 - Default listen address: `127.0.0.1:17877` (`server_port` in `config.json`, created on first run).
-- Dev run: `task web:dev` (Air + live reload; data in `var/data/`, seed with `task data:sync` from desktop `%AppData%\comm-relay` or `~/.config/comm-relay`). Plain server: `go run ./cmd/comm-relay-server -config ./var/data/config.json -web ./web`.
-- Desktop: `go build -tags wails -o comm-relay-desktop ./cmd/comm-relay-desktop` (needs Wails + platform WebView deps); config defaults to user config dir.
+- Dev run: `task web:dev` (Air + Vite Fast Refresh; data in `var/data/`, seed with `task data:sync` from desktop `%AppData%\comm-relay` or `~/.config/comm-relay`). Plain server: `go run ./cmd/comm-relay-server -config ./var/data/config.json -web ./web`.
+- Desktop: `go build -tags wails,production -o comm-relay-desktop ./cmd/comm-relay-desktop` (needs Wails + platform WebView deps); config defaults to user config dir.
 - Overrides: `-addr` (listen), `-config`, `-web`, `-debug` — see `cmd/comm-relay-server/main.go`.
 - For a long-lived background process in Cloud Agent VMs, use **tmux** (see system shell instructions), e.g. session `comm-relay-dev` with `go run ./cmd/comm-relay-server` or a built binary.
 

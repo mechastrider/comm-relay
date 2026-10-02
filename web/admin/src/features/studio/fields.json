@@ -1,0 +1,129 @@
+{
+  "overlay-theme": {
+    "type": "select-one"
+  },
+  "overlay-font-size": {
+    "type": "number",
+    "min": "12",
+    "max": "48",
+    "step": "1"
+  },
+  "overlay-leaderboard-sizing-mode": {
+    "type": "select-one"
+  },
+  "overlay-leaderboard-title-mode": {
+    "type": "select-one"
+  },
+  "overlay-leaderboard-title": {
+    "type": "text"
+  },
+  "overlay-leaderboard-show-message-count": {
+    "type": "checkbox"
+  },
+  "overlay-leaderboard-show-viewer-titles": {
+    "type": "checkbox"
+  },
+  "overlay-leaderboard-period": {
+    "type": "select-one"
+  },
+  "overlay-alerts-image-size": {
+    "type": "range",
+    "min": "25",
+    "max": "300",
+    "step": "5"
+  },
+  "overlay-alerts-sizing-mode": {
+    "type": "select-one"
+  },
+  "overlay-alerts-font-size": {
+    "type": "number",
+    "min": "12",
+    "max": "48",
+    "step": "1"
+  },
+  "overlay-text-edge": {
+    "type": "select-one"
+  },
+  "overlay-text-edge-strength": {
+    "type": "number",
+    "min": "0",
+    "max": "8",
+    "step": "1"
+  },
+  "overlay-display-mode": {
+    "type": "select-one"
+  },
+  "overlay-platform-marker": {
+    "type": "select-one"
+  },
+  "overlay-leaderboard-font-size": {
+    "type": "number",
+    "min": "12",
+    "max": "48",
+    "step": "1"
+  },
+  "overlay-leaderboard-max-entries-all": {
+    "type": "number",
+    "min": "1",
+    "max": "20",
+    "step": "1"
+  },
+  "overlay-leaderboard-layout": {
+    "type": "select-one"
+  },
+  "overlay-font-family": {
+    "type": "select-one"
+  },
+  "overlay-line-height": {
+    "type": "number",
+    "min": "1",
+    "max": "2",
+    "step": "0.05"
+  },
+  "overlay-panel-color": {
+    "type": "color"
+  },
+  "overlay-panel-opacity": {
+    "type": "number",
+    "min": "0",
+    "max": "1",
+    "step": "0.05"
+  },
+  "overlay-panel-image": {
+    "type": "hidden"
+  },
+  "overlay-panel-image-file": {
+    "type": "file"
+  },
+  "overlay-panel-image-fit": {
+    "type": "hidden"
+  },
+  "overlay-panel-image-scope": {
+    "type": "select-one"
+  },
+  "overlay-border-color": {
+    "type": "color"
+  },
+  "overlay-border-width": {
+    "type": "number",
+    "min": "0",
+    "max": "8",
+    "step": "1"
+  },
+  "overlay-border-radius": {
+    "type": "number",
+    "min": "0",
+    "max": "24",
+    "step": "1"
+  },
+  "overlay-max-messages": {
+    "type": "number",
+    "min": "1",
+    "step": "1"
+  },
+  "overlay-message-ttl": {
+    "type": "number",
+    "min": "0",
+    "step": "1"
+  }
+}

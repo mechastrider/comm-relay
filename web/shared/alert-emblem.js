@@ -142,6 +142,11 @@ function svgElement(documentRef, tagName, attributes) {
   return element;
 }
 
+/** Shape data shared by the static overlay and React admin renderers. */
+export function alertEmblemShapes(symbol) {
+  return SYMBOL_SHAPES[symbol] || SYMBOL_SHAPES.signal;
+}
+
 export function createAlertEmblem(documentRef, options = {}) {
   const model = alertEmblemModel(options.kind, options.identifier, options.label);
   const root = documentRef.createElement("div");
@@ -162,7 +167,7 @@ export function createAlertEmblem(documentRef, options = {}) {
     "stroke-linejoin": "round",
     "aria-hidden": "true",
   });
-  (SYMBOL_SHAPES[model.symbol] || SYMBOL_SHAPES.signal).forEach(function ([tagName, attrs]) {
+  alertEmblemShapes(model.symbol).forEach(function ([tagName, attrs]) {
     svg.append(svgElement(documentRef, tagName, attrs));
   });
   root.append(svg);

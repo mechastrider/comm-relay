@@ -7,20 +7,29 @@
 ## Требования
 
 - **Go 1.27.1+** — версия зафиксирована в [`go.mod`](../go.mod).
-- **Node.js 22+** — нужен для проверки и live reload статического интерфейса.
+- **Node.js 24+** — нужен для сборки React-админки и frontend-проверок; установленному приложению Node не нужен.
 - [Task](https://taskfile.dev/) — рекомендуется для полного dev-цикла.
 - [Wails v2](https://wails.io/) — нужен только для сборки desktop-приложения.
 
 Статика админки, OBS dock и overlay встроена в бинарник. При локальной разработке её можно подменить файлами из `web/`.
 
+Админка находится в `web/admin/src/` (React, TypeScript, hash-router). `npm run build` создаёт `web/admin/dist/`; **выполняйте его до прямой сборки Go**. Результат встраивается в бинарник, исходники и тесты не раздаются. Режим `-web ./web` также читает собранную админку из `dist/`; после правок нужна повторная сборка. OBS overlay/dock остаются статическими HTML/CSS/JS. `wails build`, Task и CI собирают frontend автоматически.
+
+Playwright запускает отдельный Go-сервер с временными config/SQLite для каждого теста. Пользовательские данные не затрагиваются. Визуальные эталоны прежней админки проверяются Chromium на Linux; Firefox/WebKit проверяют поведение. Для disk mode: `COMM_RELAY_E2E_DISK=1 npm run test:e2e`. Отчёт: `playwright-report/index.html`.
+
 ## Основные проверки
 
 ```bash
+npm ci
+npm run typecheck
+npm run lint
+npm test
+npm run build
 go mod download
 go build ./...
 go test ./... -race
-npm ci
-npm run lint
+npx playwright install --with-deps chromium firefox webkit
+npm run test:e2e
 ```
 
 Линтер Go как в CI:
@@ -39,7 +48,7 @@ task tools:install
 task web:dev
 ```
 
-`task web:dev` запускает Go-сервер через Air и обновление файлов из `web/`; интерфейс доступен по адресу `http://127.0.0.1:17878`. Рабочие данные лежат в `var/data/`. Чтобы заново скопировать данные desktop-установки (`config.json`, базу и `overlay-assets`), выполните:
+`task web:dev` сначала собирает админку, затем запускает Go-сервер через Air и Vite с React Fast Refresh; интерфейс доступен по адресу `http://127.0.0.1:17878`. Рабочие данные лежат в `var/data/`. Чтобы заново скопировать данные desktop-установки (`config.json`, базу и `overlay-assets`), выполните:
 
 ```bash
 task data:sync
