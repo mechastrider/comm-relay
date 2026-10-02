@@ -1,0 +1,17 @@
+# NOTICE — vendored skill "ux-audit"
+
+This skill is vendored from an external source. It is not affiliated with,
+endorsed by, or sponsored by the upstream project or its trademark holders.
+
+- Source:   paulunemoon/ux-audit-skill
+- Upstream: https://github.com/paulunemoon/ux-audit-skill.git
+- Ref:      f07ff7607039a846fba1e711bb99716a68b12f34
+- License:  MIT
+
+The catalog hash covers the pristine upstream SKILL.md, supporting directories,
+and LICENSE using agentmem HashPath (sorted paths and bytes, NUL-delimited).
+NOTICE and the documented integration adaptations below are excluded.
+
+Hub integration adaptations: none.
+
+Do not edit vendored skill content in place; re-vendor from upstream instead.

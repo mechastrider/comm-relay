@@ -52,3 +52,16 @@ Independently scroll the **long form** column. Stretch the preview column and le
 
 - Overlay and page forms: [ux-form-practices](../../ux/ux-form-practices/SKILL.md)
 - Static HTML/CSS apps: [web-static-frontend](../web-static-frontend/SKILL.md)
+
+## Verify worst-case content in a browser
+
+Use supported narrow, wide and short viewports, plus widths near layout transitions.
+Populate long translated labels, maximum supported rows, validation messages and
+expanded disclosures. A sparse desktop screenshot misses the important failures.
+
+Measure panel/action bounds and actual scroll extents. Reach the final field and
+primary action by keyboard and pointer; ensure pinned chrome does not cover focused
+content. Check both sides of a breakpoint and the relevant zoom/font-scale settings.
+For embedded surfaces, use the actual source rectangle rather than assuming the
+host browser viewport is the content size. Sample animated layouts when motion can
+affect clipping; a single static frame is insufficient for that contract.
