@@ -231,13 +231,21 @@ test("React viewer editing, responsive draft preservation, portrait and merge pe
     canvas.getContext("2d")!.fillRect(0, 0, 8, 8);
     return canvas.toDataURL().split(",")[1];
   });
-  await page
-    .locator("#viewer-portrait-file")
-    .setInputFiles({
-      name: "portrait.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(portrait, "base64"),
-    });
+  const portraitInput = page.locator("#viewer-portrait-file");
+  // setInputFiles bypasses the normal enabled actionability check. Wait for
+  // the preceding visibility save to finish before starting another mutation.
+  await expect(portraitInput).toBeEnabled();
+  const portraitUpload = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/viewers/avatar/upload") &&
+      response.request().method() === "POST",
+  );
+  await portraitInput.setInputFiles({
+    name: "portrait.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(portrait, "base64"),
+  });
+  expect((await portraitUpload).ok()).toBe(true);
   await expect(page.locator(".audience-detail__portrait img")).toBeVisible();
   await page.locator("#viewer-merge-target").selectOption("e2e-viewer-1");
   await page.locator(".audience-detail__merge button").click();
