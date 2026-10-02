@@ -87,7 +87,7 @@ React остаётся полноценным вариантом, если ег�
 До архитектурной миграции необходимо:
 
 1. Сделать `npm test` стабильно зелёным на поддерживаемых платформах и переводах строк.
-2. Добавить `npm test` в CI рядом с `npm run lint`.
+2. Выполнено 2026-10-02: `npm test` добавлен в `.github/workflows/ci.yml` после `npm ci`, рядом с `npm run lint`; ошибка теста завершает job с ошибкой. Локальный baseline на Linux / Node 24.21.0: 64 теста прошли без пропусков. Проверка остальных платформ остаётся отдельной задачей.
 3. Сохранить i18n parity check.
 4. Добавить browser/DOM characterization tests для:
    - Settings save/reset/discard;
@@ -123,7 +123,7 @@ Production build должен явно поддерживать:
 
 ### Этап 0 — стабилизация
 
-- восстановить зелёные frontend tests и включить их в CI;
+- поддерживать зелёные frontend tests и обязательный запуск в CI (добавлен 2026-10-02);
 - добавить characterization tests критических admin flows;
 - разорвать цикл i18n/rendering;
 - описать framework-neutral границы shared-кода.

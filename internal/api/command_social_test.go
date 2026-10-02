@@ -69,12 +69,10 @@ func TestCommandSocial_WhenLikeMissingArg_ExpectRejectedCommand(t *testing.T) {
 	})))
 
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
-		if readErr != nil {
-			continue
-		}
+		require.NoError(t, readErr, "expected WebSocket frame before deadline")
 		var frame map[string]any
 		if json.Unmarshal(data, &frame) != nil {
 			continue
@@ -112,12 +110,10 @@ func TestCommandSocial_WhenLikeTypoTrigger_ExpectCanonicalTrigger(t *testing.T) 
 	})))
 
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
-		if readErr != nil {
-			continue
-		}
+		require.NoError(t, readErr, "expected WebSocket frame before deadline")
 		var frame map[string]any
 		if json.Unmarshal(data, &frame) != nil {
 			continue

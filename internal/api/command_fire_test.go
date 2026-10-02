@@ -42,8 +42,8 @@ func TestCommandFire_WhenBangGG_ExpectAlertAndIsCommand(t *testing.T) {
 	var sawMessage bool
 	var sawAlert bool
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
 		if readErr != nil {
 			break
@@ -331,8 +331,8 @@ func TestConfig_WhenHideCommandMessages_ExpectPublicAndOverlaySettings(t *testin
 
 	var overlaySettings map[string]any
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
 		if readErr != nil {
 			break
@@ -525,8 +525,8 @@ func TestCommandFire_WhenTemplateHasStreamerAndMessage_ExpectResolved(t *testing
 
 	var sawAlert bool
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
 		if readErr != nil {
 			break
@@ -647,12 +647,10 @@ func TestCommandFire_WhenUniqueTypoHeate_ExpectIsCommandAndCanonicalTrigger(t *t
 	var sawMessage bool
 	var sawOutcome bool
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
-		if readErr != nil {
-			continue
-		}
+		require.NoError(t, readErr, "expected WebSocket frame before deadline")
 		var frame map[string]any
 		if json.Unmarshal(data, &frame) != nil {
 			continue

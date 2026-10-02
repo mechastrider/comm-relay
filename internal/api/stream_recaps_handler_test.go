@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -269,6 +270,7 @@ func TestStreamRecaps_WebSocket_WhenShowAndReconnect_ExpectVisibleState(t *testi
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = conn.Close() })
 
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(time.Second)))
 	for range 3 {
 		_, _, err = conn.ReadMessage()
 		require.NoError(t, err)
@@ -281,6 +283,7 @@ func TestStreamRecaps_WebSocket_WhenShowAndReconnect_ExpectVisibleState(t *testi
 	require.Equal(t, http.StatusOK, showResp.StatusCode)
 	_ = showResp.Body.Close()
 
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(time.Second)))
 	_, payload, err := conn.ReadMessage()
 	require.NoError(t, err)
 	var frame map[string]any
@@ -295,6 +298,7 @@ func TestStreamRecaps_WebSocket_WhenShowAndReconnect_ExpectVisibleState(t *testi
 	t.Cleanup(func() { _ = reconnect.Close() })
 
 	var reconnectFrame map[string]any
+	require.NoError(t, reconnect.SetReadDeadline(time.Now().Add(time.Second)))
 	for {
 		_, reconnectPayload, readErr := reconnect.ReadMessage()
 		require.NoError(t, readErr)
@@ -509,6 +513,7 @@ func extractSnapshotJSON(t *testing.T, body []byte) string {
 
 func readWSJSON(t *testing.T, conn *websocket.Conn) map[string]any {
 	t.Helper()
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(time.Second)))
 	var frame map[string]any
 	require.NoError(t, conn.ReadJSON(&frame))
 	return frame
@@ -516,10 +521,12 @@ func readWSJSON(t *testing.T, conn *websocket.Conn) map[string]any {
 
 func requireNoWSFrameWithin(t *testing.T, conn *websocket.Conn, wait time.Duration) {
 	t.Helper()
-	_ = conn.SetReadDeadline(time.Now().Add(wait))
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(wait)))
 	var frame map[string]any
 	err := conn.ReadJSON(&frame)
-	require.Error(t, err)
+	var timeout net.Error
+	require.ErrorAs(t, err, &timeout)
+	require.True(t, timeout.Timeout(), "expected no WebSocket frame before deadline")
 }
 
 func TestStreamRecaps_ShowAll_WhenNoCapture_ExpectNoRecapRow(t *testing.T) {
@@ -655,6 +662,7 @@ func TestStreamRecaps_WebSocket_WhenShowAllAndReconnect_ExpectAllTimeState(t *te
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = conn.Close() })
 
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(time.Second)))
 	for range 3 {
 		_, _, err = conn.ReadMessage()
 		require.NoError(t, err)
@@ -669,6 +677,7 @@ func TestStreamRecaps_WebSocket_WhenShowAllAndReconnect_ExpectAllTimeState(t *te
 	require.NoError(t, json.NewDecoder(showAllResp.Body).Decode(&showAllBody))
 	require.NoError(t, showAllResp.Body.Close())
 
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(time.Second)))
 	_, payload, err := conn.ReadMessage()
 	require.NoError(t, err)
 	var frame map[string]json.RawMessage
@@ -685,6 +694,7 @@ func TestStreamRecaps_WebSocket_WhenShowAllAndReconnect_ExpectAllTimeState(t *te
 	t.Cleanup(func() { _ = reconnect.Close() })
 
 	var reconnectFrame map[string]json.RawMessage
+	require.NoError(t, reconnect.SetReadDeadline(time.Now().Add(time.Second)))
 	for {
 		_, reconnectPayload, readErr := reconnect.ReadMessage()
 		require.NoError(t, readErr)

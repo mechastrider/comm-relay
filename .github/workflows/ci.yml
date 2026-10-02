@@ -49,5 +49,8 @@ jobs:
       - name: npm ci
         run: npm ci
 
+      - name: Frontend tests
+        run: npm test
+
       - name: ESLint (web)
         run: npm run lint

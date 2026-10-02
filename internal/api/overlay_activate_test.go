@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -60,41 +61,39 @@ func connectDebugOverlayWS(t *testing.T, srv *httptest.Server) *websocket.Conn {
 	return conn
 }
 
-func drainWSUntilIdle(t *testing.T, conn *websocket.Conn) {
+// Read the known initial snapshots without poisoning the connection with a timeout.
+func readInitialOverlayFrames(t *testing.T, conn *websocket.Conn) {
 	t.Helper()
-
-	_ = conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
-	for {
-		if _, _, err := conn.ReadMessage(); err != nil {
-			return
-		}
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(time.Second)))
+	for _, expected := range []string{wireLeaderboardVisibilityType, wireViewerContractStateType, wireStreamRecapStateType} {
+		_, data, err := conn.ReadMessage()
+		require.NoError(t, err)
+		var frame map[string]any
+		require.NoError(t, json.Unmarshal(data, &frame))
+		require.Equal(t, expected, frame["type"])
 	}
 }
 
 func readOverlaySettingsEventually(t *testing.T, conn *websocket.Conn, activePresetID string) map[string]any {
 	t.Helper()
 
-	var frame map[string]any
-	require.Eventually(t, func() bool {
-		_ = conn.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
+	deadline := time.Now().Add(5 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
+	for time.Now().Before(deadline) {
 		_, data, err := conn.ReadMessage()
-		if err != nil {
-			return false
-		}
-		frame = nil
-		if json.Unmarshal(data, &frame) != nil {
-			return false
-		}
+		require.NoError(t, err, "expected overlay_settings for preset %s", activePresetID)
+		var frame map[string]any
+		require.NoError(t, json.Unmarshal(data, &frame))
 		if frame["type"] != "overlay_settings" {
-			return false
+			continue
 		}
 		overlay, ok := frame["overlay"].(map[string]any)
-		if !ok {
-			return false
+		if ok && overlay["active_preset_id"] == activePresetID {
+			return frame
 		}
-		return overlay["active_preset_id"] == activePresetID
-	}, 5*time.Second, 50*time.Millisecond)
-	return frame
+	}
+	t.Fatalf("expected overlay_settings for preset %s before deadline", activePresetID)
+	return nil
 }
 
 func postOverlayActivateURL(t *testing.T, url, body string) *http.Response {
@@ -195,15 +194,16 @@ func TestOverlayActivate_WhenFailure_ExpectNoOverlaySettingsBroadcast(t *testing
 	t.Cleanup(srv.Close)
 
 	conn := connectOverlayWS(t, srv)
-	time.Sleep(50 * time.Millisecond)
-	drainWSUntilIdle(t, conn)
+	readInitialOverlayFrames(t, conn)
 
 	rec := postOverlayActivate(t, env.Handler, `{"preset_id":"missing-preset"}`)
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 
-	_ = conn.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(200*time.Millisecond)))
 	_, _, err := conn.ReadMessage()
-	require.Error(t, err)
+	var timeout net.Error
+	require.ErrorAs(t, err, &timeout)
+	require.True(t, timeout.Timeout(), "expected no WebSocket frame before deadline")
 }
 
 func TestOverlayActivate_WhenValid_ExpectOverlaySettingsBroadcastToTwoClients(t *testing.T) {
@@ -217,7 +217,8 @@ func TestOverlayActivate_WhenValid_ExpectOverlaySettingsBroadcastToTwoClients(t 
 
 	conn1 := connectOverlayWS(t, srv)
 	conn2 := connectOverlayWS(t, srv)
-	time.Sleep(100 * time.Millisecond)
+	readInitialOverlayFrames(t, conn1)
+	readInitialOverlayFrames(t, conn2)
 
 	resp := postOverlayActivateURL(t, srv.URL+"/api/overlay/activate", `{"preset_id":"stream-main"}`)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -240,6 +241,7 @@ func TestOverlayActivate_WhenValid_ExpectSettingsOnProductionAndDebugAudiencesOn
 	srv := httptest.NewServer(env.Handler)
 	t.Cleanup(srv.Close)
 	production := connectOverlayWS(t, srv)
+	readInitialOverlayFrames(t, production)
 	debug := connectDebugOverlayWS(t, srv)
 	initialDebugSettings := readWebSocketFrame(t, debug)
 	require.Equal(t, wireOverlaySettingsType, initialDebugSettings["type"])
@@ -276,15 +278,16 @@ func TestOverlayActivate_WhenSaveFails_ExpectServerErrorAndNoBroadcast(t *testin
 	t.Cleanup(srv.Close)
 
 	conn := connectOverlayWS(t, srv)
-	time.Sleep(50 * time.Millisecond)
-	drainWSUntilIdle(t, conn)
+	readInitialOverlayFrames(t, conn)
 
 	rec := postOverlayActivate(t, env.Handler, `{"preset_id":"`+config.OverlayDefaultPresetID+`"}`)
 	if rec.Code == http.StatusInternalServerError {
 		require.Contains(t, rec.Body.String(), `"failed to save settings"`)
-		_ = conn.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
+		require.NoError(t, conn.SetReadDeadline(time.Now().Add(200*time.Millisecond)))
 		_, _, err := conn.ReadMessage()
-		require.Error(t, err)
+		var timeout net.Error
+		require.ErrorAs(t, err, &timeout)
+		require.True(t, timeout.Timeout(), "expected no WebSocket frame before deadline")
 		return
 	}
 

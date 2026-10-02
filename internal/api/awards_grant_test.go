@@ -70,12 +70,10 @@ func TestAwardGrant_WhenJokeToExistingViewer_ExpectXPAndAlert(t *testing.T) {
 
 	var sawAlert bool
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
-		if readErr != nil {
-			continue
-		}
+		require.NoError(t, readErr, "expected WebSocket frame before deadline")
 		var frame map[string]any
 		if json.Unmarshal(data, &frame) != nil {
 			continue
@@ -133,14 +131,16 @@ func TestAwardGrant_WhenCachedPortrait_ExpectAlertUsesLocalAssetURL(t *testing.T
 
 	var alert map[string]any
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
-		if readErr != nil || json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
+		require.NoError(t, readErr, "expected award alert before deadline")
+		if json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
 			continue
 		}
 		break
 	}
+	require.Equal(t, "alert", alert["type"], "expected award alert frame")
 	require.Equal(t, "award", alert["source"])
 	require.Equal(t, "/overlay/assets/asset_abc123.png", alert["avatar_url"])
 	require.NotContains(t, alert, "image_asset")
@@ -182,14 +182,16 @@ func TestAwardGrant_WhenTemplateHasMessage_ExpectResolvedQuote(t *testing.T) {
 
 	var alert map[string]any
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
-		if readErr != nil || json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
+		require.NoError(t, readErr, "expected award alert before deadline")
+		if json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
 			continue
 		}
 		break
 	}
+	require.Equal(t, "alert", alert["type"], "expected award alert frame")
 	require.Equal(t, "Advice for Bob: nice catch +50", alert["text"])
 }
 
@@ -220,14 +222,16 @@ func TestAwardGrant_WhenMessageTextExceedsCodePointLimit_ExpectTransientBoundedQ
 
 	var alert map[string]any
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
-		if readErr != nil || json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
+		require.NoError(t, readErr, "expected award alert before deadline")
+		if json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
 			continue
 		}
 		break
 	}
+	require.Equal(t, "alert", alert["type"], "expected award alert frame")
 	require.Equal(t, "twitch", alert["message_platform"])
 	require.Equal(t, "msg-42", alert["message_id"])
 	alertQuote, ok := alert["message_text"].(string)
@@ -270,14 +274,16 @@ func TestAwardGrant_WhenNoMessageContext_ExpectGrantWithoutHighlightFields(t *te
 
 	var alert map[string]any
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
-		if readErr != nil || json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
+		require.NoError(t, readErr, "expected award alert before deadline")
+		if json.Unmarshal(data, &alert) != nil || alert["type"] != "alert" {
 			continue
 		}
 		break
 	}
+	require.Equal(t, "alert", alert["type"], "expected award alert frame")
 	require.NotContains(t, alert, "message_platform")
 	require.NotContains(t, alert, "message_id")
 	require.NotContains(t, alert, "message_text")
@@ -440,12 +446,10 @@ func TestAwardGrant_WhenJokeThenAdvice_ExpectTwoAlertsAndCumulativeXP(t *testing
 
 	alerts := 0
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) && alerts < 2 {
-		_ = conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
-		if readErr != nil {
-			continue
-		}
+		require.NoError(t, readErr, "expected WebSocket frame before deadline")
 		var frame map[string]any
 		if json.Unmarshal(data, &frame) != nil {
 			continue
@@ -531,12 +535,10 @@ func TestAwardGrant_WhenGranted_ExpectLeaderboardSnapshot(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 		_, data, readErr := conn.ReadMessage()
-		if readErr != nil {
-			continue
-		}
+		require.NoError(t, readErr, "expected WebSocket frame before deadline")
 		var frame map[string]any
 		if json.Unmarshal(data, &frame) != nil {
 			continue

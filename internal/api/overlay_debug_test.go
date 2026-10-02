@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -524,12 +525,10 @@ func readWebSocketFrame(t *testing.T, conn *websocket.Conn) map[string]any {
 func readWebSocketFrameSkippingLeaderboard(t *testing.T, conn *websocket.Conn) map[string]any {
 	t.Helper()
 	deadline := time.Now().Add(2 * time.Second)
+	require.NoError(t, conn.SetReadDeadline(deadline))
 	for time.Now().Before(deadline) {
-		_ = conn.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
 		_, payload, err := conn.ReadMessage()
-		if err != nil {
-			continue
-		}
+		require.NoError(t, err, "expected non-leaderboard frame before deadline")
 		frame := decodeFrame(t, payload)
 		if frame["type"] == wireLeaderboardType || frame["type"] == wireLeaderboardVisibilityType || frame["type"] == wireViewerContractStateType || frame["type"] == wireStreamRecapStateType {
 			continue
@@ -544,8 +543,10 @@ func assertNoWebSocketFrame(t *testing.T, conn *websocket.Conn) {
 	t.Helper()
 	require.NoError(t, conn.SetReadDeadline(time.Now().Add(100*time.Millisecond)))
 	_, _, err := conn.ReadMessage()
-	require.Error(t, err)
-	require.NoError(t, conn.SetReadDeadline(time.Time{}))
+	var timeout net.Error
+	require.ErrorAs(t, err, &timeout)
+	require.True(t, timeout.Timeout(), "expected no WebSocket frame before deadline")
+	// A read timeout is terminal; callers must not read this connection again.
 }
 
 func getViewerResponse(t *testing.T, handler http.Handler, viewerID string) map[string]any {
