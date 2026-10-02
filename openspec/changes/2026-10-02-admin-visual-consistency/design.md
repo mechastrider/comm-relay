@@ -26,3 +26,6 @@ None blocking. Native packaged smoke must be reported separately if unavailable.
 
 ## Follow-up: tooltip readability
 Ordinary action `overflow-wrap: anywhere` was inherited by auto-width absolute tooltips, reducing their intrinsic width to individual letters. Shared tooltips now use max-content width capped at min(280px, 70vw), normal word breaking, no automatic hyphenation and emergency break-word wrapping for oversized tokens. Live and Audience toolbar hints align to the action's right edge at all viewport widths. Regression checks measure each rendered word, viewport bounds and hover/keyboard visibility in both configured languages.
+
+## Follow-up: Studio tooltip clipping
+The preview column, its nested preview panel and the inspector column clipped absolutely positioned toolbar hints at their horizontal edges. Keep those outer wrappers overflow-visible; preserve the inner preview stage's clipping and inspector body's bounded scrolling. Align preset action hints inward from their own buttons so narrow layouts stay within the viewport. Align the preview-options hint inward from the left on narrow layouts, where that action wraps to the start of a toolbar row. Tooltip height remains content-driven, including wrapped text.

@@ -21,3 +21,5 @@ Tray, native menus and global shortcuts unchanged.
 
 ## Tooltip readability follow-up
 Shared action hints size to their content within the viewport cap. Ordinary words remain whole; only unbroken tokens wider than the hint can split. Live and Audience toolbar hints remain within viewport bounds, including right-edge desktop and narrow actions. Hover and keyboard focus continue to expose the same localized hint.
+
+Studio toolbar hints may cross column borders without being clipped. Full text must remain visible on hover and keyboard focus; internal canvas clipping and inspector scrolling remain intact.

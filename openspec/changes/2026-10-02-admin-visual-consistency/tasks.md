@@ -27,3 +27,7 @@
 - [x] T.1 Prevent shared hints from shrinking to narrow action widths or inheriting arbitrary word breaks.
 - [x] T.2 Keep Live and Audience toolbar hints within the viewport and document the contract.
 - [x] T.3 Verify word rectangles, bounds and hover/focus in RU/EN across three widths and browsers; rerun affected checks.
+
+## Follow-up: Studio tooltip clipping
+- [x] S.1 Reproduce and remove toolbar hint clipping without removing inner scroll/canvas containment.
+- [x] S.2 Verify hover/focus and clipping ancestors at wide, short and narrow viewports; review screenshots and Studio regressions.

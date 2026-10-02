@@ -128,12 +128,38 @@
   background: var(--surface-raised);
 }
 
-.studio-column--preview {
-  overflow: hidden;
+/* Inner preview and inspector bodies own clipping and scrolling. Toolbar hints
+   must be able to cross the column border without being cut off. */
+.studio-column--preview,
+.studio-column--inspector {
+  overflow: visible;
 }
 
-.studio-column--inspector {
-  overflow: hidden;
+.studio-inspector-mount .preset-island__icon-actions .ui-tooltip {
+  left: 0;
+  transform: translateY(-4px);
+}
+
+.studio-inspector-mount .preset-island__icon-actions .has-tooltip:last-child > .ui-tooltip {
+  left: auto;
+  right: 0;
+}
+
+.studio-inspector-mount .preset-island__icon-actions .has-tooltip:hover > .ui-tooltip,
+.studio-inspector-mount .preset-island__icon-actions .has-tooltip:focus-visible > .ui-tooltip {
+  transform: translateY(0);
+}
+
+@media (max-width: 760px) {
+  .studio-preview-mount .overlay-preview-overflow .ui-tooltip {
+    left: 0;
+    transform: translateY(-4px);
+  }
+
+  .studio-preview-mount .overlay-preview-overflow .has-tooltip:hover > .ui-tooltip,
+  .studio-preview-mount .overlay-preview-overflow .has-tooltip:focus-visible > .ui-tooltip {
+    transform: translateY(0);
+  }
 }
 
 .studio-inspector-mount {
@@ -704,6 +730,7 @@
 }
 
 .studio-preview-mount .overlay-preview-panel {
+  overflow: visible;
   display: flex;
   flex-direction: column;
   min-width: 0;

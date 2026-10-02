@@ -243,3 +243,8 @@ Admin fields, labels, hints, panel headings, chips, checkbox and range controls 
 - **THEN** its tooltip uses content-based width bounded by the viewport rather than shrinking to the button width
 - **AND** ordinary words wrap at natural boundaries; only overlong unbroken tokens may split to prevent overflow
 - **AND** Live and Audience toolbar tooltips remain inside the viewport at desktop and narrow widths
+
+#### Scenario: Studio hints cross panel boundaries
+- **WHEN** an operator hovers or keyboard-focuses Studio preview options or preset actions
+- **THEN** the complete tooltip remains visible without clipping by the preview or inspector columns
+- **AND** the preview canvas remains clipped to its stage and the long inspector body remains scrollable
