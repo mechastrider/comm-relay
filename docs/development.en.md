@@ -83,7 +83,7 @@ Build a headless binary:
 Install the Wails CLI:
 
 ```bash
-go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
 ```
 
 Build from the repository root:

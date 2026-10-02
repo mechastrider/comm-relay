@@ -83,7 +83,7 @@ go run ./cmd/comm-relay-server -web ./web
 Установите Wails CLI:
 
 ```bash
-go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
 ```
 
 Соберите приложение из корня репозитория:
