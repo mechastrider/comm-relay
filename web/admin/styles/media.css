@@ -148,6 +148,7 @@
 }
 
 @media (max-width: 620px) {
+  :root { --control-min-height: var(--touch-target-narrow); }
   .shell-header,
   .console-header,
   .dialog-header,

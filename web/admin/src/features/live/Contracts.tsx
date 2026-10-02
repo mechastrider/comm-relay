@@ -1,3 +1,5 @@
+import { Field } from "../../components/Field";
+import { Button } from "../../components/Button";
 import { useEffect, useRef, useState } from "react";
 import { useNavigation } from "../../app/navigation";
 import { useLocale } from "../../app/locale";
@@ -160,13 +162,13 @@ export function Contracts() {
       {failure && (
         <div id="live-contracts-error" className="notice notice--error">
           <p className="notice__body">{failure}</p>
-          <button
+          <Button
             id="live-contracts-retry"
-            className="btn-physical btn-small"
+            className="btn-small"
             onClick={reload}
           >
             {t("state.retry")}
-          </button>
+          </Button>
         </div>
       )}
       {!contract && (
@@ -179,7 +181,7 @@ export function Contracts() {
             void act("open");
           }}
         >
-          <div className="form__field">
+          <Field>
             <label htmlFor="live-contract-title">{t("contracts.title")}</label>
             <input
               ref={titleRef}
@@ -204,8 +206,8 @@ export function Contracts() {
             >
               {errors.title}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label htmlFor="live-contract-objective">
               {t("contracts.objective")}
             </label>
@@ -232,8 +234,8 @@ export function Contracts() {
             >
               {errors.objective}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label htmlFor="live-contract-reward">
               {t("contracts.reward")}
             </label>
@@ -262,21 +264,20 @@ export function Contracts() {
             >
               {errors.reward}
             </p>
-          </div>
+          </Field>
           {!awards.length && (
             <p id="live-contracts-empty-catalog" className="notice__body">
               {t("contracts.emptyCatalog")}
             </p>
           )}
           <div className="live-contracts-actions">
-            <button
+            <Button variant="primary"
               id="live-contract-open"
-              className="btn-physical"
               type="submit"
               disabled={busy || fetching || !awards.length}
             >
               {t("contracts.announce")}
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -308,9 +309,8 @@ export function Contracts() {
                 })}
           </p>
           <div className="live-contracts-actions">
-            <button
+            <Button
               id="live-contract-award"
-              className="btn-physical"
               disabled={busy}
               onClick={() => {
                 setSelected(null);
@@ -319,15 +319,15 @@ export function Contracts() {
               }}
             >
               {t("contracts.awardWinner")}
-            </button>
-            <button
+            </Button>
+            <Button
               id="live-contract-repeat"
-              className="btn-physical btn-small"
+              className="btn-small"
               disabled={busy}
               onClick={() => void act("announce")}
             >
               {t("contracts.announceAgain")}
-            </button>
+            </Button>
             <button
               id="live-contract-close"
               className="btn-danger btn-small"
@@ -396,21 +396,20 @@ export function Contracts() {
           </ul>
         </div>
         <footer className="viewer-contract-dialog__footer">
-          <button
+          <Button
             id="live-contract-winner-cancel"
-            className="btn-physical btn-small"
+            className="btn-small"
             onClick={close}
           >
             {t("dialog.cancel")}
-          </button>
-          <button
+          </Button>
+          <Button
             id="live-contract-winner-next"
-            className="btn-physical"
             disabled={!selected}
             onClick={() => setDialog("award")}
           >
             {t("contracts.continue")}
-          </button>
+          </Button>
         </footer>
       </Modal>
       {(["award", "close"] as const).map((kind) => (
@@ -448,15 +447,15 @@ export function Contracts() {
             {error && <p role="alert">{error}</p>}
           </div>
           <footer className="viewer-contract-dialog__footer">
-            <button
+            <Button
               id={`live-contract-${kind}-cancel`}
-              className="btn-physical btn-small"
+              className="btn-small"
               disabled={busy}
               onClick={close}
             >
               {t("dialog.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               id={`live-contract-${kind}-confirm`}
               className={kind === "award" ? "btn-physical" : "btn-danger"}
               disabled={busy}
@@ -465,7 +464,7 @@ export function Contracts() {
               {t(
                 kind === "award" ? "contracts.awardWinner" : "contracts.close",
               )}
-            </button>
+            </Button>
           </footer>
         </Modal>
       ))}

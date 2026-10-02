@@ -128,12 +128,38 @@
   background: var(--surface-raised);
 }
 
-.studio-column--preview {
-  overflow: hidden;
+/* Inner preview and inspector bodies own clipping and scrolling. Toolbar hints
+   must be able to cross the column border without being cut off. */
+.studio-column--preview,
+.studio-column--inspector {
+  overflow: visible;
 }
 
-.studio-column--inspector {
-  overflow: hidden;
+.studio-inspector-mount .preset-island__icon-actions .ui-tooltip {
+  left: 0;
+  transform: translateY(-4px);
+}
+
+.studio-inspector-mount .preset-island__icon-actions .has-tooltip:last-child > .ui-tooltip {
+  left: auto;
+  right: 0;
+}
+
+.studio-inspector-mount .preset-island__icon-actions .has-tooltip:hover > .ui-tooltip,
+.studio-inspector-mount .preset-island__icon-actions .has-tooltip:focus-visible > .ui-tooltip {
+  transform: translateY(0);
+}
+
+@media (max-width: 760px) {
+  .studio-preview-mount .overlay-preview-overflow .ui-tooltip {
+    left: 0;
+    transform: translateY(-4px);
+  }
+
+  .studio-preview-mount .overlay-preview-overflow .has-tooltip:hover > .ui-tooltip,
+  .studio-preview-mount .overlay-preview-overflow .has-tooltip:focus-visible > .ui-tooltip {
+    transform: translateY(0);
+  }
 }
 
 .studio-inspector-mount {
@@ -704,6 +730,7 @@
 }
 
 .studio-preview-mount .overlay-preview-panel {
+  overflow: visible;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -814,7 +841,7 @@
 }
 
 .studio-preview-mount .overlay-preview-chrome__main {
-  --studio-preview-control-height: var(--touch-target-min);
+  --studio-preview-control-height: var(--control-min-height);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -894,8 +921,8 @@
 
 .studio-preview-mount .overlay-preview-overflow__panel .preview-size-row .preview-dimension-mark {
   align-self: end;
-  min-height: 34px;
-  line-height: 34px;
+  min-height: var(--control-min-height);
+  line-height: var(--control-min-height);
 }
 
 .studio-preview-mount .overlay-preview-overflow__panel .preview-control--full {
@@ -912,19 +939,19 @@
 
 .studio-preview-mount .overlay-preview-overflow__panel .obs-url-row input {
   box-sizing: border-box;
-  min-height: 34px;
-  height: 34px;
-  max-height: 34px;
+  min-height: var(--control-min-height);
+  height: var(--control-min-height);
+  max-height: var(--control-min-height);
 }
 
 .studio-preview-mount .overlay-preview-overflow__panel .obs-url-row .btn-physical.btn-small,
 .studio-preview-mount .overlay-preview-overflow__panel .obs-url-row .icon-btn.icon-btn--copy {
   box-sizing: border-box;
-  width: 34px;
-  min-width: 34px;
-  height: 34px;
-  min-height: 34px;
-  max-height: 34px;
+  width: var(--control-min-height);
+  min-width: var(--control-min-height);
+  height: var(--control-min-height);
+  min-height: var(--control-min-height);
+  max-height: var(--control-min-height);
   padding: 0;
 }
 
@@ -943,7 +970,7 @@
 .studio-preview-mount .overlay-preview-overflow__panel .preview-control--full .button-secondary--small {
   display: flex;
   width: 100%;
-  min-height: 34px;
+  min-height: var(--control-min-height);
   box-sizing: border-box;
   justify-content: center;
 }

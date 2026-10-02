@@ -1,3 +1,4 @@
+import { Button } from "../components/Button";
 import { useSaveStatus } from "./save-status";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
@@ -215,9 +216,9 @@ export function Shell() {
             </div>
           </div>
           <div className="shell-header__actions">
-            <button
+            <Button
               id="shell-diagnostics-button"
-              className="btn-physical btn-small has-tooltip"
+              className="btn-small has-tooltip"
               type="button"
               aria-controls="shell-status-bar"
               data-i18n="shell.diagnostics"
@@ -237,7 +238,7 @@ export function Shell() {
               >
                 {t("shell.diagnosticsHint")}
               </span>
-            </button>
+            </Button>
           </div>
         </header>
         <div className="shell-body">

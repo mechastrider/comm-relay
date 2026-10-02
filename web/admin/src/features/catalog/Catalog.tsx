@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import { useReportSaveStatus } from "../../app/save-status";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBlocker } from "react-router";
@@ -142,14 +143,14 @@ export function Catalog({ kind }: { kind: Kind }) {
           >
             {t(kind + ".listHeading")}
           </h2>
-          <button
+          <Button
             id={`${kind}-create-button`}
-            className="btn-physical btn-small"
+            className="btn-small"
             disabled={busy}
             onClick={() => select("__new__", false)}
           >
             {t("catalog.create")}
-          </button>
+          </Button>
         </header>
         <div className="audience-catalog-list__body">
           <ul
@@ -260,13 +261,13 @@ export function Catalog({ kind }: { kind: Kind }) {
               <p className="audience-region-empty__message">
                 {t(kind + ".empty")}
               </p>
-              <button
+              <Button
                 id={`${kind}-empty-create`}
-                className="btn-physical btn-small"
+                className="btn-small"
                 onClick={() => select("__new__", false)}
               >
                 {t("catalog.create")}
-              </button>
+              </Button>
             </div>
           )}
           {resource.loading && !resource.data && (
@@ -278,12 +279,12 @@ export function Catalog({ kind }: { kind: Kind }) {
               className="notice notice--error audience-region-error"
             >
               <p className="notice__body">{resource.error.message}</p>
-              <button
-                className="state-retry btn-physical btn-small"
+              <Button
+                className="state-retry btn-small"
                 onClick={() => void resource.refresh()}
               >
                 {t("state.retry")}
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -311,12 +312,12 @@ export function Catalog({ kind }: { kind: Kind }) {
               {t(kind + ".editorHeading")}
             </h2>
             <div className="audience-catalog-editor__actions">
-              <button className="btn-physical btn-small" disabled>
+              <Button className="btn-small" disabled>
                 {t("catalog.save")}
-              </button>
-              <button className="btn-physical btn-danger btn-small" disabled>
+              </Button>
+              <Button variant="danger" className="btn-small" disabled>
                 {t("catalog.delete")}
-              </button>
+              </Button>
             </div>
           </header>
           <p
@@ -335,21 +336,19 @@ export function Catalog({ kind }: { kind: Kind }) {
         onClose={cancel}
         actions={
           <>
-            <button
+            <Button
               id="discard-changes-cancel"
-              className="btn-physical"
               onClick={cancel}
             >
               {t("dialog.keepEditing")}
-            </button>
-            <button
+            </Button>
+            <Button variant="danger"
               id="discard-changes-confirm"
-              className="btn-physical btn-danger"
               disabled={busy}
               onClick={discard}
             >
               {t("dialog.discardChanges")}
-            </button>
+            </Button>
           </>
         }
       >
@@ -517,23 +516,23 @@ function Editor({
           {t(kind + ".editorHeading")}
         </h2>
         <div className="audience-catalog-editor__actions">
-          <button
+          <Button variant="primary"
             id={`${kind}-save-button`}
-            className="btn-physical btn-small"
+            className="btn-small"
             type="submit"
             form={`${kind}-editor-form`}
             disabled={busy || media.uploading}
           >
             {t("catalog.save")}
-          </button>
-          <button
+          </Button>
+          <Button variant="danger"
             id={`${kind}-delete-button`}
-            className="btn-physical btn-danger btn-small"
+            className="btn-small"
             disabled={busy || media.uploading || !record.id}
             onClick={() => setDeleting(true)}
           >
             {t("catalog.delete")}
-          </button>
+          </Button>
         </div>
       </header>
       <p
@@ -569,22 +568,20 @@ function Editor({
         title={t("catalog.delete")}
         actions={
           <>
-            <button
+            <Button
               id="catalog-delete-cancel"
-              className="btn-physical"
               disabled={busy}
               onClick={() => setDeleting(false)}
             >
               {t("dialog.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button variant="danger"
               id="catalog-delete-confirm"
-              className="btn-physical btn-danger"
               disabled={busy}
               onClick={() => void remove()}
             >
               {t("catalog.delete")}
-            </button>
+            </Button>
           </>
         }
       >

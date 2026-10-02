@@ -1,3 +1,5 @@
+import { Field } from "../../components/Field";
+import { Button } from "../../components/Button";
 import { useRef, useState } from "react";
 import { useLocale } from "../../app/locale";
 import { usePages } from "../../services/pages";
@@ -141,12 +143,12 @@ function HistoryContent({
           {history.error ? (
             <div className="notice notice--error reward-history__error">
               <p className="notice__body">{t("history.loadFailed")}</p>
-              <button
-                className="btn-physical btn-small"
+              <Button
+                className="btn-small"
                 onClick={() => void history.retry()}
               >
                 {t("state.retry")}
-              </button>
+              </Button>
             </div>
           ) : (
             history.loaded &&
@@ -162,14 +164,14 @@ function HistoryContent({
           )}
           {!!history.entries.length && history.next && (
             <div className="reward-history__footer">
-              <button
-                className="btn-physical btn-small"
+              <Button
+                className="btn-small"
                 disabled={history.loading}
                 aria-busy={history.loading}
                 onClick={() => void history.more()}
               >
                 {t("history.loadMore")}
-              </button>
+              </Button>
             </div>
           )}
         </>
@@ -258,7 +260,7 @@ export function History() {
             apply();
           }}
         >
-          <div className="form__field audience-history__filter-field">
+          <Field className="audience-history__filter-field">
             <label htmlFor="reward-history-viewer-filter">
               {t("history.viewerFilterLabel")}
             </label>
@@ -305,19 +307,19 @@ export function History() {
             >
               {failure}
             </p>
-          </div>
-          <button
+          </Field>
+          <Button variant="primary"
             id="apply-reward-history-viewer-filter"
             type="submit"
-            className="btn-physical btn-small"
+            className="btn-small"
             disabled={viewers.loading}
           >
             {t("history.viewerFilterApply")}
-          </button>
-          <button
+          </Button>
+          <Button
             id="clear-reward-history-viewer-filter"
             type="button"
-            className="btn-physical btn-small"
+            className="btn-small"
             disabled={!selection}
             onClick={() => {
               clear();
@@ -325,12 +327,12 @@ export function History() {
             }}
           >
             {t("history.viewerFilterClear")}
-          </button>
+          </Button>
         </form>
-        <button
+        <Button
           id="refresh-reward-history"
           type="button"
-          className="btn-physical btn-small"
+          className="btn-small"
           disabled={history.loading}
           aria-busy={history.loading}
           onClick={() => {
@@ -339,7 +341,7 @@ export function History() {
           }}
         >
           {t("shell.refresh")}
-        </button>
+        </Button>
       </header>
       <div id="audience-history-content">
         <HistoryContent history={history} onViewer={choose} />

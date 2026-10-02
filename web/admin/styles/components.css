@@ -28,7 +28,12 @@
 .button-secondary {
   min-height: var(--control-min-height);
   min-width: var(--touch-target-min);
-  padding: var(--primitive-space-2) var(--primitive-space-6);
+  padding: var(--primitive-space-2) var(--control-padding-inline);
+  font-size: var(--control-font-size);
+  line-height: 1.4;
+  gap: var(--primitive-space-2);
+  white-space: normal;
+  overflow-wrap: anywhere;
   color: var(--text);
   font-weight: 700;
   letter-spacing: 1px;
@@ -60,6 +65,7 @@
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
+.btn-physical:has(input:disabled),
 .btn-physical:disabled,
 .button-secondary:disabled,
 .btn-physical.state-busy,
@@ -82,7 +88,12 @@
 .btn-physical.btn-start {
   border-color: var(--color-border-success);
   color: var(--success);
-  text-shadow: 0 0 5px rgba(51, 204, 102, 0.38);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--success) 10%, var(--primitive-gray-400)), var(--primitive-gray-550));
+}
+
+.btn-physical.btn-start:hover:not(:disabled) {
+  border-color: var(--success);
+  color: var(--success);
 }
 
 .btn-danger,
@@ -98,21 +109,16 @@
   color: #fff;
 }
 
-.btn-small,
-.button-secondary--small {
-  min-height: var(--control-min-height-compact);
-  padding: var(--primitive-space-1) var(--primitive-space-4);
-  font-size: var(--primitive-font-size-sm);
-}
-
-.button-secondary {
-  min-height: 36px;
-}
+/* Legacy small classes retain the shared action geometry. */
 
 /* Icon buttons */
 .icon-btn {
-  min-width: var(--touch-target-min);
-  min-height: var(--touch-target-min);
+  width: var(--control-min-height);
+  height: var(--control-min-height);
+  min-width: var(--control-min-height);
+  min-height: var(--control-min-height);
+  flex-shrink: 0;
+  font-size: var(--control-font-size);
   padding: var(--primitive-space-2);
   color: var(--muted);
 }
@@ -140,6 +146,7 @@
 }
 
 .icon-btn__icon {
+  display: block;
   width: 18px;
   height: 18px;
 }
@@ -183,9 +190,12 @@ input[type="password"],
 input[type="number"],
 input[type="url"],
 input[type="file"],
+input[type="color"],
 select,
 textarea {
   min-height: var(--control-min-height);
+  padding: var(--primitive-space-2) var(--primitive-space-3);
+  font-size: var(--field-font-size);
   border: 1px solid var(--border);
   border-radius: var(--primitive-radius-sm);
   background: var(--surface-dark);
@@ -199,15 +209,36 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
-.field-error {
-  color: var(--danger);
-  font-size: var(--primitive-font-size-sm);
+textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.45;
 }
 
-.field-hint {
-  color: var(--subtle);
-  font-size: var(--primitive-font-size-sm);
+input[type="checkbox"],
+input[type="radio"] {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  vertical-align: middle;
+  flex-shrink: 0;
+  accent-color: var(--success);
 }
+
+input[type="range"] {
+  min-height: var(--control-min-height);
+  accent-color: var(--amber);
+}
+
+.field-error,
+.field-hint {
+  margin: 0;
+  font-size: var(--primitive-font-size-md);
+  line-height: 1.45;
+}
+
+.field-error { color: var(--danger); }
+.field-hint { color: var(--muted); }
 
 /* Tables / lists */
 .status-pill {
@@ -342,4 +373,24 @@ textarea:focus-visible {
 
 .empty-state {
   color: var(--muted);
+}
+
+.panel-heading :is(h2, h3),
+.overlay-preview-heading,
+.studio-add-to-obs-panel h3 {
+  margin: 0;
+  font-size: var(--heading-panel-size);
+  font-weight: 700;
+}
+
+/* Right-aligned toolbar hints must open inward, including on narrow screens. */
+:is(.live-toolbar-actions, .audience-toolbar__actions) .has-tooltip > .ui-tooltip {
+  left: auto;
+  right: 0;
+  transform: translateY(-4px);
+}
+
+:is(.live-toolbar-actions, .audience-toolbar__actions) .has-tooltip:hover > .ui-tooltip,
+:is(.live-toolbar-actions, .audience-toolbar__actions) .has-tooltip:focus-visible > .ui-tooltip {
+  transform: translateY(0);
 }

@@ -68,7 +68,7 @@
 
 .progression-card__header h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--heading-panel-size);
 }
 
 .progression-form {
@@ -147,32 +147,6 @@
   flex-wrap: nowrap;
   align-items: stretch;
   gap: var(--primitive-space-2);
-}
-
-.audience-toolbar__actions > .btn-small,
-.audience-toolbar__actions > .icon-btn--compact {
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--control-min-height);
-  min-height: var(--control-min-height);
-  max-height: var(--control-min-height);
-}
-
-.audience-toolbar__actions > .icon-btn--compact {
-  width: var(--control-min-height);
-  min-width: var(--control-min-height);
-  padding: 2px;
-  overflow: visible;
-}
-
-.audience-toolbar__actions > .icon-btn--compact .icon-btn__icon {
-  display: block;
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
-  overflow: visible;
 }
 
 .audience-toolbar__hint {
@@ -663,7 +637,7 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 .audience-inspector__body .audience-detail__name-field > .btn-physical,
 .audience-inspector__body .audience-detail__merge > .btn-physical {
   width: 100%;
-  min-height: 42px;
+  min-height: var(--control-min-height);
 }
 
 .audience-detail__subheading {
@@ -1175,8 +1149,8 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 .audience-catalog-list__title,
 .audience-catalog-editor__title {
   margin: 0;
-  font-size: var(--primitive-font-size-sm);
-  font-weight: 600;
+  font-size: var(--heading-panel-size);
+  font-weight: 700;
 }
 
 .audience-catalog-list__body,
@@ -1287,11 +1261,11 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 
 .catalog-template-chip {
   border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface-elevated, var(--bg));
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface-dark);
   color: inherit;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--primitive-font-size-md);
   line-height: 1.2;
   padding: 0.2rem 0.55rem;
   cursor: pointer;
@@ -1310,8 +1284,7 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 
 .catalog-template-chip:hover,
 .catalog-template-chip:focus-visible {
-  border-color: var(--accent, #3b82f6);
-  outline: none;
+  border-color: var(--amber);
 }
 
 .catalog-template-preview {
@@ -1434,7 +1407,8 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 
 .catalog-layout-field legend {
   margin-bottom: 0.35rem;
-  font-weight: 500;
+  font-size: var(--heading-section-size);
+  font-weight: 700;
 }
 
 .audience-pagination {
@@ -1449,4 +1423,9 @@ table.data-table.audience-viewers-table > tbody > tr > th {
   flex: 1 1 100%;
   margin: 0;
   color: var(--color-text-secondary);
+}
+
+.audience-catalog-editor__body > .form-section,
+#command-alert-fields > .form-section {
+  margin-bottom: var(--section-gap);
 }

@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useLocale } from "../../app/locale";
@@ -165,13 +166,13 @@ export function Messages() {
           className="notice notice--error live-region-error"
         >
           <p className="notice__body">{error}</p>
-          <button
+          <Button
             type="button"
-            className="state-retry btn-physical btn-small"
+            className="state-retry btn-small"
             onClick={() => void refresh()}
           >
             {t("state.retry")}
-          </button>
+          </Button>
         </div>
       )}
     </div>

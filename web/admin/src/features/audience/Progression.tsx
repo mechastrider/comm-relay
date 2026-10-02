@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import { useReportSaveStatus } from "../../app/save-status";
 import { useRef, useState } from "react";
 import { useBlocker } from "react-router";
@@ -571,16 +572,14 @@ export function Progression() {
         title={t("dialog.discardUnsavedTitle")}
         actions={
           <>
-            <button
+            <Button
               id="discard-changes-cancel"
-              className="btn-physical"
               onClick={cancel}
             >
               {t("dialog.keepEditing")}
-            </button>
-            <button
+            </Button>
+            <Button variant="danger"
               id="discard-changes-confirm"
-              className="btn-physical btn-danger"
               disabled={busy}
               onClick={() => {
                 const callback = confirmation?.run;
@@ -590,7 +589,7 @@ export function Progression() {
               }}
             >
               {t("dialog.discardChanges")}
-            </button>
+            </Button>
           </>
         }
       >

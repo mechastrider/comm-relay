@@ -89,7 +89,7 @@
 
 .about-link-btn {
   width: 100%;
-  min-height: 40px;
+  min-height: var(--control-min-height);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;

@@ -1,3 +1,5 @@
+import { Field } from "../../components/Field";
+import { Button } from "../../components/Button";
 import { preferenceStorage } from "../../services/storage";
 import { useReportSaveStatus } from "../../app/save-status";
 import { useEffect, useRef, useState } from "react";
@@ -535,16 +537,14 @@ export function Studio() {
         title={t("obs.preset" + promptTitle + "Title")}
         actions={
           <>
-            <button
+            <Button
               id="overlay-preset-prompt-cancel"
-              className="btn-physical"
               onClick={() => setPrompt("")}
             >
               {t("dialog.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button variant="primary"
               id="overlay-preset-prompt-confirm"
-              className="btn-physical btn-start"
               onClick={confirm}
             >
               {t(
@@ -554,14 +554,14 @@ export function Studio() {
                     ? "obs.presetDelete"
                     : "obs.preset" + promptTitle + "Action",
               )}
-            </button>
+            </Button>
           </>
         }
       >
         {prompt === "delete" ? (
           <p>{t("obs.presetDeleteConfirm", { name: selected.name })}</p>
         ) : (
-          <div className="form__field">
+          <Field>
             <label htmlFor="overlay-preset-prompt-name">
               {t("obs.presetName")}
             </label>
@@ -579,7 +579,7 @@ export function Studio() {
               autoFocus
             />
             {promptError && <p role="alert">{promptError}</p>}
-          </div>
+          </Field>
         )}
       </Dialog>
       <Dialog
@@ -592,18 +592,16 @@ export function Studio() {
         title={t("studio.discardTitle")}
         actions={
           <>
-            <button
+            <Button
               id="studio-discard-cancel"
-              className="btn-physical"
               onClick={() => {
                 if (blocker.state === "blocked") blocker.reset();
               }}
             >
               {t("dialog.keepEditing")}
-            </button>
-            <button
+            </Button>
+            <Button variant="danger"
               id="studio-discard-confirm"
-              className="btn-physical btn-danger"
               disabled={busy}
               onClick={() => {
                 discard();
@@ -611,7 +609,7 @@ export function Studio() {
               }}
             >
               {t("studio.discardChanges")}
-            </button>
+            </Button>
           </>
         }
       >

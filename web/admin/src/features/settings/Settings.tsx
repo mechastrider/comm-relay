@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import { useReportSaveStatus } from "../../app/save-status";
 import { useEffect, useRef, useState } from "react";
 import { useBlocker, useNavigate, useParams } from "react-router";
@@ -309,17 +310,17 @@ export function Settings() {
                     {t("settings.sectionDirty")}
                   </span>
                   <div className="settings-section__actions">
-                    <button
-                      className="btn-physical btn-small"
+                    <Button
+                      className="btn-small"
                       type="button"
                       data-section-reset
                       disabled={!dirty || busy}
                       onClick={() => setResetOpen(true)}
                     >
                       {t("settings.resetSection")}
-                    </button>
-                    <button
-                      className="btn-physical btn-start btn-small"
+                    </Button>
+                    <Button variant="primary"
+                      className="btn-small"
                       type="submit"
                       form="settings-section-form"
                       data-section-save
@@ -327,7 +328,7 @@ export function Settings() {
                       aria-busy={busy}
                     >
                       {t("settings.saveSection")}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -393,19 +394,17 @@ export function Settings() {
         }}
         actions={
           <>
-            <button
+            <Button
               id="discard-changes-cancel"
-              className="btn-physical"
               onClick={() => {
                 setResetOpen(false);
                 if (blocker.state === "blocked") blocker.reset();
               }}
             >
               {t("dialog.keepEditing")}
-            </button>
-            <button
+            </Button>
+            <Button variant="danger"
               id="discard-changes-confirm"
-              className="btn-physical btn-danger"
               disabled={busy}
               onClick={() => {
                 reset();
@@ -414,7 +413,7 @@ export function Settings() {
               }}
             >
               {t("dialog.discardChanges")}
-            </button>
+            </Button>
           </>
         }
       >

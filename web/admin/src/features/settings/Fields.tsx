@@ -1,3 +1,5 @@
+import { Field } from "../../components/Field";
+import { Button } from "../../components/Button";
 import { useLocale } from "../../app/locale";
 export type FieldValues = Record<string, string | boolean>;
 export interface SettingsFieldsProps {
@@ -33,7 +35,7 @@ export function PlatformsFields({
             <h3 id="twitch-heading">{"Twitch"}</h3>
           </div>
           <div className="form">
-            <div className="form__field">
+            <Field>
               <label className="checkbox" htmlFor="twitch-enabled">
                 <input
                   id="twitch-enabled"
@@ -49,8 +51,8 @@ export function PlatformsFields({
                   {t("conn.enableConnector")}
                 </span>
               </label>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label htmlFor="twitch-channel" data-i18n="conn.channel">
                 {t("conn.channel")}
               </label>
@@ -75,8 +77,8 @@ export function PlatformsFields({
               >
                 {errors["twitch_channel"]}
               </p>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label
                 className="checkbox checkbox--disabled"
                 htmlFor="twitch-use-proxy"
@@ -93,7 +95,7 @@ export function PlatformsFields({
               <p className="field-hint" data-i18n="conn.twitchProxyHint">
                 {t("conn.twitchProxyHint")}
               </p>
-            </div>
+            </Field>
           </div>
         </section>
       </section>
@@ -111,7 +113,7 @@ export function PlatformsFields({
         >
           <div className="panel__header">
             <h3 id="youtube-heading">{"YouTube Live"}</h3>
-            <button
+            <Button
               id="youtube-connect"
               className="button-secondary"
               type="button"
@@ -120,10 +122,10 @@ export function PlatformsFields({
               onClick={() => onAction("oauth")}
             >
               {t("conn.connect")}
-            </button>
+            </Button>
           </div>
           <div className="form">
-            <div className="form__field">
+            <Field>
               <label className="checkbox" htmlFor="youtube-enabled">
                 <input
                   id="youtube-enabled"
@@ -139,8 +141,8 @@ export function PlatformsFields({
                   {t("conn.enableConnector")}
                 </span>
               </label>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label
                 htmlFor="youtube-connection-mode"
                 data-i18n="conn.connectionMode"
@@ -166,13 +168,13 @@ export function PlatformsFields({
               <p className="field-hint" data-i18n="conn.youtubeSimpleHint">
                 {t("conn.youtubeSimpleHint")}
               </p>
-            </div>
+            </Field>
             <div
               id="youtube-page-fields"
               className="youtube-page-fields"
               hidden={values["youtube-connection-mode"] === "api"}
             >
-              <div className="form__field">
+              <Field>
                 <label
                   htmlFor="youtube-channel-handle"
                   data-i18n="conn.channelHandle"
@@ -206,8 +208,8 @@ export function PlatformsFields({
                 >
                   {errors["youtube_channel_handle"]}
                 </p>
-              </div>
-              <div className="form__field">
+              </Field>
+              <Field>
                 <label htmlFor="youtube-video-input">
                   <span data-i18n="conn.liveVideoUrl">
                     {t("conn.liveVideoUrl")}
@@ -240,13 +242,13 @@ export function PlatformsFields({
                 >
                   {errors["youtube_video_input"]}
                 </p>
-              </div>
+              </Field>
             </div>
             <div
               id="youtube-api-fields"
               hidden={values["youtube-connection-mode"] !== "api"}
             >
-              <div className="form__field">
+              <Field>
                 <label
                   htmlFor="youtube-chat-mode"
                   data-i18n="conn.chatTransport"
@@ -275,8 +277,8 @@ export function PlatformsFields({
                 <p className="field-hint" data-i18n="conn.chatTransportHint">
                   {t("conn.chatTransportHint")}
                 </p>
-              </div>
-              <div className="form__field">
+              </Field>
+              <Field>
                 <label
                   htmlFor="youtube-client-id"
                   data-i18n="conn.oauthClientId"
@@ -295,8 +297,8 @@ export function PlatformsFields({
                   }
                   aria-invalid={Boolean(errors["youtube_client_id"])}
                 />
-              </div>
-              <div className="form__field">
+              </Field>
+              <Field>
                 <label
                   htmlFor="youtube-client-secret"
                   data-i18n="conn.oauthClientSecret"
@@ -317,9 +319,9 @@ export function PlatformsFields({
                 <p className="field-hint" data-i18n="conn.keepSecretHint">
                   {t("conn.keepSecretHint")}
                 </p>
-              </div>
+              </Field>
             </div>
-            <div className="form__field">
+            <Field>
               <label className="checkbox" htmlFor="youtube-use-proxy">
                 <input
                   id="youtube-use-proxy"
@@ -336,7 +338,7 @@ export function PlatformsFields({
               <p className="field-hint" data-i18n="conn.proxyNetworkHint">
                 {t("conn.proxyNetworkHint")}
               </p>
-            </div>
+            </Field>
           </div>
         </section>
       </section>
@@ -353,7 +355,7 @@ export function PlatformsFields({
             <h3 id="vk-heading">{"VK Live"}</h3>
           </div>
           <div className="form">
-            <div className="form__field">
+            <Field>
               <label className="checkbox" htmlFor="vk-enabled">
                 <input
                   id="vk-enabled"
@@ -369,8 +371,8 @@ export function PlatformsFields({
                   {t("conn.enableConnector")}
                 </span>
               </label>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label htmlFor="vk-channel" data-i18n="conn.channelSlug">
                 {t("conn.channelSlug")}
               </label>
@@ -398,8 +400,8 @@ export function PlatformsFields({
               >
                 {errors["vk_channel"]}
               </p>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label className="checkbox" htmlFor="vk-use-proxy">
                 <input
                   id="vk-use-proxy"
@@ -416,7 +418,7 @@ export function PlatformsFields({
               <p className="field-hint" data-i18n="conn.proxyNetworkHint">
                 {t("conn.proxyNetworkHint")}
               </p>
-            </div>
+            </Field>
           </div>
         </section>
       </section>
@@ -445,7 +447,7 @@ export function NetworkFields({
             </h3>
           </div>
           <div className="form">
-            <div className="form__field">
+            <Field>
               <label htmlFor="server-port" data-i18n="settings.serverPort">
                 {t("settings.serverPort")}
               </label>
@@ -474,7 +476,7 @@ export function NetworkFields({
               >
                 {errors["server_port"]}
               </p>
-            </div>
+            </Field>
           </div>
         </section>
         <section className="panel" aria-labelledby="network-proxy-heading">
@@ -487,7 +489,7 @@ export function NetworkFields({
             <p className="field-hint" data-i18n="conn.socks5Intro">
               {t("conn.socks5Intro")}
             </p>
-            <div className="form__field">
+            <Field>
               <label
                 htmlFor="network-socks5-address"
                 data-i18n="conn.proxyAddress"
@@ -516,8 +518,8 @@ export function NetworkFields({
               >
                 {errors["network_socks5_address"]}
               </p>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label htmlFor="network-socks5-username">
                 <span data-i18n="conn.username">{t("conn.username")}</span>
                 <span className="field-optional" data-i18n="conn.optional">
@@ -536,8 +538,8 @@ export function NetworkFields({
                 }
                 aria-invalid={Boolean(errors["network_socks5_username"])}
               />
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label htmlFor="network-socks5-password">
                 <span data-i18n="conn.password">{t("conn.password")}</span>
                 <span className="field-optional" data-i18n="conn.optional">
@@ -558,7 +560,7 @@ export function NetworkFields({
               <p className="field-hint" data-i18n="conn.keepPasswordHint">
                 {t("conn.keepPasswordHint")}
               </p>
-            </div>
+            </Field>
           </div>
         </section>
       </section>
@@ -580,7 +582,7 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
           </h3>
         </div>
         <div className="form form--compact">
-          <div className="form__field">
+          <Field>
             <label
               htmlFor="activity-interval-seconds"
               data-i18n="iface.activityIntervalSeconds"
@@ -614,8 +616,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["activity_interval_seconds"]}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label
               htmlFor="activity-session-limit"
               data-i18n="iface.activitySessionLimit"
@@ -649,8 +651,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["activity_session_limit"]}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label htmlFor="activity-xp" data-i18n="iface.activityXP">
               {t("iface.activityXP")}
             </label>
@@ -678,8 +680,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["activity_xp"]}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label
               htmlFor="buffs-per-award-per-viewer"
               data-i18n="iface.buffsPerAwardPerViewer"
@@ -718,8 +720,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["buffs_per_award_per_viewer"]}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label
               htmlFor="buff-max-unique-viewers"
               data-i18n="iface.buffMaxUniqueViewers"
@@ -755,8 +757,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["buff_max_unique_viewers"]}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label htmlFor="day-reset-hour" data-i18n="iface.dayResetHour">
               {t("iface.dayResetHour")}
             </label>
@@ -785,8 +787,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["day_reset_hour"]}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label
               htmlFor="streamer-display-name"
               data-i18n="iface.streamerDisplayName"
@@ -816,8 +818,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["streamer_display_name"]}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label className="checkbox" htmlFor="hide-command-messages">
               <input
                 id="hide-command-messages"
@@ -836,8 +838,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             <p className="field-hint" data-i18n="iface.hideCommandMessagesHint">
               {t("iface.hideCommandMessagesHint")}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label className="checkbox" htmlFor="hide-command-cooldown-overlay">
               <input
                 id="hide-command-cooldown-overlay"
@@ -862,8 +864,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {t("iface.hideCommandCooldownOverlayHint")}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label className="checkbox" htmlFor="custom-avatars-enabled">
               <input
                 id="custom-avatars-enabled"
@@ -888,7 +890,7 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {t("iface.customAvatarsEnabledHint")}
             </p>
-          </div>
+          </Field>
         </div>
       </section>
       <section
@@ -905,7 +907,7 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
           </h3>
         </div>
         <div className="form form--compact">
-          <div className="form__field">
+          <Field>
             <label
               htmlFor="leaderboard-visibility-policy"
               data-i18n="leaderboardVisibility.policy"
@@ -964,8 +966,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["leaderboard_visibility_policy"]}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label
               htmlFor="leaderboard-visibility-display-seconds"
               data-i18n="leaderboardVisibility.displaySeconds"
@@ -1000,8 +1002,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["leaderboard_visibility_display_seconds"]}
             </p>
-          </div>
-          <div className="form__field" data-leaderboard-automatic-control="">
+          </Field>
+          <Field  data-leaderboard-automatic-control="">
             <label
               htmlFor="leaderboard-visibility-cooldown-seconds"
               data-i18n="leaderboardVisibility.cooldownSeconds"
@@ -1037,8 +1039,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["leaderboard_visibility_cooldown_seconds"]}
             </p>
-          </div>
-          <div className="form__field" data-leaderboard-automatic-control="">
+          </Field>
+          <Field  data-leaderboard-automatic-control="">
             <label
               htmlFor="leaderboard-visibility-dirty-interval-seconds"
               data-i18n="leaderboardVisibility.dirtyIntervalSeconds"
@@ -1080,8 +1082,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
             >
               {errors["leaderboard_visibility_dirty_interval_seconds"]}
             </p>
-          </div>
-          <div className="form__field" data-leaderboard-automatic-control="">
+          </Field>
+          <Field  data-leaderboard-automatic-control="">
             <label
               className="checkbox"
               htmlFor="leaderboard-visibility-show-on-award"
@@ -1109,8 +1111,8 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
                 {t("leaderboardVisibility.showOnAward")}
               </span>
             </label>
-          </div>
-          <div className="form__field" data-leaderboard-automatic-control="">
+          </Field>
+          <Field  data-leaderboard-automatic-control="">
             <label
               className="checkbox"
               htmlFor="leaderboard-visibility-show-on-rank-change"
@@ -1138,7 +1140,7 @@ export function DataFields({ values, errors, onChange }: SettingsFieldsProps) {
                 {t("leaderboardVisibility.showOnRankChange")}
               </span>
             </label>
-          </div>
+          </Field>
         </div>
       </section>
     </>
@@ -1164,7 +1166,7 @@ export function ApplicationFields({
           </h3>
         </div>
         <div className="form form--compact">
-          <div className="form__field">
+          <Field>
             <label htmlFor="time-locale" data-i18n="iface.language">
               {t("iface.language")}
             </label>
@@ -1195,7 +1197,7 @@ export function ApplicationFields({
             >
               {errors["time_locale"]}
             </p>
-          </div>
+          </Field>
         </div>
       </section>
       <section
@@ -1207,7 +1209,7 @@ export function ApplicationFields({
           <h3 id="message-sound-panel-heading" data-i18n="sound.alertTone">
             {t("sound.alertTone")}
           </h3>
-          <button
+          <Button
             id="test-message-sound"
             type="button"
             className="button-secondary"
@@ -1215,10 +1217,10 @@ export function ApplicationFields({
             onClick={() => onAction("sound")}
           >
             {t("sound.test")}
-          </button>
+          </Button>
         </div>
         <div className="form form--compact">
-          <div className="form__field">
+          <Field>
             <label className="checkbox" htmlFor="message-sound-enabled">
               <input
                 id="message-sound-enabled"
@@ -1234,8 +1236,8 @@ export function ApplicationFields({
                 {t("sound.playOnMessage")}
               </span>
             </label>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label htmlFor="message-sound-volume" data-i18n="sound.volume">
               {t("sound.volume")}
             </label>
@@ -1268,8 +1270,8 @@ export function ApplicationFields({
             >
               {errors["message_sound_volume"]}
             </p>
-          </div>
-          <div className="form__field">
+          </Field>
+          <Field>
             <label htmlFor="message-sound-type" data-i18n="sound.soundType">
               {t("sound.soundType")}
             </label>
@@ -1303,7 +1305,7 @@ export function ApplicationFields({
             >
               {errors["message_sound_type"]}
             </p>
-          </div>
+          </Field>
         </div>
       </section>
       <div id="rich-chat-settings-mount" className="rich-chat-settings-mount">
@@ -1314,7 +1316,7 @@ export function ApplicationFields({
             </h3>
           </div>
           <div className="form form--compact">
-            <div className="form__field">
+            <Field>
               <label className="checkbox" htmlFor="emotes-twitch">
                 <input
                   id="emotes-twitch"
@@ -1330,8 +1332,8 @@ export function ApplicationFields({
                   {t("rich.twitchEmotes")}
                 </span>
               </label>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label className="checkbox" htmlFor="emotes-youtube">
                 <input
                   id="emotes-youtube"
@@ -1347,8 +1349,8 @@ export function ApplicationFields({
                   {t("rich.youtubeEmoji")}
                 </span>
               </label>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label className="checkbox" htmlFor="emotes-vk">
                 <input
                   id="emotes-vk"
@@ -1362,8 +1364,8 @@ export function ApplicationFields({
                 />
                 <span data-i18n="rich.vkEmoji">{t("rich.vkEmoji")}</span>
               </label>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label className="checkbox" htmlFor="emotes-ffz">
                 <input
                   id="emotes-ffz"
@@ -1377,8 +1379,8 @@ export function ApplicationFields({
                 />
                 <span data-i18n="rich.ffz">{t("rich.ffz")}</span>
               </label>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label className="checkbox" htmlFor="emotes-bttv">
                 <input
                   id="emotes-bttv"
@@ -1392,8 +1394,8 @@ export function ApplicationFields({
                 />
                 <span data-i18n="rich.bttv">{t("rich.bttv")}</span>
               </label>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label className="checkbox" htmlFor="emotes-7tv">
                 <input
                   id="emotes-7tv"
@@ -1407,7 +1409,7 @@ export function ApplicationFields({
                 />
                 <span data-i18n="rich.sevenTv">{t("rich.sevenTv")}</span>
               </label>
-            </div>
+            </Field>
           </div>
         </section>
         <section className="panel" aria-labelledby="image-previews-heading">
@@ -1417,7 +1419,7 @@ export function ApplicationFields({
             </h3>
           </div>
           <div className="form form--compact">
-            <div className="form__field">
+            <Field>
               <label className="checkbox" htmlFor="image-previews-enabled">
                 <input
                   id="image-previews-enabled"
@@ -1439,8 +1441,8 @@ export function ApplicationFields({
               <p className="field-hint" data-i18n="rich.previewsHint">
                 {t("rich.previewsHint")}
               </p>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label
                 htmlFor="image-previews-allowed-hosts"
                 data-i18n="rich.allowedHosts"
@@ -1473,8 +1475,8 @@ export function ApplicationFields({
               >
                 {errors["image_previews_allowed_hosts"]}
               </p>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label
                 htmlFor="image-previews-max-width"
                 data-i18n="rich.maxWidth"
@@ -1505,8 +1507,8 @@ export function ApplicationFields({
               >
                 {errors["image_previews_max_width_px"]}
               </p>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label
                 htmlFor="image-previews-max-height"
                 data-i18n="rich.maxHeight"
@@ -1537,8 +1539,8 @@ export function ApplicationFields({
               >
                 {errors["image_previews_max_height_px"]}
               </p>
-            </div>
-            <div className="form__field">
+            </Field>
+            <Field>
               <label
                 htmlFor="image-previews-max-per-message"
                 data-i18n="rich.maxPerMessage"
@@ -1569,7 +1571,7 @@ export function ApplicationFields({
               >
                 {errors["image_previews_max_per_message"]}
               </p>
-            </div>
+            </Field>
           </div>
         </section>
       </div>

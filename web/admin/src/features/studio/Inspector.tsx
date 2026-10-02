@@ -1,3 +1,5 @@
+import { Field } from "../../components/Field";
+import { Button } from "../../components/Button";
 import { useRef, useEffect, useState, type ReactNode } from "react";
 import { useLocale } from "../../app/locale";
 import type { Surface, Values } from "./model";
@@ -57,7 +59,7 @@ export function Inspector({
             >
               {t("studio.sharedPresetLook")}
             </h3>
-            <div className="form__field form__field--full studio-theme-field">
+            <Field className="form__field--full studio-theme-field">
               <span
                 id="overlay-theme-label"
                 className="field-label"
@@ -116,10 +118,10 @@ export function Inspector({
               >
                 {errors["overlay-theme"]}
               </p>
-            </div>
-            <div
+            </Field>
+            <Field
               id="studio-essential-font-chat"
-              className="form__field overlay-chat-only"
+              className="overlay-chat-only"
               hidden={surface !== "chat"}
             >
               <label htmlFor="overlay-font-size" data-i18n="obs.fontSize">
@@ -150,10 +152,9 @@ export function Inspector({
               >
                 {errors["overlay-font-size"]}
               </p>
-            </div>
-            <div
+            </Field>
+            <Field
               id="studio-essential-font-leaderboard"
-              className="form__field"
               hidden={surface !== "leaderboard"}
             >
               <label
@@ -190,10 +191,9 @@ export function Inspector({
               >
                 {errors["overlay-leaderboard-sizing-mode"]}
               </p>
-            </div>
-            <div
+            </Field>
+            <Field
               id="studio-essential-leaderboard-title"
-              className="form__field"
               hidden={surface !== "leaderboard"}
             >
               <label
@@ -271,10 +271,9 @@ export function Inspector({
                   {errors["overlay-leaderboard-title"]}
                 </p>
               </div>
-            </div>
-            <div
+            </Field>
+            <Field
               id="studio-essential-leaderboard-messages"
-              className="form__field"
               hidden={surface !== "leaderboard"}
             >
               <label
@@ -308,10 +307,9 @@ export function Inspector({
               >
                 {t("obs.leaderboardShowMessagesHint")}
               </p>
-            </div>
-            <div
+            </Field>
+            <Field
               id="studio-essential-leaderboard-titles"
-              className="form__field"
               hidden={surface !== "leaderboard"}
             >
               <label
@@ -345,10 +343,10 @@ export function Inspector({
               >
                 {t("obs.leaderboardShowViewerTitlesHint")}
               </p>
-            </div>
-            <div
+            </Field>
+            <Field
               id="studio-essential-duration"
-              className="form__field form__field--full overlay-chat-only"
+              className="form__field--full overlay-chat-only"
               hidden={surface !== "chat"}
             >
               <span
@@ -404,10 +402,9 @@ export function Inspector({
                   {t("obs.durationUntilReplaced")}
                 </button>
               </div>
-            </div>
-            <div
+            </Field>
+            <Field
               id="studio-essential-period"
-              className="form__field"
               hidden={true}
             >
               <label
@@ -435,10 +432,10 @@ export function Inspector({
                   {t("viewers.periodAll")}
                 </option>
               </select>
-            </div>
-            <div
+            </Field>
+            <Field
               id="studio-essential-alerts-image-size"
-              className="form__field form__field--full"
+              className="form__field--full"
               hidden={surface !== "alerts"}
             >
               <label
@@ -479,10 +476,10 @@ export function Inspector({
               >
                 {errors["overlay-alerts-image-size"]}
               </p>
-            </div>
-            <div
+            </Field>
+            <Field
               id="studio-essential-font-alerts"
-              className="form__field form__field--full"
+              className="form__field--full"
               hidden={surface !== "alerts"}
             >
               <label
@@ -563,10 +560,10 @@ export function Inspector({
               >
                 {errors["overlay-alerts-font-size"]}
               </p>
-            </div>
-            <div
+            </Field>
+            <Field
               id="studio-essential-alerts-note"
-              className="studio-surface-note form__field form__field--full"
+              className="studio-surface-note form__field--full"
               hidden={surface !== "alerts"}
             >
               <strong data-i18n="studio.alertsSettingsTitle">
@@ -575,7 +572,7 @@ export function Inspector({
               <span data-i18n="studio.alertsSharedOnly">
                 {t("studio.alertsSharedOnly")}
               </span>
-            </div>
+            </Field>
           </div>
           <details
             className="overlay-group studio-inspector-advanced"
@@ -586,7 +583,7 @@ export function Inspector({
               {t("studio.advanced")}
             </summary>
             <div className="form form--compact form--overlay-display">
-              <div className="form__field">
+              <Field>
                 <label htmlFor="overlay-text-edge" data-i18n="obs.textEdge">
                   {t("obs.textEdge")}
                 </label>
@@ -609,8 +606,8 @@ export function Inspector({
                     {t("obs.textEdgeOutline")}
                   </option>
                 </select>
-              </div>
-              <div className="form__field">
+              </Field>
+              <Field>
                 <label
                   htmlFor="overlay-text-edge-strength"
                   data-i18n="obs.textEdgeStrength"
@@ -631,7 +628,7 @@ export function Inspector({
                   }
                   aria-invalid={!!errors["overlay-text-edge-strength"]}
                 />
-              </div>
+              </Field>
               <h3
                 id="studio-selected-surface-heading"
                 className="overlay-section-title form__field--full"
@@ -645,7 +642,7 @@ export function Inspector({
                 )}
               </h3>
               <div id="overlay-chat-fields" className="overlay-surface-fields">
-                <div className="form__field">
+                <Field>
                   <label htmlFor="overlay-display-mode" data-i18n="obs.spacing">
                     {t("obs.spacing")}
                   </label>
@@ -677,8 +674,8 @@ export function Inspector({
                   >
                     {errors["overlay-display-mode"]}
                   </p>
-                </div>
-                <div className="form__field form__field--full">
+                </Field>
+                <Field className="form__field--full">
                   <label
                     htmlFor="overlay-platform-marker"
                     data-i18n="obs.platformMarker"
@@ -707,7 +704,7 @@ export function Inspector({
                       {t("obs.markerNone")}
                     </option>
                   </select>
-                  <button
+                  <Button
                     className="button-secondary button-secondary--small"
                     type="button"
                     data-overlay-reset-group="basics"
@@ -717,17 +714,16 @@ export function Inspector({
                     onClick={() => reset("basics")}
                   >
                     {t("obs.resetGroup")}
-                  </button>
-                </div>
+                  </Button>
+                </Field>
               </div>
               <div
                 id="overlay-leaderboard-fields"
                 className="overlay-surface-fields"
                 hidden={surface !== "leaderboard"}
               >
-                <div
+                <Field
                   id="overlay-leaderboard-fixed-field"
-                  className="form__field"
                   hidden={values["overlay-leaderboard-sizing-mode"] !== "fixed"}
                 >
                   <label
@@ -772,8 +768,8 @@ export function Inspector({
                   >
                     {errors["overlay-leaderboard-font-size"]}
                   </p>
-                </div>
-                <div className="form__field">
+                </Field>
+                <Field>
                   <label
                     htmlFor="overlay-leaderboard-max-entries-all"
                     data-i18n="obs.leaderboardMaxEntries"
@@ -818,8 +814,8 @@ export function Inspector({
                   >
                     {errors["overlay-leaderboard-max-entries"]}
                   </p>
-                </div>
-                <div className="form__field">
+                </Field>
+                <Field>
                   <label
                     htmlFor="overlay-leaderboard-layout"
                     data-i18n="obs.leaderboardLayout"
@@ -854,9 +850,9 @@ export function Inspector({
                   >
                     {t("obs.leaderboardLayoutHint")}
                   </p>
-                </div>
-                <div className="form__field form__field--full">
-                  <button
+                </Field>
+                <Field className="form__field--full">
+                  <Button
                     id="overlay-leaderboard-reset"
                     className="button-secondary button-secondary--small"
                     type="button"
@@ -865,15 +861,15 @@ export function Inspector({
                     onClick={() => reset("leaderboard")}
                   >
                     {t("obs.leaderboardReset")}
-                  </button>
-                </div>
+                  </Button>
+                </Field>
               </div>
               <details className="overlay-group">
                 <summary data-i18n="obs.textGroup">
                   {t("obs.textGroup")}
                 </summary>
                 <div className="form form--compact">
-                  <div className="form__field">
+                  <Field>
                     <label
                       htmlFor="overlay-font-family"
                       data-i18n="obs.fontFamily"
@@ -905,8 +901,8 @@ export function Inspector({
                         {t("obs.fontMono")}
                       </option>
                     </select>
-                  </div>
-                  <div className="form__field">
+                  </Field>
+                  <Field>
                     <label
                       htmlFor="overlay-line-height"
                       data-i18n="obs.lineHeight"
@@ -927,9 +923,9 @@ export function Inspector({
                       }
                       aria-invalid={!!errors["overlay-line-height"]}
                     />
-                  </div>
-                  <div className="form__field form__field--full">
-                    <button
+                  </Field>
+                  <Field className="form__field--full">
+                    <Button
                       className="button-secondary button-secondary--small"
                       type="button"
                       data-overlay-reset-group="text"
@@ -939,8 +935,8 @@ export function Inspector({
                       onClick={() => reset("text")}
                     >
                       {t("obs.resetGroup")}
-                    </button>
-                  </div>
+                    </Button>
+                  </Field>
                 </div>
               </details>
               <details className="overlay-group">
@@ -951,7 +947,7 @@ export function Inspector({
                   {t("obs.surfaceHint")}
                 </p>
                 <div className="form form--compact">
-                  <div className="form__field">
+                  <Field>
                     <label
                       htmlFor="overlay-panel-color"
                       data-i18n="obs.panelColor"
@@ -968,8 +964,8 @@ export function Inspector({
                       }
                       aria-invalid={!!errors["overlay-panel-color"]}
                     />
-                  </div>
-                  <div className="form__field">
+                  </Field>
+                  <Field>
                     <label
                       id="overlay-panel-opacity-label"
                       htmlFor="overlay-panel-opacity"
@@ -1008,8 +1004,8 @@ export function Inspector({
                     >
                       {errors["overlay-panel-opacity"]}
                     </p>
-                  </div>
-                  <div className="form__field form__field--full">
+                  </Field>
+                  <Field className="form__field--full">
                     <label
                       htmlFor="overlay-panel-image-file"
                       data-i18n="obs.panelImage"
@@ -1055,7 +1051,7 @@ export function Inspector({
                             : undefined
                         }
                       />
-                      <button
+                      <Button
                         id="overlay-panel-image-clear"
                         className="button-secondary button-secondary--small"
                         type="button"
@@ -1064,7 +1060,7 @@ export function Inspector({
                         onClick={() => change("overlay-panel-image", "")}
                       >
                         {t("obs.clearImage")}
-                      </button>
+                      </Button>
                       <p
                         id="overlay-panel-image-error"
                         className="field-error"
@@ -1079,7 +1075,7 @@ export function Inspector({
                       className="panel-image-options"
                       hidden={!values["overlay-panel-image"]}
                     >
-                      <div className="form__field form__field--full">
+                      <Field className="form__field--full">
                         <label
                           id="overlay-panel-image-fit-label"
                           data-i18n="obs.panelImageFit"
@@ -1294,8 +1290,8 @@ export function Inspector({
                             </span>
                           </button>
                         </div>
-                      </div>
-                      <div className="form__field">
+                      </Field>
+                      <Field>
                         <label
                           htmlFor="overlay-panel-image-scope"
                           data-i18n="obs.panelImageScope"
@@ -1329,7 +1325,7 @@ export function Inspector({
                             {t("obs.panelImageScopeColumn")}
                           </option>
                         </select>
-                      </div>
+                      </Field>
                       <p
                         className="field-hint"
                         data-i18n="obs.panelImageOptionsHint"
@@ -1337,8 +1333,8 @@ export function Inspector({
                         {t("obs.panelImageOptionsHint")}
                       </p>
                     </div>
-                  </div>
-                  <div className="form__field">
+                  </Field>
+                  <Field>
                     <label
                       htmlFor="overlay-border-color"
                       data-i18n="obs.borderColor"
@@ -1355,8 +1351,8 @@ export function Inspector({
                       }
                       aria-invalid={!!errors["overlay-border-color"]}
                     />
-                  </div>
-                  <div className="form__field">
+                  </Field>
+                  <Field>
                     <label
                       htmlFor="overlay-border-width"
                       data-i18n="obs.borderWidth"
@@ -1377,8 +1373,8 @@ export function Inspector({
                       }
                       aria-invalid={!!errors["overlay-border-width"]}
                     />
-                  </div>
-                  <div className="form__field">
+                  </Field>
+                  <Field>
                     <label
                       htmlFor="overlay-border-radius"
                       data-i18n="obs.borderRadius"
@@ -1399,9 +1395,9 @@ export function Inspector({
                       }
                       aria-invalid={!!errors["overlay-border-radius"]}
                     />
-                  </div>
-                  <div className="form__field form__field--full">
-                    <button
+                  </Field>
+                  <Field className="form__field--full">
+                    <Button
                       className="button-secondary button-secondary--small"
                       type="button"
                       data-overlay-reset-group="surface"
@@ -1411,8 +1407,8 @@ export function Inspector({
                       onClick={() => reset("surface")}
                     >
                       {t("obs.resetGroup")}
-                    </button>
-                  </div>
+                    </Button>
+                  </Field>
                 </div>
               </details>
               <div
@@ -1427,7 +1423,7 @@ export function Inspector({
                   {t("obs.queueGroup")}
                 </h3>
                 <div className="form form--compact">
-                  <div className="form__field">
+                  <Field>
                     <label
                       htmlFor="overlay-max-messages"
                       data-i18n="obs.maxMessages"
@@ -1455,8 +1451,8 @@ export function Inspector({
                     >
                       {errors["overlay-max-messages"]}
                     </p>
-                  </div>
-                  <div className="form__field">
+                  </Field>
+                  <Field>
                     <label
                       htmlFor="overlay-message-ttl"
                       data-i18n="obs.messageTtl"
@@ -1487,7 +1483,7 @@ export function Inspector({
                     >
                       {errors["overlay-message-ttl"]}
                     </p>
-                  </div>
+                  </Field>
                 </div>
               </div>
             </div>

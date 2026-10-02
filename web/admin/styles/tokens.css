@@ -56,8 +56,14 @@
 
   /* Density */
   --control-min-height: 38px;
-  --control-min-height-compact: 30px;
-  --touch-target-min: 40px;
+  --control-min-height-compact: var(--control-min-height);
+  --touch-target-min: var(--control-min-height);
+  --control-font-size: var(--primitive-font-size-md);
+  --control-padding-inline: var(--primitive-space-5);
+  --field-font-size: var(--primitive-font-size-lg);
+  --heading-panel-size: var(--primitive-font-size-lg);
+  --heading-section-size: var(--primitive-font-size-md);
+  --section-gap: var(--primitive-space-5);
   --touch-target-narrow: 44px;
   --sidebar-width-expanded: 196px;
   --sidebar-width-collapsed: 64px;

@@ -15,8 +15,8 @@
 .panel__header h3 {
   margin: 0;
   color: var(--text);
-  font-size: 13px;
-  letter-spacing: 1px;
+  font-size: var(--heading-section-size);
+  letter-spacing: 0.7px;
   text-transform: uppercase;
 }
 
@@ -79,59 +79,27 @@
   margin: 0 0 12px;
 }
 
-.form__field label {
+.form__field label:not(.btn-physical),
+.form__label,
+.progression-form > label,
+.progression-card label[for],
+.form-section__body > label {
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--heading-section-size);
   font-weight: 700;
   letter-spacing: 0.7px;
   text-transform: uppercase;
 }
 
-.form__field input[type="color"] {
-  width: 100%;
-  height: 42px;
-  min-height: 42px;
-  max-height: 42px;
-  padding: 4px 6px;
-  border: 1px solid var(--border);
-  border-top-color: #555;
-  border-left-color: #555;
-  border-radius: 2px;
-  background: #111;
-  box-sizing: border-box;
-  cursor: pointer;
-}
-
-.form__field input[type="text"],
-.form__field input[type="number"],
-.form__field input[type="password"],
-.form__field select {
-  width: 100%;
-  min-height: 42px;
-  max-height: 42px;
-  padding: 7px 9px;
-  border: 1px solid var(--border);
-  border-top-color: #555;
-  border-left-color: #555;
-  border-radius: 2px;
-  background: #111;
-  color: var(--text);
-  box-sizing: border-box;
-}
-
+.form__field input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]),
+.form__field select,
 .form__field textarea {
   width: 100%;
-  min-height: 110px;
-  padding: 7px 9px;
-  border: 1px solid var(--border);
-  border-top-color: #555;
-  border-left-color: #555;
-  border-radius: 2px;
-  background: #111;
-  color: var(--text);
-  box-sizing: border-box;
-  resize: vertical;
-  line-height: 1.4;
+}
+
+.form__field input[type="color"] {
+  height: var(--control-min-height);
+  cursor: pointer;
 }
 
 .form__field input[aria-invalid="true"],
@@ -158,7 +126,7 @@
 }
 
 .provider-list__title {
-  font-size: 12px;
+  font-size: var(--heading-section-size);
   font-weight: 700;
   letter-spacing: 0.6px;
   text-transform: uppercase;
@@ -184,19 +152,13 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 42px;
+  min-height: var(--control-min-height);
   cursor: pointer;
-}
-
-.checkbox input {
-  width: 17px;
-  height: 17px;
-  accent-color: var(--focus);
 }
 
 .checkbox span {
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--heading-section-size);
   font-weight: 700;
   letter-spacing: 0.7px;
   text-transform: uppercase;
@@ -209,22 +171,6 @@
   line-height: 1.45;
 }
 
-.field-hint,
-.field-error {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.field-hint {
-  color: var(--subtle);
-  padding-top: 2px;
-}
-
-.field-error {
-  color: #ffb8bd;
-}
-
 .volume-control {
   display: flex;
   align-items: center;
@@ -233,7 +179,7 @@
 
 .volume-control input[type="range"] {
   flex: 1;
-  min-height: 42px;
+  min-height: var(--control-min-height);
   accent-color: var(--amber);
 }
 
@@ -272,7 +218,7 @@
 .overlay-group summary {
   cursor: pointer;
   padding: 10px 12px;
-  font-size: 12px;
+  font-size: var(--heading-section-size);
   font-weight: 700;
   letter-spacing: 0.7px;
   text-transform: uppercase;
@@ -370,18 +316,6 @@
   height: 24px;
 }
 
-.icon-btn {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-}
-
-.icon-btn__icon {
-  display: block;
-  width: 16px;
-  height: 16px;
-}
-
 .overlay-appearance-panel .form__field--full > .button-secondary,
 .overlay-settings-panel .form__field--full > .button-secondary {
   display: flex;
@@ -391,4 +325,38 @@
   white-space: normal;
   text-align: center;
   overflow-wrap: anywhere;
+}
+
+/* Sections separate meaningful groups, not individual controls. */
+.form-section {
+  min-width: 0;
+  margin: 0;
+  padding: var(--section-gap);
+  border: 1px solid var(--border);
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface);
+}
+
+.form-section__title {
+  padding-inline: var(--primitive-space-2);
+  color: var(--text);
+  font-size: var(--heading-section-size);
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.form-section__body {
+  display: grid;
+  gap: var(--section-gap);
+  min-width: 0;
+}
+
+.form__field > label:has(input[type="checkbox"]),
+.form-section__body > label:has(input[type="checkbox"]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitive-space-3);
+  min-height: var(--control-min-height);
 }

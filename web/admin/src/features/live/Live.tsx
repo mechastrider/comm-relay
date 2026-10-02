@@ -1,3 +1,4 @@
+import { Button, IconButton } from "../../components/Button";
 import { useRef, useState } from "react";
 import { useLocale } from "../../app/locale";
 import { useRuntime } from "../../app/runtime";
@@ -138,9 +139,9 @@ export function Live() {
                 >
                   {t(config ? "shell.settingsSaved" : "shell.loadingSettings")}
                 </span>
-                <button
+                <Button
                   id="live-recap-button"
-                  className="btn-physical btn-small has-tooltip"
+                  className="btn-small has-tooltip"
                   type="button"
                   onClick={() => setRecap(true)}
                 >
@@ -148,7 +149,7 @@ export function Live() {
                   <span className="ui-tooltip" role="tooltip">
                     {t("recap.openHint")}
                   </span>
-                </button>
+                </Button>
                 <NewStream
                   onStarted={() => {
                     setRefreshVersion((value) => value + 1);
@@ -156,10 +157,10 @@ export function Live() {
                   }}
                 />
                 {tab !== "contracts" && (
-                  <button
+                  <IconButton
                     id={`refresh-${tab}`}
                     type="button"
-                    className="icon-btn icon-btn--compact has-tooltip"
+                    className="icon-btn--compact has-tooltip"
                     aria-label={t("shell.refresh")}
                     onClick={refresh}
                   >
@@ -181,7 +182,7 @@ export function Live() {
                     <span className="ui-tooltip" role="tooltip">
                       {t("shell.refresh")}
                     </span>
-                  </button>
+                  </IconButton>
                 )}
               </div>
             </div>

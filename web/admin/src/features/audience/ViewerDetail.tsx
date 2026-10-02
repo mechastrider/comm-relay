@@ -1,3 +1,5 @@
+import { Field } from "../../components/Field";
+import { Button, IconButton } from "../../components/Button";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useLocale } from "../../app/locale";
 import { useRuntime } from "../../app/runtime";
@@ -133,7 +135,7 @@ export function ViewerDetail({
         <h2 id={prefix + "-heading"} className={shell + "__title"}>
           {t("audience.detailHeading")}
         </h2>
-        <button
+        <IconButton
           id={prefix + "-close"}
           className={"icon-btn has-tooltip " + shell + "__close"}
           aria-label={t("audience.closeDetail")}
@@ -144,7 +146,7 @@ export function ViewerDetail({
           <span className="ui-tooltip" role="tooltip">
             {t("audience.closeDetail")}
           </span>
-        </button>
+        </IconButton>
       </header>
       <div
         ref={body}
@@ -164,12 +166,12 @@ export function ViewerDetail({
             role="alert"
           >
             <p>{detail.error.message}</p>
-            <button
-              className="btn-physical btn-small"
+            <Button
+              className="btn-small"
               onClick={() => void refresh()}
             >
               {t("state.retry")}
-            </button>
+            </Button>
           </div>
         )}
         {viewer && (
@@ -180,7 +182,7 @@ export function ViewerDetail({
                 name={viewer.display_name}
                 className="audience-detail__portrait"
               />
-              <div className="form__field audience-detail__portrait-field">
+              <Field className="audience-detail__portrait-field">
                 <label htmlFor="viewer-portrait-file">
                   {t("viewers.portraitUpload")}
                 </label>
@@ -210,16 +212,16 @@ export function ViewerDetail({
                 )}
                 <div className="audience-detail__portrait-actions">
                   {viewer.custom_avatar && (
-                    <button
-                      className="btn-physical btn-small"
+                    <Button
+                      className="btn-small"
                       disabled={busy}
                       onClick={() => void portrait()}
                     >
                       {t("viewers.portraitClear")}
-                    </button>
+                    </Button>
                   )}
                 </div>
-              </div>
+              </Field>
             </div>
             <h3 className="audience-detail__title">
               {viewer.display_name || t("viewers.unnamed")}
@@ -325,9 +327,9 @@ export function ViewerDetail({
                   {nameError}
                 </p>
               )}
-              <button className="btn-physical btn-small" disabled={busy}>
+              <Button className="btn-small" disabled={busy}>
                 {t("viewers.saveName")}
-              </button>
+              </Button>
             </form>
             {(
               [
@@ -352,9 +354,9 @@ export function ViewerDetail({
                 },
               ] as const
             ).map((field) => (
-              <div
+              <Field
                 key={field.key}
-                className="form__field audience-detail__hide-field"
+                className="audience-detail__hide-field"
               >
                 <label htmlFor={"viewer-" + field.dom}>
                   <input
@@ -383,7 +385,7 @@ export function ViewerDetail({
                 {"hint" in field && (
                   <p className="field-hint">{t(field.hint)}</p>
                 )}
-              </div>
+              </Field>
             ))}
             <h4 className="audience-detail__subheading">
               {t("viewers.identities")}
@@ -408,7 +410,7 @@ export function ViewerDetail({
                 <li>{t("viewers.noIdentities")}</li>
               )}
             </ul>
-            <div className="form__field audience-detail__merge">
+            <Field className="audience-detail__merge">
               <label htmlFor="viewer-merge-target">
                 {t("viewers.mergeInto")}
               </label>
@@ -427,8 +429,8 @@ export function ViewerDetail({
                     </option>
                   ))}
               </select>
-              <button
-                className="btn-physical btn-small"
+              <Button
+                className="btn-small"
                 disabled={busy}
                 onClick={() => {
                   if (!target) {
@@ -438,8 +440,8 @@ export function ViewerDetail({
                 }}
               >
                 {t("viewers.mergeConfirm")}
-              </button>
-            </div>
+              </Button>
+            </Field>
             {error && (
               <p className="notice notice--error" role="alert">
                 {error}
@@ -484,17 +486,15 @@ export function ViewerDetail({
         title={t("audience.mergeTitle")}
         actions={
           <>
-            <button
+            <Button
               id="viewer-merge-prompt-cancel"
-              className="btn-physical"
               disabled={busy}
               onClick={() => setMergeOpen(false)}
             >
               {t("dialog.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button variant="danger"
               id="viewer-merge-prompt-confirm"
-              className="btn-physical btn-danger"
               disabled={busy}
               onClick={() =>
                 void mutate(
@@ -512,7 +512,7 @@ export function ViewerDetail({
               }
             >
               {t("viewers.mergeConfirm")}
-            </button>
+            </Button>
           </>
         }
       >

@@ -75,13 +75,6 @@
   min-width: 0;
 }
 
-.preset-island .icon-btn {
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px;
-}
-
 .preset-island__group {
   display: flex;
   align-items: center;
@@ -97,8 +90,8 @@
   width: 132px;
   min-width: 96px;
   max-width: 160px;
-  min-height: 30px;
-  max-height: 30px;
+  min-height: var(--control-min-height);
+  max-height: none;
   padding: 4px 7px;
   border: 1px solid var(--border);
   border-radius: 2px;
@@ -135,7 +128,7 @@
 .preset-island__icon-actions {
   display: flex;
   flex: 0 0 auto;
-  gap: 4px;
+  gap: var(--primitive-space-2);
 }
 
 .preset-island__divider {
@@ -152,8 +145,8 @@
   width: auto;
   min-width: 0;
   max-width: none;
-  min-height: 30px;
-  max-height: 30px;
+  min-height: var(--control-min-height);
+  max-height: none;
   padding: 4px 7px;
   border: 1px solid var(--border);
   border-radius: 2px;
@@ -192,7 +185,7 @@
 .preset-island__status {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--primitive-space-2);
   flex: 0 0 auto;
   max-width: 88px;
   padding: 3px 6px;
@@ -254,7 +247,7 @@
 
 .surface-tab {
   position: relative;
-  min-height: 34px;
+  min-height: var(--control-min-height);
   padding: 6px 14px;
   border: 0;
   border-bottom: 2px solid transparent;
@@ -439,7 +432,7 @@
 
 .preview-control {
   display: grid;
-  gap: 4px;
+  gap: var(--primitive-space-2);
   min-width: 0;
 }
 
@@ -454,16 +447,6 @@
 .preview-control select,
 .preview-control input {
   width: 100%;
-  min-height: 34px;
-  max-height: 34px;
-  padding: 5px 7px;
-  border: 1px solid var(--border);
-  border-top-color: #555;
-  border-left-color: #555;
-  border-radius: 2px;
-  background: #111;
-  color: var(--text);
-  box-sizing: border-box;
 }
 
 .preview-control--size {
@@ -476,9 +459,9 @@
 
 .preview-dimension-mark {
   align-self: end;
-  min-height: 34px;
+  min-height: var(--control-min-height);
   color: var(--muted);
-  line-height: 34px;
+  line-height: var(--control-min-height);
 }
 
 .overlay-preview-stage {
