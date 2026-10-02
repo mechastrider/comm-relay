@@ -382,3 +382,15 @@ textarea:focus-visible {
   font-size: var(--heading-panel-size);
   font-weight: 700;
 }
+
+/* Right-aligned toolbar hints must open inward, including on narrow screens. */
+:is(.live-toolbar-actions, .audience-toolbar__actions) .has-tooltip > .ui-tooltip {
+  left: auto;
+  right: 0;
+  transform: translateY(-4px);
+}
+
+:is(.live-toolbar-actions, .audience-toolbar__actions) .has-tooltip:hover > .ui-tooltip,
+:is(.live-toolbar-actions, .audience-toolbar__actions) .has-tooltip:focus-visible > .ui-tooltip {
+  transform: translateY(0);
+}

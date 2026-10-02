@@ -4,7 +4,12 @@ for (const locale of ["ru-RU", "en-GB"]) {
   for (const viewport of [{ width: 1440, height: 900 }, { width: 1100, height: 700 }, { width: 390, height: 844 }]) {
     test(`shared action geometry and form sections ${locale} ${viewport.width}`, async ({ page, runtime }) => {
       await page.setViewportSize(viewport);
-      await page.evaluate((value) => localStorage.setItem("commRelay.uiLocale", value), locale);
+      await page.route("**/api/config", async route => {
+        const response = await route.fetch();
+        const config = await response.json();
+        config.admin.time_locale = locale;
+        await route.fulfill({ response, json: config });
+      });
       await page.reload();
       const minimum = viewport.width <= 620 ? 44 : 38;
       for (const route of ["audience/greetings", "audience/awards", "audience/commands", "audience/progression", "audience", "settings/application", "settings/diagnostics", "studio", "live", "about"]) {
@@ -81,3 +86,46 @@ test("greeting field errors retain their border and focus after grouping", async
   }
   await expect(page.locator("#greeting-template")).toBeFocused();
 });
+
+for (const locale of ["ru-RU", "en-GB"]) {
+  for (const width of [1440, 1100, 390]) {
+    test(`action tooltips keep whole words ${locale} at ${width}px`, async ({ page, runtime }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.route("**/api/config", async route => {
+        const response = await route.fetch();
+        const config = await response.json();
+        config.admin.time_locale = locale;
+        await route.fulfill({ response, json: config });
+      });
+      await page.reload();
+      for (const id of ["live-recap-button", "new-stream-button", "audience-new-stream-button"]) {
+        if (id.startsWith("audience-")) await page.goto(runtime.url + "/#/audience");
+        await expect(page.locator("html")).toHaveAttribute("lang", locale === "ru-RU" ? "ru" : "en");
+        const button = page.locator("#" + id);
+        await button.hover();
+        const tooltip = button.getByRole("tooltip");
+        await expect(tooltip).toBeVisible();
+        const measurement = await tooltip.evaluate(el => {
+          const box = el.getBoundingClientRect();
+          const node = el.firstChild!;
+          const splitWords = [...(node.textContent || "").matchAll(/[\p{L}\p{N}]+/gu)].filter(match => {
+            const range = document.createRange();
+            range.setStart(node, match.index!);
+            range.setEnd(node, match.index! + match[0].length);
+            return range.getClientRects().length > 1;
+          }).map(match => match[0]);
+          return { width: box.width, left: box.left, right: box.right, splitWords };
+        });
+        expect(measurement.splitWords, id).toEqual([]);
+        expect(measurement.width).toBeGreaterThan(150);
+        expect(measurement.left).toBeGreaterThanOrEqual(0);
+        expect(measurement.right).toBeLessThanOrEqual(width);
+        await page.mouse.move(0, 0);
+        await button.focus();
+        await page.keyboard.press("Tab");
+        await page.keyboard.press("Shift+Tab");
+        await expect(tooltip).toBeVisible();
+      }
+    });
+  }
+}

@@ -22,3 +22,9 @@ Admin fields, labels, hints, panel headings, chips, checkbox and range controls 
 #### Scenario: Loading and error recovery
 - **WHEN** a form is busy, invalid, offline or retried
 - **THEN** existing disabled, error, retry and focus behavior remains available with shared visual styling
+
+#### Scenario: Read action tooltips
+- **WHEN** an operator hovers or keyboard-focuses an action such as Recap or New stream
+- **THEN** its tooltip uses content-based width bounded by the viewport rather than shrinking to the button width
+- **AND** ordinary words wrap at natural boundaries; only overlong unbroken tokens may split to prevent overflow
+- **AND** Live and Audience toolbar tooltips remain inside the viewport at desktop and narrow widths

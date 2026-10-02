@@ -23,3 +23,6 @@ Larger catalog actions may wrap in narrow headers; use flex wrapping and indepen
 Static frontend rebuild; no data migration. Revert this change to roll back. Sync canonical specs after verification; no release publication.
 ## Open Questions
 None blocking. Native packaged smoke must be reported separately if unavailable.
+
+## Follow-up: tooltip readability
+Ordinary action `overflow-wrap: anywhere` was inherited by auto-width absolute tooltips, reducing their intrinsic width to individual letters. Shared tooltips now use max-content width capped at min(280px, 70vw), normal word breaking, no automatic hyphenation and emergency break-word wrapping for oversized tokens. Live and Audience toolbar hints align to the action's right edge at all viewport widths. Regression checks measure each rendered word, viewport bounds and hover/keyboard visibility in both configured languages.

@@ -22,3 +22,8 @@
 - [x] R.1 Fresh diff review; resolve material issues and rerun affected checks.
 ## Gate: distribution-readiness
 - [x] D.1 Verify frontend/embed readiness without signing/publishing; record native smoke limitation.
+
+## Follow-up: readable tooltips
+- [x] T.1 Prevent shared hints from shrinking to narrow action widths or inheriting arbitrary word breaks.
+- [x] T.2 Keep Live and Audience toolbar hints within the viewport and document the contract.
+- [x] T.3 Verify word rectangles, bounds and hover/focus in RU/EN across three widths and browsers; rerun affected checks.

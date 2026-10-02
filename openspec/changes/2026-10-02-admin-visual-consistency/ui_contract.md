@@ -18,3 +18,6 @@ RU/EN section labels, dark theme, wide 1440x900, short 1100x700, narrow 390x844 
 Rearranging workflows, editing OBS theme output, new native integration.
 ## Not applicable
 Tray, native menus and global shortcuts unchanged.
+
+## Tooltip readability follow-up
+Shared action hints size to their content within the viewport cap. Ordinary words remain whole; only unbroken tokens wider than the hint can split. Live and Audience toolbar hints remain within viewport bounds, including right-edge desktop and narrow actions. Hover and keyboard focus continue to expose the same localized hint.
