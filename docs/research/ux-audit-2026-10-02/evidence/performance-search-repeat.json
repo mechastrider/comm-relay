@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-02T15:54:05.828Z",
+  "method": "Date.now before fill; wait API matching query then DOM 999 rows; no screenshot or fixed sleep inside timer; includes input dispatch, 250ms debounce, backend and DOM",
+  "results": [
+    {
+      "run": 1,
+      "responseMs": 1649,
+      "rowsVisibleMs": 2349,
+      "status": 200,
+      "rows": 999
+    },
+    {
+      "run": 2,
+      "responseMs": 2016,
+      "rowsVisibleMs": 2029,
+      "status": 200,
+      "rows": 999
+    },
+    {
+      "run": 3,
+      "responseMs": 2622,
+      "rowsVisibleMs": 2644,
+      "status": 200,
+      "rows": 999
+    }
+  ]
+}
