@@ -1,3 +1,4 @@
+import { IconButton } from "../../components/Button";
 import { ErrorDetail } from "../../components/ErrorDetail";
 import { useState } from "react";
 import { useRuntime } from "../../app/runtime";
@@ -72,9 +73,9 @@ export function DiagnosticsView() {
       <p className="field-hint">{t("settings.diagnosticsHint")}</p>
       <div className="panel-heading">
         <h3>{t("shell.runtime")}</h3>
-        <button
+        <IconButton
           type="button"
-          className="icon-btn icon-btn--compact has-tooltip"
+          className="icon-btn--compact has-tooltip"
           aria-label={t("shell.refresh")}
           onClick={() => {
             void refreshDiagnostics()
@@ -86,7 +87,7 @@ export function DiagnosticsView() {
           <span className="ui-tooltip" role="tooltip">
             {t("shell.refresh")}
           </span>
-        </button>
+        </IconButton>
       </div>
       {error && <p role="alert">{error}</p>}
       <dl className="overview-list settings-diagnostics__summary">

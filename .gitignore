@@ -54,3 +54,6 @@ comm-relay.db-shm
 /web/admin/dist/
 
 /package.json.md5
+
+# Local visual audit screenshots
+/docs/research/visual-audit-2026-10-02/evidence/*.png

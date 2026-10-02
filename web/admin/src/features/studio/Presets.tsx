@@ -1,3 +1,4 @@
+import { IconButton } from "../../components/Button";
 import { useLocale } from "../../app/locale";
 import type { Preset } from "./model";
 export function Presets({
@@ -61,9 +62,9 @@ export function Presets({
           data-i18n-aria-label="obs.presetActions"
           aria-label={t("obs.presetActions")}
         >
-          <button
+          <IconButton
             id="overlay-preset-add"
-            className="icon-btn has-tooltip"
+            className="has-tooltip"
             type="button"
             data-i18n-aria-label="obs.presetAdd"
             disabled={busy || presets.length >= 32}
@@ -87,10 +88,10 @@ export function Presets({
             >
               {t("obs.presetAdd")}
             </span>
-          </button>
-          <button
+          </IconButton>
+          <IconButton
             id="overlay-preset-rename"
-            className="icon-btn has-tooltip"
+            className="has-tooltip"
             type="button"
             data-i18n-aria-label="obs.presetRename"
             disabled={busy}
@@ -119,10 +120,10 @@ export function Presets({
             >
               {t("obs.presetRename")}
             </span>
-          </button>
-          <button
+          </IconButton>
+          <IconButton
             id="overlay-preset-duplicate"
-            className="icon-btn has-tooltip"
+            className="has-tooltip"
             type="button"
             data-i18n-aria-label="obs.presetDuplicate"
             disabled={busy || presets.length >= 32}
@@ -150,10 +151,10 @@ export function Presets({
             >
               {t("obs.presetDuplicate")}
             </span>
-          </button>
-          <button
+          </IconButton>
+          <IconButton variant="danger"
             id="overlay-preset-delete"
-            className="icon-btn btn-danger has-tooltip"
+            className="has-tooltip"
             type="button"
             data-i18n-aria-label="obs.presetDelete"
             disabled={busy || presets.length < 2}
@@ -181,7 +182,7 @@ export function Presets({
             >
               {t("obs.presetDelete")}
             </span>
-          </button>
+          </IconButton>
         </div>
         <div className="preset-island__divider" aria-hidden="true"></div>
         <div className="preset-island__group preset-island__group--url">
@@ -199,8 +200,8 @@ export function Presets({
             readOnly={true}
             value={url}
           />
-          <button
-            className="icon-btn has-tooltip"
+          <IconButton
+            className="has-tooltip"
             type="button"
             data-copy-obs-url="preset-island-url"
             data-copy-label="Overlay URL"
@@ -227,7 +228,7 @@ export function Presets({
             <span className="ui-tooltip" role="tooltip" data-i18n="obs.copyUrl">
               {t("obs.copyUrl")}
             </span>
-          </button>
+          </IconButton>
           <span
             id="preset-url-status"
             className="preset-island__status"

@@ -1,3 +1,4 @@
+import { Button, IconButton } from "../../components/Button";
 import { CopyButton } from "../../components/CopyButton";
 import type { RefObject, CSSProperties } from "react";
 import { useLocale } from "../../app/locale";
@@ -47,9 +48,9 @@ export function PreviewView({
           {t("obs.preview")}
         </h3>
         <div className="overlay-preview-chrome__main">
-          <button
+          <IconButton
             id="overlay-preview-replay"
-            className="icon-btn has-tooltip"
+            className="has-tooltip"
             type="button"
             data-i18n-aria-label="obs.replay"
             onClick={() => action("overlay-preview-replay")}
@@ -73,7 +74,7 @@ export function PreviewView({
             <span className="ui-tooltip" role="tooltip" data-i18n="obs.replay">
               {t("obs.replay")}
             </span>
-          </button>
+          </IconButton>
           <div
             className="studio-copy-obs-link-wrap"
             data-studio-essential-only=""
@@ -114,9 +115,9 @@ export function PreviewView({
             </div>
           </div>
           <div className="overlay-preview-overflow" data-studio-all-only="">
-            <button
+            <IconButton
               id="overlay-preview-overflow-toggle"
-              className="icon-btn has-tooltip"
+              className="has-tooltip"
               type="button"
               aria-controls="overlay-preview-overflow-panel"
               data-i18n-aria-label="studio.previewOverflow"
@@ -141,7 +142,7 @@ export function PreviewView({
               >
                 {t("studio.previewOverflow")}
               </span>
-            </button>
+            </IconButton>
             <div
               id="overlay-preview-overflow-panel"
               className="overlay-preview-overflow__panel"
@@ -346,16 +347,16 @@ export function PreviewView({
                 : "studio.previewLoading",
             )}
           </span>
-          <button
+          <Button
             id="overlay-preview-retry"
-            className="btn-physical btn-small"
+            className="btn-small"
             type="button"
             data-i18n="studio.retryPreview"
             onClick={() => action("overlay-preview-retry")}
             hidden={state !== "error"}
           >
             {t("studio.retryPreview")}
-          </button>
+          </Button>
         </div>
       </div>
       <p

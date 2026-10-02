@@ -1,5 +1,10 @@
 /** Russian UI strings for CommRelay admin and OBS dock. */
 export default {
+  "catalog.sectionCommand": "Команда",
+  "catalog.sectionAction": "Действие",
+  "catalog.sectionLimits": "Ограничения",
+  "catalog.sectionBasics": "Основное",
+
   "shell.runtime": "Состояние приложения",
   "shell.connectChatHint": "Подключите чат, чтобы сообщения появились здесь.",
   "shell.connectPlatform": "Подключить платформу",

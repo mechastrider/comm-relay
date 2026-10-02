@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import { useEffect } from "react";
 import { useLocale } from "../../app/locale";
 import { useLeaderboard } from "./leaderboard-store";
@@ -119,12 +120,12 @@ export function Leaderboard({
             className="notice notice--error live-region-error"
           >
             <p className="notice__body">{error.message}</p>
-            <button
-              className="state-retry btn-physical btn-small"
+            <Button
+              className="state-retry btn-small"
               onClick={() => void refresh()}
             >
               {t("state.retry")}
-            </button>
+            </Button>
           </div>
         )}
       </div>

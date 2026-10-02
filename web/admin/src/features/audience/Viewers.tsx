@@ -1,3 +1,5 @@
+import { Field } from "../../components/Field";
+import { Button, IconButton } from "../../components/Button";
 import { preferenceStorage } from "../../services/storage";
 import { useReportSaveStatus } from "../../app/save-status";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -141,7 +143,7 @@ export function Viewers() {
     <>
       <header className="audience-toolbar">
         <div className="audience-toolbar__controls">
-          <div className="audience-toolbar__search form__field">
+          <Field className="audience-toolbar__search">
             <label htmlFor="viewers-search">{t("viewers.searchLabel")}</label>
             <input
               id="viewers-search"
@@ -154,8 +156,8 @@ export function Viewers() {
                 setPage(0);
               }}
             />
-          </div>
-          <div className="audience-toolbar__filters form__field">
+          </Field>
+          <Field className="audience-toolbar__filters">
             <label htmlFor="audience-period">{t("audience.periodLabel")}</label>
             <select
               id="audience-period"
@@ -174,22 +176,22 @@ export function Viewers() {
                 </option>
               ))}
             </select>
-          </div>
+          </Field>
         </div>
         <div className="audience-toolbar__actions">
-          <button
+          <Button
             id="audience-open-leaderboard"
-            className="btn-physical btn-small"
+            className="btn-small"
             onClick={() => {
               setLiveTab("leaderboard");
               void navigate("/live");
             }}
           >
             {t("audience.openLeaderboard")}
-          </button>
-          <button
+          </Button>
+          <IconButton
             id="refresh-viewers"
-            className="icon-btn icon-btn--compact has-tooltip"
+            className="icon-btn--compact has-tooltip"
             aria-label={t("shell.refresh")}
             onClick={() => void refresh()}
           >
@@ -211,7 +213,7 @@ export function Viewers() {
             <span className="ui-tooltip" role="tooltip">
               {t("shell.refresh")}
             </span>
-          </button>
+          </IconButton>
           <NewStream
             id="audience-new-stream-button"
             onStarted={() => void refresh()}
@@ -368,15 +370,15 @@ export function Viewers() {
                     total: sorted.length,
                   })}
                 </p>
-                <button
-                  className="btn-physical btn-small"
+                <Button
+                  className="btn-small"
                   disabled={currentPage === 0 || directory.loading || busy}
                   onClick={() => goToPage(currentPage - 1)}
                 >
                   {t("audience.previousPage")}
-                </button>
-                <button
-                  className="btn-physical btn-small"
+                </Button>
+                <Button
+                  className="btn-small"
                   disabled={
                     (currentPage + 1) * PAGE_SIZE >= sorted.length ||
                     directory.loading ||
@@ -385,7 +387,7 @@ export function Viewers() {
                   onClick={() => goToPage(currentPage + 1)}
                 >
                   {t("audience.nextPage")}
-                </button>
+                </Button>
               </nav>
             )}
             {!sorted.length && !directory.error && (
@@ -406,13 +408,13 @@ export function Viewers() {
                   )}
                 </p>
                 {query && (
-                  <button
+                  <Button
                     id="audience-clear-search"
-                    className="btn-physical btn-small"
+                    className="btn-small"
                     onClick={() => setSearch("")}
                   >
                     {t("audience.clearSearch")}
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
@@ -423,12 +425,12 @@ export function Viewers() {
                 role="alert"
               >
                 <p className="notice__body">{directory.error.message}</p>
-                <button
-                  className="state-retry btn-physical btn-small"
+                <Button
+                  className="state-retry btn-small"
                   onClick={() => void refresh()}
                 >
                   {t("state.retry")}
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -462,16 +464,14 @@ export function Viewers() {
         title={t("dialog.discardUnsavedTitle")}
         actions={
           <>
-            <button
+            <Button
               id="discard-changes-cancel"
-              className="btn-physical"
               onClick={cancel}
             >
               {t("dialog.keepEditing")}
-            </button>
-            <button
+            </Button>
+            <Button variant="danger"
               id="discard-changes-confirm"
-              className="btn-physical btn-danger"
               disabled={busy}
               onClick={() => {
                 setDirty(false);
@@ -486,7 +486,7 @@ export function Viewers() {
               }}
             >
               {t("dialog.discardChanges")}
-            </button>
+            </Button>
           </>
         }
       >

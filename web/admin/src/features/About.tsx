@@ -1,3 +1,4 @@
+import { Button } from "../components/Button";
 import { useState } from "react";
 import { useLocale } from "../app/locale";
 import { post } from "../services/api";
@@ -77,9 +78,9 @@ export function About({ version }: { version: string }) {
               {t("about.supportBody")}
             </p>
             <div className="about-actions">
-              <button
+              <Button variant="primary"
                 id="about-telegram"
-                className="btn-physical btn-start about-link-btn"
+                className="about-link-btn"
                 type="button"
                 onClick={() =>
                   void openSupport("https://t.me/mechastrider_apps/2")
@@ -89,10 +90,10 @@ export function About({ version }: { version: string }) {
                 <small data-i18n="about.telegramSmall">
                   {t("about.telegramSmall")}
                 </small>
-              </button>
-              <button
+              </Button>
+              <Button
                 id="about-github"
-                className="btn-physical about-link-btn"
+                className="about-link-btn"
                 type="button"
                 onClick={() =>
                   void openSupport("https://github.com/mechastrider/comm-relay")
@@ -102,7 +103,7 @@ export function About({ version }: { version: string }) {
                 <small data-i18n="about.githubSmall">
                   {t("about.githubSmall")}
                 </small>
-              </button>
+              </Button>
             </div>
           </section>
           <p className="about-license" data-i18n="about.license">
@@ -110,15 +111,14 @@ export function About({ version }: { version: string }) {
           </p>
         </section>
         <div className="about-workspace__actions">
-          <button
+          <Button
             id="about-copy-version"
-            className="btn-physical"
             type="button"
             data-i18n="about.copyVersion"
             onClick={() => void copyVersion()}
           >
             {t("about.copyVersion")}
-          </button>
+          </Button>
           <span
             id="about-feedback"
             className="about-feedback"

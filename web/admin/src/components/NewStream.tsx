@@ -1,3 +1,4 @@
+import { Button } from "./Button";
 import { useRef, useState } from "react";
 import { useLocale } from "../app/locale";
 import { post } from "../services/api";
@@ -34,9 +35,9 @@ export function NewStream({
   };
   return (
     <>
-      <button
+      <Button
         id={id}
-        className="btn-physical btn-small has-tooltip"
+        className="btn-small has-tooltip"
         type="button"
         onClick={() => {
           setError("");
@@ -47,7 +48,7 @@ export function NewStream({
         <span className="ui-tooltip" role="tooltip">
           {t("stream.newStreamHint")}
         </span>
-      </button>
+      </Button>
       {done && (
         <span className="visually-hidden" role="status">
           {t("stream.newStreamDone")}
@@ -63,22 +64,20 @@ export function NewStream({
         title={t("stream.newStreamTitle")}
         actions={
           <>
-            <button
+            <Button
               id="new-stream-prompt-cancel"
-              className="btn-physical"
               disabled={busy}
               onClick={() => setOpen(false)}
             >
               {t("dialog.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button variant="primary"
               id="new-stream-prompt-confirm"
-              className="btn-physical btn-start"
               disabled={busy}
               onClick={() => void start()}
             >
               {t("stream.newStreamConfirm")}
-            </button>
+            </Button>
           </>
         }
       >

@@ -1,3 +1,4 @@
+import { IconButton } from "./Button";
 import { useLocale } from "../app/locale";
 export function CopyButton({
   id,
@@ -12,7 +13,7 @@ export function CopyButton({
 }) {
   const { t } = useLocale();
   return (
-    <button
+    <IconButton
       id={id}
       type="button"
       className={"icon-btn has-tooltip icon-btn--copy " + className}
@@ -37,6 +38,6 @@ export function CopyButton({
       <span className="ui-tooltip" role="tooltip">
         {t("obs.copyUrl")}
       </span>
-    </button>
+    </IconButton>
   );
 }

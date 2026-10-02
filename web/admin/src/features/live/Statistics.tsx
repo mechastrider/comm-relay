@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "../../app/locale";
 import { useWire } from "../../app/runtime";
@@ -146,12 +147,12 @@ export function Statistics({
           className="notice notice--error live-region-error"
         >
           <p className="notice__body">{error}</p>
-          <button
-            className="state-retry btn-physical btn-small"
+          <Button
+            className="state-retry btn-small"
             onClick={() => void refresh()}
           >
             {t("state.retry")}
-          </button>
+          </Button>
         </div>
       )}
     </div>

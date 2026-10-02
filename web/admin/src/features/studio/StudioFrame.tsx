@@ -1,3 +1,4 @@
+import { Button, IconButton } from "../../components/Button";
 import type { ReactNode, KeyboardEvent } from "react";
 import { useLocale } from "../../app/locale";
 import type { Surface } from "./model";
@@ -98,9 +99,9 @@ export function StudioFrame({
           >
             {t("studio.publishBeforeUse")}
           </span>
-          <button
+          <Button
             id="studio-use-on-stream"
-            className="btn-physical btn-secondary studio-use-on-stream"
+            className="btn-secondary studio-use-on-stream"
             type="button"
             aria-describedby="studio-use-on-stream-hint"
             data-i18n="studio.useOnStream"
@@ -109,10 +110,9 @@ export function StudioFrame({
             onClick={() => action("activate")}
           >
             {t("studio.useOnStream")}
-          </button>
-          <button
+          </Button>
+          <Button variant="primary"
             id="studio-publish"
-            className="btn-physical btn-start"
             type="button"
             data-i18n="studio.publish"
             disabled={busy || !dirty}
@@ -120,7 +120,7 @@ export function StudioFrame({
             aria-busy={busy}
           >
             {t("studio.publish")}
-          </button>
+          </Button>
         </div>
       </header>
       <div className="studio-layout">
@@ -136,9 +136,9 @@ export function StudioFrame({
             >
               {t("obs.sourcesOnStream")}
             </p>
-            <button
+            <IconButton
               id="studio-surface-collapse"
-              className="icon-btn has-tooltip studio-surface-collapse"
+              className="has-tooltip studio-surface-collapse"
               type="button"
               aria-controls="studio-surface-list"
               data-i18n-aria-label="studio.collapseSurfaces"
@@ -167,7 +167,7 @@ export function StudioFrame({
               >
                 {t("studio.collapseSurfaces")}
               </span>
-            </button>
+            </IconButton>
           </div>
           <nav
             id="studio-surface-list"
@@ -349,9 +349,9 @@ export function StudioFrame({
               </li>
             </ol>
           </aside>
-          <button
+          <Button
             id="studio-add-to-obs-open"
-            className="btn-physical btn-secondary studio-add-to-obs-open has-tooltip"
+            className="btn-secondary studio-add-to-obs-open has-tooltip"
             type="button"
             data-i18n-aria-label="studio.obsSetup"
             onClick={() => action("setup")}
@@ -381,7 +381,7 @@ export function StudioFrame({
             >
               {t("studio.obsSetup")}
             </span>
-          </button>
+          </Button>
         </div>
         <div
           id="studio-preview-mount"
@@ -421,9 +421,9 @@ export function StudioFrame({
         >
           {t("studio.publishBeforeUse")}
         </span>
-        <button
+        <Button
           id="studio-compact-use-on-stream"
-          className="btn-physical btn-secondary studio-use-on-stream"
+          className="btn-secondary studio-use-on-stream"
           type="button"
           aria-describedby="studio-compact-use-on-stream-hint"
           data-i18n="studio.useOnStream"
@@ -432,10 +432,9 @@ export function StudioFrame({
           onClick={() => action("activate")}
         >
           {t("studio.useOnStream")}
-        </button>
-        <button
+        </Button>
+        <Button variant="primary"
           id="studio-compact-publish"
-          className="btn-physical btn-start"
           type="button"
           data-i18n="studio.publish"
           disabled={busy || !dirty}
@@ -443,7 +442,7 @@ export function StudioFrame({
           aria-busy={busy}
         >
           {t("studio.publish")}
-        </button>
+        </Button>
       </div>
     </section>
   );

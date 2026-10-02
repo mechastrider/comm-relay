@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import { useReportSaveStatus } from "../../app/save-status";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBlocker } from "react-router";
@@ -113,13 +114,13 @@ export function Greetings() {
           {resource.error && (
             <div id="greetings-list-error" className="notice notice--error">
               <p className="notice__body">{resource.error.message}</p>
-              <button
+              <Button
                 id="greetings-retry"
-                className="btn-physical btn-small"
+                className="btn-small"
                 onClick={() => void resource.refresh()}
               >
                 {t("state.retry")}
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -151,16 +152,14 @@ export function Greetings() {
         title={t("dialog.discardUnsavedTitle")}
         actions={
           <>
-            <button
+            <Button
               id="discard-changes-cancel"
-              className="btn-physical"
               onClick={cancel}
             >
               {t("dialog.keepEditing")}
-            </button>
-            <button
+            </Button>
+            <Button variant="danger"
               id="discard-changes-confirm"
-              className="btn-physical btn-danger"
               disabled={busy}
               onClick={() => {
                 setDirty(false);
@@ -172,7 +171,7 @@ export function Greetings() {
               }}
             >
               {t("dialog.discardChanges")}
-            </button>
+            </Button>
           </>
         }
       >
@@ -280,23 +279,23 @@ function GreetingEditor({
           {t("greetings.editorHeading")}
         </h2>
         <div className="audience-catalog-editor__actions">
-          <button
+          <Button
             id="greetings-test"
-            className="btn-physical btn-small"
+            className="btn-small"
             disabled={busy || media.uploading}
             onClick={() => void send(true)}
           >
             {t("greetings.test")}
-          </button>
-          <button
+          </Button>
+          <Button variant="primary"
             id="greetings-save"
-            className="btn-physical btn-small"
+            className="btn-small"
             type="submit"
             form="greetings-form"
             disabled={busy || media.uploading}
           >
             {t("catalog.save")}
-          </button>
+          </Button>
         </div>
       </header>
       <GreetingFields

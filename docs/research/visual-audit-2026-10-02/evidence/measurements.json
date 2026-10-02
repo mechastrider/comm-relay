@@ -1,0 +1,1666 @@
+[
+  {
+    "route": "#/audience/greetings",
+    "headings": [
+      {
+        "text": "Аудитория",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Автоматические приветствия",
+        "size": "11px",
+        "weight": "600"
+      },
+      {
+        "text": "Настройка приветствия",
+        "size": "11px",
+        "weight": "600"
+      },
+      {
+        "text": "Поведение",
+        "size": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Текст",
+        "size": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Медиа",
+        "size": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Внешний вид",
+        "size": "16px",
+        "weight": "500"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Зрители",
+        "id": "audience-viewers-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Архив",
+        "id": "audience-archive-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Журнал",
+        "id": "audience-history-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Прогрессия",
+        "id": "audience-progression-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Команды",
+        "id": "audience-commands-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Приветствия",
+        "id": "audience-greetings-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Награды",
+        "id": "audience-awards-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Тест",
+        "id": "greetings-test",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сохранить",
+        "id": "greetings-save",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "{viewer}Отображаемое имя зрителя (основное или последнее известное).",
+        "id": "",
+        "cls": "catalog-template-chip has-tooltip",
+        "height": 24.6875,
+        "font": "13.6px"
+      },
+      {
+        "text": "{streamer}Имя стримера из Настройки → Данные. Пусто, если не задано.",
+        "id": "",
+        "cls": "catalog-template-chip has-tooltip",
+        "height": 24.6875,
+        "font": "13.6px"
+      },
+      {
+        "text": "{message}Текст цитаты награды или строка команды (например !gg). Пусто",
+        "id": "",
+        "cls": "catalog-template-chip has-tooltip",
+        "height": 24.6875,
+        "font": "13.6px"
+      },
+      {
+        "text": "Загрузить",
+        "id": "",
+        "cls": "btn-physical btn-small catalog-media-upload",
+        "height": 30,
+        "font": "12px"
+      },
+      {
+        "text": "Очистить",
+        "id": "greeting-image-clear",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Загрузить",
+        "id": "",
+        "cls": "btn-physical btn-small catalog-media-upload",
+        "height": 30,
+        "font": "12px"
+      },
+      {
+        "text": "Очистить",
+        "id": "greeting-sound-file-clear",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Прослушать",
+        "id": "greeting-sound-play",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Стоп",
+        "id": "greeting-sound-stop",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      }
+    ],
+    "fieldsets": [
+      {
+        "legend": "Поведение",
+        "border": "2px groove rgb(107, 107, 107)",
+        "padding": "5.6px 12px 10px"
+      },
+      {
+        "legend": "Текст",
+        "border": "2px groove rgb(107, 107, 107)",
+        "padding": "5.6px 12px 10px"
+      },
+      {
+        "legend": "Медиа",
+        "border": "2px groove rgb(107, 107, 107)",
+        "padding": "5.6px 12px 10px"
+      },
+      {
+        "legend": "Внешний вид",
+        "border": "0px none rgb(217, 217, 221)",
+        "padding": "0px"
+      }
+    ]
+  },
+  {
+    "route": "#/audience/commands",
+    "headings": [
+      {
+        "text": "Аудитория",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Чат-команды",
+        "size": "11px",
+        "weight": "600"
+      },
+      {
+        "text": "Редактирование команды",
+        "size": "11px",
+        "weight": "600"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Зрители",
+        "id": "audience-viewers-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Архив",
+        "id": "audience-archive-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Журнал",
+        "id": "audience-history-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Прогрессия",
+        "id": "audience-progression-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Команды",
+        "id": "audience-commands-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Приветствия",
+        "id": "audience-greetings-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Награды",
+        "id": "audience-awards-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Создать",
+        "id": "commands-create-button",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сохранить",
+        "id": "commands-save-button",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Удалить",
+        "id": "commands-delete-button",
+        "cls": "btn-physical btn-danger btn-small",
+        "height": 30,
+        "font": "11px"
+      }
+    ],
+    "fieldsets": [
+      {
+        "legend": "Макет",
+        "border": "0px none rgb(217, 217, 221)",
+        "padding": "0px"
+      }
+    ]
+  },
+  {
+    "route": "#/audience/awards",
+    "headings": [
+      {
+        "text": "Аудитория",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Типы наград",
+        "size": "11px",
+        "weight": "600"
+      },
+      {
+        "text": "Редактирование награды",
+        "size": "11px",
+        "weight": "600"
+      },
+      {
+        "text": "Макет",
+        "size": "16px",
+        "weight": "500"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Зрители",
+        "id": "audience-viewers-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Архив",
+        "id": "audience-archive-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Журнал",
+        "id": "audience-history-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Прогрессия",
+        "id": "audience-progression-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Команды",
+        "id": "audience-commands-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Приветствия",
+        "id": "audience-greetings-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Награды",
+        "id": "audience-awards-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Создать",
+        "id": "awards-create-button",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сохранить",
+        "id": "awards-save-button",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Удалить",
+        "id": "awards-delete-button",
+        "cls": "btn-physical btn-danger btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "{viewer}Отображаемое имя зрителя (основное или последнее известное).",
+        "id": "",
+        "cls": "catalog-template-chip has-tooltip",
+        "height": 24.6875,
+        "font": "13.6px"
+      },
+      {
+        "text": "{streamer}Имя стримера из Настройки → Данные. Пусто, если не задано.",
+        "id": "",
+        "cls": "catalog-template-chip has-tooltip",
+        "height": 24.6875,
+        "font": "13.6px"
+      },
+      {
+        "text": "{points}Очки за награду. В командах всегда подставляется 0.",
+        "id": "",
+        "cls": "catalog-template-chip has-tooltip",
+        "height": 24.6875,
+        "font": "13.6px"
+      },
+      {
+        "text": "{message}Текст цитаты награды или строка команды (например !gg). Пусто",
+        "id": "",
+        "cls": "catalog-template-chip has-tooltip",
+        "height": 24.6875,
+        "font": "13.6px"
+      },
+      {
+        "text": "Загрузить",
+        "id": "",
+        "cls": "btn-physical btn-small catalog-media-upload",
+        "height": 30,
+        "font": "12px"
+      },
+      {
+        "text": "Очистить",
+        "id": "award-image-clear",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Загрузить",
+        "id": "",
+        "cls": "btn-physical btn-small catalog-media-upload",
+        "height": 30,
+        "font": "12px"
+      },
+      {
+        "text": "Очистить",
+        "id": "award-sound-file-clear",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Прослушать",
+        "id": "award-sound-play",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Стоп",
+        "id": "award-sound-stop",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      }
+    ],
+    "fieldsets": [
+      {
+        "legend": "Макет",
+        "border": "0px none rgb(217, 217, 221)",
+        "padding": "0px"
+      }
+    ]
+  },
+  {
+    "route": "#/audience/progression",
+    "headings": [
+      {
+        "text": "Аудитория",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Уровни",
+        "size": "16px",
+        "weight": "700"
+      },
+      {
+        "text": "Достижения",
+        "size": "16px",
+        "weight": "700"
+      },
+      {
+        "text": "Баннеры прогрессии",
+        "size": "16px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Зрители",
+        "id": "audience-viewers-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Архив",
+        "id": "audience-archive-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Журнал",
+        "id": "audience-history-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Прогрессия",
+        "id": "audience-progression-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Команды",
+        "id": "audience-commands-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Приветствия",
+        "id": "audience-greetings-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Награды",
+        "id": "audience-awards-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Создать",
+        "id": "progression-level-new",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сохранить",
+        "id": "progression-submit-1",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Проверить",
+        "id": "progression-level-test",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Удалить",
+        "id": "progression-level-delete",
+        "cls": "btn-physical btn-danger btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Создать",
+        "id": "progression-achievement-new",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сохранить",
+        "id": "progression-submit-5",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Проверить",
+        "id": "progression-achievement-test",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Удалить",
+        "id": "progression-achievement-delete",
+        "cls": "btn-physical btn-danger btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сохранить",
+        "id": "progression-submit-8",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сверить историю",
+        "id": "progression-reconcile",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      }
+    ],
+    "fieldsets": []
+  },
+  {
+    "route": "#/audience",
+    "headings": [
+      {
+        "text": "Аудитория",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Каталог зрителей",
+        "size": "24px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Зрители",
+        "id": "audience-viewers-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Архив",
+        "id": "audience-archive-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Журнал",
+        "id": "audience-history-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Прогрессия",
+        "id": "audience-progression-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Команды",
+        "id": "audience-commands-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Приветствия",
+        "id": "audience-greetings-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Награды",
+        "id": "audience-awards-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Открыть лидерборд",
+        "id": "audience-open-leaderboard",
+        "cls": "btn-physical btn-small",
+        "height": 38,
+        "font": "11px"
+      },
+      {
+        "text": "Обновить",
+        "id": "refresh-viewers",
+        "cls": "icon-btn icon-btn--compact has-tooltip",
+        "height": 38,
+        "font": "16px"
+      },
+      {
+        "text": "Новый стримСбрасывает XP сессии у зрителей и лидерборд сессии. День и ",
+        "id": "audience-new-stream-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 38,
+        "font": "11px"
+      },
+      {
+        "text": "Зритель",
+        "id": "audience-sort-viewer",
+        "cls": "audience-sort-button",
+        "height": 38,
+        "font": "11px"
+      },
+      {
+        "text": "XP",
+        "id": "audience-sort-xp",
+        "cls": "audience-sort-button",
+        "height": 38,
+        "font": "11px"
+      },
+      {
+        "text": "Сообщения",
+        "id": "audience-sort-messages",
+        "cls": "audience-sort-button",
+        "height": 38,
+        "font": "11px"
+      },
+      {
+        "text": "Эфиры",
+        "id": "audience-sort-streams",
+        "cls": "audience-sort-button",
+        "height": 38,
+        "font": "11px"
+      }
+    ],
+    "fieldsets": []
+  },
+  {
+    "route": "#/audience/archive",
+    "headings": [
+      {
+        "text": "Аудитория",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Архив эфиров",
+        "size": "12px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Зрители",
+        "id": "audience-viewers-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Архив",
+        "id": "audience-archive-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Журнал",
+        "id": "audience-history-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Прогрессия",
+        "id": "audience-progression-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Команды",
+        "id": "audience-commands-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Приветствия",
+        "id": "audience-greetings-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Награды",
+        "id": "audience-awards-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "2 окт. 2026 г., 18:15Текущий0 зр. · 0 сообщ. · 0 XP",
+        "id": "",
+        "cls": "live-recap-history-row",
+        "height": 41.1875,
+        "font": "16px"
+      }
+    ],
+    "fieldsets": []
+  },
+  {
+    "route": "#/audience/history",
+    "headings": [
+      {
+        "text": "Аудитория",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "История наград",
+        "size": "12px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Зрители",
+        "id": "audience-viewers-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Архив",
+        "id": "audience-archive-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Журнал",
+        "id": "audience-history-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Прогрессия",
+        "id": "audience-progression-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Команды",
+        "id": "audience-commands-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Приветствия",
+        "id": "audience-greetings-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Награды",
+        "id": "audience-awards-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Показать",
+        "id": "apply-reward-history-viewer-filter",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сбросить",
+        "id": "clear-reward-history-viewer-filter",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Обновить",
+        "id": "refresh-reward-history",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      }
+    ],
+    "fieldsets": []
+  },
+  {
+    "route": "#/live",
+    "headings": [
+      {
+        "text": "Эфир",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Рабочая область «Эфир»",
+        "size": "24px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Сообщения",
+        "id": "live-messages-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Таблица лидеров",
+        "id": "live-leaderboard-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Статистика",
+        "id": "live-statistics-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Контракты",
+        "id": "live-contracts-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "ИтогиПосмотреть текущий стрим и показать его финальные итоги.",
+        "id": "live-recap-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 38,
+        "font": "11px"
+      },
+      {
+        "text": "Новый стримСбрасывает XP сессии у зрителей и лидерборд сессии. День и ",
+        "id": "new-stream-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 38,
+        "font": "11px"
+      },
+      {
+        "text": "Обновить",
+        "id": "refresh-messages",
+        "cls": "icon-btn icon-btn--compact has-tooltip",
+        "height": 38,
+        "font": "16px"
+      },
+      {
+        "text": "Подключить платформу",
+        "id": "",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      }
+    ],
+    "fieldsets": []
+  },
+  {
+    "route": "#/studio",
+    "headings": [
+      {
+        "text": "Студия",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Готово для OBS?",
+        "size": "11px",
+        "weight": "700"
+      },
+      {
+        "text": "Превью",
+        "size": "18.72px",
+        "weight": "700"
+      },
+      {
+        "text": "Общее оформление пресета",
+        "size": "11px",
+        "weight": "700"
+      },
+      {
+        "text": "Подключение к OBS",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Overlay на сцене",
+        "size": "18.72px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Основное",
+        "id": "studio-mode-essentials",
+        "cls": "studio-mode-switch__button",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Все настройки",
+        "id": "studio-mode-all",
+        "cls": "studio-mode-switch__button",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "Опубликовать",
+        "id": "studio-publish",
+        "cls": "btn-physical btn-start",
+        "height": 38,
+        "font": "16px"
+      },
+      {
+        "text": "Свернуть поверхности",
+        "id": "studio-surface-collapse",
+        "cls": "icon-btn has-tooltip studio-surface-collapse",
+        "height": 40,
+        "font": "16px"
+      },
+      {
+        "text": "Чат/overlayЧат",
+        "id": "studio-surface-chat",
+        "cls": "studio-surface-item obs-source-item has-tooltip",
+        "height": 57.125,
+        "font": "16px"
+      },
+      {
+        "text": "Лидерборд/overlay/leaderboardЛидерборд",
+        "id": "studio-surface-leaderboard",
+        "cls": "studio-surface-item obs-source-item has-tooltip",
+        "height": 57.125,
+        "font": "16px"
+      },
+      {
+        "text": "Баннеры/overlay/alertБаннеры",
+        "id": "studio-surface-alerts",
+        "cls": "studio-surface-item obs-source-item has-tooltip",
+        "height": 57.125,
+        "font": "16px"
+      },
+      {
+        "text": "Итоги/overlay/recapИтоги",
+        "id": "studio-surface-recap",
+        "cls": "studio-surface-item obs-source-item has-tooltip",
+        "height": 57.125,
+        "font": "16px"
+      },
+      {
+        "text": "Подключение к OBSПодключение к OBS",
+        "id": "studio-add-to-obs-open",
+        "cls": "btn-physical btn-secondary studio-add-to-obs-open has-tooltip",
+        "height": 52.375,
+        "font": "16px"
+      },
+      {
+        "text": "Повтор",
+        "id": "overlay-preview-replay",
+        "cls": "icon-btn has-tooltip",
+        "height": 40,
+        "font": "16px"
+      },
+      {
+        "text": "Копировать URL",
+        "id": "preview-action-1",
+        "cls": "icon-btn has-tooltip icon-btn--copy ",
+        "height": 40,
+        "font": "16px"
+      },
+      {
+        "text": "Новый пресет",
+        "id": "overlay-preset-add",
+        "cls": "icon-btn has-tooltip",
+        "height": 30,
+        "font": "16px"
+      },
+      {
+        "text": "Переименовать",
+        "id": "overlay-preset-rename",
+        "cls": "icon-btn has-tooltip",
+        "height": 30,
+        "font": "16px"
+      },
+      {
+        "text": "Дублировать",
+        "id": "overlay-preset-duplicate",
+        "cls": "icon-btn has-tooltip",
+        "height": 30,
+        "font": "16px"
+      },
+      {
+        "text": "Удалить",
+        "id": "overlay-preset-delete",
+        "cls": "icon-btn btn-danger has-tooltip",
+        "height": 30,
+        "font": "16px"
+      },
+      {
+        "text": "Стандартная",
+        "id": "",
+        "cls": "theme-card",
+        "height": 100.78125,
+        "font": "16px"
+      },
+      {
+        "text": "Только текст (без фона)",
+        "id": "",
+        "cls": "theme-card",
+        "height": 100.78125,
+        "font": "16px"
+      },
+      {
+        "text": "MW5 Mercs Cockpit panel",
+        "id": "",
+        "cls": "theme-card",
+        "height": 100.78125,
+        "font": "16px"
+      },
+      {
+        "text": "MW5 Mercs Cockpit popups",
+        "id": "",
+        "cls": "theme-card",
+        "height": 100.78125,
+        "font": "16px"
+      },
+      {
+        "text": "G-Rebels Cockpit popups",
+        "id": "",
+        "cls": "theme-card",
+        "height": 100.78125,
+        "font": "16px"
+      },
+      {
+        "text": "8 с",
+        "id": "studio-field-action-0",
+        "cls": "duration-chip",
+        "height": 27.1875,
+        "font": "11px"
+      },
+      {
+        "text": "20 с",
+        "id": "studio-field-action-1",
+        "cls": "duration-chip",
+        "height": 27.1875,
+        "font": "11px"
+      },
+      {
+        "text": "Пока не вытеснят",
+        "id": "studio-field-action-2",
+        "cls": "duration-chip",
+        "height": 27.1875,
+        "font": "11px"
+      },
+      {
+        "text": "Закрыть",
+        "id": "obs-action-0",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Чат/overlay",
+        "id": "obs-action-1",
+        "cls": "studio-add-to-obs-nav-item",
+        "height": 53.125,
+        "font": "16px"
+      },
+      {
+        "text": "Лидерборд/overlay/leaderboard",
+        "id": "obs-action-2",
+        "cls": "studio-add-to-obs-nav-item",
+        "height": 53.125,
+        "font": "16px"
+      },
+      {
+        "text": "Баннеры/overlay/alert",
+        "id": "obs-action-3",
+        "cls": "studio-add-to-obs-nav-item",
+        "height": 53.125,
+        "font": "16px"
+      },
+      {
+        "text": "Итоги/overlay/recap",
+        "id": "obs-action-4",
+        "cls": "studio-add-to-obs-nav-item",
+        "height": 53.125,
+        "font": "16px"
+      },
+      {
+        "text": "Журнал сообщений/dock/messages",
+        "id": "obs-action-5",
+        "cls": "studio-add-to-obs-nav-item",
+        "height": 53.125,
+        "font": "16px"
+      },
+      {
+        "text": "Копировать URL",
+        "id": "obs-action-6",
+        "cls": "icon-btn has-tooltip icon-btn--copy ",
+        "height": 40,
+        "font": "16px"
+      },
+      {
+        "text": "Копировать URL",
+        "id": "obs-action-7",
+        "cls": "icon-btn has-tooltip icon-btn--copy ",
+        "height": 40,
+        "font": "16px"
+      },
+      {
+        "text": "Позже",
+        "id": "obs-action-15",
+        "cls": "btn-physical",
+        "height": 38,
+        "font": "16px"
+      },
+      {
+        "text": "Готово",
+        "id": "obs-action-16",
+        "cls": "btn-physical btn-start",
+        "height": 38,
+        "font": "16px"
+      }
+    ],
+    "fieldsets": []
+  },
+  {
+    "route": "#/settings/platforms",
+    "headings": [
+      {
+        "text": "Настройки",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Платформы",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Twitch",
+        "size": "13px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Сбросить",
+        "id": "",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сохранить",
+        "id": "",
+        "cls": "btn-physical btn-start btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Twitch",
+        "id": "connections-twitch-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "YouTube",
+        "id": "connections-youtube-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "VK Live",
+        "id": "connections-vk-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      }
+    ],
+    "fieldsets": []
+  },
+  {
+    "route": "#/settings/general",
+    "headings": [
+      {
+        "text": "Настройки",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Платформы",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Twitch",
+        "size": "13px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Сбросить",
+        "id": "",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сохранить",
+        "id": "",
+        "cls": "btn-physical btn-start btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Twitch",
+        "id": "connections-twitch-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "YouTube",
+        "id": "connections-youtube-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      },
+      {
+        "text": "VK Live",
+        "id": "connections-vk-tab",
+        "cls": "dialog-tab",
+        "height": 36,
+        "font": "11px"
+      }
+    ],
+    "fieldsets": []
+  },
+  {
+    "route": "#/settings/data",
+    "headings": [
+      {
+        "text": "Настройки",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Данные",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Статистика зрителей",
+        "size": "13px",
+        "weight": "700"
+      },
+      {
+        "text": "Видимость лидерборда",
+        "size": "13px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Сбросить",
+        "id": "",
+        "cls": "btn-physical btn-small",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Сохранить",
+        "id": "",
+        "cls": "btn-physical btn-start btn-small",
+        "height": 30,
+        "font": "11px"
+      }
+    ],
+    "fieldsets": []
+  },
+  {
+    "route": "#/settings/diagnostics",
+    "headings": [
+      {
+        "text": "Настройки",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Диагностика",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Состояние приложения",
+        "size": "18.72px",
+        "weight": "700"
+      },
+      {
+        "text": "YouTube OAuth",
+        "size": "18.72px",
+        "weight": "700"
+      },
+      {
+        "text": "Rich chat",
+        "size": "18.72px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "↻Обновить",
+        "id": "",
+        "cls": "icon-btn icon-btn--compact has-tooltip",
+        "height": 40,
+        "font": "16px"
+      }
+    ],
+    "fieldsets": []
+  },
+  {
+    "route": "#/about",
+    "headings": [
+      {
+        "text": "О программе",
+        "size": "14px",
+        "weight": "700"
+      },
+      {
+        "text": "Поддержка",
+        "size": "11.52px",
+        "weight": "700"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "ДиагностикаПерейти к аптайму, клиентам WebSocket и счётчикам сообщений",
+        "id": "shell-diagnostics-button",
+        "cls": "btn-physical btn-small has-tooltip",
+        "height": 30,
+        "font": "11px"
+      },
+      {
+        "text": "Свернуть менюСвернуть меню",
+        "id": "sidebar-toggle",
+        "cls": "shell-nav__toggle has-tooltip",
+        "height": 44,
+        "font": "10px"
+      },
+      {
+        "text": "Telegram-чатПОДДЕРЖКА",
+        "id": "about-telegram",
+        "cls": "btn-physical btn-start about-link-btn",
+        "height": 40,
+        "font": "16px"
+      },
+      {
+        "text": "GitHubИСХОДНИКИ · ISSUES",
+        "id": "about-github",
+        "cls": "btn-physical about-link-btn",
+        "height": 40,
+        "font": "16px"
+      },
+      {
+        "text": "Копировать версию",
+        "id": "about-copy-version",
+        "cls": "btn-physical",
+        "height": 38,
+        "font": "16px"
+      }
+    ],
+    "fieldsets": []
+  }
+]

@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import type { ReactNode } from "react";
 import { useLocale } from "../../app/locale";
 export function ProgressionView({
@@ -53,16 +54,16 @@ export function ProgressionView({
           <h2 id="progression-levels-heading" data-i18n="progression.levels">
             {t("progression.levels")}
           </h2>
-          <button
+          <Button
             id="progression-level-new"
-            className="btn-physical btn-small"
+            className="btn-small"
             type="button"
             data-i18n="catalog.create"
             disabled={busy}
             onClick={() => action("progression-level-new")}
           >
             {t("catalog.create")}
-          </button>
+          </Button>
         </header>
         <ul
           id="progression-level-list"
@@ -244,35 +245,35 @@ export function ProgressionView({
             {t("progression.quotaHint")}
           </p>
           <div className="progression-form__actions">
-            <button
-              className="btn-physical btn-small"
+            <Button variant="primary"
+              className="btn-small"
               type="submit"
               data-i18n="catalog.save"
               id="progression-submit-1"
               disabled={busy}
             >
               {t("catalog.save")}
-            </button>
-            <button
+            </Button>
+            <Button
               id="progression-level-test"
-              className="btn-physical btn-small"
+              className="btn-small"
               type="button"
               data-i18n="catalog.test"
               disabled={busy}
               onClick={() => action("progression-level-test")}
             >
               {t("catalog.test")}
-            </button>
-            <button
+            </Button>
+            <Button variant="danger"
               id="progression-level-delete"
-              className="btn-physical btn-danger btn-small"
+              className="btn-small"
               type="button"
               data-i18n="catalog.delete"
               disabled={busy || baseline || !values["progression-level-id"]}
               onClick={() => action("progression-level-delete")}
             >
               {t("catalog.delete")}
-            </button>
+            </Button>
           </div>
         </form>
       </section>
@@ -287,16 +288,16 @@ export function ProgressionView({
           >
             {t("progression.achievements")}
           </h2>
-          <button
+          <Button
             id="progression-achievement-new"
-            className="btn-physical btn-small"
+            className="btn-small"
             type="button"
             data-i18n="catalog.create"
             disabled={busy}
             onClick={() => action("progression-achievement-new")}
           >
             {t("catalog.create")}
-          </button>
+          </Button>
         </header>
         <label
           htmlFor="progression-achievement-search"
@@ -563,13 +564,13 @@ export function ProgressionView({
             {subjectError && (
               <div role="alert" className="notice notice--error">
                 <p>{t("progression.subjectLoadFailed")}</p>
-                <button
+                <Button
                   type="button"
-                  className="btn-physical btn-small"
+                  className="btn-small"
                   onClick={retrySubjects}
                 >
                   {t("state.retry")}
-                </button>
+                </Button>
               </div>
             )}
             <p
@@ -723,35 +724,35 @@ export function ProgressionView({
             </label>
           </div>
           <div className="progression-form__actions">
-            <button
-              className="btn-physical btn-small"
+            <Button variant="primary"
+              className="btn-small"
               type="submit"
               data-i18n="catalog.save"
               id="progression-submit-5"
               disabled={busy}
             >
               {t("catalog.save")}
-            </button>
-            <button
+            </Button>
+            <Button
               id="progression-achievement-test"
-              className="btn-physical btn-small"
+              className="btn-small"
               type="button"
               data-i18n="catalog.test"
               disabled={busy}
               onClick={() => action("progression-achievement-test")}
             >
               {t("catalog.test")}
-            </button>
-            <button
+            </Button>
+            <Button variant="danger"
               id="progression-achievement-delete"
-              className="btn-physical btn-danger btn-small"
+              className="btn-small"
               type="button"
               data-i18n="catalog.delete"
               disabled={busy || !values["progression-achievement-id"]}
               onClick={() => action("progression-achievement-delete")}
             >
               {t("catalog.delete")}
-            </button>
+            </Button>
           </div>
         </form>
       </section>
@@ -939,32 +940,32 @@ export function ProgressionView({
             {errors["progression-alert-duration"]}
           </p>
           <div className="progression-form__actions">
-            <button
-              className="btn-physical btn-small"
+            <Button variant="primary"
+              className="btn-small"
               type="submit"
               data-i18n="catalog.save"
               id="progression-submit-8"
               disabled={busy}
             >
               {t("catalog.save")}
-            </button>
-            <button
+            </Button>
+            <Button
               id="progression-reconcile"
-              className="btn-physical btn-small"
+              className="btn-small"
               type="button"
               data-i18n="progression.reconcile"
               disabled={busy}
               onClick={() => action("progression-reconcile")}
             >
               {t("progression.reconcile")}
-            </button>
+            </Button>
           </div>
           <p id="progression-status" className="field-hint" aria-live="polite">
             {status}
           </p>
-          <button
+          <Button
             id="progression-retry"
-            className="btn-physical btn-small"
+            className="btn-small"
             type="button"
             data-i18n="state.retry"
             disabled={busy}
@@ -972,7 +973,7 @@ export function ProgressionView({
             hidden={!failed}
           >
             {t("state.retry")}
-          </button>
+          </Button>
         </form>
       </section>
     </div>

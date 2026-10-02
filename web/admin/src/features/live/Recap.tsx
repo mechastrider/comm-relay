@@ -1,3 +1,4 @@
+import { Button, IconButton } from "../../components/Button";
 import { useEffect, useRef, useState } from "react";
 import { useBlocker } from "react-router";
 import { useLocale } from "../../app/locale";
@@ -244,9 +245,9 @@ export function Recap({ onClose }: { onClose: () => void }) {
         <h2 id="live-recap-heading" tabIndex={-1}>
           {t("recap.title")}
         </h2>
-        <button
+        <IconButton
           id="live-recap-close"
-          className="icon-btn has-tooltip"
+          className="has-tooltip"
           disabled={showing}
           onClick={close}
           aria-label={t("dialog.close")}
@@ -255,7 +256,7 @@ export function Recap({ onClose }: { onClose: () => void }) {
           <span className="ui-tooltip" role="tooltip">
             {t("dialog.close")}
           </span>
-        </button>
+        </IconButton>
       </header>
       <div
         className="live-recap-dialog__tabs"
@@ -345,13 +346,13 @@ export function Recap({ onClose }: { onClose: () => void }) {
                 ))}
               </div>
               {cursor && (
-                <button
-                  className="btn-physical btn-small"
+                <Button
+                  className="btn-small"
                   disabled={busy}
                   onClick={() => void loadHistory(cursor)}
                 >
                   {t("recap.loadMore")}
-                </button>
+                </Button>
               )}
             </>
           )
@@ -394,19 +395,19 @@ export function Recap({ onClose }: { onClose: () => void }) {
       </div>
       <footer className="live-recap-dialog__footer">
         {selected && (
-          <button
+          <Button
             id="live-recap-back"
-            className="btn-physical btn-small"
+            className="btn-small"
             onClick={() => setSelected(null)}
           >
             {t("recap.back")}
-          </button>
+          </Button>
         )}
         <span className="live-recap-dialog__spacer" />
         {(current.error || detail.error || historyError) && (
-          <button
+          <Button
             id="live-recap-retry"
-            className="btn-physical btn-small"
+            className="btn-small"
             disabled={!!action}
             onClick={() => {
               setError("");
@@ -417,43 +418,42 @@ export function Recap({ onClose }: { onClose: () => void }) {
             }}
           >
             {t("state.retry")}
-          </button>
+          </Button>
         )}
         {confirmation ? (
           <>
-            <button
+            <Button
               id="live-recap-cancel"
-              className="btn-physical btn-small"
+              className="btn-small"
               disabled={showing}
               onClick={() => setConfirmation(false)}
             >
               {t("dialog.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button variant="primary"
               id="live-recap-confirm"
-              className="btn-physical btn-start"
               disabled={busy || !session}
               onClick={() => void mutate("show")}
             >
               {t("recap.confirmShow")}
-            </button>
+            </Button>
           </>
         ) : (
           view === "current" && (
             <>
               {current.data?.visible && (
-                <button
+                <Button
                   id="live-recap-hide"
-                  className="btn-physical btn-small"
+                  className="btn-small"
                   disabled={busy}
                   onClick={() => void mutate("hide")}
                 >
                   {t("recap.hide")}
-                </button>
+                </Button>
               )}
-              <button
+              <Button
                 id="live-recap-download"
-                className="btn-physical btn-small"
+                className="btn-small"
                 disabled={busy || !canDownload}
                 aria-disabled={busy || !canDownload}
                 title={
@@ -464,11 +464,10 @@ export function Recap({ onClose }: { onClose: () => void }) {
                 onClick={() => void download()}
               >
                 {t("recap.downloadImage")}
-              </button>
+              </Button>
               {window === "session" ? (
-                <button
+                <Button
                   id="live-recap-show"
-                  className="btn-physical"
                   disabled={busy || !session}
                   onClick={() => {
                     if (current.data?.snapshot) void mutate("show");
@@ -476,16 +475,15 @@ export function Recap({ onClose }: { onClose: () => void }) {
                   }}
                 >
                   {t(current.data?.snapshot ? "recap.showAgain" : "recap.show")}
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
                   id="live-recap-show-all"
-                  className="btn-physical"
                   disabled={busy || !session}
                   onClick={() => void mutate("show-all")}
                 >
                   {t("recap.showAllTime")}
-                </button>
+                </Button>
               )}
             </>
           )

@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "../../app/locale";
 import { usePages } from "../../services/pages";
@@ -71,9 +72,9 @@ export function Archive() {
         </h2>
         <div className="audience-archive__actions">
           {selected && (
-            <button
+            <Button
               id="audience-archive-back"
-              className="btn-physical btn-small"
+              className="btn-small"
               disabled={busy}
               onClick={() => {
                 const id = selected;
@@ -92,22 +93,22 @@ export function Archive() {
               }}
             >
               {t("recap.back")}
-            </button>
+            </Button>
           )}
           {detail.data?.snapshot && (
-            <button
+            <Button
               id="audience-archive-download"
-              className="btn-physical btn-small"
+              className="btn-small"
               disabled={busy}
               onClick={() => void download()}
             >
               {t("recap.downloadImage")}
-            </button>
+            </Button>
           )}
           {(detail.error || sessions.error) && (
-            <button
+            <Button
               id="audience-archive-retry"
-              className="btn-physical btn-small"
+              className="btn-small"
               disabled={busy}
               onClick={() => {
                 if (selected) void detail.refresh();
@@ -115,7 +116,7 @@ export function Archive() {
               }}
             >
               {t("state.retry")}
-            </button>
+            </Button>
           )}
         </div>
       </header>
@@ -153,13 +154,13 @@ export function Archive() {
               ))}
             </div>
             {sessions.next && (
-              <button
-                className="btn-physical btn-small"
+              <Button
+                className="btn-small"
                 disabled={busy}
                 onClick={() => void sessions.more()}
               >
                 {t("recap.loadMore")}
-              </button>
+              </Button>
             )}
           </>
         )}

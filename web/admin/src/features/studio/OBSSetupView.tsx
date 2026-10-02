@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import { CopyButton } from "../../components/CopyButton";
 import { useLocale } from "../../app/locale";
 import { TranslatedText } from "../../components/TranslatedText";
@@ -38,8 +39,8 @@ export function OBSSetupView({
             {t("studio.addToObs")}
           </h2>
         </div>
-        <button
-          className="btn-physical btn-small"
+        <Button
+          className="btn-small"
           type="button"
           data-studio-add-to-obs-action="close"
           data-i18n="dialog.close"
@@ -49,7 +50,7 @@ export function OBSSetupView({
           aria-label={t("studio.addToObsClose")}
         >
           {t("dialog.close")}
-        </button>
+        </Button>
       </div>
       <div className="studio-add-to-obs-body">
         <nav
@@ -586,8 +587,7 @@ export function OBSSetupView({
         </div>
       </div>
       <div className="dialog-actions">
-        <button
-          className="btn-physical"
+        <Button
           type="button"
           data-studio-add-to-obs-action="later"
           data-i18n="studio.addToObsLater"
@@ -595,9 +595,8 @@ export function OBSSetupView({
           onClick={() => finish("skipped")}
         >
           {t("studio.addToObsLater")}
-        </button>
-        <button
-          className="btn-physical btn-start"
+        </Button>
+        <Button variant="primary"
           type="button"
           data-studio-add-to-obs-action="done"
           data-i18n="studio.addToObsDone"
@@ -605,7 +604,7 @@ export function OBSSetupView({
           onClick={() => finish("completed")}
         >
           {t("studio.addToObsDone")}
-        </button>
+        </Button>
       </div>
     </div>
   );

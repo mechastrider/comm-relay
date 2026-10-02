@@ -1,5 +1,10 @@
 /** English UI strings for CommRelay admin and OBS dock. */
 export default {
+  "catalog.sectionCommand": "Command",
+  "catalog.sectionAction": "Action",
+  "catalog.sectionLimits": "Limits",
+  "catalog.sectionBasics": "Basics",
+
   "shell.runtime": "Application status",
   "shell.connectChatHint": "Connect a chat platform to see messages here.",
   "shell.connectPlatform": "Connect a platform",
