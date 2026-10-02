@@ -1,0 +1,18 @@
+# NOTICE — vendored skill "jezweb-ux-audit"
+
+This skill is vendored from an external source. It is not affiliated with,
+endorsed by, or sponsored by the upstream project or its trademark holders.
+
+- Source:   jezweb/claude-skills/plugins/dev-tools/skills/ux-audit
+- Upstream: https://github.com/jezweb/claude-skills.git
+- Ref:      ee91a87a5c5edccd0910780dcd00aa28cec13a46
+- License:  MIT
+
+The catalog hash covers the pristine upstream SKILL.md, supporting directories,
+and LICENSE using agentmem HashPath (sorted paths and bytes, NUL-delimited).
+NOTICE and the documented integration adaptations below are excluded.
+
+Hub integration adaptations:
+- Frontmatter name: ux-audit -> jezweb-ux-audit (hub ID collision).
+
+Do not edit vendored skill content in place; re-vendor from upstream instead.

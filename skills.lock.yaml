@@ -2,7 +2,7 @@ version: 4
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 9de6fe9b278bf04a2327002c2de222b40499cd37
+    commit: 31e84a57004c2394e4359d90861751b7327b81cc
 preset: desktop-app
 include:
     - theme: backend/go
@@ -36,12 +36,14 @@ selected_packages:
     - database-migrations
     - design
     - design-system
+    - form-field-help
     - go-library-release
     - golang-errors
     - golang-logging
     - golang-tests
     - golang-validation
     - improve
+    - jezweb-ux-audit
     - mcp-tool-input-schema
     - openspec-apply-change
     - openspec-archive-change
@@ -56,6 +58,7 @@ selected_packages:
     - structural-code-review
     - ui-styling
     - ui-ux-pro-max
+    - ux-audit
     - ux-form-practices
     - web-constrained-layout
     - web-static-frontend
@@ -171,6 +174,16 @@ packages:
               src: .
               dest: .agents/skills/design-system
               installed_hash: sha256:6b6848e27394d51319aa26b6339a7e6aa3e9dd6c9c3c6d1dc6d7d7b1583715a8
+    form-field-help:
+        hub_path: frontend/ux/form-field-help
+        upstream_hash: sha256:9e8ef6f57164fc4451a8826a867bd7c5e1c16fccf05bf9e372a5b1cb8850dc79
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/form-field-help
+              installed_hash: sha256:9e8ef6f57164fc4451a8826a867bd7c5e1c16fccf05bf9e372a5b1cb8850dc79
     go-library-release:
         hub_path: backend/go/go-library-release
         upstream_hash: sha256:05b0dd95ba3d2005755ea7d3fa7b46ab1fff2e5b2cd11121f36fe02a7f07cc68
@@ -231,6 +244,16 @@ packages:
               src: .
               dest: .agents/skills/improve
               installed_hash: sha256:20fe2dad0e22ab6409aece8a1222408ecbd81ac80279110016573ef5bdddc9fc
+    jezweb-ux-audit:
+        hub_path: frontend/ux/jezweb-ux-audit
+        upstream_hash: sha256:0eefcbeed6583d6fb1684eaa8ee1d088fdf5f1bb14191b45240f1af5654bb819
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/jezweb-ux-audit
+              installed_hash: sha256:0eefcbeed6583d6fb1684eaa8ee1d088fdf5f1bb14191b45240f1af5654bb819
     mcp-tool-input-schema:
         hub_path: integration/mcp-tool-input-schema
         upstream_hash: sha256:557f6ec7f118bd436d12a443bde3be17aa0201209ff1140630e53c4824d43c3f
@@ -377,6 +400,16 @@ packages:
               src: .
               dest: .agents/skills/ui-ux-pro-max
               installed_hash: sha256:845bd0a1875a683db344ca2f3bc44c7859c79553e92bed06996ebd6ea5e40c67
+    ux-audit:
+        hub_path: frontend/ux/ux-audit
+        upstream_hash: sha256:dc18a1c0b47996dd1c9901f9259c88298636d164036b08b117a03707e1239950
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/ux-audit
+              installed_hash: sha256:dc18a1c0b47996dd1c9901f9259c88298636d164036b08b117a03707e1239950
     ux-form-practices:
         hub_path: frontend/ux/ux-form-practices
         upstream_hash: sha256:d272129c6d0fcebb416696df9cbe5753573982ccf65c65e9c7ad89280fc31ce3
