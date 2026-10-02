@@ -1,6 +1,6 @@
 # Live reload for comm-relay-server (backend + embedded API).
 # Run: task web:dev  (uses var/data/config.json; seed with task data:sync)
-# Open http://127.0.0.1:17878 for admin with CSS/JS/HTML live reload (proxies :17877).
+# Open http://127.0.0.1:17878 for React admin with Vite HMR (API/OBS routes proxy :17877).
 
 root = "."
 tmp_dir = "tmp"

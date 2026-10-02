@@ -7,20 +7,29 @@ This document covers local development, desktop builds, and the release workflow
 ## Requirements
 
 - **Go 1.27.1+** — pinned in [`go.mod`](../go.mod).
-- **Node.js 22+** — used for static UI checks and live reload.
+- **Node.js 24+** — required to build the React admin and run frontend checks; installed applications do not need Node.
 - [Task](https://taskfile.dev/) — recommended for the complete development loop.
 - [Wails v2](https://wails.io/) — required only for desktop builds.
 
 Admin, OBS dock, and overlay static assets are embedded in the binary. During local development they can be overridden with files from `web/`.
 
+The admin lives in `web/admin/src/` (React, TypeScript, hash router). `npm run build` creates `web/admin/dist/`; **run it before direct Go builds**. Only compiled assets are served and embedded. Disk mode (`-web ./web`) also serves the compiled admin from `dist/`, so rebuild after edits. OBS overlays and docks remain static HTML/CSS/JS. Wails, Task and CI build the frontend automatically.
+
+Playwright starts an isolated Go server with temporary config/SQLite for each test, without using personal data. Chromium on Linux checks original-admin visual baselines; Firefox/WebKit check behavior. For disk mode: `COMM_RELAY_E2E_DISK=1 npm run test:e2e`. Report: `playwright-report/index.html`.
+
 ## Main checks
 
 ```bash
+npm ci
+npm run typecheck
+npm run lint
+npm test
+npm run build
 go mod download
 go build ./...
 go test ./... -race
-npm ci
-npm run lint
+npx playwright install --with-deps chromium firefox webkit
+npm run test:e2e
 ```
 
 Install and run the same Go linter used in CI:
@@ -39,7 +48,7 @@ task tools:install
 task web:dev
 ```
 
-`task web:dev` runs the Go server through Air and reloads files from `web/`; the interface is available at `http://127.0.0.1:17878`. Development data is stored in `var/data/`. To copy the desktop installation data (`config.json`, the database, and `overlay-assets`) again, run:
+`task web:dev` first builds the admin, then runs the Go server through Air and Vite with React Fast Refresh; the interface is available at `http://127.0.0.1:17878`. Development data is stored in `var/data/`. To copy the desktop installation data (`config.json`, the database, and `overlay-assets`) again, run:
 
 ```bash
 task data:sync
@@ -74,7 +83,7 @@ Build a headless binary:
 Install the Wails CLI:
 
 ```bash
-go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
 ```
 
 Build from the repository root:

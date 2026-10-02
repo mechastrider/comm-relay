@@ -27,7 +27,7 @@ func resolveStaticRoots(webRoot string) (staticRoots, error) {
 		return staticRootsFromDisk(webRoot)
 	}
 
-	admin, err := fs.Sub(webstatic.FS, "admin")
+	admin, err := fs.Sub(webstatic.FS, "admin/dist")
 	if err != nil {
 		return staticRoots{}, errors.Errorf("embedded admin assets: %w", err)
 	}
@@ -60,9 +60,9 @@ func resolveStaticRoots(webRoot string) (staticRoots, error) {
 }
 
 func staticRootsFromDisk(webRoot string) (staticRoots, error) {
-	adminDir := filepath.Join(webRoot, "admin")
+	adminDir := filepath.Join(webRoot, "admin", "dist")
 	if _, err := os.Stat(filepath.Join(adminDir, "index.html")); err != nil {
-		return staticRoots{}, err
+		return staticRoots{}, errors.Errorf("compiled admin is missing; run npm ci && npm run build from the repository root: %w", err)
 	}
 
 	dockDir := filepath.Join(webRoot, "dock")

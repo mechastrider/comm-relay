@@ -46,3 +46,11 @@ build-errors.log
 comm-relay.db
 comm-relay.db-wal
 comm-relay.db-shm
+
+# Browser regression artifacts
+/playwright-report/
+/test-results/
+
+/web/admin/dist/
+
+/package.json.md5

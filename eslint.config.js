@@ -1,5 +1,7 @@
 import js from "@eslint/js";
 import globals from "globals";
+import tseslint from "typescript-eslint";
+import reactHooks from "eslint-plugin-react-hooks";
 
 const forbidNativeBrowserDialogs = {
   "no-restricted-globals": [
@@ -38,9 +40,22 @@ const forbidAdHocBlobDownload = {
 
 export default [
   {
-    ignores: ["node_modules/**", "cmd/**"],
+    ignores: ["node_modules/**", "cmd/**", "web/admin/dist/**", "playwright-report/**", "test-results/**"],
   },
   js.configs.recommended,
+  ...tseslint.configs.recommended.map(config => ({ ...config, files: ["web/admin/src/**/*.{ts,tsx}", "web/e2e/**/*.ts"] })),
+  {
+    files: ["web/admin/src/**/*.{ts,tsx}", "web/e2e/**/*.ts"],
+    languageOptions: { globals: { ...globals.browser, ...globals.node } },
+    plugins: { "react-hooks": reactHooks },
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    },
+  },
+  {
+    files: ["web/admin/src/**/*.{ts,tsx}"],
+    rules: { ...forbidNativeBrowserDialogs, ...forbidAdHocBlobDownload, "react-hooks/rules-of-hooks": "error", "react-hooks/exhaustive-deps": "error" },
+  },
   {
     files: ["web/**/*.js"],
     languageOptions: {

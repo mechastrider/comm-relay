@@ -15,6 +15,35 @@ function desktopSaveAPI() {
   return api;
 }
 
+// A MessageChannel keeps responses private to the requesting admin document.
+// The shell validates both the exact origin and the source frame before replying.
+function framedDesktopSaveAPI() {
+  if (window.parent === window || typeof MessageChannel !== "function") return Promise.resolve(null);
+  return new Promise(function (resolve) {
+    const channel = new MessageChannel();
+    const port = channel.port1;
+    const timer = setTimeout(function () { port.close(); resolve(null); }, 500);
+    port.onmessage = function (event) {
+      clearTimeout(timer);
+      if (!event.data?.available) { port.close(); resolve(null); return; }
+      resolve({ SavePNGFile: function (...args) {
+        return new Promise(function (saved, reject) {
+          port.onmessage = function (response) {
+            port.close();
+            if (response.data?.error) reject(new Error(response.data.error));
+            else saved(response.data?.path || "");
+          };
+          port.postMessage({ args });
+        });
+      } });
+    };
+    // Wails v2 uses these built-in origins. Never hand the PNG channel to an
+    // arbitrary website that happens to embed the loopback admin.
+    const shellOrigin = /Windows/.test(navigator.userAgent) ? "http://wails.localhost" : "wails://wails";
+    window.parent.postMessage({ type: "comm-relay:desktop-save" }, shellOrigin, [channel.port2]);
+  });
+}
+
 function blobToBase64(blob) {
   return new Promise(function (resolve, reject) {
     const reader = new FileReader();
@@ -53,7 +82,7 @@ function triggerAnchorDownload(blob, filename) {
  * @returns {Promise<{ cancelled: boolean, path?: string, browser?: boolean }>}
  */
 export async function saveBlobWithDialog(blob, filename, dialogTitle) {
-  const api = desktopSaveAPI();
+  const api = desktopSaveAPI() || await framedDesktopSaveAPI();
   if (api) {
     const pngBase64 = await blobToBase64(blob);
     const path = await api.SavePNGFile(dialogTitle || "", filename, pngBase64);

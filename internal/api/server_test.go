@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 	"net/http/httptest"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -24,25 +26,22 @@ func TestNewHandlerRoutes(t *testing.T) {
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
 		require.Equal(t, http.StatusOK, rec.Code)
 		require.Contains(t, rec.Body.String(), "CommRelay")
-		require.Contains(t, rec.Body.String(), "/favicon.svg")
-		require.Contains(t, rec.Body.String(), "app.js")
-		require.Contains(t, rec.Body.String(), `id="obs-setup-panel"`)
-		require.Contains(t, rec.Body.String(), `id="obs-overlay-url"`)
-		require.Contains(t, rec.Body.String(), `id="preset-island-url"`)
-		require.Contains(t, rec.Body.String(), `id="overlay-preset-prompt"`)
-		require.Contains(t, rec.Body.String(), `/dock/messages`)
-
-		jsRec := httptest.NewRecorder()
-		handler.ServeHTTP(jsRec, httptest.NewRequest(http.MethodGet, "/app.js", nil))
-		require.Equal(t, http.StatusOK, jsRec.Code)
-		require.Contains(t, jsRec.Body.String(), "initOBSSetup")
-		require.Contains(t, jsRec.Body.String(), "./js/obs-setup.js")
-
-		obsRec := httptest.NewRecorder()
-		handler.ServeHTTP(obsRec, httptest.NewRequest(http.MethodGet, "/js/obs-setup.js", nil))
-		require.Equal(t, http.StatusOK, obsRec.Code)
-		require.Contains(t, obsRec.Body.String(), "setOBSSection")
-		require.Contains(t, obsRec.Body.String(), "navigator.clipboard")
+		require.Contains(t, rec.Body.String(), "favicon")
+		require.Contains(t, rec.Body.String(), `id="root"`)
+		require.NotContains(t, rec.Body.String(), "/src/main.tsx")
+		assets := regexp.MustCompile(`(?:src|href)="(\./assets/[^"?]+\.(?:js|css))"`).FindAllStringSubmatch(rec.Body.String(), -1)
+		require.GreaterOrEqual(t, len(assets), 2, "compiled entry must reference JS and CSS")
+		for _, asset := range assets {
+			assetRec := httptest.NewRecorder()
+			handler.ServeHTTP(assetRec, httptest.NewRequest(http.MethodGet, "/"+strings.TrimPrefix(asset[1], "./"), nil))
+			require.Equal(t, http.StatusOK, assetRec.Code, asset[1])
+			require.NotEmpty(t, assetRec.Body.Bytes())
+		}
+		for _, path := range []string{"/app.js", "/js/obs-setup.js", "/src/main.tsx", "/package.json"} {
+			legacyRec := httptest.NewRecorder()
+			handler.ServeHTTP(legacyRec, httptest.NewRequest(http.MethodGet, path, nil))
+			require.Equal(t, http.StatusNotFound, legacyRec.Code, path)
+		}
 	})
 
 	t.Run("favicon", func(t *testing.T) {

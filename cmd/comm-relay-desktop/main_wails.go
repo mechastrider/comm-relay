@@ -72,7 +72,7 @@ func (a *desktopApp) tryNavigateAdmin() {
 	}
 
 	a.navigated = true
-	js := fmt.Sprintf(`window.location.replace(%q);`, a.adminURL)
+	js := fmt.Sprintf(`window.openAdmin(%q);`, a.adminURL)
 	runtime.WindowExecJS(a.wailsCtx, js)
 }
 

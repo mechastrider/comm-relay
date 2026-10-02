@@ -3,8 +3,8 @@
   "name": "CommRelay",
   "outputfilename": "comm-relay-desktop",
   "build:tags": "wails,webkit2_41",
-  "frontend:install": "",
-  "frontend:build": "",
+  "frontend:install": "npm ci",
+  "frontend:build": "npm run build",
   "frontend:dev:watcher": "",
   "frontend:dev:serverUrl": "",
   "author": {
@@ -21,5 +21,7 @@
   "version": "2",
   "assetdir": "frontend",
   "reloaddirs": "frontend",
-  "debounceMS": 100
+  "debounceMS": 100,
+  "frontend:dir": "../..",
+  "wailsjsdir": "frontend"
 }

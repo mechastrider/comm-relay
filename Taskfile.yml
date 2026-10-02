@@ -72,12 +72,14 @@ tasks:
     desc: Fill var/data with representative fake viewers, XP, and reward history
     cmds:
       - mkdir -p var/data
+      - task: web:build
       - go run ./cmd/comm-relay-seed -config var/data/config.json -reset=true
 
   web:dev:
-    desc: Dev stack — Air (Go reload) + live reload for web/ at http://127.0.0.1:17878
+    desc: Dev stack — Air (Go reload) + Vite React HMR at http://127.0.0.1:17878
     deps: [tools:ensure-air, tools:ensure-node, data:ensure]
     cmds:
+      - task: web:build
       - task: web:dev:parallel
 
   web:dev:parallel:
@@ -101,11 +103,23 @@ tasks:
     status:
       - air -v
     cmds:
-      - task: tools:install
+      - go install github.com/air-verse/air@{{.AIR_VERSION}}
 
   tools:ensure-node:
     internal: true
     status:
-      - node -e "require('node:fs').accessSync('node_modules/browser-sync')"
+      - node -e "require('node:fs').accessSync('node_modules/vite')"
     cmds:
       - npm ci
+
+  web:build:
+    desc: Build the React admin before Go embeds its assets
+    deps: [tools:ensure-node]
+    cmds:
+      - npm run build
+
+  build:
+    desc: Build the standalone server with its admin assets
+    cmds:
+      - task: web:build
+      - go build -o comm-relay ./cmd/comm-relay-server
