@@ -113,6 +113,13 @@ for (const size of [
           "src",
           /overlay/,
         );
+        // Sample messages arrive on staggered timers. A loaded iframe (or two
+        // identical screenshots) can still contain only the first message.
+        const preview = page.frameLocator("#overlay-preview-frame");
+        await expect(preview.locator(".message")).toHaveCount(4);
+        await expect(preview.locator(".message").last()).toContainText(
+          "Sample preview uses the same renderer as the OBS Browser Source.",
+        );
       }
       await expect(page).toHaveScreenshot(
         route.replaceAll("/", "-") + `-${size.width}.png`,
