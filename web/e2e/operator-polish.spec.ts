@@ -50,7 +50,9 @@ test("command audio monitoring survives navigation and saved disable", async ({ 
   }));
   const played = () => page.evaluate(() => (window as unknown as { commandAudioEvents: object[] }).commandAudioEvents);
   send();
-  await expect.poll(played).toEqual([{ kind: "playing", volume: 0.25 }]);
+  // The system audio backend can quantize volume (WebKit/PulseAudio reports
+  // 0.2499983 for 0.25). Preserve the 25% check without requiring bit equality.
+  await expect.poll(played).toEqual([{ kind: "playing", volume: expect.closeTo(0.25, 4) }]);
   await page.goto(runtime.url + "/#/audience");
   send();
   await expect.poll(async () => (await played()).length).toBe(2);
