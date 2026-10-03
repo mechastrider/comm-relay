@@ -1,7 +1,7 @@
 import { test, expect } from "./fixtures";
 
 for (const viewport of [{ width: 1440, height: 900 }, { width: 1100, height: 700 }, { width: 520, height: 600 }, { width: 390, height: 844 }]) {
-  test(`Studio tooltips are not clipped at ${viewport.width}`, async ({ page, runtime }, info) => {
+  test(`Studio tooltips are not clipped at ${viewport.width}`, { tag: viewport.width === 1440 || viewport.width === 390 ? ["@browser"] : [] }, async ({ page, runtime }) => {
     await page.setViewportSize(viewport);
     await page.route("**/api/config", async route => {
       const response = await route.fetch();
@@ -29,8 +29,9 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 1100, height: 700
       await button.hover();
       const tooltip = button.getByRole("tooltip");
       await expect(tooltip).toBeVisible();
-      await page.waitForTimeout(150);
-      await page.screenshot({ path: info.outputPath(id + ".png") });
+      await tooltip.evaluate(async el => {
+        await Promise.all(el.getAnimations().map(animation => animation.finished));
+      });
       const clipping = await tooltip.evaluate(el => {
         const rect = el.getBoundingClientRect();
         const problems: unknown[] = [];

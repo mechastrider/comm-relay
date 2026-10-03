@@ -15,7 +15,7 @@ Admin, OBS dock, and overlay static assets are embedded in the binary. During lo
 
 The admin lives in `web/admin/src/` (React, TypeScript, hash router). `npm run build` creates `web/admin/dist/`; **run it before direct Go builds**. Only compiled assets are served and embedded. Disk mode (`-web ./web`) also serves the compiled admin from `dist/`, so rebuild after edits. OBS overlays and docks remain static HTML/CSS/JS. Wails, Task and CI build the frontend automatically.
 
-Playwright starts an isolated Go server with temporary config/SQLite for each test, without using personal data. Chromium on Linux checks original-admin visual baselines; Firefox/WebKit check behavior. For disk mode: `COMM_RELAY_E2E_DISK=1 npm run test:e2e`. Report: `playwright-report/index.html`.
+Playwright starts an isolated Go server with temporary config/SQLite for each test, without using personal data. See the [E2E strategy](e2e-testing.md) for the risk inventory, browser matrix, local/CI commands, and visual baseline review rules. For disk mode: `COMM_RELAY_E2E_DISK=1 npm run test:e2e`. Report: `playwright-report/index.html`.
 
 ## Main checks
 

@@ -57,7 +57,7 @@ export const test = base.extend<{
       const child = spawn(
         process.env.COMM_RELAY_E2E_SERVER || join(bin, "server" + ext),
         args,
-        { stdio: ["ignore", "pipe", "pipe"] },
+        { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, TZ: "UTC" } },
       );
       child.stdout?.on("data", (chunk) => {
         logs += chunk.toString();
@@ -127,6 +127,10 @@ export const test = base.extend<{
     }
   },
   page: async ({ page, runtime }, use, info) => {
+    // Stabilize displayed dates without stopping timers, WS reconnect or media.
+    // Backend time stays real; visual fixtures must not depend on its clock.
+    if (info.title.includes("@visual") || info.tags.includes("@visual"))
+      await page.clock.setFixedTime(new Date("2026-01-02T12:00:00Z"));
     const failures: string[] = [];
     page.on("pageerror", (error) => failures.push(error.message));
     page.on("console", (message) => {
