@@ -37,7 +37,7 @@
 
 ### Verification
 - [x] Q.1 Run `npm ci`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and relevant `npm run test:e2e -- --grep <focused-pattern>`; record results in qa_plan.md.
-- [ ] Q.2 Run `gofmt` on touched Go files, `go test ./...`, `golangci-lint run ./...`, and `git diff --check`.
+- [x] Q.2 Run `gofmt` on touched Go files, `go test ./...`, `golangci-lint run ./...`, and `git diff --check`.
 - [ ] Q.3 Verify desktop/browser audio and leaderboard geometry per qa_plan.md; record unavailable checks honestly.
 
 ## Gate: review
@@ -46,4 +46,4 @@
 ## Gate: distribution-readiness
 - [x] D.1 Validate existing build/package readiness without signing or publishing.
 
-Implementation and automated browser verification are complete. Q.2 remains open because the full Go suite intermittently fails Windows temporary-directory cleanup; targeted config/API checks and rebuilt Go lint pass. Q.3 remains open for manual Wails/OBS listening. See qa_plan.md for exact results and environment limitations.
+Implementation and focused automated browser verification are complete. Q.2 is satisfied by Linux CI: the full Go race suite and golangci-lint v2.13.2 passed, avoiding the local Windows temporary-directory cleanup failures. Q.3 remains open for manual Wails/OBS listening. See qa_plan.md for exact results and environment limitations.

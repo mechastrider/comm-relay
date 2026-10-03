@@ -79,6 +79,14 @@ jobs:
           cache: true
       - run: npm ci
       - run: npx playwright install --with-deps chromium firefox webkit
+      - name: Start virtual audio output
+        # Firefox needs an audio backend for real AudioContext/media playback.
+        run: |
+          sudo apt-get install -y pulseaudio
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=ci_audio
+          pactl set-default-sink ci_audio
+          pactl list short sinks
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()

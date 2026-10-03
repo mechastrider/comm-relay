@@ -53,3 +53,12 @@ Manual listening in Wails/OBS and packaged GUI interaction were not performed: b
 Fresh diff review checked default/explicit-false handling, old-client omissions, source filtering, safe filenames, zero volume, late-play cancellation, unmount cleanup, navigation ownership, and terminology consistency. No critical implementation finding remains.
 
 Closeout used the visible conversation as evidence. Agentmem context lookup failed with a vector-dimension mismatch (1024 versus 1536), so memory capture is unavailable and no event or draft was recorded.
+
+## PR CI Follow-up
+
+- Initial Linux CI run `37137844684` passed the full Go race suite and golangci-lint v2.13.2. The earlier Windows cleanup/toolchain limitations no longer block Q.2.
+- Browser CI exposed stale Live visual baselines after the intentional reward-label change and an audio-test race in Firefox. Instrumenting real AudioContexts confirmed that `resume()` completed after the test had already delivered its first command. The test now waits for running contexts after the user gesture; it still requires actual media `playing` events at the requested volume. No browser autoplay policy or application behavior was changed.
+- The focused command-audio and leaderboard tests passed locally in Chromium and Firefox (four tests). Typecheck, ESLint, build, 201 static-surface tests, and 30 unit tests passed again.
+- Repetition checks: Chromium passed five audio runs; Firefox passed three sequential audio runs. A parallel Windows repeat run encountered three page-teardown timeouts and one initial page-reload timeout, distinct from the original audio assertion failure. No timeout increase or retry was introduced; Linux CI remains the full cross-browser gate.
+- Visual assertions now collect every workspace difference in a viewport test instead of aborting at the first screenshot. Failed comparisons still fail the test; thresholds, retries, and timeouts are unchanged. Linux baselines are sourced from CI artifacts and visually reviewed, not generated on Windows and relabeled.
+- Follow-up Linux run `37139256830` confirmed that awaiting resume alone was insufficient: Firefox's AudioContext never reached running on the headless runner. The browser job now starts PulseAudio with an explicit null output sink, providing a real backend without physical speakers or mocked playback. Settings baselines were reviewed and refreshed from that run. It also exposed a separate WebKit viewer-merge failure with interrupted detail/list requests; the next full run will verify whether that recurs.
