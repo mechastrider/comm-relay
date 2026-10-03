@@ -14,6 +14,15 @@ test("command audio monitoring survives navigation and saved disable", async ({ 
   wav.write("data", 36); wav.writeUInt32LE(16000, 40);
   await page.route("**/overlay/assets/monitor.wav", (route) => route.fulfill({ body: wav, contentType: "audio/wav" }));
   await page.addInitScript(() => {
+    const contexts: AudioContext[] = [];
+    Object.assign(window, { commandAudioContexts: contexts });
+    const Context = window.AudioContext;
+    window.AudioContext = class extends Context {
+      constructor(options?: AudioContextOptions) {
+        super(options);
+        contexts.push(this);
+      }
+    };
     const events: { kind: string; volume: number }[] = [];
     Object.assign(window, { commandAudioEvents: events });
     const play = HTMLMediaElement.prototype.play;
@@ -29,6 +38,12 @@ test("command audio monitoring survives navigation and saved disable", async ({ 
   const setting = page.getByLabel("Play command sounds in the app", { exact: true });
   await expect(setting).toBeChecked();
   await page.locator("#message-sound-panel-heading").click();
+  // A completed click does not mean AudioContext.resume() has completed.
+  // Wait for real browser readiness before delivering the first live command.
+  await expect.poll(() => page.evaluate(() => {
+    const contexts = (window as unknown as { commandAudioContexts: AudioContext[] }).commandAudioContexts;
+    return contexts.length > 0 && contexts.every((context) => context.state === "running");
+  })).toBe(true);
   const send = () => socket!.send(JSON.stringify({
     type: "alert", source: "command", name: "Viewer", text: "Voice clip",
     points: 0, duration_ms: 1000, sound_file: "monitor.wav", sound_volume: 25,
