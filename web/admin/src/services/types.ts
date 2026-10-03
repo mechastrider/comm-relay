@@ -39,6 +39,7 @@ export interface PublicConfig {
     socks5: { address: string; username: string; has_password?: boolean };
   };
   admin: {
+    command_sound_enabled?: boolean;
     time_locale: string;
     message_sound: { enabled: boolean; sound: string; volume: number };
   };

@@ -1,4 +1,5 @@
 import { Button } from "../components/Button";
+import { CommandAudio } from "./CommandAudio";
 import { useSaveStatus } from "./save-status";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
@@ -241,6 +242,7 @@ export function Shell() {
             </Button>
           </div>
         </header>
+        <CommandAudio />
         <div className="shell-body">
           <nav
             id="side-primary-navigation"

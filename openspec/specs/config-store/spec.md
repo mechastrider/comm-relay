@@ -6,6 +6,21 @@ Persists operator settings in `config.json`, applies safe defaults, validates up
 
 ## Requirements
 
+### Requirement: Persistent application command audio preference
+The config SHALL expose `admin.command_sound_enabled` as a boolean. Fresh configurations and existing configurations omitting this field MUST resolve to true. Explicit false MUST survive save, reload, restart, and unrelated settings updates. Older clients omitting the field during config updates MUST preserve the stored preference.
+
+#### Scenario: Upgrade without a preference
+- **WHEN** an existing config omits `admin.command_sound_enabled`
+- **THEN** app command audio is enabled
+
+#### Scenario: Explicit disable persists
+- **WHEN** the operator disables app command audio and restarts the application
+- **THEN** the setting remains false
+
+#### Scenario: Older settings client
+- **WHEN** a config update omits `admin.command_sound_enabled`
+- **THEN** the previously saved value is retained
+
 ### Requirement: Missing config file is created with defaults
 When the configured path does not exist, the system SHALL write a default `config.json` and start with those defaults. Defaults SHALL include `server_port` 17877, all platforms disabled, overlay `max_messages` 30, `message_ttl_seconds` 20, font size 18 px, theme `default`, native and third-party emotes enabled, image previews disabled, `day_reset_hour` 6, `activity_interval_seconds` 300, `activity_session_limit` 10, and `activity_xp` 1. New files MUST NOT use `points_per_message` as a progress rule.
 

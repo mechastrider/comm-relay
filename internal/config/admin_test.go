@@ -50,4 +50,33 @@ func TestLoad_WhenAdminMissing_ExpectMessageSoundDefaults(t *testing.T) {
 	require.False(t, cfg.Admin.MessageSound.Enabled)
 	require.Equal(t, 0.5, cfg.Admin.MessageSound.Volume)
 	require.Equal(t, MessageSoundChime, cfg.Admin.MessageSound.Sound)
+	require.True(t, cfg.Admin.CommandSoundEnabled)
+}
+
+func TestLoad_WhenLegacyAdmin_ExpectCommandAudioEnabled(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	path := filepath.Join(t.TempDir(), "config.json")
+	require.NoError(t, os.WriteFile(path, []byte(`{"admin":{"time_locale":"en-GB","message_sound":{"enabled":false,"volume":0.5,"sound":"chime"}}}`), 0o600))
+	// Act
+	cfg, err := Load(path)
+	// Assert
+	require.NoError(t, err)
+	require.True(t, cfg.Admin.CommandSoundEnabled)
+}
+
+func TestConfig_WhenCommandAudioDisabled_ExpectSavedFalse(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	path := filepath.Join(t.TempDir(), "config.json")
+	cfg := Default()
+	require.True(t, cfg.Admin.CommandSoundEnabled)
+	cfg.Admin.CommandSoundEnabled = false
+	// Act
+	require.NoError(t, cfg.Save(path))
+	loaded, err := Load(path)
+	// Assert
+	require.NoError(t, err)
+	require.False(t, loaded.Admin.CommandSoundEnabled)
+	require.False(t, loaded.Public().Admin.CommandSoundEnabled)
 }

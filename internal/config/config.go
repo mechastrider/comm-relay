@@ -162,8 +162,9 @@ func Default() *Config {
 			ImagePreviews:     defaultImagePreviews(),
 		},
 		Admin: AdminConfig{
-			MessageSound: defaultMessageSound(),
-			TimeLocale:   TimeLocaleRussian,
+			CommandSoundEnabled: true,
+			MessageSound:        defaultMessageSound(),
+			TimeLocale:          TimeLocaleRussian,
 		},
 		Logging: defaultLogging(),
 	}

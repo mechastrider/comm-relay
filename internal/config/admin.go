@@ -28,8 +28,9 @@ var validMessageSounds = map[string]struct{}{
 
 // AdminConfig holds preferences shared by operator-facing admin and dock UIs.
 type AdminConfig struct {
-	MessageSound MessageSoundConfig `json:"message_sound"`
-	TimeLocale   string             `json:"time_locale"`
+	CommandSoundEnabled bool               `json:"command_sound_enabled"`
+	MessageSound        MessageSoundConfig `json:"message_sound"`
+	TimeLocale          string             `json:"time_locale"`
 }
 
 // MessageSoundConfig controls notification sound in the admin panel.

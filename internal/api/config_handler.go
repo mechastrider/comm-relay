@@ -41,7 +41,9 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	prev := h.store.Snapshot()
 	var incoming config.Config
+	incoming.Admin.CommandSoundEnabled = prev.Admin.CommandSoundEnabled
 	if fields := config.ValidateIncomingJSONFields(body); len(fields) > 0 {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
 		return
@@ -51,7 +53,6 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prev := h.store.Snapshot()
 	incoming.MergeYouTubeOAuthFrom(prev)
 	incoming.MergeNetworkSOCKS5From(prev)
 	incoming.MergeOverlayPresetsFrom(prev, overlayPresetsPresent(body))

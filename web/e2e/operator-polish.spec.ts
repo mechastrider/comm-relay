@@ -1,0 +1,75 @@
+import { test, expect } from "./fixtures";
+import type { WebSocketRoute } from "@playwright/test";
+
+test("command audio monitoring survives navigation and saved disable", async ({ page, runtime }) => {
+  let socket: WebSocketRoute | undefined;
+  await page.routeWebSocket("**/ws", (route) => { socket = route; });
+  // A real, silent PCM clip exercises browser media playback without making noise.
+  const wav = Buffer.alloc(44 + 16000);
+  wav.write("RIFF", 0); wav.writeUInt32LE(wav.length - 8, 4);
+  wav.write("WAVEfmt ", 8); wav.writeUInt32LE(16, 16);
+  wav.writeUInt16LE(1, 20); wav.writeUInt16LE(1, 22);
+  wav.writeUInt32LE(8000, 24); wav.writeUInt32LE(16000, 28);
+  wav.writeUInt16LE(2, 32); wav.writeUInt16LE(16, 34);
+  wav.write("data", 36); wav.writeUInt32LE(16000, 40);
+  await page.route("**/overlay/assets/monitor.wav", (route) => route.fulfill({ body: wav, contentType: "audio/wav" }));
+  await page.addInitScript(() => {
+    const events: { kind: string; volume: number }[] = [];
+    Object.assign(window, { commandAudioEvents: events });
+    const play = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      this.addEventListener("playing", () => events.push({ kind: "playing", volume: this.volume }), { once: true });
+      return play.call(this);
+    };
+  });
+  await page.reload();
+  await expect.poll(() => !!socket).toBeTruthy();
+  await expect(page.locator("#live-contracts-tab")).toHaveText("Viewer rewards");
+  await page.goto(runtime.url + "/#/settings/application");
+  const setting = page.getByLabel("Play command sounds in the app", { exact: true });
+  await expect(setting).toBeChecked();
+  await page.locator("#message-sound-panel-heading").click();
+  const send = () => socket!.send(JSON.stringify({
+    type: "alert", source: "command", name: "Viewer", text: "Voice clip",
+    points: 0, duration_ms: 1000, sound_file: "monitor.wav", sound_volume: 25,
+  }));
+  const played = () => page.evaluate(() => (window as unknown as { commandAudioEvents: object[] }).commandAudioEvents);
+  send();
+  await expect.poll(played).toEqual([{ kind: "playing", volume: 0.25 }]);
+  await page.goto(runtime.url + "/#/audience");
+  send();
+  await expect.poll(async () => (await played()).length).toBe(2);
+  await page.goto(runtime.url + "/#/settings/application");
+  await setting.uncheck();
+  const saved = page.waitForResponse((response) => response.url().endsWith("/api/config/update"));
+  await page.locator("[data-section-save]").click();
+  expect((await (await saved).json()).admin.command_sound_enabled).toBe(false);
+  send();
+  await page.waitForTimeout(1100);
+  expect((await played()).length).toBe(2);
+  await page.reload();
+  await expect(setting).not.toBeChecked();
+});
+
+test("leaderboard ranking stays top aligned across themes and rectangles", async ({ page, runtime }) => {
+  test.setTimeout(90000);
+  const themes = ["default", "dashboard", "cockpit_panel", "cockpit_popups", "g_rebels_popups"];
+  for (const theme of themes) {
+    for (const layout of ["panel", "chips"]) {
+      await page.goto(`${runtime.url}/overlay/leaderboard?preview=sample&theme=${theme}&layout=${layout}&limit=3`);
+      for (const size of [{ width: 800, height: 450 }, { width: 450, height: 450 }, { width: 320, height: 800 }, { width: 800, height: 120 }]) {
+        await page.setViewportSize(size);
+        await expect(page.locator(".leaderboard-row").first()).toBeVisible();
+        await expect.poll(() => page.locator("#leaderboard").evaluate((element) => {
+          const style = getComputedStyle(element);
+          const child = Array.from(element.children).find((item) => !item.hasAttribute("hidden"));
+          if (!child) return false;
+          const bounds = element.getBoundingClientRect();
+          const expectedTop = bounds.top + parseFloat(style.borderTopWidth) + parseFloat(style.paddingTop);
+          return style.justifyContent === "flex-start" && Math.abs(child.getBoundingClientRect().top - expectedTop) < 2;
+        })).toBe(true);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight)).toBe(true);
+      }
+    }
+  }
+});
