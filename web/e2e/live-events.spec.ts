@@ -1,7 +1,7 @@
 import { test, expect } from "./fixtures";
 import type { WebSocketRoute } from "@playwright/test";
 
-test("injected chat events survive hidden tabs, deduplicate, preserve safe text and delete by platform", async ({
+test("injected chat events survive hidden tabs, deduplicate, preserve safe text and delete by platform", { tag: ["@core", "@browser"] }, async ({
   page,
   runtime,
 }) => {
@@ -94,7 +94,7 @@ test("viewer fetch failure retries and selection can change after recovery", asy
 });
 
 for (const width of [1920, 1024, 390]) {
-  test(`Russian locale and keyboard navigation at ${width}`, async ({
+  test(`Russian locale and keyboard navigation at ${width}`, { tag: "@browser" }, async ({
     page,
     runtime,
   }) => {

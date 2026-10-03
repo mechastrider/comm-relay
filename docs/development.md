@@ -15,7 +15,7 @@
 
 Админка находится в `web/admin/src/` (React, TypeScript, hash-router). `npm run build` создаёт `web/admin/dist/`; **выполняйте его до прямой сборки Go**. Результат встраивается в бинарник, исходники и тесты не раздаются. Режим `-web ./web` также читает собранную админку из `dist/`; после правок нужна повторная сборка. OBS overlay/dock остаются статическими HTML/CSS/JS. `wails build`, Task и CI собирают frontend автоматически.
 
-Playwright запускает отдельный Go-сервер с временными config/SQLite для каждого теста. Пользовательские данные не затрагиваются. Визуальные эталоны прежней админки проверяются Chromium на Linux; Firefox/WebKit проверяют поведение. Для disk mode: `COMM_RELAY_E2E_DISK=1 npm run test:e2e`. Отчёт: `playwright-report/index.html`.
+Playwright запускает отдельный Go-сервер с временными config/SQLite для каждого теста. Пользовательские данные не затрагиваются. Распределение рисков между unit/e2e, браузерная матрица и правила визуальных эталонов описаны в [стратегии e2e](e2e-testing.md). Для disk mode: `COMM_RELAY_E2E_DISK=1 npm run test:e2e`. Отчёт: `playwright-report/index.html`.
 
 ## Основные проверки
 

@@ -44,7 +44,7 @@ test("failed save preserves draft and retry; fresh config preserves concurrent s
   expect(saved.overlay.font_size_px).toBe(27);
 });
 
-test("real WebSocket reconnect recovers after server restart without duplicate subscriptions", async ({
+test("real WebSocket reconnect recovers after server restart without duplicate subscriptions", { tag: ["@browser"] }, async ({
   page,
   runtime,
 }) => {
@@ -74,7 +74,7 @@ test("real WebSocket reconnect recovers after server restart without duplicate s
   );
 });
 
-test("dedicated overlay test channel remains isolated without restoring the Studio panel", async ({page,runtime}) => {
+test("dedicated overlay test channel remains isolated without restoring the Studio panel", { tag: ["@core", "@browser"] }, async ({page,runtime}) => {
   await page.goto(runtime.url + '/#/studio');
   await page.locator('[data-studio-add-to-obs-action="done"]').click();
   await page.locator('#studio-mode-all').click();
@@ -93,7 +93,7 @@ test("dedicated overlay test channel remains isolated without restoring the Stud
   expect(recent.messages).toHaveLength(0);
 });
 
-test("recap browser PNG download and native bridge cancellation use the shared exporter", async ({
+test("recap browser PNG download and native bridge cancellation use the shared exporter", { tag: ["@browser"] }, async ({
   page,
   runtime,
 }) => {
@@ -149,7 +149,7 @@ test("recap browser PNG download and native bridge cancellation use the shared e
   expect((await page.request.get(runtime.url + "/health")).ok()).toBeTruthy();
 });
 
-test("OBS surfaces and dock still load independently with transparent overlay backgrounds", async ({
+test("OBS surfaces and dock still load independently with transparent overlay backgrounds", { tag: ["@core", "@browser"] }, async ({
   page,
   runtime,
 }) => {

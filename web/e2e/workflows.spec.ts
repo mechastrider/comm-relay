@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures";
 
-test("React Settings saves only its section and restores persisted state", async ({
+test("React Settings saves only its section and restores persisted state", { tag: ["@core"] }, async ({
   page,
   runtime,
 }) => {
@@ -90,7 +90,7 @@ test("React Live tabs, contract lifecycle and recap capture use the real API", a
   expect(errors).toEqual([]);
 });
 
-test("React catalog CRUD, aliases, action-specific payload and draft navigation", async ({
+test("React catalog CRUD, aliases, action-specific payload and draft navigation", { tag: ["@core"] }, async ({
   page,
   runtime,
 }) => {
@@ -203,7 +203,7 @@ test("React greetings and progression persist edits and protect the baseline lev
   expect(errors).toEqual([]);
 });
 
-test("React viewer editing, responsive draft preservation, portrait and merge persist", async ({
+test("React viewer editing, responsive draft preservation, portrait and merge persist", { tag: ["@browser"] }, async ({
   page,
   runtime,
 }) => {
@@ -257,7 +257,7 @@ test("React viewer editing, responsive draft preservation, portrait and merge pe
   await expect(page.locator("#audience-viewers-table-body tr")).toHaveCount(2);
 });
 
-test("React Studio publishes full drafts without activating edited preset and preserves surface overrides", async ({
+test("React Studio publishes full drafts without activating edited preset and preserves surface overrides", { tag: ["@core"] }, async ({
   page,
   runtime,
 }) => {
@@ -312,7 +312,7 @@ test("React Studio publishes full drafts without activating edited preset and pr
   );
 });
 
-test('contract draft survives navigation and deliberate winner settlement grants once', async ({page,runtime})=>{
+test('contract draft survives navigation and deliberate winner settlement grants once', { tag: ["@core"] }, async ({page,runtime})=>{
   await page.locator('#live-contracts-tab').click();
   await page.locator('#live-contract-title').fill('Winner regression');
   await page.locator('#live-contract-objective').fill('Complete the task');

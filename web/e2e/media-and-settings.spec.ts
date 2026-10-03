@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures";
 
-test("catalog image upload, publication, clear and abandoned draft cleanup use real storage", async ({
+test("catalog image upload, publication, clear and abandoned draft cleanup use real storage", { tag: ["@browser"] }, async ({
   page,
   runtime,
 }) => {
@@ -72,7 +72,7 @@ test("catalog image upload, publication, clear and abandoned draft cleanup use r
     .toBe(404);
 });
 
-test("platform validation focuses invalid control and mocked OAuth finishes its polling", async ({
+test("platform validation focuses invalid control and mocked OAuth finishes its polling", { tag: ["@browser"] }, async ({
   page,
   runtime,
 }) => {
@@ -99,7 +99,7 @@ test("platform validation focuses invalid control and mocked OAuth finishes its 
   await expect(page.locator("#workspace-settings")).toContainText(/connected/i);
 });
 
-test("disabled preference storage does not prevent audience and Studio mounting", async ({
+test("disabled preference storage does not prevent audience and Studio mounting", { tag: ["@browser"] }, async ({
   page,
   runtime,
 }) => {

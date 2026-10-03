@@ -1,7 +1,7 @@
 import { test, expect } from "./fixtures";
 import type { WebSocketRoute } from "@playwright/test";
 
-test("command audio monitoring survives navigation and saved disable", async ({ page, runtime }) => {
+test("command audio monitoring survives navigation and saved disable", { tag: ["@core", "@browser"] }, async ({ page, runtime }) => {
   let socket: WebSocketRoute | undefined;
   await page.routeWebSocket("**/ws", (route) => { socket = route; });
   // A real, silent PCM clip exercises browser media playback without making noise.
@@ -25,8 +25,10 @@ test("command audio monitoring survives navigation and saved disable", async ({ 
     };
     const events: { kind: string; volume: number }[] = [];
     Object.assign(window, { commandAudioEvents: events });
+    Object.assign(window, { commandAudioPlayCalls: 0 });
     const play = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () {
+      (window as unknown as { commandAudioPlayCalls: number }).commandAudioPlayCalls++;
       this.addEventListener("playing", () => events.push({ kind: "playing", volume: this.volume }), { once: true });
       return play.call(this);
     };
@@ -61,14 +63,27 @@ test("command audio monitoring survives navigation and saved disable", async ({ 
   const saved = page.waitForResponse((response) => response.url().endsWith("/api/config/update"));
   await page.locator("[data-section-save]").click();
   expect((await (await saved).json()).admin.command_sound_enabled).toBe(false);
+  await expect(page.locator(".settings-section > .notice")).toHaveText("Section saved.");
   send();
-  await page.waitForTimeout(1100);
+  // Same-socket ordering is a delivery barrier for the preceding alert. Count
+  // attempts too: a rejected or pending play() would never emit "playing".
+  socket!.send(JSON.stringify({
+    type: "message", platform: "twitch", id: "audio-disabled-barrier",
+    user: "Viewer", message: "Audio disable delivery barrier",
+    timestamp: "2026-01-01T12:00:00Z",
+  }));
+  await page.goto(runtime.url + "/#/live");
+  await expect(page.locator("#recent-messages")).toContainText("Audio disable delivery barrier");
+  expect(await page.evaluate(() =>
+    (window as unknown as { commandAudioPlayCalls: number }).commandAudioPlayCalls,
+  )).toBe(2);
   expect((await played()).length).toBe(2);
+  await page.goto(runtime.url + "/#/settings/application");
   await page.reload();
   await expect(setting).not.toBeChecked();
 });
 
-test("leaderboard ranking stays top aligned across themes and rectangles", async ({ page, runtime }) => {
+test("leaderboard ranking stays top aligned across themes and rectangles", { tag: ["@browser"] }, async ({ page, runtime }) => {
   test.setTimeout(90000);
   const themes = ["default", "dashboard", "cockpit_panel", "cockpit_popups", "g_rebels_popups"];
   for (const theme of themes) {

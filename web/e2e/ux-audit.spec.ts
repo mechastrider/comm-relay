@@ -57,7 +57,7 @@ test("offline save retains edits, explains retry and scopes success to its secti
   ).toBeVisible();
 });
 
-test("collapsed Studio label stays inside compact OBS action", async ({
+test("collapsed Studio label stays inside compact OBS action", { tag: ["@browser"] }, async ({
   page,
   runtime,
 }) => {
@@ -95,7 +95,7 @@ test("collapsed Studio label stays inside compact OBS action", async ({
   }
 });
 
-test("inspector, progression lists and media previews expose valid accessible semantics", async ({
+test("inspector, progression lists and media previews expose valid accessible semantics", { tag: ["@browser"] }, async ({
   page,
   runtime,
 }) => {

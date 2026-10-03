@@ -2,7 +2,7 @@ import { test, expect } from "./fixtures";
 
 for (const locale of ["ru-RU", "en-GB"]) {
   for (const viewport of [{ width: 1440, height: 900 }, { width: 1100, height: 700 }, { width: 390, height: 844 }]) {
-    test(`shared action geometry and form sections ${locale} ${viewport.width}`, async ({ page, runtime }) => {
+    test(`shared action geometry and form sections ${locale} ${viewport.width}`, { tag: locale === "ru-RU" && viewport.width !== 1100 ? ["@browser"] : [] }, async ({ page, runtime }) => {
       await page.setViewportSize(viewport);
       await page.route("**/api/config", async route => {
         const response = await route.fetch();
@@ -89,7 +89,7 @@ test("greeting field errors retain their border and focus after grouping", async
 
 for (const locale of ["ru-RU", "en-GB"]) {
   for (const width of [1440, 1100, 390]) {
-    test(`action tooltips keep whole words ${locale} at ${width}px`, async ({ page, runtime }) => {
+    test(`action tooltips keep whole words ${locale} at ${width}px`, { tag: locale === "ru-RU" && width !== 1100 ? ["@browser"] : [] }, async ({ page, runtime }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.route("**/api/config", async route => {
         const response = await route.fetch();
