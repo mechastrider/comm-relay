@@ -121,7 +121,8 @@ for (const size of [
           "Sample preview uses the same renderer as the OBS Browser Source.",
         );
       }
-      await expect(page).toHaveScreenshot(
+      // Collect differences for every workspace, not just the first route.
+      await expect.soft(page).toHaveScreenshot(
         route.replaceAll("/", "-") + `-${size.width}.png`,
         {
           fullPage: true,

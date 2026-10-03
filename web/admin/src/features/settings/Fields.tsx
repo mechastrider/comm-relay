@@ -1221,6 +1221,20 @@ export function ApplicationFields({
         </div>
         <div className="form form--compact">
           <Field>
+            <label className="checkbox" htmlFor="command-sound-enabled">
+              <input
+                id="command-sound-enabled"
+                name="command_sound_enabled"
+                type="checkbox"
+                checked={Boolean(values["command-sound-enabled"])}
+                onChange={(event) => onChange("command-sound-enabled", event.currentTarget.checked)}
+                aria-describedby="command-sound-hint"
+              />
+              <span>{t("sound.playCommands")}</span>
+            </label>
+            <p id="command-sound-hint" className="hint">{t("sound.commandHint")}</p>
+          </Field>
+          <Field>
             <label className="checkbox" htmlFor="message-sound-enabled">
               <input
                 id="message-sound-enabled"

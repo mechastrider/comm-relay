@@ -19,6 +19,17 @@ import {
   normalizeCommandAction,
 } from "../src/features/catalog/command-model.js";
 
+test("application command audio defaults on and explicit off survives form composition", function () {
+  const legacy = { admin: { time_locale: "en-GB" } };
+  const defaults = extractSectionValuesFromConfig(legacy, "application");
+  assert.equal(defaults.admin.command_sound_enabled, true);
+  defaults.admin.command_sound_enabled = false;
+  const saved = applySectionToConfig(legacy, "application", defaults);
+  assert.equal(saved.admin.command_sound_enabled, false);
+  assert.equal(extractSectionValuesFromConfig(saved, "application").admin.command_sound_enabled, false);
+  assert.equal(settingsSectionDirty(extractSectionValuesFromConfig(legacy, "application"), defaults, "application"), true);
+});
+
 test("command action helpers preserve alerts and strip leaderboard presentation", function () {
   assert.equal(normalizeCommandAction(undefined), "alert");
   assert.equal(normalizeCommandAction("like"), "like");

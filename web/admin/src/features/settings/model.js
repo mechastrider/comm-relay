@@ -166,6 +166,7 @@ export function extractSectionValuesFromConfig(config, sectionId) {
       const previews = asObject(overlay.image_previews);
       return {
         admin: {
+          command_sound_enabled: admin.command_sound_enabled !== false,
           time_locale: admin.time_locale === "en-GB" ? "en-GB" : "ru-RU",
           message_sound: {
             enabled: Boolean(messageSound.enabled),
@@ -289,6 +290,7 @@ export function normalizeSectionValues(sectionId, values) {
     const previews = asObject(richChat.image_previews);
     return {
       admin: {
+        command_sound_enabled: admin.command_sound_enabled !== false,
         time_locale: admin.time_locale === "en-GB" ? "en-GB" : "ru-RU",
         message_sound: {
           enabled: Boolean(messageSound.enabled),
