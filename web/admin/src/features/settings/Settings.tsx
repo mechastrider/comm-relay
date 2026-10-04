@@ -1,6 +1,6 @@
 import { Button } from "../../components/Button";
 import { useReportSaveStatus } from "../../app/save-status";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useBlocker, useNavigate, useParams } from "react-router";
 import { useRuntime } from "../../app/runtime";
 import { useLocale } from "../../app/locale";
@@ -46,6 +46,7 @@ export function Settings() {
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [focusInvalidToken, setFocusInvalidToken] = useState(0);
   const [sectionFeedback, setSectionFeedback] = useState<{
     section: string;
     text: string;
@@ -74,6 +75,15 @@ export function Settings() {
     window.addEventListener("beforeunload", guard);
     return () => window.removeEventListener("beforeunload", guard);
   }, [dirty]);
+  // Move focus after the invalid fields are committed to the DOM. A one-shot
+  // requestAnimationFrame can run before React applies aria-invalid and miss
+  // the field, leaving focus on the save button.
+  useLayoutEffect(() => {
+    if (!focusInvalidToken) return;
+    document
+      .querySelector<HTMLElement>('#settings-section-form [aria-invalid="true"]')
+      ?.focus();
+  }, [focusInvalidToken]);
   const reset = () => {
     if (editable)
       setDrafts((previous) => {
@@ -129,13 +139,7 @@ export function Settings() {
         setErrors(cause.fields);
         const first = Object.keys(cause.fields)[0];
         if (section === "platforms" && first) setPlatform(first.split("_")[0]);
-        requestAnimationFrame(() =>
-          document
-            .querySelector<HTMLElement>(
-              '#settings-section-form [aria-invalid="true"]',
-            )
-            ?.focus(),
-        );
+        setFocusInvalidToken((token) => token + 1);
       }
       setFeedback(
         cause instanceof NetworkError
