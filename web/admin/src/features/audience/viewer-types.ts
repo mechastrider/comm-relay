@@ -1,4 +1,5 @@
 import type { Achievement, Level } from "./progression-model";
+import type { VisualStatus } from "../../components/ViewerVisuals";
 export interface Identity {
   platform: string;
   user_id: string;
@@ -20,6 +21,7 @@ export interface Viewer extends Record<string, unknown> {
   day_message_count: number;
   session_count: number;
   current_level?: Level;
+  visual_status?: VisualStatus;
   leaderboard_hidden?: boolean;
   greetings_disabled?: boolean;
   progression_alerts_disabled?: boolean;

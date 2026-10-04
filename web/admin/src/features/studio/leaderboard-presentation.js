@@ -28,6 +28,7 @@ function cloneSurfaces(surfaces) {
 export function normalizeLeaderboardSurfaceOverride(value) {
   const raw = value && typeof value === "object" ? value : {};
   const next = {};
+  if (typeof raw.show_level_badges === "boolean") next.show_level_badges = raw.show_level_badges;
   if (raw.sizing_mode === "auto" || raw.sizing_mode === "fixed") {
     next.sizing_mode = raw.sizing_mode;
   }

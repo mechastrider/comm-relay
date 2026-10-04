@@ -1,6 +1,7 @@
 export interface Level {
   id: string;
   title: string;
+  emblem?: string;
   min_xp: number;
   announce: boolean;
   like_quota: number;
@@ -36,6 +37,7 @@ export const fieldMap: Record<Group, Record<string, string>> = {
   level: {
     id: "id",
     title: "title",
+    emblem: "emblem",
     xp: "min_xp",
     announce: "announce",
     "like-quota": "like_quota",
@@ -100,6 +102,7 @@ export function payloadFor(
 export const emptyLevel: Level = {
   id: "",
   title: "",
+  emblem: "shield",
   min_xp: 0,
   announce: true,
   like_quota: 1,

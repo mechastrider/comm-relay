@@ -25,6 +25,7 @@ func newProgressionHandler(viewerStore *store.Store, hub *Hub) *progressionHandl
 type progressionLevelResponse struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
+	Emblem    string `json:"emblem"`
 	MinXP     int    `json:"min_xp"`
 	LikeQuota int    `json:"like_quota"`
 	BuffQuota int    `json:"buff_quota"`
@@ -35,6 +36,7 @@ func progressionLevelFromStore(level store.ProgressionLevel) progressionLevelRes
 	return progressionLevelResponse{
 		ID:        level.ID,
 		Title:     level.Title,
+		Emblem:    level.Emblem,
 		MinXP:     level.MinXP,
 		LikeQuota: level.LikeQuota,
 		BuffQuota: level.BuffQuota,
@@ -178,6 +180,7 @@ func (h *progressionHandler) handleStatus(w http.ResponseWriter, r *http.Request
 type progressionLevelRequest struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
+	Emblem    string `json:"emblem"`
 	MinXP     int    `json:"min_xp"`
 	LikeQuota int    `json:"like_quota"`
 	BuffQuota int    `json:"buff_quota"`
@@ -243,12 +246,13 @@ func (h *progressionHandler) handleLevelCreate(w http.ResponseWriter, r *http.Re
 	if !ok {
 		return
 	}
-	item, err := h.viewerStore.CreateProgressionLevel(store.CreateProgressionLevelInput{ID: request.ID, Title: request.Title, MinXP: request.MinXP, LikeQuota: request.LikeQuota, BuffQuota: request.BuffQuota, Announce: request.Announce, Now: time.Now()})
+	item, err := h.viewerStore.CreateProgressionLevel(store.CreateProgressionLevelInput{ID: request.ID, Title: request.Title, Emblem: request.Emblem, MinXP: request.MinXP, LikeQuota: request.LikeQuota, BuffQuota: request.BuffQuota, Announce: request.Announce, Now: time.Now()})
 	if err != nil {
 		progressionMutationError(w, r, "create progression level", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, progressionLevelFromStore(*item))
+	h.broadcastLevelChange()
 }
 
 func (h *progressionHandler) handleLevelUpdate(w http.ResponseWriter, r *http.Request) {
@@ -259,12 +263,13 @@ func (h *progressionHandler) handleLevelUpdate(w http.ResponseWriter, r *http.Re
 	if !ok {
 		return
 	}
-	item, err := h.viewerStore.UpdateProgressionLevel(store.UpdateProgressionLevelInput{ID: request.ID, Title: request.Title, MinXP: request.MinXP, LikeQuota: request.LikeQuota, BuffQuota: request.BuffQuota, Announce: request.Announce, Now: time.Now()})
+	item, err := h.viewerStore.UpdateProgressionLevel(store.UpdateProgressionLevelInput{ID: request.ID, Title: request.Title, Emblem: request.Emblem, MinXP: request.MinXP, LikeQuota: request.LikeQuota, BuffQuota: request.BuffQuota, Announce: request.Announce, Now: time.Now()})
 	if err != nil {
 		progressionMutationError(w, r, "update progression level", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, progressionLevelFromStore(*item))
+	h.broadcastLevelChange()
 }
 
 func (h *progressionHandler) handleLevelDelete(w http.ResponseWriter, r *http.Request) {
@@ -279,6 +284,7 @@ func (h *progressionHandler) handleLevelDelete(w http.ResponseWriter, r *http.Re
 		progressionMutationError(w, r, "delete progression level", err)
 		return
 	}
+	h.broadcastLevelChange()
 	writeJSON(w, http.StatusOK, map[string]bool{"deleted": true})
 }
 

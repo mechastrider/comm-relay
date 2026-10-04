@@ -132,7 +132,7 @@ func (s *Store) ensureProgressionBootstrapLocked(locale string) error {
 		return errors.Errorf("begin progression bootstrap: %w", err)
 	}
 	for _, level := range progressionStarterLevels(locale) {
-		if _, err := tx.Exec(`INSERT INTO progression_levels (id, title, min_xp, like_quota, buff_quota, announce, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?) ON CONFLICT(id) DO NOTHING`, level.ID, level.Title, level.MinXP, level.LikeQuota, level.BuffQuota, formatTime(now), formatTime(now)); err != nil {
+		if _, err := tx.Exec(`INSERT INTO progression_levels (id, title, min_xp, like_quota, buff_quota, announce, created_at, updated_at, emblem) VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?) ON CONFLICT(id) DO NOTHING`, level.ID, level.Title, level.MinXP, level.LikeQuota, level.BuffQuota, formatTime(now), formatTime(now), starterLevelEmblem(level.ID)); err != nil {
 			return rollbackStarterCatalogTransaction(tx, errors.Errorf("insert starter progression level %q: %w", level.ID, err))
 		}
 	}

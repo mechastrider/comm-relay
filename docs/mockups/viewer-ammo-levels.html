@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CommRelay · Заряды и уровни</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Segoe UI", Arial, sans-serif; color: #e8edf0; background: #101417; --muted: #a4b2bb; --line: #2b363c; --like: #ffadc0; --buff: #79dfce; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, select { font: inherit; }
+    button, select { background: #1e282e; color: #e8edf0; border: 1px solid #465760; border-radius: 7px; padding: 9px 12px; }
+    button { cursor: pointer; }
+    button:hover { background: #2d3c44; }
+    button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid #79dfce; outline-offset: 4px; }
+    a { color: #8ee4d7; text-underline-offset: 4px; }
+    svg { display: inline-block; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; vertical-align: middle; }
+    .symbols { position: absolute; width: 0; height: 0; overflow: hidden; }
+    main { max-width: 1440px; margin: auto; padding: 42px 36px 64px; }
+    .eyebrow { color: #8ee4d7; text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 700; }
+    h1 { font-size: clamp(28px, 4vw, 46px); letter-spacing: -.045em; margin: 12px 0; font-weight: 650; }
+    h2 { font-size: 22px; font-weight: 600; letter-spacing: -.025em; margin: 0; }
+    h3 { font-size: 16px; margin: 0; }
+    p { line-height: 1.6; }
+    .intro { color: var(--muted); max-width: 800px; margin: 0; }
+    nav { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 24px; font-size: 13px; }
+    .section-head { display: flex; align-items: baseline; gap: 16px; margin: 44px 0 18px; }
+    .section-num { color: #748791; font: 12px Consolas, monospace; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 18px; align-items: end; padding: 18px 0; }
+    .toolbar label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; }
+    .toolbar select { min-width: 130px; }
+    .preview-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+    .stage { min-height: 580px; padding: 30px; position: relative; background: radial-gradient(ellipse at 20% 35%, #566269 0, transparent 48%), linear-gradient(145deg, #263e48, #121e29 53%, #594b39); display: flex; flex-direction: column; justify-content: flex-end; }
+    .stage::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(120deg, transparent 0 120px, #ffffff06 121px 122px); pointer-events: none; }
+    .stage[data-bg="checker"] { background: conic-gradient(#333c42 25%, #252d33 0 50%, #333c42 0 75%, #252d33 0) 0 0 / 24px 24px; }
+    .stage[data-bg="light"] { background: #c9d5d4; }
+    .stage-label { position: absolute; top: 22px; left: 28px; font-size: 10px; letter-spacing: .14em; color: #f3f6f6; background: #111a21cc; padding: 7px 10px; border-radius: 4px; }
+    .chat { position: relative; display: grid; gap: 10px; width: 100%; max-width: 690px; margin-left: auto; }
+    .message { background: #0b151dec; border: 1px solid #71939c55; border-left: 3px solid var(--author, #79dfce); border-radius: 3px 13px 13px 3px; padding: 14px 17px; box-shadow: 0 4px 16px #0003; }
+    .identity { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .avatar { width: 34px; height: 34px; border-radius: 7px; display: grid; place-items: center; background: #20313a; color: var(--author, #79dfce); font: 700 13px Consolas, monospace; flex-shrink: 0; }
+    .name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .platform { font-size: 9px; font-weight: 700; color: #b6c3cb; border: 1px solid #52616b; border-radius: 3px; padding: 2px 3px; }
+    .badge { color: var(--rank-color, #a7c1ce); display: inline-flex; flex-shrink: 0; }
+    .badge svg { width: 26px; height: 28px; stroke-width: 1.65; }
+    .ammo-row { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin: 7px 0 0 42px; }
+    .ammo { display: inline-flex; gap: 7px; align-items: center; color: var(--like); min-height: 20px; }
+    .ammo.buff { color: var(--buff); }
+    .ammo.empty { color: #9ba9b2; }
+    .ammo > svg { width: 16px; height: 16px; }
+    .rounds { display: inline-flex; gap: 3px; align-items: center; }
+    .round { width: 6px; height: 14px; border: 1px solid currentColor; border-radius: 3px 3px 1px 1px; opacity: .45; }
+    .round.loaded { background: currentColor; opacity: 1; box-shadow: inset 0 -3px #0003; }
+    .count { font: 700 12px Consolas, monospace; white-space: nowrap; }
+    .capacity { font-weight: 400; color: #b0bfc8; }
+    .magazine { width: 22px !important; height: 20px !important; }
+    .body { margin: 10px 0 0 42px; line-height: 1.45; font-size: 17px; color: #f0f4f6; overflow-wrap: anywhere; }
+    .command { color: #a7e5d8; font-family: Consolas, monospace; }
+    .reward { margin-left: auto; color: #f7dc87; font-size: 12px; white-space: nowrap; }
+    .legend-label { margin-left: auto; color: #bed0d8; font: 10px Consolas, monospace; white-space: nowrap; }
+    .side { background: #161d22; padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+    .side p { font-size: 13px; color: var(--muted); margin: 0; }
+    .actions { display: grid; gap: 9px; }
+    .actions button { text-align: left; }
+    #status { min-height: 62px; color: #c9d8df; font-size: 13px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .small-note { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .theme-plain .message { background: #111920ef; border: 1px solid #60707966; border-radius: 9px; box-shadow: none; }
+    .theme-plain .avatar { display: none; }
+    .theme-plain .ammo-row, .theme-plain .body { margin-left: 0; }
+    .theme-gold { --like: #f7de91; --buff: #dedabb; }
+    .theme-gold .message { background: #18170fec; border-color: #a99a6155; border-left-color: #ddc77f; border-radius: 0; }
+    .theme-gold .badge, .theme-gold .avatar { color: #f7de91; }
+    .theme-gold .avatar { background: #333025; }
+    .theme-text .message { background: #071019bf; border: 0; border-radius: 3px; padding: 10px 12px; box-shadow: none; }
+    .theme-text .avatar { display: none; }
+    .theme-text .ammo-row, .theme-text .body { margin-left: 0; }
+    .theme-text .body { margin-top: 4px; }
+    .theme-text .badge svg { width: 22px; height: 24px; }
+    .narrow .chat { max-width: 360px; }
+    .narrow .stage { padding: 20px; }
+    .examples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .example { border: 1px solid var(--line); background: #161d22; padding: 20px; border-radius: 9px; }
+    .example-label { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+    .example .ammo { gap: 10px; }
+    .example .count { font-size: 15px; }
+    .example p { font-size: 12px; color: var(--muted); margin: 12px 0 0; }
+    .rank-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .rank-tile { padding: 24px 12px; text-align: center; background: #161d22; border-right: 1px solid var(--line); }
+    .rank-tile:last-child { border: 0; }
+    .rank-tile > .badge svg { width: 50px; height: 56px; }
+    .rank-tile strong { display: block; margin: 14px 0 6px; font-size: 13px; }
+    .rank-tile small { color: var(--muted); font: 11px Consolas, monospace; }
+    .rank-tile .mini { margin-top: 15px; color: var(--muted); font-size: 12px; }
+    .surfaces { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .surface { border: 1px solid var(--line); border-radius: 12px; padding: 26px; background: #161d22; }
+    .surface-label { color: #91aaa9; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 20px; }
+    .leader-row { display: flex; gap: 12px; align-items: center; border-bottom: 1px solid var(--line); padding: 16px 0; }
+    .place { width: 20px; color: #a1b3bd; font: 14px Consolas, monospace; }
+    .leader-name { flex: 1; min-width: 0; }
+    .leader-name small { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; }
+    .xp { font: 12px Consolas, monospace; color: #b8e8dc; white-space: nowrap; }
+    .profile-heading { display: flex; align-items: center; gap: 12px; }
+    .profile-heading > .badge svg { width: 45px; height: 50px; }
+    .profile-heading small { display: block; color: var(--muted); margin-top: 5px; }
+    .progress { height: 5px; background: #354249; margin: 22px 0 8px; border-radius: 5px; }
+    .progress span { display: block; width: 32%; height: 100%; background: #83dbcd; border-radius: inherit; }
+    .detail-quota { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; padding: 16px 0; border-top: 1px solid var(--line); font-size: 13px; }
+    .detail-quota:first-of-type { margin-top: 24px; }
+    .footer { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 36px; }
+    .spent { animation: spend .3s ease-out; }
+    @keyframes spend { from { filter: brightness(1.8); } to { filter: brightness(1); } }
+    @media (prefers-reduced-motion: reduce) { .spent { animation: none; } }
+    @media (max-width: 1000px) { .preview-layout { grid-template-columns: minmax(0, 1fr); } .side { display: block; } .side p { margin: 12px 0; } .actions { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 16px 0; } }
+    @media (max-width: 650px) { main { padding: 26px 16px; } .stage, .narrow .stage { padding: 65px 12px 18px; } .examples, .surfaces { grid-template-columns: minmax(0, 1fr); } .rank-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rank-tile { border-bottom: 1px solid var(--line); } .message { padding: 12px; } .body { font-size: 15px; } .legend-label { display: none; } .surface { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <svg class="symbols" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M20.5 5.5a5 5 0 0 0-8.5 3 5 5 0 0 0-8.5-3C-1 10 6 16 12 21c6-5 13-11 8.5-15.5Z"/></symbol>
+    <symbol id="bolt" viewBox="0 0 24 24"><path d="m14 2-10 12h7l-1 8L21 9h-8Z"/></symbol>
+    <symbol id="mag" viewBox="0 0 24 24"><path d="M5 3h14v12l-3 6H7l-2-6Z M9 7v7 M12 7v7 M15 7v7 M7 18h10"/></symbol>
+    <symbol id="shield" viewBox="0 0 28 32"><path d="M4 4 14 1l10 3v15c0 5-10 11-10 11S4 24 4 19Z"/></symbol>
+    <symbol id="rank1" viewBox="0 0 28 32"><use href="#shield"/><path d="m8 17 6-5 6 5"/></symbol>
+    <symbol id="rank2" viewBox="0 0 28 32"><use href="#shield"/><path d="m8 14 6-5 6 5m-12 6 6-5 6 5"/></symbol>
+    <symbol id="rank3" viewBox="0 0 28 32"><use href="#shield"/><path d="m8 11 6-5 6 5m-12 6 6-5 6 5m-12 6 6-5 6 5"/></symbol>
+    <symbol id="rank4" viewBox="0 0 28 32"><use href="#shield"/><path d="m14 7 2.2 5 5.3.5-4 3.6 1.2 5.2-4.7-2.8-4.7 2.8 1.2-5.2-4-3.6 5.3-.5Z"/></symbol>
+    <symbol id="rank5" viewBox="0 0 28 32"><use href="#rank4"/><path d="M5 27Q0 21 2 11m21 16q5-6 3-16M2 18l3 2m21-2-3 2M3 23l3 1m19-1-3 1"/></symbol>
+  </defs></svg>
+  <main>
+    <header>
+      <div class="eyebrow">CommRelay / Визуальное исследование 01</div>
+      <h1>Статус зрителя. Запас действий.</h1>
+      <p class="intro">Знаки уровней и две независимые обоймы: like и buff. Интерактивный эскиз на вымышленных данных — можно сравнить оформление, потратить заряды и проверить большие лимиты.</p>
+      <nav aria-label="Разделы мокапа"><a href="#overlay">Оверлей</a><a href="#ammo">Размер обоймы</a><a href="#levels">Знаки уровней</a><a href="#surfaces">Другие поверхности</a></nav>
+    </header>
+    <section id="overlay">
+      <div class="section-head"><span class="section-num">01</span><h2>Сообщения на стриме</h2></div>
+      <div class="toolbar">
+        <label>Оформление<select id="theme"><option value="cockpit">Cockpit</option><option value="gold">Золотой HUD</option><option value="plain">Нейтральные карточки</option><option value="text">Компактный чат</option></select></label>
+        <label>Подложка<select id="background"><option value="scene">Условная сцена</option><option value="checker">Шахматная</option><option value="light">Светлая</option></select></label>
+        <label>Ширина чата<select id="width"><option value="wide">Широкий</option><option value="narrow">Узкий · 360 px</option></select></label>
+        <label>Лимит Алексея<select id="quota"><option value="5">5 зарядов</option><option value="1">1 заряд</option><option value="8">8 зарядов</option><option value="9">9 зарядов</option><option value="25">25 зарядов</option><option value="100">100 зарядов</option></select></label>
+      </div>
+      <div class="preview-layout" id="preview">
+        <div class="stage" id="stage" data-bg="scene">
+          <span class="stage-label">OBS / ПРЕДПРОСМОТР КОНЦЕПЦИИ</span>
+          <div class="chat" id="chat" aria-label="Примеры сообщений"></div>
+        </div>
+        <aside class="side">
+          <div class="eyebrow">Попробовать</div><h3>Заряды Алексея</h3>
+          <p>Действия ниже меняют только этот мокап. Лимит можно задать независимо от значка уровня.</p>
+          <div class="actions">
+            <button id="fire-like" type="button">♥ Использовать like</button>
+            <button id="fire-buff" type="button">ϟ Использовать buff</button>
+            <button id="reject" type="button">Отказ: уже усиливал</button>
+            <button id="reset" type="button">Новый стрим · восстановить</button>
+          </div>
+          <div id="status" role="status" aria-live="polite">У Алексея осталось 3 like и 2 buff из 5.</div>
+          <p>Слева от ника — уровень. Под ником — доступные действия. Справа — полученная награда.</p>
+          <p>Пустые патроны остаются видимыми. Отказ не расходует запас. Для 9+ зарядов — значок обоймы и точное число.</p>
+        </aside>
+      </div>
+      <p class="small-note">Цвет дополняет форму: сердце — like, молния — buff. Заполненный патрон доступен, контурный уже потрачен. В узком чате индикаторы переносятся, текст сообщения сохраняется полностью.</p>
+    </section>
+    <section id="ammo">
+      <div class="section-head"><span class="section-num">02</span><h2>От одного до ста зарядов</h2></div>
+      <div class="examples" id="examples"></div>
+      <p class="small-note">Порог в этом эскизе — 8. Большая обойма имеет постоянную ширину: её рисунок — символ запаса, а не шкала. Даже при остатке 2 / 100 она сохраняет числовой формат.</p>
+    </section>
+    <section id="levels">
+      <div class="section-head"><span class="section-num">03</span><h2>Одна система знаков различия</h2></div>
+      <div class="rank-strip" id="ranks"></div>
+      <p class="small-note">Сверху — увеличенный знак для оценки силуэта, снизу — размер около ника. Здесь показаны стартовые уровни; выбор знака для пользовательских уровней предполагается в редакторе.</p>
+    </section>
+    <section id="surfaces">
+      <div class="section-head"><span class="section-num">04</span><h2>Рейтинг и карточка зрителя</h2></div>
+      <div class="surfaces">
+        <div class="surface"><div class="surface-label">OBS / Рейтинг за стрим</div><h3>Экипаж на связи</h3><div id="leaderboard"></div><p class="small-note">Место и XP относятся к стриму. Знак уровня — к опыту за всё время.</p></div>
+        <div class="surface"><div class="surface-label">Audience / Карточка зрителя</div><div id="profile"></div></div>
+      </div>
+    </section>
+    <p class="small-note footer">Самостоятельный HTML-мокап · без внешних шрифтов, изображений и запросов к приложению. Все имена и значения демонстрационные. Настройки оформления и новые поля пока не реализованы в продукте.</p>
+  </main>
+  <script>
+    const ranks = [
+      { title: 'Новобранец', xp: 0, color: '#b6c6d2' },
+      { title: 'Завсегдатай', xp: 100, color: '#97d4b5' },
+      { title: 'Ветеран', xp: 500, color: '#85cee8' },
+      { title: 'Элита', xp: 1500, color: '#d0b2f3' },
+      { title: 'Легенда', xp: 5000, color: '#f1d287' }
+    ];
+    const state = { total: 5, like: 3, buff: 2 };
+    const icon = (name, cls = '') => `<svg class="${cls}" aria-hidden="true"><use href="#${name}"></use></svg>`;
+    const badge = (level) => `<span class="badge" style="--rank-color:${ranks[level - 1].color}" role="img" aria-label="Уровень: ${ranks[level - 1].title}" title="${ranks[level - 1].title}">${icon('rank' + level)}</span>`;
+    function ammo(kind, left, total, exact = false) {
+      const label = `${kind === 'like' ? 'Like' : 'Buff'}: осталось ${left} из ${total} за стрим`;
+      const visual = total <= 8
+        ? `<span class="rounds" aria-hidden="true">${Array.from({ length: total }, (_, i) => `<span class="round ${i < left ? 'loaded' : ''}"></span>`).join('')}</span>`
+        : icon('mag', 'magazine');
+      const count = total > 8 || exact || left === 0 ? `<span class="count" aria-hidden="true">${left}<span class="capacity"> / ${total}</span></span>` : '';
+      return `<span class="ammo ${kind} ${left === 0 ? 'empty' : ''}" role="img" aria-label="${label}" title="${label}">${icon(kind === 'like' ? 'heart' : 'bolt')}${visual}${count}</span>`;
+    }
+    function message({ name, initials, level, platform, text, total, like, buff, color, reward = '', demo = false }) {
+      return `<article class="message" ${demo ? 'id="demo-message"' : ''} style="--author:${color}"><div class="identity"><span class="avatar" aria-hidden="true">${initials}</span><span class="platform">${platform}</span>${badge(level)}<span class="name">${name}</span>${reward ? `<span class="reward">✦ ${reward}</span>` : ''}</div><div class="ammo-row">${ammo('like', like, total)}${ammo('buff', buff, total)}</div><p class="body">${text}</p></article>`;
+    }
+    function renderChat() {
+      document.getElementById('chat').innerHTML = [
+        message({ name: 'Лина', initials: 'ЛН', level: 1, platform: 'YT', text: 'Всем привет! Первый раз на стриме.', total: 1, like: 1, buff: 1, color: '#aabecf' }),
+        message({ name: 'Механик', initials: 'МК', level: 3, platform: 'VK', text: 'Попробуй зайти справа, там открытый фланг.', total: 3, like: 0, buff: 2, color: '#85cee8', reward: '+20 XP' }),
+        message({ name: 'Nova', initials: 'NV', level: 5, platform: 'TW', text: 'Вот это команда. Поддерживаю!', total: 100, like: 73, buff: 8, color: '#f1d287' }),
+        message({ name: 'Алексей', initials: 'АЛ', level: 4, platform: 'TW', text: 'Отличный заход, вот это попадание!', total: state.total, like: state.like, buff: state.buff, color: '#d0b2f3', demo: true })
+      ].join('');
+      document.getElementById('profile').innerHTML = `<div class="profile-heading">${badge(4)}<div><h3>Алексей</h3><small>Элита · Twitch + YouTube</small></div></div><div class="progress" role="progressbar" aria-label="Прогресс от Элиты до Легенды" aria-valuemin="0" aria-valuemax="100" aria-valuenow="32"><span></span></div><p class="small-note">2 620 XP за всё время · до Легенды ещё 2 380 XP</p><div class="detail-quota"><span>Like · текущий стрим</span>${ammo('like', state.like, state.total, true)}</div><div class="detail-quota"><span>Buff · текущий стрим</span>${ammo('buff', state.buff, state.total, true)}</div><p class="small-note">Остаток общий для связанных платформ. В этом примере лимит уровня задан оператором.</p>`;
+    }
+    document.getElementById('ranks').innerHTML = ranks.map((rank, i) => `<div class="rank-tile">${badge(i + 1)}<strong>${rank.title}</strong><small>от ${rank.xp.toLocaleString('ru-RU')} XP</small><div class="mini">${badge(i + 1)} Зритель</div></div>`).join('');
+    const cases = [
+      [1, 1, 'Один заряд', 'Новый зритель. Легко заметить доступное действие.'],
+      [2, 5, 'Обычная обойма', 'Два доступных применения, три потрачены.'],
+      [0, 5, 'Запас исчерпан', 'Пустые контуры и ноль; индикатор не исчезает.'],
+      [6, 8, 'Восемь — верхняя граница', 'Последний размер с отдельными патронами.'],
+      [7, 9, 'Девять — числовой формат', 'Фиксированный символ и точное значение.'],
+      [73, 100, 'Большой запас', 'Сто зарядов занимают столько же места, сколько девять.']
+    ];
+    document.getElementById('examples').innerHTML = cases.map(([left, total, title, note]) => `<div class="example"><div class="example-label">${title}</div>${ammo('like', left, total, true)}<p>${note}</p></div>`).join('');
+    document.getElementById('leaderboard').innerHTML = [{ name: 'Nova', level: 5, xp: 320 }, { name: 'Алексей', level: 4, xp: 240 }, { name: 'Механик', level: 3, xp: 185 }].map((viewer, i) => `<div class="leader-row"><span class="place">${i + 1}</span>${badge(viewer.level)}<div class="leader-name"><strong>${viewer.name}</strong><small>${ranks[viewer.level - 1].title}</small></div><span class="xp">${viewer.xp} XP</span></div>`).join('');
+    document.getElementById('theme').addEventListener('change', (event) => { document.getElementById('stage').className = 'stage theme-' + event.target.value; });
+    document.getElementById('background').addEventListener('change', (event) => { document.getElementById('stage').dataset.bg = event.target.value; });
+    document.getElementById('width').addEventListener('change', (event) => { document.getElementById('preview').classList.toggle('narrow', event.target.value === 'narrow'); });
+    const status = (text) => { document.getElementById('status').textContent = text; };
+    document.getElementById('quota').addEventListener('change', (event) => {
+      state.total = Number(event.target.value); state.like = state.total; state.buff = state.total; renderChat();
+      status('Демо сброшено: по ' + state.total + ' зарядов каждого действия.');
+    });
+    for (const kind of ['like', 'buff']) {
+      document.getElementById('fire-' + kind).addEventListener('click', () => {
+        if (state[kind] === 0) { status('Отказ: запас ' + kind + ' исчерпан. Восстановится в новом стриме.'); return; }
+        state[kind]--; renderChat();
+        document.querySelector('#demo-message .' + kind).classList.add('spent');
+        status(kind + ' принят. Осталось ' + state[kind] + ' из ' + state.total + '.');
+      });
+    }
+    document.getElementById('reject').addEventListener('click', () => { status('Buff отклонён: эту награду уже усиливали. Остаток не изменился: ' + state.buff + ' из ' + state.total + '.'); });
+    document.getElementById('reset').addEventListener('click', () => { state.like = state.total; state.buff = state.total; renderChat(); status('Новый стрим: обе обоймы восстановлены.'); });
+    renderChat();
+  </script>
+</body>
+</html>

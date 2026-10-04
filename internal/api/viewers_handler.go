@@ -61,26 +61,27 @@ type lastSeenResponse struct {
 }
 
 type viewerSummaryResponse struct {
-	ID                        string                     `json:"id"`
-	DisplayName               string                     `json:"display_name"`
-	AvatarURL                 string                     `json:"avatar_url,omitempty"`
-	CustomAvatar              string                     `json:"custom_avatar,omitempty"`
-	LeaderboardHidden         bool                       `json:"leaderboard_hidden,omitempty"`
-	GreetingsDisabled         bool                       `json:"greetings_disabled"`
-	ProgressionAlertsDisabled bool                       `json:"progression_alerts_disabled"`
-	MessageCount              int                        `json:"message_count"`
-	XP                        int                        `json:"xp"`
-	SessionMessageCount       int                        `json:"session_message_count"`
-	SessionXP                 int                        `json:"session_xp"`
-	DayMessageCount           int                        `json:"day_message_count"`
-	DayXP                     int                        `json:"day_xp"`
-	SessionCount              int                        `json:"session_count"`
-	LastSeenAt                string                     `json:"last_seen_at"`
-	LastSeen                  lastSeenResponse           `json:"last_seen"`
-	Platforms                 []string                   `json:"platforms"`
-	Identities                []viewerIdentityResponse   `json:"identities,omitempty"`
-	CurrentLevel              *progressionLevelResponse  `json:"current_level,omitempty"`
-	Progression               *viewerProgressionResponse `json:"progression,omitempty"`
+	ID                        string                      `json:"id"`
+	DisplayName               string                      `json:"display_name"`
+	AvatarURL                 string                      `json:"avatar_url,omitempty"`
+	CustomAvatar              string                      `json:"custom_avatar,omitempty"`
+	LeaderboardHidden         bool                        `json:"leaderboard_hidden,omitempty"`
+	GreetingsDisabled         bool                        `json:"greetings_disabled"`
+	ProgressionAlertsDisabled bool                        `json:"progression_alerts_disabled"`
+	MessageCount              int                         `json:"message_count"`
+	XP                        int                         `json:"xp"`
+	SessionMessageCount       int                         `json:"session_message_count"`
+	SessionXP                 int                         `json:"session_xp"`
+	DayMessageCount           int                         `json:"day_message_count"`
+	DayXP                     int                         `json:"day_xp"`
+	SessionCount              int                         `json:"session_count"`
+	LastSeenAt                string                      `json:"last_seen_at"`
+	LastSeen                  lastSeenResponse            `json:"last_seen"`
+	Platforms                 []string                    `json:"platforms"`
+	Identities                []viewerIdentityResponse    `json:"identities,omitempty"`
+	CurrentLevel              *progressionLevelResponse   `json:"current_level,omitempty"`
+	Progression               *viewerProgressionResponse  `json:"progression,omitempty"`
+	VisualStatus              *viewerVisualStatusResponse `json:"visual_status,omitempty"`
 }
 
 type viewersListResponse struct {
@@ -215,6 +216,13 @@ func (h *viewersHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	progressResponse := viewerProgressionFromStore(progress)
 	response.Progression = &progressResponse
 	response.CurrentLevel = progressResponse.CurrentLevel
+	visual, visualErr := h.viewerStore.ViewerVisualStatusByID(viewer.ID)
+	if visualErr != nil {
+		clog.Errorf(r.Context(), "read viewer detail visual status: %w", visualErr)
+	} else {
+		status := visualStatusFromStore(visual)
+		response.VisualStatus = &status
+	}
 	writeJSON(w, http.StatusOK, response)
 }
 

@@ -1,4 +1,7 @@
 import { appendText, createChatRender, createRewardSlot, safeImageURL, setRewardSlot } from "/shared/chat-render.js?v=13";
+import { createLevelBadge, createAmmoRow, visualIdentityKey, sampleVisualStatus } from "/shared/viewer-visual-status.js";
+import { createViewerStatusClient } from "/shared/viewer-status-client.js";
+import { setLocale } from "/shared/i18n.js";
 import {
   fontStack,
   panelBackground,
@@ -7,7 +10,7 @@ import {
   normalizePreviewBackground,
   overlayAssetURL,
   overlayViewFromConfig
-} from "/overlay/overlay-settings.js?v=8";
+} from "/overlay/overlay-settings.js?v=9";
 import {
   findEntryByMessageKey,
   rememberPendingCommandCooldown,
@@ -401,6 +404,7 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
         return;
       }
       const payload = await response.json();
+      setLocale(payload?.admin?.time_locale);
       if (typeof payload.hide_command_messages === "boolean") {
         applyHideCommandMessages(payload.hide_command_messages);
       }
@@ -426,6 +430,16 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
 
   /** @type {Array<{ el: HTMLElement, ttlTimer: number | null, rewardTimer: number | null, commandCooldownTimer: number | null, commandCooldownActive: boolean, messageKey: string }>} */
   const entries = [];
+  let viewerStatuses = new Map();
+  const statusClient = samplePreviewEnabled || debugTestEnabled ? null : createViewerStatusClient({
+    identities: () => overlayView.show_level_badges || overlayView.show_command_ammo ? entries.map(entry => entry.frame) : [],
+    receive: (statuses) => {
+      viewerStatuses = statuses;
+      entries.forEach(entry => updateViewerVisuals(entry.el, entry.frame));
+      trimToLimit();
+      scrollToBottom();
+    },
+  });
   const renderedMessageIDs = new Set();
   const pendingCommandCooldowns = new Map();
   /** @type {Map<string, { frame: object, waitTimer: number | null }>} */
@@ -735,8 +749,10 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     const userEl = document.createElement("span");
     userEl.className = "message__user";
     appendText(userEl, user);
-    identityEl.appendChild(platformEl);
-    identityEl.appendChild(userEl);
+    const identityHeader = document.createElement("span");
+    identityHeader.className = "message__identity-header";
+    identityHeader.append(avatarEl, platformEl, userEl);
+    identityEl.append(identityHeader);
 
     const rewardSlot = createRewardSlot();
 
@@ -744,13 +760,37 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     textEl.className = "message__text";
     appendMessageContent(textEl, frame, text);
 
-    row.appendChild(avatarEl);
     row.appendChild(accentEl);
     row.appendChild(identityEl);
     row.appendChild(textEl);
     row.appendChild(rewardSlot);
+    updateViewerVisuals(row, frame);
     updateRewardFeedback(row, rewardSlot, reward);
     return rewardSlot;
+  }
+
+  function updateViewerVisuals(row, frame) {
+    const identity = row.querySelector(".message__identity");
+    if (!identity) return;
+    const status = samplePreviewEnabled || debugTestEnabled
+      ? frame.visual_status || sampleVisualStatus(0)
+      : viewerStatuses.get(visualIdentityKey(frame));
+    const signature = JSON.stringify([status, overlayView.show_level_badges, overlayView.show_command_ammo]);
+    if (identity.dataset.visualStatus === signature) return;
+    identity.dataset.visualStatus = signature;
+    identity.querySelector(".message__status")?.remove();
+    if (!status) return;
+    const visuals = document.createElement("span");
+    visuals.className = "message__status";
+    if (overlayView.show_level_badges) {
+      const badge = createLevelBadge(status.level);
+      if (badge) visuals.append(badge);
+    }
+    if (overlayView.show_command_ammo) {
+      const ammo = createAmmoRow(status);
+      if (ammo) visuals.append(ammo);
+    }
+    if (visuals.childElementCount) identity.append(visuals);
   }
 
   function updateRewardFeedback(row, rewardSlot, reward) {
@@ -1009,6 +1049,7 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     trimToLimit();
     scrollToBottom();
     maybeApplyPendingCommandCooldown(entries[entries.length - 1]);
+    statusClient?.schedule();
   }
 
   function highlightRewardedMessage(alert) {
@@ -1035,6 +1076,7 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     if (!frame || typeof frame !== "object") {
       return;
     }
+    if (["message", "command_outcome", "leaderboard", "viewer_progression", "viewer_status_changed", "overlay_settings"].includes(frame.type)) statusClient?.schedule();
     if (frame.type === "overlay_settings") {
       applyOverlaySettingsFrame(frame);
       applyAppearance();
@@ -1073,6 +1115,7 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
       type: "message",
       id: typeof msg.id === "string" ? msg.id : "",
       platform: typeof msg.platform === "string" ? msg.platform : "",
+      user_id: typeof msg.user_id === "string" ? msg.user_id : "",
       user: displayName || username,
       username: username,
       message: typeof msg.message === "string" ? msg.message : "",
@@ -1142,6 +1185,7 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
     ];
 
     messages.forEach(function (frame, index) {
+      frame.visual_status = sampleVisualStatus(index);
       window.setTimeout(function () {
         renderMessage(frame, { ttlMs: null });
       }, index * SAMPLE_PREVIEW_MESSAGE_STAGGER_MS);
@@ -1167,6 +1211,7 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
 
     socket = new WebSocket(wsURL());
     socket.addEventListener("open", function () {
+      statusClient?.schedule();
       reconnectDelayMs = INITIAL_RECONNECT_MS;
       if (!debugTestEnabled && historyBootstrapped) {
         loadRecentMessages();
@@ -1180,6 +1225,7 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
   }
 
   window.addEventListener("beforeunload", function () {
+    statusClient?.stop();
     shouldRun = false;
     clearReconnectTimer();
     if (socket) {

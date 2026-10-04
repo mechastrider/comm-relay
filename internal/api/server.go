@@ -122,6 +122,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	mux.HandleFunc("POST /api/messages/delete", messagesHandler.handleDelete)
 	mux.HandleFunc("GET /api/viewers", viewersHandler.handleList)
 	mux.HandleFunc("GET /api/viewers/get", viewersHandler.handleGet)
+	mux.HandleFunc("POST /api/viewers/status", viewersHandler.handleVisualStatus)
 	mux.HandleFunc("POST /api/viewers/merge", viewersHandler.handleMerge)
 	mux.HandleFunc("POST /api/viewers/update", viewersHandler.handleUpdate)
 	mux.HandleFunc("POST /api/viewers/avatar/upload", viewersHandler.handleAvatarUpload)

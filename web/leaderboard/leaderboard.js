@@ -1,5 +1,6 @@
 "use strict";
 
+import { createLevelBadge } from "/shared/viewer-visual-status.js";
 import {
   fontStack,
   panelBackground,
@@ -8,7 +9,7 @@ import {
   normalizePanelImageScope,
   normalizePreviewBackground,
   overlayAssetURL,
-} from "../overlay-settings.js?v=8";
+} from "../overlay-settings.js?v=9";
 import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.js?v=1";
 import { setLocale, t } from "/shared/i18n.js?v=18";
 import {
@@ -50,11 +51,11 @@ const PREVIEW_BACKGROUND_CLASSES = [
 ];
 
 const SAMPLE_ENTRIES = [
-  { rank: 1, display_name: "Nova", xp: 42, message_count: 18, avatar_url: "", level: { title: "Veteran" } },
-  { rank: 2, display_name: "Brick", xp: 31, message_count: 14, avatar_url: "", level: { title: "Regular" } },
-  { rank: 3, display_name: "Helix", xp: 18, message_count: 9, avatar_url: "", level: { title: "Recruit" } },
-  { rank: 4, display_name: "Mira", xp: 12, message_count: 6, avatar_url: "", level: { title: "Recruit" } },
-  { rank: 5, display_name: "Tor", xp: 7, message_count: 4, avatar_url: "", level: { title: "Recruit" } },
+  { rank: 1, display_name: "Nova", xp: 42, message_count: 18, avatar_url: "", level: { title: "Veteran", emblem: "chevron_3" } },
+  { rank: 2, display_name: "Brick", xp: 31, message_count: 14, avatar_url: "", level: { title: "Regular", emblem: "chevron_2" } },
+  { rank: 3, display_name: "Helix", xp: 18, message_count: 9, avatar_url: "", level: { title: "Recruit", emblem: "chevron_1" } },
+  { rank: 4, display_name: "Mira", xp: 12, message_count: 6, avatar_url: "", level: { title: "Elite", emblem: "star" } },
+  { rank: 5, display_name: "Tor", xp: 7, message_count: 4, avatar_url: "", level: { title: "Legend", emblem: "laurel" } },
 ];
 
 const root = document.getElementById("leaderboard");
@@ -478,6 +479,10 @@ function renderEntries(entries, remember = true) {
     displayName.className = "leaderboard-display-name";
     displayName.textContent = escapeText(entry.display_name || "—");
     name.append(displayName);
+    if (overlayView.show_level_badges && entry.level) {
+      const badge = createLevelBadge(entry.level, t);
+      if (badge) displayName.prepend(badge);
+    }
     if (overlayView.show_viewer_titles && entry.level && typeof entry.level.title === "string" && entry.level.title.trim()) {
       const title = document.createElement("span");
       title.className = "leaderboard-viewer-title";
@@ -548,6 +553,10 @@ function handleSocketMessage(event) {
       renderCurrentContent();
       void loadSnapshot();
     }
+    return;
+  }
+  if (frame.type === "viewer_status_changed" && !samplePreviewEnabled && !debugTestEnabled) {
+    void loadSnapshot();
     return;
   }
   if (frame.type === "leaderboard_visibility") {
