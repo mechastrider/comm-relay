@@ -1,4 +1,5 @@
 import { Button } from "../components/Button";
+import { Wordmark } from "../components/Wordmark";
 import { useState } from "react";
 import { useLocale } from "../app/locale";
 import { post } from "../services/api";
@@ -51,7 +52,7 @@ export function About({ version }: { version: string }) {
           aria-label={t("about.aboutCommRelay")}
         >
           <div className="about-identity">
-            <div className="about-product">{"CommRelay"}</div>
+            <div className="about-product"><Wordmark /></div>
             <div
               id="about-version"
               className="about-version"

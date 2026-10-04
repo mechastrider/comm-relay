@@ -9,6 +9,8 @@
   --color-bg-inset: var(--primitive-gray-950);
 
   /* Semantic text */
+  --color-brand-primary: var(--primitive-gray-50);
+  --color-brand-accent: var(--primitive-orange-500);
   --color-text-primary: var(--primitive-gray-100);
   --color-text-secondary: var(--primitive-gray-150);
   --color-text-muted: var(--primitive-gray-150);

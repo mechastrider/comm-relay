@@ -1,4 +1,5 @@
 import { Button } from "../components/Button";
+import { Wordmark } from "../components/Wordmark";
 import { CommandAudio } from "./CommandAudio";
 import { useSaveStatus } from "./save-status";
 import { useEffect, useState } from "react";
@@ -177,7 +178,7 @@ export function Shell() {
             <span className="brand-kicker" data-i18n="shell.brandKicker">
               {t("shell.brandKicker")}
             </span>
-            <p className="brand-title">{"CommRelay"}</p>
+            <p className="brand-title"><Wordmark /></p>
           </div>
           <div
             className="connector-rack"

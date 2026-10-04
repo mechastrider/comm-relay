@@ -5,6 +5,7 @@ import { createHashRouter, RouterProvider, Navigate } from "react-router";
 import { LocaleProvider } from "./app/locale";
 import { RuntimeProvider, useRuntime } from "./app/runtime";
 import { Shell } from "./app/Shell";
+import { Wordmark } from "./components/Wordmark";
 const Settings = lazy(() =>
   import("./features/settings/Settings").then((module) => ({
     default: module.Settings,
@@ -67,7 +68,7 @@ class ErrorBoundary extends Component<
     if (this.state.error)
       return (
         <main role="alert">
-          <h1>CommRelay</h1>
+          <h1><Wordmark /></h1>
           <p>{this.state.error.message}</p>
           <button onClick={() => location.reload()}>
             Reload / Перезагрузить

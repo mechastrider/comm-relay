@@ -66,13 +66,23 @@
 .brand-stack h1,
 .brand-title {
   margin: 0;
-  color: var(--amber);
   font-size: var(--primitive-font-size-xl);
   line-height: 1.1;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  text-shadow: 0 0 8px rgba(212, 160, 23, 0.42);
   white-space: nowrap;
+}
+
+.wordmark {
+  color: var(--color-brand-primary);
+  font-family: var(--primitive-font-mono);
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-shadow: none;
+  white-space: nowrap;
+}
+
+.wordmark__accent {
+  color: var(--color-brand-accent);
 }
 
 .connector-rack {
