@@ -124,7 +124,7 @@ body.overlay--compact {
   max-width: 100%;
   padding: var(--overlay-message-padding-y) var(--overlay-message-padding-x);
   padding-left: calc(var(--overlay-message-padding-x) + 4px);
-  padding-right: calc(var(--overlay-message-padding-x) + var(--message-reward-slot-width));
+  padding-right: var(--overlay-message-padding-x);
   border-radius: var(--overlay-message-radius);
   border-left: 3px solid var(--platform-default);
   background: var(--overlay-panel-bg);
@@ -249,6 +249,7 @@ body.overlay--compact {
 }
 
 .message__reward {
+  box-sizing: border-box;
   display: flex;
   width: 100%;
   min-width: 0;
@@ -261,6 +262,7 @@ body.overlay--compact {
   color: #fff1a8;
   font-family: inherit;
   font-size: max(10px, 0.62em);
+  min-height: calc(1.25em + 4px);
   font-weight: 800;
   line-height: 1.25;
   white-space: nowrap;
@@ -327,7 +329,7 @@ body.overlay-theme--dashboard .message {
   padding: 0;
   padding-left: 0;
   /* The badge slot stays reserved even before an award arrives. */
-  padding-right: calc(var(--overlay-message-padding-x) + var(--message-reward-slot-width));
+  padding-right: var(--overlay-message-padding-x);
   border-left: 0;
   border-radius: 0;
   background: transparent;
@@ -484,7 +486,7 @@ body.overlay-theme--cockpit-panel .message {
   gap: 8px;
   padding: 0;
   padding-left: 0;
-  padding-right: var(--message-reward-slot-width);
+  padding-right: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -670,7 +672,7 @@ body.overlay-theme--cockpit-popups .message {
   width: 100%;
   min-height: 70px;
   padding: 14px 19px 16px 15px;
-  padding-right: calc(19px + var(--message-reward-slot-width));
+  padding-right: 19px;
   border: 1px solid rgba(53, 210, 208, 0.4);
   border-radius: 0;
   background:
@@ -774,7 +776,7 @@ body.overlay-theme--g-rebels-popups .message {
   width: 100%;
   min-height: 82px;
   padding: 19px 22px 16px 18px;
-  padding-right: calc(22px + var(--message-reward-slot-width));
+  padding-right: 22px;
   border: 1px solid rgba(247, 227, 106, 0.66);
   border-radius: 0;
   background:
@@ -1015,20 +1017,83 @@ body.overlay-theme--default.overlay-panel-image-fit--tile.overlay-panel-image-sc
 }
 
 .message__identity {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  flex: 1 1 100%;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.message__identity-header {
+  display: flex;
   align-items: center;
   gap: 6px;
+  flex: 1 1 7em;
   min-width: 0;
 }
 
 .message__identity .message__user {
   min-width: 0;
+  max-width: none;
   flex: 0 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
+
+.message__status {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 8px;
+  margin-left: auto;
+  max-width: 100%;
+  font-size: .85em;
+}
+
+.message__status .viewer-ammo-row { flex-wrap: nowrap; gap: .8em; }
+.message__text { flex-basis: 100%; }
+
+/* Award feedback only takes space when present, below the message body. */
+body .message__reward-slot {
+  position: static;
+  order: 1;
+  flex-basis: 100%;
+  width: 100%;
+  grid-area: reward;
+  display: flex;
+  justify-content: flex-end;
+}
+
+body .message__reward-slot[aria-hidden="true"] { display: none; }
+
+body .message__reward { width: var(--message-reward-slot-width); }
+
+body.overlay-theme--cockpit-panel .message,
+body.overlay-theme--cockpit-popups .message,
+body.overlay-theme--g-rebels-popups .message {
+  grid-template-columns: 5px minmax(0, 1fr);
+  grid-template-areas: "accent user" "text text";
+}
+
+body.overlay-theme--cockpit-panel .message:has(.message__reward-slot:not([aria-hidden="true"])),
+body.overlay-theme--cockpit-popups .message:has(.message__reward-slot:not([aria-hidden="true"])),
+body.overlay-theme--g-rebels-popups .message:has(.message__reward-slot:not([aria-hidden="true"])) {
+  grid-template-areas: "accent user" "text text" "reward reward";
+}
+
+.message__identity-header .message__avatar { flex-shrink: 0; }
 
 body.overlay-theme--cockpit-panel .message__identity,
 body.overlay-theme--cockpit-popups .message__identity,
-body.overlay-theme--g-rebels-popups .message__identity {
-  grid-area: user;
-  overflow: hidden;
+body.overlay-theme--g-rebels-popups .message__identity { grid-area: user; }
+
+@container (max-width: 250px) {
+  .message__status { font-size: 12px; gap: 4px; }
+  .message__status .viewer-ammo-row { gap: 6px; }
+  .message__status .viewer-ammo { gap: 3px; }
+  .message__status .viewer-ammo__rounds { gap: 2px; }
+  .message__status .viewer-ammo__round { width: 3px; }
 }

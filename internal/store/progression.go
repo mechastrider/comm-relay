@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	progressionLevelSelectColumns = `id, title, min_xp, like_quota, buff_quota, announce, created_at, updated_at`
+	progressionLevelSelectColumns = `id, title, min_xp, like_quota, buff_quota, announce, created_at, updated_at, emblem`
 	maxProgressionDefinitions     = 200
 	maxProgressionNameRunes       = 64
 	maxProgressionDescription     = 240
@@ -22,6 +22,7 @@ const (
 type CreateProgressionLevelInput struct {
 	ID        string
 	Title     string
+	Emblem    string
 	MinXP     int
 	LikeQuota int
 	BuffQuota int
@@ -232,6 +233,12 @@ func (s *Store) ListProgressionLevels() ([]ProgressionLevel, error) {
 
 // CreateProgressionLevel adds one unique XP threshold.
 func (s *Store) CreateProgressionLevel(input CreateProgressionLevelInput) (*ProgressionLevel, error) {
+	if !validLevelEmblem(input.Emblem) {
+		return nil, ErrProgressionValidation
+	}
+	if input.Emblem == "" {
+		input.Emblem = "shield"
+	}
 	title, err := normalizeProgressionText(input.Title, maxProgressionNameRunes, true)
 	if err != nil || input.MinXP < 0 || input.MinXP > maxProgressionTarget {
 		return nil, ErrProgressionValidation
@@ -252,7 +259,7 @@ func (s *Store) CreateProgressionLevel(input CreateProgressionLevelInput) (*Prog
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if _, err := s.db.Exec(`INSERT INTO progression_levels (id, title, min_xp, like_quota, buff_quota, announce, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, id, title, input.MinXP, input.LikeQuota, input.BuffQuota, boolInt(input.Announce), formatTime(now), formatTime(now)); err != nil {
+	if _, err := s.db.Exec(`INSERT INTO progression_levels (id, title, min_xp, like_quota, buff_quota, announce, created_at, updated_at, emblem) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, id, title, input.MinXP, input.LikeQuota, input.BuffQuota, boolInt(input.Announce), formatTime(now), formatTime(now), input.Emblem); err != nil {
 		return nil, errors.Errorf("insert progression level: %w", err)
 	}
 	return s.getProgressionLevelLocked(id)
@@ -260,6 +267,9 @@ func (s *Store) CreateProgressionLevel(input CreateProgressionLevelInput) (*Prog
 
 // UpdateProgressionLevel changes an existing level without allowing its baseline threshold to move.
 func (s *Store) UpdateProgressionLevel(input UpdateProgressionLevelInput) (*ProgressionLevel, error) {
+	if !validLevelEmblem(input.Emblem) {
+		return nil, ErrProgressionValidation
+	}
 	title, err := normalizeProgressionText(input.Title, maxProgressionNameRunes, true)
 	if err != nil || input.MinXP < 0 || input.MinXP > maxProgressionTarget {
 		return nil, ErrProgressionValidation
@@ -287,7 +297,10 @@ func (s *Store) UpdateProgressionLevel(input UpdateProgressionLevelInput) (*Prog
 	if current.MinXP == 0 && input.MinXP != 0 {
 		return nil, ErrBaselineLevel
 	}
-	result, err := s.db.Exec(`UPDATE progression_levels SET title = ?, min_xp = ?, like_quota = ?, buff_quota = ?, announce = ?, updated_at = ? WHERE id = ?`, title, input.MinXP, input.LikeQuota, input.BuffQuota, boolInt(input.Announce), formatTime(now), id)
+	if input.Emblem == "" {
+		input.Emblem = current.Emblem
+	}
+	result, err := s.db.Exec(`UPDATE progression_levels SET title = ?, min_xp = ?, like_quota = ?, buff_quota = ?, announce = ?, updated_at = ?, emblem = ? WHERE id = ?`, title, input.MinXP, input.LikeQuota, input.BuffQuota, boolInt(input.Announce), formatTime(now), input.Emblem, id)
 	if err != nil {
 		return nil, errors.Errorf("update progression level: %w", err)
 	}
@@ -333,7 +346,7 @@ func scanProgressionLevel(scanner interface{ Scan(...any) error }) (ProgressionL
 	var level ProgressionLevel
 	var announce int
 	var created, updated string
-	if err := scanner.Scan(&level.ID, &level.Title, &level.MinXP, &level.LikeQuota, &level.BuffQuota, &announce, &created, &updated); err != nil {
+	if err := scanner.Scan(&level.ID, &level.Title, &level.MinXP, &level.LikeQuota, &level.BuffQuota, &announce, &created, &updated, &level.Emblem); err != nil {
 		return ProgressionLevel{}, err
 	}
 	var err error

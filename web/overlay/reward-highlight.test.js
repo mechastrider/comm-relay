@@ -228,7 +228,7 @@ test("every chat theme has animated, non-color reward feedback with a static fal
   assert.doesNotMatch(css, /\.message__reward\s*\{[^}]*position:\s*absolute/);
 });
 
-test("reward rows reserve an absolute badge slot before feedback without changing row geometry", async function () {
+test("reward rows preserve their slot without narrowing the message body", async function () {
   const overlay = await readFile(new URL("./overlay.js", import.meta.url), "utf8");
   const css = await readFile(new URL("./overlay.css", import.meta.url), "utf8");
   assert.match(overlay, /const rewardSlot = createRewardSlot\(\)/);
@@ -238,9 +238,10 @@ test("reward rows reserve an absolute badge slot before feedback without changin
   assert.match(overlay, /updateRewardFeedback\(target\.el, target\.rewardSlot, null\)/);
   assert.doesNotMatch(overlay, /onStart: function \(target, reward\) \{\s*fillMessageRow/);
   assert.doesNotMatch(overlay, /onEnd: function \(target\) \{\s*fillMessageRow/);
-  assert.match(css, /\.message__reward-slot\s*\{[\s\S]*?position:\s*absolute/);
+  assert.match(css, /body \.message__reward-slot\s*\{[^}]*position:\s*static/);
   assert.match(css, /\.message\s*\{[\s\S]*?--message-reward-slot-width/);
-  assert.match(css, /padding-right:\s*calc\([^;]*--message-reward-slot-width/);
+  assert.doesNotMatch(css, /padding-right:\s*calc\([^;]*--message-reward-slot-width/);
+  assert.match(css, /\.message__reward\s*\{[^}]*min-height:\s*calc\(1\.25em \+ 4px\)/);
   assert.match(css, /\.message__reward-name[\s\S]*?text-overflow:\s*ellipsis/);
   assert.match(css, /\.message__reward-points[\s\S]*?flex:\s*0 0 auto/);
 });
@@ -274,14 +275,13 @@ function dashboardMessagePaddingRight(css) {
   return value;
 }
 
-test("dashboard cascade keeps the reserved reward slot after its later padding reset", async function () {
+test("dashboard cascade does not reserve a reward column beside the body", async function () {
   const css = await readFile(new URL("./overlay.css", import.meta.url), "utf8");
 
-  // This resolves the winning declaration for a dashboard row (specificity and
-  // source order), rather than merely checking that the base .message rule has
-  // a reservation. A later dashboard padding reset would compute to zero.
+  // Resolve the winning declaration so a theme override cannot reintroduce
+  // the obsolete reward column after the full-width body layout.
   assert.equal(
     dashboardMessagePaddingRight(css),
-    "calc(var(--overlay-message-padding-x) + var(--message-reward-slot-width))"
+    "var(--overlay-message-padding-x)"
   );
 });

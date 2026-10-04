@@ -1,4 +1,6 @@
 import { Button } from "../../components/Button";
+import { LevelBadge } from "../../components/ViewerVisuals";
+import { LEVEL_EMBLEMS } from "../../../../shared/viewer-visual-status.js";
 import type { ReactNode } from "react";
 import { useLocale } from "../../app/locale";
 export function ProgressionView({
@@ -118,6 +120,13 @@ export function ProgressionView({
           >
             {errors["progression-level-title"]}
           </p>
+          <label htmlFor="progression-level-emblem">{t("viewerVisual.emblem")}</label>
+          <select id="progression-level-emblem" disabled={busy}
+            value={String(values["progression-level-emblem"] || "shield")}
+            onChange={(event) => change("progression-level-emblem", event.target.value)}>
+            {LEVEL_EMBLEMS.map(emblem => <option key={emblem} value={emblem}>{t("viewerVisual." + emblem)}</option>)}
+          </select>
+          <LevelBadge level={{ title: String(values["progression-level-title"] || t("viewerVisual.emblem")), emblem: String(values["progression-level-emblem"] || "shield") }} />
           <label htmlFor="progression-level-xp" data-i18n="progression.minXP">
             {t("progression.minXP")}
           </label>

@@ -53,6 +53,26 @@ export function Inspector({
             {t("studio.sharedPresetIntro")}
           </p>
           <div className="studio-inspector-essential form form--compact">
+            {(surface === "chat" || surface === "leaderboard") && (
+              <Field className="form__field--full">
+                <label className="checkbox" htmlFor={"overlay-" + surface + "-show-level-badges"}>
+                  <input id={"overlay-" + surface + "-show-level-badges"} type="checkbox"
+                    checked={values["overlay-" + surface + "-show-level-badges"] !== false}
+                    disabled={busy} onChange={(event) => change("overlay-" + surface + "-show-level-badges", event.target.checked)} />
+                  <span>{t("viewerVisual.badges")}</span>
+                </label>
+                {surface === "chat" && <>
+                  <label className="checkbox" htmlFor="overlay-chat-show-command-ammo">
+                    <input id="overlay-chat-show-command-ammo" type="checkbox"
+                      checked={values["overlay-chat-show-command-ammo"] !== false}
+                      disabled={busy} aria-describedby="viewer-ammo-hint"
+                      onChange={(event) => change("overlay-chat-show-command-ammo", event.target.checked)} />
+                    <span>{t("viewerVisual.ammo")}</span>
+                  </label>
+                  <p id="viewer-ammo-hint" className="field-hint">{t("viewerVisual.ammoHint")}</p>
+                </>}
+              </Field>
+            )}
             <h3
               className="overlay-section-title form__field--full"
               data-i18n="studio.sharedPresetLook"

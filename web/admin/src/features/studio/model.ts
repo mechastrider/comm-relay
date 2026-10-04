@@ -75,6 +75,9 @@ const styleKeys = [
 ];
 export function fieldsFor(preset: Preset, surface: Surface): Values {
   const values: Values = {};
+  values["overlay-chat-show-level-badges"] = preset.surfaces.chat?.show_level_badges !== false;
+  values["overlay-chat-show-command-ammo"] = preset.surfaces.chat?.show_command_ammo !== false;
+  values["overlay-leaderboard-show-level-badges"] = preset.surfaces.leaderboard?.show_level_badges !== false;
   for (const [id, key] of Object.entries(top)) values[id] = String(preset[key]);
   for (const key of styleKeys)
     values["overlay-" + key.replaceAll("_", "-")] = String(
@@ -122,6 +125,16 @@ export function changeField(
   value: string | boolean,
 ): Preset {
   const next = structuredClone(preset);
+  const visualFields: Record<string, [string, string]> = {
+    "overlay-chat-show-level-badges": ["chat", "show_level_badges"],
+    "overlay-chat-show-command-ammo": ["chat", "show_command_ammo"],
+    "overlay-leaderboard-show-level-badges": ["leaderboard", "show_level_badges"],
+  };
+  if (visualFields[id]) {
+    const [target, key] = visualFields[id];
+    next.surfaces[target] = { ...next.surfaces[target], [key]: value === true };
+    return next;
+  }
   if (top[id]) {
     const key = top[id];
     Object.assign(next, {
@@ -252,6 +265,8 @@ export function previewURL(
     preview_background: background,
     preset: preset.id,
     theme: preset.theme,
+    show_level_badges: preset.surfaces[surface]?.show_level_badges !== false ? "1" : "0",
+    show_command_ammo: preset.surfaces.chat?.show_command_ammo !== false ? "1" : "0",
     ...preset.style,
     panel_opacity: previewSurfacePanelOpacity(
       preset,

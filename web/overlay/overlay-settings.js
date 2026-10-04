@@ -248,7 +248,20 @@ function themeFromResolvedAndQuery(resolved, query) {
 }
 
 export function overlayViewFromConfig(config, params) {
-  return surfaceViewFromConfig(config, params, "chat");
+  const base = surfaceViewFromConfig(config, params, "chat");
+  const resolved = resolvePreset(config && config.overlay, params && typeof params.get === "function" ? params.get("preset") : params);
+  const surface = resolved && resolved.surfaces && resolved.surfaces.chat || {};
+  return Object.assign(base, {
+    show_level_badges: viewerVisualEnabled(surface, params, "show_level_badges"),
+    show_command_ammo: viewerVisualEnabled(surface, params, "show_command_ammo"),
+  });
+}
+
+function viewerVisualEnabled(surface, query, key) {
+  if (query && typeof query.has === "function" && query.has("preview") && query.has(key)) {
+    return !["0", "false"].includes(query.get(key));
+  }
+  return surface[key] !== false;
 }
 
 // Recap uses a full-canvas backdrop rather than the historical chat/alert
@@ -622,6 +635,7 @@ export function leaderboardViewFromConfig(config, params) {
     title: title.text,
     show_message_count: surface.show_message_count === true,
     show_viewer_titles: surface.show_viewer_titles === true,
+    show_level_badges: viewerVisualEnabled(surface, query, "show_level_badges"),
     max_entries: maxEntries,
   };
 }

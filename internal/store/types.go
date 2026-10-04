@@ -208,6 +208,7 @@ const (
 type ProgressionLevel struct {
 	ID        string
 	Title     string
+	Emblem    string
 	MinXP     int
 	LikeQuota int
 	BuffQuota int

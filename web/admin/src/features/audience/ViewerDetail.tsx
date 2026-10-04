@@ -1,4 +1,5 @@
 import { Field } from "../../components/Field";
+import { LevelBadge, ViewerAmmo } from "../../components/ViewerVisuals";
 import { Button, IconButton } from "../../components/Button";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useLocale } from "../../app/locale";
@@ -71,6 +72,10 @@ export function ViewerDetail({
     [subscribe, refresh],
   );
   const loaded = !!viewer;
+  useEffect(() => {
+    const timer = window.setInterval(() => { void refresh(); }, 4000);
+    return () => window.clearInterval(timer);
+  }, [refresh]);
   useEffect(() => {
     if (loaded) body.current?.focus();
   }, [wide, id, loaded]);
@@ -249,6 +254,7 @@ export function ViewerDetail({
               <dd>{viewer.session_count || 0}</dd>
             </dl>
             <section className="audience-detail__progression">
+              <LevelBadge level={current} />
               <h4 className="audience-detail__subheading">
                 {t("viewers.progressionHeading")}
               </h4>
@@ -277,6 +283,10 @@ export function ViewerDetail({
                   ))}
                 </ul>
               )}
+              {viewer.visual_status && !detail.error && <div>
+                <p className="field-hint">{t("viewerVisual.session")}</p>
+                <ViewerAmmo status={viewer.visual_status} />
+              </div>}
             </section>
             <ViewerHistory viewerID={id} />
             <form

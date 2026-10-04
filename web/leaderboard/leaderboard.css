@@ -1,5 +1,7 @@
 @import url("../overlay.css");
 
+.leaderboard-display-name .viewer-level-badge { margin-right: .35em; }
+
 :root {
   --leaderboard-font-size: 18px;
   --leaderboard-scale: 1;

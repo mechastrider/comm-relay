@@ -80,7 +80,9 @@ type OverlayRecapSurface struct {
 
 // OverlayChatSurface holds optional chat-only appearance overrides.
 type OverlayChatSurface struct {
-	PanelOpacity *float64 `json:"panel_opacity,omitempty"`
+	PanelOpacity    *float64 `json:"panel_opacity,omitempty"`
+	ShowLevelBadges *bool    `json:"show_level_badges,omitempty"`
+	ShowCommandAmmo *bool    `json:"show_command_ammo,omitempty"`
 }
 
 // OverlayLeaderboardSurface is the leaderboard look for one overlay preset.
@@ -92,6 +94,7 @@ type OverlayLeaderboardSurface struct {
 	Title            string   `json:"title,omitempty"`
 	ShowMessageCount bool     `json:"show_message_count,omitempty"`
 	ShowViewerTitles bool     `json:"show_viewer_titles,omitempty"`
+	ShowLevelBadges  *bool    `json:"show_level_badges,omitempty"`
 	MaxEntries       *int     `json:"max_entries,omitempty"`
 	PanelOpacity     *float64 `json:"panel_opacity,omitempty"`
 }

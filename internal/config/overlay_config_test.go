@@ -12,6 +12,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestViewerVisualSwitches_WhenExplicitFalse_ExpectRoundTripPreserved(t *testing.T) {
+	t.Parallel()
+	// Arrange: legacy omission and explicit disabled values have different meaning.
+	var preset OverlayPreset
+	require.NoError(t, json.Unmarshal([]byte(`{"surfaces":{"chat":{"show_level_badges":false,"show_command_ammo":false},"leaderboard":{"show_level_badges":false}}}`), &preset))
+	preset.applyDefaults()
+	// Act.
+	data, err := json.Marshal(preset)
+	require.NoError(t, err)
+	var restored OverlayPreset
+	require.NoError(t, json.Unmarshal(data, &restored))
+	// Assert.
+	require.NotNil(t, restored.Surfaces.Chat.ShowLevelBadges)
+	require.False(t, *restored.Surfaces.Chat.ShowLevelBadges)
+	require.False(t, *restored.Surfaces.Chat.ShowCommandAmmo)
+	require.False(t, *restored.Surfaces.Leaderboard.ShowLevelBadges)
+	var legacy OverlayPreset
+	legacy.applyDefaults()
+	require.Nil(t, legacy.Surfaces.Chat.ShowLevelBadges)
+}
+
 func TestEnsurePresets_WhenLegacyFlatOverlay_ExpectDefaultPresetAndMirroredFields(t *testing.T) {
 	t.Parallel()
 
