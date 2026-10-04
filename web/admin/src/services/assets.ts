@@ -46,7 +46,7 @@ export async function uploadAsset(
             ? "catalog.assetSoundTypeNotAllowed"
             : "obs.assetTypeNotAllowed"
         : errors[message];
-    throw new Error(key ? t(key, { max_kb: maxKb }) : cause.message);
+    throw new Error(key ? t(key, { max_kb: maxKb }) : cause.message, { cause });
   }
 }
 export function deleteAsset(filename: string) {
