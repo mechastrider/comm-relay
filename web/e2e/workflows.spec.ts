@@ -327,6 +327,8 @@ test('contract draft survives navigation and deliberate winner settlement grants
   await page.locator('#live-contract-award').click();
   await expect(page.locator('#live-contract-winner-next')).toBeDisabled();
   await page.locator('#live-contract-viewer-results button',{hasText:'Night Owl'}).click();
+  await expect(page.locator('#live-contract-viewer-results button',{hasText:'Night Owl'})).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('#live-contract-viewer-selected')).toContainText('Night Owl');
   await page.locator('#live-contract-winner-next').click();
   await expect(page.locator('#live-contract-award-confirmation')).toContainText('Night Owl');
   await page.locator('#live-contract-award-confirm').click();

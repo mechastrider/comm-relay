@@ -192,6 +192,18 @@ When a counted chat line has a stable identity, the system SHALL grant `activity
 - **WHEN** a viewer is leaderboard-hidden
 - **THEN** `GET /api/viewers` still includes that viewer with `leaderboard_hidden` true
 
+### Requirement: Channel account is omitted from rankings
+The system SHALL omit a canonical viewer from every leaderboard period when that viewer is the operator's channel account. A match is a Twitch, YouTube, or VK identity whose username, display name, or user id equals the configured Twitch channel, YouTube channel handle, or VK channel slug after trimming decorations, or any viewer observed with a `broadcaster` or `owner` badge. Omission MUST re-rank the remaining rows, MUST survive merge onto the surviving canonical viewer, and MUST NOT set `leaderboard_hidden` or remove the viewer from Audience. Empty channel settings MUST NOT omit viewers by name. Clearing a channel setting MUST NOT return a previously marked account to the ranking.
+
+#### Scenario: Twitch login outranks everyone else
+- **WHEN** the configured Twitch channel login matches the viewer with the highest XP
+- **THEN** that viewer is absent from the next leaderboard snapshot and the next viewer becomes rank 1
+- **AND** Audience still lists the channel account with `leaderboard_hidden` unchanged
+
+#### Scenario: YouTube owner badge
+- **WHEN** a YouTube chat line carries an owner badge for a viewer who is not matched by channel handle
+- **THEN** later leaderboard snapshots omit that canonical viewer
+
 ### Requirement: Platform avatar URLs are cached locally
 When an ingested identity has a non-empty remote `avatar_url`, the system SHALL attempt to download that image into the overlay-assets directory and record the stored filename on that identity. Only connector-supplied avatar URLs SHALL be fetched, never URLs from chat text. Fetches MUST use HTTPS, reject loopback and private destinations, cap size, sniff PNG/JPEG/WebP, and MUST NOT follow redirects onto private addresses. Fetch failure MUST leave the remote URL in place and MUST NOT fail chat ingest. Subsequent resolution SHALL prefer the cached file over the remote URL.
 

@@ -131,6 +131,17 @@ func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
 		clog.Errorf(ctx, "apply chat to viewer store: %w", err)
 		return
 	}
+	if store.IdentityIsChannelOwner(msg.Platform, msg.Username, msg.DisplayName, msg.UserID, msg.Badges, channelAccounts(cfg)) {
+		marked, markErr := v.viewerStore.MarkChannelOwner(msg.Platform, msg.UserID)
+		if markErr != nil {
+			clog.Errorf(ctx, "mark channel owner: %w", markErr)
+		} else if marked {
+			clog.Info(ctx, "channel account omitted from leaderboard",
+				slog.String("platform", msg.Platform),
+				slog.String("user_id", msg.UserID),
+			)
+		}
+	}
 	chatViewerID, _ := v.viewerStore.ViewerIDForIdentity(msg.Platform, msg.UserID)
 
 	if v.avatarWorker != nil {

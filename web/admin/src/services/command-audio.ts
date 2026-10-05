@@ -42,7 +42,7 @@ export function createCommandAudio(onStatus: (status: AudioStatus) => void) {
   }
 
   function play(alert: WireEvent) {
-    if (alert.source && alert.source !== "command") return;
+    if (alert.source && alert.source !== "command" && alert.source !== "greeting") return;
     const filename = safeStoredSoundAssetFilename(alert.sound_file);
     const sound = normalizeAlertSound(alert.sound);
     const volume = normalizeAlertVolume(alert.sound_volume);

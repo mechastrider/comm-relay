@@ -30,7 +30,7 @@ The leaderboard document at `/overlay/leaderboard` SHALL use a transparent page 
 - **THEN** the chat overlay document is served and does not embed the leaderboard ranking
 
 ### Requirement: Period query selects the ranking window
-The `period` query parameter SHALL accept `session`, `day`, or `all`. Missing or invalid values SHALL use `session`. Rows SHALL be canonical viewers who are not leaderboard-hidden, ordered by `xp` descending for that period, then by `message_count` descending. Each row SHALL include rank, display name, optional resolved `avatar_url`, `xp`, and `message_count`. Rows MUST NOT include `score`. Viewers with zero XP and zero messages in that period MAY be omitted. Visible ranking copy SHALL label the value as XP. The number of rows SHALL be at most the resolved `max_entries` (preset default 5, then a valid query `limit` 1–20 when present).
+The `period` query parameter SHALL accept `session`, `day`, or `all`. Missing or invalid values SHALL use `session`. Rows SHALL be canonical viewers who are not leaderboard-hidden and who are not the operator's channel account, ordered by `xp` descending for that period, then by `message_count` descending. Each row SHALL include rank, display name, optional resolved `avatar_url`, `xp`, and `message_count`. Rows MUST NOT include `score`. Viewers with zero XP and zero messages in that period MAY be omitted. Visible ranking copy SHALL label the value as XP. The number of rows SHALL be at most the resolved `max_entries` (preset default 5, then a valid query `limit` 1–20 when present).
 
 #### Scenario: Session ranking
 - **WHEN** OBS loads `/overlay/leaderboard?period=session` after contribution in the current session
@@ -51,6 +51,10 @@ The `period` query parameter SHALL accept `session`, `day`, or `all`. Missing or
 #### Scenario: Hidden viewer omitted
 - **WHEN** a leaderboard-hidden viewer would otherwise rank in the window
 - **THEN** that viewer is absent and lower ranks move up
+
+#### Scenario: Channel account omitted
+- **WHEN** the highest-XP viewer is the configured channel account
+- **THEN** the overlay ranking starts at the next eligible viewer
 
 ### Requirement: Leaderboard restores then follows live updates
 After load, the page SHALL fetch `GET /api/leaderboard` with the same period and then apply `/ws` frames with `type` `"leaderboard"` for that period. `GET /api/leaderboard` entries SHALL use `xp` and MUST NOT use `score`. Fetch failure MUST NOT prevent later WebSocket updates.

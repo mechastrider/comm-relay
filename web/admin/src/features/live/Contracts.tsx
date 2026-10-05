@@ -373,6 +373,17 @@ export function Contracts() {
                   ? t("contracts.noViewers")
                   : ""}
           </p>
+          <p
+            id="live-contract-viewer-selected"
+            className="viewer-contract-selected"
+            aria-live="polite"
+          >
+            {selected
+              ? t("contracts.selectedViewer", {
+                  viewer: selected.display_name || selected.id,
+                })
+              : t("contracts.selectedNone")}
+          </p>
           <ul
             id="live-contract-viewer-results"
             className="viewer-contract-viewers"
@@ -382,7 +393,7 @@ export function Contracts() {
               <li key={viewer.id}>
                 <button
                   type="button"
-                  className="viewer-contract-viewer"
+                  className={`viewer-contract-viewer${selected?.id === viewer.id ? " viewer-contract-viewer--selected" : ""}`}
                   aria-pressed={selected?.id === viewer.id}
                   onClick={() => setSelected(viewer)}
                 >
