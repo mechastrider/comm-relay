@@ -167,14 +167,14 @@ func (s *Store) List(q string, dayResetHour int, now time.Time) ([]Viewer, error
 		WHERE v.hidden = 0
 		  AND (
 		    ? = ''
-		    OR LOWER(COALESCE(v.display_name, '')) LIKE ?
+		    OR unicode_lower(COALESCE(v.display_name, '')) LIKE ?
 		    OR EXISTS (
 		      SELECT 1 FROM viewer_identities vi
 		      WHERE vi.viewer_id = v.id AND (
-		        LOWER(vi.display_name) LIKE ?
-		        OR LOWER(vi.username) LIKE ?
-		        OR LOWER(vi.user_id) LIKE ?
-		        OR LOWER(vi.platform) LIKE ?
+		        unicode_lower(vi.display_name) LIKE ?
+		        OR unicode_lower(vi.username) LIKE ?
+		        OR unicode_lower(vi.user_id) LIKE ?
+		        OR unicode_lower(vi.platform) LIKE ?
 		      )
 		    )
 		  )

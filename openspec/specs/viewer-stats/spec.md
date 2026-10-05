@@ -71,11 +71,16 @@ The system SHALL keep one current stream session. If none is open at start, it S
 - **THEN** a later message in the same session is not treated as first in session
 
 ### Requirement: Admin can list, search, and open a viewer
-`GET /api/viewers` SHALL return canonical viewers (not hidden merge sources) with last-seen identity fields, counters for session, day, and all-time, integer `session_count`, and `platforms`: a JSON array of unique platform ids for that viewer. Period counters SHALL use `xp` and `message_count`. `session_count` SHALL be the number of stream sessions in which that viewer has `message_count` greater than 0 and MUST NOT change with the operator's selected session/day/all-time period. `session_count` MUST NOT be confused with `session_message_count`. The payload MUST NOT include `score`. Platform ids SHALL be unique, lowercase, and ordered with the last-seen platform first, then remaining identities by last-seen time descending. The list MUST NOT include `identities` or per-identity logins. An optional `q` query SHALL filter by display name, username, or platform user id. `GET /api/viewers/get` SHALL accept `id` as a query parameter and return that viewer's identities, the same period `xp` counters, and the same `session_count`. Viewer identifiers MUST appear in query or JSON bodies, never as `/api/{id}` path segments.
+`GET /api/viewers` SHALL return canonical viewers (not hidden merge sources) with last-seen identity fields, counters for session, day, and all-time, integer `session_count`, and `platforms`: a JSON array of unique platform ids for that viewer. Period counters SHALL use `xp` and `message_count`. `session_count` SHALL be the number of stream sessions in which that viewer has `message_count` greater than 0 and MUST NOT change with the operator's selected session/day/all-time period. `session_count` MUST NOT be confused with `session_message_count`. The payload MUST NOT include `score`. Platform ids SHALL be unique, lowercase, and ordered with the last-seen platform first, then remaining identities by last-seen time descending. The list MUST NOT include `identities` or per-identity logins. An optional `q` query SHALL filter by a case-insensitive Unicode substring of the canonical display name and of every linked identity's display name, username, or platform user id, including identities joined by a merge. ASCII-only case folding is not sufficient. `GET /api/viewers/get` SHALL accept `id` as a query parameter and return that viewer's identities, the same period `xp` counters, and the same `session_count`. Viewer identifiers MUST appear in query or JSON bodies, never as `/api/{id}` path segments.
 
 #### Scenario: Search by name
 - **WHEN** the operator requests `GET /api/viewers?q=alice`
 - **THEN** the JSON lists matching canonical viewers using snake_case fields including `message_count` and `xp` per period plus `session_count` and omits `score`
+
+#### Scenario: Cyrillic substring matches every linked nick
+- **WHEN** a viewer is shown as `Зритель` but a merged identity has display name or username `Айрат`, and the operator requests `GET /api/viewers?q=ай`
+- **THEN** that canonical viewer is included
+- **AND** a viewer named `Борис` is not included
 
 #### Scenario: Merged viewer platforms on the list
 - **WHEN** a canonical viewer has Twitch and YouTube identities and Twitch is last seen
