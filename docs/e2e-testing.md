@@ -36,7 +36,8 @@ media, RichMessage, desktop save bridge, модели форм. Они пров�
   surfaces. Быстрая обязательная проверка ключевых связок; не замена всего CI.
 - `@browser`: риск связан с движком — WebSocket, audio/autoplay, storage,
   upload/download, history, focus, responsive layout, clipping, прозрачность.
-  Эти проверки выполняются во всех трёх браузерах.
+  Эти проверки выполняются в Chromium/WebKit на PR и push в main; Firefox
+  повторяет их еженедельно и по ручному запуску.
 - `@visual`: композиция, которую неудобно надёжно описать несколькими
   утверждениями. Сначала предпочитать эталон самой OBS-поверхности, затем
   важного dialog/panel. Не добавлять полный снимок страницы ради текста вкладки.
@@ -87,12 +88,14 @@ PULSE_SINK=comm_relay_e2e npm run test:e2e
 
 ## Команды
 
-Штатная адресная матрица: **60 Chromium + 26 Firefox + 26 WebKit = 112**
-запусков; в Chromium остаются все сценарии, включая визуальные. Восемь `@core`
-входят в обычный CI, отдельной необязательной заменой не становятся.
+На PR и push в main запускаются все сценарии Chromium (включая визуальные)
+и выборочные `@browser` в WebKit. Firefox повторяет `@browser` отдельно.
+Количество тестов меняется вместе с набором; фактический выбор можно посмотреть
+через `npx playwright test --list --project=chromium --project=webkit`.
+Все `@core` входят в обычный CI, отдельной необязательной заменой не становятся.
 Для диагностики регрессии движка, обновления Playwright и крупных изменений
 React/router/общих форм запускать полный повтор поведенческих тестов во всех
-браузерах (168 запусков с новыми проверками):
+браузерах (визуальные эталоны по-прежнему только Chromium):
 
 ```bash
 COMM_RELAY_E2E_MATRIX=full npm run test:e2e
@@ -104,10 +107,19 @@ COMM_RELAY_E2E_MATRIX=full npm run test:e2e
 пометить соответствующий сценарий, а не выключить его.
 
 Проверка `Browser regression` в `.github/workflows/ci.yml` остаётся на каждом PR
-и push в main, со всеми тремя установленными движками, двумя workers, нулевыми
-retries и сохранением отчёта. Штатный `npm run test:e2e` использует адресный
-выбор повторов Firefox/WebKit из `playwright.config.ts`; расписание,
-обязательность job, audio backend, пороги сравнения и таймауты не меняются.
+и push в main: устанавливает Chromium/WebKit и явно выбирает эти два проекта.
+Два workers, нулевые retries, audio backend, пороги, таймауты и отчёт сохранены.
+Отдельный `.github/workflows/firefox.yml` запускает Firefox по понедельникам
+в 04:23 UTC и через **Actions → Firefox regression → Run workflow**.
+Ручной выбор `targeted` повторяет `@browser`; `full` — все поведенческие тесты
+Firefox без `@visual`. Отчёт `playwright-report-firefox` хранится 14 дней.
+Плановый запуск использует default branch; workflow станет доступен для ручного
+запуска после попадания в default branch. Firefox не является проверкой каждого PR.
+
+Локальный `npm run test:e2e` сохраняет адресную матрицу всех трёх движков;
+для повторения обязательного CI нужно явно выбрать Chromium/WebKit.
+WebKit сохраняется ради desktop на macOS/Linux, Chromium — ради Windows/OBS;
+Firefox обеспечивает дополнительную совместимость браузерной админки.
 
 ```bash
 npm ci
@@ -115,7 +127,9 @@ npx playwright install --with-deps chromium firefox webkit
 npm run typecheck
 npm run lint
 npm test
-npm run test:e2e                         # build admin + Go, затем матрица
+npm run test:e2e -- --project=chromium --project=webkit # как обязательный CI
+npm run test:e2e -- --project=firefox    # как еженедельный Firefox
+npm run test:e2e                         # адресная матрица всех трёх движков
 npm run test:e2e -- --project=chromium --grep @core
 npm run test:e2e:visual                  # визуальные эталоны Chromium
 ```
@@ -142,6 +156,23 @@ WAV-тест подтверждает AudioContext readiness, настоящее
 или поддержку всех пользовательских кодеков. Live-события инжектируются в WS;
 matching команд и начисления в полном ingest pipeline защищены Go-тестами,
 а внешние платформы требуют отдельной интеграционной проверки.
+
+## Предрелизная проверка Wails и OBS
+
+Перед релизом выполнить smoke собранного desktop-приложения на поддерживаемых
+Windows/macOS/Linux и реального OBS. Playwright проверяет браузерный движок,
+но не системный WebView, нативные диалоги и окружение OBS.
+
+- Запустить установленную/распакованную сборку, открыть основные страницы,
+  сохранить настройку и проверить её после перезапуска.
+- Сохранить PNG через нативный диалог, отдельно проверить отмену; открыть
+  внешнюю ссылку в системном браузере.
+- Открыть overlay и dock в OBS, проверить сообщение, прозрачность, звук
+  и восстановление после перезапуска CommRelay.
+
+Фиксировать ОС, версии Wails/WebView/OBS и результат; недоступную платформу
+явно отмечать как непроверенную. Browser e2e с заглушкой `DesktopAPI` не закрывает
+эту проверку.
 
 ## Исходные свидетельства
 

@@ -28,8 +28,8 @@ npm run build
 go mod download
 go build ./...
 go test ./... -race
-npx playwright install --with-deps chromium firefox webkit
-npm run test:e2e
+npx playwright install --with-deps chromium webkit
+npm run test:e2e -- --project=chromium --project=webkit
 ```
 
 Install and run the same Go linter used in CI:
