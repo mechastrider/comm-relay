@@ -29,6 +29,7 @@ export interface RecapPresentation {
 }
 export interface SessionSummary {
   id: string;
+  title?: string;
   started_at: string;
   is_current: boolean;
   has_recap: boolean;

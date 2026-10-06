@@ -314,6 +314,9 @@ export function Recap({ onClose }: { onClose: () => void }) {
         {confirmation ? (
           <>
             <h3>{t("recap.confirmTitle")}</h3>
+            {session?.title && (
+              <p className="live-recap-session-name">{session.title}</p>
+            )}
             <p className="field-hint">
               {t("recap.confirmSession", {
                 id: session?.id || "",

@@ -1,14 +1,17 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/store"
+	"github.com/mechastrider/comm-relay/internal/streamtitle"
 )
 
 type sessionsHandler struct {
@@ -99,6 +102,24 @@ func (h *sessionsHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, sessionDetailFromStore(detail, snapshot))
+}
+
+type titleSuggestionResponse struct {
+	Title    string `json:"title"`
+	Platform string `json:"platform,omitempty"`
+}
+
+func (h *sessionsHandler) handleTitleSuggestion(w http.ResponseWriter, r *http.Request) {
+	if h.configStore == nil {
+		writeJSON(w, http.StatusOK, titleSuggestionResponse{})
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
+	defer cancel()
+	suggestion := streamtitle.Suggest(ctx, h.configStore.Snapshot(), streamtitle.Options{
+		YouTubeAccessToken: streamtitle.YouTubeAccessToken(ctx, h.configStore),
+	})
+	writeJSON(w, http.StatusOK, titleSuggestionResponse{Title: suggestion.Title, Platform: suggestion.Platform})
 }
 
 func parseSessionListLimit(raw string) (int, error) {

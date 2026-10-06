@@ -380,13 +380,30 @@ func (h *viewersHandler) handleStartSession(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	var request struct {
+		Title string `json:"title"`
+	}
+	if r.Body != nil {
+		decoder := json.NewDecoder(io.LimitReader(r.Body, 8<<10))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&request); err != nil && !errors.Is(err, io.EOF) {
+			writeError(w, http.StatusBadRequest, "invalid JSON")
+			return
+		}
+	}
+
+	start := func() error {
+		return h.viewerStore.StartNamedSession(time.Now(), request.Title)
+	}
 	var err error
 	if h.recap != nil {
-		_, err = h.recap.HideAfter(func() error {
-			return h.viewerStore.StartSession(time.Now())
-		})
+		_, err = h.recap.HideAfter(start)
 	} else {
-		err = h.viewerStore.StartSession(time.Now())
+		err = start()
+	}
+	if errors.Is(err, store.ErrInvalidSessionTitle) {
+		writeError(w, http.StatusBadRequest, "invalid stream title")
+		return
 	}
 	if err != nil {
 		clog.Errorf(r.Context(), "start stream session: %w", err)

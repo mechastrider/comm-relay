@@ -269,6 +269,7 @@ type SessionTotals struct {
 // SessionSummary is a bounded list row for stream session history.
 type SessionSummary struct {
 	ID        string
+	Title     string
 	StartedAt time.Time
 	EndedAt   *time.Time
 	IsCurrent bool
@@ -313,6 +314,7 @@ type SessionAchievementGroup struct {
 // SessionDetail is the bounded read model for one selected session.
 type SessionDetail struct {
 	ID                string
+	Title             string
 	StartedAt         time.Time
 	EndedAt           *time.Time
 	IsCurrent         bool

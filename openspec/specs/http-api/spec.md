@@ -42,7 +42,7 @@ API mutations SHALL use `POST /api/<resource>/<action>` with identifiers in the 
 - **THEN** the client calls `POST /api/viewers/avatar/clear` with JSON `id`
 
 ### Requirement: Reads, health, static, WebSocket, and OAuth callbacks may use GET
-The following GET routes SHALL remain available: `/`, `/overlay`, `/overlay/leaderboard`, `/overlay/alert`, `/overlay/recap`, `/overlay/test/chat`, `/overlay/test/leaderboard`, `/overlay/test/alert`, `/dock/messages`, `/shared/`, `/health`, `/ws`, `/ws/overlay-debug`, `/api/config`, `/api/status`, `/api/diagnostics`, `/api/messages/recent`, `/api/viewers`, `/api/viewers/get`, `/api/sessions`, `/api/sessions/get`, `/api/stream-recaps/current`, `/api/leaderboard`, `/api/commands`, `/api/awards`, `/api/reward-history`, `/overlay/assets/{filename}`, `/oauth/youtube/start`, and `/oauth/youtube/callback`.
+The following GET routes SHALL remain available: `/`, `/overlay`, `/overlay/leaderboard`, `/overlay/alert`, `/overlay/recap`, `/overlay/test/chat`, `/overlay/test/leaderboard`, `/overlay/test/alert`, `/dock/messages`, `/shared/`, `/health`, `/ws`, `/ws/overlay-debug`, `/api/config`, `/api/status`, `/api/diagnostics`, `/api/messages/recent`, `/api/viewers`, `/api/viewers/get`, `/api/sessions`, `/api/sessions/get`, `/api/sessions/title-suggestion`, `/api/stream-recaps/current`, `/api/leaderboard`, `/api/commands`, `/api/awards`, `/api/reward-history`, `/overlay/assets/{filename}`, `/oauth/youtube/start`, and `/oauth/youtube/callback`.
 
 #### Scenario: Status poll
 - **WHEN** the admin polls connector state
@@ -245,7 +245,7 @@ The API SHALL provide `GET /api/progression/levels`, `GET /api/progression/achie
 - **THEN** the response reports one delivered client and production clients receive nothing
 
 ### Requirement: Session history uses bounded GET reads
-`GET /api/sessions` SHALL accept an optional limit from 1 through 50 and opaque cursor and return newest-first session summaries plus optional `next_cursor`. `GET /api/sessions/get` SHALL require `id` as a query parameter and return one session detail or HTTP 404. Responses SHALL use snake_case, bounded ranking and achievement arrays, RFC3339 timestamps, and MUST NOT expose raw chat, source-message identifiers, filesystem paths, or hidden achievement definitions.
+`GET /api/sessions` SHALL accept an optional limit from 1 through 50 and opaque cursor and return newest-first session summaries plus optional `next_cursor`. `GET /api/sessions/get` SHALL require `id` as a query parameter and return one session detail or HTTP 404. Each summary and detail SHALL include `title` when the operator saved one. Responses SHALL use snake_case, bounded ranking and achievement arrays, RFC3339 timestamps, and MUST NOT expose raw chat, source-message identifiers, filesystem paths, or hidden achievement definitions.
 
 #### Scenario: List first page
 - **WHEN** the admin requests `/api/sessions?limit=20`
@@ -254,6 +254,21 @@ The API SHALL provide `GET /api/progression/levels`, `GET /api/progression/achie
 #### Scenario: Unknown session
 - **WHEN** `/api/sessions/get?id=missing` is requested
 - **THEN** the server returns HTTP 404 with a short JSON error
+
+### Requirement: New stream accepts an optional title
+`POST /api/sessions/start` SHALL accept an empty body or a JSON object with optional `title`. The title SHALL be trimmed. An empty title SHALL start an untitled session. A title longer than 140 Unicode scalar values, or one that contains a control character, SHALL return HTTP 400 and MUST NOT end the current session. `GET /api/sessions/title-suggestion` SHALL return `title` and, when a live title was found, `platform` of `twitch`, `youtube`, or `vk`, choosing the first non-empty live title in that order among enabled connections. YouTube SHALL prefer the signed-in broadcast title and otherwise read the public live page. Twitch and VK titles SHALL be read from the public live metadata for the configured channel. A platform that is offline, disabled, or unreachable SHALL be skipped. Lookup failure MUST NOT fail the suggestion request; the response title is then empty. The suggestion MUST NOT be stored until the operator confirms New stream.
+
+#### Scenario: Start a named stream
+- **WHEN** the operator posts `{"title":"Phantom Reapers"}` to `/api/sessions/start`
+- **THEN** the new session summary and detail include that title and the ended session stays untitled
+
+#### Scenario: Reject an oversized title
+- **WHEN** the posted title is longer than 140 Unicode scalar values
+- **THEN** the server returns HTTP 400 and the current session id is unchanged
+
+#### Scenario: No live title
+- **WHEN** no enabled platform currently publishes a live title
+- **THEN** `/api/sessions/title-suggestion` returns HTTP 200 with an empty title
 
 ### Requirement: Recap reads expose current state safely
 `GET /api/stream-recaps/current` SHALL return the open `session_id`, a bounded current-session `session` detail, runtime `visible`, nullable `window` (`session`, `all`, or null when hidden), stored current-session `snapshot` or null, and current `all_time` presentation. A visible session snapshot SHALL use the same bounded public wire shape sent to the overlay. `snapshot` MUST remain the immutable stored session recap when one exists, including while `window` is `all`. `all_time` SHALL be computed on read and MUST NOT be persisted. The current `session` detail MAY continue reflecting normalized activity after an immutable snapshot was captured. The read MUST NOT create or modify a snapshot.

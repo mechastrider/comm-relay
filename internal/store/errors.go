@@ -64,6 +64,8 @@ var (
 	ErrInvalidSessionListLimit = errors.New("invalid session list limit")
 	// ErrInvalidSessionCursor is returned for a malformed or unsupported session cursor.
 	ErrInvalidSessionCursor = errors.New("invalid session list cursor")
+	// ErrInvalidSessionTitle is returned when an operator stream title is too long or contains control characters.
+	ErrInvalidSessionTitle = errors.New("invalid session title")
 	// ErrRecapSessionConflict is returned when Show targets a stale or non-current session.
 	ErrRecapSessionConflict = errors.New("recap session conflict")
 	// ErrRecapPayloadInvalid is returned when a recap snapshot fails validation.

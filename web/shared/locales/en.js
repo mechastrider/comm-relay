@@ -668,6 +668,8 @@ export default {
   "stream.newStreamHint": "Resets session viewer XP and the session leaderboard. Day and all-time stay.",
   "stream.newStreamTitle": "Start a new stream?",
   "stream.newStreamMessage": "Session counters reset for viewers and the session leaderboard. Day and all-time XP stay.",
+  "stream.newStreamName": "Title",
+  "stream.newStreamNameHint": "Optional. A live title from Twitch, YouTube, or VK is filled in when the platform provides one.",
   "stream.newStreamConfirm": "Start new stream",
   "stream.newStreamDone": "New stream started — session counters reset.",
 

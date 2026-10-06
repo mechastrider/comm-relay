@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/muonsoft/errors"
 )
@@ -15,6 +17,7 @@ const (
 	defaultSessionListLimit = 20
 	maxSessionListLimit     = 50
 	maxSessionCursorLen     = 1024
+	maxSessionTitleRunes    = 140
 )
 
 type sessionCursor struct {
@@ -54,7 +57,7 @@ func (s *Store) ListSessions(query SessionsQuery) (SessionsPage, error) {
 	args = append(args, limit+1)
 
 	rows, err := s.db.Query(`
-		SELECT ss.id, ss.started_at, ss.ended_at,
+		SELECT ss.id, ss.title, ss.started_at, ss.ended_at,
 		       EXISTS(SELECT 1 FROM stream_recaps sr WHERE sr.session_id = ss.id)
 		FROM stream_sessions ss
 		`+where+`
@@ -119,14 +122,15 @@ func (s *Store) GetSession(sessionID string, customAvatarsEnabled bool) (*Sessio
 		currentSessionID = ""
 	}
 
+	var title string
 	var startedAtRaw string
 	var endedAtRaw sql.NullString
 	var hasRecap bool
 	err := s.db.QueryRow(`
-		SELECT ss.started_at, ss.ended_at,
+		SELECT ss.title, ss.started_at, ss.ended_at,
 		       EXISTS(SELECT 1 FROM stream_recaps sr WHERE sr.session_id = ss.id)
 		FROM stream_sessions ss
-		WHERE ss.id = ?`, sessionID).Scan(&startedAtRaw, &endedAtRaw, &hasRecap)
+		WHERE ss.id = ?`, sessionID).Scan(&title, &startedAtRaw, &endedAtRaw, &hasRecap)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrSessionNotFound
 	}
@@ -154,6 +158,7 @@ func (s *Store) GetSession(sessionID string, customAvatarsEnabled bool) (*Sessio
 
 	detail := &SessionDetail{
 		ID:        sessionID,
+		Title:     title,
 		StartedAt: startedAt,
 		EndedAt:   endedAt,
 		IsCurrent: sessionID == currentSessionID,
@@ -194,7 +199,7 @@ func scanSessionSummaryRow(rows *sql.Rows, currentSessionID string) (SessionSumm
 	var summary SessionSummary
 	var startedAtRaw string
 	var endedAtRaw sql.NullString
-	if err := rows.Scan(&summary.ID, &startedAtRaw, &endedAtRaw, &summary.HasRecap); err != nil {
+	if err := rows.Scan(&summary.ID, &summary.Title, &startedAtRaw, &endedAtRaw, &summary.HasRecap); err != nil {
 		return SessionSummary{}, errors.Errorf("scan session summary: %w", err)
 	}
 	startedAt, err := parseTime(startedAtRaw)
@@ -394,4 +399,20 @@ func decodeSessionCursor(encoded string) (*sessionCursor, error) {
 		return nil, ErrInvalidSessionCursor
 	}
 	return &cursor, nil
+}
+
+func normalizeSessionTitle(value string) (string, error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "", nil
+	}
+	if utf8.RuneCountInString(value) > maxSessionTitleRunes {
+		return "", ErrInvalidSessionTitle
+	}
+	for _, r := range value {
+		if unicode.IsControl(r) {
+			return "", ErrInvalidSessionTitle
+		}
+	}
+	return value, nil
 }

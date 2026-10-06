@@ -668,6 +668,8 @@ export default {
   "stream.newStreamHint": "Сбрасывает XP сессии у зрителей и лидерборд сессии. День и всё время сохраняются.",
   "stream.newStreamTitle": "Начать новый стрим?",
   "stream.newStreamMessage": "Сбросятся счётчики сессии у зрителей и в лидерборде сессии. Дневная и общая статистика сохранятся.",
+  "stream.newStreamName": "Название",
+  "stream.newStreamNameHint": "Можно оставить пустым. Если Twitch, YouTube или VK сейчас в эфире, подставится заголовок с площадки.",
   "stream.newStreamConfirm": "Начать новый стрим",
   "stream.newStreamDone": "Новый стрим начат — счётчики сессии сброшены.",
 

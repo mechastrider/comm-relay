@@ -293,7 +293,7 @@ The Studio preview SHALL follow the single selected on-stream surface. Changing 
 - **THEN** the preview reflects the leaderboard font size without changing the chat font shown when switching back to Chat
 
 ### Requirement: New stream requires confirmation
-The admin chrome SHALL offer a New stream action. The system MUST NOT start a new session until the operator confirms. After success, session counters on the Audience view and session leaderboard SHALL reset while day and all-time counters remain.
+The admin chrome SHALL offer a New stream action. The system MUST NOT start a new session until the operator confirms. The confirmation dialog SHALL include an optional stream title. Opening it SHALL request `GET /api/sessions/title-suggestion` and place a returned title into the field only while the operator has not edited the field. Dismissing the dialog MUST NOT start a session. Confirming SHALL call `POST /api/sessions/start` with the current title, including an empty title. After success, session counters on the Audience view and session leaderboard SHALL reset while day and all-time counters remain.
 
 #### Scenario: Accidental click
 - **WHEN** the operator activates New stream and dismisses the confirmation
@@ -302,6 +302,10 @@ The admin chrome SHALL offer a New stream action. The system MUST NOT start a ne
 #### Scenario: Confirmed new stream
 - **WHEN** the operator confirms New stream
 - **THEN** the client calls `POST /api/sessions/start` and session totals on the Audience view are empty
+
+#### Scenario: Prefill does not overwrite an edit
+- **WHEN** a title suggestion arrives after the operator has changed the title field
+- **THEN** the edited title stays in the field
 
 ### Requirement: Admin actions expose their persistence timing
 The admin SHALL distinguish hot actions that apply immediately, Studio fields that remain local until Publish, and Settings forms that remain local until Save. The UI MUST NOT present one global Save action for unrelated workspaces. Studio appearance fields remain drafts until Publish. Activating a look from Live or from Studio Use on stream is a hot action.
@@ -884,7 +888,7 @@ Audience SHALL expose top-level tabs in the order Viewers, Archive, Journal, Pro
 - **AND** Journal remains a separate award-history tab
 
 ### Requirement: Audience Archive lists durable stream sessions
-Audience Archive SHALL list bounded newest-first session summaries from the same session history as Recap History. Each row SHALL show started time, current or completed marker, captured marker when a recap exists, and viewer/message/XP totals. Further pages SHALL load only when the operator requests them. An empty history SHALL show an empty state. Header and tab chrome MUST remain visible while the list body scrolls at constrained desktop heights.
+Audience Archive SHALL list bounded newest-first session summaries from the same session history as Recap History. Each row SHALL show the stored stream title when one was saved, started time, current or completed marker, captured marker when a recap exists, and viewer/message/XP totals. A session without a title SHALL remain identifiable by its start time. Further pages SHALL load only when the operator requests them. An empty history SHALL show an empty state. Header and tab chrome MUST remain visible while the list body scrolls at constrained desktop heights.
 
 #### Scenario: Review recent streams
 - **WHEN** the operator opens Audience Archive with more than one stored session
@@ -972,7 +976,7 @@ The Live workspace SHALL provide a keyboard-reachable Recap action separate from
 - **THEN** the dialog explains that the session changed and refreshes current data without showing stale results
 
 ### Requirement: Live exposes compact session history
-The recap dialog SHALL include Current stream and History views. History SHALL list bounded newest-first session summaries, clearly distinguish current and captured sessions, load further pages explicitly, and open a session detail with aggregates, bounded ranking, eligible achievements, and recap-captured time when present. Sessions without a recap MUST remain reviewable. Historical details MUST NOT offer an on-air replay action in this change. Header/footer controls SHALL remain visible and the dialog body MUST scroll at constrained desktop heights.
+The recap dialog SHALL include Current stream and History views. History SHALL list bounded newest-first session summaries, show a stored stream title when one was saved, clearly distinguish current and captured sessions, load further pages explicitly, and open a session detail with the title when present, aggregates, bounded ranking, eligible achievements, and recap-captured time when present. Sessions without a recap MUST remain reviewable. Historical details MUST NOT offer an on-air replay action in this change. Header/footer controls SHALL remain visible and the dialog body MUST scroll at constrained desktop heights.
 
 #### Scenario: Review a prior session
 - **WHEN** the operator opens a prior session with no recap snapshot

@@ -69,6 +69,9 @@ export function RecapHistoryRow({
       data-session-id={session.id}
       onClick={() => onSelect(session.id)}
     >
+      {session.title && (
+        <strong className="live-recap-history-row__title">{session.title}</strong>
+      )}
       <strong>{time(session.started_at)}</strong>
       <span className="field-hint">
         {[
@@ -124,6 +127,9 @@ export function RecapDetail({
               : "recap.currentSummary",
         )}
       </h3>
+      {!all && detail.title && (
+        <p className="live-recap-session-name">{detail.title}</p>
+      )}
       {!all && (
         <p className="field-hint">
           {t("recap.startedAt", { time: time(detail.started_at) })}
