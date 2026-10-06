@@ -32,6 +32,7 @@
 .live-recap-ranking, .live-recap-achievements, .live-recap-history { display: grid; gap: var(--primitive-space-2); margin: 0; padding: 0; list-style: none; }
 .live-recap-ranking li, .live-recap-achievements li, .live-recap-history-row { display: flex; align-items: center; gap: var(--primitive-space-3); min-width: 0; padding: var(--primitive-space-3); border: 1px solid var(--border); background: var(--surface-raised); }
 .live-recap-history-row { width: 100%; color: var(--text); text-align: left; cursor: pointer; flex-wrap: wrap; }
+.live-recap-history-row__title, .live-recap-session-name { flex: 1 0 100%; margin: 0; overflow-wrap: anywhere; }
 .live-recap-history-row:hover, .live-recap-history-row:focus-visible { border-color: var(--amber); }
 .live-recap-ranking__copy, .live-recap-achievements li > span { display: grid; min-width: 0; gap: 2px; overflow-wrap: anywhere; }
 .live-recap-ranking__copy small, .live-recap-achievements small, .live-recap-ranking__meta { color: var(--muted); font-size: var(--primitive-font-size-sm); }

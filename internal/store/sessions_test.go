@@ -2,6 +2,7 @@ package store_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -319,4 +320,35 @@ func TestListSessions_WhenInvalidCursorOrLimit_ExpectValidationError(t *testing.
 	_, err = s.ListSessions(store.SessionsQuery{Cursor: "not-a-cursor"})
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, store.ErrInvalidSessionCursor))
+}
+
+func TestStartNamedSession_WhenTitleProvided_ExpectTitleOnNewSessionOnly(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Now().UTC().Truncate(time.Second)
+	priorID, err := s.CurrentSessionID()
+	require.NoError(t, err)
+
+	require.NoError(t, s.StartNamedSession(now, "  Phantom Reapers  "))
+	currentID, err := s.CurrentSessionID()
+	require.NoError(t, err)
+	require.NotEqual(t, priorID, currentID)
+
+	prior, err := s.GetSession(priorID, false)
+	require.NoError(t, err)
+	current, err := s.GetSession(currentID, false)
+	require.NoError(t, err)
+	assert.Empty(t, prior.Title)
+	assert.Equal(t, "Phantom Reapers", current.Title)
+
+	page, err := s.ListSessions(store.SessionsQuery{Limit: 10})
+	require.NoError(t, err)
+	require.NotEmpty(t, page.Sessions)
+	assert.Equal(t, "Phantom Reapers", page.Sessions[0].Title)
+
+	err = s.StartNamedSession(now.Add(time.Minute), strings.Repeat("я", 141))
+	require.Error(t, err)
+	assert.True(t, errors.Is(err, store.ErrInvalidSessionTitle))
+	stillCurrent, err := s.CurrentSessionID()
+	require.NoError(t, err)
+	assert.Equal(t, currentID, stillCurrent)
 }

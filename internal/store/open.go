@@ -262,12 +262,17 @@ func (s *Store) ensureOpenSessionLocked(now time.Time) error {
 		return errors.Errorf("lookup open session: %w", err)
 	}
 
+	return s.insertOpenSessionLocked(now, "")
+}
+
+func (s *Store) insertOpenSessionLocked(now time.Time, title string) error {
 	sessionID := uuid.NewString()
 	startedAt := formatTime(now)
 	if _, err := s.db.Exec(
-		`INSERT INTO stream_sessions (id, started_at, ended_at) VALUES (?, ?, NULL)`,
+		`INSERT INTO stream_sessions (id, started_at, ended_at, title) VALUES (?, ?, NULL, ?)`,
 		sessionID,
 		startedAt,
+		title,
 	); err != nil {
 		return errors.Errorf("insert open session: %w", err)
 	}
@@ -286,13 +291,24 @@ func (s *Store) EnsureOpenSession(now time.Time) error {
 
 // StartSession ends the current open session and starts a new empty one.
 func (s *Store) StartSession(now time.Time) error {
+	return s.StartNamedSession(now, "")
+}
+
+// StartNamedSession ends the current open session and starts a new one with an optional operator title.
+// The title is stored on the new session. An empty title is kept. Invalid titles do not end the current session.
+func (s *Store) StartNamedSession(now time.Time, title string) error {
+	title, err := normalizeSessionTitle(title)
+	if err != nil {
+		return err
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	sessionID, err := s.openSessionLocked()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return s.ensureOpenSessionLocked(now)
+			return s.insertOpenSessionLocked(now, title)
 		}
 		return errors.Errorf("lookup open session: %w", err)
 	}
@@ -302,16 +318,5 @@ func (s *Store) StartSession(now time.Time) error {
 		return errors.Errorf("end current session: %w", err)
 	}
 
-	newSessionID := uuid.NewString()
-	startedAt := formatTime(now)
-	if _, err := s.db.Exec(
-		`INSERT INTO stream_sessions (id, started_at, ended_at) VALUES (?, ?, NULL)`,
-		newSessionID,
-		startedAt,
-	); err != nil {
-		return errors.Errorf("insert new session: %w", err)
-	}
-
-	s.openSessionID = newSessionID
-	return nil
+	return s.insertOpenSessionLocked(now, title)
 }

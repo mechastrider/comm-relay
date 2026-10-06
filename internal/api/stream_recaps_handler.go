@@ -341,6 +341,7 @@ type sessionAchievementGroupResponse struct {
 
 type sessionSummaryResponse struct {
 	ID        string                `json:"id"`
+	Title     string                `json:"title,omitempty"`
 	StartedAt string                `json:"started_at"`
 	EndedAt   *string               `json:"ended_at"`
 	IsCurrent bool                  `json:"is_current"`
@@ -350,6 +351,7 @@ type sessionSummaryResponse struct {
 
 type sessionDetailResponse struct {
 	ID                string                            `json:"id"`
+	Title             string                            `json:"title,omitempty"`
 	StartedAt         string                            `json:"started_at"`
 	EndedAt           *string                           `json:"ended_at"`
 	IsCurrent         bool                              `json:"is_current"`
@@ -363,6 +365,7 @@ type sessionDetailResponse struct {
 func sessionSummaryFromStore(summary store.SessionSummary) sessionSummaryResponse {
 	response := sessionSummaryResponse{
 		ID:        summary.ID,
+		Title:     summary.Title,
 		StartedAt: formatSessionTime(summary.StartedAt),
 		IsCurrent: summary.IsCurrent,
 		HasRecap:  summary.HasRecap,
@@ -385,6 +388,7 @@ func sessionDetailFromStore(detail *store.SessionDetail, snapshot *recap.Snapsho
 	}
 	response := sessionDetailResponse{
 		ID:        detail.ID,
+		Title:     detail.Title,
 		StartedAt: formatSessionTime(detail.StartedAt),
 		IsCurrent: detail.IsCurrent,
 		HasRecap:  detail.HasRecap,
