@@ -17,7 +17,7 @@ func captureTopThree(tx *sql.Tx, sessionID, dayKey string) (topThreeSnapshot, er
 		SELECT v.id
 		FROM viewers v
 		INNER JOIN viewer_session_stats vss ON vss.viewer_id = v.id AND vss.session_id = ?
-		WHERE v.hidden = 0 AND v.leaderboard_hidden = 0
+		WHERE `+viewerRankingEligibleSQL+`
 		  AND (COALESCE(vss.xp, 0) > 0 OR COALESCE(vss.message_count, 0) > 0)
 		ORDER BY COALESCE(vss.xp, 0) DESC, COALESCE(vss.message_count, 0) DESC
 		LIMIT 3`, sessionID)
@@ -28,7 +28,7 @@ func captureTopThree(tx *sql.Tx, sessionID, dayKey string) (topThreeSnapshot, er
 		SELECT v.id
 		FROM viewers v
 		INNER JOIN viewer_day_stats vds ON vds.viewer_id = v.id AND vds.day_key = ?
-		WHERE v.hidden = 0 AND v.leaderboard_hidden = 0
+		WHERE `+viewerRankingEligibleSQL+`
 		  AND (COALESCE(vds.xp, 0) > 0 OR COALESCE(vds.message_count, 0) > 0)
 		ORDER BY COALESCE(vds.xp, 0) DESC, COALESCE(vds.message_count, 0) DESC
 		LIMIT 3`, dayKey)
@@ -38,7 +38,7 @@ func captureTopThree(tx *sql.Tx, sessionID, dayKey string) (topThreeSnapshot, er
 	all, err := queryTopThree(tx, `
 		SELECT v.id
 		FROM viewers v
-		WHERE v.hidden = 0 AND v.leaderboard_hidden = 0
+		WHERE `+viewerRankingEligibleSQL+`
 		  AND (v.xp > 0 OR v.message_count > 0)
 		ORDER BY v.xp DESC, v.message_count DESC
 		LIMIT 3`)

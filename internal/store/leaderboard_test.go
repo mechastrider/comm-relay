@@ -209,3 +209,65 @@ func TestLeaderboard_WhenLeaderboardHidden_ExpectOmittedAndReranked(t *testing.T
 	require.NoError(t, err)
 	assert.True(t, viewer.LeaderboardHidden)
 }
+
+func TestLeaderboard_WhenChannelLoginMatches_ExpectOwnerOmittedAndReranked(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Now()
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "twitch", UserID: "broadcaster", Username: "MechaStrider", DisplayName: "Mecha",
+	}, disabledActivity(), testDayResetHour, now))
+	_, err := s.ApplyAward(store.ChatIdentity{
+		Platform: "twitch", UserID: "broadcaster", Username: "MechaStrider", DisplayName: "Mecha",
+	}, 9, testDayResetHour, now)
+	require.NoError(t, err)
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "twitch", UserID: "viewer", Username: "alice", DisplayName: "Alice",
+	}, disabledActivity(), testDayResetHour, now))
+	_, err = s.ApplyAward(store.ChatIdentity{
+		Platform: "twitch", UserID: "viewer", Username: "alice", DisplayName: "Alice",
+	}, 2, testDayResetHour, now)
+	require.NoError(t, err)
+
+	changed, err := s.SyncChannelOwners(store.NewChannelAccounts("#MechaStrider", "", ""))
+	require.NoError(t, err)
+	assert.True(t, changed)
+
+	entries, err := s.Leaderboard("all", 20, testDayResetHour, now, true)
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+	assert.Equal(t, 1, entries[0].Rank)
+	assert.Equal(t, "Alice", entries[0].DisplayName)
+
+	ownerID := viewerID(t, s, "twitch", "broadcaster", testDayResetHour, now)
+	owner, err := s.Get(ownerID, testDayResetHour, now)
+	require.NoError(t, err)
+	assert.False(t, owner.LeaderboardHidden)
+}
+
+func TestLeaderboard_WhenOwnerBadge_ExpectMarkedAndOmitted(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Now()
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "youtube", UserID: "UC-owner", Username: "Channel", DisplayName: "Channel",
+	}, disabledActivity(), testDayResetHour, now))
+	_, err := s.ApplyAward(store.ChatIdentity{
+		Platform: "youtube", UserID: "UC-owner", Username: "Channel", DisplayName: "Channel",
+	}, 4, testDayResetHour, now)
+	require.NoError(t, err)
+
+	before, err := s.Leaderboard("all", 20, testDayResetHour, now, true)
+	require.NoError(t, err)
+	require.Len(t, before, 1)
+
+	assert.True(t, store.IdentityIsChannelOwner("youtube", "Channel", "Channel", "UC-owner", []string{"owner"}, store.ChannelAccounts{}))
+	marked, err := s.MarkChannelOwner("youtube", "UC-owner")
+	require.NoError(t, err)
+	assert.True(t, marked)
+	markedAgain, err := s.MarkChannelOwner("youtube", "UC-owner")
+	require.NoError(t, err)
+	assert.False(t, markedAgain)
+
+	entries, err := s.Leaderboard("all", 20, testDayResetHour, now, true)
+	require.NoError(t, err)
+	assert.Empty(t, entries)
+}

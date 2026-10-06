@@ -58,6 +58,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	}
 
 	configHandler := newConfigHandler(opts.Store, opts.Hub, nil)
+	configHandler.viewerStore = opts.ViewerStore
 	configHandler.leaderboardVisibility = opts.LeaderboardVisibility
 	opts.Hub.SetLeaderboardVisibility(opts.LeaderboardVisibility)
 	overlayAssets := newOverlayAssetsHandler(opts.Store, opts.ViewerStore)

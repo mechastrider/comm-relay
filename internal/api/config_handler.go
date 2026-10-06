@@ -10,10 +10,12 @@ import (
 
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/leaderboard"
+	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 type configHandler struct {
 	store                 *config.Store
+	viewerStore           *store.Store
 	hub                   *Hub
 	leaderboardPublisher  *LeaderboardPublisher
 	leaderboardVisibility *leaderboard.Controller
@@ -79,6 +81,14 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	saved := h.store.Snapshot()
+	if h.viewerStore != nil {
+		changed, syncErr := h.viewerStore.SyncChannelOwners(channelAccounts(saved))
+		if syncErr != nil {
+			clog.Errorf(ctx, "sync channel owners: %w", syncErr)
+		} else if changed {
+			clog.Info(ctx, "channel accounts omitted from leaderboard")
+		}
+	}
 	if h.hub != nil {
 		payload, err := overlaySettingsWirePayload(saved)
 		if err != nil {
@@ -98,6 +108,10 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, saved.Public())
+}
+
+func channelAccounts(cfg config.Config) store.ChannelAccounts {
+	return store.NewChannelAccounts(cfg.Twitch.Channel, cfg.YouTube.ChannelHandle, cfg.VK.Channel)
 }
 
 func overlayPresetsPresent(data []byte) bool {

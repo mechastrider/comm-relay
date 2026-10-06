@@ -37,7 +37,7 @@ test("command audio monitoring survives navigation and saved disable", { tag: ["
   await expect.poll(() => !!socket).toBeTruthy();
   await expect(page.locator("#live-contracts-tab")).toHaveText("Viewer rewards");
   await page.goto(runtime.url + "/#/settings/application");
-  const setting = page.getByLabel("Play command sounds in the app", { exact: true });
+  const setting = page.getByLabel("Play command and greeting sounds in the app", { exact: true });
   await expect(setting).toBeChecked();
   await page.locator("#message-sound-panel-heading").click();
   // A completed click does not mean AudioContext.resume() has completed.

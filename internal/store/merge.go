@@ -76,6 +76,13 @@ func (s *Store) Merge(fromID, intoID string, dayResetHour int, now time.Time) er
 	if _, err := tx.Exec(`UPDATE viewers SET hidden = 1 WHERE id = ?`, fromID); err != nil {
 		return errors.Errorf("hide merged source viewer: %w", err)
 	}
+	if _, err := tx.Exec(`
+		UPDATE viewers
+		SET channel_owner = 1
+		WHERE id = ?
+		  AND EXISTS (SELECT 1 FROM viewers WHERE id = ? AND channel_owner = 1)`, intoID, fromID); err != nil {
+		return errors.Errorf("preserve channel owner on merge: %w", err)
+	}
 
 	if err := s.rewriteInteractionEventsLocked(tx, fromID, intoID); err != nil {
 		return err

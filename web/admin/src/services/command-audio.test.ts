@@ -152,12 +152,15 @@ test("autoplay recovery plays future events without replaying the blocked comman
   audio.dispose();
 });
 
-test("legacy command sources play but other sources and history never do", () => {
+test("legacy command sources and greetings play but other sources and history never do", () => {
   const audio = createCommandAudio(vi.fn());
   audio.receive(frame());
   expect(contexts).toHaveLength(0);
   audio.setEnabled(true);
-  for (const source of ["greeting", "contract", "progression", "unknown"]) {
+  audio.receive(frame({ source: "greeting", greeting_kind: "new_viewer", sound_file: "hello.mp3", sound: "" }));
+  vi.advanceTimersByTime(1000);
+  expect(players[0].src).toContain("hello.mp3");
+  for (const source of ["contract", "progression", "unknown"]) {
     audio.receive(frame({
       source, greeting_kind: "new_viewer", sound_file: "other.mp3",
       points: source === "contract" ? 10 : 0,
@@ -166,7 +169,7 @@ test("legacy command sources play but other sources and history never do", () =>
     }));
     vi.advanceTimersByTime(1000);
   }
-  expect(players).toHaveLength(0);
+  expect(players).toHaveLength(1);
   audio.receive({ type: "reconnected" });
   audio.receive({ type: "message", message: "!hello" });
   audio.receive(frame({ source: undefined }));

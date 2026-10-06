@@ -425,6 +425,41 @@ func TestList_WhenSearchByName_ExpectMatch(t *testing.T) {
 	require.Len(t, viewers, 1)
 }
 
+func TestList_WhenCyrillicQuery_ExpectCaseInsensitiveSubstring(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Now()
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "twitch", UserID: "airat", Username: "airat", DisplayName: "Айрат",
+	}, defaultActivity(), testDayResetHour, now))
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "youtube", UserID: "boris", Username: "boris", DisplayName: "Борис",
+	}, defaultActivity(), testDayResetHour, now))
+
+	for _, query := range []string{"ай", "АЙ", "Айрат"} {
+		viewers := listAt(t, s, query, testDayResetHour, now)
+		require.Len(t, viewers, 1, query)
+		assert.Equal(t, "Айрат", viewers[0].DisplayName)
+	}
+}
+
+func TestList_WhenMergedCyrillicNick_ExpectMatchOnLinkedIdentity(t *testing.T) {
+	s, _ := openTestStore(t)
+	now := time.Now()
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "twitch", UserID: "visible", Username: "visible", DisplayName: "Зритель",
+	}, defaultActivity(), testDayResetHour, now))
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{
+		Platform: "youtube", UserID: "linked", Username: "Айрат", DisplayName: "YouTube",
+	}, defaultActivity(), testDayResetHour, now))
+	fromID := viewerID(t, s, "youtube", "linked", testDayResetHour, now)
+	intoID := viewerID(t, s, "twitch", "visible", testDayResetHour, now)
+	require.NoError(t, s.Merge(fromID, intoID, testDayResetHour, now))
+
+	viewers := listAt(t, s, "ай", testDayResetHour, now)
+	require.Len(t, viewers, 1)
+	assert.Equal(t, intoID, viewers[0].ID)
+}
+
 func TestOpenMigrateQuery_WhenIngestAfterUp_ExpectPersistedCounters(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "comm-relay.db")

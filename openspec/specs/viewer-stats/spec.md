@@ -71,11 +71,16 @@ The system SHALL keep one current stream session. If none is open at start, it S
 - **THEN** a later message in the same session is not treated as first in session
 
 ### Requirement: Admin can list, search, and open a viewer
-`GET /api/viewers` SHALL return canonical viewers (not hidden merge sources) with last-seen identity fields, counters for session, day, and all-time, integer `session_count`, and `platforms`: a JSON array of unique platform ids for that viewer. Period counters SHALL use `xp` and `message_count`. `session_count` SHALL be the number of stream sessions in which that viewer has `message_count` greater than 0 and MUST NOT change with the operator's selected session/day/all-time period. `session_count` MUST NOT be confused with `session_message_count`. The payload MUST NOT include `score`. Platform ids SHALL be unique, lowercase, and ordered with the last-seen platform first, then remaining identities by last-seen time descending. The list MUST NOT include `identities` or per-identity logins. An optional `q` query SHALL filter by display name, username, or platform user id. `GET /api/viewers/get` SHALL accept `id` as a query parameter and return that viewer's identities, the same period `xp` counters, and the same `session_count`. Viewer identifiers MUST appear in query or JSON bodies, never as `/api/{id}` path segments.
+`GET /api/viewers` SHALL return canonical viewers (not hidden merge sources) with last-seen identity fields, counters for session, day, and all-time, integer `session_count`, and `platforms`: a JSON array of unique platform ids for that viewer. Period counters SHALL use `xp` and `message_count`. `session_count` SHALL be the number of stream sessions in which that viewer has `message_count` greater than 0 and MUST NOT change with the operator's selected session/day/all-time period. `session_count` MUST NOT be confused with `session_message_count`. The payload MUST NOT include `score`. Platform ids SHALL be unique, lowercase, and ordered with the last-seen platform first, then remaining identities by last-seen time descending. The list MUST NOT include `identities` or per-identity logins. An optional `q` query SHALL filter by a case-insensitive Unicode substring of the canonical display name and of every linked identity's display name, username, or platform user id, including identities joined by a merge. ASCII-only case folding is not sufficient. `GET /api/viewers/get` SHALL accept `id` as a query parameter and return that viewer's identities, the same period `xp` counters, and the same `session_count`. Viewer identifiers MUST appear in query or JSON bodies, never as `/api/{id}` path segments.
 
 #### Scenario: Search by name
 - **WHEN** the operator requests `GET /api/viewers?q=alice`
 - **THEN** the JSON lists matching canonical viewers using snake_case fields including `message_count` and `xp` per period plus `session_count` and omits `score`
+
+#### Scenario: Cyrillic substring matches every linked nick
+- **WHEN** a viewer is shown as `Зритель` but a merged identity has display name or username `Айрат`, and the operator requests `GET /api/viewers?q=ай`
+- **THEN** that canonical viewer is included
+- **AND** a viewer named `Борис` is not included
 
 #### Scenario: Merged viewer platforms on the list
 - **WHEN** a canonical viewer has Twitch and YouTube identities and Twitch is last seen
@@ -191,6 +196,18 @@ When a counted chat line has a stable identity, the system SHALL grant `activity
 #### Scenario: Hidden viewer stays in Audience
 - **WHEN** a viewer is leaderboard-hidden
 - **THEN** `GET /api/viewers` still includes that viewer with `leaderboard_hidden` true
+
+### Requirement: Channel account is omitted from rankings
+The system SHALL omit a canonical viewer from every leaderboard period when that viewer is the operator's channel account. A match is a Twitch, YouTube, or VK identity whose username, display name, or user id equals the configured Twitch channel, YouTube channel handle, or VK channel slug after trimming decorations, or any viewer observed with a `broadcaster` or `owner` badge. Omission MUST re-rank the remaining rows, MUST survive merge onto the surviving canonical viewer, and MUST NOT set `leaderboard_hidden` or remove the viewer from Audience. Empty channel settings MUST NOT omit viewers by name. Clearing a channel setting MUST NOT return a previously marked account to the ranking.
+
+#### Scenario: Twitch login outranks everyone else
+- **WHEN** the configured Twitch channel login matches the viewer with the highest XP
+- **THEN** that viewer is absent from the next leaderboard snapshot and the next viewer becomes rank 1
+- **AND** Audience still lists the channel account with `leaderboard_hidden` unchanged
+
+#### Scenario: YouTube owner badge
+- **WHEN** a YouTube chat line carries an owner badge for a viewer who is not matched by channel handle
+- **THEN** later leaderboard snapshots omit that canonical viewer
 
 ### Requirement: Platform avatar URLs are cached locally
 When an ingested identity has a non-empty remote `avatar_url`, the system SHALL attempt to download that image into the overlay-assets directory and record the stored filename on that identity. Only connector-supplied avatar URLs SHALL be fetched, never URLs from chat text. Fetches MUST use HTTPS, reject loopback and private destinations, cap size, sniff PNG/JPEG/WebP, and MUST NOT follow redirects onto private addresses. Fetch failure MUST leave the remote URL in place and MUST NOT fail chat ingest. Subsequent resolution SHALL prefer the cached file over the remote URL.

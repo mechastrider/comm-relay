@@ -67,6 +67,11 @@ func New(opts Options) (*App, error) {
 			}
 		}
 	}()
+	if changed, syncErr := viewerStore.SyncChannelOwners(store.NewChannelAccounts(cfg.Twitch.Channel, cfg.YouTube.ChannelHandle, cfg.VK.Channel)); syncErr != nil {
+		return nil, errors.Errorf("sync channel owners: %w", syncErr)
+	} else if changed {
+		clog.Info(context.Background(), "channel accounts omitted from leaderboard")
+	}
 
 	addr := opts.Addr
 	if addr == "" {

@@ -15,12 +15,17 @@ The Live contract workflow SHALL be labelled “Зрительские нагр�
 - **AND** announcing, awarding, repeating, and closing a reward retain their existing behavior
 
 ### Requirement: Command audio monitoring in the application
-The admin SHALL expose a labelled, keyboard-accessible setting for playing command sounds in the app, default enabled and independent of message notifications. While enabled, live command alert events SHALL play their existing custom sound file or built-in tone at the event's volume, throughout admin navigation and without an OBS overlay being open. Safe custom files MUST take precedence over built-in tones; silence and zero volume MUST remain silent. Award, greeting, progression, and contract alerts MUST NOT acquire audible app playback from this setting. No speech synthesis SHALL be added.
+The admin SHALL expose one labelled, keyboard-accessible setting for playing command and automatic-greeting sounds in the app, default enabled and independent of message notifications. While enabled, live command and greeting alert events SHALL play their existing custom sound file or built-in tone at the event's volume, throughout admin navigation and without an OBS overlay being open. Safe custom files MUST take precedence over built-in tones; silence and zero volume MUST remain silent. Award, progression, and contract alerts MUST NOT acquire audible app playback from this setting. No speech synthesis SHALL be added. The setting MUST NOT be split into separate command and greeting controls.
 
 #### Scenario: Command voice clip
 - **WHEN** a live command alert with a stored sound file arrives while app command audio is enabled
 - **THEN** the app plays that clip at its configured volume
 - **AND** the same command remains independently audible in the alert overlay
+
+#### Scenario: Greeting voice clip
+- **WHEN** a live automatic-greeting alert with a stored sound file arrives while the same setting is enabled
+- **THEN** the app plays that greeting clip at its configured volume
+- **AND** award, progression, and contract alerts stay silent in the app
 
 #### Scenario: Disable monitoring
 - **WHEN** the operator saves the setting as disabled
@@ -766,11 +771,16 @@ Live SHALL include a localized Viewer rewards view. With no active contract it S
 - **THEN** the view reloads current state, preserves the draft locally, and explains the conflict
 
 ### Requirement: Winner selection is deliberate and accessible
-Award winner SHALL open a labeled searchable canonical-viewer picker using current Audience data and distinguish duplicate display names with platform context. The final award action and close-without-result action MUST each require confirmation naming the contract and consequence. Focus SHALL move into the confirmation surface and return to the invoking control on cancellation. Success SHALL clear the active view; failure SHALL keep it and allow retry.
+Award winner SHALL open a labeled searchable canonical-viewer picker using current Audience data and distinguish duplicate display names with platform context. Activating a result SHALL visibly mark that option and name the selected viewer; continuing SHALL stay unavailable until a viewer is selected. The final award action and close-without-result action MUST each require confirmation naming the contract and consequence. Focus SHALL move into the confirmation surface and return to the invoking control on cancellation. Success SHALL clear the active view; failure SHALL keep it and allow retry.
 
 #### Scenario: Award a duplicate display name
 - **WHEN** two viewers share a display name and the operator searches for that name
 - **THEN** both options remain distinguishable and the selected canonical `viewer_id` is submitted
+
+#### Scenario: Select a winner
+- **WHEN** the operator activates a viewer result in the picker
+- **THEN** that result is marked selected and the picker names that viewer
+- **AND** the continue action becomes available
 
 #### Scenario: Cancel settlement
 - **WHEN** the operator cancels winner or no-result confirmation

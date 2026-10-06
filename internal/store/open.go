@@ -58,6 +58,10 @@ func resolvedOpenLocale(locale string) string {
 
 // Open opens or creates the SQLite database at path, runs migrations, and ensures an open session.
 func Open(path string, opts OpenOptions) (*Store, error) {
+	if err := registerUnicodeLower(); err != nil {
+		return nil, err
+	}
+
 	dsn, err := sqliteDSN(path)
 	if err != nil {
 		return nil, err
