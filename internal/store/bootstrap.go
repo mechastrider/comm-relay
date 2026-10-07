@@ -94,6 +94,16 @@ func prepareStarterCatalogBootstrap(db *sql.DB, gooseVersion int, locale string)
 		}
 	}
 
+	// This catalog addition is independent of the Goose schema version.
+	if _, err := tx.Exec(
+		`INSERT INTO store_bootstrap (key, value) VALUES (?, ?)
+		 ON CONFLICT(key) DO NOTHING`,
+		loreExpertCatalogBootstrapKey,
+		starterCatalogPendingPrefix+normalizeStarterLocale(locale),
+	); err != nil {
+		return rollbackStarterCatalogTransaction(tx, errors.Errorf("prepare lore expert catalog bootstrap state: %w", err))
+	}
+
 	if err := tx.Commit(); err != nil {
 		return errors.Errorf("commit starter catalog bootstrap preparation: %w", err)
 	}

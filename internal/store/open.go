@@ -159,6 +159,14 @@ func Open(path string, opts OpenOptions) (*Store, error) {
 		return nil, errors.Errorf("ensure on-point catalog bootstrap: %w", err)
 	}
 
+	if err := s.ensureLoreExpertCatalogBootstrapLocked(); err != nil {
+		closeErr := db.Close()
+		if closeErr != nil {
+			return nil, errors.Errorf("ensure lore expert catalog bootstrap: %w (close database: %w)", err, closeErr)
+		}
+		return nil, errors.Errorf("ensure lore expert catalog bootstrap: %w", err)
+	}
+
 	return s, nil
 }
 

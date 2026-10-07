@@ -12,6 +12,7 @@ const AWARD_SYMBOLS = Object.freeze({
   spotter: "reticle",
   intel: "radar",
   expert: "star",
+  lore_expert: "open-book",
   meme: "glitch",
   clutch: "shield-bolt",
   mvp: "laurel-star",
@@ -64,6 +65,10 @@ const SYMBOL_SHAPES = Object.freeze({
   star: [
     ["path", { d: "m32 10 6.4 13 14.3 2.1-10.4 10.1 2.5 14.3L32 42.8l-12.8 6.7 2.5-14.3-10.4-10.1L25.6 23Z" }],
     ["path", { d: "M24 53h16", opacity: ".55" }],
+  ],
+  "open-book": [
+    ["path", { d: "M32 18C24 12 16 12 8 15v34c8-3 16-3 24 3 8-6 16-6 24-3V15c-8-3-16-3-24 3Z" }],
+    ["path", { d: "M32 18v34M15 24c4-1 7 0 10 2M15 33c4-1 7 0 10 2M39 26c3-2 6-3 10-2M39 35c3-2 6-3 10-2" }],
   ],
   glitch: [
     ["path", { d: "M16 18h29v8H30v7h18v13H19v-7H9V27h7Z" }],

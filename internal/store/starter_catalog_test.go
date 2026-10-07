@@ -33,7 +33,7 @@ func TestStarterCatalog_WhenFreshRussianDatabase_ExpectLocalizedSeeds(t *testing
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 11)
+	require.Len(t, awards, 12)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
@@ -85,7 +85,7 @@ func TestStarterCatalog_WhenFreshEnglishDatabase_ExpectEnglishSeeds(t *testing.T
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 11)
+	require.Len(t, awards, 12)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
