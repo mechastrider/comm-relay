@@ -43,7 +43,7 @@ func TestCommands_WhenFreshDatabase_ExpectSeedRows(t *testing.T) {
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 11)
+	require.Len(t, awards, 12)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {
@@ -326,7 +326,7 @@ func TestAwards_WhenUpgradedFrom00002_ExpectExtraSeedsWithoutRewritingJokeAdvice
 
 	awards, err := s.ListAwards()
 	require.NoError(t, err)
-	require.Len(t, awards, 10)
+	require.Len(t, awards, 11)
 
 	byID := map[string]store.AwardType{}
 	for _, award := range awards {

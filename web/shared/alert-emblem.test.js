@@ -75,3 +75,20 @@ test("builds decorative SVG without parsing HTML", function () {
   assert.equal(emblem.children[0].tagName, "svg");
   assert.equal(Object.hasOwn(emblem, "innerHTML"), false);
 });
+
+test("renders Lore Expert as a text-free open book even after renaming", function () {
+  const emblem = createAlertEmblem(fakeDocument, {
+    kind: "award", identifier: "lore_expert", label: "Custom lore award",
+  });
+  assert.equal(emblem.attributes["data-emblem-symbol"], "open-book");
+  assert.equal(emblem.attributes["aria-hidden"], "true");
+  assert.equal(emblem.children[0].tagName, "svg");
+  assert.ok(emblem.children[0].children.length > 0);
+  function assertTextFree(element) {
+    assert.equal(element.textContent, "");
+    assert.notEqual(element.tagName, "text");
+    assert.notEqual(element.className, "alert-emblem__monogram");
+    element.children.forEach(assertTextFree);
+  }
+  assertTextFree(emblem);
+});
