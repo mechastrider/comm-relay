@@ -1,3 +1,4 @@
+import { createLevelBadge } from "/shared/viewer-visual-status.js";
 import { createChatRender } from "/shared/chat-render.js?v=12";
 import { t } from "/shared/i18n.js?v=18";
 import { RECAP_WINDOW_ALL, recapContentLayout } from "./recap-model.js?v=2";
@@ -40,7 +41,12 @@ function ranking(snapshot) {
       portrait(displayName, entry.portrait_url, "recap-portrait recap-portrait--ranking")
     );
     const name = node("div", "recap-ranking__name");
-    name.appendChild(node("strong", "recap-ranking__display-name", displayName));
+    const heading = node("div", "recap-ranking__heading");
+    if (entry.emblem && entry.title) {
+      heading.appendChild(createLevelBadge({ title: entry.title, emblem: entry.emblem }, t));
+    }
+    heading.appendChild(node("strong", "recap-ranking__display-name", displayName));
+    name.appendChild(heading);
     if (entry.title) {
       name.appendChild(node("span", "recap-ranking__title", entry.title));
     }

@@ -6,8 +6,8 @@ export const SAMPLE_RECAP = Object.freeze({
   captured_at: "2026-01-01T22:14:00Z",
   totals: { viewer_count: 48, message_count: 1267, xp: 934 },
   ranking: [
-    { rank: 1, display_name: "Капитан Марина", xp: 248, message_count: 180, title: "Vanguard" },
-    { rank: 2, display_name: "Long-range Scout", xp: 201, message_count: 154, title: "Veteran" },
+    { rank: 1, display_name: "Капитан Марина", xp: 248, message_count: 180, title: "Vanguard", emblem: "star" },
+    { rank: 2, display_name: "Long-range Scout", xp: 201, message_count: 154, title: "Veteran", emblem: "chevron_3" },
     { rank: 3, display_name: "Сигнал", xp: 173, message_count: 132 },
     { rank: 4, display_name: "Nomad", xp: 159, message_count: 116 },
     { rank: 5, display_name: "MERC-7", xp: 121, message_count: 92 },
@@ -76,6 +76,7 @@ export function normalizeRecapSnapshot(value) {
         xp: nonNegative(row.xp),
         message_count: nonNegative(row.message_count),
         title: text(row.title, ""),
+        emblem: text(row.emblem, ""),
       };
     }),
     achievement_groups: groups.map(function (entry) {
@@ -117,6 +118,7 @@ export function normalizeAllTimePresentation(value) {
         xp: nonNegative(row.xp),
         message_count: nonNegative(row.message_count),
         title: text(row.title, ""),
+        emblem: text(row.emblem, ""),
       };
     }),
     achievement_groups: [],

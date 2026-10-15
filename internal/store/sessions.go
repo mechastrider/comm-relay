@@ -272,6 +272,7 @@ func (s *Store) sessionRankingQuerierLocked(ctx context.Context, q contextRowsQu
 		entry.Rank = rank
 		if level := resolvedLeaderboardLevel(levels, allTimeXP); level != nil {
 			entry.Title = level.Title
+			entry.Emblem = level.Emblem
 		}
 		entries = append(entries, entry)
 	}

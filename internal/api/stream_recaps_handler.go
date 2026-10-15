@@ -326,6 +326,7 @@ type sessionRankingResponse struct {
 	XP           int    `json:"xp"`
 	MessageCount int    `json:"message_count"`
 	Title        string `json:"title,omitempty"`
+	Emblem       string `json:"emblem,omitempty"`
 }
 
 type sessionAchievementGroupResponse struct {
@@ -413,6 +414,7 @@ func sessionDetailFromStore(detail *store.SessionDetail, snapshot *recap.Snapsho
 			XP:           entry.XP,
 			MessageCount: entry.MessageCount,
 			Title:        entry.Title,
+			Emblem:       entry.Emblem,
 		})
 	}
 	for _, group := range detail.AchievementGroups {

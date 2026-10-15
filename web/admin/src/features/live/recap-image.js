@@ -14,6 +14,7 @@ let recapStylesPromise = null;
 function loadRecapStyles() {
   if (!recapStylesPromise) {
     recapStylesPromise = Promise.all([
+      fetch("/shared/viewer-visual-status.css").then(function (response) { if (!response.ok) throw new Error("recap badge styles HTTP " + response.status); return response.text(); }),
       fetch("/overlay/overlay.css?v=24").then(function (response) { if (!response.ok) throw new Error("recap styles HTTP " + response.status); return response.text(); }),
       fetch("/overlay/recap/recap.css?v=3").then(function (response) { if (!response.ok) throw new Error("recap styles HTTP " + response.status); return response.text(); }),
     ]).then(function (parts) {

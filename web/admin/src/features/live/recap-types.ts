@@ -7,6 +7,7 @@ export interface RecapRanking {
   rank: number;
   display_name: string;
   portrait_url?: string;
+  emblem?: string;
   title?: string;
   xp: number;
   message_count: number;

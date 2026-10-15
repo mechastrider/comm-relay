@@ -339,3 +339,65 @@ func TestComputeAllTimeRecapPresentation_WhenXPOnlyAndMessagingViewer_ExpectUniq
 	assert.Equal(t, 1, presentation.Totals.MessageCount)
 	assert.Equal(t, 41, presentation.Totals.XP)
 }
+
+func TestCaptureStreamRecap_WhenLevelChanges_ExpectCapturedEmblemAndTitlePreserved(t *testing.T) {
+	// Arrange
+	s, _ := openTestStore(t)
+	now := time.Now().UTC()
+	identity := store.ChatIdentity{Platform: "twitch", UserID: "badge-viewer", DisplayName: "Badge viewer"}
+	_, err := s.UpdateProgressionLevel(store.UpdateProgressionLevelInput{ID: "recruit", Title: "Pilot", MinXP: 0, Emblem: "star"})
+	require.NoError(t, err)
+	require.NoError(t, s.ApplyChat(identity, store.ActivitySettings{XP: 1}, testDayResetHour, now))
+	sessionID, err := s.CurrentSessionID()
+	require.NoError(t, err)
+	first, err := s.CaptureStreamRecap(context.Background(), sessionID, false)
+	require.NoError(t, err)
+	require.Len(t, first.Ranking, 1)
+	assert.Equal(t, "star", first.Ranking[0].Emblem)
+	assert.Equal(t, "Pilot", first.Ranking[0].Title)
+
+	// Act: edit the captured level, then move the viewer to another level.
+	_, err = s.UpdateProgressionLevel(store.UpdateProgressionLevelInput{ID: "recruit", Title: "Cadet", MinXP: 0, Emblem: "laurel"})
+	require.NoError(t, err)
+	current, err := s.ComputeAllTimeRecapPresentation(false)
+	require.NoError(t, err)
+	require.Len(t, current.Ranking, 1)
+	assert.Equal(t, "laurel", current.Ranking[0].Emblem)
+	assert.Equal(t, "Cadet", current.Ranking[0].Title)
+	_, err = s.ApplyAward(identity, 150, testDayResetHour, now.Add(time.Minute))
+	require.NoError(t, err)
+	loaded, err := s.LoadStreamRecap(sessionID)
+	require.NoError(t, err)
+	replayed, err := s.CaptureStreamRecap(context.Background(), sessionID, false)
+	require.NoError(t, err)
+
+	// Assert
+	assert.Equal(t, first, loaded)
+	assert.Equal(t, first, replayed)
+}
+
+func TestRecapPayload_WhenEmblemOptionalOrInvalid_ExpectBackwardCompatibleValidation(t *testing.T) {
+	// Arrange
+	s, _ := openTestStore(t)
+	require.NoError(t, s.ApplyChat(store.ChatIdentity{Platform: "twitch", UserID: "legacy", DisplayName: "Legacy"}, store.ActivitySettings{XP: 1}, testDayResetHour, time.Now()))
+	sessionID, err := s.CurrentSessionID()
+	require.NoError(t, err)
+	snapshot, err := s.CaptureStreamRecap(context.Background(), sessionID, false)
+	require.NoError(t, err)
+	require.Len(t, snapshot.Ranking, 1)
+
+	// Act and assert
+	for _, emblem := range []string{"", "shield", "chevron_1", "chevron_2", "chevron_3", "star", "laurel"} {
+		snapshot.Ranking[0].Emblem = emblem
+		encoded, encodeErr := snapshot.EncodePayload()
+		require.NoError(t, encodeErr)
+		parsed, parseErr := recap.ParsePayload(encoded)
+		require.NoError(t, parseErr)
+		assert.Equal(t, emblem, parsed.Ranking[0].Emblem)
+		if emblem == "" {
+			assert.NotContains(t, encoded, `"emblem"`)
+		}
+	}
+	snapshot.Ranking[0].Emblem = "https://example.com/icon.svg"
+	assert.ErrorIs(t, snapshot.Validate(), recap.ErrInvalidSnapshot)
+}

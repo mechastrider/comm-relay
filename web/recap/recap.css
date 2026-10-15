@@ -1,3 +1,4 @@
+@import url("/shared/viewer-visual-status.css");
 @import url("../overlay.css?v=24");
 
 :root {
@@ -688,3 +689,7 @@ body.overlay-theme--g-rebels-popups .recap-achievement { border-left: 4px solid 
   from { opacity: 0; transform: translateY(10px) scale(0.995); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+.recap-ranking__heading { display: flex; align-items: center; gap: .4em; min-width: 0; }
+.recap-ranking__heading .viewer-level-badge { font-size: .8em; }
+.recap-ranking__heading .recap-ranking__display-name { min-width: 0; }

@@ -45,6 +45,7 @@ type RankingEntry struct {
 	XP           int    `json:"xp"`
 	MessageCount int    `json:"message_count"`
 	Title        string `json:"title,omitempty"`
+	Emblem       string `json:"emblem,omitempty"`
 }
 
 // AchievementGroup groups repeated unlocks for recap presentation.
@@ -178,6 +179,11 @@ func (s *Snapshot) Validate() error {
 		}
 		if err := validateDisplayName(entry.DisplayName); err != nil {
 			return err
+		}
+		switch entry.Emblem {
+		case "", "shield", "chevron_1", "chevron_2", "chevron_3", "star", "laurel":
+		default:
+			return ErrInvalidSnapshot
 		}
 		if err := validateOptionalTitle(entry.Title); err != nil {
 			return err
