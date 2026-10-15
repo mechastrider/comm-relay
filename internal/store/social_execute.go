@@ -515,19 +515,21 @@ func (s *Store) commitLikeLocked(input SocialCommandInput, giverID, recipientID 
 	}
 
 	awardEvent := AppendInteractionEventInput{
-		Kind:      InteractionEventAward,
-		ViewerID:  recipientID,
-		CommandID: input.Command.ID,
-		AwardID:   award.ID,
-		AwardName: award.Name,
-		Points:    points,
-		Now:       input.Now,
+		ActorViewerID: giverID,
+		Kind:          InteractionEventAward,
+		ViewerID:      recipientID,
+		CommandID:     input.Command.ID,
+		AwardID:       award.ID,
+		AwardName:     award.Name,
+		Points:        points,
+		Now:           input.Now,
 	}
 	if appendErr := s.appendInteractionEventLocked(tx, awardEvent); appendErr != nil {
 		return SocialCommandResult{}, appendErr
 	}
 
 	commandEvent := AppendInteractionEventInput{
+		FeedHidden:     true,
 		Kind:           InteractionEventCommand,
 		ViewerID:       giverID,
 		CommandID:      input.Command.ID,
@@ -650,6 +652,7 @@ func (s *Store) commitBuffLocked(input SocialCommandInput, giverID string, targe
 	}
 
 	commandEvent := AppendInteractionEventInput{
+		FeedHidden:     true,
 		Kind:           InteractionEventCommand,
 		ViewerID:       giverID,
 		CommandID:      input.Command.ID,

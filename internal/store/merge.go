@@ -57,6 +57,15 @@ func (s *Store) Merge(fromID, intoID string, dayResetHour int, now time.Time) er
 	if err := s.rewriteViewerContractsLocked(tx, fromID, intoID); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(`UPDATE interaction_events SET actor_viewer_id = ? WHERE actor_viewer_id = ?`, intoID, fromID); err != nil {
+		return errors.Errorf("merge interaction actors: %w", err)
+	}
+	if _, err := tx.Exec(`UPDATE interaction_events SET recipient_viewer_id = ? WHERE recipient_viewer_id = ?`, intoID, fromID); err != nil {
+		return errors.Errorf("merge interaction recipients: %w", err)
+	}
+	if _, err := tx.Exec(`UPDATE viewer_level_events SET viewer_id = ? WHERE viewer_id = ?`, intoID, fromID); err != nil {
+		return errors.Errorf("merge level events: %w", err)
+	}
 	if s.mergeHook != nil {
 		if err := s.mergeHook(); err != nil {
 			return errors.Errorf("run merge test hook: %w", err)

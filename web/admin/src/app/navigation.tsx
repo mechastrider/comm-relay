@@ -7,7 +7,7 @@ import {
   type SetStateAction,
 } from "react";
 export type Period = "session" | "day" | "all";
-export type LiveTab = "messages" | "leaderboard" | "statistics" | "contracts";
+export type LiveTab = "messages" | "events" | "leaderboard" | "statistics" | "contracts";
 interface ContractDraft {
   title: string;
   objective: string;
