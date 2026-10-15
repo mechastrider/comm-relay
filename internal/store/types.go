@@ -297,6 +297,7 @@ type SessionRankingEntry struct {
 	XP           int
 	MessageCount int
 	Title        string
+	Emblem       string
 }
 
 // SessionAchievementGroup groups repeated unlocks for recap presentation.

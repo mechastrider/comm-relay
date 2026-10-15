@@ -187,9 +187,10 @@ func (s *Store) ComputeAllTimeRecapPresentation(customAvatarsEnabled bool) (*rec
 
 	ranking := make([]recap.RankingEntry, 0, len(entries))
 	for _, entry := range entries {
-		title := ""
+		title, emblem := "", ""
 		if entry.Level != nil {
 			title = entry.Level.Title
+			emblem = entry.Level.Emblem
 		}
 		ranking = append(ranking, recap.RankingEntry{
 			Rank:         entry.Rank,
@@ -198,6 +199,7 @@ func (s *Store) ComputeAllTimeRecapPresentation(customAvatarsEnabled bool) (*rec
 			XP:           entry.XP,
 			MessageCount: entry.MessageCount,
 			Title:        title,
+			Emblem:       emblem,
 		})
 	}
 
@@ -260,6 +262,7 @@ func recapBuildSnapshot(sessionID string, startedAt, capturedAt time.Time, detai
 			XP:           entry.XP,
 			MessageCount: entry.MessageCount,
 			Title:        entry.Title,
+			Emblem:       entry.Emblem,
 		})
 	}
 	for _, group := range detail.AchievementGroups {

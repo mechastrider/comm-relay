@@ -17,6 +17,7 @@ type CaptureRankingEntry struct {
 	XP           int
 	MessageCount int
 	Title        string
+	Emblem       string
 }
 
 // CaptureAchievementGroup groups repeated unlocks at capture time.

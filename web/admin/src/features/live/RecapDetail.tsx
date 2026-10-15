@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LevelBadge } from "../../components/ViewerVisuals";
 import { useLocale } from "../../app/locale";
 import { safeImageURL } from "../../../../shared/chat-render";
 import type {
@@ -159,9 +160,12 @@ export function RecapDetail({
                       name={entry.display_name}
                     />
                     <span className="live-recap-ranking__copy">
-                      <strong>
-                        {entry.display_name || t("viewers.unnamed")}
-                      </strong>
+                      <span className="live-recap-ranking__name">
+                        {entry.emblem && entry.title && (
+                          <LevelBadge level={{ title: entry.title, emblem: entry.emblem }} />
+                        )}
+                        <strong>{entry.display_name || t("viewers.unnamed")}</strong>
+                      </span>
                       {entry.title && <small>{entry.title}</small>}
                     </span>
                     <span className="live-recap-ranking__meta">

@@ -76,3 +76,15 @@ test("recap overlay labels are complete in Russian and English", function () {
   assert.equal(t("recap.overlayAchievements"), "Achievements");
   assert.equal(t("recap.overlayMessageCount", { count: 12 }), "12 messages");
 });
+
+test("recap normalization preserves captured emblems without inventing legacy badges", function () {
+  for (const window of [RECAP_WINDOW_SESSION, RECAP_WINDOW_ALL]) {
+    const payload = { totals: {}, ranking: [
+      { title: "Pilot", emblem: "star" },
+      { title: "Legacy pilot" },
+    ] };
+    const visible = visibleRecapFromFrame({ type: "stream_recap_state", visible: true, window, snapshot: payload, all_time: payload });
+    assert.equal(visible.snapshot.ranking[0].emblem, "star");
+    assert.equal(visible.snapshot.ranking[1].emblem, "");
+  }
+});
