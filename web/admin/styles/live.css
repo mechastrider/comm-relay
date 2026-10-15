@@ -239,3 +239,43 @@
   width: auto;
   max-width: 100%;
 }
+
+/* Events keep controls visible while the history scrolls independently. */
+.live-events {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--primitive-space-4);
+  gap: var(--primitive-space-2);
+}
+.live-events__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitive-space-2);
+}
+.live-events__toolbar select { max-width: 100%; }
+.live-events__body { flex: 1; min-height: 0; overflow: auto; overflow-wrap: anywhere; }
+.live-events__list { list-style: none; padding: 0; margin: 0; }
+.live-events__entry {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: var(--primitive-space-3);
+  padding-block: var(--primitive-space-3);
+  border-bottom: 1px solid var(--border);
+}
+.live-events__entry time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.live-events__entry p { margin: 0.25rem 0 0; }
+.live-events__kind { color: var(--muted); font-size: 0.8rem; }
+.live-events__xp { white-space: nowrap; }
+.live-events__history-hint { font-size: 0.85rem; color: var(--muted); }
+.live-events__history-hint summary { cursor: pointer; }
+
+/* The narrow shell scrolls the page; keep the journal itself bounded too. */
+@media (max-width: 860px) {
+  .live-events {
+    flex: 0 0 auto;
+    height: clamp(24rem, 75dvh, 42rem);
+  }
+}

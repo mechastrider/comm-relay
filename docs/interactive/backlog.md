@@ -89,4 +89,5 @@
 
 | ID | Результат | Область | Статус | Причина / канон |
 |---|---|---|---|---|
+| <a id="int-038"></a>INT-038 | Переключать существующий OBS-док между сообщениями и событиями стрима | Admin / OBS dock | `parked` | Обсуждение 2026-10-15: сначала отдельная вкладка событий в Live; режим текущего дока отложен, новый док не нужен. [live-events](../../openspec/specs/live-events/spec.md) |
 | <a id="int-023"></a>INT-023 | Переопределять `streamer_display_name` внутри отдельного overlay-пресета | Templates / presets | `rejected` | Имя остаётся глобальным для установки; presets не переопределяют его: [config-store](../../openspec/specs/config-store/spec.md) |

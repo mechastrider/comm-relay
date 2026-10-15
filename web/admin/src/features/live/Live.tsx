@@ -6,6 +6,7 @@ import { Tabs } from "../../components/Tabs";
 import { NewStream } from "../../components/NewStream";
 import { post } from "../../services/api";
 import type { PublicConfig } from "../../services/types";
+import { Events } from "./Events";
 import { Messages } from "./Messages";
 import { useMessages } from "./MessagesProvider";
 import { Leaderboard } from "./Leaderboard";
@@ -14,8 +15,8 @@ import { Contracts } from "./Contracts";
 import { useNavigation } from "../../app/navigation";
 import { Recap } from "./Recap";
 
-type Tab = "messages" | "leaderboard" | "statistics" | "contracts";
-const tabs: Tab[] = ["messages", "leaderboard", "statistics", "contracts"];
+type Tab = "messages" | "events" | "leaderboard" | "statistics" | "contracts";
+const tabs: Tab[] = ["messages", "events", "leaderboard", "statistics", "contracts"];
 export function Live() {
   const { t } = useLocale();
   const { config, diagnostics, applyConfig } = useRuntime();
@@ -199,6 +200,8 @@ export function Live() {
                   {tab === id &&
                     (id === "messages" ? (
                       <Messages />
+                    ) : id === "events" ? (
+                      <Events refreshVersion={refreshVersion} />
                     ) : id === "leaderboard" ? (
                       <Leaderboard
                         period={period}

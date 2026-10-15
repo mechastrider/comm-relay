@@ -46,6 +46,8 @@ type InteractionEvent struct {
 
 // AppendInteractionEventInput describes one append-only interaction event.
 type AppendInteractionEventInput struct {
+	ActorViewerID     string
+	FeedHidden        bool
 	Kind              InteractionEventKind
 	ContractID        string
 	ViewerID          string
@@ -309,8 +311,8 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 	if _, err := q.Exec(
 		`INSERT INTO interaction_events (
 			id, kind, contract_id, viewer_id, session_id, command_id, command_trigger, award_id, reward_name, points,
-			message_platform, message_id, recipient_viewer_id, parent_event_id, created_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			message_platform, message_id, recipient_viewer_id, parent_event_id, created_at, actor_viewer_id, feed_hidden
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULLIF(?, ''), ?)`,
 		id,
 		string(input.Kind),
 		contractID,
@@ -326,6 +328,8 @@ func (s *Store) appendInteractionEventLocked(q execQuerier, input AppendInteract
 		recipientViewerID,
 		parentEventID,
 		createdAt,
+		input.ActorViewerID,
+		boolInt(input.FeedHidden),
 	); err != nil {
 		return errors.Errorf("insert interaction event: %w", err)
 	}

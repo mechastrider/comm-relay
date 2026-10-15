@@ -135,6 +135,13 @@ func (s *Store) evaluateProgressionLocked(tx *sql.Tx, input ProgressionEvaluatio
 		result.CurrentLevel = level
 	}
 
+	if !input.Backfilled && input.HasPreviousXP && result.PreviousLevel != nil && result.CurrentLevel != nil && result.CurrentLevel.MinXP > result.PreviousLevel.MinXP {
+		if _, insertErr := tx.Exec(`INSERT INTO viewer_level_events (id, viewer_id, session_id, level_title, created_at) VALUES (?, ?, ?, ?, ?)`,
+			uuid.NewString(), input.ViewerID, unlockSessionID.String, result.CurrentLevel.Title, formatInteractionEventTime(input.Now)); insertErr != nil {
+			return ProgressionEvaluationResult{}, errors.Errorf("record live level transition: %w", insertErr)
+		}
+	}
+
 	rows, err := tx.Query(`SELECT d.id, d.name, d.description, r.revision, r.metric, r.subject_id, r.target, r.repeatable
 		FROM achievement_definitions d
 		JOIN achievement_revisions r ON r.achievement_id = d.id AND r.revision = d.active_revision
