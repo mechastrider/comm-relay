@@ -1,0 +1,20 @@
+name: Предложить улучшение
+description: Расскажите, чего не хватает для вашего стрима.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Можно писать своими словами, на русском или английском. Не нужно придумывать техническое решение.
+  - type: textarea
+    id: idea
+    attributes:
+      label: Что хочется улучшить?
+      description: В какой ситуации вам не хватает возможностей CommRelay и что вы хотели бы делать проще?
+      placeholder: Во время стрима мне приходится… Было бы удобно, если бы…
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Пример или картинка (необязательно)
+      description: Если есть пример, ссылка или набросок — добавьте сюда. Можно перетащить изображение.

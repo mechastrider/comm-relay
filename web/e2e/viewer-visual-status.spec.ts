@@ -119,7 +119,14 @@ test("viewer visual Studio switches default on and persist independently", async
   await expect(ammo).toBeChecked();
   await ammo.uncheck();
   const save = page.locator("#studio-publish");
+  const saved = page.waitForResponse(response =>
+    response.url() === runtime.url + "/api/config/update" &&
+    response.request().method() === "POST",
+  );
   await save.click();
+  expect((await saved).ok()).toBe(true);
+  // Publish is disabled while saving as well as when the draft is clean.
+  await expect(save).toHaveAttribute("aria-busy", "false");
   await expect(save).toBeDisabled();
   await page.reload();
   await expect(ammo).not.toBeChecked();

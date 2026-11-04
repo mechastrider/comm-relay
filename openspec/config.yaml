@@ -6,9 +6,9 @@ context: |
   Deployment: single local process; no cloud relay; HTTP + WebSocket on localhost (default 127.0.0.1:17877)
   API: POST-action (POST /api/<resource>/<action>), snake_case JSON; GET allowed for reads, static, health, WebSocket upgrade, and OAuth callbacks
   Backend packages: cmd/comm-relay-server/, cmd/comm-relay-desktop/, internal/{bootstrap,config,bus,connector,api,emote,imagelink,desktopentry}/
-  Frontend: vanilla HTML/CSS/JS under web/{admin,overlay,dock,shared}/ — no React on current product
-  Persistence: config.json for operator settings (beside the executable or user config dir); planned local SQLite beside it for viewers/stats — do not migrate config into SQLite
-  Tests: go test ./...; golangci-lint run ./...; npm run lint for web/**/*.js
+  Frontend: React/TypeScript admin under web/admin/; static HTML/CSS/JS OBS surfaces under web/{overlay,leaderboard,alert,recap,dock,shared}/
+  Persistence: config.json for operator settings; local SQLite comm-relay.db beside it for viewers, XP, catalogs, sessions, and recaps; overlay-assets beside config for media — do not migrate config into SQLite
+  Tests: go test ./...; golangci-lint run ./...; npm run typecheck; npm run lint; npm test; npm run build; npm run test:e2e
   Product brief: docs/concept.md (Russian). Next horizon: docs/roadmap.md. Canonical implemented behavior: openspec/specs/
   Principles: unified ChatMessage; overlay never branches on platform internals; one connector failing must not crash the process; changelog only for streamer-visible impact
 
