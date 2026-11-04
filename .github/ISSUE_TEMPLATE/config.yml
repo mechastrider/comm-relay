@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Помощь с настройкой
+    url: https://t.me/mechastrider_apps/2
+    about: Задайте вопрос в Telegram-чате поддержки.
+  - name: Руководство пользователя
+    url: https://github.com/mechastrider/comm-relay/blob/main/docs/user-guide.md
+    about: Подключение чатов и OBS, команды, награды и другие возможности.

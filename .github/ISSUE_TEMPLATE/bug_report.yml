@@ -1,0 +1,30 @@
+name: Сообщить об ошибке
+description: Что-то не работает или работает не так, как ожидалось.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Расскажите своими словами — технические знания не нужны. Можно писать на русском или английском.
+        Если нужна помощь с настройкой, загляните в [руководство](https://github.com/mechastrider/comm-relay/blob/main/docs/user-guide.md) или [чат поддержки](https://t.me/mechastrider_apps/2).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Что случилось?
+      description: Что вы делали, что произошло и какого результата ожидали? Если можете, перечислите шаги, чтобы повторить ошибку.
+      placeholder: Открыл OBS, добавил оверлей, отправил сообщение в чат. Сообщение появилось, но…
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Где возникла ошибка?
+      description: Укажите систему и версию CommRelay, если знаете. Для проблемы в OBS или браузере напишите и их название/версию.
+      placeholder: Windows 11, CommRelay 0.5.0, оверлей в OBS
+    validations:
+      required: true
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Скриншот или подробности (необязательно)
+      description: Можно перетащить сюда изображение, приложить лог или рассказать, как часто возникает ошибка. Перед отправкой удалите пароли, токены и другие секреты.
