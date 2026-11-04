@@ -170,7 +170,7 @@ test("React greetings and progression persist edits and protect the baseline lev
   await page.locator("#progression-level-new").click();
   await page.locator("#progression-level-title").fill("React Level");
   await page.locator("#progression-level-xp").fill("1234567");
-  await page.locator('#progression-level-form button[type="submit"]').click();
+  await page.locator('#progression-submit-1').click();
   await expect(page.locator("#progression-level-list")).toContainText(
     "React Level",
   );
@@ -179,18 +179,19 @@ test("React greetings and progression persist edits and protect the baseline lev
   await expect(page.locator("#progression-level-list")).not.toContainText(
     "React Level",
   );
+  await page.locator("#progression-achievement-tab").click();
   await page.locator("#progression-achievement-new").click();
   await page.locator("#progression-achievement-name").fill("React Achievement");
   await page.locator("#progression-achievement-target").fill("3");
   await page
-    .locator('#progression-achievement-form button[type="submit"]')
+    .locator('#progression-submit-5')
     .click();
   await expect(page.locator("#progression-achievement-list")).toContainText(
     "React Achievement",
   );
   await page.locator("#progression-achievement-target").fill("4");
   await page
-    .locator('#progression-achievement-form button[type="submit"]')
+    .locator('#progression-submit-5')
     .click();
   await expect(page.locator("#discard-changes-dialog")).toBeVisible();
   await page.locator("#discard-changes-confirm").click();

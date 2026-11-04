@@ -50,6 +50,12 @@ export function Progression() {
     [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
+  const [catalog, setCatalog] = useState<"level" | "achievement">("level");
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [statusGroup, setStatusGroup] = useState<Group | "maintenance">(
+    "level",
+  );
   const [confirmation, setConfirmation] = useState<{
     message: string;
     run: () => void;
@@ -140,11 +146,12 @@ export function Progression() {
       };
     });
     setErrors((previous) => ({ ...previous, [id]: "" }));
+    setStatusGroup(group);
     setStatus("");
     setError("");
   };
   const guard = (group: Group, run: () => void) => {
-    if (busy) return;
+    if (pending.current || busy) return;
     if (isDirty(group))
       setConfirmation({ message: t("progression.discardConfirm"), run });
     else run();
@@ -152,9 +159,11 @@ export function Progression() {
   const choose = (group: "level" | "achievement", id: string) =>
     guard(group, () => {
       clearDraft(group);
+      setStatus("");
+      setEditorOpen(true);
       if (group === "level") setLevelID(id);
       else setAchievementID(id);
-      if (!id)
+      if (!id || window.matchMedia("(max-width: 1023px)").matches)
         requestAnimationFrame(() =>
           document
             .getElementById(
@@ -164,6 +173,41 @@ export function Progression() {
             )
             ?.focus(),
         );
+    });
+  const switchCatalog = (next: "level" | "achievement") => {
+    if (next === catalog) return;
+    guard(catalog, () => {
+      clearDraft(catalog);
+      setStatus("");
+      setCatalog(next);
+      setEditorOpen(false);
+      requestAnimationFrame(() =>
+        document.getElementById(`progression-${next}-tab`)?.focus(),
+      );
+    });
+  };
+  const back = () =>
+    guard(catalog, () => {
+      clearDraft(catalog);
+      setStatus("");
+      setEditorOpen(false);
+      requestAnimationFrame(() =>
+        (
+          document.querySelector<HTMLElement>(
+            `#progression-${catalog}-list [aria-selected="true"]`,
+          ) ?? document.getElementById(`progression-${catalog}-new`)
+        )?.focus({ preventScroll: true }),
+      );
+    });
+  const closeSettings = () =>
+    guard("settings", () => {
+      clearDraft("settings");
+      setSettingsOpen(false);
+      requestAnimationFrame(() =>
+        document
+          .getElementById("progression-alerts-open")
+          ?.focus({ preventScroll: true }),
+      );
     });
   const report = (cause: unknown, group?: Group) => {
     const message = cause instanceof Error ? cause.message : String(cause);
@@ -192,6 +236,8 @@ export function Progression() {
     pending.current = true;
     setBusy(true);
     setError("");
+    setStatus("");
+    setStatusGroup(group);
     setErrors({});
     const payload = payloadFor(group, values);
     if (group === "achievement") {
@@ -260,6 +306,8 @@ export function Progression() {
     pending.current = true;
     setBusy(true);
     setError("");
+    setStatus("");
+    setStatusGroup(group);
     try {
       await post(
         "/api/progression/" +
@@ -290,6 +338,8 @@ export function Progression() {
     pending.current = true;
     setBusy(true);
     setError("");
+    setStatus("");
+    setStatusGroup(group);
     const payload = payloadFor(group, values),
       appearance = payloadFor("settings", values);
     try {
@@ -321,6 +371,8 @@ export function Progression() {
     pending.current = true;
     setBusy(true);
     setError("");
+    setStatus("");
+    setStatusGroup("maintenance");
     try {
       const result = await post<{ state: string }>(
         "/api/progression/reconcile",
@@ -423,6 +475,8 @@ export function Progression() {
     id: string,
     label: string,
     selected: boolean,
+    summary: string,
+    state?: string,
   ) => (
     <li
       key={id}
@@ -433,7 +487,9 @@ export function Progression() {
       }
       tabIndex={
         selected ||
-        ((group === "level" ? levelID : achievementID) === "" &&
+        (!(group === "level" ? list : filtered).some(
+          (item) => item.id === (group === "level" ? level.id : achievement.id),
+        ) &&
           id === (group === "level" ? list[0]?.id : filtered[0]?.id))
           ? 0
           : -1
@@ -468,7 +524,11 @@ export function Progression() {
         }
       }}
     >
-      <span className="audience-catalog-items__primary">{label}</span>
+      <span className="audience-catalog-items__label">
+        <span className="audience-catalog-items__primary">{label}</span>
+        <span className="audience-catalog-items__meta">{summary}</span>
+      </span>
+      {state && <span className="audience-catalog-items__meta">{state}</span>}
     </li>
   );
   const failed = !!(
@@ -483,12 +543,22 @@ export function Progression() {
     settings.loading ||
     statusResource.loading;
   const cancel = () => {
+    if (pending.current) return;
     setConfirmation(null);
     if (blocker.state === "blocked") blocker.reset();
   };
   return (
     <>
       <ProgressionView
+        catalog={catalog}
+        editorOpen={editorOpen}
+        settingsOpen={settingsOpen}
+        switchCatalog={switchCatalog}
+        back={back}
+        openSettings={() => {
+          setSettingsOpen(true);
+        }}
+        closeSettings={closeSettings}
         values={values}
         errors={errors}
         busy={busy || loading}
@@ -499,23 +569,28 @@ export function Progression() {
           row(
             "level",
             item.id,
-            item.title +
-              " · " +
-              item.min_xp +
+            item.title,
+            item.id === level.id,
+            item.min_xp +
               " XP · " +
               t("progression.quotaListShort", {
                 like: item.like_quota ?? 0,
                 buff: item.buff_quota ?? 0,
               }),
-            item.id === level.id,
           ),
         )}
         achievementList={filtered.map((item) =>
           row(
             "achievement",
             item.id,
-            item.name + " · " + condition(item.revision),
+            item.name,
             item.id === achievement.id,
+            condition(item.revision),
+            t(
+              item.enabled
+                ? "progression.filterEnabled"
+                : "progression.filterDisabled",
+            ),
           ),
         )}
         achievementsEmpty={!filtered.length}
@@ -525,18 +600,15 @@ export function Progression() {
           target: Number(values["progression-achievement-target"]),
           repeatable: Boolean(values["progression-achievement-repeatable"]),
         })}
-        status={
-          error ||
+        status={error || status}
+        statusGroup={statusGroup}
+        statusError={!!error}
+        resourceStatus={
           levels.error?.message ||
           achievements.error?.message ||
           settings.error?.message ||
           statusResource.error?.message ||
-          status ||
-          (loading
-            ? t("state.loading")
-            : statusResource.data?.state
-              ? t("progression.status") + ": " + statusResource.data.state
-              : "")
+          (loading ? t("state.loading") : "")
         }
         failed={failed}
         subjectOptions={
@@ -572,13 +644,11 @@ export function Progression() {
         title={t("dialog.discardUnsavedTitle")}
         actions={
           <>
-            <Button
-              id="discard-changes-cancel"
-              onClick={cancel}
-            >
+            <Button id="discard-changes-cancel" onClick={cancel}>
               {t("dialog.keepEditing")}
             </Button>
-            <Button variant="danger"
+            <Button
+              variant="danger"
               id="discard-changes-confirm"
               disabled={busy}
               onClick={() => {
