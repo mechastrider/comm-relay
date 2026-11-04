@@ -23,19 +23,16 @@ The best way to evaluate CommRelay is to see it running on the author's streams:
 
 ## Features
 
-- Combines Twitch, YouTube Live Chat, and VK Live / VK Video in one local feed.
-- Tracks viewer stats (XP, messages, session/day/all-time) in a local `comm-relay.db` file next to `config.json` — no separate database server.
-- Recognizes chat commands and lets the streamer grant viewer rewards from Live or the OBS message dock.
-- In **Live → Contracts**, lets the streamer manually announce one viewer task on `/overlay/alert`, choose a winner for a normal XP reward, or close it without a result.
-- Sends transparent chat, leaderboard, and command/reward alert surfaces to OBS.
-- Embeds a separate message log in the OBS interface: `http://127.0.0.1:17877/dock/messages`.
-- Shows a transparent leaderboard Browser Source: `http://127.0.0.1:17877/overlay/leaderboard?period=session|day|all` (same theme as chat; without `preset` it follows the active preset).
-- Shows command, reward, and automatic-greeting alerts on a separate OBS Browser Source: `http://127.0.0.1:17877/overlay/alert` (sound plays in that source; enable **Control audio via OBS** for stream audio).
-- Captures the current stream recap on the operator's command and shows it on a separate full-canvas OBS Browser Source: `http://127.0.0.1:17877/overlay/recap`; compact session history remains available in Live.
-- Provides a local console with Live, Audience, Studio, and Settings workspaces: statuses, messages, viewers, command, award, and greeting catalogs, overlay setup, and diagnostics. New and returning greetings start disabled; the confirmed **New stream** action defines the returning-viewer boundary.
-- In **Settings → Data** you can hide `!command` lines in the chat overlay only — they remain visible in Live and the dock.
-- Supports Twitch emotes, FrankerFaceZ, BetterTTV, 7TV, and safe image previews.
-- Automatically reconnects connectors and stores settings locally in `config.json`.
+- **One chat feed.** Twitch, YouTube Live, and VK Live / VK Video, Twitch/FFZ/BTTV/7TV emotes, image previews, and automatic reconnection. Read messages and grant rewards from Live or the OBS dock.
+- **Viewer contribution and progress.** Operator rewards and configurable activity grants earn XP. Customize levels, titles, emblems, and achievements; compare session, day, and all-time stats and manually merge a viewer's platform accounts.
+- **Audience interaction.** Custom alert commands, `!like nickname`, `!buff`, automatic greetings, and viewer tasks with an operator-selected winner in **Live → Viewer rewards**. Configure limits, visuals, and sounds.
+- **Four OBS surfaces.** Chat, leaderboard, alerts, and recap, with themes, presets, custom media, transparency, automatic scaling, and a Studio preview-and-publish workflow.
+- **Stream history.** Named sessions, live events, reward history, archived streams, immutable session recaps, and shareable PNG images. An all-time presentation is also available.
+- **Local data.** Settings, viewer history, and media stay on your computer; diagnostics help investigate connections and missing events. No separate database server is required.
+
+This describes the current main branch; see [CHANGELOG](CHANGELOG.md) for features included in published versions.
+
+The [user guide (Russian)](docs/user-guide.md) walks through OBS setup, XP, progression, audience commands, running a stream, recaps, and backups. Installation and connection details follow below.
 
 ## Download and install
 
@@ -81,6 +78,7 @@ Do not move the `CommRelay` folder after installing the shortcut without running
 2. Open **Settings → Platforms** and enable the platforms you need.
 3. Click **Save** on that section after changing settings.
 4. Open **Studio**: on first visit **Add to OBS** opens with Browser Source steps and copyable URLs; then customize the on-stream surfaces (chat, leaderboard, alerts, recap).
+5. Before going live, confirm **New stream** in Live and review the session title. Restarting the application does not start another session.
 
 By default CommRelay listens on `127.0.0.1:17877`. The admin panel is available at `http://127.0.0.1:17877/`, and the overlay at `http://127.0.0.1:17877/overlay`.
 
@@ -102,6 +100,8 @@ In **Live**, click **Recap**, review the current stream summary, and confirm **C
 Showing, hiding, or showing the recap again never ends the stream, creates a session, or resets counters. Starting another session still requires the separate confirmed **New stream** action. The recap dialog's **History** view provides compact summaries for the current and earlier sessions, including sessions without a captured recap; this version cannot replay a historical session on air.
 
 The `/overlay/recap` source uses the selected active or pinned preset and displays its system labels in the application language. It remains transparent while the recap is hidden. If Browser Source briefly disconnects, it restores the same visible immutable snapshot after reconnecting. A full CommRelay process restart intentionally resets visibility: the snapshot remains in history, but you must click **Show recap** again to put it on air.
+
+The same dialog can show an **all-time presentation** without capturing a session snapshot and export an opaque **16:9 PNG**. Desktop opens the native save dialog. Past streams are also available in **Audience → Archive**; a historical PNG requires a captured recap. Ranking titles and level emblems are preserved at first capture.
 
 ## Message log in the OBS interface
 
@@ -148,9 +148,10 @@ Browser Source viewport size and OBS scene transform are different. Dragging tra
 After changing appearance in Studio:
 
 1. Click **Publish**. Until the draft is published, the live overlay does not change.
-2. If the source is pinned (`?preset=`), refresh the Browser Source in OBS: right-click the source → **Refresh cache of current page**. An unpinned source picks up the active preset over WebSocket; still refresh the cache if the look looks stuck.
+2. For an inactive preset, publish the draft before choosing **Use on stream**.
+3. An unpinned source picks up the active preset over WebSocket; a pinned source (`?preset=`) keeps using its named preset and published settings. Explicit appearance parameters in the URL take precedence.
 
-Without reloading in OBS, the overlay continues with the old parameters.
+If published changes do not appear, check the selected preset and URL overrides, then refresh the Browser Source cache.
 
 **Tip:** to compare themes, wait for several chat messages — the difference is not visible on an empty screen.
 
@@ -197,7 +198,7 @@ OAuth is not required. Enter the channel slug or `live.vkvideo.ru` URL, then ena
 
 ## Where settings are stored
 
-Settings, OAuth tokens, and local parameters are stored only on your computer.
+Settings and OAuth tokens are stored in `config.json`. The adjacent `comm-relay.db` holds viewers, XP, catalogs, and history; `overlay-assets` holds images, sounds, and portraits. All of these files stay on your computer.
 
 | System | Path to `config.json` |
 |--------|------------------------|
@@ -208,6 +209,10 @@ Settings, OAuth tokens, and local parameters are stored only on your computer.
 Do not publish `config.json` if it contains an OAuth client secret or tokens.
 
 ## Updating
+
+**Before launching the new version**, close CommRelay and copy the entire user-data directory, including `config.json`, `comm-relay.db`, any companion database files, and `overlay-assets`. The database holds viewers, XP, catalogs, and history; the assets folder holds images, audio, and portraits.
+
+The update after v0.5.0 changes the database, including `score` to `xp`. Launching an older version does not automatically downgrade the database: restoring the old installation requires the previous application and a backup made before upgrading.
 
 Download a new archive from [Releases](https://github.com/mechastrider/comm-relay/releases), close the old app, and replace the application files. User `config.json` is stored separately, so settings are preserved.
 

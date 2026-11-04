@@ -4,6 +4,8 @@
 
 ## Актуальные исследования
 
+- [Готовность к релизу после v0.5.0](release-readiness-2026-11-04.md) — сверка документации и OpenSpec, результаты проверок и оставшиеся релизные этапы на 2026-11-04.
+
 - [`visual-audit-2026-10-02/visual-audit.md`](visual-audit-2026-10-02/visual-audit.md) — визуальная согласованность admin, размеры кнопок, секции форм и переиспользование компонентов.
 
 - [`frontend-refactoring.md`](frontend-refactoring.md) — направление развития admin frontend.

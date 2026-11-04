@@ -285,7 +285,13 @@ test("React Studio publishes full drafts without activating edited preset and pr
   await page.locator("#studio-surface-leaderboard").click();
   await page.locator("#overlay-leaderboard-title-mode").selectOption("custom");
   await page.locator("#overlay-leaderboard-title").fill("React leaders");
+  const published = page.waitForResponse(response =>
+    response.url() === runtime.url + "/api/config/update" &&
+    response.request().method() === "POST",
+  );
   await page.locator("#studio-publish").click();
+  expect((await published).ok()).toBe(true);
+  await expect(page.locator("#studio-publish")).toHaveAttribute("aria-busy", "false");
   await expect(page.locator("#studio-publish")).toBeDisabled();
   const saved = await (
     await page.request.get(runtime.url + "/api/config")

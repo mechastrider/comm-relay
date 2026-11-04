@@ -70,6 +70,17 @@ Seed даты/ID постоянны. Динамическая диагности
 alert и учитывать попытки `play()`, а не только успешное событие `playing`.
 Отложенные ветки scheduler проверяются unit-тестами с fake timers.
 
+При публикации Studio кнопка отключается и на время запроса, и после успешного
+сохранения. Перед reload или чтением сохранённого config дождаться ответа
+`POST /api/config/update` и `aria-busy=false`; одного `toBeDisabled()` недостаточно.
+
+Для Linux WebKit используем Playwright 1.64.1 или новее: в комплекте 1.63.0 находится
+libsoup 3.6.5 с исправленной upstream ошибкой памяти при отмене запросов.
+Она может завершить NetworkProcess, после чего ожидание PNG выглядит как
+таймаут скачивания. См. [Playwright #42803](https://github.com/microsoft/playwright/issues/42803).
+После обновления npm-зависимостей переустановить браузеры командой
+`npx playwright install --with-deps chromium firefox webkit`.
+
 Retries остаются 0. Не ослаблять pixel threshold, не увеличивать timeout и не
 ставить skip вместо выяснения причины. Ошибка Firefox audio может означать
 autoplay, отсутствие audio backend, отказ декодирования или дефект приложения;
