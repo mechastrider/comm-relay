@@ -110,7 +110,7 @@ test("inspector, progression lists and media previews expose valid accessible se
   await expect(levels).toBeVisible();
   await expect(
     page.getByRole("listbox", { name: "Achievements", exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await levels.getByRole("option").first().focus();
   await page.keyboard.press("End");
   await expect(levels.getByRole("option").last()).toBeFocused();
@@ -131,6 +131,7 @@ test("achievement subject uses catalog names and preserves unavailable IDs with 
   runtime,
 }) => {
   await page.goto(runtime.url + "/#/audience/progression");
+  await page.locator("#progression-achievement-tab").click();
   await page.locator("#progression-achievement-new").click();
   await page.locator("#progression-achievement-name").fill("Named rule");
   await page
@@ -146,7 +147,7 @@ test("achievement subject uses catalog names and preserves unavailable IDs with 
     awards[0].name,
   );
   await page
-    .locator("#progression-achievement-form button[type=submit]")
+    .locator("#progression-submit-5")
     .click();
   await expect(page.locator("#progression-achievement-id")).not.toHaveValue("");
   const id = await page.locator("#progression-achievement-id").inputValue();
@@ -161,6 +162,7 @@ test("achievement subject uses catalog names and preserves unavailable IDs with 
     route.fulfill({ json: { awards: [] } }),
   );
   await page.reload();
+  await page.locator("#progression-achievement-tab").click();
   await page.getByRole("option", { name: /Named rule/ }).click();
   await expect(subject).toHaveValue(awards[0].id);
   await expect(subject.locator("option:checked")).toContainText("Unavailable:");
@@ -169,6 +171,7 @@ test("achievement subject uses catalog names and preserves unavailable IDs with 
     route.fulfill({ status: 503, json: { error: "Fixture offline" } }),
   );
   await page.reload();
+  await page.locator("#progression-achievement-tab").click();
   await page.getByRole("option", { name: /Named rule/ }).click();
   await expect(
     page.getByText("Could not load awards and commands.", { exact: false }),

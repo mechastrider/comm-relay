@@ -1,5 +1,19 @@
 /** English UI strings for CommRelay admin and OBS dock. */
 export default {
+  "progression.catalogs": "Progression catalogs",
+  "progression.alertsButton": "Alerts",
+  "progression.backToList": "Back to list",
+  "progression.levelEditor": "Level",
+  "progression.achievementEditor": "Achievement",
+  "progression.identity": "Identity",
+  "progression.quotas": "Like and buff limits",
+  "progression.rule": "Unlock condition",
+  "progression.options": "Visibility and repeatability",
+  "progression.globalAlertsOff": "Alerts for this category are disabled in shared alert settings. Individual announcements will not be shown.",
+  "progression.maintenance": "Progression maintenance",
+  "progression.reconcileHint": "Recheck viewer progression against the current rules. This action is separate from saving alert appearance.",
+  "progression.close": "Close",
+
   "live.tabEvents": "Events",
   "events.filter": "Show",
   "events.category.all": "All events",

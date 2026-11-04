@@ -30,62 +30,61 @@
   scrollbar-gutter: stable;
 }
 
-.progression-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--primitive-space-3);
-  min-width: 0;
-}
-
-.progression-card {
+/* A single catalog fills the available workspace; its body owns scrolling. */
+.progression-workspace {
   display: flex;
-  min-width: 0;
-  min-height: 0;
+  flex: 1;
   flex-direction: column;
-  gap: var(--primitive-space-2);
-  padding: var(--primitive-space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--primitive-radius-md);
-  background: var(--surface);
+  min-height: 0;
+  min-width: 0;
+  gap: var(--primitive-space-3);
 }
 
-.progression-card--settings {
-  grid-column: 1 / -1;
-}
-
-.progression-card__header,
-.progression-form__actions,
-.progression-checks {
+.progression-toolbar,
+.progression-switch,
+.progression-load-status {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--primitive-space-2);
+  flex: 0 0 auto;
 }
 
-.progression-card__header {
-  justify-content: space-between;
+.progression-toolbar { justify-content: space-between; }
+.progression-switch button[aria-pressed="true"] {
+  border-color: var(--amber);
+  box-shadow: inset 0 -3px var(--amber);
 }
 
-.progression-card__header h2 {
-  margin: 0;
-  font-size: var(--heading-panel-size);
-}
-
-.progression-form {
+.progression-form,
+.progression-fieldset,
+.progression-filters {
   display: grid;
+  align-content: start;
   gap: var(--primitive-space-2);
   min-width: 0;
 }
 
-.progression-form input,
-.progression-form select {
-  min-width: 0;
+.progression-fieldset {
+  margin: 0;
+  padding: var(--primitive-space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--primitive-radius-md);
 }
 
-@media (max-width: 760px) {
-  .progression-grid { grid-template-columns: minmax(0, 1fr); }
-  .progression-card--settings { grid-column: auto; }
-}
+.progression-fieldset legend { padding: 0 var(--primitive-space-2); font-weight: 600; }
+.progression-form input,
+.progression-form select { min-width: 0; max-width: 100%; }
+.progression-checks { display: grid; gap: var(--primitive-space-2); }
+.progression-filters { margin-bottom: var(--primitive-space-3); }
+.progression-feedback { flex: 0 0 auto; margin: var(--primitive-space-2); overflow-wrap: anywhere; }
+.progression-maintenance { flex: 0 0 auto; }
+.progression-maintenance summary { cursor: pointer; }
+.progression-back { display: none; }
+.progression-editor-title { display: grid; gap: var(--primitive-space-2); min-width: 0; }
+.progression-alerts-dialog { width: min(640px, calc(100vw - 36px)); }
+.progression-alerts-dialog .dialog-body { overflow: auto; min-height: 0; }
+.progression-alerts-dialog .dialog-footer { flex-wrap: wrap; }
 
 .audience-toolbar {
   display: flex;
@@ -1428,4 +1427,63 @@ table.data-table.audience-viewers-table > tbody > tr > th {
 .audience-catalog-editor__body > .form-section,
 #command-alert-fields > .form-section {
   margin-bottom: var(--section-gap);
+}
+
+/* Override the generic stacked catalog at compact widths: one pane at a time. */
+.progression-catalog-layout .audience-catalog-editor__header { flex-wrap: wrap; }
+.progression-catalog-layout .audience-catalog-items__item { padding-block: var(--primitive-space-2); overflow-wrap: anywhere; }
+.progression-catalog-layout .audience-catalog-list { flex: 0 1 34%; }
+.progression-catalog-layout .audience-catalog-editor { flex: 1 1 66%; }
+.progression-catalog-layout .audience-catalog-list__body,
+.progression-catalog-layout .audience-catalog-editor__body,
+.progression-alerts-dialog .dialog-body {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--amber-dim) var(--surface);
+}
+@media (max-width: 1023px) {
+  .progression-workspace:not(.progression-workspace--editing) .audience-catalog-editor,
+  .progression-workspace--editing .audience-catalog-list { display: none; }
+  .progression-catalog-layout .audience-catalog-list,
+  .progression-catalog-layout .audience-catalog-editor { flex: 1; border: 0; }
+  .progression-back { display: inline-flex; }
+}
+
+.progression-alerts-dialog .dialog-body { padding: var(--primitive-space-4); }
+.progression-alerts-dialog .dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--primitive-space-2);
+  padding: var(--primitive-space-3);
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 860px) {
+  /* The compact shell scrolls the document. Keep its current task controls in view. */
+  .app-shell:has(.progression-workspace),
+  .shell-body:has(.progression-workspace),
+  .workspace-host:has(.progression-workspace),
+  .audience-progression-panel,
+  .progression-catalog-layout { overflow: visible; }
+  .progression-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--panel-bg);
+    padding-block: var(--primitive-space-2);
+  }
+  .progression-catalog-layout .audience-catalog-editor__header {
+    position: sticky;
+    top: var(--progression-toolbar-height, 60px);
+    z-index: 2;
+    background: var(--surface);
+  }
+  .progression-catalog-layout .audience-catalog-editor__body { overflow: visible; }
+  .progression-catalog-layout input,
+  .progression-catalog-layout select {
+    scroll-margin-block-start: calc(var(--progression-toolbar-height, 60px) + var(--progression-editor-header-height, 150px) + 16px);
+    scroll-margin-block-end: 80px;
+  }
+  .progression-workspace .btn-physical { width: auto; }
+  .progression-switch { flex-wrap: nowrap; }
+  .progression-catalog-layout .audience-catalog-editor__actions { flex-wrap: wrap; }
 }
