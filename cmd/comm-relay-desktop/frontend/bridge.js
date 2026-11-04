@@ -1,7 +1,8 @@
 // Keep Wails' runtime in the top-level document. Only our loopback admin frame
-// can request the narrow PNG-save operation; preview/third-party frames cannot.
+// can request the narrow save/audio operations; preview/third-party frames cannot.
 let adminOrigin = "";
 let saving = false;
+let messageAudioModule;
 const admin = document.getElementById("admin");
 window.openAdmin = function (url) {
   const parsed = new URL(url);
@@ -19,10 +20,25 @@ window.addEventListener("message", function (event) {
   if (
     event.source !== admin.contentWindow ||
     event.origin !== adminOrigin ||
-    event.data?.type !== "comm-relay:desktop-save" ||
     !event.ports[0]
   )
     return;
+  if (event.data?.type === "comm-relay:desktop-message-audio") {
+    // Keep openAdmin synchronous: Wails can notify OnDomReady before deferred
+    // module dependencies have evaluated. Load optional audio after navigation.
+    messageAudioModule ??= import("./message-audio.js");
+    void messageAudioModule.then(({ connectMessageAudio }) => {
+      if (event.source === admin.contentWindow && event.origin === adminOrigin) {
+        connectMessageAudio(event.ports[0], window.go?.main?.DesktopAPI);
+      } else event.ports[0].close();
+    }).catch((error) => {
+      console.warn("Desktop message audio module failed", error);
+      event.ports[0].postMessage({ available: false });
+      event.ports[0].close();
+    });
+    return;
+  }
+  if (event.data?.type !== "comm-relay:desktop-save") return;
   const port = event.ports[0];
   const api = window.go?.main?.DesktopAPI;
   if (typeof api?.SavePNGFile !== "function") {
