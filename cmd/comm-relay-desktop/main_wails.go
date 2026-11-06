@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 	goruntime "runtime"
@@ -29,6 +30,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/desktopbridge"
 	"github.com/mechastrider/comm-relay/internal/desktopentry"
 	"github.com/mechastrider/comm-relay/internal/logging"
+	webassets "github.com/mechastrider/comm-relay/web"
 )
 
 // DesktopAPI exposes native integrations to the admin WebView (Wails bindings).
@@ -231,6 +233,13 @@ func main() {
 		BackgroundColour:  &options.RGBA{R: 17, G: 17, B: 17, A: 255},
 		AssetServer: &assetserver.Options{
 			Assets: frontendAssets,
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != "/shared/message-audio.js" {
+					http.NotFound(w, r)
+					return
+				}
+				http.ServeFileFS(w, r, webassets.FS, "shared/message-audio.js")
+			}),
 		},
 		OnStartup:  app.startup,
 		OnDomReady: app.domReady,
@@ -245,6 +254,7 @@ func main() {
 			WebviewGpuPolicy: linux.WebviewGpuPolicyNever,
 		},
 		Mac: &mac.Options{
+			Preferences: &mac.Preferences{EnableAutoplayWithoutUserAction: mac.Enabled},
 			About: &mac.AboutInfo{
 				Title:   "CommRelay",
 				Message: "Local multi-platform chat overlay for OBS",

@@ -9,7 +9,7 @@ import {
 } from "react";
 import { useRuntime, useWire } from "../../app/runtime";
 import { request } from "../../services/api";
-import { playSound, unlockAudio, closeAudio } from "../../services/sound";
+import { playSound, unlockAudio, closeAudio, initAudio } from "../../services/sound";
 import {
   messageKey,
   normalizeMessage,
@@ -119,6 +119,7 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
     }
   }, []);
   useEffect(() => {
+    void initAudio();
     void refresh();
     const unlock = () => {
       void unlockAudio().catch(() => undefined);

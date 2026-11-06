@@ -40,7 +40,7 @@ const forbidAdHocBlobDownload = {
 
 export default [
   {
-    ignores: ["node_modules/**", "cmd/**", "web/admin/dist/**", "playwright-report/**", "test-results/**"],
+    ignores: ["node_modules/**", "cmd/**/wailsjs/**", "web/admin/dist/**", "playwright-report/**", "test-results/**"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended.map(config => ({ ...config, files: ["web/admin/src/**/*.{ts,tsx}", "web/e2e/**/*.ts"] })),
@@ -57,7 +57,7 @@ export default [
     rules: { ...forbidNativeBrowserDialogs, ...forbidAdHocBlobDownload, "react-hooks/rules-of-hooks": "error", "react-hooks/exhaustive-deps": "error" },
   },
   {
-    files: ["web/**/*.js"],
+    files: ["web/**/*.js", "cmd/comm-relay-desktop/frontend/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
@@ -80,7 +80,7 @@ export default [
     rules: forbidNativeBrowserDialogs,
   },
   {
-    files: ["web/**/*.js"],
+    files: ["web/**/*.js", "cmd/comm-relay-desktop/frontend/*.js"],
     ignores: ["web/shared/desktop-save.js"],
     rules: forbidAdHocBlobDownload,
   },
