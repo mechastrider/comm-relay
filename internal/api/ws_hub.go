@@ -7,6 +7,7 @@ import (
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 
+	"github.com/mechastrider/comm-relay/internal/aimessage"
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
@@ -146,6 +147,10 @@ func (h *Hub) handleChatMessage(ctx context.Context, msg bus.ChatMessage) {
 	}
 
 	isCommand := matchedCmd != nil
+	if h.cfgStore != nil && h.cfgStore.Snapshot().Features.ExperimentalAIMessages {
+		_, msg.IsAIMessage = aimessage.Parse(msg.Message)
+		isCommand = isCommand || msg.IsAIMessage
+	}
 	payload, err := chatMessageWirePayload(msg, isCommand)
 	if err != nil {
 		clog.Errorf(ctx, "chat wire payload: %w", err)

@@ -16,6 +16,7 @@ var Default = NewRegistry()
 
 // Snapshot is a point-in-time view of pipeline counters exposed via diagnostics.
 type Snapshot struct {
+	AIMessages            map[string]uint64 `json:"ai_messages"`
 	BusDrops              map[string]uint64 `json:"bus_drops"`
 	WebSocketDrops        map[string]uint64 `json:"websocket_drops"`
 	CommandsFired         uint64            `json:"commands_fired"`
@@ -31,7 +32,8 @@ type Snapshot struct {
 
 // Registry tracks delivery and product-event counters.
 type Registry struct {
-	mu sync.Mutex
+	mu         sync.Mutex
+	aiMessages map[string]uint64
 
 	busDrops           map[string]uint64
 	busDropLogCounts   map[string]uint64
@@ -53,6 +55,7 @@ type Registry struct {
 // NewRegistry creates an empty observability registry.
 func NewRegistry() *Registry {
 	return &Registry{
+		aiMessages:            make(map[string]uint64),
 		busDrops:              make(map[string]uint64),
 		busDropLogCounts:      make(map[string]uint64),
 		wsDrops:               make(map[string]uint64),
@@ -245,6 +248,7 @@ func (r *Registry) Snapshot() Snapshot {
 	}
 
 	r.mu.Lock()
+	aiMessages := copyUint64Map(r.aiMessages)
 	busDrops := copyUint64Map(r.busDrops)
 	wsDrops := copyUint64Map(r.wsDrops)
 	suppressed := copyUint64Map(r.commandsSuppressed)
@@ -256,6 +260,7 @@ func (r *Registry) Snapshot() Snapshot {
 	r.mu.Unlock()
 
 	return Snapshot{
+		AIMessages:            aiMessages,
 		BusDrops:              busDrops,
 		WebSocketDrops:        wsDrops,
 		CommandsFired:         r.commandsFired.Load(),
@@ -279,4 +284,19 @@ func copyUint64Map(src map[string]uint64) map[string]uint64 {
 		dst[key] = value
 	}
 	return dst
+}
+
+// RecordAIMessage records only an application-defined state or admission reason.
+func (r *Registry) RecordAIMessage(state string) {
+	if r == nil {
+		return
+	}
+	switch state {
+	case "accepted", "invalid", "rate_limited", "queue_full", "queued", "preparing", "verifying", "review_pending", "synthesizing", "ready", "dispatched", "rejected", "expired", "canceled", "failed":
+	default:
+		state = "other"
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.aiMessages[state]++
 }

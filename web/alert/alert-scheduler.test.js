@@ -259,3 +259,29 @@ test("keeps the complete compact debug alert burst through command, award, comma
   clock = 3 * burstDurationMs;
   assert.equal(scheduler.completeVisible(), null);
 });
+
+test("AI deadlines, duplicate delivery and cancellation preserve ordinary alerts", () => {
+  let now = 0;
+  const scheduler = createAlertScheduler({now: () => now});
+  const ai = alert("ai", "ai_message", {job_id:"job", expires_at:new Date(20000).toISOString()});
+  assert.equal(scheduler.enqueue(ai), ai);
+  assert.equal(scheduler.enqueue(ai), null);
+  const ordinary = alert("ordinary");
+  scheduler.enqueue(ordinary);
+  assert.deepEqual(scheduler.cancelAI({all:true}), {canceledVisible:true,next:ordinary});
+  assert.equal(scheduler.snapshot().visible, ordinary);
+  assert.equal(scheduler.enqueue(ai), null);
+  now = 21000;
+  assert.equal(scheduler.enqueue({...ai,job_id:"expired"}), null);
+  assert.equal(scheduler.completeVisible(), null);
+});
+
+test("AI cannot evict ordinary or protected pending entries", () => {
+  const scheduler = createAlertScheduler({now:()=>0,maxPending:2});
+  scheduler.enqueue(alert("visible"));
+  const ordinary=alert("ordinary"), award=alert("award","award");
+  scheduler.enqueue(ordinary);scheduler.enqueue(award);
+  scheduler.enqueue(alert("ai","ai_message",{job_id:"job",expires_at:new Date(20000).toISOString()}));
+  assert.deepEqual(scheduler.snapshot().commands,[ordinary]);
+  assert.deepEqual(scheduler.snapshot().awards,[award]);
+});

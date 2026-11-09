@@ -19,3 +19,16 @@
 @import url("../styles/studio.css");
 @import url("../styles/settings.css");
 @import url("../styles/media.css");
+
+/* Experimental AI controls keep long catalogs and review actions reachable. */
+.ai-workspace { min-height: 0; overflow: auto; padding: 1rem; scrollbar-gutter: stable; }
+.ai-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-block: .75rem; }
+.ai-fields { border: 0; padding: 0; min-width: 0; }
+.ai-fields input, .ai-fields textarea, .ai-fields select { display: block; width: 100%; box-sizing: border-box; }
+.ai-fields label { display: block; }
+.ai-image-binding { padding-block: .75rem; border-block-start: 1px solid var(--border-color, #78808a); }
+.ai-save { position: sticky; bottom: 0; background: var(--surface, Canvas); padding: .75rem; }
+.ai-jobs { list-style: none; padding: 0; }
+.ai-jobs li { padding: .75rem; border-block-end: 1px solid var(--border-color, #78808a); overflow-wrap: anywhere; }
+.ai-preview { max-width: 100%; max-height: 220px; object-fit: contain; }
+#ai-review .dialog-body { overflow-wrap: anywhere; }

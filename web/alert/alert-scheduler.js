@@ -18,6 +18,9 @@ export function isValidAlertEnvelope(alert) {
   if (!Number.isFinite(alert.points) || !Number.isFinite(alert.duration_ms) || alert.duration_ms <= 0) {
     return false;
   }
+  if (alert.source === "ai_message") {
+    return alert.points === 0 && nonBlankString(alert.job_id) && Number.isFinite(Date.parse(alert.expires_at));
+  }
   if (alert.source === "award") {
     return alert.points > 0 && nonBlankString(alert.award_id) && nonBlankString(alert.award_name);
   }
@@ -65,8 +68,10 @@ export function createAlertScheduler(options = {}) {
   let visible = null;
   const awards = [];
   const commands = [];
+  const seenAI = new Set();
 
   function isExpiredCommand(item, current) {
+    if (item.alert.source === "ai_message") return current >= Date.parse(item.alert.expires_at);
     return item.lane === "command" && current - item.scheduledAt > commandTTLms;
   }
 
@@ -105,6 +110,11 @@ export function createAlertScheduler(options = {}) {
       return true;
     }
 
+    if (pendingCount() >= maxPending && item.alert.source === "ai_message") {
+      const index = commands.findIndex((entry) => entry.alert.source === "ai_message");
+      if (index < 0) return false;
+      commands.splice(index, 1);
+    }
     if (pendingCount() >= maxPending) {
       if (commands.length === 0) {
         return false;
@@ -119,6 +129,11 @@ export function createAlertScheduler(options = {}) {
     enqueue(alert) {
       if (!isValidAlertEnvelope(alert)) {
         return null;
+      }
+      if (alert.source === "ai_message") {
+        if (seenAI.has(alert.job_id)) return null;
+        seenAI.add(alert.job_id);
+        if (seenAI.size > 2000) seenAI.delete(seenAI.values().next().value);
       }
       const receivedAt = now();
       const item = {
@@ -139,12 +154,22 @@ export function createAlertScheduler(options = {}) {
       return null;
     },
 
+    cancelAI(frame) {
+      const matches = (item) => item?.alert.source === "ai_message" && (frame.all === true || (Array.isArray(frame.job_ids) && frame.job_ids.includes(item.alert.job_id)));
+      const remaining = commands.filter((item) => !matches(item));
+      commands.splice(0, commands.length, ...remaining);
+      const canceledVisible = matches(visible);
+      if (canceledVisible) visible = null;
+      return { canceledVisible, next: canceledVisible ? takeNext() : null };
+    },
+
     completeVisible() {
       visible = null;
       return takeNext();
     },
 
     reset() {
+      seenAI.clear();
       visible = null;
       awards.splice(0, awards.length);
       commands.splice(0, commands.length);

@@ -1,3 +1,4 @@
+import { AIMessages } from "../ai-messages/AIMessages";
 import { Button } from "../../components/Button";
 import { useReportSaveStatus } from "../../app/save-status";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -23,7 +24,7 @@ import {
 } from "./Fields";
 import { DiagnosticsView } from "./Diagnostics";
 
-const allSections = [...sections, "diagnostics"] as const;
+const allSections = [...sections, "experimental", "diagnostics"] as const;
 const components = {
   platforms: PlatformsFields,
   network: NetworkFields,
@@ -58,7 +59,8 @@ export function Settings() {
   const [resetOpen, setResetOpen] = useState(false);
   const oauth = useRef<AbortController | null>(null);
   useEffect(() => () => oauth.current?.abort(), []);
-  const editable = section !== "diagnostics";
+  const [experimentalDirty, setExperimentalDirty] = useState(false);
+  const editable = section !== "diagnostics" && section !== "experimental";
   const currentDraft = editable ? drafts[section] : undefined;
   const dirty =
     !!currentDraft &&
@@ -67,7 +69,7 @@ export function Settings() {
   useReportSaveStatus(dirty, busy);
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
-      (dirty || busy) && currentLocation.pathname !== nextLocation.pathname,
+      (dirty || busy || experimentalDirty) && currentLocation.pathname !== nextLocation.pathname,
   );
   useEffect(() => {
     if (!dirty) return;
@@ -342,7 +344,7 @@ export function Settings() {
                 {feedback}
               </p>
             )}
-            {section === "diagnostics" ? (
+            {section === "experimental" ? (<AIMessages onDirtyChange={setExperimentalDirty} />) : section === "diagnostics" ? (
               <DiagnosticsView />
             ) : !config ? (
               <p role="status">{runtime.configError || t("state.loading")}</p>

@@ -1,6 +1,8 @@
 import type { JsonObject } from "./api";
 
 export interface PublicConfig {
+ features?: { experimental_ai_messages: boolean };
+ ai_messages?: import("../features/ai-messages/types").AISettings;
   server_port: number;
   activity_interval_seconds: number;
   activity_session_limit: number;

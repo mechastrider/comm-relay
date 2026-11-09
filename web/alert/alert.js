@@ -310,6 +310,12 @@ function handleSocketMessage(event) {
   if (!frame || typeof frame !== "object") {
     return;
   }
+  if (frame.type === "ai_message_cancel") {
+    const result = scheduler.cancelAI(frame);
+    if (result.canceledVisible) clearSplash();
+    if (result.next) showSplash(result.next);
+    return;
+  }
   if (frame.type === "overlay_settings") {
     if (frame.overlay) {
       applyServerOverlayConfig(frame.overlay);

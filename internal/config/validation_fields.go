@@ -30,6 +30,7 @@ const maxStreamerDisplayNameCodePoints = 64
 
 func (c *Config) validateFields() error {
 	fields := FieldErrors{}
+	c.validateAI(fields)
 
 	c.StreamerDisplayName = strings.TrimSpace(c.StreamerDisplayName)
 	if utf8.RuneCountInString(c.StreamerDisplayName) > maxStreamerDisplayNameCodePoints {
