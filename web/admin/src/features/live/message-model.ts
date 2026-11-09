@@ -13,6 +13,8 @@ export interface Fragment {
   url?: string;
 }
 export interface ChatMessage {
+ is_ai_message?: boolean;
+ ai_state?: string;
   id: string;
   platform: string;
   user_id: string;
@@ -46,7 +48,9 @@ export function wireMessage(frame: WireEvent): ChatMessage {
   const string = (key: string) =>
     typeof frame[key] === "string" ? frame[key] : "";
   return normalizeMessage({
-    id: string("id"),
+    is_ai_message: frame.is_ai_message === true,
+ ai_state: string("ai_state"),
+ id: string("id"),
     platform: string("platform"),
     user_id: string("user_id"),
     username: string("user"),

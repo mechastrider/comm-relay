@@ -5,6 +5,7 @@ import (
 
 	"github.com/muonsoft/errors"
 
+	"github.com/mechastrider/comm-relay/internal/aimessage"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	"github.com/mechastrider/comm-relay/internal/emote"
@@ -16,6 +17,7 @@ import (
 
 // Options configures the HTTP handler.
 type Options struct {
+	AIMessages *aimessage.Service
 	// WebRoot overrides embedded static assets with files from disk (for local UI dev).
 	WebRoot               string
 	Hub                   *Hub
@@ -59,12 +61,14 @@ func NewHandler(opts Options) (http.Handler, error) {
 
 	configHandler := newConfigHandler(opts.Store, opts.Hub, nil)
 	configHandler.viewerStore = opts.ViewerStore
+	configHandler.ai = opts.AIMessages
 	configHandler.leaderboardVisibility = opts.LeaderboardVisibility
 	opts.Hub.SetLeaderboardVisibility(opts.LeaderboardVisibility)
 	overlayAssets := newOverlayAssetsHandler(opts.Store, opts.ViewerStore)
 	statusHandler := newStatusHandler(opts.Store, registry)
 	diagnosticsHandler := newDiagnosticsHandler(opts.Store, registry, opts.Hub, rt, opts.EmoteCache)
 	messagesHandler := newMessagesHandler(opts.History, opts.Hub, opts.ViewerStore)
+	messagesHandler.ai = opts.AIMessages
 	oauthState := newOAuthStateStore()
 	youtubeOAuth := newYouTubeOAuthHandler(opts.Store, oauthState)
 	supportOpen := newSupportOpenHandler()
@@ -75,6 +79,10 @@ func NewHandler(opts Options) (http.Handler, error) {
 	configHandler.leaderboardPublisher = leaderboardPublisher
 	viewersHandler := newViewersHandler(opts.ViewerStore, opts.Store, leaderboardPublisher, opts.StreamRecap)
 	commandsHandler := newCommandsHandler(opts.ViewerStore)
+	commandsHandler.cfg = opts.Store
+	commandsHandler.ai = opts.AIMessages
+	viewersHandler.ai = opts.AIMessages
+	overlayAssets.ai = opts.AIMessages
 	greetingsHandler := newGreetingsHandler(opts.ViewerStore, opts.Store, opts.Hub)
 	progressionHandler := newProgressionHandler(opts.ViewerStore, opts.Hub)
 	awardsHandler := newAwardsHandler(opts.ViewerStore, opts.Hub, leaderboardPublisher, opts.Store, opts.LeaderboardVisibility)
@@ -99,6 +107,7 @@ func NewHandler(opts Options) (http.Handler, error) {
 	visibilityHandler := &leaderboardVisibilityHandler{controller: opts.LeaderboardVisibility, hub: opts.Hub}
 
 	mux := http.NewServeMux()
+	registerAIRoutes(mux, opts.AIMessages)
 	instanceID := ""
 	if rt != nil {
 		instanceID = rt.InstanceID

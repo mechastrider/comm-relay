@@ -42,7 +42,7 @@ export function createCommandAudio(onStatus: (status: AudioStatus) => void) {
   }
 
   function play(alert: WireEvent) {
-    if (alert.source && alert.source !== "command" && alert.source !== "greeting") return;
+    if (alert.source && alert.source !== "command" && alert.source !== "greeting" && alert.source !== "ai_message") return;
     const filename = safeStoredSoundAssetFilename(alert.sound_file);
     const sound = normalizeAlertSound(alert.sound);
     const volume = normalizeAlertVolume(alert.sound_volume);
@@ -106,6 +106,12 @@ export function createCommandAudio(onStatus: (status: AudioStatus) => void) {
     },
     receive(frame: WireEvent) {
       if (!enabled) return;
+      if (frame.type === "ai_message_cancel") {
+        const result = queue.cancelAI(frame);
+        if (result.canceledVisible) { generation++; clearTimeout(timer); stopMedia(); }
+        if (result.next) show(result.next);
+        return;
+      }
       const alert = frame.type === "alert" ? frame : progressionAlertFromFrame(frame);
       if (!alert) return;
       const next = queue.enqueue(alert);

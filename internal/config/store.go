@@ -22,9 +22,11 @@ func NewStore(path string, cfg *Config) (*Store, error) {
 		return nil, errors.New("config path is required")
 	}
 
+	copyConfig := *cfg
+	copyConfig.AIMessages = cfg.AIMessages.Clone()
 	return &Store{
 		path: path,
-		cfg:  *cfg,
+		cfg:  copyConfig,
 	}, nil
 }
 
@@ -40,7 +42,9 @@ func (s *Store) Snapshot() Config {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	return s.cfg
+	cfg := s.cfg
+	cfg.AIMessages = cfg.AIMessages.Clone()
+	return cfg
 }
 
 // Replace validates, persists, and stores new settings under the write lock
@@ -58,6 +62,7 @@ func (s *Store) Mutate(fn func(*Config) error) error {
 	defer s.mu.Unlock()
 
 	cfg := s.cfg
+	cfg.AIMessages = cfg.AIMessages.Clone()
 	if err := fn(&cfg); err != nil {
 		return err
 	}
@@ -68,6 +73,7 @@ func (s *Store) Mutate(fn func(*Config) error) error {
 		return errors.Errorf("save config: %w", err)
 	}
 
+	cfg.AIMessages = cfg.AIMessages.Clone()
 	s.cfg = cfg
 	return nil
 }

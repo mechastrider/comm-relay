@@ -225,3 +225,6 @@ func mp3BitrateKbps(version, layer, index int) int {
 	// Layer I/II fall back to MPEG1 tables for our duration gate.
 	return mpeg1Layer3[index]
 }
+
+// AudioDurationSeconds measures supported audio without applying the catalog alert duration limit.
+func AudioDurationSeconds(data []byte) (float64, error) { return audioDurationSeconds(data) }

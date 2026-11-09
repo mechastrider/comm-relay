@@ -133,7 +133,15 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       closeAudio();
     };
   }, [refresh]);
+  const aiStates = useRef(new Map<string, string>());
   useWire((frame) => {
+ if (frame.type === "ai_message_status" && typeof frame.state === "string") {
+ const key = String(frame.message_platform) + "\0" + String(frame.message_id);
+ aiStates.current.set(key, frame.state);
+ if (aiStates.current.size > 100) aiStates.current.delete(aiStates.current.keys().next().value!);
+ mutate((items) => items.map((item) => messageKey(item) === key ? {...item, ai_state: String(frame.state)} : item));
+ return;
+ }
     if (frame.type === "reconnected") {
       void refresh();
       return;
@@ -168,6 +176,7 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
     known.current.add(key);
     if (known.current.size > 1000)
       known.current.delete(known.current.keys().next().value!);
+    message.ai_state = aiStates.current.get(key) ?? message.ai_state;
     message.command_outcome =
       outcomes.current.get(key) ?? message.command_outcome;
     mutate((messages) =>

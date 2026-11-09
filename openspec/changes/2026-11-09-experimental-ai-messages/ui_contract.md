@@ -32,7 +32,7 @@ Reuse existing React components/tokens. Settings sections: LLM, TTS, policy/cont
 
 ### HTTP contract
 
-Use existing `GET /api/config` / `POST /api/config` for settings; config response exposes references/status only. New POST-action endpoints:
+Use existing `GET /api/config` / `POST /api/config/update` for settings; config response exposes references/status only. New POST-action endpoints:
 
 | Endpoint | Input | Result |
 |---|---|---|

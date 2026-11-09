@@ -11,6 +11,7 @@ import (
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 
+	"github.com/mechastrider/comm-relay/internal/aimessage"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/overlayassets"
 	"github.com/mechastrider/comm-relay/internal/recap"
@@ -18,6 +19,7 @@ import (
 )
 
 type viewersHandler struct {
+	ai          *aimessage.Service
 	viewerStore *store.Store
 	cfgStore    *config.Store
 	publisher   *LeaderboardPublisher
@@ -415,6 +417,9 @@ func (h *viewersHandler) handleStartSession(w http.ResponseWriter, r *http.Reque
 		h.publisher.FlushNow()
 	}
 
+	if h.ai != nil {
+		h.ai.CancelAll(r.Context(), "new_stream")
+	}
 	writeJSON(w, http.StatusOK, map[string]bool{"started": true})
 }
 

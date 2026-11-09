@@ -9,11 +9,13 @@ import (
 
 	"github.com/muonsoft/clog"
 
+	"github.com/mechastrider/comm-relay/internal/aimessage"
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 type messagesHandler struct {
+	ai          *aimessage.Service
 	history     *MessageHistory
 	hub         *Hub
 	matcher     *command.Matcher
@@ -47,6 +49,15 @@ func (h *messagesHandler) handleRecent(w http.ResponseWriter, r *http.Request) {
 
 func (h *messagesHandler) recentMessages(ctx context.Context, limit int) []adminMessage {
 	messages := h.history.Recent(limit)
+	for i := range messages {
+		if messages[i].IsAIMessage {
+			messages[i].IsCommand = true
+			if h.ai != nil {
+				messages[i].AIState = h.ai.MessageState(messages[i].Platform, messages[i].ID)
+				messages[i].AIDisplayText = h.ai.PublishedText(messages[i].Platform, messages[i].ID)
+			}
+		}
+	}
 	h.attachGrantedAwardIDs(ctx, messages)
 	if h.matcher == nil {
 		return messages

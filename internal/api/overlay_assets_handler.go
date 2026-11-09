@@ -9,12 +9,14 @@ import (
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 
+	"github.com/mechastrider/comm-relay/internal/aimessage"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/overlayassets"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 type overlayAssetsHandler struct {
+	ai          *aimessage.Service
 	dir         string
 	configStore *config.Store
 	viewerStore *store.Store
@@ -143,7 +145,7 @@ func (h *overlayAssetsHandler) handleDelete(w http.ResponseWriter, r *http.Reque
 		writeError(w, http.StatusInternalServerError, "could not check overlay asset references")
 		return
 	}
-	if referenced {
+	if referenced || (h.ai != nil && h.ai.Referenced(name)) {
 		writeError(w, http.StatusBadRequest, "overlay asset is still in use")
 		return
 	}
