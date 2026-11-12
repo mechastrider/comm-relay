@@ -1,134 +1,42 @@
 ---
 name: golang-validation
-description: Data validation in Go with github.com/muonsoft/validation — Validatable models, commands, validationtest, and mapping violations to HTTP 422.
+description: House Go validation integration — HTTP 400/422 mapping, application layers, and message conventions. Use when connecting muonsoft/validation to application services or HTTP responses; use muonsoft-validation for library rules and APIs.
 ---
 
-# Data validation (muonsoft/validation)
+# Application validation conventions
 
-Package: `github.com/muonsoft/validation`  
-Constraints: `github.com/muonsoft/validation/it`  
-Tests: `github.com/muonsoft/validation/validationtest`  
-Runner: `github.com/muonsoft/validation/validator`
+Use [muonsoft-validation](../muonsoft-validation/SKILL.md) for library APIs,
+constraints, optional fields, nested collections, translations, and tests.
+This companion contains only the hub's application conventions; do not duplicate
+library examples here. Both skills are selected by the `backend/go` theme.
 
-> Not every handler needs the full validator stack; prefer this skill when adding **command/query validation** or rich 422 responses. For simple handler checks, explicit `writeError(400, ...)` is still fine.
+## HTTP boundary
 
-For advanced patterns (collections, enums, translations), see [references/validation-details.md](references/validation-details.md).
+Follow [api-conventions](../api-conventions/SKILL.md) for the response envelope
+and status mapping:
 
-## Validatable interface
+- Malformed JSON, deserialization, and UUID/string parse failures return **400**.
+- With validation wired, field violations and business rules the user can fix
+  return **422**, with `violations` and `property_path` in the established envelope.
+  Missing references and duplicate unique fields belong here; version/lock
+  conflicts retain **409**.
+- Preserve technical errors for the existing error handler; do not convert a
+  dependency failure into a user violation.
+- Simple handler checks do not require introducing the full validator stack.
+  If an endpoint has not adopted validation responses, preserve its existing
+  explicit 400 contract until migration; do not mix response styles in it.
 
-```go
-type Validatable interface {
-    Validate(ctx context.Context, v *validation.Validator) error
-}
-```
+## Application layers
 
-## Basic Validate
+- `internal/api` owns decoding and transport checks, and maps violations to HTTP.
+- Commands and queries own input rules; domain types own reusable invariants.
+  Do not keep domain invariants only in HTTP handlers.
+- Services use the application's configured validator. Domain validation must
+  not depend on HTTP status constants or response serialization.
 
-```go
-func (r ResourceDraft) Validate(ctx context.Context, v *validation.Validator) error {
-    return v.Validate(ctx,
-        validation.StringProperty("name", r.Name,
-            it.IsNotBlank(),
-            it.HasMaxLength(500),
-        ),
-        validation.StringProperty("description", r.Description,
-            it.HasMaxLength(2000),
-        ),
-    )
-}
-```
+## Messages
 
-## Eager validation
-
-One `validator.Validate(ctx, args...)` collects **all** violations. Do not chain per-field `if err != nil { return }` when the API should return a full violation list.
-
-In services:
-
-```go
-if err := validator.ValidateIt(ctx, cmd); err != nil {
-    return err
-}
-```
-
-## Optional fields
-
-| Type | Use |
-|------|-----|
-| `*string` | `validation.NilStringProperty` |
-| `*int`, `*float64` | `validation.NilNumberProperty[T]` |
-| `*time.Time` | `validation.NilTimeProperty` |
-
-Do not split `Validate` with `if ptr != nil { StringProperty(...) }` — use `Nil*` in one `Validate` call.
-
-## Nested objects
-
-Include nested validation in the **same** parent `Validate`:
-
-```go
-validation.ValidProperty("metadata", r.Metadata),
-```
-
-Nested types name **relative** fields only (`title`, not `metadata.title` inside the child).
-
-## Manual violations (422)
-
-For business rules not expressible as field constraints:
-
-```go
-return v.CreateViolation(ctx,
-    ErrInvalidState,
-    ErrInvalidState.Message(),
-    validation.PropertyName("status"),
-)
-```
-
-Use **`err.Message()`** as the message argument when translations are wired.
-
-**422 vs 400:** structural JSON/UUID parse errors → 400 (`writeError`); fixable field/business rules → validation / 422.
-
-## Testing
-
-Table-driven tests with `validationtest`:
-
-```go
-err := validator.ValidateIt(t.Context(), test.input)
-
-if len(test.wantViolations) == 0 {
-    require.NoError(t, err)
-} else {
-    validationtest.Assert(t, err).
-        IsViolationList().
-        WithAttributes(test.wantViolations...)
-}
-```
-
-```go
-validationtest.ViolationAttributes{
-    PropertyPath: "name",
-    Error:        validation.ErrIsBlank,
-}
-```
-
-## Where validation belongs
-
-| Layer | Responsibility |
-|-------|----------------|
-| `internal/api` | JSON decode, auth, transport limits → 400 |
-| Command/query types | `Validate` on input DTOs when using validator |
-| `internal/<domain>` | Domain invariants, business rules — on commands or domain types |
-
-Do not put domain invariant checks only in handlers if you adopt `validation` — keep them on the command or domain type.
-
-## Anti-patterns
-
-- `validation_helpers.go` with imperative `CreateViolation` per field — use `StringProperty` + `it.*` on a `Validatable` command.
-- Locale hard-coded in `CreateViolation` — use `validation.NewError` with English default + translation map.
-- Returning raw domain errors for form-fixable issues when clients expect `propertyPath` — map to violations in the layer that owns the API contract.
-
-## Checklist
-
-- [ ] Import `github.com/muonsoft/validation/it` for constraints
-- [ ] Single `Validate` pass when full violation list is required
-- [ ] `Nil*` properties for optional pointers
-- [ ] Tests use `validationtest` with `PropertyPath` and `Error`
-- [ ] User-facing messages: English in `NewError`; translations in a dedicated map if needed
+Use English fallback messages in `validation.NewError`, with translations in a
+dedicated map when needed. Pass the sentinel's `Message()` as the message template
+when creating a violation so configured translations apply. Keep locale selection
+out of domain rules and preserve stable codes and external property paths.

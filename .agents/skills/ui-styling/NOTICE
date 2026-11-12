@@ -5,7 +5,7 @@ endorsed by, or sponsored by the upstream project or its trademark holders.
 
 - Source:   nextlevelbuilder/ui-ux-pro-max-skill/.claude/skills/ui-styling
 - Upstream: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git
-- Ref:      9ceab49a1c6e9bf23fa9ebc49ca7d4f0c6303a99
+- Ref:      6ae86f61f520d6ca229d2f40e070410638c908c5
 - License:  MIT
 
 Do not edit vendored skill content in place; re-vendor from upstream instead.

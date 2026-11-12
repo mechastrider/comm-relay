@@ -1,0 +1,15 @@
+# NOTICE — vendored skill "muonsoft-validation"
+
+- Source:   muonsoft/validation/skills/muonsoft-validation
+- Upstream: https://github.com/muonsoft/validation.git
+- Ref:      9ea5941eef2c8b441b8229acd5c21f328fefaa95
+- License:  MIT
+
+The catalog hash covers the pristine upstream SKILL.md, references directory,
+and repository-root LICENSE using agentmem HashPath (sorted paths and bytes,
+NUL-delimited). NOTICE is excluded.
+
+Hub integration adaptations: none. House application conventions live in the
+separate golang-validation skill.
+
+Do not edit vendored skill content in place; re-vendor from upstream instead.
