@@ -1,0 +1,38 @@
+# NOTICE — adapted skill "test-audit"
+
+Adapted from OpenClaw's test-audit skill. This adaptation is not affiliated
+with, endorsed by, or sponsored by the OpenClaw project or its trademark holders.
+
+- Source:   openclaw/openclaw/.agents/skills/test-audit
+- Upstream: https://github.com/openclaw/openclaw.git
+- Ref:      7910cd62c6ca2f8a5099298dd6de84be87d55739
+- License:  MIT; Copyright (c) 2026 OpenClaw Foundation (see LICENSE).
+
+The catalog hash covers the pristine upstream SKILL.md, references directory,
+and repository-root LICENSE placed at the skill root, using agentmem HashPath
+(sorted paths and bytes, NUL-delimited). NOTICE, the adapted SKILL.md, the
+adapted references/audit.md, and CAMPAIGN.md are excluded from that source hash.
+
+Hub integration adaptations:
+- Narrow the trigger to adding or materially changing tests, reviewing test
+  changes, and requested sweeps. Campaign mode runs only when asked to prune
+  one subsystem.
+- Point test mechanics at golang-tests, web-frontend-tests, and
+  compose-verification. Leave evaluation datasets to evaluation-integrity.
+- Replace OpenClaw discovery paths, the Vitest runner, crabbox, check-changed,
+  autoreview, and the pr-maintainer flow with the consumer's test command and
+  explicit authorization before commit, push, or pull request.
+- Drop plugin SDK and prompt-byte as default retention reasons. Keep public
+  API, HTTP/JSON, protocol, config, migration, storage, security, platform,
+  release, and architecture contracts.
+- Rewrite CAMPAIGN.md for a Go package, web feature, or Android module. The
+  upstream copier does not pick up this loose companion file; retain it and
+  reapply this rewrite when re-vendoring.
+- Upstream now keeps the audit checklist in references/audit.md. Reapply the
+  same hub rules there; do not leave OpenClaw proof-policy or deadcode commands
+  in the vendored copy.
+- Catalog tag is `global`, so presets that select that tag install the skill.
+
+Maintain this as an intentional adaptation. When re-vendoring, inspect upstream
+changes, reapply these adaptations, and update the pinned ref and source hash.
+Do not update it through the memory service.
