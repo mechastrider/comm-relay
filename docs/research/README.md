@@ -15,6 +15,7 @@
 ## Архивные снимки
 
 - [`archive/2026-09-03-stream-interface-review.md`](archive/2026-09-03-stream-interface-review.md) — разбор интерфейса и интерактивов, результаты которого распределены по backlog, OpenSpec и canonical specs.
+- [`archive/2026-11-04-progression-ux-audit.md`](archive/2026-11-04-progression-ux-audit.md) — UX-разбор страницы «Прогрессия»; реализован в PR #105, актуальный контракт — в spec `admin-and-dock`.
 
 Архивный research-note сохраняет контекст на дату исследования и не обновляется вслед за продуктом. В его начале должна быть ссылка на документ, который хранит актуальный результат.
 
