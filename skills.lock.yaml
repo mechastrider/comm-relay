@@ -2,7 +2,7 @@ version: 4
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 6cec1ac4fc50111aac67a4e18396595310eaba78
+    commit: 15ad3e0eeee0864221b0349fdd79ea45a66759ae
 preset: desktop-app
 include:
     - theme: backend/go
@@ -278,67 +278,67 @@ packages:
               installed_hash: sha256:e08482842ec81fe848ec9e5e44011877398a3a863169a10292d0ce9ca3a6da7a
     openspec-apply-change:
         hub_path: process/openspec-apply-change
-        upstream_hash: sha256:ced3fe15f17d7ea871932f031699bd34da209e8eaeabfb3a2a5192c8426fd3d2
+        upstream_hash: sha256:d26ef789eabfe3830fe6d35336a547d6cbb7e561e6fd1f44a088fa2db83d8ee8
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-apply-change
-              installed_hash: sha256:ced3fe15f17d7ea871932f031699bd34da209e8eaeabfb3a2a5192c8426fd3d2
+              installed_hash: sha256:d26ef789eabfe3830fe6d35336a547d6cbb7e561e6fd1f44a088fa2db83d8ee8
     openspec-archive-change:
         hub_path: process/openspec-archive-change
-        upstream_hash: sha256:1262e80d26c2e79f55a8da1f4e7322324e77763c6da005354f0eb2d96ed2c573
+        upstream_hash: sha256:e7221f965b26803ff3ec5fb46a2cebcfef06fbdf74004f346c841143880e15db
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-archive-change
-              installed_hash: sha256:1262e80d26c2e79f55a8da1f4e7322324e77763c6da005354f0eb2d96ed2c573
+              installed_hash: sha256:e7221f965b26803ff3ec5fb46a2cebcfef06fbdf74004f346c841143880e15db
     openspec-explore:
         hub_path: process/openspec-explore
-        upstream_hash: sha256:91c08d6757ba1351d99e5ee2c432e8a34ba275f83170e7a8e80689cddb52ce94
+        upstream_hash: sha256:49a324dc34cdae2a3e31f6885d556e21a890a81a897ac826bba1a74e490cf9b4
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-explore
-              installed_hash: sha256:91c08d6757ba1351d99e5ee2c432e8a34ba275f83170e7a8e80689cddb52ce94
+              installed_hash: sha256:49a324dc34cdae2a3e31f6885d556e21a890a81a897ac826bba1a74e490cf9b4
     openspec-propose:
         hub_path: process/openspec-propose
-        upstream_hash: sha256:3f28abdbd332722dd1edb3b9caba7aba69f37af179950b00635713e84ebcec4d
+        upstream_hash: sha256:7ca8f3432192393f2b5c4aef9de3fb02c103b8e03e88aac8a8ddfdd9808d2acd
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-propose
-              installed_hash: sha256:3f28abdbd332722dd1edb3b9caba7aba69f37af179950b00635713e84ebcec4d
+              installed_hash: sha256:7ca8f3432192393f2b5c4aef9de3fb02c103b8e03e88aac8a8ddfdd9808d2acd
     openspec-sync-specs:
         hub_path: process/openspec-sync-specs
-        upstream_hash: sha256:bba2fb69fe34e0148effa3720aa16020ee19ed327140aad7a3aa07d4a3af4822
+        upstream_hash: sha256:e9c2fb9f0da8e45b291039fc798cf3c501a7c6ac49025fd4ccd927747f95f697
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-sync-specs
-              installed_hash: sha256:bba2fb69fe34e0148effa3720aa16020ee19ed327140aad7a3aa07d4a3af4822
+              installed_hash: sha256:e9c2fb9f0da8e45b291039fc798cf3c501a7c6ac49025fd4ccd927747f95f697
     openspec-update-change:
         hub_path: process/openspec-update-change
-        upstream_hash: sha256:070f8b09c3a88c4bf01c173f9c0d8ddd04a4f0d8e797b109f3068c0e32da7c29
+        upstream_hash: sha256:3dc3bac0485c0dc12e03b40a834a7ab8b92dc1e81e92872bbe3f07172fe960e2
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-update-change
-              installed_hash: sha256:070f8b09c3a88c4bf01c173f9c0d8ddd04a4f0d8e797b109f3068c0e32da7c29
+              installed_hash: sha256:3dc3bac0485c0dc12e03b40a834a7ab8b92dc1e81e92872bbe3f07172fe960e2
     openspec-workflow:
         hub_path: process/openspec-workflow
-        upstream_hash: sha256:5c0f1daa05673560d6c0ba9def24fce571e2780c21abc5b407273355171b5096
+        upstream_hash: sha256:059100a614d6c8564a3ac6487c8a843fd2c66f428c5ab61293fe3d3bca96cf9b
         artifacts:
             - id: desktop-change-schema
               kind: schema
