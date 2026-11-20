@@ -82,6 +82,7 @@ body {
 }
 
 .leaderboard-toolbar select,
+.ai-inline-review button,
 .leaderboard-toolbar button {
   min-height: 28px;
   border: 1px solid #44444c;

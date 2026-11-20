@@ -68,7 +68,7 @@ type AIMessages struct {
 func DefaultAIMessages() AIMessages {
 	return AIMessages{
 		LLM:        AIProvider{Preset: "openai", BaseURL: "https://api.openai.com/v1", APIKeyEnv: "OPENAI_API_KEY", OutputMode: "json_schema", TimeoutSeconds: 15},
-		TTS:        AIProvider{Preset: "elevenlabs", BaseURL: "https://api.elevenlabs.io/v1", Model: "eleven_v3", APIKeyEnv: "ELEVENLABS_API_KEY", OutputFormat: "mp3_44100_128", TimeoutSeconds: 30},
+		TTS:        AIProvider{Preset: "elevenlabs", BaseURL: "https://api.elevenlabs.io/v1", Model: "eleven_v4", APIKeyEnv: "ELEVENLABS_API_KEY", OutputFormat: "mp3_44100_128", TimeoutSeconds: 30},
 		Limits:     AILimits{InputMaxChars: 300, SpeechMaxChars: 600, AudioMaxSeconds: 30, ViewerCooldownSeconds: 60, GlobalIntervalSeconds: 10, QueueCapacity: 3, LifetimeSeconds: 90, ReviewCapacity: 10, ReviewTTLSeconds: 300},
 		Characters: []AICharacter{}, Denylist: []string{},
 	}

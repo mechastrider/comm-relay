@@ -1,3 +1,4 @@
+import { createAIReview } from "/shared/ai-review.js?v=1";
 import { appendText, createChatRender } from "/shared/chat-render.js?v=12";
 import {
   createGrantFeedbackElement,
@@ -48,6 +49,7 @@ import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=3";
   const contractRepeatButton = document.getElementById("contract-repeat-announcement");
 
   let messages = [];
+  const reviewPanels = new Map();
   const aiStates = new Map();
   let socket = null;
   let reconnectTimer = null;
@@ -526,10 +528,12 @@ import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=3";
     meta.appendChild(user);
     meta.appendChild(platform);
     meta.appendChild(time);
+    const key = messageKey(message);
+    const aiState = aiStates.get(key) || message.ai_state || "queued";
     if (message.is_ai_message) {
       const status = document.createElement("span");
       status.setAttribute("role", "status");
-      status.textContent = "AI: " + t("ai.state." + (aiStates.get(messageKey(message)) || message.ai_state || "queued"));
+      status.textContent = "AI: " + t("ai.state." + aiState);
       meta.appendChild(status);
     }
 
@@ -562,6 +566,10 @@ import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=3";
     }
     content.appendChild(meta);
     content.appendChild(text);
+    if (message.is_ai_message && aiState === "review_pending") {
+      if (!reviewPanels.has(key)) reviewPanels.set(key, createAIReview(message.platform, message.id, t));
+      content.appendChild(reviewPanels.get(key));
+    }
     content.appendChild(grantFeedback);
     item.appendChild(buildAvatar(message));
     item.appendChild(content);
@@ -579,6 +587,9 @@ import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=3";
     const previousHeight = panel.scrollHeight;
     list.textContent = "";
     messages.forEach(function (message) { list.appendChild(buildMessageItem(message)); });
+    for (const [key, node] of reviewPanels) {
+      if (!node.isConnected) reviewPanels.delete(key);
+    }
     emptyState.hidden = messages.length > 0;
 
     window.requestAnimationFrame(function () {
@@ -739,6 +750,8 @@ import { createCommandOutcomeLive } from "/shared/command-outcome-live.js?v=3";
 
     nextSocket.addEventListener("open", function () {
       reconnectDelayMs = INITIAL_RECONNECT_MS;
+      aiStates.clear();
+      reviewPanels.clear();
       loadRecentMessages();
       loadVisibility();
       loadContractState();

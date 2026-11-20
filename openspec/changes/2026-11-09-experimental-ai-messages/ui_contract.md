@@ -8,7 +8,7 @@
 | AI messages → Settings | Configure providers, policy, voices and limits | Visible when enabled or previously configured | Environment key reference help includes desktop-launch environment caveat |
 | AI messages → Review / Recent | Review uncertain jobs and diagnose failures | Feature workspace, pending count badge | Same browser/Wails behavior |
 | OBS alert | Hear/view approved phrase | Existing `/overlay/alert` | Existing OBS browser compatibility |
-| Admin/dock chat row | See request status | Existing message row | No new dock view |
+| Admin/dock chat row | See request status, spoken text and review reason; approve or reject the displayed revision | Existing message row | No new dock view |
 
 ## Menus / Tray / Commands / Shortcuts
 

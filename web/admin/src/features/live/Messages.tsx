@@ -1,3 +1,4 @@
+import { createAIReview } from "../../../../shared/ai-review";
 import { Button } from "../../components/Button";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router";
@@ -31,6 +32,14 @@ function MessageRow({
 }) {
   const { t, locale } = useLocale();
   const [feedback, setFeedback] = useState({ text: "", error: false });
+  const reviewHost = useRef<HTMLDivElement>(null);
+  const pendingReview = message.is_ai_message && message.ai_state === "review_pending";
+  useEffect(() => {
+    const host = reviewHost.current;
+    if (!host || !pendingReview) return;
+    host.replaceChildren(createAIReview(message.platform, message.id, t));
+    return () => host.replaceChildren();
+  }, [pendingReview, message.platform, message.id, t]);
   const kind = commandOutcomeChromeKind(message.command_outcome, now);
   const date = new Date(message.timestamp);
   const time = Number.isNaN(date.valueOf())
@@ -66,6 +75,7 @@ function MessageRow({
           />
         </div>
         <MessageContent message={message} previews={previews} />
+        {pendingReview && <div ref={reviewHost} />}
         <p
           className="message-list__grant-feedback"
           hidden={!feedback.text}

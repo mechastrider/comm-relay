@@ -460,3 +460,29 @@ func TestClearHistory_RemovesRowsImmediatelyButProtectsPlayingAudio(t *testing.T
 	require.FileExists(t, filepath.Join(s.dir, audio))
 	require.True(t, s.Referenced(audio))
 }
+
+func TestSynthesize_ModelDeliveryTags(t *testing.T) {
+	cfg := config.DefaultAIMessages()
+	require.Equal(t, "eleven_v4", cfg.TTS.Model)
+	t.Setenv(cfg.TTS.APIKeyEnv, "test-key")
+	for _, tc := range []struct{ model, text string }{
+		{"eleven_v4", "[warmly] Добрый вечер!"},
+		{"eleven_v4_turbo", "[warmly] Добрый вечер!"},
+		{"eleven_v3", "[warmly] Добрый вечер!"},
+		{"eleven_multilingual_v2", "Добрый вечер!"},
+	} {
+		t.Run(tc.model, func(t *testing.T) {
+			cfg.TTS.Model = tc.model
+			p := NewProvider()
+			p.Client.Transport = transportFunc(func(r *http.Request) (*http.Response, error) {
+				var body map[string]string
+				require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+				require.Equal(t, tc.model, body["model_id"])
+				require.Equal(t, tc.text, body["text"])
+				return response(wave(1)), nil
+			})
+			_, err := p.Synthesize(t.Context(), cfg, Prepared{Segments: []Segment{{Text: "Добрый вечер!", Delivery: "warm"}}}, "voice")
+			require.NoError(t, err)
+		})
+	}
+}

@@ -224,7 +224,7 @@ func (p *Provider) Synthesize(ctx context.Context, c config.AIMessages, prepared
 	fallbackLogged := false
 	for _, seg := range prepared.Segments {
 		tag := ""
-		if c.TTS.Model == "eleven_v3" {
+		if c.TTS.Model == "eleven_v4" || c.TTS.Model == "eleven_v4_turbo" || c.TTS.Model == "eleven_v3" {
 			tag = tags[seg.Delivery]
 		} else if seg.Delivery != "neutral" && !fallbackLogged {
 			clog.Debug(ctx, "AI speech uses neutral delivery for this model")

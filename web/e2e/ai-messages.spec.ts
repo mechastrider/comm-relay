@@ -1,3 +1,4 @@
+import type { WebSocketRoute } from "@playwright/test";
 import { test, expect } from "./fixtures";
 
 test("experimental AI settings persist disabled and protect unsaved changes", async ({
@@ -170,3 +171,51 @@ test("AI settings use shared panels and keyboard tabs at desktop and narrow widt
     await expect(page.getByRole("button", { name: "Save", exact: true })).toBeInViewport();
   }
 });
+
+for (const [path, action] of [["/", "approve"], ["/dock/messages", "reject"]]) {
+  test("operator can " + action + " the displayed speech inline on " + path, async ({ page, runtime }) => {
+    const message = {
+      platform: "twitch", id: "source", user_id: "viewer", username: "Viewer", display_name: "Viewer",
+      timestamp: new Date().toISOString(), message: "!m 24", is_ai_message: true, ai_state: "review_pending",
+    };
+    let socket: WebSocketRoute | undefined;
+    const live = action === "approve";
+    await page.routeWebSocket("**/ws", route => { socket = route; });
+    const job = {
+      platform: message.platform, message_id: message.id, id: "review-id", revision: 7,
+      prepared: { display_text: "24", character_id: "mason", image_id: "repair", segments: [{ text: "Двадцать четыре.", delivery: "warm" }] }, reason: "Check context",
+    };
+    await page.route("**/api/messages/recent?*", route => route.fulfill({ json: { messages: [{ ...message, ai_state: live ? "queued" : "review_pending" }] } }));
+    await page.route("**/api/ai-messages?*", route => route.fulfill({ json: { items: [job] } }));
+    let attempts = 0;
+    await page.route("**/api/ai-messages/" + action, async route => {
+      expect(route.request().postDataJSON()).toEqual({ job_id: job.id, expected_revision: job.revision });
+      if (++attempts === 1 && live) {
+        await route.fulfill({ status: 409, json: {} });
+        return;
+      }
+      await route.fulfill({ json: { state: action === "approve" ? "queued" : "rejected" } });
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(runtime.url + path);
+    const row = page.getByRole("listitem").filter({ hasText: "!m 24" });
+    if (live) {
+      await expect(row).toContainText("Queued");
+      await expect.poll(() => !!socket).toBeTruthy();
+      socket!.send(JSON.stringify({ type: "ai_message_status", message_platform: message.platform, message_id: message.id, state: "review_pending" }));
+    }
+    await expect(row).toContainText("Двадцать четыре.");
+    await expect(row).toContainText(job.reason);
+    const approve = row.getByRole("button", { name: "Approve speech" });
+    const reject = row.getByRole("button", { name: "Reject", exact: true });
+    await expect(approve).toBeInViewport();
+    await expect(reject).toBeInViewport();
+    await (action === "approve" ? approve : reject).click();
+    if (live) {
+      await expect(row).toContainText("queue is full");
+      await approve.click();
+    }
+    await expect(approve).toHaveCount(0);
+    await expect(row.locator(".ai-inline-review")).toContainText(action === "approve" ? "Queued" : "Rejected");
+  });
+}

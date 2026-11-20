@@ -82,3 +82,7 @@ Implementation is in progress; checkboxes reflect implemented behavior and recor
 ## Verification status
 
 Implementation slices and automated checks are complete; see [implementation evidence](implementation-evidence.md). Q.3, Q.4 and D.1 retain live-provider, actual packaged Windows/OBS and installed-version downgrade checks. Q.5/Q.6 explicitly record native-host coverage gaps. Keep the experiment default-off and do not archive this change until remaining external verification is resolved.
+
+## Follow-up after stream trials
+
+- [ ] Review the next stream trials with the operator, then plan a dedicated AI section for configuration, review and history. Evaluate which static messages AI could replace before deciding on migration.

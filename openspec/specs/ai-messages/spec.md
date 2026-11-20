@@ -58,6 +58,11 @@ All viewers with a stable identity SHALL be eligible independently of level. Def
 ### Requirement: Replaceable providers and validated output
 The system SHALL support an OpenAI-compatible Chat Completions profile with configurable base URL, model, credential reference, output mode and timeout, and a separate ElevenLabs TTS profile with model and per-character voices. Structured responses MUST be locally validated even in schema mode. Unsupported schema mode MUST produce an actionable error, not silent downgrade. Speech directions SHALL be separate from display text and translated into supported provider syntax, with explicit neutral fallback for unsupported directions.
 
+#### Scenario: Speech model selection
+- **WHEN** initializing a new TTS profile
+- **THEN** the default model is `eleven_v4`
+- **AND** operators can retain or enter another model ID, with delivery tags supported for v4, v4 Turbo and v3
+
 #### Scenario: Compatible proxy
 - **WHEN** an operator selects an OpenRouter, RouterAI or Polza preset and a supported model
 - **THEN** the same Chat Completions contract is used with that profile's URL/key/model
@@ -80,6 +85,11 @@ The system MUST NOT automatically retry paid calls or fall back to another provi
 
 ### Requirement: Operator status and private diagnostics
 The operator SHALL have settings, review and recent-job views in browser and desktop admin, with accessible loading, empty, paused, failure and expiry states. Status SHALL distinguish dispatched from confirmed playback. The system SHALL retain local audit records for seven days, bounded to 1,000 records, with explicit clear history. Provider costs missing from responses SHALL remain unknown. General logs MUST exclude raw text and credentials; stage metrics SHALL use bounded labels. No external platform reply SHALL be sent.
+
+#### Scenario: Inline review during a stream
+- **WHEN** a message in the main operator feed or OBS messages dock awaits review
+- **THEN** its row presents the prepared spoken text, moderation reason and approve/reject actions for the displayed revision
+- **AND** pending review details stay off audience-facing overlays
 
 #### Scenario: Restart recovery
 - **WHEN** admin reconnects after server restart

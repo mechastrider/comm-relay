@@ -47,6 +47,7 @@ export default {
   "settings.section.experimental": "Экспериментальные функции",
   "ai.title": "AI-сообщения",
   "ai.settings": "Настройки",
+  "ai.reviewClosed": "Сообщение больше не ожидает проверки.",
   "ai.review": "На проверке",
   "ai.recent": "История",
   "ai.service": "Состояние",

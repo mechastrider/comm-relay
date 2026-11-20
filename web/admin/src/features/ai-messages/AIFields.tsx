@@ -149,6 +149,7 @@ export function AIFields({
               >
                 <input
                   type="text"
+                  list={kind === "tts" && key === "model" ? id + "-tts-models" : undefined}
                   value={profile[key]}
                   aria-invalid={!!errors[`ai_messages.${kind}.${key}`]}
                   onChange={(e) => update({ [key]: e.target.value })}
@@ -157,6 +158,11 @@ export function AIFields({
                 />
               </AIField>
             ))}
+            {kind === "tts" && (
+              <datalist id={id + "-tts-models"}>
+                {["eleven_v4", "eleven_v4_turbo", "eleven_v3"].map(model => <option key={model} value={model} />)}
+              </datalist>
+            )}
             <div className="ai-actions">
               <Button
                 type="button"

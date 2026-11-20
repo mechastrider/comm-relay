@@ -55,7 +55,7 @@ Use plain text DOM rendering. Separate semantic delivery enums from provider tag
 
 ### Providers and capabilities
 
-Use named presets plus editable base URL/model/key reference. OpenAI: `https://api.openai.com/v1`; OpenRouter: `https://openrouter.ai/api/v1`; RouterAI: `https://routerai.ru/api/v1`; Polza: `https://polza.ai/api/v1`. All append `/chat/completions`. Presets do not assert that every model supports structured output. OpenRouter can request `provider.require_parameters=true`; preserve capability checks per model/endpoint. ElevenLabs uses its own `xi-api-key`, `/v1/text-to-speech/{voice_id}`, `model_id` and `output_format`. Default experiment model is `eleven_v3` to match the existing pack; it remains configurable. Choose an LLM model explicitly rather than freezing a speculative default.
+Use named presets plus editable base URL/model/key reference. OpenAI: `https://api.openai.com/v1`; OpenRouter: `https://openrouter.ai/api/v1`; RouterAI: `https://routerai.ru/api/v1`; Polza: `https://polza.ai/api/v1`. All append `/chat/completions`. Presets do not assert that every model supports structured output. OpenRouter can request `provider.require_parameters=true`; preserve capability checks per model/endpoint. ElevenLabs uses its own `xi-api-key`, `/v1/text-to-speech/{voice_id}`, `model_id` and `output_format`. New configurations default to `eleven_v4`. Saved models remain configurable. Choose an LLM model explicitly rather than freezing a speculative default.
 
 ### Character catalog and content
 

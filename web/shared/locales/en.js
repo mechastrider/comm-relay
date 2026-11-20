@@ -47,6 +47,7 @@ export default {
   "settings.section.experimental": "Experimental features",
   "ai.title": "AI messages",
   "ai.settings": "Settings",
+  "ai.reviewClosed": "This message is no longer awaiting review.",
   "ai.review": "Review",
   "ai.recent": "Recent",
   "ai.service": "Status",
