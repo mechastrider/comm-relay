@@ -4,6 +4,7 @@ import "time"
 
 // ChatMessage is the unified chat payload produced by all platform connectors.
 type ChatMessage struct {
+	IsAIMessage bool
 	ID          string
 	Platform    string
 	UserID      string

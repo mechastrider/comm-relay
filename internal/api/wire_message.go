@@ -22,6 +22,7 @@ const (
 
 // wireChatMessage is the JSON payload sent to overlay WebSocket clients.
 type wireChatMessage struct {
+	IsAIMessage bool                  `json:"is_ai_message,omitempty"`
 	Type        string                `json:"type"`
 	ID          string                `json:"id,omitempty"`
 	Platform    string                `json:"platform"`
@@ -140,6 +141,7 @@ func chatMessageWirePayload(msg bus.ChatMessage, isCommand bool) ([]byte, error)
 
 	wire := wireChatMessage{
 		Type:        wireMessageType,
+		IsAIMessage: msg.IsAIMessage,
 		ID:          msg.ID,
 		Platform:    msg.Platform,
 		UserID:      msg.UserID,

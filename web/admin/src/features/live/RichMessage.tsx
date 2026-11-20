@@ -139,6 +139,7 @@ export function OutcomeBadge({
 }) {
   const { t } = useLocale();
   const kind = commandOutcomeChromeKind(message.command_outcome, now);
+  if (message.is_ai_message) return <span role="status" className="message-list__command-outcome">AI: {t("ai.state." + (message.ai_state || "queued"))}</span>;
   if (!kind) return null;
   const paths =
     kind === "accepted"

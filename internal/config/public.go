@@ -2,6 +2,8 @@ package config
 
 // PublicConfig is returned by the admin API without secrets or OAuth tokens.
 type PublicConfig struct {
+	Features                   Features                    `json:"features"`
+	AIMessages                 AIMessages                  `json:"ai_messages"`
 	ServerPort                 int                         `json:"server_port"`
 	ActivityIntervalSeconds    int                         `json:"activity_interval_seconds"`
 	ActivitySessionLimit       int                         `json:"activity_session_limit"`
@@ -26,6 +28,7 @@ type PublicConfig struct {
 // Public returns admin-safe settings (tokens and client secret omitted).
 func (c Config) Public() PublicConfig {
 	return PublicConfig{
+		Features: c.Features, AIMessages: c.AIMessages,
 		ServerPort:                 c.ServerPort,
 		ActivityIntervalSeconds:    c.ActivityIntervalSeconds,
 		ActivitySessionLimit:       c.ActivitySessionLimit,

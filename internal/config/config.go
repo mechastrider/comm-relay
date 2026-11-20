@@ -15,6 +15,8 @@ var ErrInvalidConfig = errors.New("invalid config")
 
 // Config holds application settings persisted in config.json.
 type Config struct {
+	Features                   Features                    `json:"features"`
+	AIMessages                 AIMessages                  `json:"ai_messages"`
 	ServerPort                 int                         `json:"server_port"`
 	PointsPerMessage           int                         `json:"points_per_message,omitempty"`
 	ActivityIntervalSeconds    int                         `json:"activity_interval_seconds"`
@@ -130,6 +132,7 @@ type OverlayConfig struct {
 // Default returns safe prototype defaults.
 func Default() *Config {
 	cfg := &Config{
+		AIMessages:              DefaultAIMessages(),
 		ServerPort:              17877,
 		ActivityIntervalSeconds: 300,
 		ActivitySessionLimit:    10,

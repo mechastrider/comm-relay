@@ -8,12 +8,14 @@ import (
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 
+	"github.com/mechastrider/comm-relay/internal/aimessage"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/leaderboard"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 type configHandler struct {
+	ai                    *aimessage.Service
 	store                 *config.Store
 	viewerStore           *store.Store
 	hub                   *Hub
@@ -34,6 +36,8 @@ func (h *configHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
+	aiConfigurationMu.Lock()
+	defer aiConfigurationMu.Unlock()
 	ctx := r.Context()
 
 	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
@@ -45,6 +49,11 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 
 	prev := h.store.Snapshot()
 	var incoming config.Config
+	incoming.Features = prev.Features
+	incoming.AIMessages = config.DefaultAIMessages()
+	if prev.AIMessages.LLM.BaseURL != "" {
+		incoming.AIMessages = prev.AIMessages
+	}
 	incoming.Admin.CommandSoundEnabled = prev.Admin.CommandSoundEnabled
 	if fields := config.ValidateIncomingJSONFields(body); len(fields) > 0 {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
@@ -66,6 +75,12 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	incoming.ApplyDefaults()
 
+	if h.ai != nil {
+		if err := h.ai.ValidateConfig(incoming); err != nil {
+			aiError(w, r, err)
+			return
+		}
+	}
 	if err := h.store.Replace(incoming); err != nil {
 		if fields := config.ValidationFields(err); len(fields) > 0 {
 			writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
@@ -80,6 +95,9 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.ai != nil {
+		h.ai.Sync(ctx)
+	}
 	saved := h.store.Snapshot()
 	if h.viewerStore != nil {
 		changed, syncErr := h.viewerStore.SyncChannelOwners(channelAccounts(saved))

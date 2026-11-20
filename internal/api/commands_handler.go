@@ -8,10 +8,14 @@ import (
 	"github.com/muonsoft/clog"
 	"github.com/muonsoft/errors"
 
+	"github.com/mechastrider/comm-relay/internal/aimessage"
+	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/store"
 )
 
 type commandsHandler struct {
+	cfg         *config.Store
+	ai          *aimessage.Service
 	viewerStore *store.Store
 }
 
@@ -122,6 +126,8 @@ type createCommandRequest struct {
 }
 
 func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
+	aiConfigurationMu.Lock()
+	defer aiConfigurationMu.Unlock()
 	if h.viewerStore == nil {
 		writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
 		return
@@ -135,6 +141,10 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if aiTriggerConflict(h.cfg, request.Trigger, request.Aliases) {
+		writeError(w, 400, "m is reserved by experimental AI messages")
+		return
+	}
 	cmd, err := h.viewerStore.CreateCommand(store.CreateCommandInput{
 		ID:              request.ID,
 		Action:          request.Action,
@@ -210,6 +220,9 @@ func (h *commandsHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.ai != nil {
+		h.ai.CancelAll(r.Context(), "catalog_changed")
+	}
 	writeJSON(w, http.StatusOK, commandFromStore(*cmd))
 }
 
@@ -234,6 +247,8 @@ type updateCommandRequest struct {
 }
 
 func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
+	aiConfigurationMu.Lock()
+	defer aiConfigurationMu.Unlock()
 	if h.viewerStore == nil {
 		writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
 		return
@@ -251,6 +266,10 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if aiTriggerConflict(h.cfg, request.Trigger, request.Aliases) {
+		writeError(w, 400, "m is reserved by experimental AI messages")
+		return
+	}
 	cmd, err := h.viewerStore.UpdateCommand(store.UpdateCommandInput{
 		ID:              request.ID,
 		Action:          request.Action,
@@ -330,6 +349,9 @@ func (h *commandsHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.ai != nil {
+		h.ai.CancelAll(r.Context(), "catalog_changed")
+	}
 	writeJSON(w, http.StatusOK, commandFromStore(*cmd))
 }
 
@@ -338,6 +360,8 @@ type deleteCommandRequest struct {
 }
 
 func (h *commandsHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
+	aiConfigurationMu.Lock()
+	defer aiConfigurationMu.Unlock()
 	if h.viewerStore == nil {
 		writeError(w, http.StatusServiceUnavailable, "viewer store unavailable")
 		return
@@ -366,5 +390,8 @@ func (h *commandsHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.ai != nil {
+		h.ai.CancelAll(r.Context(), "catalog_changed")
+	}
 	writeJSON(w, http.StatusOK, map[string]bool{"deleted": true})
 }

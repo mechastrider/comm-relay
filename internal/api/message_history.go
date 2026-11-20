@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mechastrider/comm-relay/internal/aimessage"
+
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/config"
 	"github.com/mechastrider/comm-relay/internal/store"
@@ -65,6 +67,9 @@ func (h *MessageHistory) Run(ctx context.Context, b *bus.Bus) {
 }
 
 func (h *MessageHistory) append(msg bus.ChatMessage) {
+	if h.cfgStore != nil && h.cfgStore.Snapshot().Features.ExperimentalAIMessages {
+		_, msg.IsAIMessage = aimessage.Parse(msg.Message)
+	}
 	msg = fillChatMessageAvatar(h.viewerStore, h.cfgStore, msg)
 
 	h.mu.Lock()
@@ -130,6 +135,9 @@ type commandOutcomeJSON struct {
 }
 
 type adminMessage struct {
+	AIDisplayText   string                `json:"ai_display_text,omitempty"`
+	AIState         string                `json:"ai_state,omitempty"`
+	IsAIMessage     bool                  `json:"is_ai_message,omitempty"`
 	ID              string                `json:"id,omitempty"`
 	Platform        string                `json:"platform"`
 	UserID          string                `json:"user_id,omitempty"`
@@ -151,6 +159,7 @@ func adminMessageFromChat(msg bus.ChatMessage) adminMessage {
 	}
 
 	return adminMessage{
+		IsAIMessage: msg.IsAIMessage,
 		ID:          msg.ID,
 		Platform:    msg.Platform,
 		UserID:      msg.UserID,

@@ -1,0 +1,94 @@
+/* AI settings reuse the shared settings panels, form controls and tabs. */
+.ai-workspace,
+.ai-form,
+.ai-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-space-4);
+  min-width: 0;
+}
+
+.ai-fields {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.ai-panel,
+.ai-enable-panel {
+  min-width: 0;
+}
+
+.ai-actions,
+.ai-service-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitive-space-3);
+}
+
+.ai-service-bar {
+  justify-content: space-between;
+}
+
+.ai-service-bar p {
+  margin: 0;
+}
+
+.ai-image-binding {
+  display: grid;
+  gap: var(--primitive-space-3);
+  padding: var(--primitive-space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface-raised);
+}
+
+.ai-image-binding > button,
+.ai-panel .form > button {
+  justify-self: start;
+}
+
+.ai-save {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-left: 0;
+  padding: var(--primitive-space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--primitive-radius-md);
+  background: var(--surface);
+}
+
+.ai-save > p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.ai-jobs {
+  display: grid;
+  gap: var(--primitive-space-3);
+  list-style: none;
+  padding: 0;
+}
+
+.ai-job {
+  padding: var(--primitive-space-4);
+  overflow-wrap: anywhere;
+}
+
+.ai-job small {
+  color: var(--muted);
+}
+
+.ai-preview {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+}
+
+#ai-review .dialog-body {
+  overflow-wrap: anywhere;
+}

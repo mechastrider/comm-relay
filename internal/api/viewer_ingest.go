@@ -8,6 +8,7 @@ import (
 
 	"github.com/muonsoft/clog"
 
+	"github.com/mechastrider/comm-relay/internal/aimessage"
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
@@ -18,6 +19,7 @@ import (
 
 // ViewerIngest applies chat messages to the viewer store and schedules leaderboard updates.
 type ViewerIngest struct {
+	ai           *aimessage.Service
 	viewerStore  *store.Store
 	cfgStore     *config.Store
 	publisher    *LeaderboardPublisher
@@ -79,6 +81,22 @@ func (v *ViewerIngest) Run(ctx context.Context, b *bus.Bus) {
 }
 
 func (v *ViewerIngest) handleMessage(ctx context.Context, msg bus.ChatMessage) {
+	if v.ai != nil && v.cfgStore.Snapshot().Features.ExperimentalAIMessages {
+		if text, ok := aimessage.Parse(msg.Message); ok {
+			viewerID := ""
+			if msg.Platform != "" && msg.UserID != "" {
+				viewerID = msg.Platform + ":" + msg.UserID
+				if id, found := v.viewerStore.ViewerIDForIdentity(msg.Platform, msg.UserID); found {
+					viewerID = id
+				}
+			}
+			if _, err := v.ai.Admit(ctx, msg.Platform, msg.ID, viewerID, command.DisplayName(msg.Username, msg.DisplayName), text); err != nil {
+				v.ai.ReportAdmission(msg.Platform, msg.ID)
+				clog.Debug(ctx, "AI message admission declined", slog.String("message_id", msg.ID), slog.String("reason", err.Error()))
+			}
+			return
+		}
+	}
 	var matchedCmd *store.Command
 	if v.matcher != nil {
 		match, parsed := v.matcher.LookupMatch(msg.Message)
@@ -438,3 +456,6 @@ func (v *ViewerIngest) publishProgression(ctx context.Context, bundle store.Prog
 		observability.Default.RecordProgressionPublished()
 	}
 }
+
+// SetAIMessages connects experimental command admission before ordinary chat effects.
+func (v *ViewerIngest) SetAIMessages(service *aimessage.Service) { v.ai = service }

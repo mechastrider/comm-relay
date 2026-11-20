@@ -10,6 +10,7 @@ import (
 	"github.com/muonsoft/errors"
 	"github.com/pior/runnable"
 
+	"github.com/mechastrider/comm-relay/internal/aimessage"
 	"github.com/mechastrider/comm-relay/internal/api"
 	"github.com/mechastrider/comm-relay/internal/avatarcache"
 	"github.com/mechastrider/comm-relay/internal/bus"
@@ -135,7 +136,13 @@ func New(opts Options) (*App, error) {
 	progressionReconciler := store.NewProgressionReconciler(viewerStore)
 	viewerIngest := api.NewViewerIngest(viewerStore, cfgStore, leaderboardPublisher, commandMatcher, hub, avatarWorker, visibilityController)
 
+	aiMessages, err := aimessage.New(cfgStore, viewerStore, hub.Broadcast)
+	if err != nil {
+		return nil, errors.Errorf("initialize AI messages: %w", err)
+	}
+	viewerIngest.SetAIMessages(aiMessages)
 	handler, err := api.NewHandler(api.Options{
+		AIMessages:            aiMessages,
 		WebRoot:               webRoot,
 		Hub:                   hub,
 		Store:                 cfgStore,
@@ -160,6 +167,7 @@ func New(opts Options) (*App, error) {
 
 	mgr := runnable.Manager().ShutdownTimeout(10 * time.Second)
 	mgr.RegisterService(
+		runnable.Func(aiMessages.Run).Name("ai-messages"),
 		runnable.Func(visibilityController.Run).Name("leaderboard-visibility"),
 		runnable.Func(func(ctx context.Context) error {
 			hub.Run(ctx)

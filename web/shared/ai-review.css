@@ -1,0 +1,22 @@
+.ai-inline-review {
+  overflow-wrap: anywhere;
+  margin-block: .5rem;
+}
+.ai-inline-review p {
+  margin: .25rem 0;
+}
+.ai-inline-review p:empty {
+  display: none;
+}
+.ai-inline-review__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.ai-inline-review details {
+  margin-block: .25rem;
+}
+.ai-inline-review img {
+  max-inline-size: min(100%, 8rem);
+  max-block-size: 6rem;
+}

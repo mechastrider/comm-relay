@@ -1,3 +1,4 @@
+@import url("../../shared/ai-review.css");
 @import url("../../shared/tooltip.css");
 @import url("../../shared/reward-picker.css");
 @import url("../../shared/alert-emblem.css");
@@ -19,3 +20,5 @@
 @import url("../styles/studio.css");
 @import url("../styles/settings.css");
 @import url("../styles/media.css");
+
+@import url("../styles/ai-messages.css");

@@ -967,6 +967,10 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
   restyleRenderedMessages = restyleVisibleMessages;
 
   function renderMessage(frame, options) {
+    if (frame.is_ai_message === true) {
+      if (frame.ai_state !== "dispatched" || typeof frame.ai_display_text !== "string" || !frame.ai_display_text) return;
+      frame = {...frame, message: frame.ai_display_text, fragments: [], is_command: true};
+    }
     if (frame.type !== "message") {
       return;
     }
@@ -1095,6 +1099,10 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
       highlightRewardedMessage(frame);
       return;
     }
+    if (frame.type === "ai_message_status" && frame.state === "dispatched" && typeof frame.display_text === "string") {
+      renderMessage({type:"message", id:frame.message_id, platform:frame.message_platform, user:frame.name, display_name:frame.name, message:frame.display_text, is_command:true}, {skipCommandHold:true});
+      return;
+    }
     if (frame.type === "command_outcome") {
       handleCommandOutcome(frame);
       return;
@@ -1124,6 +1132,9 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
       fragments: Array.isArray(msg.fragments) ? msg.fragments : [],
       timestamp: typeof msg.timestamp === "string" ? msg.timestamp : "",
       is_command: msg.is_command === true,
+      is_ai_message: msg.is_ai_message === true,
+      ai_state: msg.ai_state,
+      ai_display_text: msg.ai_display_text,
     };
   }
 
