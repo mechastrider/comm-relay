@@ -88,8 +88,15 @@ Skills live in **`.agents/skills/<name>/SKILL.md`**. Read the relevant skill bef
 
 ### Frontend
 
+Before creating or changing a React admin page, settings tab, form or dialog,
+read [comm-relay-admin-ui](.agents/skills/comm-relay-admin-ui/SKILL.md).
+This project-owned skill maps the existing design system to components and CSS;
+it applies to experimental features as well. Choose a sibling surface as the
+visual reference and verify rendered consistency, not just functional behavior.
+
 | Skill | Use when |
 |-------|----------|
+| `comm-relay-admin-ui` | React admin page composition, shared components/tokens, and visual consistency review; required for new or changed admin surfaces. |
 | `web-static-frontend` | Static OBS overlay/dock and packaged-shell constraints. Admin uses React/TypeScript; preserve API and surface contracts. |
 | `web-constrained-layout` | Height-capped admin dialogs and split panes (scroll the body; do not clip). Shared web layout skill — not desktop windowing. |
 | `ux-form-practices` | Connect forms, settings, accessibility |
@@ -194,6 +201,7 @@ Before reporting a task as done:
 - If you touched ingest, bus, commands, awards, connectors, or WebSocket delivery: verify logging and `pipeline` counters per skill `comm-relay-observability`.
 - If the change is user-visible product behavior (see Core Principle 6 and skill `changelog`): update `CHANGELOG.md` under `[Unreleased]`. Skip changelog for marketing assets, README promo images, and no-behavior refactors of admin/overlay code.
 - If preparing a release: move `[Unreleased]` into a versioned section, set the date, and keep README artifact names/install steps in sync.
+- For React admin layout/styling changes: compare the rendered page with a named sibling surface at desktop and narrow widths; verify actual control styling, keyboard states, error visibility and scroll reachability per `comm-relay-admin-ui`. Experimental pages use the same gate.
 - If static UI changed: smoke-check overlay (transparent background, message limit) and admin forms.
 - If observable behavior changed: keep `openspec/specs/` in sync (change delta → archive or `openspec-sync-specs`).
 - State clearly if a check could not be run and why.

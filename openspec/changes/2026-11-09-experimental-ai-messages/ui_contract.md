@@ -28,7 +28,9 @@ Reuse existing React components/tokens. Settings sections: LLM, TTS, policy/cont
 - Show message/context transmission notice next to enable. Provide explicit paid connection test, clearly labeled as using provider quota, isolated from production OBS. Saving alone does not invoke providers.
 - Review detail displays original, corrected display text, spoken text, image/character, moderation reason and expiry countdown. Approve/reject/cancel buttons have pending and stale states. No text editing in review v1; approval uses immutable revision.
 - Recent jobs can be canceled while active. No one-click retry or replay. Clear history only removes terminal records and unreferenced generated media.
-- Validation is inline and summarized; preserve unsaved values. Full-queue approval remains pending with a recoverable message. Errors use localized app wording, not raw upstream bodies.
+- Validation is inline and summarized; preserve unsaved values. A rejected save keeps the error next to the save action and moves focus and scroll to the first invalid field or its message, so a long settings page never looks like it ignored the click. Full-queue approval remains pending with a recoverable message. Errors use localized app wording, not raw upstream bodies.
+
+The experimental settings surface uses the same panel headers, field spacing, checkbox treatment, tabs and theme tokens as other settings. Nested character/image groups remain visually subordinate. Save feedback remains adjacent to the save controls. Keyboard tabs select and identify the corresponding panel.
 
 ### HTTP contract
 

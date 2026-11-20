@@ -1,3 +1,4 @@
+import { translateAIError } from "./errors";
 import {
   useId,
   useState,
@@ -17,6 +18,17 @@ import {
   type AICharacter,
 } from "./types";
 
+
+function AISection({ title, children }: { title: string; children: ReactNode }) {
+  const id = useId();
+  return (
+    <section className="panel ai-panel" aria-labelledby={id}>
+      <div className="panel__header"><h3 id={id}>{title}</h3></div>
+      <div className="form">{children}</div>
+    </section>
+  );
+}
+
 export function AIField({
   label,
   error,
@@ -27,6 +39,7 @@ export function AIField({
   children: ReactNode;
 }) {
   const id = useId();
+  const { t } = useLocale();
   const control = isValidElement(children)
     ? cloneElement(
         children as ReactElement<{
@@ -46,8 +59,14 @@ export function AIField({
       <label htmlFor={id}>{label}</label>
       {control}
       {error && (
-        <p id={id + "-error"} role="alert" className="form__error">
-          {error}
+        <p
+          id={id + "-error"}
+          role="alert"
+          className="field-error"
+          data-ai-error
+          tabIndex={-1}
+        >
+          {translateAIError(error, t)}
         </p>
       )}
     </Field>
@@ -89,12 +108,17 @@ export function AIFields({
   );
   return (
     <>
+      {errors["ai_messages"] && (
+        <p role="alert" className="field-error" data-ai-error tabIndex={-1}>
+          {translateAIError(errors["ai_messages"], t)}
+        </p>
+      )}
       {(["llm", "tts"] as const).map((kind) => {
         const profile = value[kind];
         const update = (patch: Partial<typeof profile>) =>
           change({ ...value, [kind]: { ...profile, ...patch } });
         return (
-          <FormSection key={kind} title={t("ai." + kind)}>
+          <AISection key={kind} title={t("ai." + kind)}>
             {kind === "llm" && (
               <AIField label={t("ai.provider")}>
                 <select
@@ -124,6 +148,7 @@ export function AIFields({
                 error={errors[`ai_messages.${kind}.${key}`]}
               >
                 <input
+                  type="text"
                   value={profile[key]}
                   aria-invalid={!!errors[`ai_messages.${kind}.${key}`]}
                   onChange={(e) => update({ [key]: e.target.value })}
@@ -132,7 +157,7 @@ export function AIFields({
                 />
               </AIField>
             ))}
-            <div>
+            <div className="ai-actions">
               <Button
                 type="button"
                 className="btn-small"
@@ -140,7 +165,7 @@ export function AIFields({
               >
                 {t("ai.keyHelp")}
               </Button>
-              <span role="status">
+              <span role="status" className="field-hint">
                 {" "}
                 {t(credentials?.[kind] ? "ai.keyAvailable" : "ai.keyMissing")}
               </span>
@@ -170,11 +195,11 @@ export function AIFields({
                 </select>
               </AIField>
             )}
-          </FormSection>
+          </AISection>
         );
       })}
-      <FormSection title={t("ai.policy")}>
-        <p>{t("ai.policyHint")}</p>
+      <AISection title={t("ai.policy")}>
+        <p className="field-hint">{t("ai.policyHint")}</p>
         <AIField label={t("ai.context")}>
           <textarea
             rows={3}
@@ -197,11 +222,13 @@ export function AIFields({
             }
           />
         </AIField>
-      </FormSection>
-      <FormSection title={t("ai.characters")}>
-        <p>{t("ai.charactersHint")}</p>
+      </AISection>
+      <AISection title={t("ai.characters")}>
+        <p className="field-hint">{t("ai.charactersHint")}</p>
         {errors["ai_messages.characters"] && (
-          <p role="alert">{errors["ai_messages.characters"]}</p>
+          <p role="alert" className="field-error" data-ai-error tabIndex={-1}>
+            {translateAIError(errors["ai_messages.characters"], t)}
+          </p>
         )}
         {value.characters.map((ch, index) => (
           <FormSection key={index} title={ch.label || t("ai.character")}>
@@ -209,6 +236,7 @@ export function AIFields({
               (key) => (
                 <AIField key={key} label={t("ai." + key)}>
                   <input
+                    type="text"
                     value={ch[key]}
                     onChange={(e) =>
                       character(index, { [key]: e.target.value })
@@ -235,6 +263,7 @@ export function AIFields({
               <div key={i} className="ai-image-binding">
                 <AIField label={t("ai.imageID")}>
                   <input
+                    type="text"
                     value={im.id}
                     onChange={(e) =>
                       character(index, {
@@ -266,6 +295,7 @@ export function AIFields({
                 </AIField>
                 <AIField label={t("ai.situation")}>
                   <input
+                    type="text"
                     value={im.description}
                     onChange={(e) =>
                       character(index, {
@@ -343,9 +373,9 @@ export function AIFields({
         >
           {t("ai.addCharacter")}
         </Button>
-      </FormSection>
-      <FormSection title={t("ai.limits")}>
-        <p>{t("ai.budgetHint")}</p>
+      </AISection>
+      <AISection title={t("ai.limits")}>
+        <p className="field-hint">{t("ai.budgetHint")}</p>
         {Object.entries(value.limits).map(([key, n]) => (
           <AIField
             key={key}
@@ -366,7 +396,7 @@ export function AIFields({
             />
           </AIField>
         ))}
-      </FormSection>
+      </AISection>
       <Dialog
         id={id}
         open={help}

@@ -1,3 +1,4 @@
+import { translateAIError } from "./errors";
 import {
   useCallback,
   useEffect,
@@ -9,9 +10,11 @@ import { useRuntime } from "../../app/runtime";
 import { useLocale } from "../../app/locale";
 import { useReportSaveStatus } from "../../app/save-status";
 import { ApiError, request, post } from "../../services/api";
+import { Tabs } from "../../components/Tabs";
 import { Button } from "../../components/Button";
 import { Dialog } from "../../components/Dialog";
 import { AIFields, type ImageCommand } from "./AIFields";
+import { firstAIErrorTarget, focusAIError } from "./error-focus";
 import type { AIPage, AISettings, AIJob } from "./types";
 
 export function AIMessages({
@@ -33,7 +36,10 @@ export function AIMessages({
   const [feedback, setFeedback] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [errorFocus, setErrorFocus] = useState(0);
   const inFlight = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const errorSummaryRef = useRef<HTMLParagraphElement>(null);
   const [test, setTest] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const value = draft ?? runtime.config?.ai_messages;
@@ -46,11 +52,9 @@ export function AIMessages({
     return () => onDirtyChange(false);
   }, [dirty, busy, onDirtyChange]);
   useLayoutEffect(() => {
-    if (Object.keys(fields).length)
-      document
-        .querySelector<HTMLElement>('.ai-form [aria-invalid="true"]')
-        ?.focus();
-  }, [fields]);
+    if (!errorFocus) return;
+    focusAIError(firstAIErrorTarget(formRef.current, errorSummaryRef.current));
+  }, [errorFocus]);
   const refresh = useCallback(async (signal?: AbortSignal) => {
     const [next, pending] = await Promise.all([
       request<AIPage>("/api/ai-messages?limit=100", { signal }),
@@ -97,7 +101,7 @@ export function AIMessages({
     window.addEventListener("beforeunload", guard);
     return () => window.removeEventListener("beforeunload", guard);
   }, [dirty]);
-  async function run(action: () => Promise<void>) {
+  async function run(action: () => Promise<void>, focusError = true) {
     if (inFlight.current) return;
     inFlight.current = true;
     setBusy(true);
@@ -108,6 +112,7 @@ export function AIMessages({
     } catch (cause) {
       if (cause instanceof ApiError) setFields(cause.fields);
       setError(cause instanceof Error ? cause.message : String(cause));
+      if (focusError) setErrorFocus((token) => token + 1);
     } finally {
       inFlight.current = false;
       setBusy(false);
@@ -139,7 +144,7 @@ export function AIMessages({
       });
       await refresh();
       setSelected(null);
-    });
+    }, false);
   }
   const review = reviews;
   const allJobs = [
@@ -154,25 +159,23 @@ export function AIMessages({
     return <p role="status">{runtime.configError || t("state.loading")}</p>;
   return (
     <div className="ai-workspace">
-      <div className="ai-actions" role="tablist" aria-label={t("ai.title")}>
-        {["settings", "review", "recent"].map((name) => (
-          <Button
-            key={name}
-            type="button"
-            role="tab"
-            aria-selected={tab === name}
-            onClick={() => setTab(name)}
-          >
-            {t("ai." + name)}
-            {name === "review" ? ` (${review.length})` : ""}
-          </Button>
-        ))}
-      </div>
-      <p role="status">
-        {t("ai.service")}: {t("ai.state." + (page?.service_state ?? "loading"))}
-      </p>
-      {error && <p role="alert">{error}</p>}
-      {feedback && <p role="status">{feedback}</p>}
+      <Tabs
+        items={["settings", "review", "recent"].map((name) => ({
+          id: name,
+          label: t("ai." + name) + (name === "review" ? ` (${review.length})` : ""),
+        }))}
+        selected={tab}
+        onSelect={setTab}
+        label={t("ai.title")}
+        idPrefix="ai"
+        className="dialog-tabs settings-platform-tabs"
+      />
+      <div className="ai-service-bar">
+        <p className="field-hint" role="status">
+          {t("ai.service")}: {t("ai.state." + (page?.service_state ?? "loading"))}
+        </p>
+      {tab !== "settings" && error && <p role="alert" className="field-error">{translateAIError(error, t)}</p>}
+      {tab !== "settings" && feedback && <p role="status">{feedback}</p>}
       <div className="ai-actions">
         <Button
           type="button"
@@ -209,23 +212,30 @@ export function AIMessages({
             </Button>
           )}
       </div>
+      </div>
+      <section id={`ai-${tab}-panel`} role="tabpanel" aria-labelledby={`ai-${tab}-tab`}>
       {tab === "settings" ? (
         <form
-          className="ai-form"
+          ref={formRef}
+          className="settings-section__form ai-form"
           onSubmit={(e) => {
             e.preventDefault();
             save();
           }}
         >
-          <p>{t("ai.notice")}</p>
-          <label className="form__checkbox">
+          <div className="panel ai-enable-panel">
+          <div className="form">
+          <p className="field-hint">{t("ai.notice")}</p>
+          <label className="checkbox">
             <input
               type="checkbox"
               checked={enabled}
               onChange={(e) => setEnabledDraft(e.target.checked)}
             />
-            {t("ai.enable")}
+            <span>{t("ai.enable")}</span>
           </label>
+          </div>
+          </div>
           <fieldset disabled={busy} className="ai-fields">
             <AIFields
               value={value}
@@ -238,7 +248,19 @@ export function AIMessages({
               credentials={page?.credentials}
             />
           </fieldset>
-          <div className="ai-actions ai-save">
+          <div className="settings-section__actions ai-save">
+            {error && (
+              <p
+                ref={errorSummaryRef}
+                role="alert"
+                tabIndex={-1}
+                data-ai-error-summary
+                className="field-error"
+              >
+                {translateAIError(error, t)}
+              </p>
+            )}
+            {feedback && <p role="status">{feedback}</p>}
             <Button type="submit" variant="primary" disabled={busy || !dirty}>
               {t("ai.save")}
             </Button>
@@ -267,23 +289,23 @@ export function AIMessages({
         </form>
       ) : (
         <>
-          <p>{t("ai.dispatchedHint")}</p>
+          <p className="field-hint">{t("ai.dispatchedHint")}</p>
           {!page ? (
             <p role="status">{t("state.loading")}</p>
           ) : jobs.length === 0 ? (
-            <p>{t("ai.empty")}</p>
+            <p className="notice">{t("ai.empty")}</p>
           ) : (
             <ul className="ai-jobs">
               {jobs.map((job) => (
-                <li key={job.id}>
+                <li key={job.id} className="panel ai-job">
                   <Button type="button" onClick={() => setSelected(job.id)}>
                     {job.name} · {t("ai.state." + job.state)}
                   </Button>
                   <p>{job.prepared?.display_text ?? job.original_text}</p>
                   <small>
                     {new Date(job.created_at).toLocaleString()}{" "}
-                    {job.error_code ? `· ${job.error_code}` : ""}
                   </small>
+                  {job.error_code && <p className="field-error">{translateAIError(job.error_code, t)}</p>}
                 </li>
               ))}
             </ul>
@@ -300,7 +322,7 @@ export function AIMessages({
                   );
                   setOlder((previous) => [...previous, ...next.items]);
                   setCursor(next.next_cursor ?? "");
-                })
+                }, false)
               }
             >
               {t("ai.more")}
@@ -316,7 +338,7 @@ export function AIMessages({
                   setOlder([]);
                   setCursor(null);
                   await refresh();
-                })
+                }, false)
               }
             >
               {t("ai.clear")}
@@ -324,6 +346,7 @@ export function AIMessages({
           )}
         </>
       )}
+      </section>
       <Dialog
         id="ai-paid-test"
         open={test !== null}
@@ -350,7 +373,7 @@ export function AIMessages({
                       String(result.elapsed_ms) +
                       " ms",
                   );
-                })
+                }, false)
               }
             >
               {t("ai.testConfirm")}
@@ -359,7 +382,7 @@ export function AIMessages({
         }
       >
         <p>{t("ai.testHint")}</p>
-        {error && <p role="alert">{error}</p>}
+        {error && <p role="alert" className="field-error">{translateAIError(error, t)}</p>}
       </Dialog>
       <Dialog
         id="ai-review"
@@ -411,7 +434,7 @@ export function AIMessages({
           )
         }
       >
-        {error && <p role="alert">{error}</p>}
+        {error && <p role="alert" className="field-error">{translateAIError(error, t)}</p>}
         {current && (
           <>
             <p>{t("ai.state." + current.state)}</p>
@@ -435,7 +458,7 @@ export function AIMessages({
               />
             )}
             <p>{current.reason}</p>
-            {current.error_code && <p role="alert">{current.error_code}</p>}
+            {current.error_code && <p role="alert" className="field-error">{translateAIError(current.error_code, t)}</p>}
             {current.review_expires_at && (
               <p>
                 {t("ai.expires")}:{" "}

@@ -32,9 +32,9 @@ test("experimental AI settings persist disabled and protect unsaved changes", as
   await expect(page.getByLabel("Stream context", { exact: true })).toHaveValue(
     "Unsaved context",
   );
-  await page
-    .getByRole("button", { name: "Discard changes", exact: true })
-    .click();
+  await page.locator("#settings-application-tab").click();
+  await page.locator("#discard-changes-confirm").click();
+  await page.goto(runtime.url + "/#/settings/experimental");
   await page.getByRole("tab", { name: "Review" }).click();
   await expect(
     page.getByText("No messages yet.", { exact: false }),
@@ -104,4 +104,69 @@ test("AI review keeps exact content visible after stale approval and allows retr
   await dialog.getByRole("button", { name: "Approve speech" }).click();
   await expect(dialog).not.toBeVisible();
   expect(attempts).toBe(2);
+});
+
+test("AI empty character errors are localized, red and focused", async ({ page, runtime }) => {
+  const configResponse = await page.request.get(runtime.url + "/api/config");
+  const config = await configResponse.json();
+  config.admin.time_locale = "ru-RU";
+  config.ai_messages.llm.model = "test-model";
+  const saved = await page.request.post(runtime.url + "/api/config/update", { data: config });
+  expect(saved.ok()).toBeTruthy();
+  await page.goto(runtime.url + "/#/settings/experimental");
+  await page.reload();
+  await page.getByRole("checkbox", { name: /!m/ }).check();
+  await page.getByRole("button", { name: "Сохранить", exact: true }).click();
+  const error = page.getByText("Добавьте хотя бы одного персонажа, прежде чем включать AI-сообщения.", { exact: true });
+  await expect(error).toBeVisible();
+  await expect(error).toBeInViewport();
+  await expect(error).toBeFocused();
+  const color = await error.evaluate((el) => getComputedStyle(el).color);
+  const danger = await error.evaluate((el) => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--danger)";
+    el.append(probe);
+    const result = getComputedStyle(probe).color;
+    probe.remove();
+    return result;
+  });
+  expect(color).toBe(danger);
+  await expect(page.locator("[data-ai-error-summary]")).toContainText("Проверьте выделенные поля.");
+});
+
+test("AI settings use shared panels and keyboard tabs at desktop and narrow widths", async ({ page, runtime }, info) => {
+  await page.goto(runtime.url + "/#/settings/experimental");
+  const tabs = page.getByRole("tablist", { name: "AI messages" });
+  const settings = tabs.getByRole("tab", { name: "Settings", exact: true });
+  await expect(settings).toHaveClass("dialog-tab");
+  await settings.focus();
+  await settings.press("ArrowRight");
+  await expect(tabs.getByRole("tab", { name: /Review/ })).toBeFocused();
+  await expect(page.locator("#ai-review-panel")).toBeVisible();
+  await page.keyboard.press("Home");
+  await expect(settings).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator("#ai-settings-panel")).toBeVisible();
+  await page.getByRole("button", { name: "Add character", exact: true }).click();
+  await page.getByRole("button", { name: "Add image", exact: true }).click();
+  for (const width of [1100, 390]) {
+    await page.setViewportSize({ width, height: 760 });
+    await settings.scrollIntoViewIfNeeded();
+    const overflow = await page.locator("#settings-sections-mount").evaluate((el) => el.scrollWidth - el.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+    const panel = page.locator(".ai-panel").first();
+    await expect(panel.locator(".panel__header h3")).toBeVisible();
+    const checkbox = page.getByRole("checkbox", { name: /!m/ });
+    await expect(checkbox).toHaveCSS("accent-color", await checkbox.evaluate((el) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--success)";
+      el.parentElement!.append(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    }));
+    await page.screenshot({ path: info.outputPath(`ai-settings-${width}.png`) });
+    // Reach the end of a populated form through its ordinary settings scroller.
+    await page.locator(".ai-fields input").last().scrollIntoViewIfNeeded();
+    await expect(page.getByRole("button", { name: "Save", exact: true })).toBeInViewport();
+  }
 });

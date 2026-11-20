@@ -337,3 +337,19 @@ Config SHALL add `features.experimental_ai_messages` default false, and a separa
 #### Scenario: Disable and enable later
 - **WHEN** an operator disables the configured feature and later enables it again
 - **THEN** settings remain available but old pending jobs do not resume
+
+#### Scenario: Save rejected by validation
+- **WHEN** an operator saves settings that fail validation
+- **THEN** the admin keeps the draft, shows the error next to the save action and moves focus to the first invalid field or its message
+
+#### Scenario: Understand AI errors in the selected language
+- **WHEN** AI validation, a provider request or a job reports an error
+- **THEN** the admin renders known errors in the selected RU/EN interface language with red error styling, separate from neutral hints and timestamps
+- **AND** an empty character catalog explicitly instructs the operator to add a character before enabling AI messages
+- **AND** unknown errors retain their diagnostic detail with a localized error label
+
+#### Scenario: Consistent experimental settings appearance
+- **WHEN** an operator opens experimental AI settings
+- **THEN** panels, headings, fields, checkboxes and tabs use the shared settings visual language and theme tokens
+- **AND** tabs support arrow-key navigation and expose their selected panel
+- **AND** populated character forms remain scrollable without horizontal overflow at desktop and narrow widths

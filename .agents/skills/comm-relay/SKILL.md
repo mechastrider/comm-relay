@@ -80,7 +80,14 @@ Extend with `display_name`, `avatar_url`, `badges` when available — keep backw
 - Auto-scroll; tolerate WebSocket reconnect (client-side backoff).
 - On-stream **themes** are a shared visual language for chat and leaderboard (see [obs-overlay-themes](../obs-overlay-themes/SKILL.md)). Dock stays operator-only and unthemed.
 
-## Admin / dock static UI (CommRelay)
+## Admin and dock UI (CommRelay)
+
+The admin is React/TypeScript under `web/admin/src/`; OBS surfaces and dock
+remain static HTML/CSS/JS. Before changing admin pages, settings, forms or dialogs,
+read the project-owned [admin UI skill](../comm-relay-admin-ui/SKILL.md).
+It defines shared components, styling contracts and rendered comparison checks,
+including experimental features. React uses `useLocale()` from
+`web/admin/src/app/locale.tsx`; the static surfaces use `web/shared/i18n.js`.
 
 Hub skills state generic rules; this repo documents concrete paths:
 
@@ -95,7 +102,6 @@ Hub skills state generic rules; this repo documents concrete paths:
 
 ## Non-goals (MVP)
 
-- React/Vue/Svelte admin UI.
 - BTTV/FFZ/7TV (stage 4 in concept).
 - Plugin system (research only until post-MVP).
 
@@ -128,4 +134,5 @@ New operator file exports: extend `DesktopAPI` / `desktopbridge`, call from `des
 - Layout: [backend-structure](../backend-structure/SKILL.md)
 - Go implementation: [comm-relay-backend-golang](../comm-relay-backend-golang/SKILL.md)
 - HTTP/WS: [api-conventions](../api-conventions/SKILL.md)
+- React admin UI: [comm-relay-admin-ui](../comm-relay-admin-ui/SKILL.md)
 - Static UI: [web-static-frontend](../web-static-frontend/SKILL.md)
