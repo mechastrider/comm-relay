@@ -13,7 +13,7 @@ satisfy a role default.
 
 Apply two independent ceilings to every role, retry, repair, and fallback:
 
-- Model order for this workflow: `gpt-6-luna` < `gpt-6-sol` < `gpt-6-astra`.
+- Model order for this workflow: `gpt-6-luna` < `gpt-6.2-sol` < `gpt-6.2-astra`.
   A child may use the parent's model or a lower model in this order.
 - Effort order: `none` < `low` < `medium` < `high` < `xhigh` < `max` < `ultra`.
   A child's effort may not exceed the parent's effective effort.
@@ -48,8 +48,8 @@ All roles use fresh context. All values below are subject to the session ceiling
 |---|---|---|
 | Design and OpenSpec authoring | parent model | parent effort |
 | Read-only fact gathering, code location, log collection | `gpt-6-luna` | `medium` |
-| Implementation slice, tests, corrections | `gpt-6-sol` | `medium`; `high` for a difficult slice |
-| Profile QA requiring behavioral analysis | `gpt-6-sol` | `medium`; `high` for difficult analysis |
+| Implementation slice, tests, corrections | `gpt-6.2-sol` | `medium`; `high` for a difficult slice |
+| Profile QA requiring behavioral analysis | `gpt-6.2-sol` | `medium`; `high` for difficult analysis |
 | Stuck implementation follow-up | parent model | parent effort |
 | Independent review | parent model | parent effort |
 

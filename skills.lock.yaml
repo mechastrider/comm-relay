@@ -1,8 +1,8 @@
-version: 4
+version: 5
 hub:
     repo: https://github.com/muonsoft/skills.git
     ref: main
-    commit: 15ad3e0eeee0864221b0349fdd79ea45a66759ae
+    commit: ea13c57540eca682262af114b40ed92928a320df
 preset: desktop-app
 include:
     - theme: backend/go
@@ -56,6 +56,7 @@ selected_packages:
     - runnable-background-processes
     - skill-authoring
     - slides
+    - stageshow
     - structural-code-review
     - test-audit
     - ui-styling
@@ -118,14 +119,14 @@ packages:
               installed_hash: sha256:5a27c7df3ffe03131b5a986696d097a562dc54e2a16542dfe0139fcd18474a87
     codex-orchestration:
         hub_path: process/codex-orchestration
-        upstream_hash: sha256:019c23a9785514f74384e5153f26fd330c50fb20a73abfbcbf4a72b701e51734
+        upstream_hash: sha256:f6169ec13b1b66ef7a4d6c8d3cf8708de5edae2b34dd77f9e2d54dbc510b8ce4
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/codex-orchestration
-              installed_hash: sha256:019c23a9785514f74384e5153f26fd330c50fb20a73abfbcbf4a72b701e51734
+              installed_hash: sha256:f6169ec13b1b66ef7a4d6c8d3cf8708de5edae2b34dd77f9e2d54dbc510b8ce4
     cursor-orchestration:
         hub_path: process/cursor-orchestration
         upstream_hash: sha256:7ce3d1ed3e64a34fcfd3873883e8bbb2e77f15b9b721614bd100548060033d76
@@ -158,14 +159,14 @@ packages:
               installed_hash: sha256:14f4bf07ebf3ef1d67feedf3733648c73d718c8127bdeaff1d1d84dbac77bece
     design:
         hub_path: frontend/design/design
-        upstream_hash: sha256:8c6ef9cca72db84edb1d10a9756cd05f0c60ba7337f5d7f80c33bce4354db0a5
+        upstream_hash: sha256:8507bb23f530785aeb67e69853ce1345dc7884d3c0fdfd2688863e972ce92be5
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/design
-              installed_hash: sha256:8c6ef9cca72db84edb1d10a9756cd05f0c60ba7337f5d7f80c33bce4354db0a5
+              installed_hash: sha256:8507bb23f530785aeb67e69853ce1345dc7884d3c0fdfd2688863e972ce92be5
     design-system:
         hub_path: frontend/design/design-system
         upstream_hash: sha256:7b311c35d4ae1f8d9464ba76d642501ab873e1b1f91920bb0454fa2909cf42d4
@@ -277,65 +278,95 @@ packages:
               dest: .agents/skills/muonsoft-validation
               installed_hash: sha256:e08482842ec81fe848ec9e5e44011877398a3a863169a10292d0ce9ca3a6da7a
     openspec-apply-change:
+        global:
+            repository: https://github.com/Fission-AI/OpenSpec.git
+            minimum_version: 2.1.1
+            commit: 0c737dc1b543249b38b0f4716816fcf493d894dd
+            tree_hash: sha256:a25daf56115ebcebae633b4dd967e401509dbef72df680a872132082054ff067
         hub_path: process/openspec-apply-change
-        upstream_hash: sha256:d26ef789eabfe3830fe6d35336a547d6cbb7e561e6fd1f44a088fa2db83d8ee8
+        upstream_hash: sha256:a25daf56115ebcebae633b4dd967e401509dbef72df680a872132082054ff067
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-apply-change
-              installed_hash: sha256:d26ef789eabfe3830fe6d35336a547d6cbb7e561e6fd1f44a088fa2db83d8ee8
+              installed_hash: sha256:a25daf56115ebcebae633b4dd967e401509dbef72df680a872132082054ff067
     openspec-archive-change:
+        global:
+            repository: https://github.com/Fission-AI/OpenSpec.git
+            minimum_version: 2.1.1
+            commit: 0c737dc1b543249b38b0f4716816fcf493d894dd
+            tree_hash: sha256:b48621de126ed18cce2baa36df6cbb7d7bec2f0d5d6cee831a7abb418cf52f55
         hub_path: process/openspec-archive-change
-        upstream_hash: sha256:e7221f965b26803ff3ec5fb46a2cebcfef06fbdf74004f346c841143880e15db
+        upstream_hash: sha256:b48621de126ed18cce2baa36df6cbb7d7bec2f0d5d6cee831a7abb418cf52f55
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-archive-change
-              installed_hash: sha256:e7221f965b26803ff3ec5fb46a2cebcfef06fbdf74004f346c841143880e15db
+              installed_hash: sha256:b48621de126ed18cce2baa36df6cbb7d7bec2f0d5d6cee831a7abb418cf52f55
     openspec-explore:
+        global:
+            repository: https://github.com/Fission-AI/OpenSpec.git
+            minimum_version: 2.1.1
+            commit: 0c737dc1b543249b38b0f4716816fcf493d894dd
+            tree_hash: sha256:84011f8203c7fd16cd5831f7f86a4e1f8f4b3f8ff00435014dbff91705760dd4
         hub_path: process/openspec-explore
-        upstream_hash: sha256:49a324dc34cdae2a3e31f6885d556e21a890a81a897ac826bba1a74e490cf9b4
+        upstream_hash: sha256:84011f8203c7fd16cd5831f7f86a4e1f8f4b3f8ff00435014dbff91705760dd4
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-explore
-              installed_hash: sha256:49a324dc34cdae2a3e31f6885d556e21a890a81a897ac826bba1a74e490cf9b4
+              installed_hash: sha256:84011f8203c7fd16cd5831f7f86a4e1f8f4b3f8ff00435014dbff91705760dd4
     openspec-propose:
+        global:
+            repository: https://github.com/Fission-AI/OpenSpec.git
+            minimum_version: 2.1.1
+            commit: 0c737dc1b543249b38b0f4716816fcf493d894dd
+            tree_hash: sha256:dcb6d41c284cd4fc9d866754a6922561bbc524d9475e475efe0c100e39ab8cf9
         hub_path: process/openspec-propose
-        upstream_hash: sha256:7ca8f3432192393f2b5c4aef9de3fb02c103b8e03e88aac8a8ddfdd9808d2acd
+        upstream_hash: sha256:dcb6d41c284cd4fc9d866754a6922561bbc524d9475e475efe0c100e39ab8cf9
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-propose
-              installed_hash: sha256:7ca8f3432192393f2b5c4aef9de3fb02c103b8e03e88aac8a8ddfdd9808d2acd
+              installed_hash: sha256:dcb6d41c284cd4fc9d866754a6922561bbc524d9475e475efe0c100e39ab8cf9
     openspec-sync-specs:
+        global:
+            repository: https://github.com/Fission-AI/OpenSpec.git
+            minimum_version: 2.1.1
+            commit: 0c737dc1b543249b38b0f4716816fcf493d894dd
+            tree_hash: sha256:b32f55d0ad6f97d3f490a2aa4b671153e712466c2de206bd0c84d4f29fcc2d25
         hub_path: process/openspec-sync-specs
-        upstream_hash: sha256:e9c2fb9f0da8e45b291039fc798cf3c501a7c6ac49025fd4ccd927747f95f697
+        upstream_hash: sha256:b32f55d0ad6f97d3f490a2aa4b671153e712466c2de206bd0c84d4f29fcc2d25
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-sync-specs
-              installed_hash: sha256:e9c2fb9f0da8e45b291039fc798cf3c501a7c6ac49025fd4ccd927747f95f697
+              installed_hash: sha256:b32f55d0ad6f97d3f490a2aa4b671153e712466c2de206bd0c84d4f29fcc2d25
     openspec-update-change:
+        global:
+            repository: https://github.com/Fission-AI/OpenSpec.git
+            minimum_version: 2.1.1
+            commit: 0c737dc1b543249b38b0f4716816fcf493d894dd
+            tree_hash: sha256:789681f16ef67be1800fce841dec6d7f105a6428b8fc8b639e56edc098770883
         hub_path: process/openspec-update-change
-        upstream_hash: sha256:3dc3bac0485c0dc12e03b40a834a7ab8b92dc1e81e92872bbe3f07172fe960e2
+        upstream_hash: sha256:789681f16ef67be1800fce841dec6d7f105a6428b8fc8b639e56edc098770883
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/openspec-update-change
-              installed_hash: sha256:3dc3bac0485c0dc12e03b40a834a7ab8b92dc1e81e92872bbe3f07172fe960e2
+              installed_hash: sha256:789681f16ef67be1800fce841dec6d7f105a6428b8fc8b639e56edc098770883
     openspec-workflow:
         hub_path: process/openspec-workflow
         upstream_hash: sha256:059100a614d6c8564a3ac6487c8a843fd2c66f428c5ab61293fe3d3bca96cf9b
@@ -382,6 +413,23 @@ packages:
               src: .
               dest: .agents/skills/slides
               installed_hash: sha256:11b30cdcbf919952205a6dfaa5483fa8efdbdd97f50f4b6fd8a69bc07111daa2
+    stageshow:
+        global:
+            tag: stageshow-v1.1.1
+            skill_path: stageshow
+            repository: https://github.com/benjitaylor/skills.git
+            minimum_version: 1.1.1
+            commit: 299140fafd08df55a9c234e610c3f64af3f45531
+            tree_hash: sha256:5c97dc52b66d769c4f95a29b5f48d10a42e8e3724025e6cb7af609e073fe8b0e
+        hub_path: frontend/ux/stageshow
+        upstream_hash: sha256:5c97dc52b66d769c4f95a29b5f48d10a42e8e3724025e6cb7af609e073fe8b0e
+        artifacts:
+            - id: skill
+              kind: skill
+              mode: tree
+              src: .
+              dest: .agents/skills/stageshow
+              installed_hash: sha256:5c97dc52b66d769c4f95a29b5f48d10a42e8e3724025e6cb7af609e073fe8b0e
     structural-code-review:
         hub_path: process/structural-code-review
         upstream_hash: sha256:8618f330809c058ef7f0a2032830dc4bf790220a7c15d1959ba4c07bcb310d38
@@ -414,14 +462,14 @@ packages:
               installed_hash: sha256:07b75b0db551e18082fa3b8b87f3215269a07574b12d8595f4c7f9ba089d33d9
     ui-ux-pro-max:
         hub_path: frontend/design/ui-ux-pro-max
-        upstream_hash: sha256:cef4f2f829074fd7eecdb572f25bd57ea7afe4acaad8c6eebf13c4b24263c33b
+        upstream_hash: sha256:faaab65a9863e1d21cb31fec48478ea4d0f44285df2d7be48719afe8980c3689
         artifacts:
             - id: skill
               kind: skill
               mode: tree
               src: .
               dest: .agents/skills/ui-ux-pro-max
-              installed_hash: sha256:cef4f2f829074fd7eecdb572f25bd57ea7afe4acaad8c6eebf13c4b24263c33b
+              installed_hash: sha256:faaab65a9863e1d21cb31fec48478ea4d0f44285df2d7be48719afe8980c3689
     ux-audit:
         hub_path: frontend/ux/ux-audit
         upstream_hash: sha256:dc18a1c0b47996dd1c9901f9259c88298636d164036b08b117a03707e1239950

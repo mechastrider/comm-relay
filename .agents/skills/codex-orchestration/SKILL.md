@@ -20,7 +20,7 @@ work-intake → parent-model design → broad implementation slices → profile 
 ```
 
 The parent is the orchestrator and stays on the current session model (for
-example Astra or Sol). It owns scope, decisions, worker boundaries, acceptance,
+example Astra 6.2 or Sol 6.2). It owns scope, decisions, worker boundaries, acceptance,
 durable checklist state, STOP/continue decisions, and closeout. It
 may inspect files, run checks, update checkboxes after evidence exists, and make
 a tiny mechanical correction. It must not absorb a normal implementation
