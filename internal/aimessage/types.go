@@ -87,6 +87,8 @@ type Job struct {
 	Decision        string            `json:"decision,omitempty"`
 	ReasonCode      string            `json:"reason_code,omitempty"`
 	Reason          string            `json:"reason,omitempty"`
+	Failure         *Failure          `json:"failure,omitempty"`
+	Retryable       bool              `json:"retryable,omitempty"`
 	ErrorCode       string            `json:"error_code,omitempty"`
 	Presentation    Presentation      `json:"presentation"`
 	AudioAsset      string            `json:"audio_asset,omitempty"`
@@ -127,28 +129,43 @@ func validText(s string, limit int) bool {
 }
 func validDecision(s string) bool { return s == "allow" || s == "reject" || s == "review" }
 func validatePrepared(p Prepared, c config.AIMessages) error {
-	if !validDecision(p.InputDecision) || len(p.Reason) > 2000 || len(p.ReasonCode) > 100 {
-		return ErrInvalid
+	invalid := func(field, rule string) error {
+		return &ProviderError{Code: "schema_mismatch", Field: field, Rule: rule}
 	}
-	if p.InputDecision == "reject" {
+	switch {
+	case !validDecision(p.InputDecision):
+		return invalid("input_decision", "invalid_enum")
+	case len(p.Reason) > 2000:
+		return invalid("reason", "too_long")
+	case len(p.ReasonCode) > 100:
+		return invalid("reason_code", "too_long")
+	case p.InputDecision == "reject":
 		return nil
-	}
-	if !validText(p.DisplayText, 600) || len(p.Segments) == 0 || len(p.Segments) > 30 || !validText(p.SpokenText(), c.Limits.SpeechMaxChars) {
-		return ErrInvalid
+	case !validText(p.DisplayText, 600):
+		return invalid("display_text", "invalid_text")
+	case len(p.Segments) == 0 || len(p.Segments) > 30:
+		return invalid("segments", "invalid_count")
+	case !validText(p.SpokenText(), c.Limits.SpeechMaxChars):
+		return invalid("segments", "invalid_spoken_text")
 	}
 	for _, s := range p.Segments {
-		if !validText(s.Text, c.Limits.SpeechMaxChars) || !config.ValidAIDelivery(s.Delivery) || strings.ContainsAny(s.Text, "[]<>") {
-			return ErrInvalid
+		if strings.ContainsAny(s.Text, "[]<>") || !validText(s.Text, c.Limits.SpeechMaxChars) {
+			return invalid("segments[].text", "invalid_text")
+		}
+		if !config.ValidAIDelivery(s.Delivery) {
+			return invalid("segments[].delivery", "invalid_enum")
 		}
 	}
 	for _, ch := range c.Characters {
-		if ch.ID == p.CharacterID {
-			for _, im := range ch.Images {
-				if im.ID == p.ImageID {
-					return nil
-				}
+		if ch.ID != p.CharacterID {
+			continue
+		}
+		for _, im := range ch.Images {
+			if im.ID == p.ImageID {
+				return nil
 			}
 		}
+		return invalid("image_id", "unknown_image")
 	}
-	return ErrInvalid
+	return invalid("character_id", "unknown_character")
 }

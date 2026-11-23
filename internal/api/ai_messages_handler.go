@@ -117,7 +117,7 @@ func (h aiMessagesHandler) action(action string) http.HandlerFunc {
 func registerAIRoutes(mux *http.ServeMux, service *aimessage.Service) {
 	h := aiMessagesHandler{service: service}
 	mux.HandleFunc("GET /api/ai-messages", h.list)
-	for _, action := range []string{"approve", "reject", "cancel", "resume", "clear-history", "test"} {
+	for _, action := range []string{"approve", "retry", "reject", "cancel", "resume", "clear-history", "test"} {
 		mux.HandleFunc("POST /api/ai-messages/"+action, h.action(action))
 	}
 }

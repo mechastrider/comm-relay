@@ -10,7 +10,7 @@ Preserve viewer meaning and wording while correcting spelling; expand abbreviati
 
 ## Non-Goals
 
-Creative rewriting, viewer-specified characters, level eligibility, chat history, vision, tools/function execution, generating images/voices, changing existing pack schema, importing the example pack automatically, paid retries/fallback, app-enforced monetary budgets, XP or command economy effects. No implementation or canonical spec sync in this PR.
+Creative rewriting, viewer-specified characters, level eligibility, chat history, vision, tools/function execution, generating images/voices, changing existing pack schema, importing the example pack automatically, automatic paid retries/fallback, app-enforced monetary budgets, XP or command economy effects. No implementation or canonical spec sync in this PR.
 
 ## Component / Process / IPC Boundaries
 
@@ -82,7 +82,7 @@ Preparer output is `{display_text, segments:[{text, delivery}], character_id, im
 
 Display text is also capped at 600 characters. Operator-adjustable limits remain positive and bounded; implementation must document schema ranges. Fixed safety ceilings: 2,000 input characters, 4,000 display/spoken characters, 60 seconds audio, 20 generation waiters, 50 review items, 600 seconds job lifetime, 1,800 seconds review lifetime, 60 seconds LLM timeout and 120 seconds TTS timeout. Cooldowns may be zero, up to 3,600 seconds. Audio response cap is 10 MiB; structured LLM response cap is 64 KiB. These ceilings are engineering defaults for review, not a promise of economical usage.
 
-Provider/proxy budgets are authoritative. Authentication or confirmed exhausted quota pauses admission; operator resume is explicit. HTTP 429 with uncertain cause produces a temporary provider-backoff state respecting bounded Retry-After; do not mislabel every 429 as exhausted budget. No automatic paid retries or provider/key fallback, including after ambiguous timeout. Existing pending jobs may expire while paused. No automatic replay when resumed.
+Provider/proxy budgets are authoritative. Authentication or confirmed exhausted quota pauses admission; operator resume is explicit. HTTP 429 with uncertain cause produces a temporary provider-backoff state respecting bounded Retry-After; do not mislabel every 429 as exhausted budget. No automatic paid retries or provider/key fallback, including after ambiguous timeout. Existing pending jobs may expire while paused. No automatic replay when resumed. An operator can explicitly retry a transient failure from history. The revision-checked action starts full processing again under unchanged settings and retains previously reported usage.
 
 ### Presentation and diagnostics
 

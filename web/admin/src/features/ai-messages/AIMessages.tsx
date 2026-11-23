@@ -1,4 +1,4 @@
-import { translateAIError } from "./errors";
+import { describeFailure, translateAIError } from "./errors";
 import {
   useCallback,
   useEffect,
@@ -11,7 +11,7 @@ import { useLocale } from "../../app/locale";
 import { useReportSaveStatus } from "../../app/save-status";
 import { ApiError, request, post } from "../../services/api";
 import { Tabs } from "../../components/Tabs";
-import { Button } from "../../components/Button";
+import { Button, IconButton } from "../../components/Button";
 import { Dialog } from "../../components/Dialog";
 import { AIFields, type ImageCommand } from "./AIFields";
 import { firstAIErrorTarget, focusAIError } from "./error-focus";
@@ -138,10 +138,11 @@ export function AIMessages({
   }
   function act(job: AIJob, action: string) {
     void run(async () => {
-      await post("/api/ai-messages/" + action, {
+      const updated = await post<AIJob>("/api/ai-messages/" + action, {
         job_id: job.id,
         expected_revision: job.revision,
       });
+      setOlder((items) => items.map((item) => item.id === job.id ? updated : item));
       await refresh();
       setSelected(null);
     }, false);
@@ -305,7 +306,15 @@ export function AIMessages({
                   <small>
                     {new Date(job.created_at).toLocaleString()}{" "}
                   </small>
-                  {job.error_code && <p className="field-error">{translateAIError(job.error_code, t)}</p>}
+                  {job.error_code && <p className="field-error">{describeFailure(job, t)}</p>}
+                  {job.retryable && job.state === "failed" && (
+                    <IconButton type="button" className="icon-btn--compact has-tooltip"
+                      aria-label={t("ai.retry")} disabled={busy || page?.service_state !== "ready"}
+                      onClick={() => act(job, "retry")}>
+                      <span aria-hidden="true">↻</span>
+                      <span className="ui-tooltip" role="tooltip">{t("ai.retry")}</span>
+                    </IconButton>
+                  )}
                 </li>
               ))}
             </ul>
@@ -458,7 +467,8 @@ export function AIMessages({
               />
             )}
             <p>{current.reason}</p>
-            {current.error_code && <p role="alert" className="field-error">{translateAIError(current.error_code, t)}</p>}
+            {current.error_code && <small>{t("ai.jobId", { id: current.id })}</small>}
+            {current.error_code && <p role="alert" className="field-error">{describeFailure(current, t)}</p>}
             {current.review_expires_at && (
               <p>
                 {t("ai.expires")}:{" "}

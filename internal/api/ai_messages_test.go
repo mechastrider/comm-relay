@@ -45,7 +45,7 @@ func TestAIConfig_OmittedFieldsPreserveDisabledSettings(t *testing.T) {
 func TestAIRoutes_NoServiceIsUnavailable(t *testing.T) {
 	mux := http.NewServeMux()
 	registerAIRoutes(mux, nil)
-	for _, action := range []string{"approve", "reject", "cancel", "resume", "clear-history", "test"} {
+	for _, action := range []string{"approve", "retry", "reject", "cancel", "resume", "clear-history", "test"} {
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/ai-messages/"+action, strings.NewReader(`{}`)))
 		require.Equal(t, http.StatusServiceUnavailable, rec.Code)

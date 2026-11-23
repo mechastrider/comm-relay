@@ -219,3 +219,36 @@ for (const [path, action] of [["/", "approve"], ["/dock/messages", "reject"]]) {
     await expect(row.locator(".ai-inline-review")).toContainText(action === "approve" ? "Queued" : "Rejected");
   });
 }
+
+for (const width of [390, 1280]) {
+  test(`AI history explains a failed verification and retries it once at ${width}px`, async ({ page, runtime }) => {
+    await page.setViewportSize({ width, height: 800 });
+    const job = {
+      id: "failed-job", revision: 7, state: "failed", retryable: true,
+      error_code: "output_truncated", name: "Viewer", original_text: "Hello",
+      failure: { stage: "verifying", queue: "running" }, presentation: {},
+      created_at: new Date().toISOString(), usage: []
+    };
+    await page.route("**/api/ai-messages?*", route => route.fulfill({ json: {
+      items: route.request().url().includes("review_pending") ? [] : [job],
+      credentials: {}, service_state: "ready"
+    } }));
+    let attempts = 0;
+    await page.route("**/api/ai-messages/retry", route => {
+      expect(route.request().postDataJSON()).toEqual({ job_id: job.id, expected_revision: 7 });
+      attempts++;
+      Object.assign(job, { state: "queued", retryable: false, error_code: "", revision: 8 });
+      return route.fulfill({ json: job });
+    });
+    await page.goto(runtime.url + "/#/settings/experimental");
+    await page.getByRole("tab", { name: /recent|history/i }).click();
+    await expect(page.getByText(/Verifying.*output token limit.*queue continued/)).toBeVisible();
+    const retry = page.getByRole("button", { name: /retry processing/i });
+    await retry.focus();
+    await expect(retry).toBeFocused();
+    await retry.press("Enter");
+    await expect(retry).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Viewer.*Queued/i })).toBeVisible();
+    expect(attempts).toBe(1);
+  });
+}

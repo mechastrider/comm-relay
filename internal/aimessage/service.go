@@ -120,9 +120,13 @@ func (s *Service) saveLocked(ctx context.Context, j *Job) error {
 	}
 	if err != nil {
 		j.Revision = previous
-		j.State = "failed"
-		j.ErrorCode = "storage_error"
 		s.paused = "storage_error"
+		if j.State != "failed" {
+			s.markFailedLocked(ctx, j, "storage_error", nil)
+		} else if j.Failure != nil {
+			j.Failure.Queue = "paused"
+			j.Failure.WaitSeconds = 0
+		}
 		return errors.Errorf("persist AI job: %w", err)
 	}
 	s.trimHistoryLocked(ctx)
@@ -422,7 +426,9 @@ func (s *Service) List(ctx context.Context, state, before string, limit int) Pag
 			page.NextCursor = page.Items[len(page.Items)-1].ID
 			break
 		}
-		page.Items = append(page.Items, cloneJob(j))
+		item := cloneJob(j)
+		item.Retryable = s.canRetry(j)
+		page.Items = append(page.Items, item)
 	}
 	return page
 }

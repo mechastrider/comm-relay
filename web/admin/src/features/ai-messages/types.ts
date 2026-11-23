@@ -36,6 +36,8 @@ export interface AIJob {
   original_text: string;
   reason?: string;
   error_code?: string;
+  retryable?: boolean;
+  failure?: { stage: string; queue: string; wait_seconds?: number; field?: string; rule?: string };
   created_at: string;
   expires_at: string;
   review_expires_at?: string;

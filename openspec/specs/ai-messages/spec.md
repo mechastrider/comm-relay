@@ -98,3 +98,11 @@ The operator SHALL have settings, review and recent-job views in browser and des
 #### Scenario: Secret visibility
 - **WHEN** an operator loads settings, exports configuration or views an error
 - **THEN** no provider credential value is exposed
+
+### Requirement: Operator diagnosis and explicit retry
+Technical job failures SHALL produce a warning in the ordinary session log with job ID, stage, elapsed time, configured provider/model, bounded cause and queue impact. Available HTTP status, safe request ID and schema field/rule SHALL be included. Provider bodies, viewer text and credentials MUST be excluded. History SHALL explain the stage, cause and queue impact.
+
+#### Scenario: Operator retries a transient failure
+- **WHEN** the operator selects the paid retry action on an eligible failed job with the current revision and unchanged configuration while the service can accept work
+- **THEN** the same job is queued once with a fresh deadline and undergoes full moderation again
+- **AND** stale requests, permanent failures, moderation refusals and previously dispatched jobs cannot be retried

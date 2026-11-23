@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/muonsoft/clog"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mechastrider/comm-relay/internal/config"
@@ -250,8 +252,8 @@ func TestParse_ExactOnly(t *testing.T) {
 }
 
 func TestPrepared_RequiredFieldsAndUsageSanitization(t *testing.T) {
-	require.False(t, matchesSchema(json.RawMessage(`{"decision":"allow"}`), objectSchema(map[string]any{"decision": decisionSchema(), "reason": stringSchema()})))
-	require.False(t, matchesSchema(json.RawMessage(`{"decision":"allow","reason":null}`), objectSchema(map[string]any{"decision": decisionSchema(), "reason": stringSchema()})))
+	require.NotNil(t, schemaFailure(json.RawMessage(`{"decision":"allow"}`), objectSchema(map[string]any{"decision": decisionSchema(), "reason": stringSchema()}), ""))
+	require.NotNil(t, schemaFailure(json.RawMessage(`{"decision":"allow","reason":null}`), objectSchema(map[string]any{"decision": decisionSchema(), "reason": stringSchema()}), ""))
 	require.JSONEq(t, `{"total_tokens":12}`, string(safeUsage(json.RawMessage(`{"total_tokens":12,"secret":"private","cost":"key"}`))))
 }
 func TestOutputDenylist_StopsBeforeSpeech(t *testing.T) {
@@ -485,4 +487,56 @@ func TestSynthesize_ModelDeliveryTags(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestFailedJob_DiagnosticsAndRevisionGuardedRetry(t *testing.T) {
+	s, _, frames := fixture(t)
+	var logs bytes.Buffer
+	ctx := clog.NewContext(context.Background(), slog.New(slog.NewJSONHandler(&logs, nil)))
+	j, err := s.Admit(ctx, "twitch", "one", "viewer", "Viewer", "private viewer text")
+	require.NoError(t, err)
+	s.queue = nil
+	calls := 0
+	s.provider.Client = &http.Client{Transport: transportFunc(func(*http.Request) (*http.Response, error) {
+		calls++
+		if calls == 1 {
+			return response(completion(t, prepared("allow"))), nil
+		}
+		r := response(completion(t, map[string]string{"decision": "private invalid decision", "reason": "private reason", "reason_code": "unknown"}))
+		r.Header.Set("X-Request-ID", "req-42")
+		return r, nil
+	})}
+	s.process(ctx, j.ID)
+	failed := s.List(ctx, "failed", "", 10).Items[0]
+	require.True(t, failed.Retryable)
+	require.Equal(t, "verifying", failed.Failure.Stage)
+	require.Equal(t, "schema_mismatch", failed.ErrorCode)
+	require.Equal(t, "decision", failed.Failure.Field)
+	require.Equal(t, "invalid_enum", failed.Failure.Rule)
+	var entry map[string]any
+	require.NoError(t, json.Unmarshal(logs.Bytes(), &entry))
+	require.Equal(t, "WARN", entry["level"])
+	require.Equal(t, "req-42", entry["request_id"])
+	require.Equal(t, float64(200), entry["http_status"])
+	require.Equal(t, j.ID, entry["job_id"])
+	require.NotContains(t, logs.String(), "private")
+	require.NotContains(t, logs.String(), "test-key")
+	s.backoff = s.now().Add(time.Minute)
+	_, err = s.Action(ctx, j.ID, failed.Revision, "retry")
+	require.ErrorIs(t, err, ErrUnavailable)
+	s.backoff = time.Time{}
+	queued, err := s.Action(ctx, j.ID, failed.Revision, "retry")
+	require.NoError(t, err)
+	require.Nil(t, queued.Prepared)
+	require.Nil(t, queued.Failure)
+	_, err = s.Action(ctx, j.ID, failed.Revision, "retry")
+	require.ErrorIs(t, err, ErrConflict)
+	require.Equal(t, []string{j.ID}, s.queue)
+	paid := mockProvider(t, s, "reject")
+	s.process(ctx, j.ID)
+	require.Equal(t, 1, *paid)
+	require.Empty(t, *frames)
+	rejected := s.List(ctx, "rejected", "", 1).Items[0]
+	_, err = s.Action(ctx, j.ID, rejected.Revision, "retry")
+	require.ErrorIs(t, err, ErrConflict)
 }

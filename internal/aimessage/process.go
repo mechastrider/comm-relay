@@ -25,8 +25,7 @@ func (s *Service) stage(ctx context.Context, id, state string) (Job, config.AIMe
 		return Job{}, c.AIMessages, false
 	}
 	if err := s.ValidateConfig(c); err != nil {
-		j.State = "failed"
-		j.ErrorCode = "configuration"
+		s.markFailedLocked(ctx, j, "configuration", nil)
 		if saveErr := s.saveLocked(ctx, j); saveErr != nil {
 			clog.Errorf(ctx, "save invalid AI configuration: %w", saveErr)
 		}
@@ -46,8 +45,12 @@ func (s *Service) finish(ctx context.Context, id, state, code string) {
 	if j == nil || terminal(j.State) {
 		return
 	}
-	j.State = state
-	j.ErrorCode = code
+	if state == "failed" {
+		s.markFailedLocked(ctx, j, code, nil)
+	} else {
+		j.State = state
+		j.ErrorCode = code
+	}
 	if err := s.saveLocked(context.WithoutCancel(ctx), j); err != nil {
 		clog.Errorf(ctx, "finish AI job: %w", err)
 	}
@@ -55,7 +58,13 @@ func (s *Service) finish(ctx context.Context, id, state, code string) {
 func (s *Service) fail(ctx context.Context, id string, err error) {
 	code := "invalid_result"
 	s.mu.Lock()
-	if p, ok := errors.As[*ProviderError](err); ok {
+	defer s.mu.Unlock()
+	j := s.jobs[id]
+	if id != "" && (j == nil || terminal(j.State)) {
+		return
+	}
+	p, ok := errors.As[*ProviderError](err)
+	if ok {
 		code = p.Code
 		if p.Pause {
 			s.paused = p.Code
@@ -64,11 +73,16 @@ func (s *Service) fail(ctx context.Context, id string, err error) {
 			s.backoff = s.now().Add(p.RetryAfter)
 		}
 	}
-	s.mu.Unlock()
+	if j == nil {
+		return
+	}
 	if ctx.Err() != nil {
 		code = "canceled_or_timeout"
 	}
-	s.finish(ctx, id, "failed", code)
+	s.markFailedLocked(ctx, j, code, p)
+	if err := s.saveLocked(context.WithoutCancel(ctx), j); err != nil {
+		clog.Errorf(ctx, "finish failed AI job: %w", err)
+	}
 }
 func (s *Service) updateResult(ctx context.Context, id string, p Prepared, usage json.RawMessage, stage string, started time.Time) bool {
 	s.mu.Lock()
@@ -228,13 +242,11 @@ func (s *Service) review(ctx context.Context, id string, c config.AIMessages) {
 		}
 	}
 	if count >= c.Limits.ReviewCapacity {
-		j.State = "failed"
-		j.ErrorCode = "review_full"
+		s.markFailedLocked(ctx, j, "review_full", nil)
 	} else {
 		p, err := s.presentation(c, *j.Prepared)
 		if err != nil {
-			j.State = "failed"
-			j.ErrorCode = "catalog_changed"
+			s.markFailedLocked(ctx, j, "catalog_changed", nil)
 		} else {
 			j.Presentation = p
 			j.State = "review_pending"
@@ -257,12 +269,15 @@ func (s *Service) Action(ctx context.Context, id string, revision int, action st
 	if j == nil {
 		return Job{}, ErrNotFound
 	}
-	if j.Revision != revision || terminal(j.State) {
+	if j.Revision != revision || (terminal(j.State) && action != "retry") {
 		return Job{}, ErrConflict
 	}
 	switch action {
-	case "approve":
-		if j.State != "review_pending" || j.Prepared == nil {
+	case "approve", "retry":
+		if action == "retry" && !s.canRetry(j) {
+			return Job{}, ErrConflict
+		}
+		if action == "approve" && (j.State != "review_pending" || j.Prepared == nil) {
 			return Job{}, ErrConflict
 		}
 		c := s.cfg.Snapshot()
@@ -275,15 +290,24 @@ func (s *Service) Action(ctx context.Context, id string, revision int, action st
 		if err := s.ValidateConfig(c); err != nil {
 			return Job{}, err
 		}
-		p, err := s.presentation(c.AIMessages, *j.Prepared)
-		if err != nil || p != j.Presentation {
-			return Job{}, ErrConflict
+		if action == "approve" {
+			p, err := s.presentation(c.AIMessages, *j.Prepared)
+			if err != nil || p != j.Presentation {
+				return Job{}, ErrConflict
+			}
+			j.Approved = true
+		} else {
+			j.Approved = false
+			j.Prepared = nil
+			j.Decision, j.Reason, j.ReasonCode, j.ErrorCode = "", "", "", ""
+			j.Failure = nil
+			j.Presentation = Presentation{}
+			j.StageTimings = map[string]int64{}
 		}
-		j.Approved = true
 		j.State = "queued"
 		j.ExpiresAt = s.now().Add(time.Duration(c.AIMessages.Limits.LifetimeSeconds) * time.Second)
 		j.ReviewExpiresAt = nil
-		if err = s.saveLocked(ctx, j); err != nil {
+		if err := s.saveLocked(ctx, j); err != nil {
 			return Job{}, err
 		}
 		s.queue = append(s.queue, id)
