@@ -86,7 +86,8 @@ export function Messages() {
     !!config &&
     !config.twitch.enabled &&
     !config.youtube.enabled &&
-    !config.vk.enabled;
+    !config.vk.enabled &&
+    !config.goodgame?.enabled;
   const { data: catalog } = useResource<{ awards: Award[] }>("/api/awards");
   const [now, setNow] = useState(Date.now);
   const panel = useRef<HTMLDivElement>(null);

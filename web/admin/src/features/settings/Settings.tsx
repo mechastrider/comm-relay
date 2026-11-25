@@ -364,6 +364,7 @@ export function Settings() {
                         { id: "twitch", label: "Twitch" },
                         { id: "youtube", label: "YouTube" },
                         { id: "vk", label: "VK Live" },
+                        { id: "goodgame", label: "GoodGame" },
                       ]}
                       selected={platform}
                       onSelect={setPlatform}

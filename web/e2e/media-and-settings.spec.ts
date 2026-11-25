@@ -153,3 +153,22 @@ test("real session restart appears in Archive with its captured recap", async ({
     page.locator('[data-session-id="' + before.session_id + '"]'),
   ).toBeFocused();
 });
+
+test("GoodGame validates its channel and remembers a channel URL", { tag: ["@browser"] }, async ({ page, runtime }) => {
+  await page.goto(runtime.url + "/#/settings/platforms");
+  await page.getByRole("tab", { name: "GoodGame" }).click();
+  const channel = page.locator("#goodgame-channel");
+  await page.locator("#goodgame-enabled").check();
+  await channel.fill("https://example.com/Miker");
+  await page.locator("[data-section-save]").click();
+  await expect(channel).toBeFocused();
+  await expect(channel).toHaveAttribute("aria-invalid", "true");
+  await channel.fill("https://goodgame.ru/channel/Miker/");
+  // Store the channel for later without depending on an external chat service.
+  await page.locator("#goodgame-enabled").uncheck();
+  await page.locator("[data-section-save]").click();
+  await expect(page.locator("[data-section-save]")).toBeDisabled();
+  await page.reload();
+  await page.getByRole("tab", { name: "GoodGame" }).click();
+  await expect(channel).toHaveValue("https://goodgame.ru/channel/Miker/");
+});

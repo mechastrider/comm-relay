@@ -706,9 +706,9 @@ import { isOverlayDebugPage, overlayWebSocketURL } from "/shared/overlay-debug.j
       svg.appendChild(createSVGPath("M5 4h16v11.5L16.5 20H12l-3 3v-3H5z"));
       svg.appendChild(createSVGRect({ x: "10", y: "8", width: "2", height: "5", rx: "0.5" }));
       svg.appendChild(createSVGRect({ x: "15", y: "8", width: "2", height: "5", rx: "0.5" }));
-    } else if (name === "vk") {
+    } else if (name === "vk" || name === "goodgame") {
       svg.appendChild(createSVGPath("M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"));
-      svg.appendChild(createSVGText("VK"));
+      svg.appendChild(createSVGText(name === "goodgame" ? "GG" : "VK"));
     } else {
       svg.appendChild(createSVGPath("M4 5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"));
       svg.appendChild(createSVGPath("M8 11h8v2H8z"));

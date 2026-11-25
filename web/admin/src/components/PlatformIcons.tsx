@@ -18,7 +18,7 @@ function Glyph({ name }: { name: string }) {
           <rect x="10" y="8" width="2" height="5" rx=".5" fill="currentColor" />
           <rect x="15" y="8" width="2" height="5" rx=".5" fill="currentColor" />
         </>
-      ) : name === "vk" ? (
+      ) : (name === "vk" || name === "goodgame") ? (
         <>
           <path
             d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"
@@ -32,7 +32,7 @@ function Glyph({ name }: { name: string }) {
             fontWeight="700"
             fill="currentColor"
           >
-            VK
+            {name === "goodgame" ? "GG" : "VK"}
           </text>
         </>
       ) : (

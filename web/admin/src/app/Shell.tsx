@@ -216,6 +216,17 @@ export function Shell() {
                 {connectorLabel("vk")}
               </span>
             </div>
+            {diagnostics?.connectors.goodgame?.enabled && (
+              <div className="indicator">
+                <span className="indicator__label">{"GoodGame"}</span>
+                <span
+                  id="goodgame-status"
+                  className={"status-pill status-pill--" + connectorState("goodgame")}
+                >
+                  {connectorLabel("goodgame")}
+                </span>
+              </div>
+            )}
           </div>
           <div className="shell-header__actions">
             <Button

@@ -15,6 +15,7 @@ import (
 	"github.com/mechastrider/comm-relay/internal/bus"
 	"github.com/mechastrider/comm-relay/internal/command"
 	"github.com/mechastrider/comm-relay/internal/config"
+	"github.com/mechastrider/comm-relay/internal/connector/goodgame"
 	"github.com/mechastrider/comm-relay/internal/connector/status"
 	twitchconnector "github.com/mechastrider/comm-relay/internal/connector/twitch"
 	vkconnector "github.com/mechastrider/comm-relay/internal/connector/vk"
@@ -209,6 +210,8 @@ func New(opts Options) (*App, error) {
 	youtubeConn := youtubeconnector.New(eventBus, cfgStore, statusRegistry, youtubeEmojiCatalog, emoteHTTP, youtubeEmojiRefresher)
 	processes = append(processes, connectorRunnable("youtube", youtubeConn.Run))
 
+	gg := goodgame.New(eventBus, cfgStore, statusRegistry)
+	processes = append(processes, connectorRunnable("goodgame", gg.Run))
 	vkConn := vkconnector.New(eventBus, cfgStore, statusRegistry)
 	processes = append(processes, connectorRunnable("vk", vkConn.Run))
 

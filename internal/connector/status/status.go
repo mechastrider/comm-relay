@@ -9,9 +9,10 @@ import (
 
 // Platform identifiers used across connectors and the admin API.
 const (
-	PlatformTwitch  = "twitch"
-	PlatformYouTube = "youtube"
-	PlatformVK      = "vk"
+	PlatformTwitch   = "twitch"
+	PlatformYouTube  = "youtube"
+	PlatformGoodGame = "goodgame"
+	PlatformVK       = "vk"
 )
 
 // State is the connection state exposed to the admin API.
@@ -53,6 +54,16 @@ func (r *Registry) Set(platform string, s Snapshot) {
 	r.mu.Lock()
 	r.platforms[platform] = s
 	r.mu.Unlock()
+}
+
+// SetConnection changes connection state while preserving the live message count.
+func (r *Registry) SetConnection(platform string, state State, lastError string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	snap := r.platforms[platform]
+	snap.State = state
+	snap.LastError = lastError
+	r.platforms[platform] = snap
 }
 
 // Get returns the current status for a platform.

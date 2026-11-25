@@ -1146,6 +1146,8 @@ export default {
   "platform.unknown": "unknown",
   "platform.twitch": "Twitch",
   "platform.youtube": "YouTube",
+  "platform.goodgame": "GoodGame",
+  "field.goodgame_channel": "Enter a GoodGame channel name or channel URL.",
   "platform.vk": "VK Live",
 
   "field.admin_time_locale": "Choose a supported language.",

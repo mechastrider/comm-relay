@@ -44,7 +44,7 @@ func (h *configHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	prev := h.store.Snapshot()
-	var incoming config.Config
+	incoming := config.Config{GoodGame: prev.GoodGame}
 	incoming.Admin.CommandSoundEnabled = prev.Admin.CommandSoundEnabled
 	if fields := config.ValidateIncomingJSONFields(body); len(fields) > 0 {
 		writeFieldErrors(w, http.StatusBadRequest, "Check the highlighted fields.", fields)
