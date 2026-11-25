@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml/badge.svg)](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/mechastrider/comm-relay?label=release)](https://github.com/mechastrider/comm-relay/releases) ![Go](https://img.shields.io/github/go-mod/go-version/mechastrider/comm-relay) [![License](https://img.shields.io/github/license/mechastrider/comm-relay)](LICENSE) ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue) ![OBS](https://img.shields.io/badge/OBS-Browser%20Source-9146FF?logo=obsstudio&logoColor=white) [![Wails](https://img.shields.io/badge/desktop-Wails%20v2-DF2C2C)](https://wails.io/) [![DonationAlerts](https://img.shields.io/badge/DonationAlerts-Поддержать-FD6535)](https://www.donationalerts.com/r/mechastrider)
 
-CommRelay — локальная интерактивная система для стримов. Она объединяет чат Twitch, YouTube Live и VK Live, помогает видеть вклад зрителей и выводит в OBS чат, лидерборд, команды и награды — без облачного relay-сервера.
+CommRelay — локальная интерактивная система для стримов. Она объединяет чат Twitch, YouTube Live, GoodGame и VK Live, помогает видеть вклад зрителей и выводит в OBS чат, лидерборд, команды и награды — без облачного relay-сервера.
 
 До **v0.5** CommRelay был прежде всего мультичатом. Начиная с v0.5 приложение перерабатывается в систему, где сообщения становятся событиями стрима: зрители получают прогресс, команды запускают баннеры, а стример может отмечать вклад участников наградами.
 
@@ -23,7 +23,7 @@ CommRelay — локальная интерактивная система дл�
 
 ## Что умеет
 
-- **Собирает чат в одном месте.** Twitch, YouTube Live и VK Live / VK Video, эмодзи Twitch/FFZ/BTTV/7TV, превью картинок и автоматическое переподключение. Читать сообщения и выдавать награды можно из Live или отдельной панели в OBS.
+- **Собирает чат в одном месте.** Twitch, YouTube Live, GoodGame и VK Live / VK Video, эмодзи Twitch/FFZ/BTTV/7TV, превью картинок и автоматическое переподключение. Читать сообщения и выдавать награды можно из Live или отдельной панели в OBS.
 - **Помогает отмечать вклад зрителей.** Награды стримера и настраиваемая активность дают XP; уровни, звания, эмблемы и достижения показывают прогресс. Статистика доступна за сессию, день и всё время, аккаунты одного зрителя можно объединить вручную.
 - **Вовлекает чат в эфир.** Свои команды с баннерами, лайки другим зрителям через `!like ник`, усиления наград через `!buff`, автоматические приветствия и зрительские задачи с выбранным стримером победителем. Лимиты и оформление настраиваются.
 - **Оформляет сцену OBS.** Четыре независимых источника: чат, лидерборд, баннеры и итоги. Темы и пресеты, свои изображения и звуки, прозрачность, автоматический масштаб, превью и публикация изменений из Studio.
@@ -201,6 +201,10 @@ Simple mode использует недокументированный InnerTub
 ### VK Live
 
 OAuth не требуется. Укажите slug канала или URL `live.vkvideo.ru`, затем включите VK connector и сохраните настройки.
+
+### GoodGame
+
+В разделе подключений откройте вкладку **GoodGame**, введите имя канала (например, `Miker`) или ссылку на него, включите коннектор и сохраните настройки. Новые публичные сообщения появятся в общем чате. Вход в GoodGame не требуется.
 
 ## Где хранятся настройки
 

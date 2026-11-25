@@ -74,16 +74,17 @@ func (h *diagnosticsHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 		MessageCounts:     messageCounts,
 		Pipeline:          observability.Default.Snapshot(),
 		Connectors: statusResponse{
-			Twitch:  twitchStatusResponse(cfg, h.registry),
-			YouTube: youtubeStatusResponse(cfg, h.registry),
-			VK:      vkStatusResponse(cfg, h.registry),
+			Twitch:   twitchStatusResponse(cfg, h.registry),
+			YouTube:  youtubeStatusResponse(cfg, h.registry),
+			GoodGame: goodGameStatusResponse(cfg, h.registry),
+			VK:       vkStatusResponse(cfg, h.registry),
 		},
 		EmoteCache: emoteCache,
 	})
 }
 
 func enabledConnectors(cfg config.Config) []string {
-	out := make([]string, 0, 3)
+	out := make([]string, 0, 4)
 	if cfg.Twitch.Enabled {
 		out = append(out, status.PlatformTwitch)
 	}
@@ -92,6 +93,9 @@ func enabledConnectors(cfg config.Config) []string {
 	}
 	if cfg.VK.Enabled {
 		out = append(out, status.PlatformVK)
+	}
+	if cfg.GoodGame.Enabled {
+		out = append(out, status.PlatformGoodGame)
 	}
 	return out
 }

@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml/badge.svg)](https://github.com/mechastrider/comm-relay/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/mechastrider/comm-relay?label=release)](https://github.com/mechastrider/comm-relay/releases) ![Go](https://img.shields.io/github/go-mod/go-version/mechastrider/comm-relay) [![License](https://img.shields.io/github/license/mechastrider/comm-relay)](LICENSE) ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue) ![OBS](https://img.shields.io/badge/OBS-Browser%20Source-9146FF?logo=obsstudio&logoColor=white) [![Wails](https://img.shields.io/badge/desktop-Wails%20v2-DF2C2C)](https://wails.io/) [![DonationAlerts](https://img.shields.io/badge/DonationAlerts-Поддержать-FD6535)](https://www.donationalerts.com/r/mechastrider)
 
-CommRelay is a local interactive system for livestreams. It brings Twitch, YouTube Live, and VK Live chat together, tracks viewer contribution, and sends chat, leaderboards, commands, and rewards to OBS — without a cloud relay server.
+CommRelay is a local interactive system for livestreams. It brings Twitch, YouTube Live, GoodGame, and VK Live chat together, tracks viewer contribution, and sends chat, leaderboards, commands, and rewards to OBS — without a cloud relay server.
 
 Before **v0.5**, CommRelay was primarily a multichat app. Starting with v0.5, it is being rebuilt into a system where messages become stream events: viewers gain progress, commands trigger alerts, and the streamer can recognize contributions with rewards.
 
@@ -23,7 +23,7 @@ The best way to evaluate CommRelay is to see it running on the author's streams:
 
 ## Features
 
-- **One chat feed.** Twitch, YouTube Live, and VK Live / VK Video, Twitch/FFZ/BTTV/7TV emotes, image previews, and automatic reconnection. Read messages and grant rewards from Live or the OBS dock.
+- **One chat feed.** Twitch, YouTube Live, GoodGame, and VK Live / VK Video, Twitch/FFZ/BTTV/7TV emotes, image previews, and automatic reconnection. Read messages and grant rewards from Live or the OBS dock.
 - **Viewer contribution and progress.** Operator rewards and configurable activity grants earn XP. Customize levels, titles, emblems, and achievements; compare session, day, and all-time stats and manually merge a viewer's platform accounts.
 - **Audience interaction.** Custom alert commands, `!like nickname`, `!buff`, automatic greetings, and viewer tasks with an operator-selected winner in **Live → Viewer rewards**. Configure limits, visuals, and sounds.
 - **Four OBS surfaces.** Chat, leaderboard, alerts, and recap, with themes, presets, custom media, transparency, automatic scaling, and a Studio preview-and-publish workflow.
@@ -195,6 +195,10 @@ Simple mode uses the undocumented InnerTube API (like the YouTube web player). T
 ### VK Live
 
 OAuth is not required. Enter the channel slug or `live.vkvideo.ru` URL, then enable the VK connector and save settings.
+
+### GoodGame
+
+In connection settings, open **GoodGame**, enter a channel name (for example, `Miker`) or its URL, enable the connector and save. New public messages appear in the shared chat feed. Guest access requires no GoodGame account.
 
 ## Where settings are stored
 

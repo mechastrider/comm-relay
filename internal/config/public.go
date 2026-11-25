@@ -17,6 +17,7 @@ type PublicConfig struct {
 	Network                    NetworkConfigPublic         `json:"network"`
 	Twitch                     TwitchConfig                `json:"twitch"`
 	YouTube                    YouTubeConfigPublic         `json:"youtube"`
+	GoodGame                   GoodGameConfig              `json:"goodgame"`
 	VK                         VKConfigPublic              `json:"vk"`
 	Overlay                    OverlayConfig               `json:"overlay"`
 	Admin                      AdminConfig                 `json:"admin"`
@@ -41,6 +42,7 @@ func (c Config) Public() PublicConfig {
 		Network:                    c.Network.public(),
 		Twitch:                     c.Twitch,
 		YouTube:                    c.YouTube.public(),
+		GoodGame:                   c.GoodGame,
 		VK:                         c.VK.public(),
 		Overlay:                    c.Overlay,
 		Admin:                      c.Admin,

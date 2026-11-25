@@ -422,6 +422,70 @@ export function PlatformsFields({
           </div>
         </section>
       </section>
+      <section
+        id="connections-goodgame-panel"
+        className="dialog-tab-panel connections-tab-panel"
+        role="tabpanel"
+        aria-labelledby="connections-goodgame-tab"
+        data-connections-panel="goodgame"
+        hidden={platform !== "goodgame"}
+      >
+        <section
+          className="panel platform-panel"
+          aria-labelledby="goodgame-heading"
+        >
+          <div className="panel__header">
+            <h3 id="goodgame-heading">{"GoodGame"}</h3>
+          </div>
+          <div className="form">
+            <Field>
+              <label className="checkbox" htmlFor="goodgame-enabled">
+                <input
+                  id="goodgame-enabled"
+                  name="goodgame_enabled"
+                  type="checkbox"
+                  checked={Boolean(values["goodgame-enabled"])}
+                  onChange={(event) =>
+                    onChange("goodgame-enabled", event.currentTarget.checked)
+                  }
+                  aria-invalid={Boolean(errors["goodgame_enabled"])}
+                />
+                <span data-i18n="conn.enableConnector">
+                  {t("conn.enableConnector")}
+                </span>
+              </label>
+            </Field>
+            <Field>
+              <label htmlFor="goodgame-channel" data-i18n="conn.channel">
+                {t("conn.channel")}
+              </label>
+              <input
+                id="goodgame-channel"
+                name="goodgame_channel"
+                type="text"
+                autoComplete="off"
+                spellCheck="false"
+                inputMode="text"
+                value={String(values["goodgame-channel"] ?? "")}
+                onChange={(event) =>
+                  onChange("goodgame-channel", event.currentTarget.value)
+                }
+                placeholder="https://goodgame.ru/Miker"
+                aria-describedby="goodgame-channel-error"
+                aria-invalid={Boolean(errors["goodgame_channel"])}
+              />
+              <p
+                id="goodgame-channel-error"
+                className="field-error"
+                role="alert"
+                hidden={!errors["goodgame_channel"]}
+              >
+                {errors["goodgame_channel"]}
+              </p>
+            </Field>
+          </div>
+        </section>
+      </section>
     </>
   );
 }

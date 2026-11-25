@@ -36,7 +36,7 @@ func logStartup(ctx context.Context, addr, configPath, webRoot, logFile string, 
 func enabledConnectors(cfg *config.Config) string {
 	// Runnables are always registered; connectors watch the config store for changes.
 	_ = cfg
-	return strings.Join([]string{"twitch", "youtube", "vk"}, ", ")
+	return strings.Join([]string{"twitch", "youtube", "vk", "goodgame"}, ", ")
 }
 
 func validateWebRoot(root string) error {

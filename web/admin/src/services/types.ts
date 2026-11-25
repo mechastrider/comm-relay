@@ -34,6 +34,7 @@ export interface PublicConfig {
       connected?: boolean;
     };
   };
+  goodgame?: { enabled: boolean; channel: string };
   vk: { enabled: boolean; channel: string; use_proxy: boolean };
   network: {
     socks5: { address: string; username: string; has_password?: boolean };

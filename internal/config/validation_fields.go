@@ -106,6 +106,9 @@ func (c *Config) validateFields() error {
 	if c.Twitch.Enabled && c.Twitch.Channel == "" {
 		fields["twitch_channel"] = "Channel is required when Twitch is enabled."
 	}
+	if c.GoodGame.Enabled && c.GoodGame.ChannelKey() == "" {
+		fields["goodgame_channel"] = "Enter a GoodGame channel name or channel URL."
+	}
 	if c.VK.Enabled && strings.TrimSpace(c.VK.Channel) == "" {
 		fields["vk_channel"] = "Channel slug is required when VK Live is enabled."
 	}

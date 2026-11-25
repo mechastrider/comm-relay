@@ -49,6 +49,16 @@
     "path": "youtube.use_proxy",
     "kind": "boolean"
   },
+  "goodgame-enabled": {
+    "section": "platforms",
+    "path": "goodgame.enabled",
+    "kind": "boolean"
+  },
+  "goodgame-channel": {
+    "section": "platforms",
+    "path": "goodgame.channel",
+    "kind": "string"
+  },
   "vk-enabled": {
     "section": "platforms",
     "path": "vk.enabled",

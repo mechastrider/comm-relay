@@ -85,6 +85,7 @@ export function extractSectionValuesFromConfig(config, sectionId) {
   const socks5 = asObject(network.socks5);
   const youtube = asObject(cfg.youtube);
   const oauth = asObject(youtube.oauth);
+  const goodgame = asObject(cfg.goodgame);
   const vk = asObject(cfg.vk);
   const leaderboardVisibility = asObject(cfg.leaderboard_visibility);
 
@@ -109,6 +110,10 @@ export function extractSectionValuesFromConfig(config, sectionId) {
             client_id: String(oauth.client_id || ""),
             client_secret: "",
           },
+        },
+        goodgame: {
+          enabled: Boolean(goodgame.enabled),
+          channel: String(goodgame.channel || "").trim(),
         },
         vk: {
           enabled: Boolean(vk.enabled),
@@ -212,6 +217,7 @@ export function normalizeSectionValues(sectionId, values) {
     const twitch = asObject(raw.twitch);
     const youtube = asObject(raw.youtube);
     const youtubeOauth = asObject(youtube.oauth);
+    const goodgame = asObject(raw.goodgame);
     const vk = asObject(raw.vk);
     return {
       twitch: {
@@ -232,6 +238,10 @@ export function normalizeSectionValues(sectionId, values) {
           client_id: String(youtubeOauth.client_id || "").trim(),
           client_secret: String(youtubeOauth.client_secret || ""),
         },
+      },
+      goodgame: {
+        enabled: Boolean(goodgame.enabled),
+        channel: String(goodgame.channel || "").trim(),
       },
       vk: {
         enabled: Boolean(vk.enabled),
@@ -357,6 +367,7 @@ export function applySectionToConfig(basePayload, sectionId, sectionValues) {
     const platforms = /** @type {ReturnType<typeof normalizeSectionValues>} */ (values);
     next.twitch = platforms.twitch;
     next.youtube = platforms.youtube;
+    next.goodgame = platforms.goodgame;
     next.vk = platforms.vk;
     return next;
   }

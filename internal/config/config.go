@@ -31,6 +31,7 @@ type Config struct {
 	Network                    NetworkConfig               `json:"network"`
 	Twitch                     TwitchConfig                `json:"twitch"`
 	YouTube                    YouTubeConfig               `json:"youtube"`
+	GoodGame                   GoodGameConfig              `json:"goodgame"`
 	VK                         VKConfig                    `json:"vk"`
 	Overlay                    OverlayConfig               `json:"overlay"`
 	Admin                      AdminConfig                 `json:"admin"`

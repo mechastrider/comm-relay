@@ -31,9 +31,10 @@ func newStatusHandler(store *config.Store, registry *status.Registry) *statusHan
 }
 
 type statusResponse struct {
-	Twitch  platformStatusResponse `json:"twitch"`
-	YouTube platformStatusResponse `json:"youtube"`
-	VK      platformStatusResponse `json:"vk"`
+	Twitch   platformStatusResponse `json:"twitch"`
+	YouTube  platformStatusResponse `json:"youtube"`
+	GoodGame platformStatusResponse `json:"goodgame"`
+	VK       platformStatusResponse `json:"vk"`
 }
 
 type platformStatusResponse struct {
@@ -52,9 +53,10 @@ func (h *statusHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	cfg := h.store.Snapshot()
 
 	writeJSON(w, http.StatusOK, statusResponse{
-		Twitch:  twitchStatusResponse(cfg, h.registry),
-		YouTube: youtubeStatusResponse(cfg, h.registry),
-		VK:      vkStatusResponse(cfg, h.registry),
+		Twitch:   twitchStatusResponse(cfg, h.registry),
+		YouTube:  youtubeStatusResponse(cfg, h.registry),
+		GoodGame: goodGameStatusResponse(cfg, h.registry),
+		VK:       vkStatusResponse(cfg, h.registry),
 	})
 }
 
@@ -77,6 +79,17 @@ func twitchStatusResponse(cfg config.Config, registry *status.Registry) platform
 	resp.State = connectorStateDisconnected
 	if strings.TrimSpace(cfg.Twitch.Channel) == "" {
 		resp.Detail = "Set Twitch channel in admin."
+	}
+	return resp
+}
+
+func goodGameStatusResponse(cfg config.Config, registry *status.Registry) platformStatusResponse {
+	resp := platformStatusResponse{Enabled: cfg.GoodGame.Enabled, Channel: cfg.GoodGame.Channel, State: connectorStateDisabled}
+	if resp.Enabled {
+		resp.State = connectorStateDisconnected
+		if snap, ok := registrySnapshot(registry, status.PlatformGoodGame); ok {
+			applyRegistrySnapshot(&resp, snap)
+		}
 	}
 	return resp
 }
